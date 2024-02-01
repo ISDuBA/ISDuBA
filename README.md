@@ -26,4 +26,4 @@ Envisoned is to use the following components:
 ## What does the name ISDuBA mean?
 
 It abbreviates to German meaning something like
-  *I*nternal *s*ystem for *d*ownloading and evaluating *a*dvisories.
+  **I**nternal **s**ystem for **d**ownloading and evaluating **a***dvisories.
