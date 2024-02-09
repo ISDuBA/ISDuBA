@@ -78,47 +78,47 @@ Paste the following for a valid configuration.
 The example-username and password are easy to guess and should not be used
 for production.
 
-># Basic settings for running in production. Change accordingly before deploying the server.
+> \# Basic settings for running in production. Change accordingly before deploying the server.
 >
-># Database
+> \# Database
 >
-># The database vendor.
->db=postgres
+> \# The database vendor.
+> db=postgres
 >
-># The username of the database user.
->db-username=keycloak
+> \# The username of the database user.
+> db-username=keycloak
 >
-># The password of the database user.
->db-password=keycloak
+> \# The password of the database user.
+> db-password=keycloak
 >
-># The full database JDBC URL. 
-># If not provided, a default URL is set based on the selected database vendor.
->db-url=jdbc:postgresql://localhost/keycloak
+> \# The full database JDBC URL. 
+> \# If not provided, a default URL is set based on the selected database vendor.
+> db-url=jdbc:postgresql://localhost/keycloak
 >
-># Observability
+> \# Observability
 >
-># If the server should expose healthcheck endpoints.
->#health-enabled=true
+> \# If the server should expose healthcheck endpoints.
+> \#health-enabled=true
 >
-># If the server should expose metrics endpoints.
->#metrics-enabled=true
+> \# If the server should expose metrics endpoints.
+> \#metrics-enabled=true
 >
-># HTTP
+> \# HTTP
 >
-># The file path to a server certificate or certificate chain in PEM format.
->#https-certificate-file=${kc.home.dir}conf/server.crt.pem
+> \# The file path to a server certificate or certificate chain in PEM format.
+> \#https-certificate-file=${kc.home.dir}conf/server.crt.pem
 >
-># The file path to a private key in PEM format.
->#https-certificate-key-file=${kc.home.dir}conf/server.key.pem
+> \# The file path to a private key in PEM format.
+> \#https-certificate-key-file=${kc.home.dir}conf/server.key.pem
 >
-># The proxy address forwarding mode if the server is behind a reverse proxy.
->#proxy=reencrypt
+> \# The proxy address forwarding mode if the server is behind a reverse proxy.
+> \#proxy=reencrypt
 >
-># Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
->#spi-sticky-session-encoder-infinispan-should-attach-route=false
+> \# Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
+> \#spi-sticky-session-encoder-infinispan-should-attach-route=false
 >
-># Hostname for the Keycloak server.
->#hostname=isduba'
+> \# Hostname for the Keycloak server.
+> \#hostname=isduba
 
 
 # Initialize keycloak
@@ -164,20 +164,20 @@ vim /etc/systemd/system/keycloak.service
 ```
 Use the following configuration:
 
->[Unit]
->Description=Keycloak
->After=network.target
+> [Unit]
+> Description=Keycloak
+> After=network.target
 >
->[Service]
->Type=idle
->User=keycloak
->Group=keycloak
->ExecStart=/opt/keycloak/bin/kc.sh start-dev
->TimeoutStartSec=600
->TimeoutStopSec=600
+> [Service]
+> Type=idle
+> User=keycloak
+> Group=keycloak
+> ExecStart=/opt/keycloak/bin/kc.sh start-dev
+> TimeoutStartSec=600
+> TimeoutStopSec=600
 >
->[Install]
->WantedBy=multi-user.target
+> [Install]
+> WantedBy=multi-user.target
 
 
 # Adjust systemd
@@ -200,31 +200,42 @@ Configure Keycloak.
 Open Keycloaks Web-Interface, running on localhost:8080.
 Via the admin console adjust the following if necessary:
 
-> Create Isduba realm
->
->Create Users
->
->Via Clients: auth:
->valid redirect url: /*
->web origins url: /*
->Tick the boxes Standard flow and Direct access grants
->Turn off consent required
->Switch from "settings" to "client scopes" and click on auth-dedicated
->Add mapper "User Attribute" with
->Name: TLP
->User Attribute: TLP
->Token Claim Name: TLP
->Claim JSON type: TLP
->For the switches, Multivalued should be turned off, the rest on
->
->Via Realm roles:
->Create roles
-># The following allows the role to handle
-># the WHITE and GREEN TLP levels of all publishers. Adjust as necessary
->in a role:
->Attributes
->Key: TLP
->Value: [{"publisher":"", "tlps":["WHITE, GREEN"]}]
+- Create Isduba realm
+
+- Create Users
+
+### Via Clients: auth:
+
+- valid redirect url: /*
+
+- web origins url: /*
+
+- Tick the boxes Standard flow and Direct access grants
+
+- Turn off consent required
+
+### Switch from "settings" to "client scopes" and click on auth-dedicated
+
+#### Add mapper "User Attribute" with
+
+- Name: TLP
+
+- User Attribute: TLP
+
+- Token Claim Name: TLP
+
+- Claim JSON type: TLP
+
+- For the switches, Multivalued should be turned off, the rest on
+
+Create roles via Realm roles:
+The following allows the role to handle
+the WHITE and GREEN TLP levels of all publishers. Adjust as necessary:
+Switch to the Attributes tab and set:
+
+- Key: TLP
+
+- Value: [{"publisher":"", "tlps":["WHITE, GREEN"]}]
 
 
 # Create isduba configuration
