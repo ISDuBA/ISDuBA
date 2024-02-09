@@ -37,6 +37,10 @@ func (c *Controller) Bind() http.Handler {
 	r.Use(sloggin.New(slog.Default()))
 	r.Use(gin.Recovery())
 
+	if c.cfg.Web.Static != "" {
+		r.StaticFS("/web", http.Dir(c.cfg.Web.Static))
+	}
+
 	kcCfg := c.cfg.Keycloak.Config(extractTLPs)
 
 	authRoles := func(roles ...string) gin.HandlerFunc {
@@ -52,10 +56,6 @@ func (c *Controller) Bind() http.Handler {
 	api.POST("/documents", authIm, c.importDocument)
 	api.GET("/documents", authBeReAu, c.overviewDocuments)
 	api.GET("/documents/:id", authBeReAu, c.viewDocument)
-
-	if c.cfg.Web.Static != "" {
-		r.StaticFS("/", http.Dir(c.cfg.Web.Static))
-	}
 
 	return r
 }
