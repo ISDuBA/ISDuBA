@@ -78,48 +78,49 @@ Paste the following for a valid configuration.
 The example-username and password are easy to guess and should not be used
 for production.
 
-> \# Basic settings for running in production. Change accordingly before deploying the server.
->
-> \# Database
->
-> \# The database vendor.
-> db=postgres
->
-> \# The username of the database user.
-> db-username=keycloak
->
-> \# The password of the database user.
-> db-password=keycloak
->
-> \# The full database JDBC URL. 
-> \# If not provided, a default URL is set based on the selected database vendor.
-> db-url=jdbc:postgresql://localhost/keycloak
->
-> \# Observability
->
-> \# If the server should expose healthcheck endpoints.
-> \#health-enabled=true
->
-> \# If the server should expose metrics endpoints.
-> \#metrics-enabled=true
->
-> \# HTTP
->
-> \# The file path to a server certificate or certificate chain in PEM format.
-> \#https-certificate-file=${kc.home.dir}conf/server.crt.pem
->
-> \# The file path to a private key in PEM format.
-> \#https-certificate-key-file=${kc.home.dir}conf/server.key.pem
->
-> \# The proxy address forwarding mode if the server is behind a reverse proxy.
-> \#proxy=reencrypt
->
-> \# Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
-> \#spi-sticky-session-encoder-infinispan-should-attach-route=false
->
-> \# Hostname for the Keycloak server.
-> \#hostname=isduba
+```
+# Basic settings for running in production. Change accordingly before deploying the server.
 
+# Database
+
+# The database vendor.
+db=postgres
+
+# The username of the database user.
+db-username=keycloak
+
+# The password of the database user.
+db-password=keycloak
+
+# The full database JDBC URL. 
+# If not provided, a default URL is set based on the selected database vendor.
+db-url=jdbc:postgresql://localhost/keycloak
+
+# Observability
+
+# If the server should expose healthcheck endpoints.
+#health-enabled=true
+
+# If the server should expose metrics endpoints.
+#metrics-enabled=true
+
+# HTTP
+
+# The file path to a server certificate or certificate chain in PEM format.
+#https-certificate-file=${kc.home.dir}conf/server.crt.pem
+
+# The file path to a private key in PEM format.
+#https-certificate-key-file=${kc.home.dir}conf/server.key.pem
+
+# The proxy address forwarding mode if the server is behind a reverse proxy.
+#proxy=reencrypt
+
+# Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
+#spi-sticky-session-encoder-infinispan-should-attach-route=false
+
+# Hostname for the Keycloak server.
+#hostname=isduba
+```
 
 # Initialize keycloak
 Start Keycloak and allow it to configure itself.
@@ -141,14 +142,18 @@ Open the postgresql.conf:
 vim postgresql.conf
 ```
 Change the following line:
-> set listen_addresses = '*'
+```
+set listen_addresses = '*'
+```
 Open the pg_hba.conf:
 ```
 vim pg_hba.conf
 ```
 Add the following two lines:
->host    all             all             192.168.56.1/32         scram-sha-256
->host    all             all             127.0.0.1/32            scram-sha-256
+```
+host    all             all             192.168.56.1/32         scram-sha-256
+host    all             all             127.0.0.1/32            scram-sha-256
+```
 
 Exit the postgres user:
 ```
@@ -164,21 +169,22 @@ vim /etc/systemd/system/keycloak.service
 ```
 Use the following configuration:
 
-> [Unit]
-> Description=Keycloak
-> After=network.target
->
-> [Service]
-> Type=idle
-> User=keycloak
-> Group=keycloak
-> ExecStart=/opt/keycloak/bin/kc.sh start-dev
-> TimeoutStartSec=600
-> TimeoutStopSec=600
->
-> [Install]
-> WantedBy=multi-user.target
+```
+[Unit]
+Description=Keycloak
+After=network.target
 
+[Service]
+Type=idle
+User=keycloak
+Group=keycloak
+ExecStart=/opt/keycloak/bin/kc.sh start-dev
+TimeoutStartSec=600
+TimeoutStopSec=600
+
+[Install]
+WantedBy=multi-user.target
+```
 
 # Adjust systemd
 As superuser, enable keycloak to start on system-startup.
@@ -246,21 +252,22 @@ vim isduba-bsi.toml
 ```
 
 Configure your setup, e.g. as follows:
->[logging]
->file="bsi.log"
->level="debug"
->
->[database]
->migrate=true
->user="bsi"
->password="bsi"
->database="bsi"
->host="localhost"
->port=5432
->admin_user="postgres"
->admin_password="postgres"
->admin_database="postgres"
+```
+[logging]
+file="bsi.log"
+level="debug"
 
+[database]
+migrate=true
+user="bsi"
+password="bsi"
+database="bsi"
+host="localhost"
+port=5432
+admin_user="postgres"
+admin_password="postgres"
+admin_database="postgres"
+```
 
 # Import advisories
 Import some advisories into the database via the bulk importer:
