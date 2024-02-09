@@ -48,6 +48,7 @@ const (
 	defaultWebHost    = "localhost"
 	defaultWebPort    = 8081
 	defaultWebGinMode = "release"
+	defaultWebStatic  = "web"
 )
 
 const (
@@ -95,6 +96,7 @@ type Web struct {
 	Host    string `toml:"host"`
 	Port    int    `toml:"port"`
 	GinMode string `toml:"gin_mode"`
+	Static  string `toml:"static"`
 }
 
 // Database are the config options for the database.
@@ -199,6 +201,7 @@ func Load(file string) (*Config, error) {
 			Host:    defaultWebHost,
 			Port:    defaultWebPort,
 			GinMode: defaultWebGinMode,
+			Static:  defaultWebStatic,
 		},
 		Database: Database{
 			Host:          defaultDatabaseHost,
@@ -259,6 +262,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_WEB_HOST", storeString(&cfg.Web.Host)},
 		envStore{"ISDUBA_WEB_PORT", storeInt(&cfg.Web.Port)},
 		envStore{"ISDUBA_WEB_GIN_MODE", storeString(&cfg.Web.GinMode)},
+		envStore{"ISDUBA_WEB_STATIC", storeString(&cfg.Web.Static)},
 		envStore{"ISDUBA_DB_HOST", storeString(&cfg.Database.Host)},
 		envStore{"ISDUBA_DB_PORT", storeInt(&cfg.Database.Port)},
 		envStore{"ISDUBA_DB_DATABASE", storeString(&cfg.Database.Database)},

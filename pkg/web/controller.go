@@ -13,11 +13,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	sloggin "github.com/samber/slog-gin"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
+	"github.com/gin-gonic/gin"
+	sloggin "github.com/samber/slog-gin"
 )
 
 // Controller binds the endpoints to the internal logic.
@@ -52,6 +52,10 @@ func (c *Controller) Bind() http.Handler {
 	api.POST("/documents", authIm, c.importDocument)
 	api.GET("/documents", authBeReAu, c.overviewDocuments)
 	api.GET("/documents/:id", authBeReAu, c.viewDocument)
+
+	if c.cfg.Web.Static != "" {
+		r.StaticFS("/", http.Dir(c.cfg.Web.Static))
+	}
 
 	return r
 }
