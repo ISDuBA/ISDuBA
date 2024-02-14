@@ -31,20 +31,21 @@ apt install postgresql-16
 
 # Create Postgresql keycloak user
 Allow Keycloak to access the Postgresql databases.
-The created user will have the username and password 'keycloak'.
+The created user for keycloak will have the username and password 'keycloak'.
 It is not recommended to use these for production,
 as they are too easy to guess.
+Similarly for the user.
 ```
 su - postgres
-createuser -S -R -W keycloak
 ```
 Enter psql via:
 ```
 psql
 ```
-Set the password for your Keycloak user, so Keycloak can access it later:
+Create the Keycloak and your personal user, so Keycloak can access it later:
 ```
-ALTER USER keycloak WITH PASSWORD 'keycloak';
+CREATE USER keycloak WITH PASSWORD 'keycloak';
+CREATE USER username WITH PASSWORD 'userpassowrd';
 ```
 Exit psql via:
 ```
@@ -52,10 +53,11 @@ Exit psql via:
 ```
 
 # Create Postgres database
-Create a Postgres database for Keycloak.
+Create a Postgres and bsi database for Keycloak.
 
 ```
 createdb -O keycloak -E 'UTF-8' keycloak
+createdb -O username -E 'UTF-8' username
 ```
 
 Exit the postgres user via:
@@ -305,9 +307,9 @@ level="debug"
 
 [database]
 migrate=true
-user="bsi"
-password="bsi"
-database="bsi"
+user="username"
+password="userpassword"
+database="username"
 host="localhost"
 port=5432
 admin_user="postgres"
