@@ -28,3 +28,4 @@ go.work
 
 cmd/bulkimport/bulkimport
 cmd/isdubad/isdubad
+isduba-bsi.toml
