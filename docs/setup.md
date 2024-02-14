@@ -123,6 +123,10 @@ db-url=jdbc:postgresql://localhost/keycloak
 ```
 
 # Initialize keycloak
+Navigate into the keycloak folder.
+```
+cd /opt/keycloak/
+```
 Start Keycloak and allow it to configure itself.
 ```
 bin/kc.sh start-dev
