@@ -295,7 +295,10 @@ Switch into the isdubad directory and build it:
 cd ../isdubad
 go build
 ```
-
+Return to the main directory:
+```
+cd ../..
+```
 # Create isduba configuration
 Create a configuration file for the tools used in this repository.
 Create a configuration file:
