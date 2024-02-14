@@ -146,8 +146,10 @@ Open the postgresql.conf:
 vim postgresql.conf
 ```
 Change the following line:
+> #listen_addresses = 'localhost'
+to
 ```
-set listen_addresses = '*'
+listen_addresses = '*'
 ```
 Open the pg_hba.conf:
 ```
