@@ -127,50 +127,6 @@ db-url=jdbc:postgresql://localhost/keycloak
 ```
 
 # Initialize keycloak
-Navigate into the keycloak folder.
-```
-cd /opt/keycloak/
-```
-Start Keycloak and allow it to configure itself.
-```
-bin/kc.sh start-dev
-```
-
-# Edit Postgres config
-Edit the Postgresql configuration.
-
-Change to the postgres user and change into the postgres directory:
-```
-su - postgres
-cd /etc/postgresql/16/main/
-```
-
-Open the postgresql.conf:
-```
-vim postgresql.conf
-```
-Change the following line:
-> #listen_addresses = 'localhost'
-to
-```
-listen_addresses = '*'
-```
-Open the pg_hba.conf:
-```
-vim pg_hba.conf
-```
-Add the following two lines:
-```
-host    all             all             192.168.56.1/32         scram-sha-256
-host    all             all             127.0.0.1/32            scram-sha-256
-```
-
-Exit the postgres user:
-```
-exit
-```
-
-# Edit systemd keycloak.service
 Allow Keycloak to start on system-startup.
 
 Create a systemd Keycloak file via a text editor, e.g. vim:
@@ -209,6 +165,42 @@ Enable Keycloak to start on system-startup.
 systemctl enable keycloak
 systemctl start keycloak
 ```
+
+# Edit Postgres config
+Edit the Postgresql configuration.
+
+Change to the postgres user and change into the postgres directory:
+```
+su - postgres
+cd /etc/postgresql/16/main/
+```
+
+Open the postgresql.conf:
+```
+vim postgresql.conf
+```
+Change the following line:
+> #listen_addresses = 'localhost'
+to
+```
+listen_addresses = '*'
+```
+Open the pg_hba.conf:
+```
+vim pg_hba.conf
+```
+Add the following two lines:
+```
+host    all             all             192.168.56.1/32         scram-sha-256
+host    all             all             127.0.0.1/32            scram-sha-256
+```
+
+Exit the postgres user:
+```
+exit
+```
+
+
 
 # Adjust keycloak
 Configure Keycloak.
