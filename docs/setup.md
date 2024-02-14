@@ -249,7 +249,9 @@ Switch to the Attributes tab and set:
 
 - Value: [{"publisher":"", "tlps":["WHITE, GREEN"]}]
 
-
+### Assign Users their roles
+Via ```Users``` via ```Role Mapping``` via ```Assign Role``` assign the users
+their role.
 
 # Setup Go
 Download Go 1.22:
