@@ -270,7 +270,7 @@ In there, add the line:
 > export PATH=$PATH:/usr/local/go/bin
 
 # Setup ISDuBA
-Clone the advisory:
+Clone the repository:
 ```
 git clone https://github.com/ISDuBA/ISDuBA.git
 ```
