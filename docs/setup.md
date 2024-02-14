@@ -236,7 +236,7 @@ ID/Name: ```auth```
 
 - Token Claim Name: TLP
 
-- Claim JSON type: TLP
+- Claim JSON type: JSON
 
 - For the switches, Multivalued should be turned off, the rest on
 
