@@ -314,9 +314,9 @@ level="debug"
 
 [database]
 migrate=true
-user="username"
-password="userpassword"
-database="username"
+user="bsi"
+password="bsi"
+database="bsi"
 host="localhost"
 port=5432
 admin_user="postgres"
