@@ -23,28 +23,28 @@ mv keycloak-23.0.5 /opt/keycloak
 Download Postgresql version 16, which has been used for development.
 ```
 apt install vim gnupg2 -y
-curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc| gpg --dearmor -o /etc/apt/trusted.g>
-sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt>
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc| gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' 
 apt update
 apt install postgresql-16
 ```
 
 # Create Postgresql keycloak user
 Allow Keycloak to access the Postgresql databases.
-The created user will have the username and password 'keycloak'.
+The created user for keycloak will have the username and password 'keycloak'.
 It is not recommended to use these for production,
 as they are too easy to guess.
+Similarly for the user.
 ```
 su - postgres
-createuser -S -R -W keycloak
 ```
 Enter psql via:
 ```
 psql
 ```
-Set the password for your Keycloak user, so Keycloak can access it later:
+Create the Keycloak user so Keycloak can access it later:
 ```
-ALTER USER keycloak WITH PASSWORD 'keycloak';
+CREATE USER keycloak WITH PASSWORD 'keycloak';
 ```
 Exit psql via:
 ```
@@ -123,6 +123,10 @@ db-url=jdbc:postgresql://localhost/keycloak
 ```
 
 # Initialize keycloak
+Navigate into the keycloak folder.
+```
+cd /opt/keycloak/
+```
 Start Keycloak and allow it to configure itself.
 ```
 bin/kc.sh start-dev
@@ -206,7 +210,7 @@ Configure Keycloak.
 Open Keycloaks Web-Interface, running on localhost:8080.
 Via the admin console adjust the following if necessary:
 
-- Create Isduba realm
+- Create ```isduba``` realm
 
 - Create Users
 
@@ -299,15 +303,15 @@ vim isduba-bsi.toml
 
 Configure your setup, e.g. as follows:
 ```
-[logging]
+[log]
 file="bsi.log"
 level="debug"
 
 [database]
 migrate=true
-user="bsi"
-password="bsi"
-database="bsi"
+user="username"
+password="userpassword"
+database="username"
 host="localhost"
 port=5432
 admin_user="postgres"
@@ -315,13 +319,21 @@ admin_password="postgres"
 admin_database="postgres"
 ```
 
+# Start Isdubad to allow for db creation
+From the repositories main directory, start the isdubad program,
+which creates the db and users according to the ./cmd/isdubad/isdubad -c isduba-bsi.toml:
+```
+./cmd/isdubad/isdubad -c isduba-bsi.toml 
+```
+
 # Import advisories
 Import some advisories into the database via the bulk importer:
 - host: host from where you download your advisories from
 - advisories_to_import: location to download your advisories from
 (An example would be the results of the csaf_downloader, located in localhost)
+From the repositories main directory:
 ```
-./bulkimport -database bsi -user bsi -password bsi -host localhost advisories_to_import
+./cmd/bulkimport/bulkimport -database bsi -user bsi -password bsi -host localhost advisories_to_import
 ```
 
 # Example use of isdubad
