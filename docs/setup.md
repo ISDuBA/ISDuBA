@@ -42,10 +42,9 @@ Enter psql via:
 ```
 psql
 ```
-Create the Keycloak and your personal user, so Keycloak can access it later:
+Create the Keycloak user so Keycloak can access it later:
 ```
 CREATE USER keycloak WITH PASSWORD 'keycloak';
-CREATE USER username WITH PASSWORD 'userpassowrd';
 ```
 Exit psql via:
 ```
@@ -53,11 +52,10 @@ Exit psql via:
 ```
 
 # Create Postgres database
-Create a Postgres and bsi database for Keycloak.
+Create a Postgres database for Keycloak.
 
 ```
 createdb -O keycloak -E 'UTF-8' keycloak
-createdb -O username -E 'UTF-8' username
 ```
 
 Exit the postgres user via:
