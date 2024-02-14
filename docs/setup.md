@@ -46,6 +46,10 @@ Create the Keycloak user so Keycloak can access it later:
 ```
 CREATE USER keycloak WITH PASSWORD 'keycloak';
 ```
+Give your postgres an explicit password so it can be accessed later:
+```
+ALTER USER postgres WITH PASSWORD 'postgres';
+```
 Exit psql via:
 ```
 \q 
