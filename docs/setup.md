@@ -46,18 +46,18 @@ Set the password for your Keycloak user, so Keycloak can access it later:
 ```
 ALTER USER keycloak WITH PASSWORD 'keycloak';
 ```
-
-# Create Postgres database
-Create a Postgres database for Keycloak.
-
-While still in psql:
-```
-CREATE DATABASE keycloak;
-```
 Exit psql via:
 ```
 \q 
 ```
+
+# Create Postgres database
+Create a Postgres database for Keycloak.
+
+```
+createdb -O keycloak -E 'UTF-8' keycloak
+```
+
 Exit the postgres user via:
 ```
 exit
@@ -210,15 +210,21 @@ Via the admin console adjust the following if necessary:
 
 - Create Users
 
+### Create Clients: auth
+
+Under Clients, create auth:
+
+ID/Name: ```auth```
+
 ### Via Clients: auth:
 
-- valid redirect url: /*
+- valid redirect url: ```/*```
 
-- web origins url: /*
+- web origins url: ```/*```
 
 - Tick the boxes Standard flow and Direct access grants
 
-- Turn off consent required
+- Turn off ```consent required```
 
 ### Switch from "settings" to "client scopes" and click on auth-dedicated
 
@@ -230,7 +236,7 @@ Via the admin console adjust the following if necessary:
 
 - Token Claim Name: TLP
 
-- Claim JSON type: TLP
+- Claim JSON type: JSON
 
 - For the switches, Multivalued should be turned off, the rest on
 
@@ -243,6 +249,46 @@ Switch to the Attributes tab and set:
 
 - Value: [{"publisher":"", "tlps":["WHITE, GREEN"]}]
 
+### Assign Users their roles
+Via ```Users``` via ```Role Mapping``` via ```Assign Role``` assign the users
+their role.
+
+# Setup Go
+Download Go 1.22:
+```
+wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+```
+Extract it and place the new go version into the /usr/local directory:
+```
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+```
+## Edit your profile to always use this go:
+```
+vim /etc/profile
+```
+In there, add the line:
+> export PATH=$PATH:/usr/local/go/bin
+
+# Setup ISDuBA
+Clone the repository:
+```
+git clone https://github.com/ISDuBA/ISDuBA.git
+```
+Switch into the directory
+```
+cd ISDuBA
+```
+## build the tools
+Switch into the bulkimport directory and build it:
+```
+cd cmd/bulkimport
+go build
+```
+Switch into the isdubad directory and build it:
+```
+cd ../isdubad
+go build
+```
 
 # Create isduba configuration
 Create a configuration file for the tools used in this repository.
