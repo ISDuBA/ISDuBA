@@ -210,15 +210,21 @@ Via the admin console adjust the following if necessary:
 
 - Create Users
 
+### Create Clients: auth
+
+Under Clients, create auth:
+
+ID/Name: ```auth```
+
 ### Via Clients: auth:
 
-- valid redirect url: /*
+- valid redirect url: ```/*```
 
-- web origins url: /*
+- web origins url: ```/*```
 
 - Tick the boxes Standard flow and Direct access grants
 
-- Turn off consent required
+- Turn off ```consent required```
 
 ### Switch from "settings" to "client scopes" and click on auth-dedicated
 
