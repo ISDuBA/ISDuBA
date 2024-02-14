@@ -299,7 +299,7 @@ vim isduba-bsi.toml
 
 Configure your setup, e.g. as follows:
 ```
-[logging]
+[log]
 file="bsi.log"
 level="debug"
 
