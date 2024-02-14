@@ -1,6 +1,6 @@
 # ISDuBA
 
-*Work in progress* *early-development*
+**Work in progress** **early-development**
 
 Plan: Develop a web application
 for downloading and evaluating security advisories in CSAF 2.0 format
@@ -23,7 +23,11 @@ Envisoned is to use the following components:
  * https://github.com/rtfpessoa/diff2html
 
 
+## How to get started
+ * [Setup](docs/setup.md)
+
+
 ## What does the name ISDuBA mean?
 
-It abbreviates to German meaning something like
-  **I**nternal **s**ystem for **d**ownloading and evaluating **a***dvisories.
+The abbreviation expands to a German label, which translates to
+  **I**nternal **s**ystem for **d**ownloading and evaluating **a**dvisories.
