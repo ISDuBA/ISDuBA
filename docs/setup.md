@@ -244,6 +244,44 @@ Switch to the Attributes tab and set:
 - Value: [{"publisher":"", "tlps":["WHITE, GREEN"]}]
 
 
+
+# Setup Go
+Download Go 1.22:
+```
+wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+```
+Extract it and place the new go version into the /usr/local directory:
+```
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+```
+## Edit your profile to always use this go:
+```
+vim /etc/profile
+```
+In there, add the line:
+> export PATH=$PATH:/usr/local/go/bin
+
+# Setup ISDuBA
+Clone the advisory:
+```
+git clone https://github.com/ISDuBA/ISDuBA.git
+```
+Switch into the directory
+```
+cd ISDuBA
+```
+## build the tools
+Switch into the bulkimport directory and build it:
+```
+cd cmd/bulkimport
+go build
+```
+Switch into the isdubad directory and build it:
+```
+cd ../isdubad
+go build
+```
+
 # Create isduba configuration
 Create a configuration file for the tools used in this repository.
 Create a configuration file:
