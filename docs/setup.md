@@ -320,8 +320,9 @@ Import some advisories into the database via the bulk importer:
 - host: host from where you download your advisories from
 - advisories_to_import: location to download your advisories from
 (An example would be the results of the csaf_downloader, located in localhost)
+From the repositories main directory:
 ```
-./bulkimport -database bsi -user bsi -password bsi -host localhost advisories_to_import
+./cmd/bulkimport/bulkimport -database bsi -user bsi -password bsi -host localhost advisories_to_import
 ```
 
 # Example use of isdubad
