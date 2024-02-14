@@ -46,18 +46,18 @@ Set the password for your Keycloak user, so Keycloak can access it later:
 ```
 ALTER USER keycloak WITH PASSWORD 'keycloak';
 ```
-
-# Create Postgres database
-Create a Postgres database for Keycloak.
-
-While still in psql:
-```
-CREATE DATABASE keycloak;
-```
 Exit psql via:
 ```
 \q 
 ```
+
+# Create Postgres database
+Create a Postgres database for Keycloak.
+
+```
+createdb -O keycloak -E 'UTF-8' keycloak
+```
+
 Exit the postgres user via:
 ```
 exit
