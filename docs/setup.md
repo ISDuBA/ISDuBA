@@ -315,6 +315,13 @@ admin_password="postgres"
 admin_database="postgres"
 ```
 
+# Start Isdubad to allow for db creation
+From the repositories main directory, start the isdubad program,
+which creates the db and users according to the ./cmd/isdubad/isdubad -c isduba-bsi.toml:
+```
+./cmd/isdubad/isdubad -c isduba-bsi.toml 
+```
+
 # Import advisories
 Import some advisories into the database via the bulk importer:
 - host: host from where you download your advisories from
