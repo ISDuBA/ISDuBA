@@ -3,6 +3,17 @@ with as well as the basics of the tools provided through this repository on
 an Ubuntu system, provided neither of the components have been previously
 installed.
 
+# Prerequisites
+A sufficiently new version of Java as well as an unzip-tool like unzip need to be installed.
+You can install Java 17 via 
+```
+sudo apt install openjdk-17-jre-headless
+```
+and unzip via 
+```
+sudo apt install unzip
+```
+
 # Get Keycloak
 Download Keycloak version 23.0.5, which has been used for development.
 ```
@@ -166,6 +177,11 @@ systemctl enable keycloak
 systemctl start keycloak
 ```
 
+Start Keycloak in the background or restart your system.
+```
+bin/kc.sh start-dev &
+```
+
 # Edit Postgres config
 Edit the Postgresql configuration.
 
@@ -210,7 +226,7 @@ Via the admin console adjust the following if necessary:
 
 - Create ```isduba``` realm
 
-- Create Users
+## Create Users
 
 ### Create Clients: auth
 
