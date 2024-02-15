@@ -1,7 +1,8 @@
 The following document explains how to set up keycloak and postgresql to use
 with as well as the basics of the tools provided through this repository on
 an Ubuntu system, provided neither of the components have been previously
-installed.
+installed. Note that all IDs and passwords used in this setup are
+easy to guess and should not be used in production, only for development.
 
 # Prerequisites
 A sufficiently new version of Java as well as an unzip-tool like unzip need to be installed.
@@ -43,9 +44,6 @@ apt install postgresql-16
 # Create Postgresql keycloak user
 Allow Keycloak to access the Postgresql databases.
 The created user for keycloak will have the username and password 'keycloak'.
-It is not recommended to use these for production,
-as they are too easy to guess.
-Similarly for the user.
 ```
 su - postgres
 ```
@@ -90,8 +88,6 @@ Open the Keycloak config with a text-editor (like vim):
 vim /opt/keycloak/conf/keycloak.conf
 ```
 Paste the following for a valid configuration. 
-The example-username and password are easy to guess and should not be used
-for production.
 
 ```
 # Basic settings for running in production. Change accordingly before deploying the server.
@@ -276,14 +272,14 @@ Switch to the Attributes tab and set:
 ## Create Users
 
 Via ```Users``` use ```Create User``` to create an example user.
-For example:
+For an example-setup that will be used later in this guide use:
  
  - Username: ```beate```
  - First name: ```beate```
  - E-Mail verified: ```yes```
 
 Then, set their passwords via ```Credentials```.
-For an example setup, use ```beate``` as password.
+For the example setup, use ```beate``` as password.
 Make sure to turn ```temporary``` off.
 
 ### Assign Users their roles
@@ -375,7 +371,6 @@ From the repositories main directory:
 # Example use of isdubad
 The following will define a TOKEN variable which holds the information 
 about a user with name USERNAME and password USERPASSWORD.
-Both the username and password are too easy to guess for production.
 (You can check whether the TOKEN is correct via e.g. jwt.io)
 ```
 TOKEN=`curl -d 'client_id=auth'  -d 'username=USERNAME' -d 'password=USERPASSWORD' -d 'grant_type=password' 'http://127.0.0.1:8080/realms/isduba/protocol/openid-connect/token' | jq -r .access_token`
