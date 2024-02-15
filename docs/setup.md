@@ -301,7 +301,9 @@ Open the profile with a text manager.
 vim /etc/profile
 ```
 In there, add the line:
-> export PATH=$PATH:/usr/local/go/bin
+```
+export PATH=$PATH:/usr/local/go/bin
+```
 The system will now use go1.22 when go is called upon.
 
 # Setup ISDuBA
