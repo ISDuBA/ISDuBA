@@ -10,60 +10,31 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
+  import { appStore } from "$lib/store";
   import { configuration } from "$lib/configuration";
   import Keycloak from "keycloak-js";
-  import { Heading, Sidebar, SidebarWrapper, SidebarGroup, SidebarItem } from "flowbite-svelte";
-
-  let keycloak: any;
-  let token: string;
-  let firstName: string;
-  let lastName: string;
+  import SideNav from "$lib/SideNav.svelte";
 
   onMount(async () => {
-    keycloak = new Keycloak(configuration.getConfiguration());
-    const authenticated = await keycloak
+    appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
+    await $appStore.app.keycloak
       .init({
         checkLoginIframe: false
         //onLoad: 'login-required'
       })
       .then(async (response: any) => {
-        token = keycloak.token;
-        const profile = await keycloak.loadUserProfile();
+        const profile = await $appStore.app.keycloak.loadUserProfile();
         console.log("Retrieved user profile:", profile);
-        firstName = profile.firstName;
-        lastName = profile.lastName;
+        appStore.setLoginState(true);
+        appStore.setUserProfile({
+          firstName: profile.firstName,
+          lastName: profile.lastName
+        });
       })
       .catch((error: any) => {
         console.log("error", error);
       });
   });
-
-  async function logout() {
-    keycloak.logout();
-  }
-
-  function login() {
-    keycloak.login();
-  }
 </script>
 
-<Sidebar class="bg-primary-700 h-screen p-2">
-  <SidebarWrapper class="bg-primary-700">
-    <Heading class="mb-6 text-white">ISDuBA</Heading>
-    <SidebarGroup class="bg-primary-700">
-      {#if token}
-        <SidebarItem on:click={logout} label="Logout ({firstName} {lastName})">
-          <svelte:fragment slot="icon">
-            <i class="bx bx-power-off"></i>
-          </svelte:fragment>
-        </SidebarItem>
-      {:else}
-        <SidebarItem on:click={login} label="Login">
-          <svelte:fragment slot="icon">
-            <i class="bx bx-log-in"></i>
-          </svelte:fragment>
-        </SidebarItem>
-      {/if}
-    </SidebarGroup>
-  </SidebarWrapper>
-</Sidebar>
+<SideNav></SideNav>

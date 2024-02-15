@@ -15,7 +15,7 @@
   export let loginRequired: boolean = true;
   export let roles: any = [];
   onMount(() => {
-    if (loginRequired && !$appStore.app.isUserLoggedIn) {
+    if (loginRequired && $appStore.app.isUserLoggedIn === false) {
       goto("/login");
     }
   });
