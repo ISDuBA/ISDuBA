@@ -52,9 +52,17 @@
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">
       {#if token}
-        <SidebarItem on:click={logout} label="Logout ({firstName} {lastName})"></SidebarItem>
+        <SidebarItem on:click={logout} label="Logout ({firstName} {lastName})">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-power-off"></i>
+          </svelte:fragment>
+        </SidebarItem>
       {:else}
-        <SidebarItem on:click={login} label="Login"></SidebarItem>
+        <SidebarItem on:click={login} label="Login">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-log-in"></i>
+          </svelte:fragment>
+        </SidebarItem>
       {/if}
     </SidebarGroup>
   </SidebarWrapper>

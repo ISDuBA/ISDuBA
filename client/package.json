@@ -43,6 +43,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"boxicons": "^2.1.4",
 		"keycloak-js": "^23.0.6"
 	}
 }

@@ -9,7 +9,8 @@
 -->
 
 <script>
-	import '../app.pcss';
+  import "../app.pcss";
+  import "boxicons/css/boxicons.min.css";
 </script>
 
 <slot />
