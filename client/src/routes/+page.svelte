@@ -50,10 +50,10 @@
 	}
 </script>
 
-<Sidebar>
-	<SidebarWrapper>
-		<Heading class="mb-6">ISDuBA</Heading>
-		<SidebarGroup>
+<Sidebar class="bg-primary-700 h-screen p-2">
+	<SidebarWrapper class="bg-primary-700">
+		<Heading class="mb-6 text-white">ISDuBA</Heading>
+		<SidebarGroup class="bg-primary-700">
 			{#if token}
 				<SidebarItem on:click={logout} label="Logout ({firstName} {lastName})"></SidebarItem>
 			{:else}
