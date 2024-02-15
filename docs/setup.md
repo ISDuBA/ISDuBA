@@ -226,8 +226,6 @@ Via the admin console adjust the following if necessary:
 
 - Create ```isduba``` realm
 
-## Create Users
-
 ### Create Clients: auth
 
 Under Clients, create auth:
@@ -248,24 +246,45 @@ ID/Name: ```auth```
 
 #### Add mapper "User Attribute" with
 
-- Name: TLP
+- Name: ```TLP```
 
-- User Attribute: TLP
+- User Attribute: ```TLP```
 
-- Token Claim Name: TLP
+- Token Claim Name: ```TLP```
 
-- Claim JSON type: JSON
+- Claim JSON type: ```JSON```
 
 - For the switches, Multivalued should be turned off, the rest on
 
 Create roles via Realm roles:
-The following allows the role to handle
+
+E.g. 
+
+- Name: ```Bearbeiter```
+- Description: ```Bearbeiter```
+
+### Add attributes
+
+The following attribute allows the role to handle
 the WHITE and GREEN TLP levels of all publishers. Adjust as necessary:
 Switch to the Attributes tab and set:
 
-- Key: TLP
+- Key: ```TLP```
 
-- Value: [{"publisher":"", "tlps":["WHITE, GREEN"]}]
+- Value: ```[{"publisher":"", "tlps":["WHITE, GREEN"]}]```
+
+## Create Users
+
+Via ```Users``` use ```Create User``` to create an example user.
+For example:
+ 
+ - Username: ```beate```
+ - First name: ```beate```
+ - E-Mail verified: ```yes```
+
+Then, set their passwords via ```Credentials```.
+For an example setup, use ```beate``` as password.
+Make sure to turn ```temporary``` off.
 
 ### Assign Users their roles
 Via ```Users``` via ```Role Mapping``` via ```Assign Role``` assign the users
