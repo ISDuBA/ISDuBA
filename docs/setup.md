@@ -271,15 +271,14 @@ Switch to the Attributes tab and set:
 
 ## Create Users
 
-Via ```Users``` use ```Create User``` to create an example user.
-USERNAME and USERPASSWORD are example credentials that should be adjusted
-for the userbase.
+Via ```Users``` use ```Create User``` to create a user.
+USERNAME and USERPASSWORD are example credentials.
  
  - Username: ```USERNAME```
  - E-Mail verified: ```yes```
 
-Then, set the password via ```Credentials```.
-Set ```USERPASSWORD``` as password and
+Then, set the password via ```Credentials```. This example uses the password
+```USERPASSWORD```
 Turn ```temporary``` off.
 
 ### Assign Users their roles
