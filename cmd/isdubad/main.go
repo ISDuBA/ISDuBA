@@ -52,7 +52,7 @@ func run(cfg *config.Config) error {
 	ctrl := web.NewController(cfg, db)
 
 	addr := cfg.Web.Addr()
-	slog.Debug("Starting web server", "address", addr)
+	slog.Info("Starting web server", "address", addr)
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: ctrl.Bind(),
@@ -70,7 +70,7 @@ func run(cfg *config.Config) error {
 
 	select {
 	case <-ctx.Done():
-		slog.Debug("Shutting down")
+		slog.Info("Shutting down")
 		srv.Shutdown(ctx)
 	case err = <-srvErrors:
 	}

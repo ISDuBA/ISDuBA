@@ -22,8 +22,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
+	"github.com/jackc/pgx/v5"
 )
 
 type migration struct {
@@ -151,6 +151,7 @@ func doMigrations(
 			return fmt.Errorf("applying migration %q failed: %w", mig.path, err)
 		}
 	}
+	slog.Info("Migrations are done and database is ready")
 	return nil
 }
 
