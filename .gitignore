@@ -30,3 +30,7 @@ cmd/bulkimport/bulkimport
 cmd/isdubad/isdubad
 isduba.log
 isduba-bsi.toml
+
+# Client
+client/node_modules
+client/.svelte-kit
