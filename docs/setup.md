@@ -41,8 +41,8 @@ unzip keycloak-23.0.5.zip
 mv keycloak-23.0.5 /opt/keycloak
 ```
 
-# Get Postgresql 16
-Download Postgresql version 16, which has been used for development.
+# Get PostgreSQL 16
+Download PostgreSQL version 16, which has been used for development.
 ```
 apt install vim gnupg2 -y
 curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc| gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
@@ -51,8 +51,8 @@ apt update
 apt install postgresql-16
 ```
 
-# Create Postgresql keycloak user
-Allow Keycloak to access the Postgresql databases.
+# Create PostgreSQL keycloak user
+Allow Keycloak to access the PostgreSQL databases.
 The created user for keycloak will have the username and password 'keycloak'.
 ```
 su - postgres
@@ -189,7 +189,7 @@ bin/kc.sh start-dev &
 ```
 
 # Edit Postgres config
-Edit the Postgresql configuration.
+Edit the PostgreSQL configuration.
 
 Change to the postgres user and change into the postgres directory:
 ```
@@ -353,7 +353,6 @@ file="bsi.log"
 level="debug"
 
 [database]
-migrate=true
 user="bsi"
 password="bsi"
 database="bsi"
@@ -364,12 +363,16 @@ admin_password="postgres"
 admin_database="postgres"
 ```
 
-# Start Isdubad to allow for db creation
+# Start `isdubad` to allow db creation
 From the repositories main directory, start the isdubad program,
 which creates the db and users according to the ./cmd/isdubad/isdubad -c isduba-bsi.toml:
 ```
-./cmd/isdubad/isdubad -c isduba-bsi.toml 
+ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isduba-bsi.toml 
 ```
+
+After the initial migration you can un-configure the `admin_` parts In
+the configuration file adn start `isdubad` without the `ISDUBA_DB_MIGRATE`
+env var set.
 
 # Import advisories
 Import some advisories into the database via the bulk importer:
@@ -378,10 +381,10 @@ Import some advisories into the database via the bulk importer:
 (An example would be the results of the csaf_downloader, located in localhost)
 From the repositories main directory:
 ```
-./cmd/bulkimport/bulkimport -database bsi -user bsi -password bsi -host localhost advisories_to_import
+./cmd/bulkimport/bulkimport -database bsi -user bsi -password bsi -host localhost /path/to/advisories/to/import
 ```
 
-# Example use of isdubad
+# Example use of `isdubad`
 The following will define a TOKEN variable which holds the information 
 about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
 (You can check whether the TOKEN is correct via e.g. jwt.io)
