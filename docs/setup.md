@@ -1,3 +1,13 @@
+<!--
+ This file is Free Software under the MIT License
+ without warranty, see README.md and LICENSES/MIT.txt for details.
+
+ SPDX-License-Identifier: MIT
+
+ SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+-->
+
 The following document explains how to set up keycloak and postgresql to use
 with as well as the basics of the tools provided through this repository on
 an Ubuntu system, provided neither of the components have been previously
