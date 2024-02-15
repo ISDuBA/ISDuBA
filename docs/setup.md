@@ -272,15 +272,15 @@ Switch to the Attributes tab and set:
 ## Create Users
 
 Via ```Users``` use ```Create User``` to create an example user.
-For an example-setup that will be used later in this guide use:
+USERNAME and USERPASSWORD are example credentials that should be adjusted
+for the userbase.
  
- - Username: ```beate```
- - First name: ```beate```
+ - Username: ```USERNAME```
  - E-Mail verified: ```yes```
 
-Then, set their passwords via ```Credentials```.
-For the example setup, use ```beate``` as password.
-Make sure to turn ```temporary``` off.
+Then, set the password via ```Credentials```.
+Set ```USERPASSWORD``` as password and
+Turn ```temporary``` off.
 
 ### Assign Users their roles
 Via ```Users``` via ```Role Mapping``` via ```Assign Role``` assign the users
@@ -374,7 +374,7 @@ From the repositories main directory:
 
 # Example use of isdubad
 The following will define a TOKEN variable which holds the information 
-about a user with name USERNAME and password USERPASSWORD.
+about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
 (You can check whether the TOKEN is correct via e.g. jwt.io)
 ```
 TOKEN=`curl -d 'client_id=auth'  -d 'username=USERNAME' -d 'password=USERPASSWORD' -d 'grant_type=password' 'http://127.0.0.1:8080/realms/isduba/protocol/openid-connect/token' | jq -r .access_token`
