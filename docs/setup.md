@@ -295,12 +295,14 @@ Extract it and place the new go version into the /usr/local directory:
 ```
 rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
 ```
-## Edit your profile to always use this go:
+## Make the profile always use this version of go:
+Open the profile with a text manager.
 ```
 vim /etc/profile
 ```
 In there, add the line:
 > export PATH=$PATH:/usr/local/go/bin
+The system will now use go1.22 when go is called upon.
 
 # Setup ISDuBA
 Clone the repository:
