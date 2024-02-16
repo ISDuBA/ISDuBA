@@ -20,9 +20,9 @@ The configuration consists of the following sections:
 
 - `advisory_upload_limit`: Limits the size of a CSAF document to be uploaded.
    Defaults to `"512K"`. Recognized unit suffixes are
-   k`/`K` for 1000/1024, `m`/`M` for 1000<sup>2</sup>/1024<sup>2</sup>,
+   `k`/`K` for 1000/1024, `m`/`M` for 1000<sup>2</sup>/1024<sup>2</sup>,
    `g`/`G` 1000<sup>3</sup>/1024<sup>3</sup> and none for bytes.
-- `anonymous_event_logging': Indicates that the event logging of the document
+- `anonymous_event_logging`: Indicates that the event logging of the document
    workflow life cycle should be stored with no user. Defaults to `false`.
 
 ### <a name="section_log"></a> Section `[log]` Logging
