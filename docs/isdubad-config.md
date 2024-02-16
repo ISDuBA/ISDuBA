@@ -9,34 +9,39 @@ An example file can be found [here](./isdubad.toml) (with the default values as 
 
 The configuration consists of the following sections:
 
-- [`[general]`](#section_general)
-- [`[log]`](#section_log)
-- [`[keycloak]`](#section_keycloak)
-- [`[web]`](#section_web)
-- [`[database]`](#section_database)
-- [`[[publishers_tlps]]`](#section_publishers_tlps)
+- [`[general]`](#section_general) General parameters
+- [`[log]`](#section_log) Logging
+- [`[keycloak]`](#section_keycloak) Keycloak
+- [`[web]`](#section_web) Web interface
+- [`[database]`](#section_database) Database credentials
+- [`[[publishers_tlps]]`](#section_publishers_tlps) publishers/TLPs filters
 
-### <a name="section_general"></a> Section `[general]`
+### <a name="section_general"></a> Section `[general]` General password
 
-**TBD**
+- `advisory_upload_limit`: Limits the size of a CSAF document to be uploaded.
+   Defaults to `"512K"`. Recognized unit suffixes are
+   k`/`K` for 1000/1024, `m`/`M` for 1000<sup>2</sup>/1024<sup>2</sup>,
+   `g`/`G` 1000<sup>3</sup>/1024<sup>3</sup> and none for bytes.
+- `anonymous_event_logging': Indicates that the event logging of the document
+   workflow life cycle should be stored with no user. Defaults to `false`.
 
-### <a name="section_log"></a> Section `[log]`
-
-**TBD**
-
-### <a name="section_keycloak"></a> Section `[keycloak]`
-
-**TBD**
-
-### <a name="section_web"></a> Section `[web]`
+### <a name="section_log"></a> Section `[log]` Logging
 
 **TBD**
 
-### <a name="section_database"></a> Section `[database]`
+### <a name="section_keycloak"></a> Section `[keycloak]` Keycloak
 
 **TBD**
 
-### <a name="section_publishers_tlps"></a> Section `[[publishers_tlps]]`
+### <a name="section_web"></a> Section `[web]` Web interface
+
+**TBD**
+
+### <a name="section_database"></a> Section `[database]` Database credentials
+
+**TBD**
+
+### <a name="section_publishers_tlps"></a> Section `[[publishers_tlps]]` publishers/TLP filters
 
 **TBD**
 
