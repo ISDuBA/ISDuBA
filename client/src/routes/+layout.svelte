@@ -11,6 +11,8 @@
 <script>
   import "../app.pcss";
   import "boxicons/css/boxicons.min.css";
+  import SideNav from "$lib/SideNav.svelte";
 </script>
 
+<SideNav></SideNav>
 <slot />
