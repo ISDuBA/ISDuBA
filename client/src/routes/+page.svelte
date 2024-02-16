@@ -13,5 +13,5 @@
 </script>
 
 <RouteGuard loginRequired={true}>
-  <h1>Hello World</h1>
+  <h1 class="text-lg">Hello World</h1>
 </RouteGuard>

@@ -14,8 +14,6 @@
   import { goto } from "$app/navigation";
   import { configuration } from "$lib/configuration";
   import Keycloak from "keycloak-js";
-  import SideNav from "$lib/SideNav.svelte";
-
   onMount(async () => {
     appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
     await $appStore.app.keycloak
@@ -38,5 +36,3 @@
       });
   });
 </script>
-
-<SideNav></SideNav>
