@@ -1,4 +1,7 @@
 <script lang="ts">
+  import RouteGuard from "$lib/RouteGuard.svelte";
 </script>
 
-<h1>Advisories</h1>
+<RouteGuard>
+  <h1 class="text-lg">Advisories</h1>
+</RouteGuard>
