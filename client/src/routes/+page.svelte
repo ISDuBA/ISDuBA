@@ -10,8 +10,9 @@
 
 <script lang="ts">
   import RouteGuard from "$lib/RouteGuard.svelte";
+  import SideNav from "$lib/SideNav.svelte";
 </script>
 
 <RouteGuard loginRequired={true}>
-  <h1>Hello World</h1>
+  <SideNav></SideNav>
 </RouteGuard>
