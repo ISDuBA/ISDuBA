@@ -196,7 +196,7 @@ func CreateCountSQL(where string, hasAliases bool) string {
 	if hasAliases {
 		from = `extended_documents JOIN documents_texts ON id = documents_id`
 	} else {
-		from = `documents`
+		from = `extended_documents`
 	}
 	return "SELECT count(*) FROM " + from + " WHERE " + where
 }
