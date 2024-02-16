@@ -6,6 +6,7 @@
 # file = "isduba.log"
 # level = "info"
 # source = false
+# json = false
 
 # [keycloak]
 # url = "http://localhost:8080"
