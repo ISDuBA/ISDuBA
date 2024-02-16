@@ -120,5 +120,6 @@ func (ptlps PuplishersTLPs) AsConditions() string {
 			b.WriteString(" and or")
 		}
 	}
+	fmt.Println(b.String())
 	return b.String()
 }
