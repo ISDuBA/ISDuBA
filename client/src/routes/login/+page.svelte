@@ -11,6 +11,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
+  import { goto } from "$app/navigation";
   import { configuration } from "$lib/configuration";
   import Keycloak from "keycloak-js";
   import SideNav from "$lib/SideNav.svelte";
@@ -30,6 +31,7 @@
           firstName: profile.firstName,
           lastName: profile.lastName
         });
+        goto("/");
       })
       .catch((error: any) => {
         console.log("error", error);
