@@ -5,7 +5,42 @@ Some of the configurables can be overwritten by environment variables. See a ful
 
 An example file can be found [here](./isdubad.toml) (with the default values as comments).
 
-## <a name="env_vars"></a>Environment variables.
+## Sections
+
+The configuration consists of the following sections:
+
+- [`[general]`](#section_general)
+- [`[log]`](#section_log)
+- [`[keycloak]`](#section_keycloak)
+- [`[web]`](#section_web)
+- [`[database]`](#section_database)
+- [`[[publishers_tlps]]`](#section_publishers_tlps)
+
+### <a name="section_general"></a> Section `[general]`
+
+**TBD**
+
+### <a name="section_log"></a> Section `[log]`
+
+**TBD**
+
+### <a name="section_keycloak"></a> Section `[keycloak]`
+
+**TBD**
+
+### <a name="section_web"></a> Section `[web]`
+
+**TBD**
+
+### <a name="section_database"></a> Section `[database]`
+
+**TBD**
+
+### <a name="section_publishers_tlps"></a> Section `[[publishers_tlps]]`
+
+**TBD**
+
+## <a name="env_vars"></a>Environment variables
 
 | Env variable | Overwrites |
 | ------------ | ---------- |
