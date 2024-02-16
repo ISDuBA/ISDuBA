@@ -16,7 +16,7 @@ The configuration consists of the following sections:
 - [`[database]`](#section_database) Database credentials
 - [`[[publishers_tlps]]`](#section_publishers_tlps) publishers/TLPs filters
 
-### <a name="section_general"></a> Section `[general]` General password
+### <a name="section_general"></a> Section `[general]` General parameters
 
 - `advisory_upload_limit`: Limits the size of a CSAF document to be uploaded.
    Defaults to `"512K"`. Recognized unit suffixes are
