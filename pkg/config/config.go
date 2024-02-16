@@ -63,6 +63,13 @@ const (
 	defaultDatabaseMigrate       = false
 )
 
+var defaultPublishersTLPs = models.PuplishersTLPs{
+	models.PuplisherTLPs{
+		Publisher: "", // Wildcard
+		TLPs:      []models.TLP{models.TLPWhite},
+	},
+}
+
 // HumanSize de-serializes sizes from integer strings
 // with suffix "k" (1000), "K" (1024), "m", "M", "g", "G".
 // With no suffix given bytes are assumed.
@@ -215,12 +222,7 @@ func Load(file string) (*Config, error) {
 			Migrate:       defaultDatabaseMigrate,
 			TextSearch:    defaultTextSearch,
 		},
-		PublishersTLPs: models.PuplishersTLPs{
-			models.PuplisherTLPs{
-				Publisher: "", // Wildcard
-				TLPs:      []models.TLP{models.TLPWhite},
-			},
-		},
+		PublishersTLPs: defaultPublishersTLPs,
 	}
 	if file != "" {
 		md, err := toml.DecodeFile(file, cfg)

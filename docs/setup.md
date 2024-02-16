@@ -341,6 +341,7 @@ cd ../..
 ```
 # Create isduba configuration
 Create a configuration file for the tools used in this repository.
+A detailed description of this configuration file can be found [here](./isdubad-config.md).
 Create a configuration file:
 ```
 vim isduba-bsi.toml
