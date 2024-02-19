@@ -9,7 +9,6 @@
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
         }
       });
-      console.log(response);
     }
   });
 </script>
