@@ -23,9 +23,9 @@
   }
   $: activeUrl = $page.url.pathname;
   let activeClass =
-    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 rounded-lg dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700";
+    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700";
   let nonActiveClass =
-    "flex items-center p-2 text-base font-normal text-white rounded-lg dark:text-white hover:bg-primary-100 hover:text-primary-900";
+    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
 </script>
 
 <Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>

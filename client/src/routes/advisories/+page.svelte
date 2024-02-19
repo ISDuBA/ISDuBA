@@ -9,6 +9,11 @@
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
         }
       });
+      if (response.ok) {
+        const documents = await response.json();
+      } else {
+        // Do errorhandling
+      }
     }
   });
 </script>
