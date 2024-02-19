@@ -28,8 +28,9 @@ go.work
 
 cmd/bulkimport/bulkimport
 cmd/isdubad/isdubad
-isduba.log
+*.log
 isduba-bsi.toml
+
 
 # Client
 client/node_modules
