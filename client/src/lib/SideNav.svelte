@@ -49,6 +49,11 @@
           </svelte:fragment>
         </SidebarItem>
       {/if}
+      <SidebarItem label="Compare" href="/diff">
+        <svelte:fragment slot="icon">
+          <i class="bx bx-transfer"></i>
+        </svelte:fragment>
+      </SidebarItem>
     </SidebarGroup>
   </SidebarWrapper>
 </Sidebar>
