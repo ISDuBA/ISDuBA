@@ -75,7 +75,7 @@
   {#if documents}
     <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
       <Table hoverable={true}>
-        <TableHead>
+        <TableHead class="cursor-pointer">
           <TableHeadCell on:click={() => sortDocuments("id")}
             >ID<i
               class:bx={true}
