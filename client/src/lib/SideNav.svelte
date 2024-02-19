@@ -23,6 +23,7 @@
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">
       {#if $appStore.app.isUserLoggedIn}
+        <!-- Entries which are available after login should go here-->
         <SidebarItem label="Home" href="/">
           <svelte:fragment slot="icon">
             <i class="bx bxs-dashboard"></i>
@@ -31,6 +32,11 @@
         <SidebarItem label="Advisories" href="/advisories">
           <svelte:fragment slot="icon">
             <i class="bx bx-spreadsheet"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Compare" href="/diff">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-transfer"></i>
           </svelte:fragment>
         </SidebarItem>
         <SidebarItem
@@ -43,17 +49,13 @@
           </svelte:fragment>
         </SidebarItem>
       {:else}
+        <!-- Entries which should be available independend from login status should go here-->
         <SidebarItem on:click={login} label="Login">
           <svelte:fragment slot="icon">
             <i class="bx bx-log-in"></i>
           </svelte:fragment>
         </SidebarItem>
       {/if}
-      <SidebarItem label="Compare" href="/diff">
-        <svelte:fragment slot="icon">
-          <i class="bx bx-transfer"></i>
-        </svelte:fragment>
-      </SidebarItem>
     </SidebarGroup>
   </SidebarWrapper>
 </Sidebar>
