@@ -347,22 +347,7 @@ Create a configuration file:
 vim isdubad.toml
 ```
 
-Configure your setup, e.g. as follows:
-```
-[log]
-file="isdubad.log"
-level="debug"
-
-[database]
-user="isdubad"
-password="isdubad"
-database="isdubad"
-host="localhost"
-port=5432
-admin_user="postgres"
-admin_password="postgres"
-admin_database="postgres"
-```
+An example configuration can be found [here](./isdubad.toml).
 
 # Start `isdubad` to allow db creation
 From the repositories main directory, start the isdubad program,
