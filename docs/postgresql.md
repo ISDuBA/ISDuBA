@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-# Get PostgreSQL 16
+# Get PostgreSQL
 Download PostgreSQL version 15 or newer.
 PostgreSQL 16 has been used for development.
 ```
