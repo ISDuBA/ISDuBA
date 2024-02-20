@@ -14,9 +14,9 @@
   import SideNav from "$lib/SideNav.svelte";
 </script>
 
-<div class="flex">
+<div class="bg-primary-700 flex">
   <SideNav></SideNav>
-  <main class="ml-12 mt-12 w-full">
+  <main class="w-full bg-white pl-12 pt-12">
     <slot />
   </main>
 </div>
