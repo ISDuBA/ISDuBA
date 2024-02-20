@@ -344,19 +344,19 @@ Create a configuration file for the tools used in this repository.
 A detailed description of this configuration file can be found [here](./isdubad-config.md).
 Create a configuration file:
 ```
-vim isduba-bsi.toml
+vim isdubad.toml
 ```
 
 Configure your setup, e.g. as follows:
 ```
 [log]
-file="bsi.log"
+file="isdubad.log"
 level="debug"
 
 [database]
-user="bsi"
-password="bsi"
-database="bsi"
+user="isdubad"
+password="isdubad"
+database="isdubad"
 host="localhost"
 port=5432
 admin_user="postgres"
@@ -366,9 +366,9 @@ admin_database="postgres"
 
 # Start `isdubad` to allow db creation
 From the repositories main directory, start the isdubad program,
-which creates the db and users according to the ./cmd/isdubad/isdubad -c isduba-bsi.toml:
+which creates the db and users according to the ./cmd/isdubad/isdubad -c isdubad.toml:
 ```
-ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isduba-bsi.toml 
+ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isdubad.toml 
 ```
 
 After the initial migration you can un-configure the `admin_` parts In
@@ -378,11 +378,11 @@ env var set.
 # Import advisories
 Import some advisories into the database via the bulk importer:
 - host: host from where you download your advisories from
-- advisories_to_import: location to download your advisories from
+- /path/to/advisories/to/import: location to download your advisories from
 (An example would be the results of the csaf_downloader, located in localhost)
 From the repositories main directory:
 ```
-./cmd/bulkimport/bulkimport -database bsi -user bsi -password bsi -host localhost /path/to/advisories/to/import
+./cmd/bulkimport/bulkimport -database isdubad -user isdubad -password isdubad -host localhost /path/to/advisories/to/import
 ```
 
 # Example use of `isdubad`
