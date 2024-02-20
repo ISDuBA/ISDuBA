@@ -18,6 +18,7 @@
     appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
     await $appStore.app.keycloak
       .init({
+        onLoad: "check-sso",
         checkLoginIframe: false
         //onLoad: 'login-required'
       })
