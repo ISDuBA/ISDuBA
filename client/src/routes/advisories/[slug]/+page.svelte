@@ -51,6 +51,7 @@
       backdrop={false}
       class="relative overflow-visible"
       placement="right"
+      width="w-1/3"
       hidden={hideComments}
       transitionType="in:slide"
       {transitionParams}
