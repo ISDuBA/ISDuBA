@@ -12,9 +12,17 @@
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
+  import { browser } from "$app/environment";
   export let loginRequired: boolean = true;
   export let roles: any = [];
+
+  $: activeUrl = $page.url.pathname;
+
   onMount(() => {
+    if (browser) {
+      localStorage.setItem("lastVisited", activeUrl);
+    }
     if (loginRequired && $appStore.app.isUserLoggedIn === false) {
       goto("/login");
     }

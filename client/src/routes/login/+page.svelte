@@ -13,7 +13,13 @@
   import { appStore } from "$lib/store";
   import { goto } from "$app/navigation";
   import { configuration } from "$lib/configuration";
+  import { browser } from "$app/environment";
   import Keycloak from "keycloak-js";
+
+  let lastVisited = "/";
+  if (browser) {
+    lastVisited = localStorage.getItem("lastVisited") || "/";
+  }
   onMount(async () => {
     appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
     await $appStore.app.keycloak
@@ -30,7 +36,7 @@
           firstName: profile.firstName,
           lastName: profile.lastName
         });
-        goto("/");
+        goto(lastVisited);
       })
       .catch((error: any) => {
         console.log("error", error);
