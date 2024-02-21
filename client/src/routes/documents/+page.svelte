@@ -2,6 +2,7 @@
   import RouteGuard from "$lib/RouteGuard.svelte";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
+  import { goto } from "$app/navigation";
   import {
     Table,
     TableBody,
@@ -123,7 +124,12 @@
         </TableHead>
         <TableBody>
           {#each filteredItems as item}
-            <TableBodyRow>
+            <TableBodyRow
+              class="cursor-pointer"
+              on:click={() => {
+                goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
+              }}
+            >
               <TableBodyCell>{item.id}</TableBodyCell>
               <TableBodyCell>{item.publisher}</TableBodyCell>
               <TableBodyCell>{item.title}</TableBodyCell>

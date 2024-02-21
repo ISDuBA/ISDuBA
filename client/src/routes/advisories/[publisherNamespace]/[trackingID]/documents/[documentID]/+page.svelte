@@ -1,10 +1,12 @@
 <script lang="ts">
   import RouteGuard from "$lib/RouteGuard.svelte";
-  import type { PageData } from "./$types";
+  import { page } from "$app/stores";
   import { Button, Drawer, Label, Textarea, Timeline, TimelineItem } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
+  import { onMount } from "svelte";
+  import { appStore } from "$lib/store";
 
-  export let data: PageData;
+  let document = {};
   let hideComments = false;
 
   let comments = [
@@ -31,12 +33,44 @@
   function toggleComments() {
     hideComments = !hideComments;
   }
+  onMount(async () => {
+    if ($appStore.app.isUserLoggedIn) {
+      const response = await fetch(`/api/documents/${$page.params.documentID}`, {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        }
+      });
+      if (response.ok) {
+        ({ document } = await response.json());
+        console.log(document);
+      } else {
+        // Do errorhandling
+      }
+    }
+  });
 </script>
 
 <RouteGuard>
   <div class="flex">
     <div class="grow">
-      <div>Slug ID: {data.id}</div>
+      <table>
+        <tr>
+          <td>PublisherNamespace:</td><td class="pl-3">{$page.params.publisherNamespace}</td>
+        </tr>
+        <tr>
+          <td>TrackingId:</td><td class="pl-3">{$page.params.trackingID}</td>
+        </tr>
+        <tr>
+          <td>DocumentID:</td><td class="pl-3">{$page.params.documentID}</td>
+        </tr>
+        {#if document}
+          <tr>
+            <td>Current release date:</td><td class="pl-3"
+              >{document.tracking?.current_release_date}</td
+            >
+          </tr>
+        {/if}
+      </table>
     </div>
     <Button
       on:click={toggleComments}

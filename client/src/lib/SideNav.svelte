@@ -44,7 +44,7 @@
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Single Document" href="/documents/1">
+        <SidebarItem label="Advisories" href="/advisories">
           <svelte:fragment slot="icon">
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
