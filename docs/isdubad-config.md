@@ -3,7 +3,7 @@
 The `isdubad` server is configured with a [TOML v1.0.0](https://toml.io/en/v1.0.0) file.
 Some of the configurables can be overwritten by environment variables. See a full list [here](#env_vars).
 
-An example file can be found [here](./isdubad.toml) (with the default values as comments).
+An example file can be found [here](./example_isdubad.toml) (with the default values as comments).
 
 ## Sections
 
