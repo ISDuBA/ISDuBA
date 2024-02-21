@@ -44,6 +44,11 @@
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
         </SidebarItem>
+        <SidebarItem label="Single Advisory" href="/advisories/1">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-spreadsheet"></i>
+          </svelte:fragment>
+        </SidebarItem>
         <SidebarItem label="Compare" href="/diff">
           <svelte:fragment slot="icon">
             <i class="bx bx-transfer"></i>
