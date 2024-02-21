@@ -68,7 +68,7 @@ publisher = ""
 tlps = ["WHITE"]
 ```
 An empty `publisher` means all not explicity stated. `publisher`s with non empty values have a higher priority.
-Valid values for `tlps` are the [Traffic Light Protocol(https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values
+Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values
 `WHITE`, `GREEN`, `AMBER` and `RED`.
 
 ## <a name="env_vars"></a>Environment variables
