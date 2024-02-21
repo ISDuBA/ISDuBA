@@ -185,8 +185,8 @@ Create roles via Realm roles:
 
 E.g. 
 
-- Name: ```Bearbeiter```
-- Description: ```Bearbeiter```
+- Name: ```bearbeiter```
+- Description: ```bearbeiter```
 
 ### Add attributes
 
@@ -196,7 +196,7 @@ Switch to the Attributes tab and set:
 
 - Key: ```TLP```
 
-- Value: ```[{"publisher":"", "tlps":["WHITE, GREEN"]}]```
+- Value: ```[{"publisher":"", "tlps":["WHITE", "GREEN"]}]```
 
 ## Create Users
 

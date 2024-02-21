@@ -8,49 +8,78 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
+# Prerequisites
 
-# Installing prerequisite Software
-In order to setup Keycloak and isdubad,
-recent versions of Java and go are needed.
+ - A keycloak setup as described [here](./keycloak.md)
 
-The following details on how to set these up.
+ - A recent version of go, see [here on how to download and install go](https://go.dev/doc/install)
 
-## Install Java
-A recent version of java is required.
-The following will install Java 17:
+ - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool](https://github.com/csaf-poc/csaf_distribution)
+ 
+# Setup ISDuBA
+Clone the repository:
 ```
-sudo apt install openjdk-17-jre-headless
+git clone https://github.com/ISDuBA/ISDuBA.git
+```
+Switch into the directory
+```
+cd ISDuBA
+```
+## build the tools
+Switch into the bulkimport directory and build it:
+```
+cd cmd/bulkimport
+go build
+```
+Switch into the isdubad directory and build it:
+```
+cd ../isdubad
+go build
+```
+Return to the main directory:
+```
+cd ../..
+```
+# Create isduba configuration
+Create a configuration file for the tools used in this repository.
+A detailed description of this configuration file can be found [here](./isdubad-config.md).
+Create a configuration file:
+```
+cp docs/example_isdubad.toml isdubad.toml
+vim isdubad.toml
 ```
 
-## Setup Go
+An example configuration can be found [here](./isdubad.toml).
 
-The following will download Go 1.22.0:
+# Start `isdubad` to allow db creation
+From the repositories main directory, start the isdubad program,
+which creates the db and users according to the ./cmd/isdubad/isdubad -c isdubad.toml:
 ```
-wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
-```
-Extract it and place the new go version into the /usr/local directory:
-```
-rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
-```
-### Make the profile always use this version of go:
-Open the profile with a text manager.
-```
-vim /etc/profile
-```
-In there, add the line:
-```
-export PATH=$PATH:/usr/local/go/bin
-```
-The system will now use go1.22.0 when go is called.
-
-You can check whether it was successful via:
-```
-go version
+ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isdubad.toml 
 ```
 
-## Install unzip
-The following will install unzip which can be used
-to unpack ''.zip' archives
+After the initial migration you can un-configure the `admin_` parts In
+the configuration file adn start `isdubad` without the `ISDUBA_DB_MIGRATE`
+env var set.
+
+# Import advisories
+Import some advisories into the database via the bulk importer:
+- host: host from where you download your advisories from
+- /path/to/advisories/to/import: location to download your advisories from
+(An example would be the results of the csaf_downloader, located in localhost)
+From the repositories main directory:
 ```
-sudo apt install unzip
+./cmd/bulkimport/bulkimport -database isdubad -user isdubad -password isdubad -host localhost /path/to/advisories/to/import
+```
+
+# Example use of `isdubad`
+The following will define a TOKEN variable which holds the information 
+about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
+(You can check whether the TOKEN is correct via e.g. jwt.io)
+```
+TOKEN=`curl -d 'client_id=auth'  -d 'username=USERNAME' -d 'password=USERPASSWORD' -d 'grant_type=password' 'http://127.0.0.1:8080/realms/isduba/protocol/openid-connect/token' | jq -r .access_token`
+```
+The contents of the Token can be checked via:
+```
+echo $TOKEN
 ```
