@@ -28,7 +28,7 @@
     "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
 </script>
 
-<Sidebar class="h-screen bg-primary-700 p-2" {activeUrl} {activeClass} {nonActiveClass}>
+<Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
   <SidebarWrapper class="bg-primary-700">
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">
@@ -39,12 +39,12 @@
             <i class="bx bxs-dashboard"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Advisories" href="/advisories">
+        <SidebarItem label="Documents" href="/documents">
           <svelte:fragment slot="icon">
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Single Advisory" href="/advisories/1">
+        <SidebarItem label="Single Document" href="/documents/1">
           <svelte:fragment slot="icon">
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>

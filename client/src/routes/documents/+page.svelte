@@ -71,7 +71,7 @@
 </script>
 
 <RouteGuard>
-  <h1 class="text-lg">Advisories</h1>
+  <h1 class="text-lg">Documents</h1>
   {#if documents}
     <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
       <Table hoverable={true}>
