@@ -2,6 +2,7 @@
   import RouteGuard from "$lib/RouteGuard.svelte";
   import type { PageData } from "./$types";
   import { Button, Drawer, Label, Textarea, Timeline, TimelineItem } from "flowbite-svelte";
+  import { sineIn } from "svelte/easing";
 
   export let data: PageData;
   let hideComments = false;
@@ -21,6 +22,12 @@
     }
   ];
 
+  let transitionParams = {
+    x: 320,
+    duration: 120,
+    easing: sineIn
+  };
+
   function toggleComments() {
     hideComments = !hideComments;
   }
@@ -31,22 +38,23 @@
     <div class="grow">
       <div>Slug ID: {data.id}</div>
     </div>
+    <Button
+      on:click={toggleComments}
+      outline={true}
+      class="absolute right-2 top-2 z-10 !p-2"
+      size="lg"
+    >
+      <i class={hideComments ? "bx bx-chevron-left" : "bx bx-chevron-right"}></i>
+    </Button>
     <Drawer
       activateClickOutside={false}
       backdrop={false}
-      class="relative overflow-visible transition-all duration-100 ease-linear motion-reduce:transition-none"
-      width={hideComments ? "w-0" : "w-1/3"}
+      class="relative overflow-visible"
       placement="right"
-      hidden={false}
+      hidden={hideComments}
+      transitionType="in:slide"
+      {transitionParams}
     >
-      <Button
-        on:click={toggleComments}
-        outline={true}
-        class="absolute -left-8 top-8 z-10 !p-2"
-        size="lg"
-      >
-        <i class={hideComments ? "bx bx-chevron-left" : "bx bx-chevron-right"}></i>
-      </Button>
       <Timeline>
         {#each comments as comment}
           <TimelineItem date={comment.date} title={comment.author}>
