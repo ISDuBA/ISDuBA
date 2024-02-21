@@ -8,30 +8,34 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
+# Setup
+
+## Setup backend
+
 The following document explains how to set up keycloak and postgresql to use
 with as well as the basics of the tools provided through this repository on
 an Ubuntu system, provided neither of the components have been previously
 installed. Note that all IDs and passwords used in this setup are
 easy to guess and should not be used in production, only for development.
 
-# Prerequisites
+### Prerequisites
 A sufficiently new version of Java as well as an unzip-tool like unzip need to be installed.
-You can install Java 17 via 
+You can install Java 17 via
 ```
 sudo apt install openjdk-17-jre-headless
 ```
-and unzip via 
+and unzip via
 ```
 sudo apt install unzip
 ```
 
-# Get Keycloak
+### Get Keycloak
 Download Keycloak version 23.0.5, which has been used for development.
 ```
 wget https://github.com/keycloak/keycloak/releases/download/23.0.5/keycloak-23.0.5.zip
 ```
 
-# Unzip Keycloak
+### Unzip Keycloak
 ```
 unzip keycloak-23.0.5.zip
 ```
@@ -41,7 +45,7 @@ unzip keycloak-23.0.5.zip
 mv keycloak-23.0.5 /opt/keycloak
 ```
 
-# Get PostgreSQL 16
+### Get PostgreSQL 16
 Download PostgreSQL version 16, which has been used for development.
 ```
 apt install vim gnupg2 -y
@@ -51,7 +55,7 @@ apt update
 apt install postgresql-16
 ```
 
-# Create PostgreSQL keycloak user
+### Create PostgreSQL keycloak user
 Allow Keycloak to access the PostgreSQL databases.
 The created user for keycloak will have the username and password 'keycloak'.
 ```
@@ -74,7 +78,7 @@ Exit psql via:
 \q 
 ```
 
-# Create Postgres database
+### Create Postgres database
 Create a Postgres database for Keycloak.
 
 ```
@@ -86,7 +90,7 @@ Exit the postgres user via:
 exit
 ```
 
-# Alter Keycloak config
+### Alter Keycloak config
 Create a Keycloak user with access rights to your Keycloak
 directory.
 ```
@@ -143,7 +147,7 @@ db-url=jdbc:postgresql://localhost/keycloak
 #hostname=isduba
 ```
 
-# Initialize keycloak
+### Initialize keycloak
 Allow Keycloak to start on system-startup.
 
 Create a systemd Keycloak file via a text editor, e.g. vim:
@@ -169,7 +173,7 @@ TimeoutStopSec=600
 WantedBy=multi-user.target
 ```
 
-# Adjust systemd
+### Adjust systemd
 As superuser, enable keycloak to start on system-startup.
 
 Enter superuser status.
@@ -188,7 +192,7 @@ Start Keycloak in the background or restart your system.
 bin/kc.sh start-dev &
 ```
 
-# Edit Postgres config
+### Edit Postgres config
 Edit the PostgreSQL configuration.
 
 Change to the postgres user and change into the postgres directory:
@@ -224,7 +228,7 @@ exit
 
 
 
-# Adjust keycloak
+### Adjust keycloak
 Configure Keycloak.
 
 Open Keycloaks Web-Interface, running on localhost:8080.
@@ -232,13 +236,13 @@ Via the admin console adjust the following if necessary:
 
 - Create ```isduba``` realm
 
-### Create Clients: auth
+#### Create Clients: auth
 
 Under Clients, create auth:
 
 ID/Name: ```auth```
 
-### Via Clients: auth:
+#### Via Clients: auth:
 
 - valid redirect url: ```/*```
 
@@ -248,9 +252,9 @@ ID/Name: ```auth```
 
 - Turn off ```consent required```
 
-### Switch from "settings" to "client scopes" and click on auth-dedicated
+#### Switch from "settings" to "client scopes" and click on auth-dedicated
 
-#### Add mapper "User Attribute" with
+##### Add mapper "User Attribute" with
 
 - Name: ```TLP```
 
@@ -269,7 +273,7 @@ E.g.
 - Name: ```bearbeiter```
 - Description: ```bearbeiter```
 
-### Add attributes
+#### Add attributes
 
 The following attribute allows the role to handle
 the WHITE and GREEN TLP levels of all publishers. Adjust as necessary:
@@ -279,7 +283,7 @@ Switch to the Attributes tab and set:
 
 - Value: ```[{"publisher":"", "tlps":["WHITE", "GREEN"]}]```
 
-## Create Users
+### Create Users
 
 Via ```Users``` use ```Create User``` to create a user.
 USERNAME and USERPASSWORD are example credentials.
@@ -291,11 +295,11 @@ Then, set the password via ```Credentials```. This example uses the password
 ```USERPASSWORD```
 Turn ```temporary``` off.
 
-### Assign Users their roles
+#### Assign Users their roles
 Via ```Users``` via ```Role Mapping``` via ```Assign Role``` assign the users
 their role.
 
-# Setup Go
+### Setup Go
 Download Go 1.22:
 ```
 wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
@@ -304,7 +308,7 @@ Extract it and place the new go version into the /usr/local directory:
 ```
 rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
 ```
-## Make the profile always use this version of go:
+#### Make the profile always use this version of go:
 Open the profile with a text manager.
 ```
 vim /etc/profile
@@ -315,7 +319,7 @@ export PATH=$PATH:/usr/local/go/bin
 ```
 The system will now use go1.22 when go is called upon.
 
-# Setup ISDuBA
+### Setup ISDuBA
 Clone the repository:
 ```
 git clone https://github.com/ISDuBA/ISDuBA.git
@@ -324,7 +328,7 @@ Switch into the directory
 ```
 cd ISDuBA
 ```
-## build the tools
+#### build the tools
 Switch into the bulkimport directory and build it:
 ```
 cd cmd/bulkimport
@@ -339,7 +343,7 @@ Return to the main directory:
 ```
 cd ../..
 ```
-# Create isduba configuration
+### Create isduba configuration
 Create a configuration file for the tools used in this repository.
 A detailed description of this configuration file can be found [here](./isdubad-config.md).
 Create a configuration file:
@@ -348,7 +352,7 @@ cp docs/example_isdubad.toml isdubad.toml
 vim isdubad.toml
 ```
 
-# Start `isdubad` to allow db creation
+### Start `isdubad` to allow db creation
 From the repositories main directory, start the isdubad program,
 which creates the db and users according to the ./cmd/isdubad/isdubad -c isdubad.toml:
 ```
@@ -359,7 +363,7 @@ After the initial migration you can un-configure the `admin_` parts In
 the configuration file adn start `isdubad` without the `ISDUBA_DB_MIGRATE`
 env var set.
 
-# Import advisories
+### Import advisories
 Import some advisories into the database via the bulk importer:
 - host: host from where you download your advisories from
 - /path/to/advisories/to/import: location to download your advisories from
@@ -369,7 +373,7 @@ From the repositories main directory:
 ./cmd/bulkimport/bulkimport -database isdubad -user isdubad -password isdubad -host localhost /path/to/advisories/to/import
 ```
 
-# Example use of `isdubad`
+### Example use of `isdubad`
 The following will define a TOKEN variable which holds the information 
 about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
 (You can check whether the TOKEN is correct via e.g. jwt.io)
@@ -380,3 +384,27 @@ The contents of the Token can be checked via:
 ```
 echo $TOKEN
 ```
+
+## Setup client
+
+### Prerequisites
+
+A current Version of nodeJS LTS (version `20.11.1`).
+
+### Install necessary packages
+
+Assuming you are in the checked out repository
+
+```bash
+cd client
+npm install
+npx playwright install
+```
+
+### Run the client application in a dev environment
+
+```bash
+npm run dev -- --open
+```
+
+This will start the client application and opens a window in your default browser.
