@@ -344,10 +344,9 @@ Create a configuration file for the tools used in this repository.
 A detailed description of this configuration file can be found [here](./isdubad-config.md).
 Create a configuration file:
 ```
+cp docs/example_isdubad.toml isdubad.toml
 vim isdubad.toml
 ```
-
-An example configuration can be found [here](./isdubad.toml).
 
 # Start `isdubad` to allow db creation
 From the repositories main directory, start the isdubad program,
