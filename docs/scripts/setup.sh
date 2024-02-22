@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
-set -e
 
-./installgojava.sh
+# This file is Free Software under the MIT License
+# without warranty, see README.md and LICENSES/MIT.txt for details.
+#
+# SPDX-License-Identifier: MIT
+#
+# SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+# Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-./installkeycloak.sh
+set -e # to exit if a command in the script fails
 
-./configurekeycloak.sh
+./installgojava.sh # installs go and java
 
-./installpostgres.sh
+./installkeycloak.sh # installs keycloak
 
-./configurepostgres.sh
+./configurekeycloak.sh # configures keycloak
 
-./keycloakonsystemstart.sh
+./installpostgres.sh # installs postgreSQL
+
+./configurepostgres.sh # creates necessary postgres users and databases
+
+./keycloakonsystemstart.sh # adjust systemd to allow keycloak to start on systemstartup
