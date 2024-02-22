@@ -49,13 +49,21 @@ func (c *Controller) Bind() http.Handler {
 
 	var (
 		authIm     = authRoles("importer")
+		authBeRe   = authRoles("bearbeiter", "reviewer")
 		authBeReAu = authRoles("bearbeiter", "reviewer", "auditor")
 	)
 
 	api := r.Group("/api")
+
+	// Documents
 	api.POST("/documents", authIm, c.importDocument)
 	api.GET("/documents", authBeReAu, c.overviewDocuments)
 	api.GET("/documents/:id", authBeReAu, c.viewDocument)
+
+	// Comments
+	api.POST("/comments/:document", authBeRe, c.createComment)
+	api.PUT("/comments/:id", authBeRe, c.updateComment)
+	api.GET("/comments/:document", authBeRe, c.viewComments)
 
 	return r
 }
