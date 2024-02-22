@@ -70,17 +70,19 @@
   $: filteredItems = documents;
   onMount(async () => {
     if ($appStore.app.isUserLoggedIn) {
-      const response = await fetch(allUnreadDocuments, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      $appStore.app.keycloak.updateToken(5).then(async () => {
+        const response = await fetch(allUnreadDocuments, {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
+        });
+        if (response.ok) {
+          ({ documents } = await response.json());
+          sortDocuments("id");
+        } else {
+          // Do errorhandling
         }
       });
-      if (response.ok) {
-        ({ documents } = await response.json());
-        sortDocuments("id");
-      } else {
-        // Do errorhandling
-      }
     }
   });
 </script>
@@ -101,12 +103,12 @@
   </Table>
   <h1 class="mb-3 mt-10 text-lg">New Documents</h1>
   {#if documents}
-    <div style="height: 30%; margin-right:10rem;overflow-y:auto">
+    <div style="height:30rem; width: 100%;overflow-y: auto">
       <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
         <Table hoverable={true}>
           <TableHead class="cursor-pointer">
-            <TableHeadCell
-              >Description<i
+            <TableHeadCell on:click={() => sortDocuments("id")}
+              >ID<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "id" &&
                   sortState["id"] === "asc"}
@@ -114,13 +116,49 @@
                   sortState["id"] === "desc"}
               ></i></TableHeadCell
             >
-            <TableHeadCell
+            <TableHeadCell on:click={() => sortDocuments("publisher")}
               >Publisher<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "publisher" &&
                   sortState["publisher"] === "asc"}
                 class:bx-caret-down={sortState["activeSortColumn"] == "publisher" &&
                   sortState["publisher"] === "desc"}
+              ></i></TableHeadCell
+            >
+            <TableHeadCell on:click={() => sortDocuments("title")}
+              >Title<i
+                class:bx={true}
+                class:bx-caret-up={sortState["activeSortColumn"] == "title" &&
+                  sortState["title"] === "asc"}
+                class:bx-caret-down={sortState["activeSortColumn"] == "title" &&
+                  sortState["title"] === "desc"}
+              ></i></TableHeadCell
+            >
+            <TableHeadCell on:click={() => sortDocuments("trackingID")}
+              >Tracking ID<i
+                class:bx={true}
+                class:bx-caret-up={sortState["activeSortColumn"] == "trackingID" &&
+                  sortState["trackingID"] === "asc"}
+                class:bx-caret-down={sortState["activeSortColumn"] == "trackingID" &&
+                  sortState["trackingID"] === "desc"}
+              ></i></TableHeadCell
+            >
+            <TableHeadCell on:click={() => sortDocuments("version")}
+              >Version<i
+                class:bx={true}
+                class:bx-caret-up={sortState["activeSortColumn"] == "version" &&
+                  sortState["version"] === "asc"}
+                class:bx-caret-down={sortState["activeSortColumn"] == "version" &&
+                  sortState["version"] === "desc"}
+              ></i></TableHeadCell
+            >
+            <TableHeadCell on:click={() => sortDocuments("state")}
+              >State<i
+                class:bx={true}
+                class:bx-caret-up={sortState["activeSortColumn"] == "state" &&
+                  sortState["state"] === "asc"}
+                class:bx-caret-down={sortState["activeSortColumn"] == "state" &&
+                  sortState["state"] === "desc"}
               ></i></TableHeadCell
             >
           </TableHead>

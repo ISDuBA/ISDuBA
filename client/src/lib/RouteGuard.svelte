@@ -17,12 +17,9 @@
   export let loginRequired: boolean = true;
   export let roles: any = [];
 
-  $: activeUrl = $page.url.pathname;
-
   onMount(() => {
-    let url = activeUrl;
     if (browser) {
-      localStorage.setItem("lastVisited", url);
+      localStorage.setItem("lastVisited", $page.url.pathname);
     }
     if (loginRequired && $appStore.app.isUserLoggedIn === false) {
       goto("/login");

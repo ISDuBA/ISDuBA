@@ -54,19 +54,21 @@
     }
   };
   $: filteredItems = documents;
-  onMount(async () => {
+  onMount(() => {
     if ($appStore.app.isUserLoggedIn) {
-      const response = await fetch("/api/documents", {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      $appStore.app.keycloak.updateToken(5).then(async () => {
+        const response = await fetch("/api/documents", {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
+        });
+        if (response.ok) {
+          ({ documents } = await response.json());
+          sortDocuments("id");
+        } else {
+          // Do errorhandling
         }
       });
-      if (response.ok) {
-        ({ documents } = await response.json());
-        sortDocuments("id");
-      } else {
-        // Do errorhandling
-      }
     }
   });
 </script>
