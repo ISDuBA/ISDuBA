@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-LAO = "#listen_addresses = 'localhost'"
-LAR = "listen_addresses = '*'"
+LAO="#listen_addresses = 'localhost'"
+LAR="listen_addresses = '*'"
 apt-get install sudo
-  
+
 sudo -u postgres psql -c "CREATE USER keycloak WITH PASSWORD 'keycloak';"
 sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
 sudo -u postgres createdb -O keycloak -E 'UTF-8' keycloak
