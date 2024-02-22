@@ -15,4 +15,4 @@ sed -i s,$DBURLB,$DBURLA,g /opt/keycloak/conf/keycloak.conf
 
 sed -i s,#hostname=myhostname,#hostname=isduba,g /opt/keycloak/conf/keycloak.conf
 
-echo "Adjusted keycloaks configuration style"
+echo "Succesfully adjusted keycloaks configuration."
