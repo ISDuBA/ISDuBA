@@ -3,7 +3,7 @@ set -e
 
 apt-get update
 
-apt install -y openjdk-17-jre-headless unzip
+apt install -y openjdk-17-jre-headless
 
 wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
 
