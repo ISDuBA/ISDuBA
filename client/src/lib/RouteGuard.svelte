@@ -20,8 +20,9 @@
   $: activeUrl = $page.url.pathname;
 
   onMount(() => {
+    let url = activeUrl;
     if (browser) {
-      localStorage.setItem("lastVisited", activeUrl);
+      localStorage.setItem("lastVisited", url);
     }
     if (loginRequired && $appStore.app.isUserLoggedIn === false) {
       goto("/login");
