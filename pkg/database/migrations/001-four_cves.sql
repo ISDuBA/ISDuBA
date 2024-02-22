@@ -6,7 +6,9 @@
 -- SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 -- Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-CREATE OR REPLACE VIEW extended_documents AS SELECT
+DROP VIEW extended_documents;
+
+CREATE VIEW extended_documents AS SELECT
     *,
     (document #>> '{document,title}')                  AS title,
     (document #>> '{document,distribution,tlp,label}') AS tlp,
@@ -18,6 +20,8 @@ CREATE OR REPLACE VIEW extended_documents AS SELECT
         jsonb_path_query(
             document, '$.vulnerabilities[*].scores[*].cvss_v3.baseScore') a)
         AS cvss_v3_score,
-    (SELECT array_to_string(array(SELECT jsonb_path_query_array(
-        document, '$.vulnerabilities[0 to 3]."cve"')), ',')) AS four_cves
+    (jsonb_path_query_array(
+        document, '$.vulnerabilities[0 to 3]."cve"')) AS four_cves
     FROM documents;
+
+GRANT SELECT ON extended_documents TO {{ .User | sanitize }};

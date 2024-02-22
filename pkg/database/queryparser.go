@@ -66,8 +66,9 @@ type Expr struct {
 }
 
 type documentColumn struct {
-	name      string
-	valueType valueType
+	name           string
+	valueType      valueType
+	projectionOnly bool
 }
 
 // String implements [fmt.Stringer].
@@ -129,18 +130,18 @@ func (pe parseError) Error() string {
 }
 
 var columns = []documentColumn{
-	{"id", intType},
-	{"state", workflowType},
-	{"tracking_id", stringType},
-	{"version", stringType},
-	{"publisher", stringType},
-	{"current_release_date", timeType},
-	{"initial_release_date", timeType},
-	{"title", stringType},
-	{"tlp", stringType},
-	{"cvss_v2_score", floatType},
-	{"cvss_v3_score", floatType},
-	{"four_cves", stringType},
+	{"id", intType, false},
+	{"state", workflowType, false},
+	{"tracking_id", stringType, false},
+	{"version", stringType, false},
+	{"publisher", stringType, false},
+	{"current_release_date", timeType, false},
+	{"initial_release_date", timeType, false},
+	{"title", stringType, false},
+	{"tlp", stringType, false},
+	{"cvss_v2_score", floatType, false},
+	{"cvss_v3_score", floatType, false},
+	{"four_cves", stringType, true},
 }
 
 // TODO: make this configurable?
@@ -525,6 +526,9 @@ func (st *stack) access(field string) {
 	col := findDocumentColumn(field)
 	if col == nil {
 		panic(parseError(fmt.Sprintf("unknown column %q", field)))
+	}
+	if col.projectionOnly {
+		panic(parseError(fmt.Sprintf("column %q is for projection only", field)))
 	}
 	st.push(&Expr{
 		exprType:    access,
