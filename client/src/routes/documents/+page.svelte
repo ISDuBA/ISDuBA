@@ -22,7 +22,7 @@
     version: "",
     activeSortColumn: ""
   };
-  const defaultSearchFunction = (attribute: string) => {
+  const defaultSortFunction = (attribute: string) => {
     return {
       asc: (ad1: any, ad2: any) => {
         if (ad1[attribute] < ad2[attribute]) return -1;
@@ -37,11 +37,11 @@
     };
   };
   const sortFunctionsByColumn: any = {
-    id: defaultSearchFunction("id"),
-    publisher: defaultSearchFunction("publisher"),
-    title: defaultSearchFunction("title"),
-    trackingID: defaultSearchFunction("tracking_id"),
-    version: defaultSearchFunction("version")
+    id: defaultSortFunction("id"),
+    publisher: defaultSortFunction("publisher"),
+    title: defaultSortFunction("title"),
+    trackingID: defaultSortFunction("tracking_id"),
+    version: defaultSortFunction("version")
   };
   const sortDocuments = (column: string) => {
     sortState["activeSortColumn"] = column;
