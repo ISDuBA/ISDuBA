@@ -69,7 +69,9 @@ vim postgresql.conf
 ```
 Change the following line:
 > #listen_addresses = 'localhost'
+
 to
+
 ```
 listen_addresses = '*'
 ```

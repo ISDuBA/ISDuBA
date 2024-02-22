@@ -96,7 +96,7 @@ db-url=jdbc:postgresql://localhost/keycloak
 #hostname=isduba
 ```
 
-# (Optional) Initialize keycloak
+# (Optional) Keycloak on System-Startup
 Allow Keycloak to start on system-startup.
 
 Create a systemd Keycloak file via a text editor, e.g. vim:
