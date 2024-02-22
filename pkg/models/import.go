@@ -112,6 +112,16 @@ func keepAndIndex(index func(string) int, path ...string) replacer {
 	}
 }
 
+func keepAndIndexSuffix(index func(string) int, path ...string) replacer {
+	return func(ks []string, v string) (any, bool) {
+		if len(ks) >= len(path) && slices.Equal(path, ks[len(ks)-len(path):]) {
+			_ = index(v)
+			return v, true
+		}
+		return v, false
+	}
+}
+
 func transformJSON(document any, replace replacer) {
 
 	var (
@@ -265,6 +275,7 @@ func ImportDocument(
 			storer(&version, &versionOK, "document", "tracking", "version"),
 			keepAndIndex(idxer.index, "document", "publisher", "name"),
 			keepAndIndex(idxer.index, "document", "title"),
+			keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
 			keepByKeys(excludeKeys),
 			keepByValues(excludeValues),
 			replaceByIndex(idxer.index),
