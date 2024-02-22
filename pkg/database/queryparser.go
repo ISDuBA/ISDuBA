@@ -140,6 +140,7 @@ var columns = []documentColumn{
 	{"tlp", stringType},
 	{"cvss_v2_score", floatType},
 	{"cvss_v3_score", floatType},
+	{"four_cves", stringType},
 }
 
 // TODO: make this configurable?

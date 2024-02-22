@@ -75,7 +75,9 @@ CREATE VIEW extended_documents AS SELECT
     (SELECT max(a::float) FROM
         jsonb_path_query(
             document, '$.vulnerabilities[*].scores[*].cvss_v3.baseScore') a)
-        AS cvss_v3_score
+        AS cvss_v3_score,
+    (SELECT array_to_string(array(SELECT jsonb_path_query_array(
+        document, '$.vulnerabilities[0 to 3]."cve"')), ',')) AS four_cves
     FROM documents;
 
 CREATE TABLE comments (
