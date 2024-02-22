@@ -19,11 +19,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ISDuBA/ISDuBA/pkg/database"
-	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
 // importDocument is an end point to import a document.
@@ -134,7 +134,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	query := ctx.DefaultQuery("query", "true")
 	expr, err := database.Parse(query)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 		return
 	}
 
@@ -144,7 +144,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		tlpExpr, err := database.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
 			return
 		}
 		expr = expr.And(tlpExpr)
@@ -156,7 +156,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
 	if err := database.CheckProjections(fields, aliases); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 		return
 	}
 
@@ -164,7 +164,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.DefaultQuery("order", "publisher tracking_id -version"))
 	order, err := database.CreateOrder(orderFields, aliases)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 		return
 	}
 
@@ -182,7 +182,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	if lim := ctx.Query("limit"); lim != "" {
 		limit, err = strconv.ParseInt(lim, 10, 64)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error:": err})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 			return
 		}
 	}
@@ -190,7 +190,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	if ofs := ctx.Query("offset"); ofs != "" {
 		offset, err = strconv.ParseInt(ofs, 10, 64)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error:": err})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 			return
 		}
 	}
@@ -240,7 +240,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return rows.Err()
 	}); err != nil {
 		slog.Warn("run failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
