@@ -53,7 +53,6 @@ CREATE FUNCTION to_tsvector_multilang(text) RETURNS tsvector AS $$
 $$ LANGUAGE SQL IMMUTABLE;
 
 CREATE TABLE documents_texts (
-    state        workflow NOT NULL DEFAULT 'new',
     documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     num          int NOT NULL,
     txt          text COMPRESSION lz4 NOT NULL,
