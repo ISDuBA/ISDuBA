@@ -12,6 +12,8 @@ set -e # to exit if a command in the script fails
 
 curl -sL https://deb.nodesource.com/setup_20.x | bash - # install node
 
+apt-install npm # install npm
+
 cd ../../client # change directory
 
 # install dependencies
