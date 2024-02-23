@@ -14,6 +14,8 @@ curl -sL https://deb.nodesource.com/setup_20.x | bash - # install node
 
 apt-install npm # install npm
 
+apt-get install nodejs -y
+
 cd ../../client # change directory
 
 # install dependencies
