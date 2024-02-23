@@ -41,10 +41,6 @@
   }
   function createComment() {
     const formData = new FormData();
-    formData.append(
-      "commentator",
-      `${$appStore.app.userProfile.firstName} ${$appStore.app.userProfile.lastName}`
-    );
     formData.append("message", comment);
     fetch(`/api/comments/${$page.params.documentID}`, {
       headers: {
@@ -120,7 +116,7 @@
       {transitionParams}
     >
       <div class="overflow-y-scroll pl-2">
-        <Timeline>
+        <Timeline class="flex flex-col-reverse">
           {#each comments as comment}
             <Comment {comment}></Comment>
           {/each}

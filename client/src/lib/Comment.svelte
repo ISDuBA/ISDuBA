@@ -17,10 +17,6 @@
 
   function updateComment() {
     const formData = new FormData();
-    formData.append(
-      "commentator",
-      `${$appStore.app.userProfile.firstName} ${$appStore.app.userProfile.lastName}`
-    );
     formData.append("message", updatedComment);
     fetch(`/api/comments/${comment.id}`, {
       headers: {
@@ -48,11 +44,13 @@
     <P class="mb-2">
       {comment.message}
     </P>
-    <ButtonGroup>
-      <Button class="!p-2" on:click={toggleEditing}>
-        <i class="bx bx-edit text-lg"></i>
-      </Button>
-    </ButtonGroup>
+    {#if $appStore.app.keycloak.tokenParsed.preferred_username === comment.commentator}
+      <ButtonGroup>
+        <Button class="!p-2" on:click={toggleEditing}>
+          <i class="bx bx-edit text-lg"></i>
+        </Button>
+      </ButtonGroup>
+    {/if}
   {:else}
     <Textarea bind:value={updatedComment}></Textarea>
     <Button color="red" outline={true} class="!p-2" on:click={toggleEditing}>
