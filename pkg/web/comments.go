@@ -10,6 +10,7 @@ package web
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -88,7 +89,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		if !c.cfg.General.AnonymousEventLogging {
 			actor.String = commentator
 		}
-		if _, err := tx.Exec(rctx, eventSQL, now, actor, message); err != nil {
+		if _, err := tx.Exec(rctx, eventSQL, now, actor, docID); err != nil {
 			return err
 		}
 
@@ -110,8 +111,63 @@ func (c *Controller) createComment(ctx *gin.Context) {
 }
 
 func (c *Controller) updateComment(ctx *gin.Context) {
-	// TODO: Implement me!
-	_ = ctx
+	commentIDs := ctx.Param("document")
+	commentID, err := strconv.ParseInt(commentIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	var (
+		exists      bool
+		now         = time.Now().UTC()
+		commentator = ctx.GetString("uid")
+		message, _  = ctx.GetPostForm("message")
+		rctx        = ctx.Request.Context()
+	)
+	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+		tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback(rctx)
+
+		const updateSQL = `UPDATE comments ` +
+			`SET message = $1 ` +
+			`WHERE id = $2 AND commentator = $3 ` +
+			`RETURNING documents_id`
+
+		var docID int64
+		switch err := tx.QueryRow(rctx, updateSQL, message, commentID, commentator).Scan(&docID); {
+		case errors.Is(err, pgx.ErrNoRows):
+			exists = false
+			return nil
+		case err != nil:
+			return err
+		}
+
+		const eventSQL = `INSERT INTO events_log ` +
+			`(event, state, time, actor, documents_id) ` +
+			`VALUES('change_comment', (SELECT state FROM documents WHERE id = $3), $1, $2, $3)`
+
+		var actor sql.NullString
+		if !c.cfg.General.AnonymousEventLogging {
+			actor.String = commentator
+		}
+		if _, err := tx.Exec(rctx, eventSQL, now, actor, docID); err != nil {
+			return err
+		}
+
+		return tx.Commit(rctx)
+	}); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	if !exists {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{})
 }
 
 func (c *Controller) viewComments(ctx *gin.Context) {

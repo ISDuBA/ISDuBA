@@ -63,7 +63,7 @@ func (c *Controller) Bind() http.Handler {
 	// Comments
 	api.POST("/comments/:document", authBeRe, c.createComment)
 	api.PUT("/comments/:id", authBeRe, c.updateComment)
-	api.GET("/comments/:document", authBeRe, c.viewComments)
+	api.GET("/comments/:document", authBeReAu, c.viewComments)
 
 	return r
 }
