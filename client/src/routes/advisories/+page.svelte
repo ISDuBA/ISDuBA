@@ -142,6 +142,8 @@
                   sortState["trackingID"] === "desc"}
               ></i></TableHeadCell
             >
+            <TableHeadCell>Initial Release</TableHeadCell>
+            <TableHeadCell>Current Release</TableHeadCell>
             <TableHeadCell on:click={() => sortDocuments("version")}
               >Version<i
                 class:bx={true}
@@ -175,10 +177,12 @@
                     >{item.cvss_v3_score}</span
                   ></TableBodyCell
                 >
-                <TableBodyCell>{item.four_cves.replace(/\[|\]|\"/g, "")}</TableBodyCell>
+                <TableBodyCell>{item.four_cves.join(", ")}</TableBodyCell>
                 <TableBodyCell>{item.publisher}</TableBodyCell>
                 <TableBodyCell>{item.title}</TableBodyCell>
                 <TableBodyCell>{item.tracking_id}</TableBodyCell>
+                <TableBodyCell>{item.current_release_date}</TableBodyCell>
+                <TableBodyCell>{item.initial_release_date}</TableBodyCell>
                 <TableBodyCell>{item.version}</TableBodyCell>
                 <TableBodyCell>{item.state}</TableBodyCell>
               </TableBodyRow>
