@@ -1,28 +1,16 @@
 <script lang="ts">
   import RouteGuard from "$lib/RouteGuard.svelte";
   import { page } from "$app/stores";
-  import { Button, Drawer, Label, Textarea, Timeline, TimelineItem } from "flowbite-svelte";
+  import { Button, Drawer, Label, Textarea, Timeline } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
+  import Comment from "$lib/Comment.svelte";
 
   let document = {};
   let hideComments = false;
-
-  let comments = [
-    {
-      author: "Beate Bearbeiterin",
-      comment:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras in mi neque. Nam et pretium purus, vel condimentum magna. Vestibulum gravida, felis non efficitur imperdiet, arcu orci commodo ligula, vel pharetra tortor mi at felis. Proin eleifend dolor vitae lacinia luctus. Praesent sed justo quis eros convallis lacinia. Sed pharetra sollicitudin dui. Nam molestie convallis venenatis. Phasellus luctus felis at magna venenatis pellentesque. Integer mattis odio ac sapien pulvinar finibus. Pellentesque sit amet enim vitae ligula rutrum laoreet. Phasellus a placerat erat. Aliquam tortor eros, dignissim quis vulputate et, interdum vel tellus.",
-      date: "2024-02-19"
-    },
-    {
-      author: "Rene Reviewer",
-      comment:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras in mi neque. Nam et pretium purus, vel condimentum magna. Vestibulum gravida, felis non efficitur imperdiet, arcu orci commodo ligula, vel pharetra tortor mi at felis. Proin eleifend dolor vitae lacinia luctus. Praesent sed justo quis eros convallis lacinia. Sed pharetra sollicitudin dui. Nam molestie convallis venenatis. Phasellus luctus felis at magna venenatis pellentesque. Integer mattis odio ac sapien pulvinar finibus. Pellentesque sit amet enim vitae ligula rutrum laoreet. Phasellus a placerat erat. Aliquam tortor eros, dignissim quis vulputate et, interdum vel tellus.",
-      date: "2024-02-20"
-    }
-  ];
+  let comment: string = "";
+  let comments: any = [];
 
   let transitionParams = {
     x: 320,
@@ -32,6 +20,46 @@
 
   function toggleComments() {
     hideComments = !hideComments;
+  }
+  function loadComments() {
+    fetch(`/api/comments/${$page.params.documentID}`, {
+      headers: {
+        Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      }
+    }).then((response) => {
+      if (response.ok) {
+        response.json().then((json) => {
+          json.forEach((c: any) => {
+            c.documentID = $page.params.documentID;
+          });
+          comments = json;
+        });
+      } else {
+        // Do errorhandling
+      }
+    });
+  }
+  function createComment() {
+    const formData = new FormData();
+    formData.append(
+      "commentator",
+      `${$appStore.app.userProfile.firstName} ${$appStore.app.userProfile.lastName}`
+    );
+    formData.append("message", comment);
+    fetch(`/api/comments/${$page.params.documentID}`, {
+      headers: {
+        Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      },
+      method: "POST",
+      body: formData
+    }).then((response) => {
+      if (response.ok) {
+        comment = "";
+        loadComments();
+      } else {
+        // Do errorhandling
+      }
+    });
   }
   onMount(async () => {
     if ($appStore.app.isUserLoggedIn) {
@@ -46,6 +74,7 @@
       } else {
         // Do errorhandling
       }
+      loadComments();
     }
   });
 </script>
@@ -83,26 +112,25 @@
     <Drawer
       activateClickOutside={false}
       backdrop={false}
-      class="relative overflow-visible"
+      class="relative flex flex-col"
       placement="right"
       width="w-1/3"
       hidden={hideComments}
       transitionType="in:slide"
       {transitionParams}
     >
-      <Timeline>
-        {#each comments as comment}
-          <TimelineItem date={comment.date} title={comment.author}>
-            <span>Version 1.0</span>
-            <p>
-              {comment.comment}
-            </p>
-          </TimelineItem>
-        {/each}
-      </Timeline>
-      <Label class="mb-2" for="comment-textarea">Kommentar</Label>
-      <Textarea class="mb-2" id="comment-textarea"></Textarea>
-      <Button>Send</Button>
+      <div class="overflow-y-scroll pl-2">
+        <Timeline>
+          {#each comments as comment}
+            <Comment {comment}></Comment>
+          {/each}
+        </Timeline>
+      </div>
+      <div>
+        <Label class="mb-2" for="comment-textarea">Comment:</Label>
+        <Textarea bind:value={comment} class="mb-2" id="comment-textarea"></Textarea>
+        <Button on:click={createComment}>Send</Button>
+      </div>
     </Drawer>
   </div>
 </RouteGuard>
