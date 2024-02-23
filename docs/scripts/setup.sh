@@ -12,6 +12,8 @@ set -e # to exit if a command in the script fails
 
 ./installgojava.sh # installs go and java
 
+./installisduba.sh # build the isdubad and bulkimporter tools
+
 ./installkeycloak.sh # installs keycloak
 
 ./configurekeycloak.sh # configures keycloak
@@ -21,3 +23,5 @@ set -e # to exit if a command in the script fails
 ./configurepostgres.sh # creates necessary postgres users and databases
 
 ./keycloakonsystemstart.sh # adjust systemd to allow keycloak to start on systemstartup
+
+./installplaywright.sh # Prepare frontend
