@@ -64,7 +64,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		}
 		defer tx.Rollback(rctx)
 
-		existsSQL := `SELECT exists(SELECT FROM documents ` + where + `)`
+		existsSQL := `SELECT exists(SELECT FROM extended_documents WHERE ` + where + `)`
 		if err := tx.QueryRow(rctx, existsSQL, replacements...).Scan(&exists); err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 }
 
 func (c *Controller) updateComment(ctx *gin.Context) {
-	commentIDs := ctx.Param("document")
+	commentIDs := ctx.Param("id")
 	commentID, err := strconv.ParseInt(commentIDs, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
@@ -144,6 +144,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		case err != nil:
 			return err
 		}
+		exists = true
 
 		const eventSQL = `INSERT INTO events_log ` +
 			`(event, state, time, actor, documents_id) ` +
@@ -164,7 +165,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		return
 	}
 	if !exists {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{})
@@ -208,7 +209,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 
 	rctx := ctx.Request.Context()
 	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
-		existsSQL := `SELECT exists(SELECT FROM documents ` + where + `)`
+		existsSQL := `SELECT exists(SELECT FROM extended_documents WHERE ` + where + `)`
 		if err := conn.QueryRow(rctx, existsSQL, replacements...).Scan(&exists); err != nil {
 			return err
 		}
