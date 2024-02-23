@@ -41,3 +41,4 @@ client/vite.config.ts.timestamp-*
 
 # IDE
 .vscode
+__debug_*
