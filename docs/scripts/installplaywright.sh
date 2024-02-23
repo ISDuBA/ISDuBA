@@ -10,11 +10,11 @@
 
 set -e # to exit if a command in the script fails
 
+echo
+
 curl -sL https://deb.nodesource.com/setup_20.x | bash - # install node
 
-apt-install npm # install npm
-
-apt-get install nodejs -y
+apt-get install nodejs -y # install node
 
 cd ../../client # change directory
 
