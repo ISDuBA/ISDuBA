@@ -39,11 +39,6 @@
             <i class="bx bxs-dashboard"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Documents" href="/documents">
-          <svelte:fragment slot="icon">
-            <i class="bx bx-spreadsheet"></i>
-          </svelte:fragment>
-        </SidebarItem>
         <SidebarItem label="Advisories" href="/advisories">
           <svelte:fragment slot="icon">
             <i class="bx bx-spreadsheet"></i>
@@ -52,6 +47,26 @@
         <SidebarItem label="Compare" href="/diff">
           <svelte:fragment slot="icon">
             <i class="bx bx-transfer"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Documents" href="/documents">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-spreadsheet"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Sources" href="/sources">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-git-repo-forked"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Statistics" href="/statistics">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-bar-chart-square"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Configuration" href="/config">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-cog"></i>
           </svelte:fragment>
         </SidebarItem>
         <SidebarItem
