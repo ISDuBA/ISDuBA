@@ -100,7 +100,7 @@
   <h1 class="mb-3 text-lg">Advisories</h1>
   {#if documents}
     <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
-      <Table hoverable={true}>
+      <Table hoverable={true} noborder={true}>
         <TableHead class="cursor-pointer">
           <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("id")}
             >ID<i
