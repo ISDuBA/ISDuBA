@@ -24,6 +24,11 @@
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
 
+  let openRow: number | null;
+
+  const toggleRow = (i: number) => {
+    openRow = openRow === i ? null : i;
+  };
   let documents: any = [];
   let searchTerm: string = "";
   const sortState: any = {
@@ -164,10 +169,10 @@
           >
         </TableHead>
         <TableBody>
-          {#each filteredItems as item}
+          {#each filteredItems as item, i}
             <TableBodyRow
               class="cursor-pointer"
-              on:click={() => {
+              on:click={(event) => {
                 goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
               }}
             >
@@ -177,7 +182,22 @@
                   >{item.cvss_v3_score}</span
                 ></TableBodyCell
               >
-              <TableBodyCell {tdClass}>{item.four_cves[0] || ""}</TableBodyCell>
+              <TableBodyCell {tdClass}
+                >{#if item.four_cves[0]}
+                  <!-- svelte-ignore a11y-click-events-have-key-events -->
+                  <!-- svelte-ignore a11y-no-static-element-interactions -->
+                  <span on:click|stopPropagation={() => toggleRow(i)}>
+                    {item.four_cves[0]}
+                    {#if item.four_cves.length > 1}
+                      {#if openRow === i}
+                        <i class="bx bx-minus"></i>
+                      {:else}
+                        <i class="bx bx-plus"></i>
+                      {/if}
+                    {/if}
+                  </span>
+                {/if}</TableBodyCell
+              >
               <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
               <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
               <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
@@ -188,6 +208,28 @@
                 ><i class:bx={true} class:bxs-star={item.state === "new"}></i></TableBodyCell
               >
             </TableBodyRow>
+            {#if openRow === i}
+              <TableBodyRow>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <div>
+                    {#each item.four_cves as cve, i}
+                      {#if i !== 0}
+                        <div>{cve}</div>
+                      {/if}
+                    {/each}
+                  </div>
+                </TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+                <TableBodyCell {tdClass}></TableBodyCell>
+              </TableBodyRow>
+            {/if}
           {/each}
         </TableBody>
       </Table>
