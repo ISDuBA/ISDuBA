@@ -16,7 +16,7 @@
 
 <div class="bg-primary-700 flex">
   <SideNav></SideNav>
-  <main class="w-full bg-white pl-12 pt-12">
+  <main class="w-full bg-white pl-6 pt-6">
     <slot />
   </main>
 </div>

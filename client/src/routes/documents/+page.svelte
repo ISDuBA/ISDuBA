@@ -12,6 +12,7 @@
     TableHeadCell,
     TableSearch
   } from "flowbite-svelte";
+  import { tablePadding, tdClass } from "$lib/table/defaults";
   let documents: any = [];
   let searchTerm: string = "";
   const sortState: any = {
@@ -79,7 +80,7 @@
     <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
       <Table hoverable={true}>
         <TableHead class="cursor-pointer">
-          <TableHeadCell on:click={() => sortDocuments("id")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("id")}
             >ID<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "id" && sortState["id"] === "asc"}
@@ -87,7 +88,7 @@
                 sortState["id"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("publisher")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("publisher")}
             >Publisher<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "publisher" &&
@@ -96,7 +97,7 @@
                 sortState["publisher"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("title")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("title")}
             >Title<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "title" &&
@@ -105,7 +106,7 @@
                 sortState["title"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("trackingID")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("trackingID")}
             >Tracking ID<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "trackingID" &&
@@ -114,7 +115,7 @@
                 sortState["trackingID"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("version")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("version")}
             >Version<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "version" &&
@@ -132,11 +133,11 @@
                 goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
               }}
             >
-              <TableBodyCell>{item.id}</TableBodyCell>
-              <TableBodyCell>{item.publisher}</TableBodyCell>
-              <TableBodyCell>{item.title}</TableBodyCell>
-              <TableBodyCell>{item.tracking_id}</TableBodyCell>
-              <TableBodyCell>{item.version}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.id}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
             </TableBodyRow>
           {/each}
         </TableBody>
