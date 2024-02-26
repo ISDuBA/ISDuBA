@@ -186,16 +186,19 @@
                 >{#if item.four_cves[0]}
                   <!-- svelte-ignore a11y-click-events-have-key-events -->
                   <!-- svelte-ignore a11y-no-static-element-interactions -->
-                  <span on:click|stopPropagation={() => toggleRow(i)}>
-                    {item.four_cves[0]}
-                    {#if item.four_cves.length > 1}
+                  {#if item.four_cves.length > 1}
+                    <span on:click|stopPropagation={() => toggleRow(i)}>
+                      {item.four_cves[0]}
+
                       {#if openRow === i}
                         <i class="bx bx-minus"></i>
                       {:else}
                         <i class="bx bx-plus"></i>
                       {/if}
-                    {/if}
-                  </span>
+                    </span>
+                  {:else}
+                    <span>{item.four_cves[0]}</span>
+                  {/if}
                 {/if}</TableBodyCell
               >
               <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
