@@ -82,11 +82,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 	}
 
 	query := fmt.Sprintf("$id %d int =", id)
-	expr, err := database.Parse(query)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err})
-		return
-	}
+	expr := database.MustParse(query)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {

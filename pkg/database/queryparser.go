@@ -887,3 +887,13 @@ func Parse(input string) (expr *Expr, err error) {
 	}()
 	return parse(input)
 }
+
+// MustParse parses the given input to an expression.
+// If the parsing failed it panics.
+func MustParse(input string) *Expr {
+	expr, err := Parse(input)
+	if err != nil {
+		panic(fmt.Sprintf("parsing %q failed: %v", input, err))
+	}
+	return expr
+}
