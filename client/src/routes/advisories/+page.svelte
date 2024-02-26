@@ -22,6 +22,8 @@
     TableHeadCell,
     TableSearch
   } from "flowbite-svelte";
+  const tdClass = "whitespace-nowrap font-medium";
+  const padding = "";
   let documents: any = [];
   let searchTerm: string = "";
   const sortState: any = {
@@ -96,7 +98,7 @@
       <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
         <Table hoverable={true}>
           <TableHead class="cursor-pointer">
-            <TableHeadCell on:click={() => sortDocuments("id")}
+            <TableHeadCell {padding} on:click={() => sortDocuments("id")}
               >ID<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "id" &&
@@ -105,7 +107,7 @@
                   sortState["id"] === "desc"}
               ></i></TableHeadCell
             >
-            <TableHeadCell on:click={() => sortDocuments("cvss")}
+            <TableHeadCell {padding} on:click={() => sortDocuments("cvss")}
               >CVSS<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "cvss" &&
@@ -114,8 +116,8 @@
                   sortState["id"] === "desc"}
               ></i></TableHeadCell
             >
-            <TableHeadCell>CVEs</TableHeadCell>
-            <TableHeadCell on:click={() => sortDocuments("publisher")}
+            <TableHeadCell {padding}>CVEs</TableHeadCell>
+            <TableHeadCell {padding} on:click={() => sortDocuments("publisher")}
               >Publisher<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "publisher" &&
@@ -124,7 +126,7 @@
                   sortState["publisher"] === "desc"}
               ></i></TableHeadCell
             >
-            <TableHeadCell on:click={() => sortDocuments("title")}
+            <TableHeadCell {padding} on:click={() => sortDocuments("title")}
               >Title<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "title" &&
@@ -133,7 +135,7 @@
                   sortState["title"] === "desc"}
               ></i></TableHeadCell
             >
-            <TableHeadCell on:click={() => sortDocuments("trackingID")}
+            <TableHeadCell {padding} on:click={() => sortDocuments("trackingID")}
               >Tracking ID<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "trackingID" &&
@@ -142,9 +144,9 @@
                   sortState["trackingID"] === "desc"}
               ></i></TableHeadCell
             >
-            <TableHeadCell>Initial Release</TableHeadCell>
-            <TableHeadCell>Current Release</TableHeadCell>
-            <TableHeadCell on:click={() => sortDocuments("version")}
+            <TableHeadCell {padding}>Initial Release</TableHeadCell>
+            <TableHeadCell {padding}>Current Release</TableHeadCell>
+            <TableHeadCell {padding} on:click={() => sortDocuments("version")}
               >Version<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "version" &&
@@ -153,7 +155,7 @@
                   sortState["version"] === "desc"}
               ></i></TableHeadCell
             >
-            <TableHeadCell on:click={() => sortDocuments("state")}
+            <TableHeadCell {padding} on:click={() => sortDocuments("state")}
               >State<i
                 class:bx={true}
                 class:bx-caret-up={sortState["activeSortColumn"] == "state" &&
@@ -171,20 +173,22 @@
                   goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
                 }}
               >
-                <TableBodyCell>{item.id}</TableBodyCell>
-                <TableBodyCell
+                <TableBodyCell {tdClass}>{item.id}</TableBodyCell>
+                <TableBodyCell {tdClass}
                   ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
                     >{item.cvss_v3_score}</span
                   ></TableBodyCell
                 >
-                <TableBodyCell>{item.four_cves.join(", ")}</TableBodyCell>
-                <TableBodyCell>{item.publisher}</TableBodyCell>
-                <TableBodyCell>{item.title}</TableBodyCell>
-                <TableBodyCell>{item.tracking_id}</TableBodyCell>
-                <TableBodyCell>{item.current_release_date}</TableBodyCell>
-                <TableBodyCell>{item.initial_release_date}</TableBodyCell>
-                <TableBodyCell>{item.version}</TableBodyCell>
-                <TableBodyCell>{item.state}</TableBodyCell>
+                <TableBodyCell {tdClass}>{item.four_cves[0] || ""}</TableBodyCell>
+                <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
+                <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
+                <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
+                <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
+                <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
+                <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
+                <TableBodyCell {tdClass}
+                  ><i class:bx={true} class:bxs-star={item.state === "new"}></i></TableBodyCell
+                >
               </TableBodyRow>
             {/each}
           </TableBody>
