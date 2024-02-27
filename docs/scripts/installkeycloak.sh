@@ -10,9 +10,9 @@
 
 set -e # to exit if a command in the script fails
 
+apt install -y unzip # needed to unzip the keycloak archive
 
-apt install -y unzip
-
+# download and extract keycloak
 wget https://github.com/keycloak/keycloak/releases/download/23.0.5/keycloak-23.0.5.zip
 
 unzip keycloak-23.0.5.zip
@@ -21,5 +21,6 @@ mkdir -p /opt/
 
 mv keycloak-23.0.5 /opt/keycloak
 
+# create a keycloak user and give them the rights over keycloak
 useradd keycloak
 chown -R keycloak: /opt/keycloak

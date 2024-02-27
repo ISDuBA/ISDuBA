@@ -12,8 +12,10 @@ set -e # to exit if a command in the script fails
 
 apt-get update
 
+# Install Java
 apt install -y openjdk-17-jre-headless
 
+# Install Go
 wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
 
 rm  /usr/local/go -rf && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz

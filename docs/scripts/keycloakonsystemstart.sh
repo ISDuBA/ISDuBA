@@ -10,6 +10,7 @@
 
 set -e # to exit if a command in the script fails
 
+# write keycloak.service file
 echo "[Unit]
 Description=Keycloak
 After=network.target
@@ -26,5 +27,6 @@ TimeoutStopSec=600
 WantedBy=multi-user.target
 " > /etc/systemd/system/keycloak.service
 
+# enable keycloak on system startup
 systemctl enable keycloak
 systemctl start keycloak

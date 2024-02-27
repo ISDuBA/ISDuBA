@@ -16,4 +16,4 @@ git clone https://github.com/ISDuBA/ISDuBA.git # Clone ISDuBA repository
 
 cd ISDuBA/docs/scripts # Change working directory to scripts
 
-./setup.sh # Execute all the other scripts
+./setup.sh # Execute all the other setup scripts

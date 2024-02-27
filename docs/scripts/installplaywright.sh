@@ -21,6 +21,6 @@ sudo apt-get update && sudo apt-get install nodejs -y
 cd ../../client # change directory
 
 # install dependencies
-npm install 
+npm install
 
 npx playwright install
