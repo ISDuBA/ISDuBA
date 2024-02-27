@@ -10,12 +10,18 @@
 
 set -e # to exit if a command in the script fails
 
+# build the isdubad tool
 cd ../../cmd/isdubad/
 
 go build
 
+# build the bulkimporter
 cd ../bulkimport/
 
 go build
 
+# go back into the scripts directory
 cd ../../docs/scripts
+
+# create the isdubad configuration
+cp ../example_isdubad.toml ../../isdubad.toml
