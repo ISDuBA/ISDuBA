@@ -864,8 +864,9 @@ func parse(input string) (*Expr, error) {
 		}
 	})
 
-	if len(st) == 0 {
-		return nil, parseError("no expression found")
+	if len(st) != 1 {
+		return nil, parseError(fmt.Sprintf(
+			"invalid number of expression roots: expected 1 have %d", len(st)))
 	}
 	e := st[len(st)-1]
 	if e.valueType != boolType {
