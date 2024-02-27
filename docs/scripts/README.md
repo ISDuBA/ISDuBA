@@ -17,5 +17,8 @@ To call installall (as root):
 ```
 Keycloak will still need to be started, have a realm created and
 configured via it's userinterface.
-After that, the bulkimporter can be used to
+Then Isdubad needs to be started to allow for the database migration.
+Finally, the bulkimporter can be used to
 import manually download documents.
+
+After that, everything is set up.
