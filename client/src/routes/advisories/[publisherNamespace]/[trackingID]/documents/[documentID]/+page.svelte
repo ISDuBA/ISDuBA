@@ -6,16 +6,50 @@
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Comment.svelte";
+  import Version from "$lib/Version.svelte";
 
   let document = {};
   let hideComments = false;
   let comment: string = "";
   let comments: any = [];
+  let advisoryVersions: string[] = [];
 
   let transitionParams = {
     x: 320,
     duration: 120,
     easing: sineIn
+  };
+
+  const loadAdvisoryVersions = async () => {
+    const response = await fetch(
+      `/api/documents?&columns=id version&query=$tracking_id ${$page.params.trackingID} = $publisher "${$page.params.publisherNamespace}" = and`,
+      {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        }
+      }
+    );
+    if (response.ok) {
+      const result = await response.json();
+      advisoryVersions = result.documents.map((doc: any) => {
+        return { id: doc.id, version: doc.version };
+      });
+    } else {
+      // Do errorhandling
+    }
+  };
+
+  const loadDocument = async () => {
+    const response = await fetch(`/api/documents/${$page.params.documentID}`, {
+      headers: {
+        Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      }
+    });
+    if (response.ok) {
+      ({ document } = await response.json());
+    } else {
+      // Do errorhandling
+    }
   };
 
   function toggleComments() {
@@ -57,20 +91,12 @@
       }
     });
   }
+
   onMount(async () => {
     if ($appStore.app.isUserLoggedIn) {
-      const response = await fetch(`/api/documents/${$page.params.documentID}`, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      });
-      if (response.ok) {
-        ({ document } = await response.json());
-        console.log(document);
-      } else {
-        // Do errorhandling
-      }
+      loadDocument();
       loadComments();
+      loadAdvisoryVersions();
     }
   });
 </script>
@@ -97,6 +123,11 @@
         {/if}
       </table>
     </div>
+    <Version
+      publisherNamespace={$page.params.publisherNamespace}
+      trackingID={$page.params.trackingID}
+      {advisoryVersions}
+    ></Version>
     <Button
       on:click={toggleComments}
       outline={true}
