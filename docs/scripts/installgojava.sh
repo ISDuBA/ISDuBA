@@ -16,10 +16,12 @@ apt-get update
 apt install -y openjdk-17-jre-headless
 
 # Install Go
-wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+wget -O /tmp/go1.22.0.linux-amd64.tar.gz https://go.dev/dl/go1.22.0.linux-amd64.tar.gz 
 
-rm  /usr/local/go -rf && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+cd /usr/local/
 
-rm go1.22.0.linux-amd64.tar.gz
+rm -rf go  && tar -C -xzf /tmp/go1.22.0.linux-amd64.tar.gz
+
+rm -f /tmp/go1.22.0.linux-amd64.tar.gz
 
 ln -snf /usr/local/go/bin/go /usr/local/bin/go
