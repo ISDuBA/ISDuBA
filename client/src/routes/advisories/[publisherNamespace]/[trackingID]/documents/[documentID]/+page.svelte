@@ -2,7 +2,7 @@
   import RouteGuard from "$lib/RouteGuard.svelte";
   import { page } from "$app/stores";
   import { Button, Drawer, Label, Textarea, Timeline } from "flowbite-svelte";
-  import { sineIn } from "svelte/easing";
+ SPDX-License-Identifier: Apache-2.0lte/easing";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Comment.svelte";
