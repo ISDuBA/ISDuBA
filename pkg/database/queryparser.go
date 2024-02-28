@@ -137,6 +137,7 @@ var columns = []documentColumn{
 	{"publisher", stringType, false},
 	{"current_release_date", timeType, false},
 	{"initial_release_date", timeType, false},
+	{"rev_history_length", intType, false},
 	{"title", stringType, false},
 	{"tlp", stringType, false},
 	{"cvss_v2_score", floatType, false},
