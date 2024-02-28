@@ -16,8 +16,7 @@ LAA="listen_addresses = '*'"          # Listen Adress After
 apt-get install sudo                  # Need sudo to become postgres
 
 # Alter PostgreSQL as postgres user
-sudo -u postgres psql -c "CREATE USER keycloak WITH PASSWORD 'keycloak';"
-sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+sudo -u postgres psql -c "CREATE USER keycloak WITH PASSWORD 'keycloak'; ALTER USER postgres WITH PASSWORD 'postgres';"
 sudo -u postgres createdb -O keycloak -E 'UTF-8' keycloak
 sudo -u postgres sed -i "s/$LAB/$LAA/g" /etc/postgresql/16/main/postgresql.conf
 sudo -u postgres echo "host    all             all             192.168.56.1/32         scram-sha-256" >>/etc/postgresql/16/main/pg_hba.conf
