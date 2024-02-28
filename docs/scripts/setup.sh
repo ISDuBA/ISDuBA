@@ -12,13 +12,13 @@ set -e # to exit if a command in the script fails
 
 ./installgojava.sh # installs go and java
 
-./installkeycloak.sh # installs keycloak
-
-./configurekeycloak.sh # configures keycloak
-
 ./installpostgres.sh # installs postgreSQL
 
 ./configurepostgres.sh # creates necessary postgres users and databases
+
+./installkeycloak.sh # installs keycloak
+
+./configurekeycloak.sh # configures keycloak
 
 ./keycloakonsystemstart.sh # adjust systemd to allow keycloak to start on systemstartup
 
