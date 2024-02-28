@@ -16,6 +16,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	sloggin "github.com/samber/slog-gin"
 )
@@ -38,7 +39,7 @@ func (c *Controller) Bind() http.Handler {
 	r.Use(gin.Recovery())
 
 	if c.cfg.Web.Static != "" {
-		r.StaticFS("/web", http.Dir(c.cfg.Web.Static))
+		r.Use(static.Serve("/", static.LocalFile(c.cfg.Web.Static, false)))
 	}
 
 	kcCfg := c.cfg.Keycloak.Config(extractTLPs)
