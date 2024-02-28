@@ -32,6 +32,8 @@
     version: "",
     activeSortColumn: ""
   };
+  import { tdClass, tablePadding } from "$lib/table/defaults";
+
   const defaultSortFunction = (attribute: string) => {
     return {
       asc: (ad1: any, ad2: any) => {
@@ -91,22 +93,22 @@
   <h1 class="mb-3 text-lg">New Events</h1>
   <Table>
     <TableHead>
-      <TableHeadCell>Description</TableHeadCell>
-      <TableHeadCell>Advisory</TableHeadCell>
+      <TableHeadCell padding={tablePadding}>Description</TableHeadCell>
+      <TableHeadCell padding={tablePadding}>Advisory</TableHeadCell>
     </TableHead>
     <TableBody>
       <TableBodyRow>
-        <TableBodyCell>Comment added</TableBodyCell>
-        <TableBodyCell>Sick PSIRT SCA-2022-0032</TableBodyCell>
+        <TableBodyCell {tdClass}>Comment added</TableBodyCell>
+        <TableBodyCell {tdClass}>Sick PSIRT SCA-2022-0032</TableBodyCell>
       </TableBodyRow>
     </TableBody>
   </Table>
   <h1 class="mb-3 mt-10 text-lg">New Documents</h1>
   {#if documents}
-    <div style="height:30rem; width: 100%;overflow-y: auto">
-      <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
+    <div style="width: 100%;overflow-y: auto">
+      <TableSearch placeholder="Search" hoverable={true} bind:inputValue={searchTerm}>
         <TableHead class="cursor-pointer">
-          <TableHeadCell on:click={() => sortDocuments("id")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("id")}
             >ID<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "id" && sortState["id"] === "asc"}
@@ -114,7 +116,7 @@
                 sortState["id"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("publisher")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("publisher")}
             >Publisher<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "publisher" &&
@@ -123,7 +125,7 @@
                 sortState["publisher"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("title")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("title")}
             >Title<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "title" &&
@@ -132,7 +134,7 @@
                 sortState["title"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("trackingID")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("trackingID")}
             >Tracking ID<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "trackingID" &&
@@ -141,7 +143,7 @@
                 sortState["trackingID"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("version")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("version")}
             >Version<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "version" &&
@@ -150,7 +152,7 @@
                 sortState["version"] === "desc"}
             ></i></TableHeadCell
           >
-          <TableHeadCell on:click={() => sortDocuments("state")}
+          <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("state")}
             >State<i
               class:bx={true}
               class:bx-caret-up={sortState["activeSortColumn"] == "state" &&
@@ -168,12 +170,12 @@
                 goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
               }}
             >
-              <TableBodyCell>{item.id}</TableBodyCell>
-              <TableBodyCell>{item.publisher}</TableBodyCell>
-              <TableBodyCell>{item.title}</TableBodyCell>
-              <TableBodyCell>{item.tracking_id}</TableBodyCell>
-              <TableBodyCell>{item.version}</TableBodyCell>
-              <TableBodyCell>{item.state}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.id}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
+              <TableBodyCell {tdClass}>{item.state}</TableBodyCell>
             </TableBodyRow>
           {/each}
         </TableBody>
