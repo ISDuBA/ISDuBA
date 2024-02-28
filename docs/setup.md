@@ -17,6 +17,7 @@
  - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool](https://github.com/csaf-poc/csaf_distribution)
  
 # Setup ISDuBA
+This setup can also be performed via [the ./installisduba.sh setup script](./scripts/installisduba.sh)
 Clone the repository:
 ```
 git clone https://github.com/ISDuBA/ISDuBA.git
@@ -40,7 +41,7 @@ Return to the main directory:
 ```
 cd ../..
 ```
-# Create isduba configuration
+## Create isduba configuration
 Create a configuration file for the tools used in this repository.
 A detailed description of this configuration file can be found [here](./isdubad-config.md).
 Create a configuration file:
