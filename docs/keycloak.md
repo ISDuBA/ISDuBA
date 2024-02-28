@@ -22,6 +22,11 @@
  
 # Get Keycloak
 
+This section can be automated via the [keycloak setup script](./scripts/installkeycloak.sh)
+and the [keycloak configuration script](./scripts/configurekeycloak.sh)
+
+The creation of Realms and Users via keycloak needs to be done manually still.
+
 Download a recent version of Keycloak. 
 Version 23.0.5 has been used for development.
 
@@ -97,7 +102,8 @@ db-url=jdbc:postgresql://localhost/keycloak
 ```
 
 # (Optional) Keycloak on System-Startup
-Allow Keycloak to start on system-startup.
+Allow Keycloak to start on system-startup. This section
+can be automated via the [keycloakonsystemstart script](./scripts/keycloakonsystemstart.sh)
 
 Create a systemd Keycloak file via a text editor, e.g. vim:
 ```
