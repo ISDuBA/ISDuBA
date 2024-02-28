@@ -7,6 +7,8 @@
  SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
+Everything described here is also done via the [postgres install](./scripts/installpostgres.sh)
+and [postgres configuration](./scripts/configurepostgres.sh) scripts.
 
 # Get PostgreSQL
 Download PostgreSQL version 15 or newer.
