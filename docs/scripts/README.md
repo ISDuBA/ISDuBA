@@ -10,10 +10,10 @@ Calling installall.sh will
    - install node 20 and all frontend dependencies via installplaywright.sh
    
 
-To call installall (as root):
+To call installall:
 ``` bash
     curl --fail -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
-    installall.sh
+    sudo installall.sh
 ```
 Keycloak will still need to be started, have a realm created and
 configured via it's userinterface.
