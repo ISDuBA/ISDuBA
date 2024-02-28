@@ -17,7 +17,8 @@
  - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool](https://github.com/csaf-poc/csaf_distribution)
  
 # Setup ISDuBA
-This setup can also be performed via [the ./installisduba.sh setup script](./scripts/installisduba.sh)
+This setup can also be performed via the [installisduba.sh script](./scripts/installisduba.sh).
+
 Clone the repository:
 ```
 git clone https://github.com/ISDuBA/ISDuBA.git
