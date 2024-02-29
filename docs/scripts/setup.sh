@@ -20,8 +20,6 @@ set -e # to exit if a command in the script fails
 
 ./configurekeycloak.sh # configures keycloak
 
-./keycloakonsystemstart.sh # adjust systemd to allow keycloak to start on systemstartup
-
 ./installplaywright.sh # Prepare frontend
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
