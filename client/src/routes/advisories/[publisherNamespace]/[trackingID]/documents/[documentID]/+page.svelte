@@ -56,21 +56,27 @@
     hideComments = !hideComments;
   }
   function loadComments() {
-    fetch(`/api/comments/${$page.params.documentID}`, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      }
-    }).then((response) => {
-      if (response.ok) {
-        response.json().then((json) => {
-          json.forEach((c: any) => {
-            c.documentID = $page.params.documentID;
+    const newComments: any = [];
+    advisoryVersions.forEach((advVer: any) => {
+      fetch(`/api/comments/${advVer.id}`, {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        }
+      }).then((response) => {
+        if (response.ok) {
+          response.json().then((json) => {
+            if (json) {
+              json.forEach((c: any) => {
+                c.documentID = advVer.id;
+              });
+              newComments.push(...json);
+            }
+            comments = newComments;
           });
-          comments = json;
-        });
-      } else {
-        // Do errorhandling
-      }
+        } else {
+          // Do errorhandling
+        }
+      });
     });
   }
   function createComment() {
@@ -95,8 +101,8 @@
   onMount(async () => {
     if ($appStore.app.isUserLoggedIn) {
       loadDocument();
+      await loadAdvisoryVersions();
       loadComments();
-      loadAdvisoryVersions();
     }
   });
 </script>
