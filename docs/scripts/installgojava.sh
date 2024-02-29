@@ -20,7 +20,7 @@ wget -O /tmp/go1.22.0.linux-amd64.tar.gz https://go.dev/dl/go1.22.0.linux-amd64.
 
 cd /usr/local/
 
-sudo rm -rf go  && tar -xzf /tmp/go1.22.0.linux-amd64.tar.gz
+sudo rm -rf go  && sudo tar -xzf /tmp/go1.22.0.linux-amd64.tar.gz
 
 sudo rm -f /tmp/go1.22.0.linux-amd64.tar.gz
 
