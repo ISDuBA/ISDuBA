@@ -102,8 +102,7 @@ db-url=jdbc:postgresql://localhost/keycloak
 ```
 
 # (Optional) Keycloak on System-Startup
-Allow Keycloak to start on system-startup. This section
-can be automated via the [keycloakonsystemstart script](./scripts/keycloakonsystemstart.sh)
+Allow Keycloak to start on system-startup.
 
 Create a systemd Keycloak file via a text editor, e.g. vim:
 ```
