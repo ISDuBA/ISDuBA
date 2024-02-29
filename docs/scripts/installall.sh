@@ -10,7 +10,7 @@
 
 set -e # to exit if a command in the script fails
 
-apt-get install git -y # Needed to work with github repositories
+sudo apt-get install git -y # Needed to work with github repositories
 
 git clone https://github.com/ISDuBA/ISDuBA.git # Clone ISDuBA repository
 
