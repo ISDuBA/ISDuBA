@@ -13,7 +13,6 @@ set -e # to exit if a command in the script fails
 
 LAB="#listen_addresses = 'localhost'" # Listen Adress Before
 LAA="listen_addresses = '*'"          # Listen Adress After
-apt-get install sudo                  # Need sudo to become postgres
 
 # Alter PostgreSQL as postgres user
 sudo -u postgres psql -c "CREATE USER keycloak WITH PASSWORD 'keycloak'; ALTER USER postgres WITH PASSWORD 'postgres';"

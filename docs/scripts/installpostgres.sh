@@ -11,4 +11,4 @@
 set -e # to exit if a command in the script fails
 
 # install PostgreSQL 16
-apt install postgresql -y
+sudo apt install postgresql -y

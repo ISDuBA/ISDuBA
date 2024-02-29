@@ -10,18 +10,18 @@
 
 set -e # to exit if a command in the script fails
 
-apt-get update
+sudo apt-get update
 
 # Install Java
-apt install -y openjdk-17-jre-headless
+sudo apt install -y openjdk-17-jre-headless
 
 # Install Go
 wget -O /tmp/go1.22.0.linux-amd64.tar.gz https://go.dev/dl/go1.22.0.linux-amd64.tar.gz 
 
 cd /usr/local/
 
-rm -rf go  && tar -xzf /tmp/go1.22.0.linux-amd64.tar.gz
+sudo rm -rf go  && tar -xzf /tmp/go1.22.0.linux-amd64.tar.gz
 
-rm -f /tmp/go1.22.0.linux-amd64.tar.gz
+sudo rm -f /tmp/go1.22.0.linux-amd64.tar.gz
 
-ln -snf /usr/local/go/bin/go /usr/local/bin/go
+sudo ln -snf /usr/local/go/bin/go /usr/local/bin/go
