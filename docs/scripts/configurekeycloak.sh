@@ -11,22 +11,10 @@
 set -e # to exit if a command in the script fails
 
 # Alter the keycloak configuration
-DBN=db=postgres
-
-DBU=db-username=keycloak 
-
-DBPB=#db-password=password
-DBPA=db-password=keycloak
-
-DBURL=db-url=jdbc:postgresql://localhost/keycloak
-
-sed -i s,#$DBN,$DBN,g /opt/keycloak/conf/keycloak.conf     # remove leading '#'
-
-sed -i s,#$DBU,$DBU,g /opt/keycloak/conf/keycloak.conf     # remove leading '#'
-
-sed -i s,$DBPB,$DBPA,g /opt/keycloak/conf/keycloak.conf    # exchange password
-
-sed -i s,#$DBURL,$DBURL,g /opt/keycloak/conf/keycloak.conf # remove leading '#'
+sed -i -e 's/^#db=postgres/db=postgres/' \
+       -e 's/^#db-username=/db-username=/' \
+       -e 's/^#db-password=password/db-password=keycloak/' \
+       -e 's/^#db-url=/db-url=/'
 
 
 # Give feedback after successful completion
