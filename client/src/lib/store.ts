@@ -37,6 +37,8 @@ const generateInitalState = (): AppStore => {
 
 function createStore() {
   const { subscribe, set, update } = writable(generateInitalState());
+  let state: any;
+  subscribe((v) => (state = v));
   return {
     subscribe,
     setKeycloak: (keycloak: any) => {
@@ -61,7 +63,12 @@ function createStore() {
     },
     reset: () => {
       set(generateInitalState());
-    }
+    },
+    isImporter: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("importer"),
+    isEditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("bearbeiter"),
+    isReviewer: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("reviewer"),
+    isAdmin: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("admin"),
+    isAuditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("auditor")
   };
 }
 
