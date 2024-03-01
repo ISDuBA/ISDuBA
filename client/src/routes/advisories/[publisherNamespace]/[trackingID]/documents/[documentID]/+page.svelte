@@ -112,7 +112,9 @@
     if ($appStore.app.isUserLoggedIn) {
       loadDocument();
       await loadAdvisoryVersions();
-      loadComments();
+      if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
+        loadComments();
+      }
     }
   });
 </script>
