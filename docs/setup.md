@@ -73,7 +73,7 @@ Import some advisories into the database via the bulk importer:
 (An example would be the results of the csaf_downloader, located in localhost)
 From the repositories main directory:
 ```
-./cmd/bulkimport/bulkimport -database isdubad -user isdubad -password isdubad -host localhost /path/to/advisories/to/import
+./cmd/bulkimport/bulkimport -database isduba -user isduba -password isduba -host localhost /path/to/advisories/to/import
 ```
 
 ### Example use of `isdubad`
