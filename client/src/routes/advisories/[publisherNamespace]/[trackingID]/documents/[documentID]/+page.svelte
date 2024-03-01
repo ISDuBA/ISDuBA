@@ -1,12 +1,13 @@
 <script lang="ts">
   import RouteGuard from "$lib/RouteGuard.svelte";
   import { page } from "$app/stores";
-  import { Button, Drawer, Label, Textarea, Timeline } from "flowbite-svelte";
+  import { Button, Drawer, Label, Select, Textarea, Timeline } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Comment.svelte";
   import Version from "$lib/Version.svelte";
+  import { WorkflowStates } from "$lib/types";
 
   let document = {};
   let hideComments = false;
@@ -40,13 +41,18 @@
   };
 
   const loadDocument = async () => {
-    const response = await fetch(`/api/documents/${$page.params.documentID}`, {
+    const query = `&query=$tracking_id ${$page.params.trackingID} = $id ${$page.params.documentID} int = $publisher "${$page.params.publisherNamespace}" = and`;
+    const encodedUri = encodeURI(
+      `/api/documents?columns=id state tracking_id version publisher current_release_date initial_release_date title tlp cvss_v2_score cvss_v3_score four_cves${query}`
+    );
+    const response = await fetch(encodedUri, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       }
     });
     if (response.ok) {
-      ({ document } = await response.json());
+      const foundDocuments = await response.json();
+      document = foundDocuments.documents[0];
     } else {
       // Do errorhandling
     }
@@ -98,6 +104,10 @@
     });
   }
 
+  function updateState(event) {
+    console.log(event.target.value);
+  }
+
   onMount(async () => {
     if ($appStore.app.isUserLoggedIn) {
       loadDocument();
@@ -122,9 +132,21 @@
         </tr>
         {#if document}
           <tr>
-            <td>Current release date:</td><td class="pl-3"
-              >{document.tracking?.current_release_date}</td
-            >
+            <td>Current release date:</td><td class="pl-3">{document.current_release_date}</td>
+          </tr>
+          <tr>
+            <td>Workflow state:</td>
+            <td class="pl-3">
+              <Select
+                on:change={updateState}
+                items={Object.values(WorkflowStates).map((v) => {
+                  return { value: v, name: v };
+                })}
+                value={document.state}
+                placeholder=""
+                underline
+              ></Select>
+            </td>
           </tr>
         {/if}
       </table>
