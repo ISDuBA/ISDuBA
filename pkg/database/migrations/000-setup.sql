@@ -47,7 +47,7 @@ CREATE TABLE documents (
     title       text
                 GENERATED ALWAYS AS (document #>> '{document,title}') STORED,
     rev_history_length int
-                GENERATED ALWAYS AS (rev_history_length(document)) STORED,
+                GENERATED ALWAYS AS (revision_history_length(document)) STORED,
     -- The data
     document    jsonb COMPRESSION lz4 NOT NULL,
     original    bytea COMPRESSION lz4 NOT NULL,
