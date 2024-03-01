@@ -20,4 +20,4 @@ Then Isdubad needs to be started to allow for the database migration.
 Finally, the bulkimporter can be used to
 import manually download documents.
 
-After that, everything is set up.
+After that the setup is complete.
