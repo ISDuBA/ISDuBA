@@ -12,6 +12,7 @@
   let document = {};
   let hideComments = false;
   let comment: string = "";
+  $: count = comment.length;
   let comments: any = [];
   let advisoryVersions: string[] = [];
 
@@ -190,9 +191,15 @@
         {/if}
         {#if appStore.isEditor() || appStore.isReviewer()}
           <div>
-            <Label class="mb-2" for="comment-textarea">Comment:</Label>
-            <Textarea bind:value={comment} class="mb-2" id="comment-textarea"></Textarea>
-            <Button on:click={createComment}>Send</Button>
+            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+              <div slot="footer" class="flex items-start justify-between">
+                <Button on:click={createComment} disabled={count > 10000}>Send</Button>
+                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                  >{`${count}/10000`}</Label
+                >
+              </div>
+            </Textarea>
           </div>
         {/if}
       </Drawer>
