@@ -134,36 +134,44 @@
       trackingID={$page.params.trackingID}
       {advisoryVersions}
     ></Version>
-    <Button
-      on:click={toggleComments}
-      outline={true}
-      class="absolute right-2 top-2 z-10 !p-2"
-      size="lg"
-    >
-      <i class={hideComments ? "bx bx-chevron-left" : "bx bx-chevron-right"}></i>
-    </Button>
-    <Drawer
-      activateClickOutside={false}
-      backdrop={false}
-      class="relative flex flex-col"
-      placement="right"
-      width="w-1/3"
-      hidden={hideComments}
-      transitionType="in:slide"
-      {transitionParams}
-    >
-      <div class="overflow-y-scroll pl-2">
-        <Timeline class="flex flex-col-reverse">
-          {#each comments as comment}
-            <Comment {comment}></Comment>
-          {/each}
-        </Timeline>
-      </div>
-      <div>
-        <Label class="mb-2" for="comment-textarea">Comment:</Label>
-        <Textarea bind:value={comment} class="mb-2" id="comment-textarea"></Textarea>
-        <Button on:click={createComment}>Send</Button>
-      </div>
-    </Drawer>
+    {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+      <Button
+        on:click={toggleComments}
+        outline={true}
+        class="absolute right-2 top-2 z-[51] !p-2"
+        size="lg"
+      >
+        <i class={hideComments ? "bx bx-chevron-left" : "bx bx-chevron-right"}></i>
+      </Button>
+      <Drawer
+        activateClickOutside={false}
+        backdrop={false}
+        class="relative flex flex-col"
+        placement="right"
+        width="w-1/3"
+        hidden={hideComments}
+        transitionType="in:slide"
+        {transitionParams}
+      >
+        {#if comments?.length > 0}
+          <div class="overflow-y-scroll pl-2">
+            <Timeline class="flex flex-col-reverse">
+              {#each comments as comment}
+                <Comment {comment}></Comment>
+              {/each}
+            </Timeline>
+          </div>
+        {:else}
+          <span class="mb-4 text-gray-600">No comments available.</span>
+        {/if}
+        {#if appStore.isEditor() || appStore.isReviewer()}
+          <div>
+            <Label class="mb-2" for="comment-textarea">Comment:</Label>
+            <Textarea bind:value={comment} class="mb-2" id="comment-textarea"></Textarea>
+            <Button on:click={createComment}>Send</Button>
+          </div>
+        {/if}
+      </Drawer>
+    {/if}
   </div>
 </RouteGuard>
