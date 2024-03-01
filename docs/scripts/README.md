@@ -14,12 +14,12 @@ To call installall (sudo privileges needed):
     curl --fail -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
     installall.sh
 ```
-[Keycloak will still need to be started, have a realm created and
-configured via it's userinterface, see keycloak.md.](./../keycloak.md)
+Keycloak will still need to be started, have a realm created and
+configured via it's userinterface, [see keycloak.md.](./../keycloak.md#start-keycloak)
 
 
-[Then Isdubad needs to be started to allow for the database migration.
+Then Isdubad needs to be started to allow for the database migration.
 Finally, the bulkimporter can be used to
-import manually download documents, see setup.md](./../setup.md)
+import manually download documents, [see setup.md](./../setup.md#start-isdubad-to-allow-db-creation)
 
 After that the setup is complete.
