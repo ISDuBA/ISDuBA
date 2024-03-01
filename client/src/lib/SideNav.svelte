@@ -2,7 +2,7 @@
  This file is Free Software under the MIT License
  without warranty, see README.md and LICENSES/MIT.txt for details.
 
- SPDX-License-Identifier: MIT
+ SPDX-License-Identifier: Apache-2.0
 
  SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
@@ -28,7 +28,7 @@
     "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
 </script>
 
-<Sidebar class="h-screen bg-primary-700 p-2" {activeUrl} {activeClass} {nonActiveClass}>
+<Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
   <SidebarWrapper class="bg-primary-700">
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">
@@ -47,6 +47,26 @@
         <SidebarItem label="Compare" href="/diff">
           <svelte:fragment slot="icon">
             <i class="bx bx-transfer"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Documents" href="/documents">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-spreadsheet"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Sources" href="/sources">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-git-repo-forked"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Statistics" href="/statistics">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-bar-chart-square"></i>
+          </svelte:fragment>
+        </SidebarItem>
+        <SidebarItem label="Configuration" href="/config">
+          <svelte:fragment slot="icon">
+            <i class="bx bx-cog"></i>
           </svelte:fragment>
         </SidebarItem>
         <SidebarItem

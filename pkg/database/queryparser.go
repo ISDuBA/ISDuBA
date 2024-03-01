@@ -1,7 +1,7 @@
 // This file is Free Software under the MIT License
 // without warranty, see README.md and LICENSES/MIT.txt for details.
 //
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 //
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
@@ -66,8 +66,9 @@ type Expr struct {
 }
 
 type documentColumn struct {
-	name      string
-	valueType valueType
+	name           string
+	valueType      valueType
+	projectionOnly bool
 }
 
 // String implements [fmt.Stringer].
@@ -129,17 +130,19 @@ func (pe parseError) Error() string {
 }
 
 var columns = []documentColumn{
-	{"id", intType},
-	{"state", workflowType},
-	{"tracking_id", stringType},
-	{"version", stringType},
-	{"publisher", stringType},
-	{"current_release_date", timeType},
-	{"initial_release_date", timeType},
-	{"title", stringType},
-	{"tlp", stringType},
-	{"cvss_v2_score", floatType},
-	{"cvss_v3_score", floatType},
+	{"id", intType, false},
+	{"state", workflowType, false},
+	{"tracking_id", stringType, false},
+	{"version", stringType, false},
+	{"publisher", stringType, false},
+	{"current_release_date", timeType, false},
+	{"initial_release_date", timeType, false},
+	{"rev_history_length", intType, false},
+	{"title", stringType, false},
+	{"tlp", stringType, false},
+	{"cvss_v2_score", floatType, false},
+	{"cvss_v3_score", floatType, false},
+	{"four_cves", stringType, true},
 }
 
 // TODO: make this configurable?
@@ -525,6 +528,9 @@ func (st *stack) access(field string) {
 	if col == nil {
 		panic(parseError(fmt.Sprintf("unknown column %q", field)))
 	}
+	if col.projectionOnly {
+		panic(parseError(fmt.Sprintf("column %q is for projection only", field)))
+	}
 	st.push(&Expr{
 		exprType:    access,
 		valueType:   col.valueType,
@@ -859,8 +865,9 @@ func parse(input string) (*Expr, error) {
 		}
 	})
 
-	if len(st) == 0 {
-		return nil, parseError("no expression found")
+	if len(st) != 1 {
+		return nil, parseError(fmt.Sprintf(
+			"invalid number of expression roots: expected 1 have %d", len(st)))
 	}
 	e := st[len(st)-1]
 	if e.valueType != boolType {
@@ -881,4 +888,14 @@ func Parse(input string) (expr *Expr, err error) {
 		}
 	}()
 	return parse(input)
+}
+
+// MustParse parses the given input to an expression.
+// If the parsing failed it panics.
+func MustParse(input string) *Expr {
+	expr, err := Parse(input)
+	if err != nil {
+		panic(fmt.Sprintf("parsing %q failed: %v", input, err))
+	}
+	return expr
 }

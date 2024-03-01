@@ -1,7 +1,7 @@
 -- This file is Free Software under the MIT License
 -- without warranty, see README.md and LICENSES/MIT.txt for details.
 --
--- SPDX-License-Identifier: MIT
+-- SPDX-License-Identifier: Apache-2.0
 --
 -- SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 -- Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
@@ -18,6 +18,10 @@ CREATE TYPE workflow AS ENUM (
 
 CREATE FUNCTION utc_timestamp(text) RETURNS timestamp with time zone AS $$
     SELECT $1::timestamp with time zone AT time zone 'utc'
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE FUNCTION revision_history_length(jsonb) RETURNS int AS $$
+    SELECT jsonb_array_length(jsonb_path_query($1, '$.document.tracking.revision_history'))
 $$ LANGUAGE SQL IMMUTABLE;
 
 CREATE TABLE documents (
@@ -37,6 +41,13 @@ CREATE TABLE documents (
     initial_release_date timestamptz
                 GENERATED ALWAYS AS (
                 utc_timestamp(document #>> '{document,tracking,initial_release_date}')) STORED,
+    -- Often used
+    tlp         text
+                GENERATED ALWAYS AS (document #>> '{document,distribution,tlp,label}') STORED,
+    title       text
+                GENERATED ALWAYS AS (document #>> '{document,title}') STORED,
+    rev_history_length int
+                GENERATED ALWAYS AS (rev_history_length(document)) STORED,
     -- The data
     document    jsonb COMPRESSION lz4 NOT NULL,
     original    bytea COMPRESSION lz4 NOT NULL,
@@ -53,7 +64,6 @@ CREATE FUNCTION to_tsvector_multilang(text) RETURNS tsvector AS $$
 $$ LANGUAGE SQL IMMUTABLE;
 
 CREATE TABLE documents_texts (
-    state        workflow NOT NULL DEFAULT 'new',
     documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     num          int NOT NULL,
     txt          text COMPRESSION lz4 NOT NULL,
@@ -66,8 +76,6 @@ CREATE INDEX documents_texts_ts_idx ON documents_texts USING GIN (ts);
 
 CREATE VIEW extended_documents AS SELECT
     *,
-    (document #>> '{document,title}')                  AS title,
-    (document #>> '{document,distribution,tlp,label}') AS tlp,
     (SELECT max(a::float) FROM
         jsonb_path_query(
             document, '$.vulnerabilities[*].scores[*].cvss_v2.baseScore') a)
@@ -75,7 +83,9 @@ CREATE VIEW extended_documents AS SELECT
     (SELECT max(a::float) FROM
         jsonb_path_query(
             document, '$.vulnerabilities[*].scores[*].cvss_v3.baseScore') a)
-        AS cvss_v3_score
+        AS cvss_v3_score,
+    (jsonb_path_query_array(
+        document, '$.vulnerabilities[0 to 3]."cve"')) AS four_cves
     FROM documents;
 
 CREATE TABLE comments (

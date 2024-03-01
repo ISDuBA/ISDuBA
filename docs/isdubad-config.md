@@ -3,7 +3,7 @@
 The `isdubad` server is configured with a [TOML v1.0.0](https://toml.io/en/v1.0.0) file.
 Some of the configurables can be overwritten by environment variables. See a full list [here](#env_vars).
 
-An example file can be found [here](./isdubad.toml) (with the default values as comments).
+An example file can be found [here](./example_isdubad.toml) (with the default values as comments).
 
 ## Sections
 
@@ -27,23 +27,49 @@ The configuration consists of the following sections:
 
 ### <a name="section_log"></a> Section `[log]` Logging
 
-**TBD**
+- `file`: File to log to. An empty string logs to stderr. Defaults to `"isduba.log"`.
+- `level`: Log level. Possible values are `"debug"`, `"info"`, `"warn"` and `"error"`. Defaults to `"info"`.
+- `source`: Add source reference to log output. Defaults to `false`.
+- `json`: Log as JSON lines. Defaults to `false`.
 
 ### <a name="section_keycloak"></a> Section `[keycloak]` Keycloak
 
-**TBD**
+- `url`: Defaults to `"http://localhost:8080"`.
+- `realm`: Name of the realm used be the server. Defaults to `"isduba"`.
+- `certs_caching`: How long should signing certificats from the Keycloak should be cached before reasked. Defaults to `"8h"`.
+- `timeout`: How long should we wait for reactions from the Keycloak server. Defaults to `"30s"`.
+- `full_certs_path`: Special URL to fetch the signing certificats from. Defaults to `""`.
 
 ### <a name="section_web"></a> Section `[web]` Web interface
-
-**TBD**
+- `host`: Interface the web server listens on. Defaults to `"localhost"`.
+- `port`: Port the web server listens on. Defaults to `8081`.
+- `gin_mode`: Mode the Gin middleware is running in. Defaults to `"release"`.
+- `static`: Folder to be served under **http://host:port/web**. Defaults to `"web"`.
 
 ### <a name="section_database"></a> Section `[database]` Database credentials
-
-**TBD**
+- `host`: Host of the database server. Defaults to `"localhost"`.
+- `port`: Port of the database server. Defaults to `5432`.
+- `database`: Name of the database. Defaults to `"isduba"`.
+- `user`: Name of the database user. Defaults to `"isduba"`.
+- `password`: Passwordof the database user. Defaults to `"isduba"`.
+- `admin_user`: Name of an admin database user. Only needed when migration is needed. Defaults to `"postgres"`.
+- `admin_database`: Name of an admin database. Only needed in case of migrations. Defaults to `"postgres"`.
+- `admin_password`: Password of the admin user. For migrations only. Defaults to `"postgres"`.
+- `migrate`: Should a migration be performed if needed? Better triggered by the **ISDUBA_DB_MIGRATE** env variable. Defaults to `false`.
+- `text_search`: When a database is first setup which languages should to used for full-text searches. Defaults to `["german", "english"]`.
 
 ### <a name="section_publishers_tlps"></a> Section `[[publishers_tlps]]` publishers/TLP filters
 
-**TBD**
+Is a table of pairs of `publisher` and `tlps` of default access.
+Defaults to:
+```
+[[publishers_tlps]]
+publisher = ""
+tlps = ["WHITE"]
+```
+An empty `publisher` means all not explicity stated. `publisher`s with non empty values have a higher priority.
+Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values
+`WHITE`, `GREEN`, `AMBER` and `RED`.
 
 ## <a name="env_vars"></a>Environment variables
 

@@ -2,7 +2,7 @@
  This file is Free Software under the MIT License
  without warranty, see README.md and LICENSES/MIT.txt for details.
 
- SPDX-License-Identifier: MIT
+ SPDX-License-Identifier: Apache-2.0
 
  SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
@@ -10,7 +10,9 @@
 
 # Prerequisites
 
- - A keycloak setup as described [here](./keycloak.md)
+ - [A keycloak setup](./keycloak.md)
+
+ - [A postgres database](./postgres.md)
 
  - A recent version of go, see [here on how to download and install go](https://go.dev/doc/install)
 
@@ -18,6 +20,7 @@
  
 # Setup ISDuBA
 This setup can also be performed via the [installisduba.sh script](./scripts/installisduba.sh).
+
 
 Clone the repository:
 ```
@@ -27,7 +30,7 @@ Switch into the directory
 ```
 cd ISDuBA
 ```
-## build the tools
+#### build the tools
 Switch into the bulkimport directory and build it:
 ```
 cd cmd/bulkimport
@@ -43,6 +46,7 @@ Return to the main directory:
 cd ../..
 ```
 ## Create isduba configuration
+
 Create a configuration file for the tools used in this repository.
 A detailed description of this configuration file can be found [here](./isdubad-config.md).
 Create a configuration file:
@@ -51,9 +55,7 @@ cp docs/example_isdubad.toml isdubad.toml
 vim isdubad.toml
 ```
 
-An example configuration can be found [here](./isdubad.toml).
-
-# Start `isdubad` to allow db creation
+### Start `isdubad` to allow db creation
 From the repositories main directory, start the isdubad program,
 which creates the db and users according to the ./cmd/isdubad/isdubad -c isdubad.toml:
 ```
@@ -64,7 +66,7 @@ After the initial migration you can un-configure the `admin_` parts In
 the configuration file adn start `isdubad` without the `ISDUBA_DB_MIGRATE`
 env var set.
 
-# Import advisories
+### Import advisories
 Import some advisories into the database via the bulk importer:
 - host: host from where you download your advisories from
 - /path/to/advisories/to/import: location to download your advisories from
@@ -74,7 +76,7 @@ From the repositories main directory:
 ./cmd/bulkimport/bulkimport -database isdubad -user isdubad -password isdubad -host localhost /path/to/advisories/to/import
 ```
 
-# Example use of `isdubad`
+### Example use of `isdubad`
 The following will define a TOKEN variable which holds the information 
 about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
 (You can check whether the TOKEN is correct via e.g. jwt.io)
@@ -85,3 +87,27 @@ The contents of the Token can be checked via:
 ```
 echo $TOKEN
 ```
+
+## Setup client
+
+### Prerequisites
+
+A current Version of nodeJS LTS (version `20.11.1`).
+
+### Install necessary packages
+
+Assuming you are in the checked out repository
+
+```bash
+cd client
+npm install
+npx playwright install
+```
+
+### Run the client application in a dev environment
+
+```bash
+npm run dev -- --open
+```
+
+This will start the client application and opens a window in your default browser.

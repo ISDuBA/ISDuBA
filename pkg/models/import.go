@@ -1,7 +1,7 @@
 // This file is Free Software under the MIT License
 // without warranty, see README.md and LICENSES/MIT.txt for details.
 //
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 //
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
@@ -105,6 +105,16 @@ func keepAndIndex(index func(string) int, path ...string) replacer {
 	return func(ks []string, v string) (any, bool) {
 		if !found && slices.Equal(path, ks) {
 			found = true
+			_ = index(v)
+			return v, true
+		}
+		return v, false
+	}
+}
+
+func keepAndIndexSuffix(index func(string) int, path ...string) replacer {
+	return func(ks []string, v string) (any, bool) {
+		if len(ks) >= len(path) && slices.Equal(path, ks[len(ks)-len(path):]) {
 			_ = index(v)
 			return v, true
 		}
@@ -265,6 +275,7 @@ func ImportDocument(
 			storer(&version, &versionOK, "document", "tracking", "version"),
 			keepAndIndex(idxer.index, "document", "publisher", "name"),
 			keepAndIndex(idxer.index, "document", "title"),
+			keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
 			keepByKeys(excludeKeys),
 			keepByValues(excludeValues),
 			replaceByIndex(idxer.index),
