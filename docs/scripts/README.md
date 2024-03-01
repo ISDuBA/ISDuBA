@@ -9,7 +9,7 @@ Calling installall.sh will
    - install node 20 and all frontend dependencies via installplaywright.sh
    
 
-To call installall (you will need sudo privileges):
+To call installall (sudo privileges needed):
 ``` bash
     curl --fail -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
     installall.sh
