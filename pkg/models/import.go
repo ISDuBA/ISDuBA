@@ -21,6 +21,7 @@ import (
 
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -316,27 +317,20 @@ func ImportDocument(
 	defer tx.Rollback(ctx)
 
 	const (
-		exists    = `SELECT EXISTS (SELECT FROM documents WHERE (tracking_id, version, publisher) = ($1, $2, $3))`
 		insertDoc = `INSERT INTO documents (document, original) VALUES ($1, $2) RETURNING id`
 		insertLog = `INSERT INTO events_log (event, state, actor, documents_id) VALUES ('import_document', 'new', $1, $2)`
 	)
-
-	var already bool
-	if err := tx.QueryRow(
-		ctx, exists,
-		trackingID, version, publisher,
-	).Scan(&already); err != nil {
-		return 0, fmt.Errorf("query exists failed: %w", err)
-	}
-	if already {
-		return 0, ErrAlreadyInDatabase
-	}
 
 	var id int64
 	if err := tx.QueryRow(
 		ctx, insertDoc,
 		document, buf.Bytes(),
 	).Scan(&id); err != nil {
+		var pgErr *pgconn.PgError
+		// Unique constraint violation
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return 0, ErrAlreadyInDatabase
+		}
 		return 0, fmt.Errorf("inserting document failed: %w", err)
 	}
 	if _, err := tx.Exec(ctx, insertLog, actor, id); err != nil {
