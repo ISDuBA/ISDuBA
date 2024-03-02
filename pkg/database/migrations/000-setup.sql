@@ -62,6 +62,24 @@ CREATE TABLE documents (
                 ON DELETE CASCADE
 );
 
+CREATE FUNCTION create_advisory() RETURNS trigger AS $$
+    DECLARE
+        t_id TEXT;
+        pub  TEXT;
+    BEGIN
+        SELECT new.document #>> '{document,tracking,id}'    INTO t_id;
+        SELECT new.document #>> '{document,publisher,name}' INTO pub;
+        INSERT INTO advisories (tracking_id, publisher)
+               VALUES (t_id, pub)
+               ON CONFLICT (tracking_id, publisher)
+               DO UPDATE SET state = 'new';
+        RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER insert_document BEFORE INSERT ON documents
+    FOR EACH ROW EXECUTE FUNCTION create_advisory();
+
 CREATE INDEX current_release_date_idx ON documents (current_release_date);
 CREATE INDEX initial_release_date_idx ON documents (initial_release_date);
 
@@ -121,6 +139,7 @@ CREATE TABLE events_log (
 
 GRANT SELECT ON versions TO {{ .User | sanitize }};
 GRANT SELECT ON extended_documents TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON advisories TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON documents TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON documents_texts TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON comments TO {{ .User | sanitize }};
