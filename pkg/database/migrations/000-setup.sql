@@ -60,6 +60,7 @@ CREATE TABLE advisories (
 );
 
 
+-- create_advisory checks if the new document is newer than the old one.
 CREATE FUNCTION create_advisory() RETURNS trigger AS $$
     DECLARE
         old_id           int;
@@ -67,11 +68,10 @@ CREATE FUNCTION create_advisory() RETURNS trigger AS $$
         old_release_date timestamptz;
     BEGIN
         SELECT docs.id, docs.rev_history_length, docs.current_release_date
-        INTO old_id, old_rev_length, old_release_date
-        FROM  advisories ads JOIN documents docs ON ads.documents_id = docs.id
-        WHERE docs.tracking_id = NEW.tracking_id AND docs.publisher = NEW.publisher;
-
-        IF old_id IS NULL THEN
+            INTO old_id, old_rev_length, old_release_date
+            FROM  advisories ads JOIN documents docs ON ads.documents_id = docs.id
+            WHERE docs.tracking_id = NEW.tracking_id AND docs.publisher = NEW.publisher;
+        IF NOT FOUND THEN
             INSERT INTO advisories (documents_id) VALUES (NEW.id);
         ELSIF NEW.current_release_date > old_release_date OR
               (NEW.current_release_date = old_release_date AND NEW.rev_history_length > old_rev_length)
@@ -85,8 +85,34 @@ CREATE FUNCTION create_advisory() RETURNS trigger AS $$
     END;
 $$ LANGUAGE plpgsql;
 
+-- delete_advisory tries to re-establish an advisory after the last head was deleted.
+CREATE FUNCTION delete_advisory() RETURNS trigger AS $$
+    DECLARE
+        new_id int;
+    BEGIN
+        IF NOT EXISTS (
+            SELECT FROM advisories ads JOIN documents docs
+                ON ads.documents_id = docs.id
+                WHERE docs.publisher = OLD.publisher AND docs.tracking_id = old.tracking_id)
+        THEN
+            SELECT id
+                INTO new_id
+                FROM documents
+                WHERE tracking_id = OLD.tracking_id AND publisher = OLD.publisher
+                ORDER BY current_release_date DESC, rev_history_length DESC;
+            IF FOUND THEN
+                INSERT INTO advisories (documents_id) VALUES (new_id);
+            END IF;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER insert_document AFTER INSERT ON documents
     FOR EACH ROW EXECUTE FUNCTION create_advisory();
+
+CREATE TRIGGER delete_document AFTER DELETE ON documents
+    FOR EACH ROW EXECUTE FUNCTION delete_advisory();
 
 CREATE INDEX current_release_date_idx  ON documents (current_release_date);
 CREATE INDEX initial_release_date_idx  ON documents (initial_release_date);
