@@ -239,10 +239,8 @@ func ImportDocument(
 	dry bool,
 ) (int64, error) {
 	var (
-		tlp, tlpOk               = "", false
-		trackingID, trackingIDOk = "", false
-		publisher, publisherOK   = "", false
-		version, versionOK       = "", false
+		tlp, tlpOk             = "", false
+		publisher, publisherOK = "", false
 	)
 
 	var buf bytes.Buffer
@@ -271,9 +269,7 @@ func ImportDocument(
 
 	transformJSON(document, chainReplacers(
 		append(reps,
-			storer(&trackingID, &trackingIDOk, "document", "tracking", "id"),
 			storer(&publisher, &publisherOK, "document", "publisher", "name"),
-			storer(&version, &versionOK, "document", "tracking", "version"),
 			keepAndIndex(idxer.index, "document", "publisher", "name"),
 			keepAndIndex(idxer.index, "document", "title"),
 			keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
@@ -282,25 +278,11 @@ func ImportDocument(
 			replaceByIndex(idxer.index),
 		)...))
 
-	var trackingErr, publisherErr, versionErr error
-	if !trackingIDOk {
-		trackingErr = errors.New("missing /document/tracking/id")
-	}
 	if !publisherOK {
-		publisherErr = errors.New("missing /document/publisher/name")
-	}
-	if !versionOK {
-		versionErr = errors.New("missing /document/tracking/version")
+		return 0, errors.New("missing /document/publisher/name")
 	}
 
-	if err := errors.Join(trackingErr, publisherErr, versionErr); err != nil {
-		return 0, err
-	}
-
-	slog.Debug("document id",
-		"id", trackingID,
-		"publisher", publisher,
-		"version", version)
+	slog.Debug("document publisher", "publisher", publisher)
 
 	if pstlps != nil && (!tlpOk || !pstlps.Allowed(publisher, TLP(tlp))) {
 		return 0, ErrNotAllowed
