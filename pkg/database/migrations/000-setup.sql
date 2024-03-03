@@ -14,7 +14,7 @@ CREATE TABLE versions (
 
 CREATE TYPE workflow AS ENUM (
     'new', 'read', 'assessing',
-    'review', 'archive', 'delete');
+    'review', 'archived', 'delete');
 
 CREATE FUNCTION utc_timestamp(text) RETURNS timestamp with time zone AS $$
     SELECT $1::timestamp with time zone AT time zone 'utc'
