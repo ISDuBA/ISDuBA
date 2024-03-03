@@ -68,6 +68,7 @@ type Expr struct {
 type documentColumn struct {
 	name           string
 	valueType      valueType
+	advisoryOnly   bool
 	projectionOnly bool
 }
 
@@ -130,19 +131,19 @@ func (pe parseError) Error() string {
 }
 
 var columns = []documentColumn{
-	{"id", intType, false},
-	{"state", workflowType, false},
-	{"tracking_id", stringType, false},
-	{"version", stringType, false},
-	{"publisher", stringType, false},
-	{"current_release_date", timeType, false},
-	{"initial_release_date", timeType, false},
-	{"rev_history_length", intType, false},
-	{"title", stringType, false},
-	{"tlp", stringType, false},
-	{"cvss_v2_score", floatType, false},
-	{"cvss_v3_score", floatType, false},
-	{"four_cves", stringType, true},
+	{"id", intType, false, false},
+	{"state", workflowType, true, false},
+	{"tracking_id", stringType, false, false},
+	{"version", stringType, false, false},
+	{"publisher", stringType, false, false},
+	{"current_release_date", timeType, false, false},
+	{"initial_release_date", timeType, false, false},
+	{"rev_history_length", intType, false, false},
+	{"title", stringType, false, false},
+	{"tlp", stringType, false, false},
+	{"cvss_v2_score", floatType, false, false},
+	{"cvss_v3_score", floatType, false, false},
+	{"four_cves", stringType, false, true},
 }
 
 // TODO: make this configurable?
@@ -155,6 +156,7 @@ var supportedLangs = []string{
 func CreateOrder(
 	fields []string,
 	aliases map[string]string,
+	advisory bool,
 ) (string, error) {
 	var b strings.Builder
 	for _, field := range fields {
@@ -162,7 +164,7 @@ func CreateOrder(
 		if desc {
 			field = field[1:]
 		}
-		if _, found := aliases[field]; !found && !ExistsDocumentColumn(field) {
+		if _, found := aliases[field]; !found && !ExistsDocumentColumn(field, advisory) {
 			return "", fmt.Errorf("order field %q does not exists", field)
 		}
 		if b.Len() > 0 {
@@ -179,28 +181,37 @@ func CreateOrder(
 }
 
 // CheckProjections checks if the requested projections are valid.
-func CheckProjections(proj []string, aliases map[string]string) error {
+func CheckProjections(proj []string, aliases map[string]string, advisory bool) error {
 	for _, p := range proj {
 		if _, found := aliases[p]; found {
 			continue
 		}
-		if !ExistsDocumentColumn(p) {
+		if !ExistsDocumentColumn(p, advisory) {
 			return fmt.Errorf("column %q does not exists", p)
 		}
 	}
 	return nil
 }
 
-// CreateCountSQL returns an SQL count statement to count
-// the number of rows which are possible to fetch by the
-// given filter.
-func CreateCountSQL(where string, hasAliases bool) string {
+func createFrom(hasAliases, advisory bool) string {
 	var from string
-	if hasAliases {
-		from = `extended_documents JOIN documents_texts ON id = documents_id`
+	if advisory {
+		from = `extended_documents JOIN advisories ON advisories.documents_id = id`
 	} else {
 		from = `extended_documents`
 	}
+
+	if hasAliases {
+		from += ` JOIN documents_texts ON id = documents_texts.documents_id`
+	}
+	return from
+}
+
+// CreateCountSQL returns an SQL count statement to count
+// the number of rows which are possible to fetch by the
+// given filter.
+func CreateCountSQL(where string, hasAliases, advisory bool) string {
+	from := createFrom(hasAliases, advisory)
 	return "SELECT count(*) FROM " + from + " WHERE " + where
 }
 
@@ -213,15 +224,11 @@ func CreateQuerySQL(
 	where string,
 	order string,
 	limit, offset int64,
+	advisory bool,
 ) string {
 	projs := projectionsWithCasts(fields, aliases)
 
-	var from string
-	if len(aliases) == 0 {
-		from = `extended_documents`
-	} else {
-		from = `extended_documents JOIN documents_texts ON id = documents_id`
-	}
+	from := createFrom(len(aliases) > 0, advisory)
 
 	sql := "SELECT " + projs + " FROM " + from + " WHERE " + where
 
@@ -259,13 +266,16 @@ func projectionsWithCasts(proj []string, aliases map[string]string) string {
 }
 
 // ExistsDocumentColumn returns true if a column in document exists.
-func ExistsDocumentColumn(name string) bool {
-	return findDocumentColumn(name) != nil
+func ExistsDocumentColumn(name string, advisory bool) bool {
+	return findDocumentColumn(name, advisory) != nil
 }
 
-func findDocumentColumn(name string) *documentColumn {
+func findDocumentColumn(name string, advisory bool) *documentColumn {
 	for i := range columns {
 		if col := &columns[i]; col.name == name {
+			if col.advisoryOnly && !advisory {
+				return nil
+			}
 			return col
 		}
 	}
@@ -523,8 +533,8 @@ func (st *stack) binary(et exprType) {
 	})
 }
 
-func (st *stack) access(field string) {
-	col := findDocumentColumn(field)
+func (st *stack) access(field string, advisory bool) {
+	col := findDocumentColumn(field, advisory)
 	if col == nil {
 		panic(parseError(fmt.Sprintf("unknown column %q", field)))
 	}
@@ -810,7 +820,7 @@ func split(input string, fn func(string, bool)) {
 	}
 }
 
-func parse(input string) (*Expr, error) {
+func parse(input string, advisory bool) (*Expr, error) {
 	st := stack{}
 	aliases := map[string]struct{}{}
 
@@ -858,7 +868,7 @@ func parse(input string) (*Expr, error) {
 			st.as(aliases)
 		default:
 			if strings.HasPrefix(field, "$") {
-				st.access(field[1:])
+				st.access(field[1:], advisory)
 			} else {
 				st.pushString(field)
 			}
@@ -877,7 +887,7 @@ func parse(input string) (*Expr, error) {
 }
 
 // Parse returns an expression.
-func Parse(input string) (expr *Expr, err error) {
+func Parse(input string, advisory bool) (expr *Expr, err error) {
 	defer func() {
 		if x := recover(); x != nil {
 			if pe, ok := x.(parseError); ok {
@@ -887,13 +897,13 @@ func Parse(input string) (expr *Expr, err error) {
 			}
 		}
 	}()
-	return parse(input)
+	return parse(input, advisory)
 }
 
 // MustParse parses the given input to an expression.
 // If the parsing failed it panics.
-func MustParse(input string) *Expr {
-	expr, err := Parse(input)
+func MustParse(input string, advisory bool) *Expr {
+	expr, err := Parse(input, advisory)
 	if err != nil {
 		panic(fmt.Sprintf("parsing %q failed: %v", input, err))
 	}

@@ -33,12 +33,12 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	}
 
 	query := fmt.Sprintf("$id %d int =", docID)
-	expr := database.MustParse(query)
+	expr := database.MustParse(query, false)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		tlpExpr, err := database.Parse(conditions)
+		tlpExpr, err := database.Parse(conditions, false)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err})
@@ -181,12 +181,12 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	}
 
 	query := fmt.Sprintf("$id %d int =", id)
-	expr := database.MustParse(query)
+	expr := database.MustParse(query, false)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		tlpExpr, err := database.Parse(conditions)
+		tlpExpr, err := database.Parse(conditions, false)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err})

@@ -82,12 +82,12 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 	}
 
 	query := fmt.Sprintf("$id %d int =", id)
-	expr := database.MustParse(query)
+	expr := database.MustParse(query, false)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		tlpExpr, err := database.Parse(conditions)
+		tlpExpr, err := database.Parse(conditions, false)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err})
@@ -98,7 +98,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 
 	fields := []string{"original"}
 	where, replacements, aliases := expr.Where()
-	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1)
+	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1, false)
 
 	var original []byte
 
@@ -127,8 +127,18 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 
 // overviewDocuments is an end point to return an overview document.
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
+
+	// Use the advisories.
+	advisoryS := ctx.DefaultQuery("advisories", "false")
+	advisory, err := strconv.ParseBool(advisoryS)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
+		return
+	}
+
+	// The query to filter the documents.
 	query := ctx.DefaultQuery("query", "true")
-	expr, err := database.Parse(query)
+	expr, err := database.Parse(query, advisory)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 		return
@@ -137,7 +147,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		tlpExpr, err := database.Parse(conditions)
+		tlpExpr, err := database.Parse(conditions, advisory)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
@@ -151,14 +161,14 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
-	if err := database.CheckProjections(fields, aliases); err != nil {
+	if err := database.CheckProjections(fields, aliases, advisory); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 		return
 	}
 
 	orderFields := strings.Fields(
-		ctx.DefaultQuery("order", "publisher tracking_id -version"))
-	order, err := database.CreateOrder(orderFields, aliases)
+		ctx.DefaultQuery("order", "publisher tracking_id -current_release_date -rev_history_length"))
+	order, err := database.CreateOrder(orderFields, aliases, advisory)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 		return
@@ -196,7 +206,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		if calcCount {
 			if err := conn.QueryRow(
 				rctx,
-				database.CreateCountSQL(where, len(aliases) > 0),
+				database.CreateCountSQL(where, len(aliases) > 0, advisory),
 				replacements...,
 			).Scan(&count); err != nil {
 				return fmt.Errorf("cannot calculate count %w", err)
@@ -207,7 +217,8 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			return nil
 		}
 
-		sql := database.CreateQuerySQL(fields, aliases, where, order, limit, offset)
+		sql := database.CreateQuerySQL(
+			fields, aliases, where, order, limit, offset, advisory)
 
 		values := make([]any, len(fields))
 		ptrs := make([]any, len(fields))
