@@ -101,7 +101,7 @@ CREATE FUNCTION delete_advisory() RETURNS trigger AS $$
                 WHERE tracking_id = OLD.tracking_id AND publisher = OLD.publisher
                 ORDER BY current_release_date DESC, rev_history_length DESC;
             IF FOUND THEN
-                INSERT INTO advisories (documents_id) VALUES (new_id);
+                INSERT INTO advisories (documents_id, state) VALUES (new_id, old.state);
             END IF;
         END IF;
         RETURN NULL;
@@ -114,8 +114,8 @@ CREATE TRIGGER insert_document AFTER INSERT ON documents
 CREATE TRIGGER delete_document AFTER DELETE ON documents
     FOR EACH ROW EXECUTE FUNCTION delete_advisory();
 
-CREATE INDEX current_release_date_idx  ON documents (current_release_date);
-CREATE INDEX initial_release_date_idx  ON documents (initial_release_date);
+CREATE INDEX current_release_date_idx ON documents (current_release_date);
+CREATE INDEX initial_release_date_idx ON documents (initial_release_date);
 
 CREATE FUNCTION to_tsvector_multilang(text) RETURNS tsvector AS $$
     SELECT {{ range $idx, $lang := .TextSearch -}}
