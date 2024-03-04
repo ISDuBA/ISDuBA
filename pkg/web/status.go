@@ -68,6 +68,10 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 				bad = true
 				return nil
 			}
+			slog.Debug("state change",
+				"publisher", input.Publisher,
+				"tracking_id", input.TrackingID,
+				"state", input.State)
 
 			if err := tx.QueryRow(rctx, findAdvisory, input.Publisher, input.TrackingID).Scan(
 				&documentID, &current, &tlp,
@@ -80,6 +84,8 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 				forbidden = true
 				return nil
 			}
+
+			slog.Debug("current state", "state", current)
 
 			// Check if the transition is allowed to user.
 			roles := models.Workflow(current).TransitionsRoles(input.State)

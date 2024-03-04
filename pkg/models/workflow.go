@@ -30,10 +30,11 @@ const (
 	Auditor  = "auditor"    // Auditor role
 )
 
+// TODO: Why is there no way back from read to new?
 // transitions is a matrix to tell who is allowed to change between certain states.
 var transitions = map[[2]Workflow][]string{
 	{"", NewWorkflow}:                   {Importer},
-	{NewWorkflow, AssessingWorkflow}:    {Editor},
+	{NewWorkflow, ReadWorkflow}:         {Editor},
 	{ReadWorkflow, AssessingWorkflow}:   {Editor},
 	{AssessingWorkflow, NewWorkflow}:    {Importer},
 	{ReviewWorkflow, NewWorkflow}:       {Importer},
