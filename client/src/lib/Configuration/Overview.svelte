@@ -7,8 +7,9 @@
  SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
+
 <script lang="ts">
-  import Advisory from "$lib/Advisories/Advisory.svelte";
+  import { onMount } from "svelte";
 </script>
 
-<Advisory></Advisory>
+<h1>Configuration</h1>
