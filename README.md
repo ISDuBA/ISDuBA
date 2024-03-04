@@ -42,6 +42,12 @@ Envisoned is to use the following components:
 The abbreviation expands to a German label, which translates to
   **I**nternal **s**ystem for **d**ownloading and evaluating **a**dvisories.
 
-## Free Software
 
-ISDuBA is Free Software licensed under the terms of the [Apache License, Version 2.0](./LICENSES/Apache-License-2.0.txt).
+## License
+
+- `ISDuBA` is licensed as Free Software under the [Apache License, Version 2.0](./LICENSES/Apache-License-2.0.txt)
+
+- See the specific source files
+  for details, the license itself can be found in the directory `LICENSES/`.
+
+- Contains third party Free Software components under licenses that to our best knowledge are compatible at time of adding the dependency, [3rdpartylicenses.md](3rdpartylicenses.md) has the details.
