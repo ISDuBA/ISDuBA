@@ -41,3 +41,7 @@ Envisoned is to use the following components:
 
 The abbreviation expands to a German label, which translates to
   **I**nternal **s**ystem for **d**ownloading and evaluating **a**dvisories.
+
+## Free Software
+
+ISDuBA is Free Software licensed under the terms of the [Apache License, Version 2.0](./LICENSES/Apache-License-2.0.txt).

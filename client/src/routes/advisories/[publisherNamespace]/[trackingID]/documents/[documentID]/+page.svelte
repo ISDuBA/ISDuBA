@@ -10,16 +10,18 @@
 <script lang="ts">
   import RouteGuard from "$lib/RouteGuard.svelte";
   import { page } from "$app/stores";
-  import { Button, Drawer, Label, Textarea, Timeline } from "flowbite-svelte";
+  import { Button, Drawer, Label, Select, Textarea, Timeline } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Comment.svelte";
   import Version from "$lib/Version.svelte";
+  import { WorkflowStates } from "$lib/types";
 
   let document = {};
   let hideComments = false;
   let comment: string = "";
+  $: count = comment.length;
   let comments: any = [];
   let advisoryVersions: string[] = [];
 
@@ -49,13 +51,18 @@
   };
 
   const loadDocument = async () => {
-    const response = await fetch(`/api/documents/${$page.params.documentID}`, {
+    const query = `&query=$tracking_id ${$page.params.trackingID} = $id ${$page.params.documentID} int = $publisher "${$page.params.publisherNamespace}" = and`;
+    const encodedUri = encodeURI(
+      `/api/documents?columns=id state tracking_id version publisher current_release_date initial_release_date title tlp cvss_v2_score cvss_v3_score four_cves${query}`
+    );
+    const response = await fetch(encodedUri, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       }
     });
     if (response.ok) {
-      ({ document } = await response.json());
+      const foundDocuments = await response.json();
+      document = foundDocuments.documents[0];
     } else {
       // Do errorhandling
     }
@@ -107,11 +114,17 @@
     });
   }
 
+  function updateState(event) {
+    console.log(event.target.value);
+  }
+
   onMount(async () => {
     if ($appStore.app.isUserLoggedIn) {
       loadDocument();
       await loadAdvisoryVersions();
-      loadComments();
+      if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
+        loadComments();
+      }
     }
   });
 </script>
@@ -131,9 +144,21 @@
         </tr>
         {#if document}
           <tr>
-            <td>Current release date:</td><td class="pl-3"
-              >{document.tracking?.current_release_date}</td
-            >
+            <td>Current release date:</td><td class="pl-3">{document.current_release_date}</td>
+          </tr>
+          <tr>
+            <td>Workflow state:</td>
+            <td class="pl-3">
+              <Select
+                on:change={updateState}
+                items={Object.values(WorkflowStates).map((v) => {
+                  return { value: v, name: v };
+                })}
+                value={document.state}
+                placeholder=""
+                underline
+              ></Select>
+            </td>
           </tr>
         {/if}
       </table>
@@ -143,36 +168,52 @@
       trackingID={$page.params.trackingID}
       {advisoryVersions}
     ></Version>
-    <Button
-      on:click={toggleComments}
-      outline={true}
-      class="absolute right-2 top-2 z-10 !p-2"
-      size="lg"
-    >
-      <i class={hideComments ? "bx bx-chevron-left" : "bx bx-chevron-right"}></i>
-    </Button>
-    <Drawer
-      activateClickOutside={false}
-      backdrop={false}
-      class="relative flex flex-col"
-      placement="right"
-      width="w-1/3"
-      hidden={hideComments}
-      transitionType="in:slide"
-      {transitionParams}
-    >
-      <div class="overflow-y-scroll pl-2">
-        <Timeline class="flex flex-col-reverse">
-          {#each comments as comment}
-            <Comment {comment}></Comment>
-          {/each}
-        </Timeline>
-      </div>
-      <div>
-        <Label class="mb-2" for="comment-textarea">Comment:</Label>
-        <Textarea bind:value={comment} class="mb-2" id="comment-textarea"></Textarea>
-        <Button on:click={createComment}>Send</Button>
-      </div>
-    </Drawer>
+    {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+      <Button
+        on:click={toggleComments}
+        outline={true}
+        class="absolute right-2 top-2 z-[51] !p-2"
+        size="lg"
+      >
+        <i class={hideComments ? "bx bx-chevron-left" : "bx bx-chevron-right"}></i>
+      </Button>
+      <Drawer
+        activateClickOutside={false}
+        backdrop={false}
+        class="relative flex flex-col"
+        placement="right"
+        width="w-1/3"
+        hidden={hideComments}
+        transitionType="in:slide"
+        {transitionParams}
+      >
+        {#if comments?.length > 0}
+          <div class="overflow-y-scroll pl-2">
+            <Timeline class="flex flex-col-reverse">
+              {#each comments as comment}
+                <Comment {comment}></Comment>
+              {/each}
+            </Timeline>
+          </div>
+        {:else}
+          <span class="mb-4 text-gray-600">No comments available.</span>
+        {/if}
+        {#if appStore.isEditor() || appStore.isReviewer()}
+          <div>
+            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+              <div slot="footer" class="flex items-start justify-between">
+                <Button on:click={createComment} disabled={count > 10000 || count === 0}
+                  >Send</Button
+                >
+                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                  >{`${count}/10000`}</Label
+                >
+              </div>
+            </Textarea>
+          </div>
+        {/if}
+      </Drawer>
+    {/if}
   </div>
 </RouteGuard>

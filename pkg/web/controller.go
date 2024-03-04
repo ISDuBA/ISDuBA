@@ -16,6 +16,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	sloggin "github.com/samber/slog-gin"
@@ -49,22 +50,26 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
-		authIm     = authRoles("importer")
-		authBeRe   = authRoles("bearbeiter", "reviewer")
-		authBeReAu = authRoles("bearbeiter", "reviewer", "auditor")
+		authIm     = authRoles(models.Importer)
+		authEdRe   = authRoles(models.Editor, models.Reviewer)
+		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
+		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
 	)
 
 	api := r.Group("/api")
 
 	// Documents
 	api.POST("/documents", authIm, c.importDocument)
-	api.GET("/documents", authBeReAu, c.overviewDocuments)
-	api.GET("/documents/:id", authBeReAu, c.viewDocument)
+	api.GET("/documents", authEdReAu, c.overviewDocuments)
+	api.GET("/documents/:id", authEdReAu, c.viewDocument)
 
 	// Comments
-	api.POST("/comments/:document", authBeRe, c.createComment)
-	api.PUT("/comments/:id", authBeRe, c.updateComment)
-	api.GET("/comments/:document", authBeReAu, c.viewComments)
+	api.POST("/comments/:document", authEdRe, c.createComment)
+	api.PUT("/comments/:id", authEdRe, c.updateComment)
+	api.GET("/comments/:document", authEdReAu, c.viewComments)
+
+	// State change
+	api.PUT("/status/:id/:state", authEdReAd, c.changeStatus)
 
 	return r
 }

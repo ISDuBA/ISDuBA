@@ -85,6 +85,7 @@ func doMigrations(
 	migs []migration,
 ) error {
 	if err := func() error {
+		slog.InfoContext(ctx, "admin url", "url", cfg.AdminURL())
 		conn, err := pgx.Connect(ctx, cfg.AdminURL())
 		if err != nil {
 			return err
@@ -135,6 +136,7 @@ func doMigrations(
 				return err
 			}
 			defer tx.Rollback(ctx)
+			slog.InfoContext(ctx, "running migration", "name", mig.description)
 			if _, err := tx.Exec(ctx, script.String()); err != nil {
 				return fmt.Errorf("executing migration %q failed: %w", mig.path, err)
 			}
@@ -164,18 +166,21 @@ func createUser(
 	conn *pgx.Conn,
 	cfg *config.Database,
 ) error {
+	slog.InfoContext(ctx, "Check if user exists", "user", cfg.User)
 	const userExists = `SELECT EXISTS (SELECT FROM pg_roles WHERE rolname = $1)`
 	var exists bool
 	if err := conn.QueryRow(ctx, userExists, cfg.User).Scan(&exists); err != nil {
 		return fmt.Errorf("check if user exists failed: %w err", err)
 	}
 	if exists {
+		slog.InfoContext(ctx, "User exists")
 		return nil
 	}
 	var (
 		user     = pgx.Identifier{cfg.User}.Sanitize()
 		password = sqlQuote(cfg.Password)
 	)
+	slog.InfoContext(ctx, "Create user", "user", cfg.User)
 	createUser := "CREATE USER " + user + " LOGIN PASSWORD " + password
 	if _, err := conn.Exec(ctx, createUser); err != nil {
 		return fmt.Errorf("creating user failed: %w err", err)
@@ -188,18 +193,21 @@ func createDatabase(
 	conn *pgx.Conn,
 	cfg *config.Database,
 ) error {
+	slog.InfoContext(ctx, "Check if database exists", "database", cfg.Database)
 	const dbExists = `SELECT EXISTS (SELECT FROM pg_catalog.pg_database WHERE datname = $1)`
 	var exists bool
-	if err := conn.QueryRow(ctx, dbExists, cfg.User).Scan(&exists); err != nil {
+	if err := conn.QueryRow(ctx, dbExists, cfg.Database).Scan(&exists); err != nil {
 		return fmt.Errorf("check if database exists failed: %w", err)
 	}
 	if exists {
+		slog.InfoContext(ctx, "Database exists")
 		return nil
 	}
 	var (
 		db   = pgx.Identifier{cfg.Database}.Sanitize()
 		user = pgx.Identifier{cfg.User}.Sanitize()
 	)
+	slog.InfoContext(ctx, "Create database", "database", cfg.Database)
 	createDB := "CREATE DATABASE " + db + " OWNER " + user + " ENCODING 'UTF-8'"
 	if _, err := conn.Exec(ctx, createDB); err != nil {
 		return fmt.Errorf("creating database failed: %w", err)

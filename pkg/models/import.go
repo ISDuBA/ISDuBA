@@ -21,6 +21,7 @@ import (
 
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -238,10 +239,8 @@ func ImportDocument(
 	dry bool,
 ) (int64, error) {
 	var (
-		tlp, tlpOk               = "", false
-		trackingID, trackingIDOk = "", false
-		publisher, publisherOK   = "", false
-		version, versionOK       = "", false
+		tlp, tlpOk             = "", false
+		publisher, publisherOK = "", false
 	)
 
 	var buf bytes.Buffer
@@ -270,9 +269,7 @@ func ImportDocument(
 
 	transformJSON(document, chainReplacers(
 		append(reps,
-			storer(&trackingID, &trackingIDOk, "document", "tracking", "id"),
 			storer(&publisher, &publisherOK, "document", "publisher", "name"),
-			storer(&version, &versionOK, "document", "tracking", "version"),
 			keepAndIndex(idxer.index, "document", "publisher", "name"),
 			keepAndIndex(idxer.index, "document", "title"),
 			keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
@@ -281,25 +278,11 @@ func ImportDocument(
 			replaceByIndex(idxer.index),
 		)...))
 
-	var trackingErr, publisherErr, versionErr error
-	if !trackingIDOk {
-		trackingErr = errors.New("missing /document/tracking/id")
-	}
 	if !publisherOK {
-		publisherErr = errors.New("missing /document/publisher/name")
-	}
-	if !versionOK {
-		versionErr = errors.New("missing /document/tracking/version")
+		return 0, errors.New("missing /document/publisher/name")
 	}
 
-	if err := errors.Join(trackingErr, publisherErr, versionErr); err != nil {
-		return 0, err
-	}
-
-	slog.Debug("document id",
-		"id", trackingID,
-		"publisher", publisher,
-		"version", version)
+	slog.Debug("document publisher", "publisher", publisher)
 
 	if pstlps != nil && (!tlpOk || !pstlps.Allowed(publisher, TLP(tlp))) {
 		return 0, ErrNotAllowed
@@ -316,27 +299,20 @@ func ImportDocument(
 	defer tx.Rollback(ctx)
 
 	const (
-		exists    = `SELECT EXISTS (SELECT FROM documents WHERE (tracking_id, version, publisher) = ($1, $2, $3))`
 		insertDoc = `INSERT INTO documents (document, original) VALUES ($1, $2) RETURNING id`
 		insertLog = `INSERT INTO events_log (event, state, actor, documents_id) VALUES ('import_document', 'new', $1, $2)`
 	)
-
-	var already bool
-	if err := tx.QueryRow(
-		ctx, exists,
-		trackingID, version, publisher,
-	).Scan(&already); err != nil {
-		return 0, fmt.Errorf("query exists failed: %w", err)
-	}
-	if already {
-		return 0, ErrAlreadyInDatabase
-	}
 
 	var id int64
 	if err := tx.QueryRow(
 		ctx, insertDoc,
 		document, buf.Bytes(),
 	).Scan(&id); err != nil {
+		var pgErr *pgconn.PgError
+		// Unique constraint violation
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return 0, ErrAlreadyInDatabase
+		}
 		return 0, fmt.Errorf("inserting document failed: %w", err)
 	}
 	if _, err := tx.Exec(ctx, insertLog, actor, id); err != nil {
