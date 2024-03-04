@@ -1,3 +1,13 @@
+<!--
+ This file is Free Software under the MIT License
+ without warranty, see README.md and LICENSES/MIT.txt for details.
+
+ SPDX-License-Identifier: Apache-2.0
+
+ SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+-->
+
 # The `isdubad.toml` configuration file
 
 The `isdubad` server is configured with a [TOML v1.0.0](https://toml.io/en/v1.0.0) file.
