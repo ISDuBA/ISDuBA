@@ -136,7 +136,7 @@ func (c *Controller) changeStatus(ctx *gin.Context) {
 
 func (c *Controller) changeStatusBulk(ctx *gin.Context) {
 	var inputs advisoryStates
-	if err := ctx.ShouldBindUri(&inputs); err != nil {
+	if err := ctx.ShouldBindJSON(&inputs); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
