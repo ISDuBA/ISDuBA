@@ -28,8 +28,8 @@ const (
 	Auditor  = "auditor"    // Auditor role
 )
 
-// Transitions is a matrix to tell who is allowed to change between certain states.
-var Transitions = map[[2]Workflow][]string{
+// transitions is a matrix to tell who is allowed to change between certain states.
+var transitions = map[[2]Workflow][]string{
 	{"", NewWorkflow}:                   {Importer},
 	{NewWorkflow, AssessingWorkflow}:    {Editor},
 	{ReadWorkflow, AssessingWorkflow}:   {Editor},
@@ -55,4 +55,10 @@ func (wf Workflow) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// TransitionsRoles return a list of roles that are allowed to do the requested
+// transition.
+func (wf Workflow) TransitionsRoles(other Workflow) []string {
+	return transitions[[2]Workflow{wf, other}]
 }

@@ -22,8 +22,8 @@ type (
 		Publisher string `json:"publisher" toml:"publisher"`
 		TLPs      []TLP  `json:"tlps" toml:"tlps"`
 	}
-	// PuplishersTLPs is a list of TLPs per publisher.
-	PuplishersTLPs []PuplisherTLPs
+	// PublishersTLPs is a list of TLPs per publisher.
+	PublishersTLPs []PuplisherTLPs
 )
 
 const (
@@ -46,7 +46,7 @@ func (tlp *TLP) UnmarshalText(text []byte) error {
 }
 
 // Allowed checks if a pair of publisher/tlp is allowed.
-func (ptlps PuplishersTLPs) Allowed(publisher string, tlp TLP) bool {
+func (ptlps PublishersTLPs) Allowed(publisher string, tlp TLP) bool {
 	var wildcard *PuplisherTLPs
 	for i := range ptlps {
 		ptlp := &ptlps[i]
@@ -65,7 +65,7 @@ func (ptlps PuplishersTLPs) Allowed(publisher string, tlp TLP) bool {
 }
 
 // AsConditions returns the list of TLP rules as a postfix expression.
-func (ptlps PuplishersTLPs) AsConditions() string {
+func (ptlps PublishersTLPs) AsConditions() string {
 	var b strings.Builder
 	var noneWildcards int
 	var wildcard *PuplisherTLPs

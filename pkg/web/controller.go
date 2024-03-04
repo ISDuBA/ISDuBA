@@ -69,7 +69,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/comments/:document", authEdReAu, c.viewComments)
 
 	// State change
-	api.PUT("/status/:id/:state", authEdReAd, c.changeStatus)
+	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)
 
 	return r
 }

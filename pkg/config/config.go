@@ -63,7 +63,7 @@ const (
 	defaultDatabaseMigrate       = false
 )
 
-var defaultPublishersTLPs = models.PuplishersTLPs{
+var defaultPublishersTLPs = models.PublishersTLPs{
 	models.PuplisherTLPs{
 		Publisher: "", // Wildcard
 		TLPs:      []models.TLP{models.TLPWhite},
@@ -129,7 +129,7 @@ type Config struct {
 	Keycloak       Keycloak              `toml:"keycloak"`
 	Web            Web                   `toml:"web"`
 	Database       Database              `toml:"database"`
-	PublishersTLPs models.PuplishersTLPs `toml:"publishers_tlps"`
+	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
 }
 
 // URL creates a connection URL from the configured credentials.
