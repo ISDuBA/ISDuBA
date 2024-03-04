@@ -17,6 +17,8 @@
   import Comment from "$lib/Comment.svelte";
   import Version from "$lib/Version.svelte";
   import { WorkflowStates } from "$lib/types";
+  import Webview from "$lib/CSAFWebview/Webview.svelte";
+  import { convertToDocModel } from "$lib/CSAFWebview/docmodel/docmodel";
 
   let document = {};
   let hideComments = false;
@@ -51,18 +53,16 @@
   };
 
   const loadDocument = async () => {
-    const query = `&query=$tracking_id ${$page.params.trackingID} = $id ${$page.params.documentID} int = $publisher "${$page.params.publisherNamespace}" = and`;
-    const encodedUri = encodeURI(
-      `/api/documents?columns=id state tracking_id version publisher current_release_date initial_release_date title tlp cvss_v2_score cvss_v3_score four_cves${query}`
-    );
-    const response = await fetch(encodedUri, {
+    const response = await fetch(`/api/documents/${$page.params.documentID}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       }
     });
     if (response.ok) {
-      const foundDocuments = await response.json();
-      document = foundDocuments.documents[0];
+      const doc = await response.json();
+      ({ document } = doc);
+      const docModel = convertToDocModel(doc);
+      appStore.setDocument(docModel);
     } else {
       // Do errorhandling
     }
@@ -132,36 +132,18 @@
 <RouteGuard>
   <div class="flex">
     <div class="grow">
-      <table>
-        <tr>
-          <td>PublisherNamespace:</td><td class="pl-3">{$page.params.publisherNamespace}</td>
-        </tr>
-        <tr>
-          <td>TrackingId:</td><td class="pl-3">{$page.params.trackingID}</td>
-        </tr>
-        <tr>
-          <td>DocumentID:</td><td class="pl-3">{$page.params.documentID}</td>
-        </tr>
-        {#if document}
-          <tr>
-            <td>Current release date:</td><td class="pl-3">{document.current_release_date}</td>
-          </tr>
-          <tr>
-            <td>Workflow state:</td>
-            <td class="pl-3">
-              <Select
-                on:change={updateState}
-                items={Object.values(WorkflowStates).map((v) => {
-                  return { value: v, name: v };
-                })}
-                value={document.state}
-                placeholder=""
-                underline
-              ></Select>
-            </td>
-          </tr>
-        {/if}
-      </table>
+      <Webview></Webview>
+    </div>
+    <div>
+      <Select
+        on:change={updateState}
+        items={Object.values(WorkflowStates).map((v) => {
+          return { value: v, name: v };
+        })}
+        value={"new"}
+        placeholder=""
+        underline
+      ></Select>
     </div>
     <Version
       publisherNamespace={$page.params.publisherNamespace}
