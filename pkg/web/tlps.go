@@ -42,3 +42,16 @@ func (c *Controller) tlps(ctx *gin.Context) models.PuplishersTLPs {
 	}
 	return tlps
 }
+
+// hasAnyRole checks if at least one of the roles is fullfilled.
+func (c *Controller) hasAnyRole(ctx *gin.Context, roles ...string) bool {
+	token, ok := ctx.Get("token")
+	if !ok {
+		return false
+	}
+	kct, ok := token.(*ginkeycloak.KeycloakToken)
+	if !ok || kct == nil {
+		return false
+	}
+	return kct.RealmAccess.ContainsAny(roles)
+}

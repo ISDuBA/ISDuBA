@@ -36,4 +36,5 @@ func (c *Controller) changeStatus(ctx *gin.Context) {
 
 	_ = id
 	_ = state
+	_ = c.hasAnyRole
 }
