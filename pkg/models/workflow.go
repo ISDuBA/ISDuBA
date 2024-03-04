@@ -8,6 +8,8 @@
 
 package models
 
+import "fmt"
+
 // Workflow is a state of an advisory.
 type Workflow string
 
@@ -55,6 +57,16 @@ func (wf Workflow) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (wf *Workflow) UnmarshalText(text []byte) error {
+	x := Workflow(text)
+	if !x.Valid() {
+		return fmt.Errorf("%q is no a valid workflow", text)
+	}
+	*wf = x
+	return nil
 }
 
 // TransitionsRoles return a list of roles that are allowed to do the requested

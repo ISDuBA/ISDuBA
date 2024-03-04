@@ -70,6 +70,7 @@ func (c *Controller) Bind() http.Handler {
 
 	// State change
 	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)
+	api.PUT("/status", authEdReAd, c.changeStatusBulk)
 
 	return r
 }

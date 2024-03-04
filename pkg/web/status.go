@@ -10,7 +10,6 @@ package web
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -20,21 +19,34 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (c *Controller) changeStatus(ctx *gin.Context) {
+type advisoryState struct {
+	Publisher  string          `uri:"publisher" binding:"required" json:"publisher"`
+	TrackingID string          `uri:"trackingid" binding:"required" json:"tracking_id"`
+	State      models.Workflow `uri:"state" binding:"required" json:"state"`
+}
 
-	var (
-		publisher  = ctx.Param("publisher")
-		trackingID = ctx.Param("trackingid")
-		state      = models.Workflow(ctx.Param("state"))
+type advisoryStates []advisoryState
+
+func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
+
+	const (
+		findAdvisory = `SELECT id, state::text, tlp ` +
+			`FROM advisories ads JOIN documents docs ON ads.documents_id = docs.id ` +
+			`WHERE publisher = $1 AND tracking_id = $2`
+		updateState = `UPDATE advisories SET state = $1::workflow WHERE documents_id = $2`
+		insertLog   = `INSERT INTO events_log (event, state, actor, documents_id) ` +
+			`VALUES ('state_change', $1::workflow, $2, $3)`
 	)
 
-	if !state.Valid() {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": fmt.Sprintf("invalid state %q", state)})
-		return
+	var actor *string
+	if !c.cfg.General.AnonymousEventLogging {
+		uid := ctx.GetString("uid")
+		actor = &uid
 	}
 
-	var forbidden, noTransition bool
+	tlps := c.tlps(ctx)
+
+	var forbidden, noTransition, bad bool
 
 	rctx := ctx.Request.Context()
 	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
@@ -44,57 +56,51 @@ func (c *Controller) changeStatus(ctx *gin.Context) {
 		}
 		defer tx.Rollback(rctx)
 
-		var (
-			documentID int64
-			currentS   string
-			tlp        string
-		)
+		for i := range inputs {
+			var (
+				input      = &inputs[i]
+				documentID int64
+				current    string
+				tlp        string
+			)
 
-		const findAdvisory = `SELECT id, state::text, tlp ` +
-			`FROM advisories ads JOIN documents docs ON ads.documents_id = docs.id ` +
-			`WHERE publisher = $1 AND tracking_id = $2`
+			if input.Publisher == "" || input.TrackingID == "" {
+				bad = true
+				return nil
+			}
 
-		if err := tx.QueryRow(rctx, findAdvisory, publisher, trackingID).Scan(
-			&documentID, &state, &tlp,
-		); err != nil {
-			return err
-		}
+			if err := tx.QueryRow(rctx, findAdvisory, input.Publisher, input.TrackingID).Scan(
+				&documentID, &current, &tlp,
+			); err != nil {
+				return err
+			}
 
-		// Check if we are allowed to access it.
-		if tlps := c.tlps(ctx); len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
-			forbidden = true
-			return nil
-		}
+			// Check if we are allowed to access it.
+			if len(tlps) > 0 && !tlps.Allowed(input.Publisher, models.TLP(tlp)) {
+				forbidden = true
+				return nil
+			}
 
-		// Check if the transition is allowed to user.
-		current := models.Workflow(currentS)
-		roles := current.TransitionsRoles(state)
-		if len(roles) == 0 {
-			noTransition = true
-			return nil
-		}
-		if !c.hasAnyRole(ctx, roles...) {
-			forbidden = true
-			return nil
-		}
+			// Check if the transition is allowed to user.
+			roles := models.Workflow(current).TransitionsRoles(input.State)
+			if len(roles) == 0 {
+				noTransition = true
+				return nil
+			}
+			if !c.hasAnyRole(ctx, roles...) {
+				forbidden = true
+				return nil
+			}
 
-		// At this point the state change can be done.
-		const updateState = `UPDATE advisories SET state = $1::workflow WHERE documents_id = $2`
-		if _, err := tx.Exec(rctx, updateState, string(state), documentID); err != nil {
-			return err
-		}
+			// At this point the state change can be done.
+			if _, err := tx.Exec(rctx, updateState, string(input.State), documentID); err != nil {
+				return err
+			}
 
-		// Log the event
-		const insertLog = `INSERT INTO events_log (event, state, actor, documents_id) ` +
-			`VALUES ('state_change', $1::workflow, $2, $3)`
-
-		var actor *string
-		if !c.cfg.General.AnonymousEventLogging {
-			uid := ctx.GetString("uid")
-			actor = &uid
-		}
-		if _, err := tx.Exec(rctx, insertLog, string(state), actor, documentID); err != nil {
-			return err
+			// Log the event
+			if _, err := tx.Exec(rctx, insertLog, string(input.State), actor, documentID); err != nil {
+				return err
+			}
 		}
 
 		return tx.Commit(rctx)
@@ -107,14 +113,32 @@ func (c *Controller) changeStatus(ctx *gin.Context) {
 		}
 		return
 	}
-
-	if forbidden {
+	switch {
+	case bad:
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "bad input"})
+	case forbidden:
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
-		return
-	}
-	if noTransition {
+	case noTransition:
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "state transition not possible"})
+	default:
+		ctx.JSON(http.StatusOK, gin.H{"message": "transition done"})
+	}
+}
+
+func (c *Controller) changeStatus(ctx *gin.Context) {
+	var input advisoryState
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "transition done"})
+	c.changeStatusAll(ctx, advisoryStates{input})
+}
+
+func (c *Controller) changeStatusBulk(ctx *gin.Context) {
+	var inputs advisoryStates
+	if err := ctx.ShouldBindUri(&inputs); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.changeStatusAll(ctx, inputs)
 }
