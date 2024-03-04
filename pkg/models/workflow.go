@@ -64,7 +64,7 @@ func (wf Workflow) Valid() bool {
 func (wf *Workflow) UnmarshalText(text []byte) error {
 	x := Workflow(text)
 	if !x.Valid() {
-		return fmt.Errorf("%q is no a valid workflow", text)
+		return fmt.Errorf("%q is no a valid workflow state", text)
 	}
 	*wf = x
 	return nil
