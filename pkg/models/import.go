@@ -235,7 +235,7 @@ func ImportDocument(
 	conn *pgxpool.Conn,
 	r io.Reader,
 	actor *string,
-	pstlps PuplishersTLPs,
+	pstlps PublishersTLPs,
 	dry bool,
 ) (int64, error) {
 	var (

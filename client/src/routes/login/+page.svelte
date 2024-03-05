@@ -9,37 +9,7 @@
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { appStore } from "$lib/store";
-  import { goto } from "$app/navigation";
-  import { configuration } from "$lib/configuration";
-  import { browser } from "$app/environment";
-  import Keycloak from "keycloak-js";
-
-  let lastVisited = "/";
-  if (browser) {
-    lastVisited = localStorage.getItem("lastVisited") || "/";
-  }
-  onMount(async () => {
-    appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
-    await $appStore.app.keycloak
-      .init({
-        onLoad: "check-sso",
-        checkLoginIframe: false
-        //onLoad: 'login-required'
-      })
-      .then(async (response: any) => {
-        const profile = await $appStore.app.keycloak.loadUserProfile();
-        console.log("Retrieved user profile:", profile);
-        appStore.setLoginState(true);
-        appStore.setUserProfile({
-          firstName: profile.firstName,
-          lastName: profile.lastName
-        });
-        goto(lastVisited);
-      })
-      .catch((error: any) => {
-        console.log("error", error);
-      });
-  });
+  import Login from "$lib/Login/Login.svelte";
 </script>
+
+<Login></Login>

@@ -32,7 +32,7 @@ func TestAsConditions(t *testing.T) {
 		{`[{"publisher": "", "tlps": ["WHITE"]}, {"publisher": "A", "tlps": [ "AMBER" ]}, {"publisher": "B", "tlps": ["RED"]}]`,
 			`$tlp AMBER = $publisher "A" = and $tlp RED = $publisher "B" = and or $tlp WHITE = $publisher "A" != $publisher "B" != and and or`},
 	} {
-		var ptlps PuplishersTLPs
+		var ptlps PublishersTLPs
 		if err := json.Unmarshal([]byte(x.input), &ptlps); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}

@@ -17,7 +17,7 @@ import (
 // extractTLPs extracts the TLP from the JWT token.
 func extractTLPs(claims func(any) error, kc *ginkeycloak.KeycloakToken) error {
 	var wrapper struct {
-		TLP models.PuplishersTLPs `json:"TLP"`
+		TLP models.PublishersTLPs `json:"TLP"`
 	}
 	if err := claims(&wrapper); err != nil {
 		return err
@@ -27,7 +27,7 @@ func extractTLPs(claims func(any) error, kc *ginkeycloak.KeycloakToken) error {
 }
 
 // tlps fetches the TLPs from the given Gin context.
-func (c *Controller) tlps(ctx *gin.Context) models.PuplishersTLPs {
+func (c *Controller) tlps(ctx *gin.Context) models.PublishersTLPs {
 	token, ok := ctx.Get("token")
 	if !ok {
 		return c.cfg.PublishersTLPs
@@ -36,9 +36,22 @@ func (c *Controller) tlps(ctx *gin.Context) models.PuplishersTLPs {
 	if !ok || kct == nil {
 		return c.cfg.PublishersTLPs
 	}
-	tlps, ok := kct.CustomClaims.(models.PuplishersTLPs)
+	tlps, ok := kct.CustomClaims.(models.PublishersTLPs)
 	if !ok {
 		return c.cfg.PublishersTLPs
 	}
 	return tlps
+}
+
+// hasAnyRole checks if at least one of the roles is fullfilled.
+func (c *Controller) hasAnyRole(ctx *gin.Context, roles ...string) bool {
+	token, ok := ctx.Get("token")
+	if !ok {
+		return false
+	}
+	kct, ok := token.(*ginkeycloak.KeycloakToken)
+	if !ok || kct == nil {
+		return false
+	}
+	return kct.RealmAccess.ContainsAny(roles)
 }

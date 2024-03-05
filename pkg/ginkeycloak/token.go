@@ -8,7 +8,10 @@
 
 package ginkeycloak
 
-import "time"
+import (
+	"slices"
+	"time"
+)
 
 // KeycloakToken is the de-serialized token from Keycloak.
 type KeycloakToken struct {
@@ -39,6 +42,17 @@ type KeycloakToken struct {
 // ServiceRole is a list of roles.
 type ServiceRole struct {
 	Roles []string `json:"roles"`
+}
+
+// ContainsAny returns if the list of service roles contains
+// at least one of the given ones.
+func (sr *ServiceRole) ContainsAny(roles []string) bool {
+	for _, role := range sr.Roles {
+		if slices.Contains(roles, role) {
+			return true
+		}
+	}
+	return false
 }
 
 func (kct *KeycloakToken) isExpired() bool {
