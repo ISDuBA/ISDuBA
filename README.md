@@ -51,3 +51,4 @@ The abbreviation expands to a German label, which translates to
 
 - Contains third party Free Software components under licenses that to our best knowledge are compatible at time of adding the dependency, [3rdpartylicenses.md](3rdpartylicenses.md) has the details.
 
+- The copyright is held by the Bundesamt für Sicherheit in der Informationstechnik (BSI)
