@@ -8,6 +8,8 @@
 
 package models
 
+import "fmt"
+
 // Workflow is a state of an advisory.
 type Workflow string
 
@@ -28,10 +30,11 @@ const (
 	Auditor  = "auditor"    // Auditor role
 )
 
-// Transitions is a matrix to tell who is allowed to change between certain states.
-var Transitions = map[[2]Workflow][]string{
+// TODO: Why is there no way back from read to new?
+// transitions is a matrix to tell who is allowed to change between certain states.
+var transitions = map[[2]Workflow][]string{
 	{"", NewWorkflow}:                   {Importer},
-	{NewWorkflow, AssessingWorkflow}:    {Editor},
+	{NewWorkflow, ReadWorkflow}:         {Editor},
 	{ReadWorkflow, AssessingWorkflow}:   {Editor},
 	{AssessingWorkflow, NewWorkflow}:    {Importer},
 	{ReviewWorkflow, NewWorkflow}:       {Importer},
@@ -55,4 +58,20 @@ func (wf Workflow) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (wf *Workflow) UnmarshalText(text []byte) error {
+	x := Workflow(text)
+	if !x.Valid() {
+		return fmt.Errorf("%q is no a valid workflow state", text)
+	}
+	*wf = x
+	return nil
+}
+
+// TransitionsRoles return a list of roles that are allowed to do the requested
+// transition.
+func (wf Workflow) TransitionsRoles(other Workflow) []string {
+	return transitions[[2]Workflow{wf, other}]
 }

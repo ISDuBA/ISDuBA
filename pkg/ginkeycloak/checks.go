@@ -103,12 +103,7 @@ func (ab *AccessBuilder) All() gin.HandlerFunc {
 // is part of the claims.
 func RoleCheck(roles ...string) AccessCheckFunction {
 	return func(tc *TokenContainer, _ *gin.Context) bool {
-		for _, role := range roles {
-			if slices.Contains(tc.KeycloakToken.RealmAccess.Roles, role) {
-				return true
-			}
-		}
-		return false
+		return tc.KeycloakToken.RealmAccess.ContainsAny(roles)
 	}
 }
 

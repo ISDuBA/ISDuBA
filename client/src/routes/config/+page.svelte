@@ -9,10 +9,7 @@
 -->
 
 <script lang="ts">
-  import RouteGuard from "$lib/RouteGuard.svelte";
-  import { onMount } from "svelte";
+  import Configuration from "$lib/Configuration/Overview.svelte";
 </script>
 
-<RouteGuard>
-  <h1>Configuration</h1>
-</RouteGuard>
+<Configuration></Configuration>
