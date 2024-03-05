@@ -18,6 +18,7 @@
   import { WorkflowStates } from "$lib/types";
   import Webview from "$lib/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/CSAFWebview/docmodel/docmodel";
+  export let params: any = null;
 
   let document = {};
   let hideComments = false;
@@ -34,7 +35,7 @@
 
   const loadAdvisoryVersions = async () => {
     const response = await fetch(
-      `/api/documents?&columns=id version&query=$tracking_id ${$page.params.trackingID} = $publisher "${$page.params.publisherNamespace}" = and`,
+      `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
       {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
@@ -52,7 +53,7 @@
   };
 
   const loadDocument = async () => {
-    const response = await fetch(`/api/documents/${$page.params.documentID}`, {
+    const response = await fetch(`/api/documents/${params.id}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       }
