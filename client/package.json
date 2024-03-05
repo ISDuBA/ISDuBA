@@ -49,7 +49,9 @@
   "dependencies": {
     "boxicons": "^2.1.4",
     "diff2html": "^3.4.47",
+    "dompurify": "^3.0.9",
     "keycloak-js": "^23.0.6",
+    "marked": "^12.0.0",
     "svelte-spa-router": "^4.0.1"
   }
 }
