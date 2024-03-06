@@ -196,7 +196,10 @@ func CheckProjections(proj []string, aliases map[string]string, advisory bool) e
 func createFrom(hasAliases, advisory bool) string {
 	var from string
 	if advisory {
-		from = `extended_documents JOIN advisories ON advisories.documents_id = id`
+		from = `extended_documents ` +
+			`JOIN advisories ON ` +
+			`advisories.tracking_id = extended_documents.tracking_id AND ` +
+			`advisories.publisher = extended_documents.publisher`
 	} else {
 		from = `extended_documents`
 	}
@@ -256,6 +259,9 @@ func projectionsWithCasts(proj []string, aliases map[string]string) string {
 		if alias, found := aliases[p]; found {
 			b.WriteString(alias)
 			continue
+		}
+		if p == "tracking_id" || p == "publisher" {
+			b.WriteString("extended_documents.")
 		}
 		b.WriteString(p)
 		if p == "state" {

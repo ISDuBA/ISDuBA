@@ -63,10 +63,12 @@ CREATE TABLE documents (
         REFERENCES advisories(tracking_id, publisher)
         ON DELETE CASCADE
         DEFERRABLE INITIALLY DEFERRED,
-    UNIQUE (tracking_id, publisher, version, rev_history_length),
-    UNIQUE (tracking_id, publisher, latest),
-    CHECK (latest <> FALSE)
+    UNIQUE (tracking_id, publisher, version, rev_history_length)
 );
+
+CREATE UNIQUE INDEX only_one_latest_constraint
+    ON documents (tracking_id, publisher)
+    WHERE latest;
 
 -- create_advisory checks if the new document is newer than the old one.
 CREATE FUNCTION create_advisory() RETURNS trigger AS $$
