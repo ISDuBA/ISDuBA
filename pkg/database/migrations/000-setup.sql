@@ -61,7 +61,8 @@ CREATE TABLE documents (
 
     FOREIGN KEY (tracking_id, publisher)
         REFERENCES advisories(tracking_id, publisher)
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
+        DEFERRABLE INITIALLY DEFERRED,
     UNIQUE (tracking_id, publisher, version, rev_history_length),
     UNIQUE (tracking_id, publisher, latest),
     CHECK (latest <> FALSE)
@@ -74,21 +75,27 @@ CREATE FUNCTION create_advisory() RETURNS trigger AS $$
         old_rev_length   int;
         old_release_date timestamptz;
     BEGIN
-        SELECT id, revision_history_length, current_release_date
+        -- Ensure having an advisories record.
+        INSERT INTO advisories (tracking_id, publisher)
+            VALUES (NEW.tracking_id, NEW.publisher)
+            ON CONFLICT (tracking_id, publisher) DO NOTHING;
+
+        SELECT id, rev_history_length, current_release_date
             INTO old_id, old_rev_length, old_release_date
             FROM documents
             WHERE latest AND tracking_id = NEW.tracking_id AND publisher = NEW.publisher;
 
         IF NOT FOUND THEN -- No latest -> we are
-            UPDATE documents SET latest = true WHERE id = NEW.id;
+            UPDATE documents SET latest = TRUE WHERE id = NEW.id;
         ELSE
             -- Check if the new record is in fact newer than the old one.
             IF NEW.current_release_date > old_release_date OR
-               (NEW.current_release_date = old_release_date AND NEW.rev_history_length > old_rev_length)
+               (NEW.current_release_date = old_release_date AND
+                NEW.rev_history_length > old_rev_length)
             THEN
                 -- Take over lead.
-                UPDATE documents SET latest = false WHERE id = old_id;
-                UPDATE documents SET latest = true  WHERE id = NEW.id;
+                UPDATE documents SET latest = FALSE WHERE id = old_id;
+                UPDATE documents SET latest = TRUE  WHERE id = NEW.id;
             END IF;
         END IF;
         RETURN NULL;
@@ -108,7 +115,7 @@ CREATE FUNCTION delete_advisory() RETURNS trigger AS $$
                 WHERE tracking_id = OLD.tracking_id AND publisher = OLD.publisher
                 ORDER BY current_release_date DESC, rev_history_length DESC;
             IF FOUND THEN
-                UPDATE documents SET latest = true WHERE id = lead_id;
+                UPDATE documents SET latest = TRUE WHERE id = lead_id;
             ELSE -- No documents for advisory -> Delete advisory.
                 DELETE FROM advisories WHERE (tracking_id, publisher) = (OLD.tracking_id, OLD.publisher);
             END IF;
@@ -117,7 +124,9 @@ CREATE FUNCTION delete_advisory() RETURNS trigger AS $$
     END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER insert_document AFTER INSERT ON documents
+CREATE TRIGGER insert_document
+    AFTER INSERT
+    ON documents
     FOR EACH ROW EXECUTE FUNCTION create_advisory();
 
 CREATE TRIGGER delete_document AFTER DELETE ON documents
