@@ -79,13 +79,14 @@
           </svelte:fragment>
         </SidebarItem>
       {:else}
-        <!-- Entries which should be available independend from login status should go here-->
+        <!-- Entries which should be available only if not logged in should go here-->
         <SidebarItem on:click={login} label="Login">
           <svelte:fragment slot="icon">
             <i class="bx bx-log-in"></i>
           </svelte:fragment>
         </SidebarItem>
       {/if}
+      <!-- Entries which should be available independend from login status should go here-->
         <SidebarItem label="About" href="/#/about">
         </SidebarItem>
 
