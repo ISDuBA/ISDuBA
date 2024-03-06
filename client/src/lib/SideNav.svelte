@@ -28,43 +28,43 @@
     "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
 </script>
 
-<Sidebar class="h-screen bg-primary-700 p-2" {activeUrl} {activeClass} {nonActiveClass}>
+<Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
   <SidebarWrapper class="bg-primary-700">
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">
       {#if $appStore.app.isUserLoggedIn}
         <!-- Entries which are available after login should go here-->
-        <SidebarItem label="Home" href="/">
+        <SidebarItem label="Home" href="/#/">
           <svelte:fragment slot="icon">
             <i class="bx bxs-dashboard"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Advisories" href="/advisories">
+        <SidebarItem label="Advisories" href="/#/advisories">
           <svelte:fragment slot="icon">
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Compare" href="/diff">
+        <SidebarItem label="Compare" href="/#/diff">
           <svelte:fragment slot="icon">
             <i class="bx bx-transfer"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Documents" href="/documents">
+        <SidebarItem label="Documents" href="/#/documents">
           <svelte:fragment slot="icon">
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Sources" href="/sources">
+        <SidebarItem label="Sources" href="/#/sources">
           <svelte:fragment slot="icon">
             <i class="bx bx-git-repo-forked"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Statistics" href="/statistics">
+        <SidebarItem label="Statistics" href="/#/statistics">
           <svelte:fragment slot="icon">
             <i class="bx bx-bar-chart-square"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Configuration" href="/config">
+        <SidebarItem label="Configuration" href="/#/configuration">
           <svelte:fragment slot="icon">
             <i class="bx bx-cog"></i>
           </svelte:fragment>

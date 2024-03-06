@@ -15,9 +15,10 @@
   import { appStore } from "$lib/store";
   import Comment from "$lib/Comment.svelte";
   import Version from "$lib/Version.svelte";
-  import { WorkflowStates } from "$lib/types";
+  import { getAllowedWorkflowChanges } from "$lib/permissions";
   import Webview from "$lib/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/CSAFWebview/docmodel/docmodel";
+  export let params: any = null;
 
   let document = {};
   let hideComments = false;
@@ -34,7 +35,7 @@
 
   const loadAdvisoryVersions = async () => {
     const response = await fetch(
-      `/api/documents?&columns=id version&query=$tracking_id ${$page.params.trackingID} = $publisher "${$page.params.publisherNamespace}" = and`,
+      `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
       {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
@@ -52,7 +53,7 @@
   };
 
   const loadDocument = async () => {
-    const response = await fetch(`/api/documents/${$page.params.documentID}`, {
+    const response = await fetch(`/api/documents/${params.id}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       }
@@ -113,8 +114,14 @@
     });
   }
 
-  function updateState(event) {
-    console.log(event.target.value);
+  function updateState(event: any) {
+    const newState = event.target.value;
+    fetch(`/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`, {
+      headers: {
+        Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      },
+      method: "PUT"
+    });
   }
 
   onMount(async () => {
@@ -130,18 +137,25 @@
 
 <div class="flex">
   <div class="grow">
-    <Webview></Webview>
-  </div>
-  <div>
-    <Select
-      on:change={updateState}
-      items={Object.values(WorkflowStates).map((v) => {
-        return { value: v, name: v };
-      })}
-      value={"new"}
-      placeholder=""
-      underline
-    ></Select>
+    <div class="flex flex-col">
+      <Label class="mb-4 max-w-52"
+        >Workflow-State:
+        <!-- TODO: Replace hard-coded state "new" with current state of document -->
+        <Select
+          on:change={updateState}
+          items={[
+            { value: "new", name: "new" },
+            ...getAllowedWorkflowChanges(appStore.getRoles(), "new").map((v) => {
+              return { value: v.to, name: v.to };
+            })
+          ]}
+          value={"new"}
+          placeholder=""
+          underline
+        ></Select>
+      </Label>
+      <Webview></Webview>
+    </div>
   </div>
   <Version
     publisherNamespace={$page.params.publisherNamespace}

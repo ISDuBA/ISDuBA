@@ -10,7 +10,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
-  import { goto } from "$app/navigation";
+  import { push } from "svelte-spa-router";
   import {
     Table,
     TableBody,
@@ -135,7 +135,7 @@
         <TableBodyRow
           class="cursor-pointer"
           on:click={() => {
-            goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
+            push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
           }}
         >
           <TableBodyCell {tdClass}>{item.id}</TableBodyCell>

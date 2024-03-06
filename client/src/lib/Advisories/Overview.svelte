@@ -11,7 +11,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
-  import { goto } from "$app/navigation";
+  import { push } from "svelte-spa-router";
   import {
     Table,
     TableBody,
@@ -73,7 +73,7 @@
     }
   };
   const allUnreadDocuments = encodeURI(
-    "/api/documents?columns=id state tracking_id version publisher current_release_date initial_release_date title tlp cvss_v2_score cvss_v3_score four_cves"
+    "/api/documents?columns=id tracking_id version publisher current_release_date initial_release_date title tlp cvss_v2_score cvss_v3_score four_cves"
   );
   $: filteredItems = documents;
   onMount(async () => {
@@ -173,7 +173,7 @@
         <TableBodyRow
           class="cursor-pointer"
           on:click={(event) => {
-            goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
+            push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
           }}
         >
           <TableBodyCell {tdClass}>{item.id}</TableBodyCell>

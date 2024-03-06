@@ -8,6 +8,7 @@
 
 import { writable } from "svelte/store";
 import type { DocModel } from "./CSAFWebview/docmodel/docmodeltypes";
+import { ADMIN, EDITOR, REVIEWER, IMPORTER, AUDITOR } from "./permissions";
 
 type AppStore = {
   app: {
@@ -270,11 +271,12 @@ function createStore() {
     reset: () => {
       set(generateInitalState());
     },
-    isImporter: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("importer"),
-    isEditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("bearbeiter"),
-    isReviewer: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("reviewer"),
-    isAdmin: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("admin"),
-    isAuditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes("auditor")
+    getRoles: () => state.app.keycloak.tokenParsed.realm_access.roles,
+    isImporter: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(IMPORTER),
+    isEditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(EDITOR),
+    isReviewer: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(REVIEWER),
+    isAdmin: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(ADMIN),
+    isAuditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(AUDITOR)
   };
 }
 
