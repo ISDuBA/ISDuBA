@@ -15,7 +15,7 @@
   import { appStore } from "$lib/store";
   import Comment from "$lib/Comment.svelte";
   import Version from "$lib/Version.svelte";
-  import { WorkflowStates } from "$lib/types";
+  import { WORKFLOW_STATES } from "$lib/permissions";
   import Webview from "$lib/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/CSAFWebview/docmodel/docmodel";
   export let params: any = null;
@@ -114,8 +114,14 @@
     });
   }
 
-  function updateState(event) {
-    console.log(event.target.value);
+  function updateState(event: any) {
+    const newState = event.target.value;
+    fetch(`/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`, {
+      headers: {
+        Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      },
+      method: "PUT"
+    });
   }
 
   onMount(async () => {
@@ -136,7 +142,7 @@
   <div>
     <Select
       on:change={updateState}
-      items={Object.values(WorkflowStates).map((v) => {
+      items={WORKFLOW_STATES.map((v) => {
         return { value: v, name: v };
       })}
       value={"new"}

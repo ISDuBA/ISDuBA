@@ -6,15 +6,6 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-export enum WorkflowStates {
-  NEW = "new",
-  READ = "read",
-  ASSESSING = "assessing",
-  REVIEW = "review",
-  ARCHIVE = "archive",
-  DELETE = "delete"
-}
-
 /**
  * Contains a list of acknowledgment elements associated with the whole document.
  */
