@@ -15,7 +15,7 @@
   import { appStore } from "$lib/store";
   import Comment from "$lib/Comment.svelte";
   import Version from "$lib/Version.svelte";
-  import { WORKFLOW_STATES } from "$lib/permissions";
+  import { getAllowedWorkflowChanges } from "$lib/permissions";
   import Webview from "$lib/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/CSAFWebview/docmodel/docmodel";
   export let params: any = null;
@@ -137,18 +137,25 @@
 
 <div class="flex">
   <div class="grow">
-    <Webview></Webview>
-  </div>
-  <div>
-    <Select
-      on:change={updateState}
-      items={WORKFLOW_STATES.map((v) => {
-        return { value: v, name: v };
-      })}
-      value={"new"}
-      placeholder=""
-      underline
-    ></Select>
+    <div class="flex flex-col">
+      <Label class="mb-4 max-w-52"
+        >Workflow-State:
+        <!-- TODO: Replace hard-coded state "new" with current state of document -->
+        <Select
+          on:change={updateState}
+          items={[
+            { value: "new", name: "new" },
+            ...getAllowedWorkflowChanges(appStore.getRoles(), "new").map((v) => {
+              return { value: v.to, name: v.to };
+            })
+          ]}
+          value={"new"}
+          placeholder=""
+          underline
+        ></Select>
+      </Label>
+      <Webview></Webview>
+    </div>
   </div>
   <Version
     publisherNamespace={$page.params.publisherNamespace}
