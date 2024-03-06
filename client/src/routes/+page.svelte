@@ -16,6 +16,7 @@
   import Statistics from "$lib/Statistics/Overview.svelte";
   import Login from "$lib/Login/Login.svelte";
   import Sources from "$lib/Sources/Overview.svelte";
+  import About from "$lib/About/About.svelte"
   import Diff from "$lib/Diff/DiffPage.svelte";
   import { wrap } from "svelte-spa-router/wrap";
   import Configuration from "$lib/Configuration/Overview.svelte";
@@ -46,6 +47,9 @@
     }),
     "/login": wrap({
       component: Login
+    }),
+    "/about": wrap({
+      component: About
     }),
     "/advisories/:publisherNamespace/:trackingID/documents/:id": wrap({
       component: Advisory,

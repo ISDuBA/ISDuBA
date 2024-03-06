@@ -86,6 +86,9 @@
           </svelte:fragment>
         </SidebarItem>
       {/if}
+        <SidebarItem label="About" href="/#/about">
+        </SidebarItem>
+
     </SidebarGroup>
   </SidebarWrapper>
 </Sidebar>
