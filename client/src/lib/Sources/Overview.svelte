@@ -9,7 +9,8 @@
 -->
 
 <script lang="ts">
+  import SectionHeader from "$lib/SectionHeader.svelte";
   import { onMount } from "svelte";
 </script>
 
-<h1>Sources</h1>
+<SectionHeader title="Sources"></SectionHeader>

@@ -22,6 +22,7 @@
     TableSearch
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
+  import SectionHeader from "$lib/SectionHeader.svelte";
 
   let openRow: number | null;
 
@@ -95,7 +96,7 @@
   });
 </script>
 
-<h1 class="mb-3 text-lg">Advisories</h1>
+<SectionHeader title="Advisories"></SectionHeader>
 {#if documents}
   <TableSearch
     placeholder="Search by maker name"

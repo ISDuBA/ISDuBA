@@ -12,6 +12,7 @@
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Diff from "$lib/Diff/Diff.svelte";
+  import SectionHeader from "$lib/SectionHeader.svelte";
 
   let diff: string;
   onMount(async () => {
@@ -29,5 +30,5 @@
   });
 </script>
 
-<h1 class="text-lg">Comparison</h1>
+<SectionHeader title="Comparison"></SectionHeader>
 <Diff {diff}></Diff>

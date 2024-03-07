@@ -21,6 +21,7 @@
     TableSearch
   } from "flowbite-svelte";
   import { tablePadding, tdClass } from "$lib/table/defaults";
+  import SectionHeader from "$lib/SectionHeader.svelte";
   let documents: any = [];
   let searchTerm: string = "";
   const sortState: any = {
@@ -82,7 +83,7 @@
   });
 </script>
 
-<h1 class="text-lg">Documents</h1>
+<SectionHeader title="Documents"></SectionHeader>
 {#if documents}
   <TableSearch placeholder="Search by maker name" hoverable={true} bind:inputValue={searchTerm}>
     <TableHead class="cursor-pointer">

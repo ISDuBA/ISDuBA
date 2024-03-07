@@ -32,6 +32,7 @@
     activeSortColumn: ""
   };
   import { tdClass, tablePadding } from "$lib/table/defaults";
+  import SectionHeader from "$lib/SectionHeader.svelte";
 
   const defaultSortFunction = (attribute: string) => {
     return {
@@ -88,7 +89,7 @@
   });
 </script>
 
-<h1 class="mb-3 text-lg">New Events</h1>
+<SectionHeader title="New Events"></SectionHeader>
 <Table>
   <TableHead>
     <TableHeadCell padding={tablePadding}>Description</TableHeadCell>
@@ -101,7 +102,7 @@
     </TableBodyRow>
   </TableBody>
 </Table>
-<h1 class="mb-3 mt-10 text-lg">New Documents</h1>
+<SectionHeader title="New Advisories"></SectionHeader>
 {#if documents}
   <div style="width: 100%;overflow-y: auto">
     <TableSearch placeholder="Search" hoverable={true} bind:inputValue={searchTerm}>

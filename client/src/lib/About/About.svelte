@@ -9,14 +9,13 @@
 -->
 
 <script lang="ts">
-  import { A, P, Li, List, Heading } from "flowbite-svelte";
+  import { A, P, Li, List } from "flowbite-svelte";
+  import SectionHeader from "$lib/SectionHeader.svelte";
   const clientVersion: string = __APP_VERSION__;
   const backendVersion: string = __BACKEND_VERSION__;
 </script>
 
-<Heading tag="h2" customSize="text-lg" class="mb-3 text-lg text-gray-900 dark:text-white"
-  >About ISDuBA</Heading
->
+<SectionHeader title="About ISDuBA"></SectionHeader>
 
 <P>
   <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
