@@ -17,6 +17,7 @@ declare global {
     // interface Platform {}
   }
   declare const __APP_VERSION__: string;
+  declare const __BACKEND_VERSION__: string;
 }
 
 export {};

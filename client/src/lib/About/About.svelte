@@ -10,15 +10,15 @@
 
 <script lang="ts">
   import { A, P } from "flowbite-svelte";
-  /*global __APP_VERSION__*/
-  const version: string = __APP_VERSION__;
+  const clientVersion: string = __APP_VERSION__;
+  const backendVersion: string = __BACKEND_VERSION__;
 </script>
 
 <h1 class="mb-3 text-lg">About ISDuBA</h1>
 Versions:
 <ul>
-  <li>Client: {version}</li>
-  <li>Backend: blubb</li>
+  <li>Client: {clientVersion}</li>
+  <li>Backend: {backendVersion}</li>
 </ul>
 <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
   >Visit the ISDuBA project on Github</A
