@@ -86,10 +86,7 @@
           </svelte:fragment>
         </SidebarItem>
       {/if}
-      <!-- Entries which should be available independend from login status should go here-->
-        <SidebarItem label="About" href="/#/about">
-        </SidebarItem>
-
+      <SidebarItem label="About" href="/#/about"></SidebarItem>
     </SidebarGroup>
   </SidebarWrapper>
 </Sidebar>

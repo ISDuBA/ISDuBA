@@ -1,4 +1,3 @@
-  GNU nano 7.2                                                                                 About/About.svelte                                                                                           
 <!--
  This file is Free Software under the MIT License
  without warranty, see README.md and LICENSES/MIT.txt for details.
@@ -10,9 +9,17 @@
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { A, P } from 'flowbite-svelte';
+  import { A, P } from "flowbite-svelte";
+  /*global __APP_VERSION__*/
+  const version: string = __APP_VERSION__;
 </script>
 
-<h1>About</h1>
-<A href="https://github.com/ISDuBA/" class="underline hover:no-underline">Visit the ISDuBA project on Github</A>
+<h1 class="mb-3 text-lg">About ISDuBA</h1>
+Versions:
+<ul>
+  <li>Client: {version}</li>
+  <li>Backend: blubb</li>
+</ul>
+<A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
+  >Visit the ISDuBA project on Github</A
+>
