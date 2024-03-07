@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import "diff2html/bundles/css/diff2html.min.css";
   import { Diff2HtmlUI, type Diff2HtmlUIConfig } from "diff2html/lib/ui/js/diff2html-ui-slim";
 
   export let diff: string;

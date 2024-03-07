@@ -11,7 +11,6 @@
   import Router from "svelte-spa-router";
   import "../app.pcss";
   import "boxicons/css/boxicons.min.css";
-  import "diff2html/bundles/css/diff2html.min.css";
   import SideNav from "$lib/SideNav.svelte";
   import Home from "$lib/Home/Home.svelte";
   import Statistics from "$lib/Statistics/Overview.svelte";
