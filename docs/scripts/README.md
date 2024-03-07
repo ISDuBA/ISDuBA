@@ -17,7 +17,7 @@ Calling installall.sh will
    - install PostgreSQL via installpostgres.sh
    - create keycloak user and adjust postgres user for postgres via configurepostgres.sh
    - install node 20 and all frontend dependencies via installplaywright.sh
-   
+ 
 
 To call installall (sudo privileges needed):
 ``` bash
