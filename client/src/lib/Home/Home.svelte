@@ -19,9 +19,15 @@
     TableBodyRow,
     TableHead,
     TableHeadCell,
-    TableSearch
+    TableSearch,
+    Pagination
   } from "flowbite-svelte";
+  import { tdClass, tablePadding } from "$lib/table/defaults";
+  import SectionHeader from "$lib/SectionHeader.svelte";
+
+  let pages = [{ name: "1" }, { name: "2" }, { name: "3" }, { name: "4" }, { name: "5" }];
   let documents: any = [];
+  let count = 0;
   let searchTerm: string = "";
   const sortState: any = {
     id: "",
@@ -31,56 +37,33 @@
     version: "",
     activeSortColumn: ""
   };
-  import { tdClass, tablePadding } from "$lib/table/defaults";
-  import SectionHeader from "$lib/SectionHeader.svelte";
 
-  const defaultSortFunction = (attribute: string) => {
-    return {
-      asc: (ad1: any, ad2: any) => {
-        if (ad1[attribute] < ad2[attribute]) return -1;
-        if (ad1[attribute] > ad2[attribute]) return 1;
-        return 0;
-      },
-      desc: (ad2: any, ad1: any) => {
-        if (ad1[attribute] < ad2[attribute]) return -1;
-        if (ad1[attribute] > ad2[attribute]) return 1;
-        return 0;
-      }
-    };
+  let orderBy = "id";
+  let limit = 10;
+  const previous = () => {
+    alert("Previous btn clicked. Make a call to your server to fetch data.");
   };
-  const sortFunctionsByColumn: any = {
-    id: defaultSortFunction("id"),
-    publisher: defaultSortFunction("publisher"),
-    title: defaultSortFunction("title"),
-    trackingID: defaultSortFunction("tracking_id"),
-    version: defaultSortFunction("version"),
-    state: defaultSortFunction("state")
+  const next = () => {
+    alert("Next btn clicked. Make a call to your server to fetch data.");
   };
-  const sortDocuments = (column: string) => {
-    sortState["activeSortColumn"] = column;
-    if (sortState[column] === "asc") {
-      documents = [...documents.sort(sortFunctionsByColumn[column]["desc"])];
-      sortState[column] = "desc";
-    } else {
-      documents = [...documents.sort(sortFunctionsByColumn[column]["asc"])];
-      sortState[column] = "asc";
-    }
+  const handleClick = () => {
+    alert("Page clicked");
   };
-  const allUnreadDocuments = encodeURI(
-    "/api/documents?columns=id publisher title tracking_id version"
+
+  const sortDocuments = (column: string) => {};
+  $: documentURL = encodeURI(
+    `/api/documents?&count=1&order=${orderBy}&limit=${limit}&columns=id publisher title tracking_id version`
   );
-  $: filteredItems = documents;
   onMount(async () => {
     if ($appStore.app.isUserLoggedIn) {
       $appStore.app.keycloak.updateToken(5).then(async () => {
-        const response = await fetch(allUnreadDocuments, {
+        const response = await fetch(documentURL, {
           headers: {
             Authorization: `Bearer ${$appStore.app.keycloak.token}`
           }
         });
         if (response.ok) {
-          ({ documents } = await response.json());
-          sortDocuments("id");
+          ({ count, documents } = await response.json());
         } else {
           // Do errorhandling
         }
@@ -162,7 +145,7 @@
         >
       </TableHead>
       <TableBody>
-        {#each filteredItems as item}
+        {#each documents as item}
           <TableBodyRow
             class="cursor-pointer"
             on:click={() => {
@@ -181,3 +164,7 @@
     </TableSearch>
   </div>
 {/if}
+<div class="mt-3 flex">
+  <span class="mr-3 flex-grow">Showing the first 10 of {count} Entries</span>
+  <Pagination {pages} on:previous={previous} on:next={next} on:click={handleClick} />
+</div>
