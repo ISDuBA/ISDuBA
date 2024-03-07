@@ -26,9 +26,4 @@
   }
 </script>
 
-<link
-  rel="stylesheet"
-  type="text/css"
-  href="../../node_modules/diff2html/bundles/css/diff2html.min.css"
-/>
 <div id="diff"></div>
