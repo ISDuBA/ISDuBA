@@ -49,6 +49,14 @@ const (
 	workflowType
 )
 
+// Parser helps parsing database queries,
+type Parser struct {
+	// Advisory indicates that only advisories should be considered.
+	Advisory bool
+	// Languages are the languages supported by full-text search.
+	Languages []string
+}
+
 // Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
 type Expr struct {
 	exprType  exprType
@@ -146,7 +154,8 @@ var columns = []documentColumn{
 	{"four_cves", stringType, false, true},
 }
 
-// TODO: make this configurable?
+// supportedLangs are the default languages.
+// Can be overwritten in Parser.
 var supportedLangs = []string{
 	"english",
 	"german",
@@ -734,15 +743,25 @@ func (st *stack) workflow() {
 	}
 }
 
-func (st *stack) search() {
+func (p *Parser) checkLanguage(lang string) {
+	var langs []string
+	if p.Languages != nil {
+		langs = p.Languages
+	} else {
+		langs = supportedLangs
+	}
+	if !slices.Contains(langs, lang) {
+		panic(parseError(
+			fmt.Sprintf("unsupported search language %q", lang)))
+	}
+}
+
+func (st *stack) search(p *Parser) {
 	lang := st.pop()
 	term := st.pop()
 	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
-	if !slices.Contains(supportedLangs, lang.stringValue) {
-		panic(parseError(
-			fmt.Sprintf("unsupported search language %q", lang.stringValue)))
-	}
+	p.checkLanguage(lang.stringValue)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
@@ -826,7 +845,7 @@ func split(input string, fn func(string, bool)) {
 	}
 }
 
-func parse(input string, advisory bool) (*Expr, error) {
+func (p *Parser) parse(input string) (*Expr, error) {
 	st := stack{}
 	aliases := map[string]struct{}{}
 
@@ -869,12 +888,12 @@ func parse(input string, advisory bool) (*Expr, error) {
 		case ">=":
 			st.cmp(ge)
 		case "search":
-			st.search()
+			st.search(p)
 		case "as":
 			st.as(aliases)
 		default:
 			if strings.HasPrefix(field, "$") {
-				st.access(field[1:], advisory)
+				st.access(field[1:], p.Advisory)
 			} else {
 				st.pushString(field)
 			}
@@ -893,7 +912,7 @@ func parse(input string, advisory bool) (*Expr, error) {
 }
 
 // Parse returns an expression.
-func Parse(input string, advisory bool) (expr *Expr, err error) {
+func (p *Parser) Parse(input string) (expr *Expr, err error) {
 	defer func() {
 		if x := recover(); x != nil {
 			if pe, ok := x.(parseError); ok {
@@ -903,13 +922,13 @@ func Parse(input string, advisory bool) (expr *Expr, err error) {
 			}
 		}
 	}()
-	return parse(input, advisory)
+	return p.parse(input)
 }
 
 // MustParse parses the given input to an expression.
 // If the parsing failed it panics.
-func MustParse(input string, advisory bool) *Expr {
-	expr, err := Parse(input, advisory)
+func (p *Parser) MustParse(input string) *Expr {
+	expr, err := p.Parse(input)
 	if err != nil {
 		panic(fmt.Sprintf("parsing %q failed: %v", input, err))
 	}

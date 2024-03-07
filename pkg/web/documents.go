@@ -81,13 +81,15 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		return
 	}
 
+	parser := database.Parser{}
+
 	query := fmt.Sprintf("$id %d int =", id)
-	expr := database.MustParse(query, false)
+	expr := parser.MustParse(query)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		tlpExpr, err := database.Parse(conditions, false)
+		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err})
@@ -136,9 +138,14 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
+	parser := database.Parser{
+		Advisory:  advisory,
+		Languages: c.cfg.Database.TextSearch,
+	}
+
 	// The query to filter the documents.
 	query := ctx.DefaultQuery("query", "true")
-	expr, err := database.Parse(query, advisory)
+	expr, err := parser.Parse(query)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error:": err.Error()})
 		return
@@ -147,7 +154,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		tlpExpr, err := database.Parse(conditions, advisory)
+		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
