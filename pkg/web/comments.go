@@ -83,7 +83,9 @@ func (c *Controller) createComment(ctx *gin.Context) {
 
 		const eventSQL = `INSERT INTO events_log ` +
 			`(event, state, time, actor, documents_id) ` +
-			`VALUES('add_comment', (SELECT state FROM documents WHERE id = $3), $1, $2, $3)`
+			`VALUES('add_comment', ` +
+			`(SELECT state FROM advisories ads JOIN documents ON ads.tracking_id = tracking_id AND ads.publisher = publisher WHERE id = $3), ` +
+			`$1, $2, $3)`
 
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {
@@ -148,7 +150,9 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 
 		const eventSQL = `INSERT INTO events_log ` +
 			`(event, state, time, actor, documents_id) ` +
-			`VALUES('change_comment', (SELECT state FROM documents WHERE id = $3), $1, $2, $3)`
+			`VALUES('change_comment', ` +
+			`(SELECT state FROM advisories ads JOIN documents ON ads.tracking_id = tracking_id AND ads.publisher = publisher WHERE id = $3), ` +
+			`$1, $2, $3)`
 
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {

@@ -10,9 +10,8 @@
 
 # Prerequisites
 
- - [A keycloak setup](./keycloak.md)
-
  - [A postgres database](./postgres.md)
+ - [A keycloak setup](./keycloak.md)
 
  - A recent version of go, see [here on how to download and install go](https://go.dev/doc/install)
 
