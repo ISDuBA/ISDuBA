@@ -13,11 +13,11 @@
   import { sineIn } from "svelte/easing";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
-  import Comment from "$lib/Comment.svelte";
+  import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Version.svelte";
   import { getAllowedWorkflowChanges } from "$lib/permissions";
-  import Webview from "$lib/CSAFWebview/Webview.svelte";
-  import { convertToDocModel } from "$lib/CSAFWebview/docmodel/docmodel";
+  import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
+  import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   export let params: any = null;
 
   let document = {};
