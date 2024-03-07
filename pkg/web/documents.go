@@ -163,6 +163,11 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
+	// In advisory mode we only show the latest.
+	if advisory {
+		expr = expr.And(parser.MustParse("$latest"))
+	}
+
 	where, replacements, aliases := expr.Where()
 
 	fields := strings.Fields(

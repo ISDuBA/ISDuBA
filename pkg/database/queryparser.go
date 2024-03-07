@@ -140,6 +140,7 @@ func (pe parseError) Error() string {
 
 var columns = []documentColumn{
 	{"id", intType, false, false},
+	{"latest", boolType, false, false},
 	{"state", workflowType, true, false},
 	{"tracking_id", stringType, false, false},
 	{"version", stringType, false, false},
