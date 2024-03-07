@@ -19,7 +19,6 @@ const versionGo = readFileSync(versionGOFile, "utf8");
 const versionInfo = versionGo.match(/var SemVersion = "(.*?)"/);
 let backendVersion = "Error";
 if (versionInfo) backendVersion = versionInfo[1] || "Error";
-console.log(backendVersion);
 
 export default defineConfig({
   server: {
