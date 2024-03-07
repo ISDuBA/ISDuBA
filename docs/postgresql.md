@@ -81,11 +81,15 @@ Open the pg_hba.conf:
 ```
 vim pg_hba.conf
 ```
-Add the following two lines:
+Add lines that allow logins via the network,
+replace `192.168.56.1/32` in the following example
+with the subnet you want to allow access from:
 ```
 host    all             all             192.168.56.1/32         scram-sha-256
 host    all             all             127.0.0.1/32            scram-sha-256
 ```
+
+Use a method to reload that config file, e.g. `pg_ctl reload`.
 
 Exit the postgres user:
 ```
