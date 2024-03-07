@@ -9,17 +9,24 @@
 -->
 
 <script lang="ts">
-  import { A, P } from "flowbite-svelte";
+  import { A, P, Li, List, Heading } from "flowbite-svelte";
   const clientVersion: string = __APP_VERSION__;
   const backendVersion: string = __BACKEND_VERSION__;
 </script>
 
-<h1 class="mb-3 text-lg">About ISDuBA</h1>
-Versions:
-<ul>
-  <li>Client: {clientVersion}</li>
-  <li>Backend: {backendVersion}</li>
-</ul>
-<A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
-  >Visit the ISDuBA project on Github</A
+<Heading tag="h2" customSize="text-lg" class="mb-3 text-lg text-gray-900 dark:text-white"
+  >About ISDuBA</Heading
 >
+
+<P>
+  <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
+    >Visit the ISDuBA project on Github</A
+  ></P
+>
+<P class="mt-3">
+  Versions:
+  <List tag="ul" class="space-y-1" list="none">
+    <Li liClass="ml-3">Client: {clientVersion}</Li>
+    <Li liClass="ml-3">Backend: {backendVersion}</Li>
+  </List>
+</P>
