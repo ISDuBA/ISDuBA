@@ -164,9 +164,11 @@ ID/Name: ```auth```
 
 ### Via Clients: auth:
 
-- valid redirect url: ```/*```
+- `Valid redirect URIs`: ```/*```
 
-- web origins url: ```/*```
+- `Web origins`: ```/*```
+
+- `Valid post logout redirect URIs`: `+` or `/*`. `+` means that the value from `Valid redirect URIs` is taken.
 
 - Tick the boxes Standard flow and Direct access grants
 
