@@ -11,6 +11,8 @@
 Everything described here can also be done via the [postgres install](./scripts/installpostgres.sh)
 and [postgres configuration](./scripts/configurepostgres.sh) scripts.
 
+This guide describes how to set up a postgres database for a development build on Ubuntu 24.04. These settings may not be suitable for production.
+
 # Get PostgreSQL
 Download PostgreSQL version 15 or newer.
 PostgreSQL 16 has been used for development.
