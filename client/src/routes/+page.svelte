@@ -62,7 +62,7 @@
     "/": wrap({
       component: Home,
       userData: loginRequired,
-      conditions: [loginCondition]
+      conditions: []
     }),
     "/about": wrap({
       component: About
