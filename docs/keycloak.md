@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-This guide describes how to set up keycloak for a development build.
+This guide describes how to set up keycloak on Ubuntu for a development build.
 These settings may not be suitable for production.
 
 # Prerequisites
