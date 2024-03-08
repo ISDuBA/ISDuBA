@@ -8,6 +8,9 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
+This guide describes how to set up keycloak for a development build.
+These settings may not be suitable for production.
+
 # Prerequisites
 
  * A recent PostgreSQL installation
@@ -28,20 +31,20 @@ and the [keycloak configuration script](./scripts/configurekeycloak.sh)
 The creation of Realms and Users via keycloak needs to be done manually still.
 
 Download a recent version of Keycloak. 
-Version 23.0.5 has been used for development.
+Version 24.0.1 has been used for development.
 
 ```
-wget https://github.com/keycloak/keycloak/releases/download/23.0.5/keycloak-23.0.5.zip
+wget https://github.com/keycloak/keycloak/releases/download/24.0.1/keycloak-24.0.1.zip
 ```
 
 ### Unzip Keycloak
 
 ```
-unzip keycloak-23.0.5.zip
+unzip keycloak-24.0.1.zip
 ```
 
 ```
-mv keycloak-23.0.5 /opt/keycloak
+mv keycloak-24.0.1 /opt/keycloak
 ```
 
 ### Alter Keycloak config
@@ -164,11 +167,13 @@ ID/Name: ```auth```
 
 ### Via Clients: auth:
 
-- `Valid redirect URIs`: ```/*```
+- `Valid redirect URIs`: ```http://localhost:5173/*```
+
+- `Valid post logout redirect URIs`: `+` or `/*`. `+` means that the value from `Valid redirect URIs` is taken.
 
 - `Web origins`: ```/*```
 
-- `Valid post logout redirect URIs`: `+` or `/*`. `+` means that the value from `Valid redirect URIs` is taken.
+- `Admin URL`: ```http://localhost:5173/```
 
 - Tick the boxes Standard flow and Direct access grants
 
