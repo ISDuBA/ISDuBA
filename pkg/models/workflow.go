@@ -74,3 +74,8 @@ func (wf *Workflow) UnmarshalText(text []byte) error {
 func (wf Workflow) TransitionsRoles(other Workflow) []string {
 	return transitions[[2]Workflow{wf, other}]
 }
+
+// CommentingAllowed returns true if commenting is allowed.
+func (wf Workflow) CommentingAllowed() bool {
+	return wf == ReadWorkflow || wf == AssessingWorkflow
+}

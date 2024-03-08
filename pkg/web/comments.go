@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -52,6 +53,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	var (
 		where, replacements, _ = expr.Where()
 		exists                 bool
+		commentingAllowed      bool
+		forbidden              bool
 		commentator            = ctx.GetString("uid")
 		message, _             = ctx.GetPostForm("message")
 		now                    = time.Now().UTC()
@@ -66,34 +69,83 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		}
 		defer tx.Rollback(rctx)
 
-		existsSQL := `SELECT exists(SELECT FROM extended_documents WHERE ` + where + `)`
-		if err := tx.QueryRow(rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+		stateSQL := `SELECT state, docs.tracking_id, docs.publisher ` +
+			`FROM documents docs JOIN advisories ads ` +
+			`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
+			` WHERE ` + where + `)`
+
+		var (
+			stateS     string
+			trackingID string
+			publisher  string
+		)
+		if err := tx.QueryRow(rctx, stateSQL, replacements...).Scan(
+			&stateS, &trackingID, &publisher,
+		); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil
+			}
 			return err
 		}
-		if !exists {
+		exists = true
+
+		// Check if we are in a state in which commenting is allowed.
+		state := models.Workflow(stateS)
+		commentingAllowed = state == models.ReadWorkflow || state == models.AssessingWorkflow
+		if !commentingAllowed {
 			return nil
 		}
-
-		const insertSQL = `INSERT INTO comments ` +
-			`(documents_id, time, commentator, message) ` +
-			`VALUES ($1, $2, $3, $4) ` +
-			`RETURNING id`
-
-		if err := tx.QueryRow(rctx, insertSQL, docID, now, commentator, message).Scan(&commentID); err != nil {
-			return err
-		}
-
-		const eventSQL = `INSERT INTO events_log ` +
-			`(event, state, time, actor, documents_id) ` +
-			`VALUES('add_comment', ` +
-			`(SELECT state FROM advisories ads JOIN documents ON ads.tracking_id = tracking_id AND ads.publisher = publisher WHERE id = $3), ` +
-			`$1, $2, $3)`
 
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {
 			actor.String = commentator
 		}
-		if _, err := tx.Exec(rctx, eventSQL, now, actor, docID); err != nil {
+
+		logEvent := func(event models.Event, state models.Workflow) error {
+			const eventSQL = `INSERT INTO events_log ` +
+				`(event, state, time, actor, documents_id) ` +
+				`VALUES($1::events, $2::workflow, $3, $4, $5)`
+			_, err := tx.Exec(rctx, eventSQL, string(event), string(state), now, actor, docID)
+			return err
+		}
+
+		// Switch to assessing state if we are not in.
+		if state == models.ReadWorkflow {
+			// Check if the transition is allowed to user.
+			roles := models.ReadWorkflow.TransitionsRoles(models.AssessingWorkflow)
+			if !c.hasAnyRole(ctx, roles...) {
+				forbidden = true
+				return nil
+			}
+
+			// Switch to assessing state.
+			const assessingStateSQL = `UPDATE advisories SET state = 'assessing' ` +
+				`WHERE (trackingid, publisher) = ($1, $2)`
+			if _, err := tx.Exec(rctx, assessingStateSQL, trackingID, publisher); err != nil {
+				return err
+			}
+
+			// Log that we switched state.
+			if err := logEvent(models.StateChangeEvent, models.AssessingWorkflow); err != nil {
+				return err
+			}
+		}
+
+		// Now insert the comment itself
+		const insertSQL = `INSERT INTO comments ` +
+			`(documents_id, time, commentator, message) ` +
+			`VALUES ($1, $2, $3, $4) ` +
+			`RETURNING id`
+
+		if err := tx.QueryRow(
+			rctx, insertSQL,
+			docID, now, commentator, message,
+		).Scan(&commentID); err != nil {
+			return err
+		}
+
+		// Log that we created a comment
+		if err := logEvent(models.AddCommentEvent, models.AssessingWorkflow); err != nil {
 			return err
 		}
 
@@ -103,15 +155,20 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	if !exists {
+	switch {
+	case !exists:
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
-		return
+	case !commentingAllowed:
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid state to comment"})
+	case forbidden:
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not allowed to change state"})
+	default:
+		ctx.JSON(http.StatusCreated, gin.H{
+			"id":          commentID,
+			"time":        now,
+			"commentator": commentator,
+		})
 	}
-	ctx.JSON(http.StatusCreated, gin.H{
-		"id":          commentID,
-		"time":        now,
-		"commentator": commentator,
-	})
 }
 
 func (c *Controller) updateComment(ctx *gin.Context) {
