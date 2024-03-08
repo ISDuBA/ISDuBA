@@ -16,7 +16,7 @@
 
   let diff: string;
   onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
+    if ($appStore.app.keycloak.authenticated) {
       fetch("advisory.diff", {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`

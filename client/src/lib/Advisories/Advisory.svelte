@@ -125,7 +125,7 @@
   }
 
   onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
+    if ($appStore.app.keycloak.authenticated) {
       loadDocument();
       await loadAdvisoryVersions();
       if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {

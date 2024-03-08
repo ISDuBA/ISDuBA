@@ -14,7 +14,6 @@
   import { page } from "$app/stores";
 
   async function logout() {
-    appStore.setLoginState(false);
     $appStore.app.keycloak.logout();
   }
 
@@ -32,7 +31,7 @@
   <SidebarWrapper class="bg-primary-700">
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">
-      {#if $appStore.app.isUserLoggedIn}
+      {#if $appStore.app.keycloak.authenticated}
         <!-- Entries which are available after login should go here-->
         <SidebarItem label="Home" href="/#/">
           <svelte:fragment slot="icon">

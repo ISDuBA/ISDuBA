@@ -14,7 +14,6 @@
   import SideNav from "$lib/SideNav.svelte";
   import Home from "$lib/Home/Home.svelte";
   import Statistics from "$lib/Statistics/Overview.svelte";
-  import Login from "$lib/Login/Login.svelte";
   import Sources from "$lib/Sources/Overview.svelte";
   import About from "$lib/About/About.svelte";
   import Diff from "$lib/Diff/DiffPage.svelte";
@@ -28,15 +27,35 @@
   import { push } from "svelte-spa-router";
   import Keycloak from "keycloak-js";
   import { configuration } from "$lib/configuration";
+  import { onMount } from "svelte";
 
   appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
+
+  onMount(async () => {
+    await $appStore.app.keycloak
+      .init({
+        onLoad: "check-sso",
+        checkLoginIframe: false,
+        responseMode: "query"
+      })
+      .then(async (response: any) => {
+        const profile = await $appStore.app.keycloak.loadUserProfile();
+        appStore.setUserProfile({
+          firstName: profile.firstName,
+          lastName: profile.lastName
+        });
+      })
+      .catch((error: any) => {
+        console.log("error", error);
+      });
+  });
 
   const loginRequired = {
     loginRequired: true
   };
 
   const loginCondition = () => {
-    return $appStore.app.isUserLoggedIn;
+    return $appStore.app.keycloak.authenticated;
   };
 
   const routes = {
@@ -44,9 +63,6 @@
       component: Home,
       userData: loginRequired,
       conditions: [loginCondition]
-    }),
-    "/login": wrap({
-      component: Login
     }),
     "/about": wrap({
       component: About
@@ -91,7 +107,7 @@
 
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
-      push("/login");
+      push("/");
     }
   };
 </script>

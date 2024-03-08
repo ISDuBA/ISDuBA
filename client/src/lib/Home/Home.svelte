@@ -55,7 +55,7 @@
     `/api/documents?&count=1&order=${orderBy}&limit=${limit}&columns=id publisher title tracking_id version`
   );
   onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
+    if ($appStore.app.keycloak.authenticated) {
       $appStore.app.keycloak.updateToken(5).then(async () => {
         const response = await fetch(documentURL, {
           headers: {

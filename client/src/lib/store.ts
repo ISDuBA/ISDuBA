@@ -16,7 +16,6 @@ type AppStore = {
       firstName: string;
       lastName: string;
     };
-    isUserLoggedIn: boolean;
     token: any;
     keycloak: any;
   };
@@ -259,12 +258,6 @@ function createStore() {
         const { firstName, lastName } = userProfile;
         settings.app.userProfile.firstName = firstName;
         settings.app.userProfile.lastName = lastName;
-        return settings;
-      });
-    },
-    setLoginState: (newState: boolean) => {
-      update((settings) => {
-        settings.app.isUserLoggedIn = newState;
         return settings;
       });
     },

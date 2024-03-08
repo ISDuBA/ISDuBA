@@ -65,7 +65,7 @@
   };
   $: filteredItems = documents;
   onMount(() => {
-    if ($appStore.app.isUserLoggedIn) {
+    if ($appStore.app.keycloak.authenticated) {
       $appStore.app.keycloak.updateToken(5).then(async () => {
         const response = await fetch("/api/documents", {
           headers: {
