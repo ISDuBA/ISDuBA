@@ -225,3 +225,11 @@ Turn ```temporary``` off.
 ### Assign Users their roles
 Via ```Users``` via ```Role Mapping``` via ```Assign Role``` assign the users
 their role.
+
+
+### (Optional) Adjust necessary profile information
+
+By default, any user needs a registered E-Mail Adress, First Name, Last Name and Username.
+These settings can be adjusted via  ```Realm Settings``` under ``` User Profile```. 
+E.g. to allow users to log in with just their Username and Password, you can uncheck ```Required Field```
+under E-Mail Adress, First Name and Last Name.
