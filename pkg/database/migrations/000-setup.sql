@@ -55,6 +55,7 @@ CREATE TABLE documents (
                 GENERATED ALWAYS AS (document #>> '{document,title}') STORED,
     rev_history_length int
                 GENERATED ALWAYS AS (revision_history_length(document)) STORED,
+    ssvc        text,
     -- The data
     document    jsonb COMPRESSION lz4 NOT NULL,
     original    bytea COMPRESSION lz4 NOT NULL,

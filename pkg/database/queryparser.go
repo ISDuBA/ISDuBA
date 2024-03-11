@@ -150,6 +150,7 @@ var columns = []documentColumn{
 	{"rev_history_length", intType, false, false},
 	{"title", stringType, false, false},
 	{"tlp", stringType, false, false},
+	{"ssvc", stringType, false, false},
 	{"cvss_v2_score", floatType, false, false},
 	{"cvss_v3_score", floatType, false, false},
 	{"four_cves", stringType, false, true},
