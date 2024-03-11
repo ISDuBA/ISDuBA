@@ -18,7 +18,6 @@ These settings may not be suitable for production.
 <!---
    * Alternatively, use the [setup script]() // TODO
 --->   
- * A way to unpack '.zip' archives, [e.g. unzip](https://manpages.ubuntu.com/manpages/focal/man1/unzip.1.html)
  * A recent version of java, e.g. Java 17
 
  * (Optional) Superuser privileges to allow keycloak to start on system-startup
@@ -30,7 +29,7 @@ and the [keycloak configuration script](./scripts/configurekeycloak.sh)
 
 The creation of Realms and Users via keycloak needs to be done manually still.
 
-Download a recent version of Keycloak. 
+Download a recent version of Keycloak.
 Version 24.0.1 has been used for development.
 
 ```
