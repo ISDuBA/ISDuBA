@@ -52,6 +52,7 @@ directory.
 ```
 adduser --disabled-password --system --group --gecos "" keycloak
 chown -R keycloak:keycloak /opt/keycloak
+chmod -R o-rwx /opt/keycloak/
 ```
 Open the Keycloak config with a text-editor (like vim):
 ```
@@ -131,23 +132,10 @@ WantedBy=multi-user.target
 
 ###  Adjust systemd
 As superuser, enable keycloak to start on system-startup.
-
-Enter superuser status.
-```
-sudo su
-```
-
 Enable Keycloak to start on system-startup.
 ```
 systemctl enable keycloak
 systemctl start keycloak
-```
-
-# Start Keycloak
-
-Start Keycloak and allow it to configure itself.
-```
-bin/kc.sh start-dev &
 ```
 
 # Adjust keycloak

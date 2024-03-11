@@ -24,3 +24,4 @@ sudo mv keycloak-24.0.1 /opt/keycloak
 # create a keycloak user and give them the rights over keycloak
 sudo adduser --disabled-password --system --group --gecos "" keycloak
 sudo chown -R keycloak:keycloak /opt/keycloak
+sudo chmod -R o-rwx /opt/keycloak/
