@@ -22,6 +22,7 @@ const (
 	DeleteWorkflow    Workflow = "delete"    // DeleteWorkflow represents 'delete'.
 )
 
+// The different roles
 const (
 	Admin    = "admin"      // Admin role
 	Importer = "importer"   // Importer role

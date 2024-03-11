@@ -26,6 +26,7 @@ type (
 	PublishersTLPs []PuplisherTLPs
 )
 
+// The different TLP levels
 const (
 	TLPWhite TLP = "WHITE" // TLPWhite represents TLP:WHITE
 	TLPGreen TLP = "GREEN" // TLPGreen represents TLP:GREEN
