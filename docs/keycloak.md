@@ -50,8 +50,8 @@ mv keycloak-24.0.1 /opt/keycloak
 Create a Keycloak user with access rights to your Keycloak
 directory.
 ```
-useradd keycloak
-chown -R keycloak: /opt/keycloak
+adduser --disabled-password --system --group --gecos "" keycloak
+chown -R keycloak:keycloak /opt/keycloak
 ```
 Open the Keycloak config with a text-editor (like vim):
 ```
