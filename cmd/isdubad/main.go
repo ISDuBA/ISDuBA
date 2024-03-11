@@ -25,6 +25,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/web"
 )
 
+// Test comment
 func check(err error) {
 	if err != nil {
 		slog.Error("fatal", "error", err)
