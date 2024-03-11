@@ -18,6 +18,7 @@
   import { getAllowedWorkflowChanges } from "$lib/permissions";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
+  import SsvcCalculator from "$lib/SSVC/SSVCCalculator.svelte";
   export let params: any = null;
 
   let document = {};
@@ -26,12 +27,17 @@
   $: count = comment.length;
   let comments: any = [];
   let advisoryVersions: string[] = [];
+  let showCalculator = false;
 
   let transitionParams = {
     x: 320,
     duration: 120,
     easing: sineIn
   };
+
+  function toggleCalculator() {
+    showCalculator = !showCalculator;
+  }
 
   const loadAdvisoryVersions = async () => {
     const response = await fetch(
@@ -136,32 +142,37 @@
 </script>
 
 <div class="flex">
-  <div class="grow">
+  <div>
     <div class="flex flex-col">
-      <Label class="mb-4 max-w-52"
-        >Workflow-State:
-        <!-- TODO: Replace hard-coded state "new" with current state of document -->
-        <Select
-          on:change={updateState}
-          items={[
-            { value: "new", name: "new" },
-            ...getAllowedWorkflowChanges(appStore.getRoles(), "new").map((v) => {
-              return { value: v.to, name: v.to };
-            })
-          ]}
-          value={"new"}
-          placeholder=""
-          underline
-        ></Select>
-      </Label>
+      <div class="flex">
+        <div class="me-2 flex-col">
+          <Label class="mb-4 max-w-52"
+            >Workflow-State:
+            <!-- TODO: Replace hard-coded state "new" with current state of document -->
+            <Select
+              on:change={updateState}
+              items={[
+                { value: "new", name: "new" },
+                ...getAllowedWorkflowChanges(appStore.getRoles(), "new").map((v) => {
+                  return { value: v.to, name: v.to };
+                })
+              ]}
+              value={"new"}
+              placeholder=""
+              underline
+            ></Select>
+          </Label>
+          <Button on:click={toggleCalculator} class="w-40">Toggle Calculator</Button>
+        </div>
+        <Version
+          publisherNamespace={$page.params.publisherNamespace}
+          trackingID={$page.params.trackingID}
+          {advisoryVersions}
+        ></Version>
+      </div>
       <Webview></Webview>
     </div>
   </div>
-  <Version
-    publisherNamespace={$page.params.publisherNamespace}
-    trackingID={$page.params.trackingID}
-    {advisoryVersions}
-  ></Version>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <Button
       on:click={toggleComments}
@@ -176,34 +187,40 @@
       backdrop={false}
       class="relative flex flex-col"
       placement="right"
-      width="w-1/3"
+      width="w-1/2"
       hidden={hideComments}
       transitionType="in:slide"
       {transitionParams}
     >
-      {#if comments?.length > 0}
-        <div class="overflow-y-scroll pl-2">
-          <Timeline class="flex flex-col-reverse">
-            {#each comments as comment}
-              <Comment {comment}></Comment>
-            {/each}
-          </Timeline>
-        </div>
+      {#if showCalculator}
+        <SsvcCalculator></SsvcCalculator>
       {:else}
-        <span class="mb-4 text-gray-600">No comments available.</span>
-      {/if}
-      {#if appStore.isEditor() || appStore.isReviewer()}
-        <div>
-          <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-          <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-            <div slot="footer" class="flex items-start justify-between">
-              <Button on:click={createComment} disabled={count > 10000 || count === 0}>Send</Button>
-              <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                >{`${count}/10000`}</Label
-              >
-            </div>
-          </Textarea>
-        </div>
+        {#if comments?.length > 0}
+          <div class="overflow-y-scroll pl-2">
+            <Timeline class="flex flex-col-reverse">
+              {#each comments as comment}
+                <Comment {comment}></Comment>
+              {/each}
+            </Timeline>
+          </div>
+        {:else}
+          <span class="mb-4 text-gray-600">No comments available.</span>
+        {/if}
+        {#if appStore.isEditor() || appStore.isReviewer()}
+          <div>
+            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+              <div slot="footer" class="flex items-start justify-between">
+                <Button on:click={createComment} disabled={count > 10000 || count === 0}
+                  >Send</Button
+                >
+                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                  >{`${count}/10000`}</Label
+                >
+              </div>
+            </Textarea>
+          </div>
+        {/if}
       {/if}
     </Drawer>
   {/if}

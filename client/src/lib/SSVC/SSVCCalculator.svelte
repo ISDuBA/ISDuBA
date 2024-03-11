@@ -20,6 +20,8 @@
   let userDecisions: any = {};
   const vectorBeginning = "SSVCv2/";
   let vector: string;
+  let result: any;
+  $: resultStyle = result?.color ? `color: ${result.color}` : "";
 
   onMount(async () => {
     if (true) {
@@ -86,6 +88,9 @@
     userDecisions[mainDecisions[currentStep].label] = option.label;
     extendVector(`${mainDecisions[currentStep].key}:${option.key}/`);
     currentStep++;
+    if (currentStep === mainDecisions.length - 1) {
+      calculateResult();
+    }
   }
 
   function doesContainChildCombo(selectedOptions: any, childCombos: any[]): Boolean {
@@ -127,7 +132,7 @@
     selectOption(selectedOption);
   }
 
-  function calculateResult(): any {
+  function calculateResult() {
     let filteredDecisions = decisions_table;
     for (const key of Object.keys(userDecisions)) {
       filteredDecisions = filteredDecisions.filter((decision) => {
@@ -141,7 +146,13 @@
     const option = getOption(mainDecisions[currentStep], finalDecision.Decision);
     const isoString = new Date().toISOString();
     extendVector(`${mainDecisions[currentStep].key}:${option.key}/${isoString}`);
-    return Object.values(finalDecision)[0];
+    const resultText = Object.values(finalDecision)[0];
+    const color = getOption(mainDecisions[currentStep], resultText).color;
+    console.log(color);
+    result = {
+      text: resultText,
+      color: color
+    };
   }
 
   function stepBack() {
@@ -179,7 +190,9 @@
     currentStep={currentStep + 1}
     {steps}
   ></StepIndicator>
-  <Heading class="mb-6 max-w-fit">{steps[currentStep]}</Heading>
+  {#if steps[currentStep]}
+    <Heading class="mb-6 max-w-fit text-xl">{steps[currentStep]}</Heading>
+  {/if}
   {#if mainDecisions[currentStep]}
     {#if currentStep < mainDecisions.length - 1}
       {#if mainDecisions[currentStep].decision_type === "simple"}
@@ -243,8 +256,11 @@
           </form>
         </Card>
       {/if}
-    {:else}
-      <Label class="text-lg">Result: {calculateResult()}</Label>
+    {:else if result}
+      <Label class="me-1 text-lg"
+        >Result:
+        <span style={resultStyle}>{result.text}</span>
+      </Label>
       <Label class="text-lg">Vector: {vector}</Label>
       <Button>
         <i class="bx bx-save me-2 text-xl"></i>Save</Button
