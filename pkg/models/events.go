@@ -11,6 +11,7 @@ package models
 // Event is an event in the event log.
 type Event string
 
+// Documents to export
 const (
 	ImportDocumentEvent Event = "import_document" // ImportDocumentEvent represents a document import.
 	DeleteDocumentEvent Event = "delete_document" // DeleteDocumentEvent represents a document deletion.

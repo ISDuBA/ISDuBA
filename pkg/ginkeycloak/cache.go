@@ -38,30 +38,30 @@ func newCache[K comparable, V any](expiration time.Duration) *cache[K, V] {
 	}
 }
 
-func (c *cache[K, V]) get(k K) (V, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	it := c.items[k]
+func (i *cache[K, V]) get(k K) (V, bool) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	it := i.items[k]
 	if it == nil {
 		var zero V
 		return zero, false
 	}
 	if it.expired() {
-		delete(c.items, k)
+		delete(i.items, k)
 		var zero V
 		return zero, false
 	}
 	return it.value, true
 }
 
-func (c *cache[K, V]) set(k K, v V) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+func (i *cache[K, V]) set(k K, v V) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	var expires time.Time
-	if c.expiration > 0 {
-		expires = time.Now().Add(c.expiration)
+	if i.expiration > 0 {
+		expires = time.Now().Add(i.expiration)
 	}
-	c.items[k] = &item[V]{
+	i.items[k] = &item[V]{
 		expires: expires,
 		value:   v,
 	}
