@@ -18,7 +18,6 @@ These settings may not be suitable for production.
 <!---
    * Alternatively, use the [setup script]() // TODO
 --->   
- * A way to unpack '.zip' archives, [e.g. unzip](https://manpages.ubuntu.com/manpages/focal/man1/unzip.1.html)
  * A recent version of java, e.g. Java 17
 
  * (Optional) Superuser privileges to allow keycloak to start on system-startup
@@ -30,7 +29,7 @@ and the [keycloak configuration script](./scripts/configurekeycloak.sh)
 
 The creation of Realms and Users via keycloak needs to be done manually still.
 
-Download a recent version of Keycloak. 
+Download a recent version of Keycloak.
 Version 24.0.1 has been used for development.
 
 ```
@@ -51,8 +50,9 @@ mv keycloak-24.0.1 /opt/keycloak
 Create a Keycloak user with access rights to your Keycloak
 directory.
 ```
-useradd keycloak
-chown -R keycloak: /opt/keycloak
+adduser --disabled-password --system --group --gecos "" keycloak
+chown -R keycloak:keycloak /opt/keycloak
+chmod -R o-rwx /opt/keycloak/
 ```
 Open the Keycloak config with a text-editor (like vim):
 ```
@@ -132,23 +132,10 @@ WantedBy=multi-user.target
 
 ###  Adjust systemd
 As superuser, enable keycloak to start on system-startup.
-
-Enter superuser status.
-```
-sudo su
-```
-
 Enable Keycloak to start on system-startup.
 ```
 systemctl enable keycloak
 systemctl start keycloak
-```
-
-# Start Keycloak
-
-Start Keycloak and allow it to configure itself.
-```
-bin/kc.sh start-dev &
 ```
 
 # Adjust keycloak
@@ -167,11 +154,13 @@ ID/Name: ```auth```
 
 ### Via Clients: auth:
 
+- `Root URL`: ```http://localhost:5173/``` 
+
 - `Valid redirect URIs`: ```http://localhost:5173/*```
 
 - `Valid post logout redirect URIs`: `+` or `/*`. `+` means that the value from `Valid redirect URIs` is taken.
 
-- `Web origins`: ```/*```
+- `Web origins`: ```*```
 
 - `Admin URL`: ```http://localhost:5173/```
 

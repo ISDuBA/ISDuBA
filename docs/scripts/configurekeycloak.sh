@@ -11,7 +11,7 @@
 set -e # to exit if a command in the script fails
 
 # Alter the keycloak configuration
-sudo sed -i -e 's/^#db=postgres/db=postgres/' \
+sudo sed --in-place=.orig -e 's/^#db=postgres/db=postgres/' \
             -e 's/^#db-username=/db-username=/' \
             -e 's/^#db-password=password/db-password=keycloak/' \
             -e 's/^#db-url=/db-url=/' /opt/keycloak/conf/keycloak.conf

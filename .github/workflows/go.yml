@@ -1,0 +1,45 @@
+# This file is Free Software under the MIT License
+# without warranty, see README.md and LICENSES/MIT.txt for details.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+# Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+
+name: Go
+
+on:
+  push:
+    paths:
+      - "**.go"
+  pull_request:
+    paths:
+      - "**.go"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 'stable'
+
+      - name: Build
+        run: go build -v ./cmd/...
+
+      - name: vet
+        run: go vet ./...
+
+      - name: gofmt
+        uses: Jerome1337/gofmt-action@v1.0.4
+        with:
+          gofmt-flags: "-l -d"
+
+      - name: Revive Action
+        uses: morphy2k/revive-action@v2.5.1
+
+      - name: Tests
+        run: go test -v ./...

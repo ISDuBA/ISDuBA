@@ -13,6 +13,7 @@ import "fmt"
 // Workflow is a state of an advisory.
 type Workflow string
 
+// Different Workflows
 const (
 	NewWorkflow       Workflow = "new"       // NewWorkflow represents 'new'.
 	ReadWorkflow      Workflow = "read"      // ReadWorkflow represents 'read'.
@@ -22,6 +23,7 @@ const (
 	DeleteWorkflow    Workflow = "delete"    // DeleteWorkflow represents 'delete'.
 )
 
+// The different roles
 const (
 	Admin    = "admin"      // Admin role
 	Importer = "importer"   // Importer role

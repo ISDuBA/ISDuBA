@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -26,6 +27,11 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+//go:embed migrations
+var migrations embed.FS
+
+// migration stores the meta information extracted from the
+// embedded SQL migration files and their names.
 type migration struct {
 	version     int64
 	description string

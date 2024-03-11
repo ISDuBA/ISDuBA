@@ -7,7 +7,7 @@
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
 import { describe, it, expect } from "vitest";
-import { convertToDocModel } from "$lib/CSAFWebview/docmodel/docmodel";
+import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
 import {
   EMPTY,
   Status,
@@ -15,7 +15,7 @@ import {
   type DocModel,
   type DocModelKey,
   TLP
-} from "$lib/CSAFWebview/docmodel/docmodeltypes";
+} from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
 
 const allEmpty = (docModel: DocModel, properties: DocModelKey[]) => {
   properties.forEach((p) => {
