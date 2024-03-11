@@ -167,11 +167,13 @@ ID/Name: ```auth```
 
 ### Via Clients: auth:
 
+- `Root URL`: ```http://localhost:5173/``` 
+
 - `Valid redirect URIs`: ```http://localhost:5173/*```
 
 - `Valid post logout redirect URIs`: `+` or `/*`. `+` means that the value from `Valid redirect URIs` is taken.
 
-- `Web origins`: ```/*```
+- `Web origins`: ```*```
 
 - `Admin URL`: ```http://localhost:5173/```
 
