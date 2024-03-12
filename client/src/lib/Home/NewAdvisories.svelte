@@ -20,25 +20,9 @@
     TableHead,
     TableHeadCell,
     TableSearch,
-    Pagination
+    PaginationItem
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
-
-  const previous = () => {
-    if (offset - limit >= 0) {
-      offset = offset - limit > 0 ? offset - limit : 0;
-    }
-    fetchData();
-  };
-  const next = () => {
-    if (offset + limit <= count) {
-      offset = offset + limit;
-    }
-    fetchData();
-  };
-  const handleClick = () => {
-    alert("Page clicked");
-  };
 
   let orderBy = "title";
   let limit = 10;
@@ -69,9 +53,29 @@
     });
   };
 
-  $: pages = Array.from({ length: Math.ceil(count / limit) }, (_, v) => v + 1).map((x) => {
-    return { name: x };
-  });
+  const previous = () => {
+    if (offset - limit >= 0) {
+      offset = offset - limit > 0 ? offset - limit : 0;
+    }
+    fetchData();
+  };
+  const next = () => {
+    if (offset + limit <= count) {
+      offset = offset + limit;
+    }
+    fetchData();
+  };
+
+  const first = () => {
+    offset = 0;
+    fetchData();
+  };
+
+  const last = () => {
+    offset = count - (count % limit);
+    fetchData();
+  };
+  $: numberOfPages = Math.ceil(count / limit);
   $: documentURL = encodeURI(
     `/api/documents?&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=id publisher title tracking_id version`
   );
@@ -163,12 +167,33 @@
       ]}
       bind:value={limit}
       on:change={() => {
+        offset = 0;
         fetchData();
       }}
     ></Select>
   </div>
   <div class="mr-3 flex-grow">
-    <Pagination {pages} on:previous={previous} on:next={next} on:click={handleClick} />
+    <div class="flex">
+      <PaginationItem on:click={first}>
+        <i class="bx bx-arrow-to-left"></i>
+      </PaginationItem>
+      <PaginationItem on:click={previous}>
+        <i class="bx bx-chevrons-left"></i>
+      </PaginationItem>
+      {#if numberOfPages <= 10}
+        {#each Array.from({ length: numberOfPages }, (_, v) => v) as page}
+          <PaginationItem><span>{page + 1}</span></PaginationItem>
+        {/each}
+      {:else}
+        Navigation for more than 10 elements not implemented
+      {/if}
+      <PaginationItem on:click={next}>
+        <i class="bx bx-chevrons-right"></i>
+      </PaginationItem>
+      <PaginationItem on:click={last}>
+        <i class="bx bx-arrow-to-right"></i>
+      </PaginationItem>
+    </div>
   </div>
   <div class="mr-3">
     {count} entries in total
