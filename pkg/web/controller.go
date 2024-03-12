@@ -72,5 +72,8 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)
 	api.PUT("/status", authEdReAd, c.changeStatusBulk)
 
+	// SSVC change
+	api.PUT("/ssvc/:document", authEdRe, c.changeSSVC)
+
 	return r
 }

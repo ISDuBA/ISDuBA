@@ -17,8 +17,8 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/jackc/pgx/v5 v5.5.3
 	github.com/samber/slog-gin v1.10.1
+	github.com/seal-io/meta-api v0.0.0-20221128093957-de1fd8bb5053
 	golang.org/x/oauth2 v0.17.0
-	golang.org/x/tools v0.6.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
@@ -56,7 +56,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.23.1 // indirect
 	golang.org/x/arch v0.7.0 // indirect
 	golang.org/x/crypto v0.20.0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
