@@ -39,11 +39,8 @@
   const vectorBeginning = "SSVCv2/";
   let vector: string;
   let vectorInput = "SSVCv2/E:N/A:N/T:P/M:M/D:T/2024-03-12T13:26:47Z/";
-  let labelOfConvertedVector = "";
-  let colorOfConvertedVector: string;
   let result: any;
   $: resultStyle = result?.color ? `color: ${result.color}` : "";
-  $: convertedVectorStyle = colorOfConvertedVector ? `color: ${colorOfConvertedVector}` : "";
 
   onMount(async () => {
     loadDecisionTree();
@@ -145,7 +142,9 @@
       delete finalDecision[key];
     }
     const option = getOption(mainDecisions[currentStep], finalDecision.Decision);
-    extendVector(`${mainDecisions[currentStep].key}:${option.key}/${createIsoTimeStringForSSVC()}`);
+    extendVector(
+      `${mainDecisions[currentStep].key}:${option.key}/${createIsoTimeStringForSSVC()}/`
+    );
     const resultText = Object.values(finalDecision)[0];
     const color = getOption(mainDecisions[currentStep], resultText).color;
     result = {
@@ -167,12 +166,6 @@
     delete userDecisions[keyOfLastDecision];
   }
 
-  function convertVector() {
-    const { color, label } = convertVectorToLabel(vectorInput, mainDecisions);
-    labelOfConvertedVector = label;
-    colorOfConvertedVector = color;
-  }
-
   function saveSSVC(vector: string) {
     const encodedUrl = encodeURI(`/api/ssvc/${documentID}?vector=${vector}`);
     fetch(encodedUrl, {
@@ -192,20 +185,14 @@
 
 <div id="ssvc-calc" class="pe-4">
   {#if !startedCalculation}
-    <Label class="mb-4 text-lg">Convert and save existing SSVC vector</Label>
+    <Label class="mb-4 text-lg">Save existing SSVC vector</Label>
     <Label class="mb-2">
       Vector:
       <Input type="text" bind:value={vectorInput} />
     </Label>
-    <div class="flex gap-4">
-      <Button on:click={convertVector}>Convert</Button>
-      {#if labelOfConvertedVector?.length > 0}
-        <P style={convertedVectorStyle}>{labelOfConvertedVector}</P>
-        <Button on:click={() => saveSSVC(vectorInput)}>
-          <i class="bx bx-save me-2 text-xl"></i>Save</Button
-        >
-      {/if}
-    </div>
+    <Button on:click={() => saveSSVC(vectorInput)}>
+      <i class="bx bx-save me-2 text-xl"></i>Save</Button
+    >
     <Label class="mb-4 mt-6 text-lg">Calculate new SSVC vector</Label>
     <Button on:click={() => (startedCalculation = true)}>Calculate</Button>
   {:else}
@@ -302,7 +289,7 @@
           <span style={resultStyle}>{result.text}</span>
         </Label>
         <Label class="text-lg">Vector: {vector}</Label>
-        <Button>
+        <Button on:click={() => saveSSVC(vector)}>
           <i class="bx bx-save me-2 text-xl"></i>Save</Button
         >
       {/if}

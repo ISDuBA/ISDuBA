@@ -49,9 +49,12 @@ export function createIsoTimeStringForSSVC() {
   return `${iso.split(".")[0]}Z`;
 }
 
-export function convertVectorToLabel(vector: string, mainDecisions: any[]): any {
+export async function convertVectorToLabel(vector: string, mainDecisions?: any[]): any {
+  if (!mainDecisions) {
+    ({ mainDecisions } = await loadDecisionTreeFromFile());
+  }
   const keyPairs = vector.split("/").slice(1, -2);
-  if (mainDecisions.length === keyPairs.length) {
+  if (mainDecisions && mainDecisions.length === keyPairs.length) {
     const keyOfSelectedOption = keyPairs[keyPairs.length - 1].split(":")[1];
     const selectedOption = getOptionWithKey(
       mainDecisions[mainDecisions.length - 1],

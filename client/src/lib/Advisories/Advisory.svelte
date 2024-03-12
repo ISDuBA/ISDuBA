@@ -19,9 +19,12 @@
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/SSVC/SSVCCalculator.svelte";
+  import { convertVectorToLabel } from "$lib/SSVC/SSVCCalculator";
   export let params: any = null;
 
   let document = {};
+  let ssvc: any;
+  $: ssvcStyle = ssvc ? `color: ${ssvc.color}` : "";
   let hideComments = false;
   let comment: string = "";
   $: count = comment.length;
@@ -69,6 +72,25 @@
       ({ document } = doc);
       const docModel = convertToDocModel(doc);
       appStore.setDocument(docModel);
+    } else {
+      // Do errorhandling
+    }
+  };
+
+  const loadDocumentSSVC = async () => {
+    const response = await fetch(
+      `/api/documents?&columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        }
+      }
+    );
+    if (response.ok) {
+      const result = await response.json();
+      if (result.documents[0].ssvc) {
+        ssvc = await convertVectorToLabel(result.documents[0].ssvc);
+      }
     } else {
       // Do errorhandling
     }
@@ -137,6 +159,7 @@
       if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
         loadComments();
       }
+      loadDocumentSSVC();
     }
   });
 </script>
@@ -161,6 +184,13 @@
               placeholder=""
               underline
             ></Select>
+          </Label>
+          <Label class="text-lg">
+            {#if ssvc}
+              <span style={ssvcStyle}>{ssvc.label}</span>
+            {:else}
+              <span class="text-gray-400">No SSVC</span>
+            {/if}
           </Label>
           <Button on:click={toggleCalculator} class="w-40">Toggle Calculator</Button>
         </div>
