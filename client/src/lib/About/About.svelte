@@ -11,6 +11,7 @@
 <script lang="ts">
   import { A, P, Li, List } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
+  import { appStore } from "$lib/store";
   const clientVersion: string = __APP_VERSION__;
   const backendVersion: string = __BACKEND_VERSION__;
 </script>
@@ -22,10 +23,12 @@
     >Visit the ISDuBA project on Github</A
   ></P
 >
-<P class="mt-3">
-  Versions:
-  <List tag="ul" class="space-y-1" list="none">
-    <Li liClass="ml-3">Client: {clientVersion}</Li>
-    <Li liClass="ml-3">Backend: {backendVersion}</Li>
-  </List>
-</P>
+{#if $appStore.app.keycloak.authenticated}
+  <P class="mt-3">
+    Versions:
+    <List tag="ul" class="space-y-1" list="none">
+      <Li liClass="ml-3">Client: {clientVersion}</Li>
+      <Li liClass="ml-3">Backend: {backendVersion}</Li>
+    </List>
+  </P>
+{/if}
