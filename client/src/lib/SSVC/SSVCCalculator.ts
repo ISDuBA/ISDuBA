@@ -44,10 +44,15 @@ export function getOptionWithKey(decision: any, key: string): any {
   return decision.options.find((element: any) => element.key === key);
 }
 
+export function createIsoTimeStringForSSVC() {
+  const iso = new Date().toISOString();
+  return `${iso.split(".")[0]}Z`;
+}
+
 export function convertVectorToLabel(vector: string, mainDecisions: any[]): any {
-  const splittedVector = vector.split("/");
-  if (mainDecisions.length === splittedVector.length - 2) {
-    const keyOfSelectedOption = splittedVector[splittedVector.length - 2].split(":")[1];
+  const keyPairs = vector.split("/").slice(1, -2);
+  if (mainDecisions.length === keyPairs.length) {
+    const keyOfSelectedOption = keyPairs[keyPairs.length - 1].split(":")[1];
     const selectedOption = getOptionWithKey(
       mainDecisions[mainDecisions.length - 1],
       keyOfSelectedOption

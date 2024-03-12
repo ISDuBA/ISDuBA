@@ -20,9 +20,15 @@
     Tooltip,
     Input
   } from "flowbite-svelte";
-  import { convertVectorToLabel, loadDecisionTreeFromFile } from "./SSVCCalculator";
+  import {
+    convertVectorToLabel,
+    createIsoTimeStringForSSVC,
+    loadDecisionTreeFromFile
+  } from "./SSVCCalculator";
   import { onMount } from "svelte";
+  import { appStore } from "$lib/store";
 
+  export let documentID: string;
   let startedCalculation = false;
   let currentStep = 0;
   let steps: string[] = [];
@@ -32,7 +38,7 @@
   let userDecisions: any = {};
   const vectorBeginning = "SSVCv2/";
   let vector: string;
-  let vectorInput = "SSVCv2/E:N/A:N/T:P/M:L/D:T/2024-03-11T14:15:17.473Z";
+  let vectorInput = "SSVCv2/E:N/A:N/T:P/M:M/D:T/2024-03-12T13:26:47Z/";
   let labelOfConvertedVector = "";
   let colorOfConvertedVector: string;
   let result: any;
@@ -139,8 +145,7 @@
       delete finalDecision[key];
     }
     const option = getOption(mainDecisions[currentStep], finalDecision.Decision);
-    const isoString = new Date().toISOString();
-    extendVector(`${mainDecisions[currentStep].key}:${option.key}/${isoString}`);
+    extendVector(`${mainDecisions[currentStep].key}:${option.key}/${createIsoTimeStringForSSVC()}`);
     const resultText = Object.values(finalDecision)[0];
     const color = getOption(mainDecisions[currentStep], resultText).color;
     result = {
@@ -152,7 +157,7 @@
   function stepBack() {
     if (currentStep === steps.length - 1) {
       // Delete ISO string and last key pair
-      vector = vector.slice(0, -28);
+      vector = vector.slice(0, -24);
     } else {
       // Delete key pair
       vector = vector.slice(0, -4);
@@ -167,6 +172,22 @@
     labelOfConvertedVector = label;
     colorOfConvertedVector = color;
   }
+
+  function saveSSVC(vector: string) {
+    const encodedUrl = encodeURI(`/api/ssvc/${documentID}?vector=${vector}`);
+    fetch(encodedUrl, {
+      headers: {
+        Authorization: `Bearer ${$appStore.app.keycloak.token}`
+      },
+      method: "PUT"
+    }).then((response) => {
+      if (response.ok) {
+        console.log("response", response);
+      } else {
+        // Do errorhandling
+      }
+    });
+  }
 </script>
 
 <div id="ssvc-calc" class="pe-4">
@@ -180,7 +201,7 @@
       <Button on:click={convertVector}>Convert</Button>
       {#if labelOfConvertedVector?.length > 0}
         <P style={convertedVectorStyle}>{labelOfConvertedVector}</P>
-        <Button>
+        <Button on:click={() => saveSSVC(vectorInput)}>
           <i class="bx bx-save me-2 text-xl"></i>Save</Button
         >
       {/if}

@@ -193,7 +193,7 @@
       {transitionParams}
     >
       {#if showCalculator}
-        <SsvcCalculator></SsvcCalculator>
+        <SsvcCalculator documentID={params.id}></SsvcCalculator>
       {:else}
         {#if comments?.length > 0}
           <div class="overflow-y-scroll pl-2">
