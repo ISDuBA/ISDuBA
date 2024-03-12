@@ -32,9 +32,9 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 	const (
 		findAdvisory = `SELECT id, state::text, tlp ` +
 			`FROM advisories ads ` +
-			`JOIN documents docs ON ads.tracking_id = tracking_id AND ads.publisher = docs.Publisher ` +
-			`WHERE publisher = $1 AND tracking_id = $2`
-		updateState = `UPDATE advisories SET state = $1::workflow WHERE tracking_id = $1 AND publisher = $2`
+			`JOIN documents docs ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.Publisher) ` +
+			`WHERE docs.publisher = $1 AND docs.tracking_id = $2`
+		updateState = `UPDATE advisories SET state = $1::workflow WHERE (tracking_id, publisher) = ($2, $3)`
 		insertLog   = `INSERT INTO events_log (event, state, actor, documents_id) ` +
 			`VALUES ('state_change', $1::workflow, $2, $3)`
 	)
