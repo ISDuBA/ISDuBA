@@ -19,7 +19,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/seal-io/meta-api/ssvc/ssvc2"
 )
 
 func (c *Controller) changeSSVC(ctx *gin.Context) {
@@ -31,7 +30,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 	}
 
 	vector := ctx.DefaultQuery("vector", "")
-	if _, err := ssvc2.Parse(vector); err != nil {
+	if err := models.ValidateSSVCv2Vector(vector); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

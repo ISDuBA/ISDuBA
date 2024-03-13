@@ -17,7 +17,6 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/jackc/pgx/v5 v5.5.3
 	github.com/samber/slog-gin v1.10.1
-	github.com/seal-io/meta-api v0.0.0-20221128093957-de1fd8bb5053
 	golang.org/x/oauth2 v0.17.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
