@@ -11,7 +11,12 @@ package models
 import "testing"
 
 func TestSSVC(t *testing.T) {
-	const vector = "SSVCv2/E:A/A:Y/T:T/M:H/D:C/2024-03-12T18:57:25Z/"
-	// TODO: Implement me!
-	_ = t
+	for _, vector := range []string{
+		"SSVCv2/E:N/A:N/T:P/P:M/B:M/M:L/D:T/2024-03-13T10:33:45Z/",
+		"SSVCv2/E:N/A:N/T:P/M:L/D:T/2024-03-13T10:34:39Z/",
+	} {
+		if err := ValidateSSVCv2Vector(vector); err != nil {
+			t.Errorf("%q failed to validate: %v", vector, err)
+		}
+	}
 }

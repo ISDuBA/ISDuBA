@@ -36,10 +36,10 @@ type ssvcDecisionPointOptionChildCombination struct {
 }
 
 type ssvcDecisionPointOption struct {
-	Label             string                                    `json:"label"`
-	Key               string                                    `json:"key"`
-	Description       string                                    `json:"description"`
-	ChildCombinations []ssvcDecisionPointOptionChildCombination `json:"child_combinations"`
+	Label             string                                      `json:"label"`
+	Key               string                                      `json:"key"`
+	Description       string                                      `json:"description"`
+	ChildCombinations [][]ssvcDecisionPointOptionChildCombination `json:"child_combinations"`
 }
 
 type ssvcDecisionPointChild struct {
