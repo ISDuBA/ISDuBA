@@ -130,15 +130,6 @@
               sortState["version"] === "desc"}
           ></i></TableHeadCell
         >
-        <TableHeadCell padding={tablePadding} on:click={() => {}}
-          >State<i
-            class:bx={true}
-            class:bx-caret-up={sortState["activeSortColumn"] == "state" &&
-              sortState["state"] === "asc"}
-            class:bx-caret-down={sortState["activeSortColumn"] == "state" &&
-              sortState["state"] === "desc"}
-          ></i></TableHeadCell
-        >
       </TableHead>
       <TableBody>
         {#each documents as item}
@@ -152,7 +143,6 @@
             <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
             <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
             <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
-            <TableBodyCell {tdClass}>{item.state}</TableBodyCell>
           </TableBodyRow>
         {/each}
       </TableBody>
