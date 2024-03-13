@@ -12,6 +12,7 @@
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
   import {
+    Input,
     Label,
     Select,
     TableBody,
@@ -28,6 +29,7 @@
   let limit = 10;
   let offset = 0;
   let count = 0;
+  let currentPage = 1;
   let documents: any = [];
   let searchTerm: string = "";
   const sortState: any = {
@@ -56,23 +58,27 @@
   const previous = () => {
     if (offset - limit >= 0) {
       offset = offset - limit > 0 ? offset - limit : 0;
+      currentPage -= 1;
     }
     fetchData();
   };
   const next = () => {
     if (offset + limit <= count) {
       offset = offset + limit;
+      currentPage += 1;
     }
     fetchData();
   };
 
   const first = () => {
     offset = 0;
+    currentPage = 1;
     fetchData();
   };
 
   const last = () => {
     offset = count - (count % limit);
+    currentPage = numberOfPages;
     fetchData();
   };
   $: numberOfPages = Math.ceil(count / limit);
@@ -180,13 +186,19 @@
       <PaginationItem on:click={previous}>
         <i class="bx bx-chevrons-left"></i>
       </PaginationItem>
-      {#if numberOfPages <= 10}
-        {#each Array.from({ length: numberOfPages }, (_, v) => v) as page}
-          <PaginationItem><span>{page + 1}</span></PaginationItem>
-        {/each}
-      {:else}
-        Navigation for more than 10 elements not implemented
-      {/if}
+      <div class="mx-3 flex items-center">
+        <input
+          class="w-16 cursor-pointer border pr-1 text-right"
+          on:change={() => {
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > numberOfPages) currentPage = numberOfPages;
+            offset = (currentPage - 1) * limit;
+            fetchData();
+          }}
+          bind:value={currentPage}
+        />
+        <span class="mr-9">of {Math.ceil(count / limit)} Pages</span>
+      </div>
       <PaginationItem on:click={next}>
         <i class="bx bx-chevrons-right"></i>
       </PaginationItem>
