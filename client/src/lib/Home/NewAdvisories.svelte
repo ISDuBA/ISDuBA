@@ -190,6 +190,8 @@
         <input
           class="w-16 cursor-pointer border pr-1 text-right"
           on:change={() => {
+            currentPage = Math.floor(currentPage);
+            if (!parseInt("" + currentPage)) currentPage = 1;
             if (currentPage < 1) currentPage = 1;
             if (currentPage > numberOfPages) currentPage = numberOfPages;
             offset = (currentPage - 1) * limit;
