@@ -32,14 +32,18 @@
   let currentPage = 1;
   let documents: any = [];
   let searchTerm: string = "";
-  const sortState: any = {
-    publisher: "",
-    title: "",
-    trackingID: "",
-    version: "",
-    activeSortColumn: ""
-  };
-
+  let columns = [
+    "id",
+    "publisher",
+    "title",
+    "tracking_id",
+    "version",
+    "cvss_v2_score",
+    "cvss_v3_score"
+  ];
+  const sortState: any = columns.map((c) => {
+    return { [c]: "" };
+  });
   const fetchData = () => {
     $appStore.app.keycloak.updateToken(5).then(async () => {
       const response = await fetch(documentURL, {
@@ -83,7 +87,7 @@
   };
   $: numberOfPages = Math.ceil(count / limit);
   $: documentURL = encodeURI(
-    `/api/documents?&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=id publisher title tracking_id version`
+    `/api/documents?&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
   );
   $: if ($appStore.app.keycloak.authenticated) {
     fetchData();
@@ -94,6 +98,15 @@
   <div style="width: 100%;overflow-y: auto">
     <TableSearch placeholder="Search" hoverable={true} bind:inputValue={searchTerm}>
       <TableHead class="cursor-pointer">
+        <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("cvss")}
+          >CVSS<i
+            class:bx={true}
+            class:bx-caret-up={sortState["activeSortColumn"] == "cvss" &&
+              sortState["cvss"] === "asc"}
+            class:bx-caret-down={sortState["activeSortColumn"] == "cvss" &&
+              sortState["id"] === "desc"}
+          ></i></TableHeadCell
+        >
         <TableHeadCell padding={tablePadding} on:click={() => {}}
           >Publisher<i
             class:bx={true}
@@ -139,6 +152,11 @@
               push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
             }}
           >
+            <TableBodyCell {tdClass}
+              ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
+                >{item.cvss_v3_score}</span
+              ></TableBodyCell
+            >
             <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
             <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
             <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
