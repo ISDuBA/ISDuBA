@@ -197,7 +197,7 @@
           }}
           bind:value={currentPage}
         />
-        <span class="mr-9">of {Math.ceil(count / limit)} Pages</span>
+        <span class="mr-9">of {numberOfPages} Pages</span>
       </div>
       <PaginationItem on:click={next}>
         <i class="bx bx-chevrons-right"></i>
