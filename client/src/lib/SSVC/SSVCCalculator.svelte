@@ -119,13 +119,16 @@
         selectedChildOptions[child.label] = checkedRadioButton.value;
       }
     });
-    let result: string = "";
     let selectedOption: any;
     mainDecisions[currentStep].options.forEach((option: any) => {
       if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
-        result = option.label;
         selectedOption = option;
       }
+    });
+    Object.keys(selectedChildOptions).forEach((decisionLabel) => {
+      const decision = getDecision(decisionLabel);
+      const option = getOption(decision, selectedChildOptions[decisionLabel]);
+      extendVector(`${decision.key}:${option.key}/`);
     });
     selectOption(selectedOption);
   }
@@ -155,12 +158,42 @@
 
   function stepBack() {
     if (currentStep === steps.length - 1) {
-      // Delete ISO string and last key pair
-      vector = vector.slice(0, -24);
-    } else {
-      // Delete key pair
+      // Delete ISO string and "/"
+      vector = vector.slice(0, -1 - createIsoTimeStringForSSVC().length);
+      // Delete final decision
       vector = vector.slice(0, -4);
     }
+    // Find out if user did select child options of a decision. If yes we need to cut-off
+    // more than the key pair for the parent decision.
+    if (mainDecisions[currentStep - 1].children) {
+      const children = mainDecisions[currentStep - 1].children;
+      let tmpVector = vector;
+      // Cut-off parent
+      tmpVector = tmpVector.slice(0, -4);
+      const keyPairs = [];
+      children.forEach(() => {
+        const splittedVector = tmpVector.split("/");
+        keyPairs.push(splittedVector[splittedVector.length - 2]);
+        tmpVector = tmpVector.slice(0, -4);
+      });
+      let didUserChooseChildren = true;
+      keyPairs.forEach((pair) => {
+        const splittedPair = pair.split(":");
+        let isChild = false;
+        children.forEach((child) => {
+          const childDecision = getDecision(child.label);
+          if (childDecision.key !== splittedPair[0]) return;
+          const optionsKeys = childDecision.options.map((option) => option.key);
+          if (optionsKeys.includes(splittedPair[1])) isChild = true;
+        });
+        if (!isChild) didUserChooseChildren = false;
+      });
+      if (didUserChooseChildren) {
+        vector = vector.slice(0, -(4 * children.length));
+      }
+    }
+    // Delete (parent) key pair
+    vector = vector.slice(0, -4);
     currentStep--;
     const keyOfLastDecision = Object.keys(userDecisions)[Object.keys(userDecisions).length - 1];
     delete userDecisions[keyOfLastDecision];
