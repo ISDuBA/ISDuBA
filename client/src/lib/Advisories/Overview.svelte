@@ -232,8 +232,8 @@
           <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
+          <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
           <TableBodyCell {tdClass}
             ><i class:bx={true} class:bxs-star={item.state === "new"}></i></TableBodyCell
