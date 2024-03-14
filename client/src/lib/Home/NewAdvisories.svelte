@@ -97,7 +97,7 @@
   $: searchSuffix = searchTerm ? ` "${searchTerm}" german search msg as and` : "";
   $: numberOfPages = Math.ceil(count / limit);
   $: documentURL = encodeURI(
-    `/api/documents?&query=$state new workflow =${searchSuffix}&advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
+    `/api/documents?query=$state new workflow =${searchSuffix}&advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
   );
   $: if ($appStore.app.keycloak.authenticated) {
     fetchData();
@@ -123,7 +123,7 @@
       >
     </Search>
   </div>
-  <Table hoverable={true}>
+  <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
       <TableHeadCell
         padding={tablePadding}
