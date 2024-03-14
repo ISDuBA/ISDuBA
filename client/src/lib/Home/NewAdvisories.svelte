@@ -26,7 +26,6 @@
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
 
-  let orderBy = "title";
   let limit = 10;
   let offset = 0;
   let count = 0;
@@ -42,9 +41,7 @@
     "cvss_v2_score",
     "cvss_v3_score"
   ];
-  const sortState: any = columns.map((c) => {
-    return { [c]: "" };
-  });
+  let orderBy = "title";
   const fetchData = () => {
     $appStore.app.keycloak.updateToken(5).then(async () => {
       const response = await fetch(documentURL, {
@@ -87,6 +84,16 @@
     currentPage = numberOfPages;
     fetchData();
   };
+
+  const switchSort = (column: string) => {
+    if (column === orderBy) {
+      orderBy[0] === "-" ? (orderBy = column) : (orderBy = `-${column}`);
+    } else {
+      orderBy = column;
+    }
+    fetchData();
+  };
+
   $: searchSuffix = searchTerm ? ` "${searchTerm}" german search msg as and` : "";
   $: numberOfPages = Math.ceil(count / limit);
   $: documentURL = encodeURI(
@@ -118,48 +125,59 @@
   </div>
   <Table hoverable={true}>
     <TableHead class="cursor-pointer">
-      <TableHeadCell padding={tablePadding} on:click={() => {}}
+      <TableHeadCell
+        padding={tablePadding}
+        on:click={() => {
+          switchSort("cvss_v3_score");
+        }}
         >CVSS<i
           class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "cvss" && sortState["cvss"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "cvss" &&
-            sortState["id"] === "desc"}
+          class:bx-caret-up={orderBy === "cvss_v3_score"}
+          class:bx-caret-down={orderBy === "-cvss_v3_score"}
         ></i></TableHeadCell
       >
-      <TableHeadCell padding={tablePadding} on:click={() => {}}
+      <TableHeadCell
+        padding={tablePadding}
+        on:click={() => {
+          switchSort("publisher");
+        }}
         >Publisher<i
           class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "publisher" &&
-            sortState["publisher"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "publisher" &&
-            sortState["publisher"] === "desc"}
+          class:bx-caret-up={orderBy === "publisher"}
+          class:bx-caret-down={orderBy === "-publisher"}
         ></i></TableHeadCell
       >
-      <TableHeadCell padding={tablePadding} on:click={() => {}}
+      <TableHeadCell
+        padding={tablePadding}
+        on:click={() => {
+          switchSort("title");
+        }}
         >Title<i
           class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "title" &&
-            sortState["title"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "title" &&
-            sortState["title"] === "desc"}
+          class:bx-caret-up={orderBy === "title"}
+          class:bx-caret-down={orderBy === "-title"}
         ></i></TableHeadCell
       >
-      <TableHeadCell padding={tablePadding} on:click={() => {}}
+      <TableHeadCell
+        padding={tablePadding}
+        on:click={() => {
+          switchSort("tracking_id");
+        }}
         >Tracking ID<i
           class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "trackingID" &&
-            sortState["trackingID"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "trackingID" &&
-            sortState["trackingID"] === "desc"}
+          class:bx-caret-up={orderBy === "tracking_id"}
+          class:bx-caret-down={orderBy === "-tracking_id"}
         ></i></TableHeadCell
       >
-      <TableHeadCell padding={tablePadding} on:click={() => {}}
+      <TableHeadCell
+        padding={tablePadding}
+        on:click={() => {
+          switchSort("version");
+        }}
         >Version<i
           class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "version" &&
-            sortState["version"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "version" &&
-            sortState["version"] === "desc"}
+          class:bx-caret-up={orderBy === "version"}
+          class:bx-caret-down={orderBy === "-version"}
         ></i></TableHeadCell
       >
     </TableHead>
