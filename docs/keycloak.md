@@ -106,10 +106,11 @@ systemctl start keycloak
 # Adjust keycloak
 Configure Keycloak.
 
-Open Keycloaks Web-Interface, running on localhost:8080.
-Via the admin console adjust the following if necessary:
+Open Keycloak's web-interface, running on localhost:8080,
+create an admin user if you haven't done so, and log in to the admin console.
 
-- Create ```isduba``` realm
+- Create ```isduba``` realm once,
+     by using the drop down selection for `Keycloak` in the menu.
 
 ### Create Clients: auth
 
