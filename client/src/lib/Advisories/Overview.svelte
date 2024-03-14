@@ -93,8 +93,9 @@
 
   $: searchSuffix = searchTerm ? `query="${searchTerm}" german search msg as &` : "";
   $: numberOfPages = Math.ceil(count / limit);
+  $: searchColumn = searchTerm ? " msg" : "";
   $: documentURL = encodeURI(
-    `/api/documents?${searchSuffix}advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
+    `/api/documents?${searchSuffix}advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
   );
   const fetchData = () => {
     $appStore.app.keycloak.updateToken(5).then(async () => {
@@ -251,6 +252,20 @@
                 {/each}
               </div>
             </TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
+          </TableBodyRow>
+        {/if}
+        {#if item.msg}
+          <TableBodyRow class="border border-indigo-500/100 bg-slate-100">
+            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}>{@html item.msg}</TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>

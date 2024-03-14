@@ -105,24 +105,6 @@
 </script>
 
 <div style="width: 100%;overflow-y: auto">
-  <div class="mb-3 w-2/3">
-    <Search bind:value={searchTerm}>
-      {#if searchTerm}
-        <button
-          class="mr-3"
-          on:click={() => {
-            searchTerm = "";
-            fetchData();
-          }}>x</button
-        >
-      {/if}
-      <Button
-        on:click={() => {
-          fetchData();
-        }}>Search</Button
-      >
-    </Search>
-  </div>
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
       <TableHeadCell
