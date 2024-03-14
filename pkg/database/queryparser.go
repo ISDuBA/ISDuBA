@@ -181,6 +181,9 @@ func CreateOrder(
 		if b.Len() > 0 {
 			b.WriteByte(',')
 		}
+		if field == "tracking_id" || field == "publisher" {
+			b.WriteString("extended_documents.")
+		}
 		b.WriteString(field)
 		if desc {
 			b.WriteString(" DESC")
@@ -428,11 +431,19 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 		b.WriteByte(')')
 	}
 
+	writeAccess := func(e *Expr) {
+		column := e.stringValue
+		if column == "tracking_id" || column == "publisher" {
+			b.WriteString("extended_documents.")
+		}
+		b.WriteString(column)
+	}
+
 	recurse = func(e *Expr) {
 		b.WriteByte('(')
 		switch e.exprType {
 		case access:
-			b.WriteString(e.stringValue)
+			writeAccess(e)
 		case cnst:
 			writeCnst(e)
 		case cast:
