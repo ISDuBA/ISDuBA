@@ -60,11 +60,11 @@ vim isdubad.toml
 From the repositories main directory, start the isdubad program,
 which creates the db and users according to the ./cmd/isdubad/isdubad -c isdubad.toml:
 ```
-ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isdubad.toml 
+ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isdubad.toml
 ```
 
 After the initial migration you can un-configure the `admin_` parts In
-the configuration file adn start `isdubad` without the `ISDUBA_DB_MIGRATE`
+the configuration file and start `isdubad` without the `ISDUBA_DB_MIGRATE`
 env var set.
 
 ### Import advisories
@@ -108,7 +108,8 @@ npx playwright install
 ### Run the client application in a dev environment
 
 ```bash
-npm run dev -- --open
+npm run dev
 ```
 
-This will start the client application and opens a window in your default browser.
+This will start the client application and
+print the URL you can point your browser to.
