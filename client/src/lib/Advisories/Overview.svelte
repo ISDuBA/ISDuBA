@@ -242,7 +242,6 @@
         {#if openRow === i}
           <TableBodyRow>
             <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}>
               <div>
                 {#each item.four_cves as cve, i}
@@ -252,6 +251,7 @@
                 {/each}
               </div>
             </TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>
