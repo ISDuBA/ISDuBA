@@ -29,7 +29,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	docIDs := ctx.Param("document")
 	docID, err := strconv.ParseInt(docIDs, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -44,7 +44,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
 			return
 		}
 		expr = expr.And(tlpExpr)
@@ -91,7 +91,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 
 		// Check if we are in a state in which commenting is allowed.
 		state := models.Workflow(stateS)
-		commentingAllowed = state == models.ReadWorkflow || state == models.AssessingWorkflow
+		commentingAllowed = state == models.ReadWorkflow ||
+			state == models.AssessingWorkflow
 		if !commentingAllowed {
 			return nil
 		}
@@ -105,7 +106,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			const eventSQL = `INSERT INTO events_log ` +
 				`(event, state, time, actor, documents_id) ` +
 				`VALUES($1::events, $2::workflow, $3, $4, $5)`
-			_, err := tx.Exec(rctx, eventSQL, string(event), string(state), now, actor, docID)
+			_, err := tx.Exec(
+				rctx, eventSQL, string(event), string(state), now, actor, docID)
 			return err
 		}
 
@@ -152,7 +154,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		return tx.Commit(rctx)
 	}); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	switch {
@@ -175,7 +177,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 	commentIDs := ctx.Param("id")
 	commentID, err := strconv.ParseInt(commentIDs, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	var (
@@ -198,7 +200,9 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 			`RETURNING documents_id`
 
 		var docID int64
-		switch err := tx.QueryRow(rctx, updateSQL, message, commentID, commentator).Scan(&docID); {
+		switch err := tx.QueryRow(
+			rctx, updateSQL, message, commentID, commentator,
+		).Scan(&docID); {
 		case errors.Is(err, pgx.ErrNoRows):
 			exists = false
 			return nil
@@ -224,7 +228,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		return tx.Commit(rctx)
 	}); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	if !exists {
@@ -239,7 +243,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	idS := ctx.Param("document")
 	id, err := strconv.ParseInt(idS, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -275,7 +279,8 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	rctx := ctx.Request.Context()
 	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
 		existsSQL := `SELECT exists(SELECT FROM extended_documents WHERE ` + where + `)`
-		if err := conn.QueryRow(rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+		if err := conn.QueryRow(
+			rctx, existsSQL, replacements...).Scan(&exists); err != nil {
 			return err
 		}
 		if !exists {
@@ -285,15 +290,18 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 			`WHERE documents_id = $1 ORDER BY time DESC`
 		rows, _ := conn.Query(rctx, fetchSQL, id)
 		var err error
-		comments, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (comment, error) {
-			var com comment
-			err := row.Scan(&com.ID, &com.Time, &com.Commentator, &com.Message)
-			com.Time = com.Time.UTC()
-			return com, err
-		})
+		comments, err = pgx.CollectRows(
+			rows,
+			func(row pgx.CollectableRow) (comment, error) {
+				var com comment
+				err := row.Scan(&com.ID, &com.Time, &com.Commentator, &com.Message)
+				com.Time = com.Time.UTC()
+				return com, err
+			})
 		return err
 	}); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
