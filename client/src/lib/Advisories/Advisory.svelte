@@ -9,13 +9,12 @@
 -->
 <script lang="ts">
   import { page } from "$app/stores";
-  import { Button, Drawer, Label, Select, Textarea, Timeline } from "flowbite-svelte";
+  import { Button, Drawer, Label, Textarea, Timeline } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
-  import { getAllowedWorkflowChanges } from "$lib/permissions";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/SSVC/SSVCCalculator.svelte";
@@ -30,7 +29,9 @@
   $: count = comment.length;
   let comments: any = [];
   let advisoryVersions: string[] = [];
+  let advisoryState: string;
   let showCalculator = false;
+  const timeoutIDs: number[] = [];
 
   let transitionParams = {
     x: 320,
@@ -79,7 +80,7 @@
 
   const loadDocumentSSVC = async () => {
     const response = await fetch(
-      `/api/documents?&columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      `/api/documents?columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
       {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
@@ -142,15 +143,37 @@
     });
   }
 
-  function updateState(event: any) {
-    const newState = event.target.value;
-    fetch(`/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`, {
+  async function updateState(newState: string) {
+    await fetch(`/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       },
       method: "PUT"
     });
   }
+
+  const loadAdvisoryState = async () => {
+    const response = await fetch(
+      `/api/documents?advisories=true&columns=state&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        }
+      }
+    );
+    if (response.ok) {
+      const result = await response.json();
+      return result.documents[0].state;
+    } else {
+      // Do errorhandling
+    }
+  };
+
+  onDestroy(() => {
+    timeoutIDs.forEach((id: number) => {
+      clearTimeout(id);
+    });
+  });
 
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
@@ -160,6 +183,15 @@
         loadComments();
       }
       loadDocumentSSVC();
+      const state = await loadAdvisoryState();
+      advisoryState = state;
+      if (state === "new") {
+        const id = setTimeout(async () => {
+          await updateState("read");
+          advisoryState = "read";
+        }, 3000);
+        timeoutIDs.push(id);
+      }
     }
   });
 </script>
@@ -171,19 +203,9 @@
         <div class="me-2 flex-col">
           <Label class="mb-4 max-w-52"
             >Workflow-State:
-            <!-- TODO: Replace hard-coded state "new" with current state of document -->
-            <Select
-              on:change={updateState}
-              items={[
-                { value: "new", name: "new" },
-                ...getAllowedWorkflowChanges(appStore.getRoles(), "new").map((v) => {
-                  return { value: v.to, name: v.to };
-                })
-              ]}
-              value={"new"}
-              placeholder=""
-              underline
-            ></Select>
+            {#if advisoryState}
+              <span>{advisoryState}</span>
+            {/if}
           </Label>
           <Label class="text-lg">
             {#if ssvc}
