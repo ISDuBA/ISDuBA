@@ -29,7 +29,7 @@
           <svelte:fragment slot="icon">
             <a
               class={false ? selectedClass : unselectedClass}
-              href={`/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
+              href={`/#/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
               >{version.version}
             </a>
           </svelte:fragment>

@@ -14,7 +14,7 @@
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
-  import Version from "$lib/Version.svelte";
+  import Version from "$lib/Advisories/Version.svelte";
   import { getAllowedWorkflowChanges } from "$lib/permissions";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
@@ -195,8 +195,8 @@
           <Button on:click={toggleCalculator} class="w-40">Toggle Calculator</Button>
         </div>
         <Version
-          publisherNamespace={$page.params.publisherNamespace}
-          trackingID={$page.params.trackingID}
+          publisherNamespace={params.publisherNamespace}
+          trackingID={params.trackingID}
           {advisoryVersions}
         ></Version>
       </div>
