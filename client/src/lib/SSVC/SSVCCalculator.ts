@@ -6,6 +6,26 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+export type SSVCOption = {
+  label: string;
+  key: string;
+  description: string;
+  child_combinations: [];
+  color: string | undefined;
+};
+
+export type SSVCDecisionChild = {
+  label: string;
+};
+
+export type SSVCDecision = {
+  label: string;
+  key: string;
+  decision_type: string;
+  children?: SSVCDecisionChild[];
+  options: SSVCOption[];
+};
+
 export function loadDecisionTreeFromFile() {
   return new Promise((resolve) => {
     fetch("CISA-Coordinator.json").then((response) => {
@@ -40,8 +60,8 @@ export function loadDecisionTreeFromFile() {
   });
 }
 
-export function getOptionWithKey(decision: any, key: string): any {
-  return decision.options.find((element: any) => element.key === key);
+export function getOptionWithKey(decision: SSVCDecision, key: string): SSVCOption | undefined {
+  return decision.options.find((element: SSVCOption) => element.key === key);
 }
 
 export function createIsoTimeStringForSSVC() {
@@ -61,8 +81,8 @@ export async function convertVectorToLabel(vector: string, mainDecisions?: any[]
       keyOfSelectedOption
     );
     return {
-      label: selectedOption.label,
-      color: selectedOption.color
+      label: selectedOption?.label,
+      color: selectedOption?.color
     };
   }
 }

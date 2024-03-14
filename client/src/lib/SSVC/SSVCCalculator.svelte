@@ -21,9 +21,10 @@
     Input
   } from "flowbite-svelte";
   import {
-    convertVectorToLabel,
     createIsoTimeStringForSSVC,
-    loadDecisionTreeFromFile
+    loadDecisionTreeFromFile,
+    type SSVCDecision,
+    type SSVCOption
   } from "./SSVCCalculator";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
@@ -70,19 +71,19 @@
     vector = vectorBeginning;
   }
 
-  function getDecision(label: string): any {
+  function getDecision(label: string): SSVCDecision {
     return decisionPoints.find((element) => element.label === label);
   }
 
-  function getOption(decision: any, label: string): any {
-    return decision.options.find((element: any) => element.label === label);
+  function getOption(decision: SSVCDecision, label: string): SSVCOption | undefined {
+    return decision.options.find((element: SSVCOption) => element.label === label);
   }
 
   function extendVector(text: string) {
     vector = vector.concat(text);
   }
 
-  function selectOption(option: any) {
+  function selectOption(option: SSVCOption) {
     userDecisions[mainDecisions[currentStep].label] = option.label;
     extendVector(`${mainDecisions[currentStep].key}:${option.key}/`);
     currentStep++;
@@ -119,8 +120,8 @@
         selectedChildOptions[child.label] = checkedRadioButton.value;
       }
     });
-    let selectedOption: any;
-    mainDecisions[currentStep].options.forEach((option: any) => {
+    let selectedOption: SSVCOption;
+    mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
       if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
         selectedOption = option;
       }
@@ -128,7 +129,7 @@
     Object.keys(selectedChildOptions).forEach((decisionLabel) => {
       const decision = getDecision(decisionLabel);
       const option = getOption(decision, selectedChildOptions[decisionLabel]);
-      extendVector(`${decision.key}:${option.key}/`);
+      extendVector(`${decision.key}:${option?.key}/`);
     });
     selectOption(selectedOption);
   }
@@ -146,7 +147,7 @@
     }
     const option = getOption(mainDecisions[currentStep], finalDecision.Decision);
     extendVector(
-      `${mainDecisions[currentStep].key}:${option.key}/${createIsoTimeStringForSSVC()}/`
+      `${mainDecisions[currentStep].key}:${option?.key}/${createIsoTimeStringForSSVC()}/`
     );
     const resultText = Object.values(finalDecision)[0];
     const color = getOption(mainDecisions[currentStep], resultText).color;
@@ -170,7 +171,7 @@
       let tmpVector = vector;
       // Cut-off parent
       tmpVector = tmpVector.slice(0, -4);
-      const keyPairs = [];
+      const keyPairs: string[] = [];
       children.forEach(() => {
         const splittedVector = tmpVector.split("/");
         keyPairs.push(splittedVector[splittedVector.length - 2]);
@@ -180,7 +181,7 @@
       keyPairs.forEach((pair) => {
         const splittedPair = pair.split(":");
         let isChild = false;
-        children.forEach((child) => {
+        children.forEach((child: any) => {
           const childDecision = getDecision(child.label);
           if (childDecision.key !== splittedPair[0]) return;
           const optionsKeys = childDecision.options.map((option) => option.key);
