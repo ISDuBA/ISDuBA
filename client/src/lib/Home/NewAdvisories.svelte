@@ -172,7 +172,8 @@
           }}
         >
           <TableBodyCell {tdClass}
-            ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}>{item.cvss_v3_score}</span
+            ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
+              >{item.cvss_v3_score || ""}</span
             ></TableBodyCell
           >
           <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
