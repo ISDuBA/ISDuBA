@@ -121,7 +121,12 @@
 <SectionHeader title="Documents"></SectionHeader>
 {#if documents}
   <div class="mb-3 w-2/3">
-    <Search bind:value={searchTerm}>
+    <Search
+      bind:value={searchTerm}
+      on:keyup={(e) => {
+        if (e.key === "Enter") fetchData();
+      }}
+    >
       {#if searchTerm}
         <button
           class="mr-3"
