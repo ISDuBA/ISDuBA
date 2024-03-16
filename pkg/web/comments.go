@@ -72,7 +72,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		stateSQL := `SELECT state, docs.tracking_id, docs.publisher ` +
 			`FROM documents docs JOIN advisories ads ` +
 			`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
-			` WHERE ` + where + `)`
+			` WHERE ` + where
 
 		var (
 			stateS     string
