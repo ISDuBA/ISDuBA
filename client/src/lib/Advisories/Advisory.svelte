@@ -127,7 +127,7 @@
   function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
-    fetch(`/api/comments/${$page.params.documentID}`, {
+    fetch(`/api/comments/${params.id}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       },

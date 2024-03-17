@@ -122,7 +122,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 
 			// Switch to assessing state.
 			const assessingStateSQL = `UPDATE advisories SET state = 'assessing' ` +
-				`WHERE (trackingid, publisher) = ($1, $2)`
+				`WHERE (tracking_id, publisher) = ($1, $2)`
 			if _, err := tx.Exec(rctx, assessingStateSQL, trackingID, publisher); err != nil {
 				return err
 			}
