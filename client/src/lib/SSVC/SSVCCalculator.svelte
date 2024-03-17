@@ -26,8 +26,10 @@
     type SSVCDecision,
     type SSVCOption
   } from "./SSVCCalculator";
-  import { onMount } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import { appStore } from "$lib/store";
+
+  const dispatch = createEventDispatcher();
 
   export let documentID: string;
   let startedCalculation = false;
@@ -209,7 +211,7 @@
       method: "PUT"
     }).then((response) => {
       if (response.ok) {
-        console.log("response", response);
+        dispatch("updateSSVC");
       } else {
         // Do errorhandling
       }

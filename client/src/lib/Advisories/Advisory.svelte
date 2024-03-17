@@ -100,27 +100,30 @@
   function toggleComments() {
     hideComments = !hideComments;
   }
-  function loadComments() {
-    const newComments: any = [];
-    advisoryVersions.forEach((advVer: any) => {
-      fetch(`/api/comments/${advVer.id}`, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      }).then((response) => {
-        if (response.ok) {
-          response.json().then((json) => {
-            if (json) {
-              json.forEach((c: any) => {
-                c.documentID = advVer.id;
-              });
-              newComments.push(...json);
-            }
-            comments = newComments;
-          });
-        } else {
-          // Do errorhandling
-        }
+  function loadComments(): Promise<any[]> {
+    return new Promise((resolve) => {
+      const newComments: any = [];
+      advisoryVersions.forEach((advVer: any) => {
+        fetch(`/api/comments/${advVer.id}`, {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
+        }).then((response) => {
+          if (response.ok) {
+            response.json().then((json) => {
+              if (json) {
+                json.forEach((c: any) => {
+                  c.documentID = advVer.id;
+                });
+                newComments.push(...json);
+              }
+              comments = newComments;
+              resolve(newComments);
+            });
+          } else {
+            // Do errorhandling
+          }
+        });
       });
     });
   }
@@ -136,7 +139,11 @@
     }).then((response) => {
       if (response.ok) {
         comment = "";
-        loadComments();
+        loadComments().then((newComments: any[]) => {
+          if (newComments.length === 1) {
+            loadAdvisoryState();
+          }
+        });
       } else {
         // Do errorhandling
       }
@@ -163,11 +170,17 @@
     );
     if (response.ok) {
       const result = await response.json();
+      advisoryState = result.documents[0].state;
       return result.documents[0].state;
     } else {
       // Do errorhandling
     }
   };
+
+  function loadMetaData() {
+    loadAdvisoryState();
+    loadDocumentSSVC();
+  }
 
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
@@ -184,7 +197,6 @@
       }
       loadDocumentSSVC();
       const state = await loadAdvisoryState();
-      advisoryState = state;
       if (state === "new") {
         const id = setTimeout(async () => {
           await updateState("read");
@@ -245,7 +257,7 @@
       {transitionParams}
     >
       {#if showCalculator}
-        <SsvcCalculator documentID={params.id}></SsvcCalculator>
+        <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
       {:else}
         {#if comments?.length > 0}
           <div class="overflow-y-scroll pl-2">
