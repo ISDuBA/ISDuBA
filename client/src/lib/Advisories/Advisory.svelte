@@ -9,9 +9,10 @@
 -->
 <script lang="ts">
   import { page } from "$app/stores";
-  import { Button, Drawer, Label, Tabs, TabItem, Textarea, Timeline } from "flowbite-svelte";
+  import { Button, Drawer, Label, Tabs, TabItem, Textarea, Timeline, Toast } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
+  import { slide } from "svelte/transition";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
@@ -30,6 +31,8 @@
   let advisoryVersions: string[] = [];
   let advisoryState: string;
   const timeoutIDs: number[] = [];
+  let isToastOpen = false;
+  let toastText = "";
 
   let transitionParams = {
     x: 320,
@@ -191,6 +194,11 @@
       if (state === "new") {
         const id = setTimeout(async () => {
           await updateState("read");
+          toastText = "State was set to 'read'.";
+          isToastOpen = true;
+          setTimeout(() => {
+            isToastOpen = false;
+          }, 5000);
           advisoryState = "read";
         }, 3000);
         timeoutIDs.push(id);
@@ -200,6 +208,19 @@
 </script>
 
 <div class="flex">
+  <div class="fixed bottom-4 left-0 z-10 flex w-screen justify-center">
+    <Toast
+      class="min-w-40 border border-solid border-gray-200"
+      dismissable={true}
+      transition={slide}
+      bind:open={isToastOpen}
+    >
+      <div class="flex items-center justify-center gap-x-2">
+        <i class="bx bx-info-circle text-lg"></i>
+        {toastText}
+      </div>
+    </Toast>
+  </div>
   <div>
     <div class="flex flex-col">
       <div class="flex">
@@ -228,21 +249,12 @@
     </div>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <Drawer
-      activateClickOutside={false}
-      backdrop={false}
-      class="relative flex flex-col"
-      placement="right"
-      width="w-1/2"
-      hidden={false}
-      transitionType="in:slide"
-      {transitionParams}
-    >
+    <div class="relative flex w-2/4 flex-col">
       <Tabs>
         <TabItem open title="Comments">
           {#if comments?.length > 0}
             <div class="overflow-y-scroll pl-2">
-              <Timeline class="flex flex-col-reverse">
+              <Timeline class="mb-4 flex flex-col-reverse">
                 {#each comments as comment}
                   <Comment {comment}></Comment>
                 {/each}
@@ -271,6 +283,6 @@
           <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
         </TabItem>
       </Tabs>
-    </Drawer>
+    </div>
   {/if}
 </div>
