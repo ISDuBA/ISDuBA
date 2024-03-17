@@ -10,7 +10,6 @@ package web
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -34,14 +33,13 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		return
 	}
 
-	parser := database.Parser{}
-
-	expr1 := parser.MustParse(fmt.Sprintf("$id %d int =", docID1))
-	expr2 := parser.MustParse(fmt.Sprintf("$id %d int =", docID2))
+	expr1 := database.FieldEqInt("id", docID1)
+	expr2 := database.FieldEqInt("id", docID2)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
+		parser := database.Parser{}
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)

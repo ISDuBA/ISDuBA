@@ -100,6 +100,19 @@ func (vt valueType) String() string {
 	}
 }
 
+// FieldEqInt is a shortcut mainly for building expressions
+// accessing an integer column like 'id's.
+func FieldEqInt(field string, value int64) *Expr {
+	return &Expr{
+		valueType: boolType,
+		exprType:  eq,
+		children: []*Expr{
+			{valueType: intType, exprType: cnst, intValue: value},
+			{valueType: intType, exprType: access, stringValue: field},
+		},
+	}
+}
+
 // String implements [fmt.Stringer].
 func (et exprType) String() string {
 	switch et {
