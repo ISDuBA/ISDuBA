@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-This guide describes how to set up ISDuBA for a development build on Ubuntu. These settings may not be suitable for production.
+This guide describes how to set up ISDuBA for a development build on Ubuntu 24.04. These settings may not be suitable for production.
 
 # Prerequisites
 
