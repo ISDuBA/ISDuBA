@@ -9,15 +9,18 @@
 package web
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"gomodules.xyz/jsonpatch/v2"
 )
 
@@ -78,6 +81,100 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 	if err != nil {
 		slog.Error("creating patch failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
+	wordDiffS := ctx.DefaultQuery("word-diff", "false")
+	wordDiff, _ := strconv.ParseBool(wordDiffS)
+	if !wordDiff {
+		ctx.JSON(http.StatusOK, patch)
+		return
+	}
+	// Calculate word diff for "replace" operations.
+
+	var d1 any
+	if err := json.Unmarshal(doc1, &d1); err != nil {
+		slog.Error("unmarshaling failed", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	dmp := diffmatchpatch.New()
+
+	for i := range patch {
+		ch := &patch[i]
+		if ch.Operation != "replace" {
+			continue
+		}
+		r, ok := ch.Value.(string)
+		if !ok {
+			continue
+		}
+		x, ok := locate(d1, ch.Path)
+		if !ok {
+			continue
+		}
+		s, ok := x.(string)
+		if !ok {
+			continue
+		}
+		diffs := dmp.DiffMain(s, r, false)
+		ch.Value = doWordDiff(diffs)
+	}
+
 	ctx.JSON(http.StatusOK, patch)
+	return
+}
+
+func doWordDiff(diffs []diffmatchpatch.Diff) string {
+	var b strings.Builder
+	for i := range diffs {
+		diff := &diffs[i]
+		text := diff.Text
+		switch diff.Type {
+		case diffmatchpatch.DiffInsert:
+			b.WriteString("{+")
+			b.WriteString(text)
+			b.WriteString("+}")
+		case diffmatchpatch.DiffDelete:
+			b.WriteString("[-")
+			b.WriteString(text)
+			b.WriteString("-]")
+		case diffmatchpatch.DiffEqual:
+			b.WriteString(text)
+		}
+	}
+	return b.String()
+}
+
+func locate(doc any, path string) (any, bool) {
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 {
+		return nil, false
+	}
+	if parts[0] == "" {
+		parts = parts[1:]
+	}
+	var recurse func(any, []string) (any, bool)
+	recurse = func(current any, rest []string) (any, bool) {
+		if len(rest) == 0 {
+			return current, true
+		}
+		switch x := current.(type) {
+		case map[string]any:
+			v, ok := x[rest[0]]
+			if !ok {
+				return nil, false
+			}
+			return recurse(v, rest[1:])
+		case []any:
+			idx, err := strconv.Atoi(rest[0])
+			if err != nil || idx < 0 || idx >= len(x) {
+				return nil, false
+			}
+			return recurse(x[idx], rest[1:])
+		default:
+			return nil, false
+		}
+	}
+	return recurse(doc, parts)
 }
