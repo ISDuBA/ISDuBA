@@ -6,12 +6,18 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+import {
+  PUBLIC_KEYCLOAK_URL,
+  PUBLIC_KEYCLOAK_REALM,
+  PUBLIC_KEYCLOAK_CLIENTID
+} from "$env/static/public";
+
 const configuration = {
   getConfiguration: () => {
     return {
-      url: "http://localhost:8080",
-      realm: "isduba",
-      clientId: "auth"
+      url: PUBLIC_KEYCLOAK_URL,
+      realm: PUBLIC_KEYCLOAK_REALM,
+      clientId: PUBLIC_KEYCLOAK_CLIENTID
     };
   }
 };
