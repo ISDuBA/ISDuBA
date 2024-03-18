@@ -104,7 +104,7 @@ PUBLIC_KEYCLOAK_REALM="isduba"
 PUBLIC_KEYCLOAK_CLIENTID="auth"
 ```
 
-which allows to adjust your configuration to the seetings you chose for your keycloak setup.
+which allows to adjust your configuration to the settings you chose for your keycloak setup.
 
 ### Install necessary packages
 
