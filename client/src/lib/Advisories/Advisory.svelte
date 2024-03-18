@@ -9,9 +9,10 @@
 -->
 <script lang="ts">
   import { page } from "$app/stores";
-  import { Button, Drawer, Label, Textarea, Timeline } from "flowbite-svelte";
+  import { Button, Drawer, Label, Tabs, TabItem, Textarea, Timeline, Toast } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
+  import { slide } from "svelte/transition";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
@@ -24,24 +25,20 @@
   let document = {};
   let ssvc: any;
   $: ssvcStyle = ssvc ? `color: ${ssvc.color}` : "";
-  let hideComments = false;
   let comment: string = "";
   $: count = comment.length;
   let comments: any = [];
   let advisoryVersions: string[] = [];
   let advisoryState: string;
-  let showCalculator = false;
   const timeoutIDs: number[] = [];
+  let isToastOpen = false;
+  let toastText = "";
 
   let transitionParams = {
     x: 320,
     duration: 120,
     easing: sineIn
   };
-
-  function toggleCalculator() {
-    showCalculator = !showCalculator;
-  }
 
   const loadAdvisoryVersions = async () => {
     const response = await fetch(
@@ -97,37 +94,37 @@
     }
   };
 
-  function toggleComments() {
-    hideComments = !hideComments;
-  }
-  function loadComments() {
-    const newComments: any = [];
-    advisoryVersions.forEach((advVer: any) => {
-      fetch(`/api/comments/${advVer.id}`, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      }).then((response) => {
-        if (response.ok) {
-          response.json().then((json) => {
-            if (json) {
-              json.forEach((c: any) => {
-                c.documentID = advVer.id;
-              });
-              newComments.push(...json);
-            }
-            comments = newComments;
-          });
-        } else {
-          // Do errorhandling
-        }
+  function loadComments(): Promise<any[]> {
+    return new Promise((resolve) => {
+      const newComments: any = [];
+      advisoryVersions.forEach((advVer: any) => {
+        fetch(`/api/comments/${advVer.id}`, {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
+        }).then((response) => {
+          if (response.ok) {
+            response.json().then((json) => {
+              if (json) {
+                json.forEach((c: any) => {
+                  c.documentID = advVer.id;
+                });
+                newComments.push(...json);
+              }
+              comments = newComments;
+              resolve(newComments);
+            });
+          } else {
+            // Do errorhandling
+          }
+        });
       });
     });
   }
   function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
-    fetch(`/api/comments/${$page.params.documentID}`, {
+    fetch(`/api/comments/${params.id}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       },
@@ -136,7 +133,11 @@
     }).then((response) => {
       if (response.ok) {
         comment = "";
-        loadComments();
+        loadComments().then((newComments: any[]) => {
+          if (newComments.length === 1) {
+            loadAdvisoryState();
+          }
+        });
       } else {
         // Do errorhandling
       }
@@ -163,11 +164,17 @@
     );
     if (response.ok) {
       const result = await response.json();
+      advisoryState = result.documents[0].state;
       return result.documents[0].state;
     } else {
       // Do errorhandling
     }
   };
+
+  function loadMetaData() {
+    loadAdvisoryState();
+    loadDocumentSSVC();
+  }
 
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
@@ -184,10 +191,14 @@
       }
       loadDocumentSSVC();
       const state = await loadAdvisoryState();
-      advisoryState = state;
       if (state === "new") {
         const id = setTimeout(async () => {
           await updateState("read");
+          toastText = "State was set to 'read'.";
+          isToastOpen = true;
+          setTimeout(() => {
+            isToastOpen = false;
+          }, 5000);
           advisoryState = "read";
         }, 3000);
         timeoutIDs.push(id);
@@ -197,6 +208,19 @@
 </script>
 
 <div class="flex">
+  <div class="fixed bottom-4 left-0 z-10 flex w-screen justify-center">
+    <Toast
+      class="min-w-40 border border-solid border-gray-200"
+      dismissable={true}
+      transition={slide}
+      bind:open={isToastOpen}
+    >
+      <div class="flex items-center justify-center gap-x-2">
+        <i class="bx bx-info-circle text-lg"></i>
+        {toastText}
+      </div>
+    </Toast>
+  </div>
   <div>
     <div class="flex flex-col">
       <div class="flex">
@@ -214,7 +238,6 @@
               <span class="text-gray-400">No SSVC</span>
             {/if}
           </Label>
-          <Button on:click={toggleCalculator} class="w-40">Toggle Calculator</Button>
         </div>
         <Version
           publisherNamespace={params.publisherNamespace}
@@ -226,54 +249,40 @@
     </div>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <Button
-      on:click={toggleComments}
-      outline={true}
-      class="absolute right-2 top-2 z-[51] !p-2"
-      size="lg"
-    >
-      <i class={hideComments ? "bx bx-chevron-left" : "bx bx-chevron-right"}></i>
-    </Button>
-    <Drawer
-      activateClickOutside={false}
-      backdrop={false}
-      class="relative flex flex-col"
-      placement="right"
-      width="w-1/2"
-      hidden={hideComments}
-      transitionType="in:slide"
-      {transitionParams}
-    >
-      {#if showCalculator}
-        <SsvcCalculator documentID={params.id}></SsvcCalculator>
-      {:else}
-        {#if comments?.length > 0}
-          <div class="overflow-y-scroll pl-2">
-            <Timeline class="flex flex-col-reverse">
-              {#each comments as comment}
-                <Comment {comment}></Comment>
-              {/each}
-            </Timeline>
-          </div>
-        {:else}
-          <span class="mb-4 text-gray-600">No comments available.</span>
-        {/if}
-        {#if appStore.isEditor() || appStore.isReviewer()}
-          <div>
-            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-              <div slot="footer" class="flex items-start justify-between">
-                <Button on:click={createComment} disabled={count > 10000 || count === 0}
-                  >Send</Button
-                >
-                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                  >{`${count}/10000`}</Label
-                >
-              </div>
-            </Textarea>
-          </div>
-        {/if}
-      {/if}
-    </Drawer>
+    <div class="relative flex w-2/4 flex-col">
+      <Tabs>
+        <TabItem open title="Comments">
+          {#if comments?.length > 0}
+            <div class="overflow-y-scroll pl-2">
+              <Timeline class="mb-4 flex flex-col-reverse">
+                {#each comments as comment}
+                  <Comment {comment}></Comment>
+                {/each}
+              </Timeline>
+            </div>
+          {:else}
+            <div class="mb-6 text-gray-600">No comments available.</div>
+          {/if}
+          {#if appStore.isEditor() || appStore.isReviewer()}
+            <div>
+              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+              <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+                <div slot="footer" class="flex items-start justify-between">
+                  <Button on:click={createComment} disabled={count > 10000 || count === 0}
+                    >Send</Button
+                  >
+                  <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                    >{`${count}/10000`}</Label
+                  >
+                </div>
+              </Textarea>
+            </div>
+          {/if}
+        </TabItem>
+        <TabItem title="SSVC Calculator">
+          <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
+        </TabItem>
+      </Tabs>
+    </div>
   {/if}
 </div>

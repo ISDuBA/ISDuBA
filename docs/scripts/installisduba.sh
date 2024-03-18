@@ -12,7 +12,7 @@ set -e # to exit if a command in the script fails
 
 cd ../..
 
-mkdir bin
+mkdir -p bin
 
 go build -o ./bin/isdubad ./cmd/isdubad
 

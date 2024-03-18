@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-Calling installall.sh will
+Calling installall.sh will, on a new Ubuntu 24.04 setup: 
  - install git and download the git repository of ISDuBA and then call setup.sh which will
    - install java and go via installgojava.sh
    - build the bulkimporter and isdubad tools via installisduba.sh

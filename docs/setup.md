@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-This guide describes how to set up ISDuBA for a development build on Ubuntu. These settings may not be suitable for production.
+This guide describes how to set up ISDuBA for a development build on Ubuntu 24.04. These settings may not be suitable for production.
 
 # Prerequisites
 
@@ -94,6 +94,17 @@ echo $TOKEN
 ### Prerequisites
 
 A current Version of nodeJS LTS (version `20.11.1`).
+
+### Prepare keycloak configuration
+
+There is an `.env`-file under `client`
+```bash
+PUBLIC_KEYCLOAK_URL="http://localhost:8080"
+PUBLIC_KEYCLOAK_REALM="isduba"
+PUBLIC_KEYCLOAK_CLIENTID="auth"
+```
+
+which allows to adjust your configuration to the settings you chose for your keycloak setup.
 
 ### Install necessary packages
 
