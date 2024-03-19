@@ -39,7 +39,7 @@
         comment.message = updatedComment;
         toggleEditing();
       } else {
-        // Do errorhandling
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
     });
   }

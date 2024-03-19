@@ -25,6 +25,7 @@
     Table
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
+  import { onMount } from "svelte";
 
   let limit = 10;
   let offset = 0;
@@ -53,7 +54,7 @@
         ({ count, documents } = await response.json());
         documents = documents || [];
       } else {
-        // Do errorhandling
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
     });
   };
@@ -99,9 +100,9 @@
   $: documentURL = encodeURI(
     `/api/documents?query=$state new workflow =${searchSuffix}&advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
   );
-  $: if ($appStore.app.keycloak.authenticated) {
+  onMount(async () => {
     fetchData();
-  }
+  });
 </script>
 
 <div style="width: 100%;overflow-y: auto">

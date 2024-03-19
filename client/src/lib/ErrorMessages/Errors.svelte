@@ -9,29 +9,14 @@
 -->
 
 <script lang="ts">
-  import { Toast } from "flowbite-svelte";
   import { appStore } from "$lib/store";
-  import { ERRORS } from "./messagetypes";
-
-  const coloryByType = (type: string) => {
-    if (type === ERRORS.ERROR) return "red";
-    if (type === ERRORS.WARNING) return "yellow";
-    return "green";
-  };
+  import Error from "./Error.svelte";
 </script>
 
-{#each $appStore.app.errors as error}
-  <Toast
-    position="bottom-right"
-    color={coloryByType(error.type)}
-    on:close={() => {
-      appStore.removeError(error.id);
-    }}
-  >
-    <svelte:fragment slot="icon">
-      <i class="bx bxs-error-alt"></i>
-    </svelte:fragment>
-    <span class="mb-1 text-sm font-semibold text-gray-900 dark:text-white">{error.type}</span>
-    <div class="mb-2 text-sm font-normal">{error.message}</div>
-  </Toast>
-{/each}
+<div style="position:absolute; bottom:1rem; right:1rem;">
+  {#each $appStore.app.errors as error (error.id)}
+    <div class="mb-2">
+      <Error {error}></Error>
+    </div>
+  {/each}
+</div>

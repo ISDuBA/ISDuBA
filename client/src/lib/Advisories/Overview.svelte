@@ -108,7 +108,7 @@
         ({ count, documents } = await response.json());
         documents = documents || [];
       } else {
-        // Do errorhandling
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
     });
   };

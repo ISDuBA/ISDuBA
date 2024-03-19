@@ -213,7 +213,7 @@
       if (response.ok) {
         dispatch("updateSSVC");
       } else {
-        // Do errorhandling
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
     });
   }
