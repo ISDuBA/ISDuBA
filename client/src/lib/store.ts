@@ -7,8 +7,15 @@
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 import { writable } from "svelte/store";
-import type { DocModel } from "./CSAFWebview/docmodel/docmodeltypes";
+import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
 import { ADMIN, EDITOR, REVIEWER, IMPORTER, AUDITOR } from "./permissions";
+import { ERRORS } from "./ErrorMessages/messagetypes";
+
+type ErrorMessage = {
+  id: string;
+  type: string;
+  message: string;
+};
 
 type AppStore = {
   app: {
@@ -18,6 +25,7 @@ type AppStore = {
     };
     token: any;
     keycloak: any;
+    errors: ErrorMessage[];
   };
   webview: {
     doc: DocModel | null;
@@ -52,7 +60,8 @@ const generateInitalState = (): AppStore => {
       },
       isUserLoggedIn: false,
       token: null,
-      keycloak: null
+      keycloak: null,
+      errors: []
     },
     webview: {
       doc: null,
@@ -258,6 +267,47 @@ function createStore() {
         const { firstName, lastName } = userProfile;
         settings.app.userProfile.firstName = firstName;
         settings.app.userProfile.lastName = lastName;
+        return settings;
+      });
+    },
+    displayErrorMessage: (msg: string) => {
+      update((settings) => {
+        const errorMessage = {
+          id: crypto.randomUUID(),
+          type: ERRORS.ERROR,
+          message: msg
+        };
+        settings.app.errors = [errorMessage, ...settings.app.errors];
+        return settings;
+      });
+    },
+    displayWarningMessage: (msg: string) => {
+      update((settings) => {
+        const errorMessage = {
+          id: crypto.randomUUID(),
+          type: ERRORS.WARNING,
+          message: msg
+        };
+        settings.app.errors = [errorMessage, ...settings.app.errors];
+        return settings;
+      });
+    },
+    displaySuccessMessage: (msg: string) => {
+      update((settings) => {
+        const errorMessage = {
+          id: crypto.randomUUID(),
+          type: ERRORS.SUCCESS,
+          message: msg
+        };
+        settings.app.errors = [errorMessage, ...settings.app.errors];
+        return settings;
+      });
+    },
+    removeError: (id: string) => {
+      update((settings) => {
+        settings.app.errors = settings.app.errors.filter((msg) => {
+          return msg.id !== id;
+        });
         return settings;
       });
     },
