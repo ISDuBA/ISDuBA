@@ -55,7 +55,7 @@
         return { id: doc.id, version: doc.version };
       });
     } else {
-      // Do errorhandling
+      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
     }
   };
 
@@ -71,7 +71,7 @@
       const docModel = convertToDocModel(doc);
       appStore.setDocument(docModel);
     } else {
-      // Do errorhandling
+      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
     }
   };
 
@@ -90,7 +90,7 @@
         ssvc = await convertVectorToLabel(result.documents[0].ssvc);
       }
     } else {
-      // Do errorhandling
+      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
     }
   };
 
@@ -115,7 +115,7 @@
               resolve(newComments);
             });
           } else {
-            // Do errorhandling
+            appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
           }
         });
       });
@@ -139,7 +139,7 @@
           }
         });
       } else {
-        // Do errorhandling
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
     });
   }
@@ -167,7 +167,7 @@
       advisoryState = result.documents[0].state;
       return result.documents[0].state;
     } else {
-      // Do errorhandling
+      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
     }
   };
 

@@ -27,6 +27,7 @@
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
+  import { Spinner } from "flowbite-svelte";
 
   let openRow: number | null;
 
@@ -53,6 +54,7 @@
     "four_cves"
   ];
   let orderBy = "-cvss_v3_score";
+  let loading = false;
 
   const previous = () => {
     if (offset - limit >= 0) {
@@ -98,6 +100,7 @@
   );
   const fetchData = () => {
     $appStore.app.keycloak.updateToken(5).then(async () => {
+      loading = true;
       const response = await fetch(documentURL, {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
@@ -107,8 +110,9 @@
         ({ count, documents } = await response.json());
         documents = documents || [];
       } else {
-        // Do errorhandling
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
+      loading = false;
     });
   };
   onMount(async () => {
@@ -119,6 +123,9 @@
 </script>
 
 <SectionHeader title="Documents"></SectionHeader>
+{#if loading}
+  <Spinner color="gray"></Spinner>
+{/if}
 {#if documents}
   <div class="mb-3 w-2/3">
     <Search

@@ -25,6 +25,8 @@
     Table
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
+  import { onMount } from "svelte";
+  import { Spinner } from "flowbite-svelte";
 
   let limit = 10;
   let offset = 0;
@@ -32,6 +34,7 @@
   let currentPage = 1;
   let documents: any = [];
   let searchTerm: string = "";
+  let loading = false;
   let columns = [
     "id",
     "publisher",
@@ -44,6 +47,7 @@
   let orderBy = "title";
   const fetchData = () => {
     $appStore.app.keycloak.updateToken(5).then(async () => {
+      loading = true;
       const response = await fetch(documentURL, {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
@@ -53,8 +57,9 @@
         ({ count, documents } = await response.json());
         documents = documents || [];
       } else {
-        // Do errorhandling
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
+      loading = false;
     });
   };
 
@@ -99,12 +104,15 @@
   $: documentURL = encodeURI(
     `/api/documents?query=$state new workflow =${searchSuffix}&advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
   );
-  $: if ($appStore.app.keycloak.authenticated) {
+  onMount(async () => {
     fetchData();
-  }
+  });
 </script>
 
 <div style="width: 100%;overflow-y: auto">
+  {#if loading}
+    <Spinner color="gray" />
+  {/if}
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
       <TableHeadCell
