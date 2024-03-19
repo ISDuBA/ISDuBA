@@ -27,6 +27,7 @@
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
+  import { Spinner } from "flowbite-svelte";
 
   let openRow: number | null;
 
@@ -34,6 +35,7 @@
     openRow = openRow === i ? null : i;
   };
   let limit = 10;
+  let loading = false;
   let offset = 0;
   let count = 0;
   let currentPage = 1;
@@ -99,6 +101,7 @@
   );
   const fetchData = () => {
     $appStore.app.keycloak.updateToken(5).then(async () => {
+      loading = true;
       const response = await fetch(documentURL, {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
@@ -110,6 +113,7 @@
       } else {
         appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
+      loading = false;
     });
   };
   onMount(async () => {
@@ -120,6 +124,9 @@
 </script>
 
 <SectionHeader title="Advisories"></SectionHeader>
+{#if loading}
+  <Spinner color="gray"></Spinner>
+{/if}
 {#if documents}
   <div class="mb-3 w-2/3">
     <Search
