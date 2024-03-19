@@ -214,7 +214,9 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		const eventSQL = `INSERT INTO events_log ` +
 			`(event, state, time, actor, documents_id) ` +
 			`VALUES('change_comment', ` +
-			`(SELECT state FROM advisories ads JOIN documents ON ads.tracking_id = tracking_id AND ads.publisher = publisher WHERE id = $3), ` +
+			`(SELECT state FROM advisories ads JOIN documents docs ` +
+			`ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.publisher) ` +
+			`WHERE docs.id = $3), ` +
 			`$1, $2, $3)`
 
 		var actor sql.NullString
