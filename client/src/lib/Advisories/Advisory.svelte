@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, Label, Tabs, TabItem, Textarea, Timeline } from "flowbite-svelte";
+  import { Button, Label, Tabs, TabItem, Textarea, Timeline, Card } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
@@ -224,39 +224,38 @@
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="relative flex w-2/4 flex-col">
-      <Tabs>
-        <TabItem open title="Comments">
-          {#if comments?.length > 0}
-            <div class="overflow-y-scroll pl-2">
-              <Timeline class="mb-4 flex flex-col-reverse">
-                {#each comments as comment}
-                  <Comment {comment}></Comment>
-                {/each}
-              </Timeline>
-            </div>
-          {:else}
-            <div class="mb-6 text-gray-600">No comments available.</div>
-          {/if}
-          {#if appStore.isEditor() || appStore.isReviewer()}
-            <div>
-              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-              <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-                <div slot="footer" class="flex items-start justify-between">
-                  <Button on:click={createComment} disabled={count > 10000 || count === 0}
-                    >Send</Button
-                  >
-                  <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                    >{`${count}/10000`}</Label
-                  >
-                </div>
-              </Textarea>
-            </div>
-          {/if}
-        </TabItem>
-        <TabItem title="SSVC Calculator">
-          <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
-        </TabItem>
-      </Tabs>
+      <Card>
+        <Label class="mb-4 text-lg">Comments</Label>
+        {#if comments?.length > 0}
+          <div class="max-h-96 overflow-y-auto pl-2">
+            <Timeline class="mb-4 flex flex-col-reverse">
+              {#each comments as comment}
+                <Comment {comment}></Comment>
+              {/each}
+            </Timeline>
+          </div>
+        {:else}
+          <div class="mb-6 text-gray-600">No comments available.</div>
+        {/if}
+        {#if appStore.isEditor() || appStore.isReviewer()}
+          <div class="mt-6">
+            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+              <div slot="footer" class="flex items-start justify-between">
+                <Button on:click={createComment} disabled={count > 10000 || count === 0}
+                  >Send</Button
+                >
+                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                  >{`${count}/10000`}</Label
+                >
+              </div>
+            </Textarea>
+          </div>
+        {/if}
+      </Card>
+      <Card class="mt-3">
+        <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
+      </Card>
     </div>
   {/if}
 </div>

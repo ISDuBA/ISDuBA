@@ -41,7 +41,7 @@
   let userDecisions: any = {};
   const vectorBeginning = "SSVCv2/";
   let vector: string;
-  let vectorInput = "SSVCv2/E:N/A:N/T:P/M:M/D:T/2024-03-12T13:26:47Z/";
+  let vectorInput = "";
   let result: any;
   $: resultStyle = result?.color ? `color: ${result.color}` : "";
 
@@ -212,6 +212,7 @@
     }).then((response) => {
       if (response.ok) {
         dispatch("updateSSVC");
+        appStore.displaySuccessMessage("SSVC updated");
       } else {
         appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
@@ -221,10 +222,11 @@
 
 <div id="ssvc-calc" class="pe-4">
   {#if !startedCalculation}
-    <Label class="mb-4 text-lg">Save existing SSVC vector</Label>
+    <Label class="mb-4 text-lg">Enter SSVC vector</Label>
     <Label class="mb-2">
-      Vector:
       <Input type="text" bind:value={vectorInput} />
+      <small class="text-slate-400">Example: SSVCv2/E:N/A:N/T:P/M:M/D:T/2024-03-12T13:26:47Z/</small
+      >
     </Label>
     <Button on:click={() => saveSSVC(vectorInput)}>
       <i class="bx bx-save me-2 text-xl"></i>Save</Button
