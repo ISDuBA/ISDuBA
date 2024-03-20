@@ -8,10 +8,9 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, Drawer, Label, Tabs, TabItem, Textarea, Timeline, Toast } from "flowbite-svelte";
+  import { Button, Label, Tabs, TabItem, Textarea, Timeline } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
-  import { slide } from "svelte/transition";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
@@ -30,12 +29,6 @@
   let advisoryVersions: string[] = [];
   let advisoryState: string;
   const timeoutIDs: number[] = [];
-
-  let transitionParams = {
-    x: 320,
-    duration: 120,
-    easing: sineIn
-  };
 
   const loadAdvisoryVersions = async () => {
     const response = await fetch(
@@ -118,27 +111,28 @@
       });
     });
   }
-  function createComment() {
+  async function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
-    fetch(`/api/comments/${params.id}`, {
+    const response = await fetch(`/api/comments/${params.id}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       },
       method: "POST",
       body: formData
-    }).then((response) => {
-      if (response.ok) {
-        comment = "";
-        loadComments().then((newComments: any[]) => {
-          if (newComments.length === 1) {
-            loadAdvisoryState();
-          }
-        });
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
     });
+    if (response.ok) {
+      comment = "";
+      loadComments().then((newComments: any[]) => {
+        if (newComments.length === 1) {
+          loadAdvisoryState();
+        }
+      });
+      appStore.displaySuccessMessage("Comment for advisory saved");
+    } else {
+      const error = await response.json();
+      appStore.displayErrorMessage(`${error.error}`);
+    }
   }
 
   async function updateState(newState: string) {
