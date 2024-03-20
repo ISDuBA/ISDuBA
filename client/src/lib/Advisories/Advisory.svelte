@@ -16,8 +16,8 @@
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
-  import SsvcCalculator from "$lib/SSVC/SSVCCalculator.svelte";
-  import { convertVectorToLabel } from "$lib/SSVC/SSVCCalculator";
+  import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
+  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   export let params: any = null;
 
   let document = {};
