@@ -128,7 +128,7 @@
           loadAdvisoryState();
         }
       });
-      appStore.displaySuccessMessage("Comment for advisory saved");
+      appStore.displaySuccessMessage("Comment for advisory saved.");
     } else {
       const error = await response.json();
       appStore.displayErrorMessage(`${error.error}`);

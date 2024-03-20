@@ -38,6 +38,7 @@
       if (response.ok) {
         comment.message = updatedComment;
         toggleEditing();
+        appStore.displaySuccessMessage("Comment updated.");
       } else {
         appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
