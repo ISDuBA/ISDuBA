@@ -254,7 +254,12 @@
         {/if}
       </Card>
       <Card class="mt-3">
-        <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
+        <Label class="mb-4 text-lg">SSVC</Label>
+        <SsvcCalculator
+          vectorInput={ssvc?.vector}
+          documentID={params.id}
+          on:updateSSVC={loadMetaData}
+        ></SsvcCalculator>
       </Card>
     </div>
   {/if}
