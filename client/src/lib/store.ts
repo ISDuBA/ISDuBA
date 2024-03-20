@@ -9,7 +9,7 @@
 import { writable } from "svelte/store";
 import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
 import { ADMIN, EDITOR, REVIEWER, IMPORTER, AUDITOR } from "./permissions";
-import { ERRORS } from "./ErrorMessages/messagetypes";
+import { MESSAGE } from "./Messages/messagetypes";
 
 type ErrorMessage = {
   id: string;
@@ -48,6 +48,14 @@ type AppStore = {
       uploadedFile: boolean;
       history: string[];
     };
+  };
+};
+
+const generateMessage = (msg: string, type: string) => {
+  return {
+    id: crypto.randomUUID(),
+    type: type,
+    message: msg
   };
 };
 
@@ -272,33 +280,28 @@ function createStore() {
     },
     displayErrorMessage: (msg: string) => {
       update((settings) => {
-        const errorMessage = {
-          id: crypto.randomUUID(),
-          type: ERRORS.ERROR,
-          message: msg
-        };
+        const errorMessage = generateMessage(msg, MESSAGE.ERROR);
         settings.app.errors = [errorMessage, ...settings.app.errors];
         return settings;
       });
     },
     displayWarningMessage: (msg: string) => {
       update((settings) => {
-        const errorMessage = {
-          id: crypto.randomUUID(),
-          type: ERRORS.WARNING,
-          message: msg
-        };
+        const errorMessage = generateMessage(msg, MESSAGE.WARNING);
         settings.app.errors = [errorMessage, ...settings.app.errors];
         return settings;
       });
     },
     displaySuccessMessage: (msg: string) => {
       update((settings) => {
-        const errorMessage = {
-          id: crypto.randomUUID(),
-          type: ERRORS.SUCCESS,
-          message: msg
-        };
+        const errorMessage = generateMessage(msg, MESSAGE.SUCCESS);
+        settings.app.errors = [errorMessage, ...settings.app.errors];
+        return settings;
+      });
+    },
+    displayInfoMessage: (msg: string) => {
+      update((settings) => {
+        const errorMessage = generateMessage(msg, MESSAGE.INFO);
         settings.app.errors = [errorMessage, ...settings.app.errors];
         return settings;
       });

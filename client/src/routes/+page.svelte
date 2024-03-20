@@ -28,7 +28,7 @@
   import Keycloak from "keycloak-js";
   import { configuration } from "$lib/configuration";
   import { onMount } from "svelte";
-  import Errors from "$lib/ErrorMessages/Errors.svelte";
+  import Messages from "$lib/Messages/Messages.svelte";
 
   appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
 
@@ -118,5 +118,5 @@
   <main class="w-full bg-white pl-6 pt-6">
     <Router {routes} on:conditionsFailed={conditionsFailed} />
   </main>
-  <Errors></Errors>
+  <Messages></Messages>
 </div>

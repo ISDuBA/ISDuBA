@@ -194,10 +194,19 @@ func CreateOrder(
 		if b.Len() > 0 {
 			b.WriteByte(',')
 		}
-		if field == "tracking_id" || field == "publisher" {
+		bracket := false
+		switch field {
+		case "tracking_id", "publisher":
 			b.WriteString("extended_documents.")
+		case "cvss_v2_score", "cvss_v3_score":
+			bracket = true
+			b.WriteString("COALESCE(")
 		}
 		b.WriteString(field)
+		if bracket {
+			b.WriteString(",0)")
+		}
+
 		if desc {
 			b.WriteString(" DESC")
 		} else {

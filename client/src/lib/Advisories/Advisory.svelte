@@ -8,18 +8,16 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { page } from "$app/stores";
-  import { Button, Drawer, Label, Tabs, TabItem, Textarea, Timeline, Toast } from "flowbite-svelte";
+  import { Button, Label, Tabs, TabItem, Textarea, Timeline, Card } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
-  import { slide } from "svelte/transition";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
-  import SsvcCalculator from "$lib/SSVC/SSVCCalculator.svelte";
-  import { convertVectorToLabel } from "$lib/SSVC/SSVCCalculator";
+  import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
+  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   export let params: any = null;
 
   let document = {};
@@ -31,14 +29,6 @@
   let advisoryVersions: string[] = [];
   let advisoryState: string;
   const timeoutIDs: number[] = [];
-  let isToastOpen = false;
-  let toastText = "";
-
-  let transitionParams = {
-    x: 320,
-    duration: 120,
-    easing: sineIn
-  };
 
   const loadAdvisoryVersions = async () => {
     const response = await fetch(
@@ -121,27 +111,28 @@
       });
     });
   }
-  function createComment() {
+  async function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
-    fetch(`/api/comments/${params.id}`, {
+    const response = await fetch(`/api/comments/${params.id}`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
       },
       method: "POST",
       body: formData
-    }).then((response) => {
-      if (response.ok) {
-        comment = "";
-        loadComments().then((newComments: any[]) => {
-          if (newComments.length === 1) {
-            loadAdvisoryState();
-          }
-        });
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
     });
+    if (response.ok) {
+      comment = "";
+      loadComments().then((newComments: any[]) => {
+        if (newComments.length === 1) {
+          loadAdvisoryState();
+        }
+      });
+      appStore.displaySuccessMessage("Comment for advisory saved.");
+    } else {
+      const error = await response.json();
+      appStore.displayErrorMessage(`${error.error}`);
+    }
   }
 
   async function updateState(newState: string) {
@@ -194,11 +185,7 @@
       if (state === "new") {
         const id = setTimeout(async () => {
           await updateState("read");
-          toastText = "State was set to 'read'.";
-          isToastOpen = true;
-          setTimeout(() => {
-            isToastOpen = false;
-          }, 5000);
+          appStore.displayInfoMessage("This advisory is marked as read");
           advisoryState = "read";
         }, 3000);
         timeoutIDs.push(id);
@@ -208,19 +195,6 @@
 </script>
 
 <div class="flex">
-  <div class="fixed bottom-4 left-0 z-10 flex w-screen justify-center">
-    <Toast
-      class="min-w-40 border border-solid border-gray-200"
-      dismissable={true}
-      transition={slide}
-      bind:open={isToastOpen}
-    >
-      <div class="flex items-center justify-center gap-x-2">
-        <i class="bx bx-info-circle text-lg"></i>
-        {toastText}
-      </div>
-    </Toast>
-  </div>
   <div>
     <div class="flex flex-col">
       <div class="flex">
@@ -250,39 +224,38 @@
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="relative flex w-2/4 flex-col">
-      <Tabs>
-        <TabItem open title="Comments">
-          {#if comments?.length > 0}
-            <div class="overflow-y-scroll pl-2">
-              <Timeline class="mb-4 flex flex-col-reverse">
-                {#each comments as comment}
-                  <Comment {comment}></Comment>
-                {/each}
-              </Timeline>
-            </div>
-          {:else}
-            <div class="mb-6 text-gray-600">No comments available.</div>
-          {/if}
-          {#if appStore.isEditor() || appStore.isReviewer()}
-            <div>
-              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-              <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-                <div slot="footer" class="flex items-start justify-between">
-                  <Button on:click={createComment} disabled={count > 10000 || count === 0}
-                    >Send</Button
-                  >
-                  <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                    >{`${count}/10000`}</Label
-                  >
-                </div>
-              </Textarea>
-            </div>
-          {/if}
-        </TabItem>
-        <TabItem title="SSVC Calculator">
-          <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
-        </TabItem>
-      </Tabs>
+      <Card>
+        <Label class="mb-4 text-lg">Comments</Label>
+        {#if comments?.length > 0}
+          <div class="max-h-96 overflow-y-auto pl-2">
+            <Timeline class="mb-4 flex flex-col-reverse">
+              {#each comments as comment}
+                <Comment {comment}></Comment>
+              {/each}
+            </Timeline>
+          </div>
+        {:else}
+          <div class="mb-6 text-gray-600">No comments available.</div>
+        {/if}
+        {#if appStore.isEditor() || appStore.isReviewer()}
+          <div class="mt-6">
+            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+              <div slot="footer" class="flex items-start justify-between">
+                <Button on:click={createComment} disabled={count > 10000 || count === 0}
+                  >Send</Button
+                >
+                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                  >{`${count}/10000`}</Label
+                >
+              </div>
+            </Textarea>
+          </div>
+        {/if}
+      </Card>
+      <Card class="mt-3">
+        <SsvcCalculator documentID={params.id} on:updateSSVC={loadMetaData}></SsvcCalculator>
+      </Card>
     </div>
   {/if}
 </div>

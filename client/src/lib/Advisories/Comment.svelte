@@ -38,6 +38,7 @@
       if (response.ok) {
         comment.message = updatedComment;
         toggleEditing();
+        appStore.displaySuccessMessage("Comment updated.");
       } else {
         appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
@@ -47,20 +48,20 @@
 
 <TimelineItem
   date={`${new Date(comment.time).toLocaleDateString("en-US")} - ${new Date(comment.time).toLocaleTimeString("en-US")}`}
-  title={comment.commentator}
 >
-  <Label class="text-xs text-slate-400">Document-Version: {comment.documentID}</Label>
   {#if !isEditing}
     <P class="mb-2">
       {comment.message}
+      <small>({comment.commentator})</small>
+      {#if $appStore.app.keycloak.tokenParsed.preferred_username === comment.commentator}
+        <ButtonGroup>
+          <Button class="!p-2" on:click={toggleEditing}>
+            <i class="bx bx-edit text-lg"></i>
+          </Button>
+        </ButtonGroup>
+      {/if}
     </P>
-    {#if $appStore.app.keycloak.tokenParsed.preferred_username === comment.commentator}
-      <ButtonGroup>
-        <Button class="!p-2" on:click={toggleEditing}>
-          <i class="bx bx-edit text-lg"></i>
-        </Button>
-      </ButtonGroup>
-    {/if}
+    <Label class="text-xs text-slate-400">Document-Version: {comment.documentID}</Label>
   {:else}
     <Textarea bind:value={updatedComment}></Textarea>
     <Button color="red" outline={true} class="!p-2" on:click={toggleEditing}>
