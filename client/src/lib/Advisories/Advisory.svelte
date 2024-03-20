@@ -195,35 +195,33 @@
 </script>
 
 <div class="flex">
-  <div>
-    <div class="flex flex-col">
-      <div class="flex">
-        <div class="me-2 flex-col">
-          <Label class="mb-4 max-w-52"
-            >Workflow-State:
-            {#if advisoryState}
-              <span>{advisoryState}</span>
-            {/if}
-          </Label>
-          <Label class="text-lg">
-            {#if ssvc}
-              <span style={ssvcStyle}>{ssvc.label}</span>
-            {:else}
-              <span class="text-gray-400">No SSVC</span>
-            {/if}
-          </Label>
-        </div>
-        <Version
-          publisherNamespace={params.publisherNamespace}
-          trackingID={params.trackingID}
-          {advisoryVersions}
-        ></Version>
+  <div class="flex flex-col">
+    <div class="flex">
+      <div class="me-2 flex-col">
+        <Label class="mb-4 max-w-52"
+          >Workflow-State:
+          {#if advisoryState}
+            <span>{advisoryState}</span>
+          {/if}
+        </Label>
+        <Label class="text-lg">
+          {#if ssvc}
+            <span style={ssvcStyle}>{ssvc.label}</span>
+          {:else}
+            <span class="text-gray-400">No SSVC</span>
+          {/if}
+        </Label>
       </div>
-      <Webview></Webview>
+      <Version
+        publisherNamespace={params.publisherNamespace}
+        trackingID={params.trackingID}
+        {advisoryVersions}
+      ></Version>
     </div>
+    <Webview></Webview>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="relative flex w-2/4 flex-col">
+    <div class="relative ml-auto mr-3 min-w-96">
       <Card>
         <Label class="mb-4 text-lg">Comments</Label>
         {#if comments?.length > 0}
