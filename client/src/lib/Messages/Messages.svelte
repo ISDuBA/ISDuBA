@@ -10,13 +10,13 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store";
-  import Error from "./Error.svelte";
+  import Message from "./Message.svelte";
 </script>
 
 <div style="position:absolute; bottom:1rem; right:1rem;">
   {#each $appStore.app.errors as error (error.id)}
     <div class="mb-2">
-      <Error {error}></Error>
+      <Message {error}></Message>
     </div>
   {/each}
 </div>

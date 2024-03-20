@@ -8,7 +8,6 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { page } from "$app/stores";
   import { Button, Drawer, Label, Tabs, TabItem, Textarea, Timeline, Toast } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";

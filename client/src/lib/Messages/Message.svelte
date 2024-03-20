@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { Toast } from "flowbite-svelte";
-  import { ERRORS } from "./messagetypes";
+  import { MESSAGE } from "./messagetypes";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { blur } from "svelte/transition";
@@ -20,9 +20,10 @@
   let open = true;
 
   const coloryByType = (type: string) => {
-    if (type === ERRORS.ERROR) return "red";
-    if (type === ERRORS.WARNING) return "yellow";
-    return "green";
+    if (type === MESSAGE.ERROR) return "red";
+    if (type === MESSAGE.WARNING) return "yellow";
+    if (type === MESSAGE.SUCCESS) return "green";
+    return "blue";
   };
 
   onMount(async () => {
@@ -45,9 +46,10 @@
     <svelte:fragment slot="icon">
       <i
         class:bx={true}
-        class:bxs-message-rounded-x={error.type === ERRORS.ERROR}
-        class:bxs-message-rounded-error={error.type === ERRORS.WARNING}
-        class:bxs-message-rounded-check={error.type === ERRORS.SUCCESS}
+        class:bxs-message-rounded-x={error.type === MESSAGE.ERROR}
+        class:bxs-message-rounded-error={error.type === MESSAGE.WARNING}
+        class:bxs-message-rounded-check={error.type === MESSAGE.SUCCESS}
+        class:bxs-message-rounded={error.type === MESSAGE.INFO}
       ></i>
     </svelte:fragment>
     <span class="mb-1 text-sm font-semibold text-gray-900 dark:text-white">{error.type}</span>
