@@ -30,8 +30,6 @@
   let advisoryVersions: string[] = [];
   let advisoryState: string;
   const timeoutIDs: number[] = [];
-  let isToastOpen = false;
-  let toastText = "";
 
   let transitionParams = {
     x: 320,
@@ -193,11 +191,7 @@
       if (state === "new") {
         const id = setTimeout(async () => {
           await updateState("read");
-          toastText = "State was set to 'read'.";
-          isToastOpen = true;
-          setTimeout(() => {
-            isToastOpen = false;
-          }, 5000);
+          appStore.displayInfoMessage("This advisory is marked as read");
           advisoryState = "read";
         }, 3000);
         timeoutIDs.push(id);
@@ -207,19 +201,6 @@
 </script>
 
 <div class="flex">
-  <div class="fixed bottom-4 left-0 z-10 flex w-screen justify-center">
-    <Toast
-      class="min-w-40 border border-solid border-gray-200"
-      dismissable={true}
-      transition={slide}
-      bind:open={isToastOpen}
-    >
-      <div class="flex items-center justify-center gap-x-2">
-        <i class="bx bx-info-circle text-lg"></i>
-        {toastText}
-      </div>
-    </Toast>
-  </div>
   <div>
     <div class="flex flex-col">
       <div class="flex">
