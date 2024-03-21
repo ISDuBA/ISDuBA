@@ -24,7 +24,7 @@
     TableHeadCell,
     Table
   } from "flowbite-svelte";
-  import { tdClass, tablePadding } from "$lib/table/defaults";
+  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import { onMount } from "svelte";
   import { Spinner } from "flowbite-svelte";
 
@@ -109,7 +109,7 @@
   });
 </script>
 
-<div style="width: 100%;overflow-y: auto">
+<div>
   <div class="mb-2 mt-2 flex items-center justify-between">
     {#if documents.length > 0}
       <div class="flex items-center">
@@ -179,83 +179,89 @@
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
-  <Table hoverable={true} noborder={true}>
-    <TableHead class="cursor-pointer">
-      <TableHeadCell
-        padding={tablePadding}
-        on:click={() => {
-          switchSort("cvss_v3_score");
-        }}
-        >CVSS<i
-          class:bx={true}
-          class:bx-caret-up={orderBy === "cvss_v3_score"}
-          class:bx-caret-down={orderBy === "-cvss_v3_score"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell
-        padding={tablePadding}
-        on:click={() => {
-          switchSort("publisher");
-        }}
-        >Publisher<i
-          class:bx={true}
-          class:bx-caret-up={orderBy === "publisher"}
-          class:bx-caret-down={orderBy === "-publisher"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell
-        padding={tablePadding}
-        on:click={() => {
-          switchSort("title");
-        }}
-        >Title<i
-          class:bx={true}
-          class:bx-caret-up={orderBy === "title"}
-          class:bx-caret-down={orderBy === "-title"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell
-        padding={tablePadding}
-        on:click={() => {
-          switchSort("tracking_id");
-        }}
-        >Tracking ID<i
-          class:bx={true}
-          class:bx-caret-up={orderBy === "tracking_id"}
-          class:bx-caret-down={orderBy === "-tracking_id"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell
-        padding={tablePadding}
-        on:click={() => {
-          switchSort("version");
-        }}
-        >Version<i
-          class:bx={true}
-          class:bx-caret-up={orderBy === "version"}
-          class:bx-caret-down={orderBy === "-version"}
-        ></i></TableHeadCell
-      >
-    </TableHead>
-    <TableBody>
-      {#each documents as item}
-        <TableBodyRow
-          class="cursor-pointer"
+  <div class="w-fit">
+    <Table hoverable={true} noborder={true}>
+      <TableHead class="cursor-pointer">
+        <TableHeadCell
+          padding={tablePadding}
           on:click={() => {
-            push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
+            switchSort("cvss_v3_score");
           }}
+          >CVSS<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "cvss_v3_score"}
+            class:bx-caret-down={orderBy === "-cvss_v3_score"}
+          ></i></TableHeadCell
         >
-          <TableBodyCell {tdClass}
-            ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
-              >{item.cvss_v3_score == null ? "" : item.cvss_v3_score}</span
-            ></TableBodyCell
+        <TableHeadCell
+          padding={tablePadding}
+          on:click={() => {
+            switchSort("publisher");
+          }}
+          >Publisher<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "publisher"}
+            class:bx-caret-down={orderBy === "-publisher"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell
+          padding={tablePadding}
+          on:click={() => {
+            switchSort("title");
+          }}
+          >Title<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "title"}
+            class:bx-caret-down={orderBy === "-title"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell
+          padding={tablePadding}
+          on:click={() => {
+            switchSort("tracking_id");
+          }}
+          >Tracking ID<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "tracking_id"}
+            class:bx-caret-down={orderBy === "-tracking_id"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell
+          padding={tablePadding}
+          on:click={() => {
+            switchSort("version");
+          }}
+          >Version<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "version"}
+            class:bx-caret-down={orderBy === "-version"}
+          ></i></TableHeadCell
+        >
+      </TableHead>
+      <TableBody>
+        {#each documents as item}
+          <TableBodyRow
+            class="cursor-pointer"
+            on:click={() => {
+              push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
+            }}
           >
-          <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
-        </TableBodyRow>
-      {/each}
-    </TableBody>
-  </Table>
+            <TableBodyCell {tdClass}
+              ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
+                >{item.cvss_v3_score == null ? "" : item.cvss_v3_score}</span
+              ></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><span title={item.publisher}>{item.publisher}</span></TableBodyCell
+            >
+            <TableBodyCell style="max-width: 48rem;" tdClass={title}
+              ><span title={item.title}>{item.title}</span></TableBodyCell
+            >
+            <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
+            <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
+          </TableBodyRow>
+        {/each}
+      </TableBody>
+    </Table>
+  </div>
 </div>

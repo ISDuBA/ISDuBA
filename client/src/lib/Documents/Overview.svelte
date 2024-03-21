@@ -25,7 +25,7 @@
     TableHeadCell,
     Table
   } from "flowbite-svelte";
-  import { tdClass, tablePadding } from "$lib/table/defaults";
+  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Spinner } from "flowbite-svelte";
 
@@ -301,8 +301,11 @@
               {/if}
             {/if}</TableBodyCell
           >
-          <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
+          <TableBodyCell tdClass={publisher}
+            ><span title={item.publisher}>{item.publisher}</span></TableBodyCell
+          >
+          <TableBodyCell tdClass={title}><span title={item.title}>{item.title}</span></TableBodyCell
+          >
           <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
