@@ -110,10 +110,7 @@
 </script>
 
 <div style="width: 100%;overflow-y: auto">
-  {#if loading}
-    <Spinner color="gray" />
-  {/if}
-  <div class="mb-10 mt-3 flex items-center justify-between">
+  <div class="mb-2 mt-2 flex items-center justify-between">
     {#if documents.length > 0}
       <div class="flex items-center">
         <Label class="mr-3">Items per page</Label>
@@ -177,6 +174,10 @@
         {count} entries in total
       {/if}
     </div>
+  </div>
+  <div class:invisible={!loading} class:mb-4={true}>
+    Loading ...
+    <Spinner color="gray" size="4"></Spinner>
   </div>
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">

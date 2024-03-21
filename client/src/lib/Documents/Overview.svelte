@@ -123,9 +123,6 @@
 </script>
 
 <SectionHeader title="Documents"></SectionHeader>
-{#if loading}
-  <Spinner color="gray"></Spinner>
-{/if}
 {#if documents}
   <div class="mb-3 w-2/3">
     <Search
@@ -150,7 +147,7 @@
       >
     </Search>
   </div>
-  <div class="mb-10 mt-3 flex items-center justify-between">
+  <div class="mb-2 mt-8 flex items-center justify-between">
     {#if documents.length > 0}
       <div class="flex items-center">
         <Label class="mr-3">Items per page</Label>
@@ -214,6 +211,10 @@
         {count} entries in total
       {/if}
     </div>
+  </div>
+  <div class:invisible={!loading} class:mb-4={true}>
+    Loading ...
+    <Spinner color="gray" size="4"></Spinner>
   </div>
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
