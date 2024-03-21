@@ -136,14 +136,14 @@
       </div>
       <div class="mr-3 flex-grow">
         <div class="flex">
-          {#if currentPage > 1}
+          <div class:invisible={currentPage === 1} class:flex={true}>
             <PaginationItem on:click={first}>
               <i class="bx bx-arrow-to-left"></i>
             </PaginationItem>
             <PaginationItem on:click={previous}>
               <i class="bx bx-chevrons-left"></i>
             </PaginationItem>
-          {/if}
+          </div>
           <div class="mx-3 flex items-center">
             <input
               class="mr-1 w-16 cursor-pointer border pr-1 text-right"
@@ -159,14 +159,14 @@
             />
             <span>of {numberOfPages} Pages</span>
           </div>
-          {#if currentPage !== numberOfPages}
+          <div class:invisible={currentPage === numberOfPages} class:flex={true}>
             <PaginationItem on:click={next}>
               <i class="bx bx-chevrons-right"></i>
             </PaginationItem>
             <PaginationItem on:click={last}>
               <i class="bx bx-arrow-to-right"></i>
             </PaginationItem>
-          {/if}
+          </div>
         </div>
       </div>
     {/if}
