@@ -12,8 +12,13 @@ set -e # to exit if a command in the script fails
 
 sudo apt-get install git -y # Needed to work with github repositories
 
-git clone https://github.com/ISDuBA/ISDuBA.git # Clone ISDuBA repository
-
-cd ISDuBA/docs/scripts # Change working directory to scripts
+# If repository already exists, update it instead of cloning it
+if [ ! -d "ISDuBA" ] ; then
+  git clone https://github.com/ISDuBA/ISDuBA.git
+  cd ISDuBA/docs/scripts
+else
+  cd ISDuBA/docs/scripts
+  git pull
+fi
 
 ./setup.sh # Execute all the other setup scripts
