@@ -315,12 +315,14 @@
       </div>
       <div class="mr-3 flex-grow">
         <div class="flex">
-          <PaginationItem on:click={first}>
-            <i class="bx bx-arrow-to-left"></i>
-          </PaginationItem>
-          <PaginationItem on:click={previous}>
-            <i class="bx bx-chevrons-left"></i>
-          </PaginationItem>
+          {#if currentPage > 1}
+            <PaginationItem on:click={first}>
+              <i class="bx bx-arrow-to-left"></i>
+            </PaginationItem>
+            <PaginationItem on:click={previous}>
+              <i class="bx bx-chevrons-left"></i>
+            </PaginationItem>
+          {/if}
           <div class="mx-3 flex items-center">
             <input
               class="w-16 cursor-pointer border pr-1 text-right"
@@ -334,14 +336,16 @@
               }}
               bind:value={currentPage}
             />
-            <span class="mr-9">of {numberOfPages} Pages</span>
+            <span>of {numberOfPages} Pages</span>
           </div>
-          <PaginationItem on:click={next}>
-            <i class="bx bx-chevrons-right"></i>
-          </PaginationItem>
-          <PaginationItem on:click={last}>
-            <i class="bx bx-arrow-to-right"></i>
-          </PaginationItem>
+          {#if currentPage !== numberOfPages}
+            <PaginationItem on:click={next}>
+              <i class="bx bx-chevrons-right"></i>
+            </PaginationItem>
+            <PaginationItem on:click={last}>
+              <i class="bx bx-arrow-to-right"></i>
+            </PaginationItem>
+          {/if}
         </div>
       </div>
     {/if}
