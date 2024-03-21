@@ -85,7 +85,7 @@
   };
 
   const last = () => {
-    offset = count - (count % limit);
+    offset = (numberOfPages - 1) * limit;
     currentPage = numberOfPages;
     fetchData();
   };
@@ -113,6 +113,71 @@
   {#if loading}
     <Spinner color="gray" />
   {/if}
+  <div class="mb-10 mt-3 flex items-center">
+    {#if documents.length > 0}
+      <div class="flex flex-grow items-center">
+        <Label class="mr-3">Items per page</Label>
+        <Select
+          id="pagecount"
+          class="mt-2 w-24"
+          items={[
+            { name: "10", value: 10 },
+            { name: "25", value: 25 },
+            { name: "50", value: 50 },
+            { name: "100", value: 100 }
+          ]}
+          bind:value={limit}
+          on:change={() => {
+            offset = 0;
+            currentPage = 1;
+            fetchData();
+          }}
+        ></Select>
+      </div>
+      <div class="mr-3 flex-grow">
+        <div class="flex">
+          {#if currentPage > 1}
+            <PaginationItem on:click={first}>
+              <i class="bx bx-arrow-to-left"></i>
+            </PaginationItem>
+            <PaginationItem on:click={previous}>
+              <i class="bx bx-chevrons-left"></i>
+            </PaginationItem>
+          {/if}
+          <div class="mx-3 flex items-center">
+            <input
+              class="mr-1 w-16 cursor-pointer border pr-1 text-right"
+              on:change={() => {
+                if (!parseInt("" + currentPage)) currentPage = 1;
+                currentPage = Math.floor(currentPage);
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > numberOfPages) currentPage = numberOfPages;
+                offset = (currentPage - 1) * limit;
+                fetchData();
+              }}
+              bind:value={currentPage}
+            />
+            <span>of {numberOfPages} Pages</span>
+          </div>
+          {#if currentPage !== numberOfPages}
+            <PaginationItem on:click={next}>
+              <i class="bx bx-chevrons-right"></i>
+            </PaginationItem>
+            <PaginationItem on:click={last}>
+              <i class="bx bx-arrow-to-right"></i>
+            </PaginationItem>
+          {/if}
+        </div>
+      </div>
+    {/if}
+    <div class="mr-3">
+      {#if searchTerm}
+        {count} entries found
+      {:else}
+        {count} entries in total
+      {/if}
+    </div>
+  </div>
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
       <TableHeadCell
@@ -192,69 +257,4 @@
       {/each}
     </TableBody>
   </Table>
-</div>
-<div class="mb-12 mt-3 flex items-center">
-  {#if documents.length > 0}
-    <div class="flex flex-grow items-center">
-      <Label class="mr-3">Items per page</Label>
-      <Select
-        id="pagecount"
-        class="mt-2 w-24"
-        items={[
-          { name: "10", value: 10 },
-          { name: "25", value: 25 },
-          { name: "50", value: 50 },
-          { name: "100", value: 100 }
-        ]}
-        bind:value={limit}
-        on:change={() => {
-          offset = 0;
-          currentPage = 1;
-          fetchData();
-        }}
-      ></Select>
-    </div>
-    <div class="mr-3 flex-grow">
-      <div class="flex">
-        {#if currentPage > 1}
-          <PaginationItem on:click={first}>
-            <i class="bx bx-arrow-to-left"></i>
-          </PaginationItem>
-          <PaginationItem on:click={previous}>
-            <i class="bx bx-chevrons-left"></i>
-          </PaginationItem>
-        {/if}
-        <div class="mx-3 flex items-center">
-          <input
-            class="w-16 cursor-pointer border pr-1 text-right"
-            on:change={() => {
-              if (!parseInt("" + currentPage)) currentPage = 1;
-              currentPage = Math.floor(currentPage);
-              if (currentPage < 1) currentPage = 1;
-              if (currentPage > numberOfPages) currentPage = numberOfPages;
-              offset = (currentPage - 1) * limit;
-              fetchData();
-            }}
-            bind:value={currentPage}
-          />
-          <span>of {numberOfPages} Pages</span>
-        </div>
-        {#if currentPage !== numberOfPages}
-          <PaginationItem on:click={next}>
-            <i class="bx bx-chevrons-right"></i>
-          </PaginationItem>
-          <PaginationItem on:click={last}>
-            <i class="bx bx-arrow-to-right"></i>
-          </PaginationItem>
-        {/if}
-      </div>
-    </div>
-  {/if}
-  <div class="mr-3">
-    {#if searchTerm}
-      {count} entries found
-    {:else}
-      {count} entries in total
-    {/if}
-  </div>
 </div>
