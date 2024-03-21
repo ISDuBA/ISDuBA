@@ -209,6 +209,7 @@
         bind:value={limit}
         on:change={() => {
           offset = 0;
+          currentPage = 1;
           fetchData();
         }}
       ></Select>
