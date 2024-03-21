@@ -32,4 +32,5 @@ else
   sudo rm -f /tmp/$latest_go
 
   sudo ln -snf /usr/local/go/bin/go /usr/local/bin/go
+  echo "Successfully installed $go_version."
 fi

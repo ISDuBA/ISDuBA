@@ -17,6 +17,8 @@ mkdir -p bin
 go build -o ./bin/isdubad ./cmd/isdubad
 
 go build -o ./bin/bulkimport ./cmd/bulkimport
+echo "Successfully created isdubad and bulkimport binaries."
 
 # create the isdubad configuration
 cp docs/example_isdubad.toml isdubad.toml
+echo "Successfully created example-configuration isdubad.toml."
