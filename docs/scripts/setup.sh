@@ -25,3 +25,5 @@ sudo apt-get update # Make sure to be up-to-date
 ./installplaywright.sh # Prepare frontend
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
+
+echo "All set up!"
