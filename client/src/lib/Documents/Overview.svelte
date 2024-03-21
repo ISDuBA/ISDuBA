@@ -150,9 +150,9 @@
       >
     </Search>
   </div>
-  <div class="mb-10 mt-3 flex items-center">
+  <div class="mb-10 mt-3 flex items-center justify-between">
     {#if documents.length > 0}
-      <div class="flex flex-grow items-center">
+      <div class="flex items-center">
         <Label class="mr-3">Items per page</Label>
         <Select
           id="pagecount"
@@ -171,7 +171,7 @@
           }}
         ></Select>
       </div>
-      <div class="mr-3 flex-grow">
+      <div>
         <div class="flex">
           <div class:invisible={currentPage === 1} class:flex={true}>
             <PaginationItem on:click={first}>
