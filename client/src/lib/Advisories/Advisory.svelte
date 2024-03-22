@@ -175,12 +175,12 @@
 
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
-      loadDocument();
+      loadDocumentSSVC();
+      await loadDocument();
       await loadAdvisoryVersions();
       if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
         loadComments();
       }
-      loadDocumentSSVC();
       const state = await loadAdvisoryState();
       if (state === "new") {
         const id = setTimeout(async () => {
@@ -216,6 +216,7 @@
         publisherNamespace={params.publisherNamespace}
         trackingID={params.trackingID}
         {advisoryVersions}
+        selectedDocumentVersion={document.tracking?.version}
       ></Version>
     </div>
     <Webview></Webview>
