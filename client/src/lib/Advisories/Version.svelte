@@ -13,6 +13,7 @@
   export let advisoryVersions: any;
   export let publisherNamespace: string;
   export let trackingID: string;
+  export let selectedDocumentVersion: string;
 
   let staticClass =
     "border-primary-800 border-solid border absolute -start-3 flex h-6 w-6 items-center justify-center rounded-full ring-8 ring-white";
@@ -28,7 +29,7 @@
         <TimelineItem classLi="mb-14">
           <svelte:fragment slot="icon">
             <a
-              class={false ? selectedClass : unselectedClass}
+              class={selectedDocumentVersion === version.version ? selectedClass : unselectedClass}
               href={`/#/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
               >{version.version}
             </a>
