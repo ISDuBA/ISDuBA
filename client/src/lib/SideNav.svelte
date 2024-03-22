@@ -68,9 +68,13 @@
             <i class="bx bx-cog"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Profile" target="_blank" href="http://localhost:8080/realms/isduba/account/#/">
+        <SidebarItem
+          label="Profile"
+          target="_blank"
+          href="http://localhost:8080/realms/isduba/account/#/"
+        >
           <svelte:fragment slot="icon">
-            <i class="bx bx-cog"></i>
+            <i class="bx bx-user"></i>
           </svelte:fragment>
         </SidebarItem>
         <SidebarItem
