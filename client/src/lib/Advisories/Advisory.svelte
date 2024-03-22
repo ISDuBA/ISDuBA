@@ -8,7 +8,17 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, Label, Tabs, TabItem, Textarea, Timeline, Card } from "flowbite-svelte";
+  import {
+    Button,
+    Label,
+    Tabs,
+    TabItem,
+    Textarea,
+    Timeline,
+    Card,
+    AccordionItem,
+    Accordion
+  } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
@@ -222,44 +232,50 @@
     <Webview></Webview>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="relative ml-auto mr-3 min-w-96">
-      <Card>
-        <Label class="mb-4 text-lg">Comments</Label>
-        {#if comments?.length > 0}
-          <div class="max-h-96 overflow-y-auto pl-2">
-            <Timeline class="mb-4 flex flex-col-reverse">
-              {#each comments as comment}
-                <Comment {comment}></Comment>
-              {/each}
-            </Timeline>
-          </div>
-        {:else}
-          <div class="mb-6 text-gray-600">No comments available.</div>
-        {/if}
-        {#if appStore.isEditor() || appStore.isReviewer()}
-          <div class="mt-6">
-            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-              <div slot="footer" class="flex items-start justify-between">
-                <Button on:click={createComment} disabled={count > 10000 || count === 0}
-                  >Send</Button
-                >
-                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                  >{`${count}/10000`}</Label
-                >
-              </div>
-            </Textarea>
-          </div>
-        {/if}
-      </Card>
-      <Card class="mt-3">
-        <Label class="mb-4 text-lg">SSVC</Label>
-        <SsvcCalculator
-          vectorInput={ssvc?.vector}
-          documentID={params.id}
-          on:updateSSVC={loadMetaData}
-        ></SsvcCalculator>
-      </Card>
+    <div class="ml-auto mr-3 min-w-96 max-w-96">
+      <Accordion>
+        <AccordionItem open>
+          <span slot="header"
+            ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
+          >
+          {#if comments?.length > 0}
+            <div class="max-h-96 overflow-y-auto pl-2">
+              <Timeline class="mb-4 flex flex-col-reverse">
+                {#each comments as comment}
+                  <Comment {comment}></Comment>
+                {/each}
+              </Timeline>
+            </div>
+          {:else}
+            <div class="mb-6 text-gray-600">No comments available.</div>
+          {/if}
+          {#if appStore.isEditor() || appStore.isReviewer()}
+            <div class="mt-6">
+              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+              <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+                <div slot="footer" class="flex items-start justify-between">
+                  <Button on:click={createComment} disabled={count > 10000 || count === 0}
+                    >Send</Button
+                  >
+                  <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                    >{`${count}/10000`}</Label
+                  >
+                </div>
+              </Textarea>
+            </div>
+          {/if}
+        </AccordionItem>
+      </Accordion>
+      <Accordion class="mt-3">
+        <AccordionItem open>
+          <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
+          <SsvcCalculator
+            vectorInput={ssvc?.vector}
+            documentID={params.id}
+            on:updateSSVC={loadMetaData}
+          ></SsvcCalculator>
+        </AccordionItem>
+      </Accordion>
     </div>
   {/if}
 </div>
