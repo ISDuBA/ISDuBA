@@ -121,11 +121,11 @@
 
   const calcSSVC = async (documents: any) => {
     if (!documents) return [];
-    for (let i = 0; i < documents.length; i += 1) {
-      if (documents[i]["ssvc"]) {
-        documents[i]["ssvc"] = await convertVectorToLabel(documents[i]["ssvc"]);
-      }
-    }
+    await Promise.all(
+      documents.map(async (d: any) => {
+        if (d["ssvc"]) d["ssvc"] = await convertVectorToLabel(d["ssvc"]);
+      })
+    );
     return documents;
   };
 
