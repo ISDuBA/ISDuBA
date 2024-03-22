@@ -109,22 +109,12 @@
       });
       if (response.ok) {
         ({ count, documents } = await response.json());
-        documents = await calcSSVC(documents);
+        documents = documents || [];
       } else {
         appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
       loading = false;
     });
-  };
-
-  const calcSSVC = async (documents: any) => {
-    if (!documents) return [];
-    for (let i = 0; i < documents.length; i += 1) {
-      if (documents[i]["ssvc"]) {
-        documents[i]["ssvc"] = await convertVectorToLabel(documents[i]["ssvc"]);
-      }
-    }
-    return documents;
   };
 
   onMount(async () => {
@@ -244,13 +234,6 @@
           class:bx-caret-down={orderBy == "-cvss_v2_score"}
         ></i></TableHeadCell
       >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("ssvc")}
-        >SSVC<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "ssvc"}
-          class:bx-caret-down={orderBy == "-ssvc"}
-        ></i></TableHeadCell
-      >
       <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
       <TableHeadCell padding={tablePadding} on:click={() => switchSort("publisher")}
         >Publisher<i
@@ -311,11 +294,6 @@
           <TableBodyCell {tdClass}
             ><span class:text-red-500={Number(item.cvss_v2_score) > 5.0}
               >{item.cvss_v2_score == null ? "" : item.cvss_v2_score}</span
-            ></TableBodyCell
-          >
-          <TableBodyCell {tdClass}
-            ><span style={item.ssvc ? `color:${item.ssvc.color}` : ""}
-              >{item.ssvc?.label || ""}</span
             ></TableBodyCell
           >
           <TableBodyCell {tdClass}
