@@ -28,7 +28,6 @@
   import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Spinner } from "flowbite-svelte";
-  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
   let openRow: number | null;
 

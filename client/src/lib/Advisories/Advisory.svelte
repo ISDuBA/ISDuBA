@@ -87,7 +87,7 @@
     if (response.ok) {
       const result = await response.json();
       if (result.documents[0].ssvc) {
-        ssvc = await convertVectorToLabel(result.documents[0].ssvc);
+        ssvc = convertVectorToLabel(result.documents[0].ssvc);
       }
     } else {
       appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);

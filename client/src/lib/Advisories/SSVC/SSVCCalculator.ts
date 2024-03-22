@@ -6,6 +6,8 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+import decisionTree from "./CISA-Coordinator";
+
 export type SSVCOption = {
   label: string;
   key: string;
@@ -26,38 +28,33 @@ export type SSVCDecision = {
   options: SSVCOption[];
 };
 
-export function loadDecisionTreeFromFile() {
-  return new Promise((resolve) => {
-    fetch("CISA-Coordinator.json").then((response) => {
-      response.json().then((json) => {
-        const addedPoints: string[] = [];
-        const decisionPoints = json.decision_points;
-        const decisionsTable = json.decisions_table;
-        let mainDecisions = [];
-        for (let i = decisionPoints.length - 1; i >= 0; i--) {
-          const decision = decisionPoints[i];
-          if (!addedPoints.includes(decision.label)) {
-            mainDecisions.push(decision);
-            if (decision.decision_type === "complex") {
-              for (const child of decision.children) {
-                addedPoints.push(child.label);
-              }
-            } else {
-              addedPoints.push(decision.label);
-            }
-          }
+export function parseDecisionTree() {
+  const json = decisionTree;
+  const addedPoints: string[] = [];
+  const decisionPoints = json.decision_points;
+  const decisionsTable = json.decisions_table;
+  let mainDecisions = [];
+  for (let i = decisionPoints.length - 1; i >= 0; i--) {
+    const decision = decisionPoints[i];
+    if (!addedPoints.includes(decision.label)) {
+      mainDecisions.push(decision);
+      if (decision.decision_type === "complex") {
+        for (const child of decision.children) {
+          addedPoints.push(child.label);
         }
-        mainDecisions = mainDecisions.reverse();
-        const steps = mainDecisions.map((element) => element.label);
-        resolve({
-          decisionPoints: decisionPoints,
-          decisionsTable: decisionsTable,
-          mainDecisions: mainDecisions,
-          steps: steps
-        });
-      });
-    });
-  });
+      } else {
+        addedPoints.push(decision.label);
+      }
+    }
+  }
+  mainDecisions = mainDecisions.reverse();
+  const steps = mainDecisions.map((element) => element.label);
+  return {
+    decisionPoints: decisionPoints,
+    decisionsTable: decisionsTable,
+    mainDecisions: mainDecisions,
+    steps: steps
+  };
 }
 
 export function getOptionWithKey(decision: SSVCDecision, key: string): SSVCOption | undefined {
@@ -69,9 +66,9 @@ export function createIsoTimeStringForSSVC() {
   return `${iso.split(".")[0]}Z`;
 }
 
-export async function convertVectorToLabel(vector: string, mainDecisions?: any[]): any {
+export function convertVectorToLabel(vector: string, mainDecisions?: any[]): any {
   if (!mainDecisions) {
-    ({ mainDecisions } = await loadDecisionTreeFromFile());
+    ({ mainDecisions } = parseDecisionTree());
   }
   const keyPairs = vector.split("/").slice(1, -2);
   if (mainDecisions && mainDecisions.length === keyPairs.length) {
