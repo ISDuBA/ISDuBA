@@ -25,9 +25,10 @@
     TableHeadCell,
     Table
   } from "flowbite-svelte";
-  import { tdClass, tablePadding } from "$lib/table/defaults";
+  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Spinner } from "flowbite-svelte";
+  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
   let openRow: number | null;
 
@@ -78,7 +79,7 @@
   };
 
   const last = () => {
-    offset = count - (count % limit);
+    offset = (numberOfPages - 1) * limit;
     currentPage = numberOfPages;
     fetchData();
   };
@@ -108,13 +109,24 @@
       });
       if (response.ok) {
         ({ count, documents } = await response.json());
-        documents = documents || [];
+        documents = await calcSSVC(documents);
       } else {
         appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
       loading = false;
     });
   };
+
+  const calcSSVC = async (documents: any) => {
+    if (!documents) return [];
+    for (let i = 0; i < documents.length; i += 1) {
+      if (documents[i]["ssvc"]) {
+        documents[i]["ssvc"] = await convertVectorToLabel(documents[i]["ssvc"]);
+      }
+    }
+    return documents;
+  };
+
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
       fetchData();
@@ -123,9 +135,6 @@
 </script>
 
 <SectionHeader title="Documents"></SectionHeader>
-{#if loading}
-  <Spinner color="gray"></Spinner>
-{/if}
 {#if documents}
   <div class="mb-3 w-2/3">
     <Search
@@ -150,13 +159,96 @@
       >
     </Search>
   </div>
+  <div class="mb-2 mt-8 flex items-center justify-between">
+    {#if documents.length > 0}
+      <div class="flex items-center">
+        <Label class="mr-3">Items per page</Label>
+        <Select
+          id="pagecount"
+          class="mt-2 w-24"
+          items={[
+            { name: "10", value: 10 },
+            { name: "25", value: 25 },
+            { name: "50", value: 50 },
+            { name: "100", value: 100 }
+          ]}
+          bind:value={limit}
+          on:change={() => {
+            offset = 0;
+            currentPage = 1;
+            fetchData();
+          }}
+        ></Select>
+      </div>
+      <div>
+        <div class="flex">
+          <div class:invisible={currentPage === 1} class:flex={true}>
+            <PaginationItem on:click={first}>
+              <i class="bx bx-arrow-to-left"></i>
+            </PaginationItem>
+            <PaginationItem on:click={previous}>
+              <i class="bx bx-chevrons-left"></i>
+            </PaginationItem>
+          </div>
+          <div class="mx-3 flex items-center">
+            <input
+              class="mr-1 w-16 cursor-pointer border pr-1 text-right"
+              on:change={() => {
+                if (!parseInt("" + currentPage)) currentPage = 1;
+                currentPage = Math.floor(currentPage);
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > numberOfPages) currentPage = numberOfPages;
+                offset = (currentPage - 1) * limit;
+                fetchData();
+              }}
+              bind:value={currentPage}
+            />
+            <span>of {numberOfPages} Pages</span>
+          </div>
+          <div class:invisible={currentPage === numberOfPages} class:flex={true}>
+            <PaginationItem on:click={next}>
+              <i class="bx bx-chevrons-right"></i>
+            </PaginationItem>
+            <PaginationItem on:click={last}>
+              <i class="bx bx-arrow-to-right"></i>
+            </PaginationItem>
+          </div>
+        </div>
+      </div>
+    {/if}
+    <div class="mr-3">
+      {#if searchTerm}
+        {count} entries found
+      {:else}
+        {count} entries in total
+      {/if}
+    </div>
+  </div>
+  <div class:invisible={!loading} class:mb-4={true}>
+    Loading ...
+    <Spinner color="gray" size="4"></Spinner>
+  </div>
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
       <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v3_score")}
-        >CVSS<i
+        >CVSS3<i
           class:bx={true}
           class:bx-caret-up={orderBy == "cvss_v3_score"}
           class:bx-caret-down={orderBy == "-cvss_v3_score"}
+        ></i></TableHeadCell
+      >
+      <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v2_score")}
+        >CVSS2<i
+          class:bx={true}
+          class:bx-caret-up={orderBy == "cvss_v2_score"}
+          class:bx-caret-down={orderBy == "-cvss_v2_score"}
+        ></i></TableHeadCell
+      >
+      <TableHeadCell padding={tablePadding} on:click={() => switchSort("ssvc")}
+        >SSVC<i
+          class:bx={true}
+          class:bx-caret-up={orderBy == "ssvc"}
+          class:bx-caret-down={orderBy == "-ssvc"}
         ></i></TableHeadCell
       >
       <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
@@ -217,6 +309,16 @@
             ></TableBodyCell
           >
           <TableBodyCell {tdClass}
+            ><span class:text-red-500={Number(item.cvss_v2_score) > 5.0}
+              >{item.cvss_v2_score == null ? "" : item.cvss_v2_score}</span
+            ></TableBodyCell
+          >
+          <TableBodyCell {tdClass}
+            ><span style={item.ssvc ? `color:${item.ssvc.color}` : ""}
+              >{item.ssvc?.label || ""}</span
+            ></TableBodyCell
+          >
+          <TableBodyCell {tdClass}
             >{#if item.four_cves[0]}
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -235,8 +337,11 @@
               {/if}
             {/if}</TableBodyCell
           >
-          <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
+          <TableBodyCell tdClass={publisher}
+            ><span title={item.publisher}>{item.publisher}</span></TableBodyCell
+          >
+          <TableBodyCell tdClass={title}><span title={item.title}>{item.title}</span></TableBodyCell
+          >
           <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
@@ -281,64 +386,4 @@
       {/each}
     </TableBody>
   </Table>
-  <div class="mb-12 mt-3 flex items-center">
-    {#if documents.length > 0}
-      <div class="flex flex-grow items-center">
-        <Label class="mr-3">Items per page</Label>
-        <Select
-          id="pagecount"
-          class="mt-2 w-24"
-          items={[
-            { name: "10", value: 10 },
-            { name: "25", value: 25 },
-            { name: "50", value: 50 },
-            { name: "100", value: 100 }
-          ]}
-          bind:value={limit}
-          on:change={() => {
-            offset = 0;
-            fetchData();
-          }}
-        ></Select>
-      </div>
-      <div class="mr-3 flex-grow">
-        <div class="flex">
-          <PaginationItem on:click={first}>
-            <i class="bx bx-arrow-to-left"></i>
-          </PaginationItem>
-          <PaginationItem on:click={previous}>
-            <i class="bx bx-chevrons-left"></i>
-          </PaginationItem>
-          <div class="mx-3 flex items-center">
-            <input
-              class="w-16 cursor-pointer border pr-1 text-right"
-              on:change={() => {
-                if (!parseInt("" + currentPage)) currentPage = 1;
-                currentPage = Math.floor(currentPage);
-                if (currentPage < 1) currentPage = 1;
-                if (currentPage > numberOfPages) currentPage = numberOfPages;
-                offset = (currentPage - 1) * limit;
-                fetchData();
-              }}
-              bind:value={currentPage}
-            />
-            <span class="mr-9">of {numberOfPages} Pages</span>
-          </div>
-          <PaginationItem on:click={next}>
-            <i class="bx bx-chevrons-right"></i>
-          </PaginationItem>
-          <PaginationItem on:click={last}>
-            <i class="bx bx-arrow-to-right"></i>
-          </PaginationItem>
-        </div>
-      </div>
-    {/if}
-    <div class="mr-3">
-      {#if searchTerm}
-        {count} entries found
-      {:else}
-        {count} entries in total
-      {/if}
-    </div>
-  </div>
 {/if}

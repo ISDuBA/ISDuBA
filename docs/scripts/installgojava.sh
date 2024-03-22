@@ -10,18 +10,27 @@
 
 set -e # to exit if a command in the script fails
 
-sudo apt-get update
-
 # Install Java
 sudo apt install -y openjdk-17-jre-headless
 
 # Install Go
 
-latest_go="$(curl https://go.dev/VERSION\?m=text| head -1).linux-amd64.tar.gz"
-wget -O /tmp/$latest_go https://dl.google.com/go/$latest_go
-sudo rm -rf /usr/local/go # be sure that we do not have an old installation
-sudo tar -C /usr/local -xzf /tmp/$latest_go
+# look up current go version
+go_version="$(curl https://go.dev/VERSION\?m=text| head -1)"
 
-sudo rm -f /tmp/$latest_go
+# if go exists and is the newest version
+if [ -x "$(command -v go version)" ] && [[ `go version` == *"$go_version"* ]]; then
+  echo "Newest go version already installed."
+# if not, download the newest go version
+else
+  latest_go=$go_version".linux-amd64.tar.gz"
 
-sudo ln -snf /usr/local/go/bin/go /usr/local/bin/go
+  wget -O /tmp/$latest_go https://dl.google.com/go/$latest_go
+  sudo rm -rf /usr/local/go # remove any old installations
+  sudo tar -C /usr/local -xzf /tmp/$latest_go
+
+  sudo rm -f /tmp/$latest_go
+
+  sudo ln -snf /usr/local/go/bin/go /usr/local/bin/go
+  echo "Successfully installed $go_version."
+fi

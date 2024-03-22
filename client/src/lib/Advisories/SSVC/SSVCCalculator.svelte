@@ -41,7 +41,7 @@
   let userDecisions: any = {};
   const vectorBeginning = "SSVCv2/";
   let vector: string;
-  let vectorInput = "";
+  export let vectorInput = "";
   let result: any;
   $: resultStyle = result?.color ? `color: ${result.color}` : "";
 
@@ -222,19 +222,29 @@
 
 <div id="ssvc-calc" class="pe-4">
   {#if !startedCalculation}
-    <Label class="mb-4 text-lg">Enter SSVC vector</Label>
+    <Label class="mb-4">Enter SSVC vector manually</Label>
     <Label class="mb-2">
-      <Input type="text" bind:value={vectorInput} />
+      <Input
+        on:keyup={(e) => {
+          if (e.key === "Enter") saveSSVC(vectorInput);
+        }}
+        type="text"
+        bind:value={vectorInput}
+      />
       <small class="text-slate-400">Example: SSVCv2/E:N/A:N/T:P/M:M/D:T/2024-03-12T13:26:47Z/</small
       >
     </Label>
-    <Button on:click={() => saveSSVC(vectorInput)}>
-      <i class="bx bx-save me-2 text-xl"></i>Save</Button
-    >
-    <Label class="mb-4 mt-6 text-lg">Calculate new SSVC vector</Label>
+    <Label class="mb-4 mt-6">Calculate new SSVC vector</Label>
     <Button on:click={() => (startedCalculation = true)}>Calculate</Button>
   {:else}
     <div class="mb-4 flex gap-4">
+      <Button
+        color="light"
+        on:click={() => {
+          resetUserDecisions();
+          startedCalculation = false;
+        }}><i class="bx bx-arrow-back me-2 text-xl"></i>Back</Button
+      >
       <Button color="light" on:click={resetUserDecisions}>
         <i class="bx bx-reset me-2 text-xl"></i>
         Restart</Button

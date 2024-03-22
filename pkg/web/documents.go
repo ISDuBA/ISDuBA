@@ -256,7 +256,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		}
 		return rows.Err()
 	}); err != nil {
-		slog.Warn("run failed", "err", err)
+		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

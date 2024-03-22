@@ -10,6 +10,8 @@
 
 set -e # to exit if a command in the script fails
 
+sudo apt-get update # Make sure to be up-to-date
+
 ./installgojava.sh # installs go and java
 
 ./installpostgres.sh # installs postgreSQL
@@ -23,3 +25,5 @@ set -e # to exit if a command in the script fails
 ./installplaywright.sh # Prepare frontend
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
+
+echo "All set up!"

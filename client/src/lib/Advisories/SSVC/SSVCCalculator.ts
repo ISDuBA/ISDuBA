@@ -81,6 +81,7 @@ export async function convertVectorToLabel(vector: string, mainDecisions?: any[]
       keyOfSelectedOption
     );
     return {
+      vector: vector,
       label: selectedOption?.label,
       color: selectedOption?.color
     };
