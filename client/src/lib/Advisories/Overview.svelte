@@ -220,10 +220,17 @@
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
       <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v3_score")}
-        >CVSS<i
+        >CVSSv3<i
           class:bx={true}
           class:bx-caret-up={orderBy == "cvss_v3_score"}
           class:bx-caret-down={orderBy == "-cvss_v3_score"}
+        ></i></TableHeadCell
+      >
+      <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v2_score")}
+        >CVSSv2<i
+          class:bx={true}
+          class:bx-caret-up={orderBy == "cvss_v2_score"}
+          class:bx-caret-down={orderBy == "-cvss_v2_score"}
         ></i></TableHeadCell
       >
       <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
@@ -288,6 +295,11 @@
           <TableBodyCell {tdClass}
             ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
               >{item.cvss_v3_score == null ? "" : item.cvss_v3_score}</span
+            ></TableBodyCell
+          >
+          <TableBodyCell {tdClass}
+            ><span class:text-red-500={Number(item.cvss_v2_score) > 5.0}
+              >{item.cvss_v2_score == null ? "" : item.cvss_v2_score}</span
             ></TableBodyCell
           >
           <TableBodyCell {tdClass}
