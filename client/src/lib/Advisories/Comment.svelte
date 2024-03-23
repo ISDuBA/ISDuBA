@@ -12,6 +12,7 @@
   import { Button, ButtonGroup, Label, P, Textarea, TimelineItem } from "flowbite-svelte";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
+  import CommentTextArea from "./CommentTextArea.svelte";
 
   export let comment: any;
   let updatedComment = "";
@@ -63,12 +64,12 @@
     </P>
     <Label class="text-xs text-slate-400">Document-Version: {comment.documentID}</Label>
   {:else}
-    <Textarea bind:value={updatedComment}></Textarea>
-    <Button color="red" outline={true} class="!p-2" on:click={toggleEditing}>
-      <i class="bx bx-x text-lg"></i>
-    </Button>
-    <Button color="green" class="!p-2" on:click={updateComment}>
-      <i class="bx bx-check text-lg"></i>
-    </Button>
+    <CommentTextArea
+      on:cancel={toggleEditing}
+      on:saveComment={updateComment}
+      cancelable={true}
+      buttonText="Save"
+      bind:value={updatedComment}
+    ></CommentTextArea>
   {/if}
 </TimelineItem>

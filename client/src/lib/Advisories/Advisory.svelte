@@ -41,6 +41,7 @@
     canSetStateReview,
     getAllowedWorkflowChanges
   } from "$lib/permissions";
+  import CommentTextArea from "./CommentTextArea.svelte";
   export let params: any = null;
 
   let document = {};
@@ -49,7 +50,6 @@
     ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
     : "";
   let comment: string = "";
-  $: count = comment.length;
   let comments: any = [];
   let advisoryVersions: string[] = [];
   let advisoryState: string;
@@ -319,16 +319,8 @@
           {#if appStore.isEditor() || appStore.isReviewer()}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-              <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-                <div slot="footer" class="flex items-start justify-between">
-                  <Button on:click={createComment} disabled={count > 10000 || count === 0}
-                    >Send</Button
-                  >
-                  <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                    >{`${count}/10000`}</Label
-                  >
-                </div>
-              </Textarea>
+              <CommentTextArea on:saveComment={createComment} bind:value={comment} buttonText="Send"
+              ></CommentTextArea>
             </div>
           {/if}
         </AccordionItem>
