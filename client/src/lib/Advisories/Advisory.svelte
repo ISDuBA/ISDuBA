@@ -11,15 +11,13 @@
   import {
     Button,
     Label,
-    Tabs,
-    TabItem,
     Textarea,
     Timeline,
-    Card,
     AccordionItem,
-    Accordion
+    Accordion,
+    Badge,
+    Tooltip
   } from "flowbite-svelte";
-  import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
@@ -32,7 +30,9 @@
 
   let document = {};
   let ssvc: any;
-  $: ssvcStyle = ssvc ? `color: ${ssvc.color}` : "";
+  $: ssvcStyle = ssvc
+    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
+    : "";
   let comment: string = "";
   $: count = comment.length;
   let comments: any = [];
@@ -206,29 +206,26 @@
 
 <div class="flex">
   <div class="flex flex-col">
-    <div class="flex">
-      <div class="me-2 flex-col">
-        <Label class="mb-4 max-w-52"
-          >Workflow-State:
-          {#if advisoryState}
-            <span>{advisoryState}</span>
-          {/if}
-        </Label>
-        <Label class="text-lg">
-          {#if ssvc}
-            <span style={ssvcStyle}>{ssvc.label}</span>
-          {:else}
-            <span class="text-gray-400">No SSVC</span>
-          {/if}
-        </Label>
+    <div class="flex flex-col">
+      <Label class="text-lg">{params.trackingID}</Label>
+      <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
+      <div class="flex gap-2">
+        {#if advisoryState}
+          <Badge class="w-fit">{advisoryState}</Badge>
+          <Tooltip>Workflow state</Tooltip>
+        {/if}
+        {#if ssvc}
+          <Badge style={ssvcStyle}>{ssvc.label}</Badge>
+          <Tooltip>SSVC</Tooltip>
+        {/if}
       </div>
-      <Version
-        publisherNamespace={params.publisherNamespace}
-        trackingID={params.trackingID}
-        {advisoryVersions}
-        selectedDocumentVersion={document.tracking?.version}
-      ></Version>
     </div>
+    <Version
+      publisherNamespace={params.publisherNamespace}
+      trackingID={params.trackingID}
+      {advisoryVersions}
+      selectedDocumentVersion={document.tracking?.version}
+    ></Version>
     <Webview></Webview>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}

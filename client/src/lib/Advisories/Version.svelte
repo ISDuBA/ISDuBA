@@ -9,33 +9,24 @@
 -->
 
 <script lang="ts">
-  import { Timeline, TimelineItem } from "flowbite-svelte";
+  import { Button } from "flowbite-svelte";
   export let advisoryVersions: any;
   export let publisherNamespace: string;
   export let trackingID: string;
   export let selectedDocumentVersion: string;
-
-  let staticClass =
-    "border-primary-800 border-solid border absolute -start-3 flex h-6 w-6 items-center justify-center rounded-full ring-8 ring-white";
-  let selectedClass = `bg-primary-800 text-white cursor-default ${staticClass}`;
-  let unselectedClass = `bg-white hover:bg-primary-600 hover:border-primary-600 hover:text-white ${staticClass}`;
 </script>
 
-<div>
-  <div class="flex">
+<div class="my-2">
+  <div class="flex items-center">
     <h2 class="mr-3">Advisory Versions</h2>
-    <Timeline class="flex flex-col-reverse border-gray-400" order="vertical">
+    <div class="flex flex-row-reverse gap-2">
       {#each advisoryVersions as version}
-        <TimelineItem classLi="mb-14">
-          <svelte:fragment slot="icon">
-            <a
-              class={selectedDocumentVersion === version.version ? selectedClass : unselectedClass}
-              href={`/#/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
-              >{version.version}
-            </a>
-          </svelte:fragment>
-        </TimelineItem>
+        <Button class="!p-2" disabled={selectedDocumentVersion === version.version} color="light">
+          <a href={`/#/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
+            >{version.version}
+          </a>
+        </Button>
       {/each}
-    </Timeline>
+    </div>
   </div>
 </div>
