@@ -8,8 +8,17 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, Label, Tabs, TabItem, Textarea, Timeline, Card, Modal } from "flowbite-svelte";
-  import { sineIn } from "svelte/easing";
+  import {
+    Button,
+    Label,
+    Textarea,
+    Timeline,
+    AccordionItem,
+    Accordion,
+    Badge,
+    Tooltip,
+    Modal
+  } from "flowbite-svelte";
   import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
@@ -24,7 +33,9 @@
 
   let document = {};
   let ssvc: any;
-  $: ssvcStyle = ssvc ? `color: ${ssvc.color}` : "";
+  $: ssvcStyle = ssvc
+    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
+    : "";
   let comment: string = "";
   $: count = comment.length;
   let comments: any = [];
@@ -81,7 +92,7 @@
     if (response.ok) {
       const result = await response.json();
       if (result.documents[0].ssvc) {
-        ssvc = await convertVectorToLabel(result.documents[0].ssvc);
+        ssvc = convertVectorToLabel(result.documents[0].ssvc);
       }
     } else {
       appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
@@ -221,77 +232,80 @@
 
 <div class="flex">
   <div class="flex flex-col">
-    <div class="flex">
-      <div class="me-2 flex-col">
-        <Label class="mb-4 max-w-52"
-          >Workflow-State:
-          {#if advisoryState}
-            <span>{advisoryState}</span>
-          {/if}
-        </Label>
-        <Label class="text-lg">
-          {#if ssvc}
-            <span style={ssvcStyle}>{ssvc.label}</span>
-          {:else}
-            <span class="text-gray-400">No SSVC</span>
-          {/if}
-        </Label>
-        {#if advisoryVersions.length > 1}
-          {#if advisoryVersions[0].version === document.tracking?.version}
-            <Button color="light" on:click={compareLatest}
-              ><i class="bx bx-transfer me-2 text-lg"></i>Latest Changes</Button
-            >
-          {/if}
+    <div class="flex flex-col">
+      <Label class="text-lg">{params.trackingID}</Label>
+      <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
+      <div class="flex gap-2">
+        {#if advisoryState}
+          <Badge class="w-fit">{advisoryState}</Badge>
+          <Tooltip>Workflow state</Tooltip>
+        {/if}
+        {#if ssvc}
+          <Badge style={ssvcStyle}>{ssvc.label}</Badge>
+          <Tooltip>SSVC</Tooltip>
         {/if}
       </div>
-      <Version
-        publisherNamespace={params.publisherNamespace}
-        trackingID={params.trackingID}
-        {advisoryVersions}
-        selectedDocumentVersion={document.tracking?.version}
-      ></Version>
     </div>
+    <Version
+      publisherNamespace={params.publisherNamespace}
+      trackingID={params.trackingID}
+      {advisoryVersions}
+      selectedDocumentVersion={document.tracking?.version}
+    ></Version>
+    {#if advisoryVersions.length > 1}
+      {#if advisoryVersions[0].version === document.tracking?.version}
+        <Button class="w-fit" color="light" on:click={compareLatest}
+          ><i class="bx bx-transfer me-2 text-lg"></i>Latest Changes</Button
+        >
+      {/if}
+    {/if}
     <Webview></Webview>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="relative ml-auto mr-3 min-w-96">
-      <Card>
-        <Label class="mb-4 text-lg">Comments</Label>
-        {#if comments?.length > 0}
-          <div class="max-h-96 overflow-y-auto pl-2">
-            <Timeline class="mb-4 flex flex-col-reverse">
-              {#each comments as comment}
-                <Comment {comment}></Comment>
-              {/each}
-            </Timeline>
-          </div>
-        {:else}
-          <div class="mb-6 text-gray-600">No comments available.</div>
-        {/if}
-        {#if appStore.isEditor() || appStore.isReviewer()}
-          <div class="mt-6">
-            <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-            <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-              <div slot="footer" class="flex items-start justify-between">
-                <Button on:click={createComment} disabled={count > 10000 || count === 0}
-                  >Send</Button
-                >
-                <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                  >{`${count}/10000`}</Label
-                >
-              </div>
-            </Textarea>
-          </div>
-        {/if}
-      </Card>
-      <Card class="mt-3">
-        <Label class="mb-4 text-lg">SSVC</Label>
-        <SsvcCalculator
-          vectorInput={ssvc?.vector}
-          documentID={params.id}
-          on:updateSSVC={loadMetaData}
-        ></SsvcCalculator>
-      </Card>
+    <div class="ml-auto mr-3 min-w-96 max-w-96">
+      <Accordion>
+        <AccordionItem open>
+          <span slot="header"
+            ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
+          >
+          {#if comments?.length > 0}
+            <div class="max-h-96 overflow-y-auto pl-2">
+              <Timeline class="mb-4 flex flex-col-reverse">
+                {#each comments as comment}
+                  <Comment {comment}></Comment>
+                {/each}
+              </Timeline>
+            </div>
+          {:else}
+            <div class="mb-6 text-gray-600">No comments available.</div>
+          {/if}
+          {#if appStore.isEditor() || appStore.isReviewer()}
+            <div class="mt-6">
+              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+              <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
+                <div slot="footer" class="flex items-start justify-between">
+                  <Button on:click={createComment} disabled={count > 10000 || count === 0}
+                    >Send</Button
+                  >
+                  <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
+                    >{`${count}/10000`}</Label
+                  >
+                </div>
+              </Textarea>
+            </div>
+          {/if}
+        </AccordionItem>
+      </Accordion>
+      <Accordion class="mt-3">
+        <AccordionItem open>
+          <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
+          <SsvcCalculator
+            vectorInput={ssvc?.vector}
+            documentID={params.id}
+            on:updateSSVC={loadMetaData}
+          ></SsvcCalculator>
+        </AccordionItem>
+      </Accordion>
     </div>
     <Modal bind:open={isDiffOpen}>
       <JsonDiff {diff}></JsonDiff>

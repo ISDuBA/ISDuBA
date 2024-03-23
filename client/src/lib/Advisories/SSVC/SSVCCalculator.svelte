@@ -22,7 +22,7 @@
   } from "flowbite-svelte";
   import {
     createIsoTimeStringForSSVC,
-    loadDecisionTreeFromFile,
+    parseDecisionTree,
     type SSVCDecision,
     type SSVCOption
   } from "./SSVCCalculator";
@@ -49,14 +49,9 @@
     loadDecisionTree();
   });
 
-  function loadDecisionTree(): Promise<void> {
-    return new Promise((resolve) => {
-      resetDecisions();
-      loadDecisionTreeFromFile().then((result: any) => {
-        ({ decisionPoints, decisionsTable, mainDecisions, steps } = result);
-        resolve();
-      });
-    });
+  function loadDecisionTree() {
+    resetDecisions();
+    ({ decisionPoints, decisionsTable, mainDecisions, steps } = parseDecisionTree());
   }
 
   function resetDecisions() {

@@ -111,7 +111,7 @@
       });
       if (response.ok) {
         ({ count, documents } = await response.json());
-        documents = await calcSSVC(documents);
+        documents = calcSSVC(documents);
       } else {
         appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
@@ -119,13 +119,11 @@
     });
   };
 
-  const calcSSVC = async (documents: any) => {
+  const calcSSVC = (documents: any) => {
     if (!documents) return [];
-    await Promise.all(
-      documents.map(async (d: any) => {
-        if (d["ssvc"]) d["ssvc"] = await convertVectorToLabel(d["ssvc"]);
-      })
-    );
+    documents.map((d: any) => {
+      if (d["ssvc"]) d["ssvc"] = convertVectorToLabel(d["ssvc"]);
+    });
     return documents;
   };
 
