@@ -8,6 +8,8 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
+import { appStore } from "./store";
+
 export type WorkflowState = string;
 export const NEW: WorkflowState = "new";
 export const READ: WorkflowState = "read";
@@ -37,13 +39,15 @@ const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
     to: READ,
     roles: [EDITOR]
   },
+  { from: READ, to: NEW, roles: [EDITOR] },
   { from: READ, to: ASSESSING, roles: [EDITOR] },
   { from: ASSESSING, to: REVIEW, roles: [EDITOR] },
   { from: REVIEW, to: ASSESSING, roles: [REVIEWER] },
   { from: REVIEW, to: ARCHIVED, roles: [REVIEWER] },
   { from: REVIEW, to: DELETED, roles: [REVIEWER] },
   { from: READ, to: DELETED, roles: [EDITOR, REVIEWER] },
-  { from: ASSESSING, to: DELETED, roles: [EDITOR, REVIEWER] }
+  { from: ASSESSING, to: DELETED, roles: [EDITOR, REVIEWER] },
+  { from: ARCHIVED, to: DELETED, roles: [EDITOR, REVIEWER] }
 ];
 
 function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
@@ -53,6 +57,26 @@ function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
     }
   }
   return false;
+}
+
+export function canSetStateNew(currentState: WorkflowState) {
+  return allowedToChangeWorkflow(appStore.getRoles(), currentState, NEW);
+}
+
+export function canSetStateRead(currentState: WorkflowState) {
+  return allowedToChangeWorkflow(appStore.getRoles(), currentState, READ);
+}
+
+export function canSetStateReview(currentState: WorkflowState) {
+  return allowedToChangeWorkflow(appStore.getRoles(), currentState, REVIEW);
+}
+
+export function canSetStateArchived(currentState: WorkflowState) {
+  return allowedToChangeWorkflow(appStore.getRoles(), currentState, ARCHIVED);
+}
+
+export function canSetStateDeleted(currentState: WorkflowState) {
+  return allowedToChangeWorkflow(appStore.getRoles(), currentState, DELETED);
 }
 
 export function allowedToChangeWorkflow(
@@ -69,8 +93,9 @@ export function allowedToChangeWorkflow(
   return false;
 }
 
-export function getAllowedWorkflowChanges(roles: Role[], currentState: WorkflowState) {
+export function getAllowedWorkflowChanges(currentState: WorkflowState) {
   return WORKFLOW_TRANSITIONS.filter(
-    (transition) => isRoleIncluded(transition.roles, roles) && transition.from === currentState
+    (transition) =>
+      isRoleIncluded(transition.roles, appStore.getRoles()) && transition.from === currentState
   );
 }
