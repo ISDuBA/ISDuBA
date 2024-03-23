@@ -1,5 +1,8 @@
 <script lang="ts">
+  import ReplaceOperation from "./ReplaceOperation.svelte";
+
   export let content: any;
+  export let operation: string;
   export let depth = 0;
 
   $: containerStyle = `padding-left: ${depth > 1 ? 6 * depth : 0}pt`;
@@ -13,7 +16,6 @@
       </div>
     {/each}
   {:else if typeof content === "object"}
-    <!-- curly brace open <span>&#123;</span> -->
     {#each Object.keys(content) as key}
       <div>
         {key}:&ensp;
@@ -24,7 +26,8 @@
         {/if}
       </div>
     {/each}
-    <!-- curly brace close <span>&#125;</span> -->
+  {:else if operation === "replace"}
+    <ReplaceOperation {content}></ReplaceOperation>
   {:else}
     <span>{content}</span>
   {/if}

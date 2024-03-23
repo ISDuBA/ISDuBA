@@ -172,14 +172,13 @@
   }
 
   const compareLatest = async () => {
-    const response = await fetch(
-      `/api/diff/${advisoryVersions[advisoryVersions.length - 2].id}/${advisoryVersions[advisoryVersions.length - 1].id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
+    const firstDoc = advisoryVersions[advisoryVersions.length - 2].id;
+    const secondDoc = advisoryVersions[advisoryVersions.length - 1].id;
+    const response = await fetch(`/api/diff/${firstDoc}/${secondDoc}?word-diff=true`, {
+      headers: {
+        Authorization: `Bearer ${$appStore.app.keycloak.token}`
       }
-    );
+    });
     if (response.ok) {
       const result: JsonDiffResultList = await response.json();
       diff = {

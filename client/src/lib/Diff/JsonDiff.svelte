@@ -50,7 +50,7 @@
         {:else}
           <div class="bg-gray-800 py-1 ps-2 text-white">
             <i class="bx bx-pencil text-lg"></i>
-            <span>Replaced ({result.changes.length})</span>
+            <span>Edited ({result.changes.length})</span>
           </div>
         {/if}
       </div>
@@ -64,7 +64,7 @@
             </b>
           </div>
           {#if change.value}
-            <DiffEntry content={change.value}></DiffEntry>
+            <DiffEntry content={change.value} operation={change.op}></DiffEntry>
           {/if}
         </div>
       {/each}
