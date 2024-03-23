@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, Label, Tabs, TabItem, Textarea, Timeline, Card } from "flowbite-svelte";
+  import { Button, Label, Tabs, TabItem, Textarea, Timeline, Card, Modal } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
@@ -18,6 +18,8 @@
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import JsonDiff from "$lib/Diff/JsonDiff.svelte";
+  import type { JsonDiffResultList } from "$lib/Diff/JsonDiff";
   export let params: any = null;
 
   let document = {};
@@ -29,6 +31,8 @@
   let advisoryVersions: string[] = [];
   let advisoryState: string;
   const timeoutIDs: number[] = [];
+  let diff: any;
+  let isDiffOpen = false;
 
   const loadAdvisoryVersions = async () => {
     const response = await fetch(
@@ -167,6 +171,28 @@
     loadDocumentSSVC();
   }
 
+  const compareLatest = async () => {
+    const response = await fetch(
+      `/api/diff/${advisoryVersions[advisoryVersions.length - 2].id}/${advisoryVersions[advisoryVersions.length - 1].id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        }
+      }
+    );
+    if (response.ok) {
+      const result: JsonDiffResultList = await response.json();
+      diff = {
+        docA: advisoryVersions[advisoryVersions.length - 2].version,
+        docB: advisoryVersions[advisoryVersions.length - 1].version,
+        result: result
+      };
+      isDiffOpen = true;
+    } else {
+      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
+    }
+  };
+
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
       clearTimeout(id);
@@ -211,6 +237,13 @@
             <span class="text-gray-400">No SSVC</span>
           {/if}
         </Label>
+        {#if advisoryVersions.length > 1}
+          {#if advisoryVersions[0].version === document.tracking?.version}
+            <Button color="light" on:click={compareLatest}
+              ><i class="bx bx-transfer me-2 text-lg"></i>Latest Changes</Button
+            >
+          {/if}
+        {/if}
       </div>
       <Version
         publisherNamespace={params.publisherNamespace}
@@ -261,5 +294,8 @@
         ></SsvcCalculator>
       </Card>
     </div>
+    <Modal bind:open={isDiffOpen}>
+      <JsonDiff {diff}></JsonDiff>
+    </Modal>
   {/if}
 </div>
