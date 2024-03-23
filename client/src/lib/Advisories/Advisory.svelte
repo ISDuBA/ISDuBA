@@ -216,7 +216,13 @@
         loadComments();
       }
       const state = await loadAdvisoryState();
-      if (state === "new") {
+      // Only set state to 'read' if editor opens the current version.
+      if (
+        state === "new" &&
+        appStore.isEditor() &&
+        (advisoryVersions.length === 1 ||
+          advisoryVersions[0].version === document.tracking?.version)
+      ) {
         const id = setTimeout(async () => {
           await updateState("read");
           appStore.displayInfoMessage("This advisory is marked as read");
