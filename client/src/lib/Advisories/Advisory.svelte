@@ -17,7 +17,9 @@
     Accordion,
     Badge,
     Tooltip,
-    Modal
+    Modal,
+    Dropdown,
+    DropdownItem
   } from "flowbite-svelte";
   import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
@@ -29,6 +31,20 @@
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
   import type { JsonDiffResultList } from "$lib/Diff/JsonDiff";
+  import {
+    ARCHIVED,
+    DELETED,
+    NEW,
+    READ,
+    REVIEW,
+    canSetStateArchived,
+    canSetStateDeleted,
+    canSetStateNew,
+    canSetStateRead,
+    canSetStateReview,
+    getAllowedWorkflowChanges
+  } from "$lib/permissions";
+  import CommentTextArea from "./CommentTextArea.svelte";
   export let params: any = null;
 
   let document = {};
@@ -37,7 +53,6 @@
     ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
     : "";
   let comment: string = "";
-  $: count = comment.length;
   let comments: any = [];
   let advisoryVersions: string[] = [];
   let advisoryState: string;
@@ -151,12 +166,21 @@
   }
 
   async function updateState(newState: string) {
-    await fetch(`/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      },
-      method: "PUT"
-    });
+    const response = await fetch(
+      `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
+      {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        },
+        method: "PUT"
+      }
+    );
+    if (response.ok) {
+      advisoryState = newState;
+    } else {
+      const error = await response.json();
+      appStore.displayErrorMessage(`${error.error}`);
+    }
   }
 
   const loadAdvisoryState = async () => {
@@ -218,11 +242,16 @@
         loadComments();
       }
       const state = await loadAdvisoryState();
-      if (state === "new") {
+      // Only set state to 'read' if editor opens the current version.
+      if (
+        state === "new" &&
+        appStore.isEditor() &&
+        (advisoryVersions.length === 1 ||
+          advisoryVersions[0].version === document.tracking?.version)
+      ) {
         const id = setTimeout(async () => {
           await updateState("read");
           appStore.displayInfoMessage("This advisory is marked as read");
-          advisoryState = "read";
         }, 3000);
         timeoutIDs.push(id);
       }
@@ -233,7 +262,48 @@
 <div class="flex">
   <div class="flex flex-col">
     <div class="flex flex-col">
-      <Label class="text-lg">{params.trackingID}</Label>
+      <div class="flex gap-2">
+        <Label class="text-lg">{params.trackingID}</Label>
+        <Button
+          class="!p-1"
+          color="light"
+          disabled={getAllowedWorkflowChanges(advisoryState).length === 0}
+        >
+          <i class="bx bx-dots-vertical-rounded"></i>
+        </Button>
+        <Dropdown>
+          {#if canSetStateNew(advisoryState)}
+            <DropdownItem on:click={() => updateState(NEW)} class="flex items-center gap-2">
+              <i class="bx bx-star text-lg"></i>
+              <span>Mark as new</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateRead(advisoryState)}
+            <DropdownItem on:click={() => updateState(READ)} class="flex items-center gap-2">
+              <i class="bx bx-show text-lg"></i>
+              <span>Mark as read</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateReview(advisoryState)}
+            <DropdownItem on:click={() => updateState(REVIEW)} class="flex items-center gap-2">
+              <i class="bx bx-book-open text-lg"></i>
+              <span>Release for review</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateArchived(advisoryState)}
+            <DropdownItem on:click={() => updateState(ARCHIVED)} class="flex items-center gap-2">
+              <i class="bx bx-archive text-lg"></i>
+              <span>Archive</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateDeleted(advisoryState)}
+            <DropdownItem on:click={() => updateState(DELETED)} class="flex items-center gap-2">
+              <i class="bx bx-trash text-lg"></i>
+              <span>Mark for deletion</span>
+            </DropdownItem>
+          {/if}
+        </Dropdown>
+      </div>
       <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
       <div class="flex gap-2">
         {#if advisoryState}
@@ -282,16 +352,8 @@
           {#if appStore.isEditor() || appStore.isReviewer()}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-              <Textarea bind:value={comment} class="mb-2" id="comment-textarea">
-                <div slot="footer" class="flex items-start justify-between">
-                  <Button on:click={createComment} disabled={count > 10000 || count === 0}
-                    >Send</Button
-                  >
-                  <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-                    >{`${count}/10000`}</Label
-                  >
-                </div>
-              </Textarea>
+              <CommentTextArea on:saveComment={createComment} bind:value={comment} buttonText="Send"
+              ></CommentTextArea>
             </div>
           {/if}
         </AccordionItem>
