@@ -40,11 +40,13 @@
         responseMode: "query"
       })
       .then(async (response: any) => {
-        const profile = await $appStore.app.keycloak.loadUserProfile();
-        appStore.setUserProfile({
-          firstName: profile.firstName,
-          lastName: profile.lastName
-        });
+        if ($appStore.app.keycloak.authenticated) {
+          const profile = await $appStore.app.keycloak.loadUserProfile();
+          appStore.setUserProfile({
+            firstName: profile.firstName,
+            lastName: profile.lastName
+          });
+        }
       })
       .catch((error: any) => {
         console.log("error", error);
