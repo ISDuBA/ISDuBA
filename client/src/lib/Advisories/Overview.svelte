@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";

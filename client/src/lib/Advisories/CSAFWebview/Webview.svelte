@@ -9,11 +9,9 @@
 -->
 <script lang="ts">
   import { appStore } from "$lib/store";
-  import Back from "$lib/Advisories/CSAFWebview/Back.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import General from "$lib/Advisories/CSAFWebview/general/General.svelte";
   import ProductTree from "$lib/Advisories/CSAFWebview/producttree/ProductTree.svelte";
-  import ProductVulnerabilities from "$lib/Advisories/CSAFWebview/productvulnerabilities/ProductVulnerabilities.svelte";
   import Vulnerabilities from "$lib/Advisories/CSAFWebview/vulnerabilities/Vulnerabilities.svelte";
   $: isCSAF = !(
     !$appStore.webview.doc?.isRevisionHistoryPresent &&

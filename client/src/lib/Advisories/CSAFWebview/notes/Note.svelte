@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { marked } from "marked";

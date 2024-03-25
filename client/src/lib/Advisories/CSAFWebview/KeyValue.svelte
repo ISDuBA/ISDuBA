@@ -9,10 +9,11 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { marked } from "marked";
   import DOMPurify from "dompurify";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  export let keys: Array<String>;
+  export let keys: Array<string>;
   export let values: any;
   marked.use({ gfm: true });
   const cellStyle = "px-6 py-0";

@@ -11,7 +11,6 @@
   import {
     Button,
     Label,
-    Textarea,
     Timeline,
     AccordionItem,
     Accordion,

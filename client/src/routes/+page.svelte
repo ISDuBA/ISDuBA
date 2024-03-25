@@ -39,7 +39,7 @@
         checkLoginIframe: false,
         responseMode: "query"
       })
-      .then(async (response: any) => {
+      .then(async () => {
         if ($appStore.app.keycloak.authenticated) {
           const profile = await $appStore.app.keycloak.loadUserProfile();
           appStore.setUserProfile({
@@ -115,7 +115,7 @@
   };
 </script>
 
-<div class="flex bg-primary-700">
+<div class="bg-primary-700 flex">
   <SideNav></SideNav>
   <main class="w-full bg-white pl-6 pt-6">
     <Router {routes} on:conditionsFailed={conditionsFailed} />
