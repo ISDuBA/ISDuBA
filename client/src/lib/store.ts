@@ -322,7 +322,8 @@ function createStore() {
     isEditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(EDITOR),
     isReviewer: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(REVIEWER),
     isAdmin: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(ADMIN),
-    isAuditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(AUDITOR)
+    isAuditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(AUDITOR),
+    getKeycloak: () => state.app.keycloak
   };
 }
 

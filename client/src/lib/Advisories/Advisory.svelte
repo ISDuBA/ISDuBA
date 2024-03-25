@@ -42,6 +42,7 @@
     getAllowedWorkflowChanges
   } from "$lib/permissions";
   import CommentTextArea from "./CommentTextArea.svelte";
+  import { request } from "$lib/utils";
   export let params: any = null;
 
   let document = {};
@@ -139,14 +140,8 @@
   async function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
-    const response = await fetch(`/api/comments/${params.id}`, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      },
-      method: "POST",
-      body: formData
-    });
-    if (response.ok) {
+    const response = await request(`/api/comments/${params.id}`, "POST", formData);
+    if (response) {
       comment = "";
       loadComments().then((newComments: any[]) => {
         if (newComments.length === 1) {
@@ -154,9 +149,6 @@
         }
       });
       appStore.displaySuccessMessage("Comment for advisory saved.");
-    } else {
-      const error = await response.json();
-      appStore.displayErrorMessage(`${error.error}`);
     }
   }
 
