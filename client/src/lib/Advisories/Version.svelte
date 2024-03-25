@@ -10,10 +10,14 @@
 
 <script lang="ts">
   import { Button } from "flowbite-svelte";
+  import { push } from "svelte-spa-router";
   export let advisoryVersions: any;
   export let publisherNamespace: string;
   export let trackingID: string;
   export let selectedDocumentVersion: string;
+  const navigateToVersion = (version: any) => {
+    push(`/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`);
+  };
 </script>
 
 <div class="my-2">
@@ -24,7 +28,9 @@
         <Button
           class="!p-2"
           disabled={selectedDocumentVersion === version.version}
-          href={`/#/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
+          on:click={() => {
+            navigateToVersion(version);
+          }}
           color="light"
         >
           {version.version}
