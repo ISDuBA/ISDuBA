@@ -57,11 +57,11 @@
   ) {
     appStore.setSingleErrorMsg("Are you sure the URL refers to a CSAF document?");
   }
-  const cellStyle = "px-6 py-2";
+  const cellStyle = "px-6 py-1";
 </script>
 
 <div class="w-max">
-  <Table>
+  <Table noborder>
     <TableBodyRow>
       <TableBodyCell class={cellStyle}>ID</TableBodyCell>
       <TableBodyCell class={cellStyle}>{id}</TableBodyCell>
