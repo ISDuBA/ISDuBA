@@ -21,10 +21,13 @@
     <h2 class="mr-3">Advisory Versions</h2>
     <div class="flex flex-row-reverse gap-2">
       {#each advisoryVersions as version}
-        <Button class="!p-2" disabled={selectedDocumentVersion === version.version} color="light">
-          <a href={`/#/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
-            >{version.version}
-          </a>
+        <Button
+          class="!p-2"
+          disabled={selectedDocumentVersion === version.version}
+          href={`/#/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`}
+          color="light"
+        >
+          {version.version}
         </Button>
       {/each}
     </div>
