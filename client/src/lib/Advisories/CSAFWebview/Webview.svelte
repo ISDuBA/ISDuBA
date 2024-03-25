@@ -32,17 +32,6 @@
       <General />
     </Collapsible>
   {/if}
-  {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
-    <Collapsible
-      header="Vulnerabilities overview"
-      open={$appStore.webview.ui.isVulnerabilitiesOverviewVisible}
-    >
-      <ProductVulnerabilities />
-    </Collapsible>
-  {:else}
-    <h2>No Vulnerabilities overview</h2>
-    (As no products are connected to vulnerabilities.)
-  {/if}
 
   {#if $appStore.webview.doc && $appStore.webview.doc["isProductTreePresent"]}
     <Collapsible
@@ -70,9 +59,5 @@
     >
       <Vulnerabilities />
     </Collapsible>
-  {/if}
-
-  {#if $appStore.webview.ui.history.length > 0}
-    <Back />
   {/if}
 {/if}
