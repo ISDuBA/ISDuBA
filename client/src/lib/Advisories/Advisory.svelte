@@ -127,7 +127,6 @@
           if (response.ok) {
             response.json().then((json) => {
               if (json) {
-                console.log(json);
                 json.forEach((c: any) => {
                   c.documentVersion = advisoryVersionByDocumentID[c.documentID];
                 });
