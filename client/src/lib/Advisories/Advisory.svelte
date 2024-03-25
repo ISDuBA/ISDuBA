@@ -53,6 +53,7 @@
   let comment: string = "";
   let comments: any = [];
   let advisoryVersions: string[] = [];
+  let advisoryVersionByDocumentID: any;
   let advisoryState: string;
   const timeoutIDs: number[] = [];
 
@@ -70,6 +71,10 @@
       advisoryVersions = result.documents.map((doc: any) => {
         return { id: doc.id, version: doc.version };
       });
+      advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
+        acc[version.id] = version.version;
+        return acc;
+      }, {});
     } else {
       appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
     }
@@ -122,8 +127,9 @@
           if (response.ok) {
             response.json().then((json) => {
               if (json) {
+                console.log(json);
                 json.forEach((c: any) => {
-                  c.documentID = advVer.id;
+                  c.documentVersion = advisoryVersionByDocumentID[c.documentID];
                 });
                 newComments.push(...json);
               }

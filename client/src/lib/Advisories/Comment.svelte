@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, ButtonGroup, Label, P, Textarea, TimelineItem } from "flowbite-svelte";
+  import { Button, ButtonGroup, Label, P, TimelineItem } from "flowbite-svelte";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import CommentTextArea from "./CommentTextArea.svelte";
@@ -62,7 +62,7 @@
         </ButtonGroup>
       {/if}
     </P>
-    <Label class="text-xs text-slate-400">Document-Version: {comment.documentID}</Label>
+    <Label class="text-xs text-slate-400">Document-Version: {comment.documentVersion}</Label>
   {:else}
     <CommentTextArea
       on:cancel={toggleEditing}
