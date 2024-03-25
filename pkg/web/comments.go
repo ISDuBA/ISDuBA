@@ -264,6 +264,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	where, replacements, _ := expr.Where()
 
 	type comment struct {
+		DocumentID  int64     `json:"documentID"`
 		ID          int64     `json:"id"`
 		Time        time.Time `json:"time"`
 		Commentator string    `json:"commentator"`
@@ -283,7 +284,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		if !exists {
 			return nil
 		}
-		const fetchSQL = `SELECT id, time, commentator, message FROM comments ` +
+		const fetchSQL = `SELECT id, documents_id, time, commentator, message FROM comments ` +
 			`WHERE documents_id = $1 ORDER BY time DESC`
 		rows, _ := conn.Query(rctx, fetchSQL, id)
 		var err error
@@ -291,7 +292,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 			rows,
 			func(row pgx.CollectableRow) (comment, error) {
 				var com comment
-				err := row.Scan(&com.ID, &com.Time, &com.Commentator, &com.Message)
+				err := row.Scan(&com.ID, &com.DocumentID, &com.Time, &com.Commentator, &com.Message)
 				com.Time = com.Time.UTC()
 				return com, err
 			})

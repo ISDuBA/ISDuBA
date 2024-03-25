@@ -28,6 +28,7 @@
   } from "./SSVCCalculator";
   import { createEventDispatcher, onMount } from "svelte";
   import { appStore } from "$lib/store";
+  import { request } from "$lib/utils";
 
   const dispatch = createEventDispatcher();
 
@@ -197,21 +198,13 @@
     delete userDecisions[keyOfLastDecision];
   }
 
-  function saveSSVC(vector: string) {
+  async function saveSSVC(vector: string) {
     const encodedUrl = encodeURI(`/api/ssvc/${documentID}?vector=${vector}`);
-    fetch(encodedUrl, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      },
-      method: "PUT"
-    }).then((response) => {
-      if (response.ok) {
-        dispatch("updateSSVC");
-        appStore.displaySuccessMessage("SSVC updated");
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
-    });
+    const response = await request(encodedUrl, "PUT");
+    if (response) {
+      dispatch("updateSSVC");
+      appStore.displaySuccessMessage("SSVC updated");
+    }
   }
 </script>
 

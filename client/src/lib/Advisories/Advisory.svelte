@@ -45,6 +45,7 @@
     getAllowedWorkflowChanges
   } from "$lib/permissions";
   import CommentTextArea from "./CommentTextArea.svelte";
+  import { request } from "$lib/utils";
   export let params: any = null;
 
   let document = {};
@@ -55,6 +56,7 @@
   let comment: string = "";
   let comments: any = [];
   let advisoryVersions: string[] = [];
+  let advisoryVersionByDocumentID: any;
   let advisoryState: string;
   const timeoutIDs: number[] = [];
   let diff: any;
@@ -74,6 +76,10 @@
       advisoryVersions = result.documents.map((doc: any) => {
         return { id: doc.id, version: doc.version };
       });
+      advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
+        acc[version.id] = version.version;
+        return acc;
+      }, {});
     } else {
       appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
     }
@@ -127,7 +133,7 @@
             response.json().then((json) => {
               if (json) {
                 json.forEach((c: any) => {
-                  c.documentID = advVer.id;
+                  c.documentVersion = advisoryVersionByDocumentID[c.documentID];
                 });
                 newComments.push(...json);
               }
@@ -144,14 +150,8 @@
   async function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
-    const response = await fetch(`/api/comments/${params.id}`, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      },
-      method: "POST",
-      body: formData
-    });
-    if (response.ok) {
+    const response = await request(`/api/comments/${params.id}`, "POST", formData);
+    if (response) {
       comment = "";
       loadComments().then((newComments: any[]) => {
         if (newComments.length === 1) {
@@ -159,9 +159,6 @@
         }
       });
       appStore.displaySuccessMessage("Comment for advisory saved.");
-    } else {
-      const error = await response.json();
-      appStore.displayErrorMessage(`${error.error}`);
     }
   }
 
