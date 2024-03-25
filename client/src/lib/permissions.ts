@@ -16,7 +16,7 @@ export const READ: WorkflowState = "read";
 export const ASSESSING: WorkflowState = "assessing";
 export const REVIEW: WorkflowState = "review";
 export const ARCHIVED: WorkflowState = "archived";
-export const DELETED: WorkflowState = "deleted";
+export const DELETED: WorkflowState = "delete";
 
 export const WORKFLOW_STATES = [NEW, READ, ASSESSING, REVIEW, ARCHIVED, DELETED];
 
