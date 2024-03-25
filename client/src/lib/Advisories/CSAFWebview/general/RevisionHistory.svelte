@@ -22,7 +22,7 @@
 
 {#if $appStore.webview.doc?.isRevisionHistoryPresent}
   <div class="w-max">
-    <Table>
+    <Table noborder>
       <TableHead>
         <TableHeadCell>Date</TableHeadCell>
         <TableHeadCell>Number</TableHeadCell>

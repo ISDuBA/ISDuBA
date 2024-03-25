@@ -18,7 +18,7 @@
 </script>
 
 <div>
-  <Table>
+  <Table noborder>
     <TableBodyRow>
       <TableBodyCell><h5>Product Version Helper</h5></TableBodyCell>
     </TableBodyRow>
