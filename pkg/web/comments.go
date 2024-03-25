@@ -269,7 +269,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	where, replacements, _ := expr.Where()
 
 	type comment struct {
-		DocumentID  int64     `json:"documentID"`
+		DocumentID  int64     `json:"document_id"`
 		ID          int64     `json:"id"`
 		Time        time.Time `json:"time"`
 		Commentator string    `json:"commentator"`

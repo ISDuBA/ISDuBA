@@ -128,7 +128,7 @@
             response.json().then((json) => {
               if (json) {
                 json.forEach((c: any) => {
-                  c.documentVersion = advisoryVersionByDocumentID[c.documentID];
+                  c.documentVersion = advisoryVersionByDocumentID[c.document_id];
                 });
                 newComments.push(...json);
               }
