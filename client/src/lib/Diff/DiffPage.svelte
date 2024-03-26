@@ -17,13 +17,15 @@
   let diff: string;
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
-      fetch("advisory.diff", {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      }).then((response) => {
-        response.text().then((text) => {
-          diff = text;
+      $appStore.app.keycloak.updateToken(5).then(async () => {
+        fetch("advisory.diff", {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
+        }).then((response) => {
+          response.text().then((text) => {
+            diff = text;
+          });
         });
       });
     }
