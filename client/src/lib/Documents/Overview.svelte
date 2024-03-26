@@ -193,7 +193,7 @@
               }}
               bind:value={currentPage}
             />
-            <span>of {numberOfPages} Pages</span>
+            <span>of {numberOfPages} pages</span>
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
             <PaginationItem on:click={next}>
