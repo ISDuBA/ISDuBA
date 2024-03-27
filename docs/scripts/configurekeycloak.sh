@@ -30,7 +30,7 @@ tlp='\"WHITE\", \"GREEN\"'
 
 ./keycloak/login.sh
 
-./keycloak/createRealm.sh
+./keycloak/createRealm.sh | echo
 
 ./keycloak/createRole.sh $role 'Bearbeiter' $publisher $tlp | echo
 
