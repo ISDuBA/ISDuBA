@@ -42,8 +42,6 @@ adminpass=keycloak
 # log into the master realm with admin rights, token saved in ~/.keycloak/kcadm.config
 sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$adminuser" --password "$adminpass"
 
-# TODO: Reusability
-
 if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms' | grep -F -q '"realm" : "isduba",' ; then
  echo "Realm isduba already exists."
 else
