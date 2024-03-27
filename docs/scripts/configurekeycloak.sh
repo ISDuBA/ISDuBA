@@ -26,7 +26,7 @@ publisher=''
 
 tlp='\"WHITE\", \"GREEN\"'
 
-echo $A
+# TODO: Reusability
 
 ./keycloak/login.sh
 
