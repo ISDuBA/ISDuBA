@@ -13,5 +13,7 @@ set -e # to exit if a command in the script fails
 adminuser=keycloak
 adminpass=keycloak
 
+# TODO: Create Admin user. Will not work without it.
+
 # log into the master realm with admin rights, token saved in ~/.keycloak/kcadm.config
 sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$adminuser" --password "$adminpass"
