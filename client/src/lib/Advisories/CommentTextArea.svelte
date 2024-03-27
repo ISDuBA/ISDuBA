@@ -32,8 +32,10 @@
         </Button>
       {/if}
     </div>
-    <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}
-      >{`${count}/10000`}</Label
-    >
+    {#if count > 9500}
+      <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}>
+        {`${count}/10000`}
+      </Label>
+    {/if}
   </div>
 </Textarea>

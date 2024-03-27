@@ -327,7 +327,15 @@
             ></TableBodyCell
           >
           <TableBodyCell {tdClass}
-            ><i class:bx={true} class:bxs-star={item.state === "new"}></i></TableBodyCell
+            ><i
+              class:bx={true}
+              class:bxs-star={item.state === "new"}
+              class:bx-show={item.state === "read"}
+              class:bxs-analyse={item.state === "assessing"}
+              class:bx-book-open={item.state === "review"}
+              class:bx-archive={item.state === "archived"}
+              class:bx-trash={item.state === "delete"}
+            ></i></TableBodyCell
           >
           <TableBodyCell {tdClass}
             >{#if item.four_cves[0]}
