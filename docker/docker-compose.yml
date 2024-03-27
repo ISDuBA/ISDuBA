@@ -1,0 +1,93 @@
+# This file is Free Software under the Apache-2.0 License
+# without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+# Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+
+version: "3.8"
+services:
+  keycloak:
+    image: mirror.mobydock.de/keycloak/keycloak:23.0
+    container_name: "isduba-keycloak"
+    ports:
+      - "${KC_HOSTNAME_PORT}:8080"
+    command: ["start-dev"]
+    environment:
+      KC_DB: postgres
+      KC_DB_SCHEMA: public
+      KC_DB_URL: jdbc:postgresql://isduba-db/keycloak
+
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: secret
+
+      KC_HOSTNAME_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
+    networks:
+      - isduba
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c 'cat < /dev/null > /dev/tcp/localhost/8080'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      db:
+        condition: service_healthy
+
+  keycloak-setup:
+    image: mirror.mobydock.de/keycloak/keycloak:23.0
+    container_name: "isduba-keycloak-setup"
+    restart: "no"
+    entrypoint: ["bash", "/opt/keycloak/init.sh"]
+    networks:
+      - isduba
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: secret
+      CLIENT_HOSTNAME_URL: ${PROTOCOL}://${CLIENT_HOST}:${CLIENT_PORT}
+    volumes:
+      - ./keycloak/init.sh:/opt/keycloak/init.sh
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  db:
+    container_name: "isduba-db"
+    image: mirror.mobydock.de/library/postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - isduba
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./db/init.sh:/docker-entrypoint-initdb.d/init.sh
+
+  server:
+    container_name: "isduba-server"
+    build:
+      context: ../
+      dockerfile: ./docker/server/Dockerfile
+    networks:
+      - isduba
+    ports:
+      - "${CLIENT_PORT}:8081"
+    environment:
+      PUBLIC_KEYCLOAK_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+
+networks:
+  isduba:
+    name: isduba
+
