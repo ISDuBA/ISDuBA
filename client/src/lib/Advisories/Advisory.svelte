@@ -11,13 +11,11 @@
   import {
     Button,
     Label,
-    Textarea,
     Timeline,
     AccordionItem,
     Accordion,
     Badge,
     Tooltip,
-    Modal,
     Dropdown,
     DropdownItem
   } from "flowbite-svelte";
@@ -30,7 +28,6 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import type { JsonDiffResultList } from "$lib/Diff/JsonDiff";
   import {
     ARCHIVED,
     DELETED,
@@ -59,7 +56,7 @@
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
   const timeoutIDs: number[] = [];
-  let diff: any;
+  let diffDocuments: any;
   let isDiffOpen = false;
 
   const loadAdvisoryVersions = async () => {
@@ -204,24 +201,11 @@
   }
 
   const compareLatest = async () => {
-    const firstDoc = advisoryVersions[advisoryVersions.length - 1].id;
-    const secondDoc = advisoryVersions[advisoryVersions.length - 2].id;
-    const response = await fetch(`/api/diff/${firstDoc}/${secondDoc}?word-diff=true`, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      }
-    });
-    if (response.ok) {
-      const result: JsonDiffResultList = await response.json();
-      diff = {
-        docA: advisoryVersions[advisoryVersions.length - 1].version,
-        docB: advisoryVersions[advisoryVersions.length - 2].version,
-        result: result
-      };
-      isDiffOpen = true;
-    } else {
-      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-    }
+    diffDocuments = {
+      docA: advisoryVersions[advisoryVersions.length - 2],
+      docB: advisoryVersions[advisoryVersions.length - 1]
+    };
+    isDiffOpen = true;
   };
 
   const toggleLatestChanges = () => {
@@ -335,7 +319,7 @@
       {/if}
     {/if}
     {#if isDiffOpen}
-      <JsonDiff {diff}></JsonDiff>
+      <JsonDiff {diffDocuments}></JsonDiff>
     {:else}
       <Webview></Webview>
     {/if}
