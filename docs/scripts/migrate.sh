@@ -25,5 +25,5 @@ if ps -p $!; then
   echo "Migration successful"
   kill $!
 else
- echo "Couldn't start migration, is isdubad already running?"
+ echo "Couldn't start migration, is isduba already running?"
 fi
