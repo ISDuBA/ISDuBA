@@ -10,6 +10,8 @@
 
 set -e # to exit if a command in the script fails
 
+cd "$HOME"
+
 sudo apt-get install git -y # Needed to work with github repositories
 
 # If repository already exists, update it instead of cloning it
