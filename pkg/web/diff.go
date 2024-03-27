@@ -11,6 +11,7 @@ package web
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -83,14 +84,51 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Deliver a specific operation item.
+	if itemS := ctx.DefaultQuery("item", ""); itemS != "" {
+		item, err := strconv.Atoi(itemS)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if item < 0 || item >= len(patch) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "item out of range"})
+			return
+		}
+		switch p := &patch[item]; p.Operation {
+		case "remove", "replace":
+			var d1 any
+			if err := json.Unmarshal(doc1, &d1); err != nil {
+				slog.Error("unmarshaling failed", "err", err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			x, ok := locate(d1, p.Path)
+			if !ok {
+				ctx.JSON(http.StatusNotFound, gin.H{
+					"error": fmt.Sprintf("path %q not found", p.Path),
+				})
+			} else {
+				ctx.JSON(http.StatusOK, x)
+			}
+		default:
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": fmt.Sprintf("operation %q not supported", p.Operation),
+			})
+		}
+		return
+	}
+
+	// Check if we have to do word diffing. If not deliver the patch directly.
 	wordDiffS := ctx.DefaultQuery("word-diff", "false")
 	wordDiff, _ := strconv.ParseBool(wordDiffS)
 	if !wordDiff {
 		ctx.JSON(http.StatusOK, patch)
 		return
 	}
-	// Calculate word diff for "replace" operations.
 
+	// Calculate word diff for "replace" operations.
 	var d1 any
 	if err := json.Unmarshal(doc1, &d1); err != nil {
 		slog.Error("unmarshaling failed", "err", err)
@@ -101,15 +139,15 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 	dmp := diffmatchpatch.New()
 
 	for i := range patch {
-		ch := &patch[i]
-		if ch.Operation != "replace" {
+		p := &patch[i]
+		if p.Operation != "replace" {
 			continue
 		}
-		r, ok := ch.Value.(string)
+		r, ok := p.Value.(string)
 		if !ok {
 			continue
 		}
-		x, ok := locate(d1, ch.Path)
+		x, ok := locate(d1, p.Path)
 		if !ok {
 			continue
 		}
@@ -118,7 +156,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 			continue
 		}
 		diffs := dmp.DiffMain(s, r, false)
-		ch.Value = doWordDiff(diffs)
+		p.Value = doWordDiff(diffs)
 	}
 
 	ctx.JSON(http.StatusOK, patch)
