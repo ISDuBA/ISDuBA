@@ -32,6 +32,7 @@
 
   const dispatch = createEventDispatcher();
 
+  export let disabled = false;
   export let documentID: string;
   let startedCalculation = false;
   let currentStep = 0;
@@ -213,6 +214,7 @@
     <Label class="mb-4">Enter SSVC vector manually</Label>
     <Label class="mb-2">
       <Input
+        {disabled}
         on:keyup={(e) => {
           if (e.key === "Enter") saveSSVC(vectorInput);
         }}
@@ -223,7 +225,7 @@
       >
     </Label>
     <Label class="mb-4 mt-6">Calculate new SSVC vector</Label>
-    <Button on:click={() => (startedCalculation = true)}>Calculate</Button>
+    <Button {disabled} on:click={() => (startedCalculation = true)}>Calculate</Button>
   {:else}
     <div class="mb-4 flex gap-4">
       <Button

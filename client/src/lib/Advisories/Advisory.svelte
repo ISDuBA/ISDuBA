@@ -28,6 +28,7 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import {
+    ASSESSING,
     ARCHIVED,
     DELETED,
     NEW,
@@ -54,6 +55,18 @@
   let advisoryVersions: string[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
+  let isCommentingAllowed: boolean;
+  $: if ([READ, ASSESSING].includes(advisoryState)) {
+    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+  } else {
+    isCommentingAllowed = false;
+  }
+  let isCalculatingAllowed: boolean;
+  $: if ([READ, ASSESSING].includes(advisoryState)) {
+    isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
+  } else {
+    isCalculatingAllowed = false;
+  }
   const timeoutIDs: number[] = [];
 
   const loadAdvisoryVersions = async () => {
@@ -324,7 +337,7 @@
           {:else}
             <div class="mb-6 text-gray-600">No comments available.</div>
           {/if}
-          {#if appStore.isEditor() || appStore.isReviewer()}
+          {#if isCommentingAllowed}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
               <CommentTextArea on:saveComment={createComment} bind:value={comment} buttonText="Send"
@@ -338,6 +351,7 @@
           <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
           <SsvcCalculator
             vectorInput={ssvc?.vector}
+            disabled={!isCalculatingAllowed}
             documentID={params.id}
             on:updateSSVC={loadMetaData}
           ></SsvcCalculator>
