@@ -27,3 +27,5 @@ if ps -p $!; then
 else
  echo "Couldn't start migration, is isduba already running?"
 fi
+
+# TODO: Import advisories
