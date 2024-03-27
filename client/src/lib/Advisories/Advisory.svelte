@@ -35,6 +35,7 @@
     READ,
     REVIEW,
     canSetStateArchived,
+    canSetStateAssessing,
     canSetStateDeleted,
     canSetStateNew,
     canSetStateRead,
@@ -283,6 +284,11 @@
             <DropdownItem on:click={() => updateState(REVIEW)} class="flex items-center gap-2">
               <i class="bx bx-book-open text-lg"></i>
               <span>Release for review</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateAssessing(advisoryState)}
+            <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
+              <span>Back to assessing</span>
             </DropdownItem>
           {/if}
           {#if canSetStateArchived(advisoryState)}

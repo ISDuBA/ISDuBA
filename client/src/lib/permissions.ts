@@ -71,6 +71,10 @@ export function canSetStateReview(currentState: WorkflowState) {
   return allowedToChangeWorkflow(appStore.getRoles(), currentState, REVIEW);
 }
 
+export function canSetStateAssessing(currentState: WorkflowState) {
+  return allowedToChangeWorkflow(appStore.getRoles(), currentState, ASSESSING);
+}
+
 export function canSetStateArchived(currentState: WorkflowState) {
   return allowedToChangeWorkflow(appStore.getRoles(), currentState, ARCHIVED);
 }
