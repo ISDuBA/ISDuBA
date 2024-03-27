@@ -204,8 +204,8 @@
   }
 
   const compareLatest = async () => {
-    const firstDoc = advisoryVersions[advisoryVersions.length - 2].id;
-    const secondDoc = advisoryVersions[advisoryVersions.length - 1].id;
+    const firstDoc = advisoryVersions[advisoryVersions.length - 1].id;
+    const secondDoc = advisoryVersions[advisoryVersions.length - 2].id;
     const response = await fetch(`/api/diff/${firstDoc}/${secondDoc}?word-diff=true`, {
       headers: {
         Authorization: `Bearer ${$appStore.app.keycloak.token}`
@@ -214,13 +214,21 @@
     if (response.ok) {
       const result: JsonDiffResultList = await response.json();
       diff = {
-        docA: advisoryVersions[advisoryVersions.length - 2].version,
-        docB: advisoryVersions[advisoryVersions.length - 1].version,
+        docA: advisoryVersions[advisoryVersions.length - 1].version,
+        docB: advisoryVersions[advisoryVersions.length - 2].version,
         result: result
       };
       isDiffOpen = true;
     } else {
       appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
+    }
+  };
+
+  const toggleLatestChanges = () => {
+    if (!isDiffOpen) {
+      compareLatest();
+    } else {
+      isDiffOpen = false;
     }
   };
 
@@ -256,8 +264,8 @@
   });
 </script>
 
-<div class="flex">
-  <div class="flex flex-col">
+<div class="flex gap-x-4">
+  <div class="flex grow flex-col gap-y-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
@@ -321,12 +329,16 @@
     ></Version>
     {#if advisoryVersions.length > 1}
       {#if advisoryVersions[0].version === document.tracking?.version}
-        <Button class="w-fit" color="light" on:click={compareLatest}
+        <Button class="w-fit" color="light" on:click={toggleLatestChanges}
           ><i class="bx bx-transfer me-2 text-lg"></i>Latest Changes</Button
         >
       {/if}
     {/if}
-    <Webview></Webview>
+    {#if isDiffOpen}
+      <JsonDiff {diff}></JsonDiff>
+    {:else}
+      <Webview></Webview>
+    {/if}
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="ml-auto mr-3 min-w-96 max-w-96">
@@ -366,8 +378,5 @@
         </AccordionItem>
       </Accordion>
     </div>
-    <Modal bind:open={isDiffOpen}>
-      <JsonDiff {diff}></JsonDiff>
-    </Modal>
   {/if}
 </div>
