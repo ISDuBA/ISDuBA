@@ -30,7 +30,7 @@ echo $A
 
 ./keycloak/login.sh
 
-./keycloak/createRealm
+./keycloak/createRealm.sh
 
 ./keycloak/createRole.sh $role 'Bearbeiter' $publisher $tlp | echo
 
