@@ -18,15 +18,20 @@ set -e # to exit if a command in the script fails
 # $5: password
 # $6: role
 
-# create user
-userid=$(sudo /opt/keycloak/bin/kcadm.sh create users --target-realm isduba \
-    --set username=$1 --set enabled=true \
-    --set firstName=$2 --set lastName=$3 \
-    --set email=$4 \
-    --set emailVerified=true)
+if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms/isduba/users' | grep -F -q "\"username\" : \"$1\"" ; then
+  echo "User $1 already exists."
+else
+  # create user
+  userid=$(sudo /opt/keycloak/bin/kcadm.sh create users --target-realm isduba \
+      --set username=$1 --set enabled=true \
+      --set firstName=$2 --set lastName=$3 \
+      --set email=$4 \
+      --set emailVerified=true)
 
-password=$5
-sudo /opt/keycloak/bin/kcadm.sh set-password --target-realm isduba \
-    --username $1 --new-password "$password"
+  # set password for user
+  sudo /opt/keycloak/bin/kcadm.sh set-password --target-realm isduba \
+      --username $1 --new-password "$5"
 
-sudo /opt/keycloak/bin/kcadm.sh add-roles -r isduba --uusername $1 --rolename $6
+  # set role for user
+  sudo /opt/keycloak/bin/kcadm.sh add-roles -r isduba --uusername $1 --rolename $6
+fi

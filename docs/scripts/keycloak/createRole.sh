@@ -16,10 +16,15 @@ set -e # to exit if a command in the script fails
 # $3: publishers
 # $4: tlps
 
-# create role
-sudo /opt/keycloak/bin/kcadm.sh create roles --target-realm=isduba --set name=$1 \
-    --set "description=$2"
-sudo /opt/keycloak/bin/kcadm.sh update roles/$1 --target-realm isduba \
-  --set 'attributes={
-    "TLP" : [ "[{\"publisher\":\"$3\", \"tlps\":[$4]}]" ]
-  }'
+
+if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms/isduba/roles' | grep -F -q "\"name\" : \"$1\"", ; then
+  echo "Role $1 already exists."
+else
+  # create role
+  sudo /opt/keycloak/bin/kcadm.sh create roles --target-realm=isduba --set name=$1 \
+      --set "description=$2"
+  sudo /opt/keycloak/bin/kcadm.sh update roles/$1 --target-realm isduba \
+    --set 'attributes={
+      "TLP" : [ "[{\"publisher\":\"$3\", \"tlps\":[$4]}]" ]
+    }'
+fi
