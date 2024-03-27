@@ -12,7 +12,7 @@ set -e # to exit if a command in the script fails
 
 ./../../bin/isdubad -c ../../isdubad.toml &
 
-# TODO: race conditions
+# TODO: handle race conditions
 if curl --head --silent http://localhost:5173/ | grep -F -q "HTTP/1.1 200 OK"; then
   echo "Port 5173 is already being used. Is isduba already running?"
 else
