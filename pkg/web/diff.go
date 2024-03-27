@@ -160,7 +160,6 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, patch)
-	return
 }
 
 func doWordDiff(diffs []diffmatchpatch.Diff) string {
