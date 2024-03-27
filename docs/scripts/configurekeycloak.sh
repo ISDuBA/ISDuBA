@@ -27,14 +27,18 @@ export KEYCLOAK_ADMIN_PASSWORD="keycloak"
 
 # TODO: what if keycloak is running, but does not have an admin user yet?
 
-sudo --preserve-env=KEYCLOAK_ADMIN,KEYCLOAK_ADMIN_PASSWORD /opt/keycloak/bin/kc.sh start-dev &
+if curl --head --silent http://localhost:8080/ | grep -F -q "Location: http://localhost:8080/admin/"; then
+  echo "keycloak is already running..."
+else
+  sudo --preserve-env=KEYCLOAK_ADMIN,KEYCLOAK_ADMIN_PASSWORD /opt/keycloak/bin/kc.sh start-dev &
 
-# wait for keycloak to start
-echo "Waiting for keycloak to start..."
-until curl --head --silent http://localhost:8080/
-do
-  sleep 1
-done
+  # wait for keycloak to start
+  echo "Waiting for keycloak to start..."
+  until curl --head --silent http://localhost:8080/ | grep -F -q "Location: http://localhost:8080/admin/"
+  do
+    sleep 1
+  done
+fi
 
 adminuser=keycloak
 adminpass=keycloak
