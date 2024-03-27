@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# This file is Free Software under the Apache-2.0 License
+# without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+# Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+
+set -e # to exit if a command in the script fails
+
+# arguments:
+# $1: name
+# $2: description
+# $3: publishers
+# $4: tlps
+
+# create role
+sudo /opt/keycloak/bin/kcadm.sh create roles --target-realm=isduba --set name=$1 \
+    --set "description=$2"
+sudo /opt/keycloak/bin/kcadm.sh update roles/$1 --target-realm isduba \
+  --set 'attributes={
+    "TLP" : [ "[{\"publisher\":\"$3\", \"tlps\":[$4]}]" ]
+  }'

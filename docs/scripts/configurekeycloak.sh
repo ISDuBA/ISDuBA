@@ -19,3 +19,19 @@ sudo sed --in-place=.orig -e 's/^#db=postgres/db=postgres/' \
 
 # Give feedback after successful completion
 echo "Succesfully adjusted keycloaks configuration."
+
+role='bearbeiter'
+
+publisher=''
+
+tlp='\"WHITE\", \"GREEN\"'
+
+echo $A
+
+./keycloak/login.sh
+
+./keycloak/createRealm
+
+./keycloak/createRole.sh $role 'Bearbeiter' $publisher $tlp | echo
+
+./keycloak/createUser.sh 'beate' 'beate' 'bear' 'bea@ISDuBA.isduba' 'beate' $role | echo
