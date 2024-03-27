@@ -19,7 +19,7 @@ else
   # Make sure no potentially broken zip file exists
   rm --force keycloak-24.0.1.zip
   # download and extract keycloak
-  sudo wget https://github.com/keycloak/keycloak/releases/download/24.0.1/keycloak-24.0.1.zip
+  wget https://github.com/keycloak/keycloak/releases/download/24.0.1/keycloak-24.0.1.zip
 
   echo "Extracting Keycloak..."
   unzip -q keycloak-24.0.1.zip
