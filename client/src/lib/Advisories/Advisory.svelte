@@ -286,8 +286,9 @@
               <span>Release for review</span>
             </DropdownItem>
           {/if}
-          {#if canSetStateAssessing(advisoryState)}
+          {#if canSetStateAssessing(advisoryState) && advisoryState === REVIEW}
             <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
+              <i class="bx bx-analyse text-lg"></i>
               <span>Back to assessing</span>
             </DropdownItem>
           {/if}
