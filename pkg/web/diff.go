@@ -86,18 +86,12 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 	}
 
 	// Deliver a specific operation item.
-	if itemS := ctx.DefaultQuery("item", ""); itemS != "" {
-		item, err := strconv.Atoi(itemS)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if item < 0 || item >= len(patch) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "item out of range"})
-			return
-		}
-		switch p := &patch[item]; p.Operation {
-		case "remove", "replace":
+	if op, path := ctx.Query("item_op"), ctx.Query("item_path"); op != "" && path != "" {
+		for i := range patch {
+			p := &patch[i]
+			if p.Operation != op || p.Path != path {
+				continue
+			}
 			var d1 any
 			if err := json.Unmarshal(doc1, &d1); err != nil {
 				slog.Error("unmarshaling failed", "err", err)
@@ -112,11 +106,11 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 			} else {
 				ctx.JSON(http.StatusOK, x)
 			}
-		default:
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": fmt.Sprintf("operation %q not supported", p.Operation),
-			})
+			return
 		}
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": "path/op not found",
+		})
 		return
 	}
 
