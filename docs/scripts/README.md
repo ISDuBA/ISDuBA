@@ -27,7 +27,6 @@ To call installall (sudo privileges needed):
     installall.sh
 ```
 
-Finally, the bulkimporter can be used to
-import manually download documents, [see setup.md](./../setup.md#start-isdubad-to-allow-db-creation)
+Finally, the bulkimporter can be used to import manually downloaded documents.
 
 After that the setup is complete.
