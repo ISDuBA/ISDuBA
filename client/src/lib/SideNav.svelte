@@ -27,7 +27,7 @@
     "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
 </script>
 
-<Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
+<Sidebar class="h-screen bg-primary-700 p-2" {activeUrl} {activeClass} {nonActiveClass}>
   <SidebarWrapper class="bg-primary-700">
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">

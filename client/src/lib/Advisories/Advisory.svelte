@@ -29,12 +29,14 @@
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
   import {
+    ASSESSING,
     ARCHIVED,
     DELETED,
     NEW,
     READ,
     REVIEW,
     canSetStateArchived,
+    canSetStateAssessing,
     canSetStateDeleted,
     canSetStateNew,
     canSetStateRead,
@@ -55,91 +57,111 @@
   let advisoryVersions: string[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
+  let isCommentingAllowed: boolean;
+  $: if ([READ, ASSESSING].includes(advisoryState)) {
+    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+  } else {
+    isCommentingAllowed = false;
+  }
+  let isCalculatingAllowed: boolean;
+  $: if ([READ, ASSESSING].includes(advisoryState)) {
+    isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
+  } else {
+    isCalculatingAllowed = false;
+  }
   const timeoutIDs: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
 
   const loadAdvisoryVersions = async () => {
-    const response = await fetch(
-      `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
-      {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+    $appStore.app.keycloak.updateToken(5).then(async () => {
+      const response = await fetch(
+        `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+        {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
         }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        advisoryVersions = result.documents.map((doc: any) => {
+          return { id: doc.id, version: doc.version };
+        });
+        advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
+          acc[version.id] = version.version;
+          return acc;
+        }, {});
+      } else {
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
-    );
-    if (response.ok) {
-      const result = await response.json();
-      advisoryVersions = result.documents.map((doc: any) => {
-        return { id: doc.id, version: doc.version };
-      });
-      advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
-        acc[version.id] = version.version;
-        return acc;
-      }, {});
-    } else {
-      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-    }
+    });
   };
 
   const loadDocument = async () => {
-    const response = await fetch(`/api/documents/${params.id}`, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      }
-    });
-    if (response.ok) {
-      const doc = await response.json();
-      ({ document } = doc);
-      const docModel = convertToDocModel(doc);
-      appStore.setDocument(docModel);
-    } else {
-      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-    }
-  };
-
-  const loadDocumentSSVC = async () => {
-    const response = await fetch(
-      `/api/documents?columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
-      {
+    $appStore.app.keycloak.updateToken(5).then(async () => {
+      const response = await fetch(`/api/documents/${params.id}`, {
         headers: {
           Authorization: `Bearer ${$appStore.app.keycloak.token}`
         }
+      });
+      if (response.ok) {
+        const doc = await response.json();
+        ({ document } = doc);
+        const docModel = convertToDocModel(doc);
+        appStore.setDocument(docModel);
+      } else {
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
-    );
-    if (response.ok) {
-      const result = await response.json();
-      if (result.documents[0].ssvc) {
-        ssvc = convertVectorToLabel(result.documents[0].ssvc);
+    });
+  };
+
+  const loadDocumentSSVC = async () => {
+    $appStore.app.keycloak.updateToken(5).then(async () => {
+      const response = await fetch(
+        `/api/documents?columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+        {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
+        }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        if (result.documents[0].ssvc) {
+          ssvc = convertVectorToLabel(result.documents[0].ssvc);
+        }
+      } else {
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
-    } else {
-      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-    }
+    });
   };
 
   function loadComments(): Promise<any[]> {
     return new Promise((resolve) => {
       const newComments: any = [];
       advisoryVersions.forEach((advVer: any) => {
-        fetch(`/api/comments/${advVer.id}`, {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          }
-        }).then((response) => {
-          if (response.ok) {
-            response.json().then((json) => {
-              if (json) {
-                json.forEach((c: any) => {
-                  c.documentVersion = advisoryVersionByDocumentID[c.documentID];
-                });
-                newComments.push(...json);
-              }
-              comments = newComments;
-              resolve(newComments);
-            });
-          } else {
-            appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-          }
+        $appStore.app.keycloak.updateToken(5).then(async () => {
+          fetch(`/api/comments/${advVer.id}`, {
+            headers: {
+              Authorization: `Bearer ${$appStore.app.keycloak.token}`
+            }
+          }).then((response) => {
+            if (response.ok) {
+              response.json().then((json) => {
+                if (json) {
+                  json.forEach((c: any) => {
+                    c.documentVersion = advisoryVersionByDocumentID[c.document_id];
+                  });
+                  newComments.push(...json);
+                }
+                comments = newComments;
+                resolve(newComments);
+              });
+            } else {
+              appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
+            }
+          });
         });
       });
     });
@@ -160,39 +182,43 @@
   }
 
   async function updateState(newState: string) {
-    const response = await fetch(
-      `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
-      {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        },
-        method: "PUT"
+    $appStore.app.keycloak.updateToken(5).then(async () => {
+      const response = await fetch(
+        `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
+        {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          },
+          method: "PUT"
+        }
+      );
+      if (response.ok) {
+        advisoryState = newState;
+      } else {
+        const error = await response.json();
+        appStore.displayErrorMessage(`${error.error}`);
       }
-    );
-    if (response.ok) {
-      advisoryState = newState;
-    } else {
-      const error = await response.json();
-      appStore.displayErrorMessage(`${error.error}`);
-    }
+    });
   }
 
   const loadAdvisoryState = async () => {
-    const response = await fetch(
-      `/api/documents?advisories=true&columns=state&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
-      {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+    $appStore.app.keycloak.updateToken(5).then(async () => {
+      const response = await fetch(
+        `/api/documents?advisories=true&columns=state&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+        {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
         }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        advisoryState = result.documents[0].state;
+        return result.documents[0].state;
+      } else {
+        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
       }
-    );
-    if (response.ok) {
-      const result = await response.json();
-      advisoryState = result.documents[0].state;
-      return result.documents[0].state;
-    } else {
-      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-    }
+    });
   };
 
   function loadMetaData() {
@@ -279,6 +305,12 @@
               <span>Release for review</span>
             </DropdownItem>
           {/if}
+          {#if canSetStateAssessing(advisoryState) && advisoryState === REVIEW}
+            <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
+              <i class="bx bx-analyse text-lg"></i>
+              <span>Back to assessing</span>
+            </DropdownItem>
+          {/if}
           {#if canSetStateArchived(advisoryState)}
             <DropdownItem on:click={() => updateState(ARCHIVED)} class="flex items-center gap-2">
               <i class="bx bx-archive text-lg"></i>
@@ -342,7 +374,7 @@
           {:else}
             <div class="mb-6 text-gray-600">No comments available.</div>
           {/if}
-          {#if appStore.isEditor() || appStore.isReviewer()}
+          {#if isCommentingAllowed}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
               <CommentTextArea on:saveComment={createComment} bind:value={comment} buttonText="Send"
@@ -356,6 +388,7 @@
           <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
           <SsvcCalculator
             vectorInput={ssvc?.vector}
+            disabled={!isCalculatingAllowed}
             documentID={params.id}
             on:updateSSVC={loadMetaData}
           ></SsvcCalculator>

@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
@@ -192,7 +193,7 @@
               }}
               bind:value={currentPage}
             />
-            <span>of {numberOfPages} Pages</span>
+            <span>of {numberOfPages} pages</span>
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
             <PaginationItem on:click={next}>

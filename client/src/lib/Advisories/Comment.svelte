@@ -29,20 +29,22 @@
   function updateComment() {
     const formData = new FormData();
     formData.append("message", updatedComment);
-    fetch(`/api/comments/${comment.id}`, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      },
-      method: "PUT",
-      body: formData
-    }).then((response) => {
-      if (response.ok) {
-        comment.message = updatedComment;
-        toggleEditing();
-        appStore.displaySuccessMessage("Comment updated.");
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
+    $appStore.app.keycloak.updateToken(5).then(async () => {
+      fetch(`/api/comments/${comment.id}`, {
+        headers: {
+          Authorization: `Bearer ${$appStore.app.keycloak.token}`
+        },
+        method: "PUT",
+        body: formData
+      }).then((response) => {
+        if (response.ok) {
+          comment.message = updatedComment;
+          toggleEditing();
+          appStore.displaySuccessMessage("Comment updated.");
+        } else {
+          appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
+        }
+      });
     });
   }
 </script>

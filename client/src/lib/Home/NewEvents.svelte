@@ -15,9 +15,7 @@
     TableBodyCell,
     TableBodyRow,
     TableHead,
-    TableHeadCell,
-    TableSearch,
-    Pagination
+    TableHeadCell
   } from "flowbite-svelte";
   import { tdClass, tablePadding } from "$lib/table/defaults";
 </script>

@@ -57,30 +57,30 @@
   ) {
     appStore.setSingleErrorMsg("Are you sure the URL refers to a CSAF document?");
   }
-  const cellStyle = "px-6 py-2";
+  const cellStyle = "px-6 py-0";
 </script>
 
 <div class="w-max">
-  <Table>
+  <Table noborder>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>ID</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{id}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>ID</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{id}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>CSAF-Version</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{csafVersion}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>CSAF-Version</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{csafVersion}</TableBodyCell>
     </TableBodyRow>
     {#if $appStore.webview.doc?.aggregateSeverity}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Aggregate severity text</TableBodyCell>
-        <TableBodyCell class={cellStyle}>
+        <TableBodyCell tdClass={cellStyle}>Aggregate severity text</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>
           <span>{$appStore.webview.doc?.aggregateSeverity.text}</span></TableBodyCell
         >
       </TableBodyRow>
       {#if $appStore.webview.doc?.aggregateSeverity.namespace}
         <TableBodyRow>
-          <TableBodyCell class={cellStyle}>Aggregate severity namespace</TableBodyCell>
-          <TableBodyCell class={cellStyle}
+          <TableBodyCell tdClass={cellStyle}>Aggregate severity namespace</TableBodyCell>
+          <TableBodyCell tdClass={cellStyle}
             ><span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span></TableBodyCell
           >
         </TableBodyRow>
@@ -88,98 +88,99 @@
     {/if}
     {#if tlp?.label}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>TLP</TableBodyCell>
-        <TableBodyCell class={cellStyle}><span class={tlpStyle}>{tlp?.label}</span></TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>TLP</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}><span class={tlpStyle}>{tlp?.label}</span></TableBodyCell
+        >
       </TableBodyRow>
     {/if}
     {#if tlp?.url}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>TLP URL</TableBodyCell>
-        <TableBodyCell class={cellStyle}><a href={tlpurl}>{tlp?.url}</a></TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>TLP URL</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}><a href={tlpurl}>{tlp?.url}</a></TableBodyCell>
       </TableBodyRow>
     {/if}
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Category</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{category}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Category</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{category}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Title</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{title}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Title</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{title}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Publisher name</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{publisherName}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Publisher name</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{publisherName}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Publisher category</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{publisherCategory}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Publisher category</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{publisherCategory}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Publisher namespace</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{publisherNamespace}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Publisher namespace</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{publisherNamespace}</TableBodyCell>
     </TableBodyRow>
     {#if publisherIssuingAuthority}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Publisher issuing authority</TableBodyCell>
-        <TableBodyCell class={cellStyle}>{publisherIssuingAuthority}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>Publisher issuing authority</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>{publisherIssuingAuthority}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if publisherContactDetails}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Publisher contact details</TableBodyCell>
-        <TableBodyCell class={cellStyle}>{publisherContactDetails}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>Publisher contact details</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>{publisherContactDetails}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if lang}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Language</TableBodyCell>
-        <TableBodyCell class={cellStyle}>{lang}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>Language</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>{lang}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if sourceLang}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Source lang</TableBodyCell>
-        <TableBodyCell class={cellStyle}>{sourceLang}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>Source lang</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>{sourceLang}</TableBodyCell>
       </TableBodyRow>
     {/if}
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Published</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{published}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Published</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{published}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Last update</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{lastUpdate}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Last update</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{lastUpdate}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell class={cellStyle}>Tracking Version</TableBodyCell>
-      <TableBodyCell class={cellStyle}>{trackingVersion}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>Tracking Version</TableBodyCell>
+      <TableBodyCell tdClass={cellStyle}>{trackingVersion}</TableBodyCell>
     </TableBodyRow>
     {#if $appStore.webview.doc?.status !== Status.final}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Status</TableBodyCell>
-        <TableBodyCell class={cellStyle}>{status}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>Status</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>{status}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if generator}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Generator engine</TableBodyCell>
-        <TableBodyCell class={cellStyle}
+        <TableBodyCell tdClass={cellStyle}>Generator engine</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}
           ><span>{$appStore.webview.doc?.generator?.engine.name}</span></TableBodyCell
         >
       </TableBodyRow>
     {/if}
     {#if generator?.engine?.version}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Generator engine version</TableBodyCell>
-        <TableBodyCell class={cellStyle}
+        <TableBodyCell tdClass={cellStyle}>Generator engine version</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}
           ><span>{$appStore.webview.doc?.generator?.engine.version}</span></TableBodyCell
         >
       </TableBodyRow>
     {/if}
     {#if generator?.date}
       <TableBodyRow>
-        <TableBodyCell class={cellStyle}>Generator date</TableBodyCell>
-        <TableBodyCell class={cellStyle}><span>{generator?.date}</span></TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}>Generator date</TableBodyCell>
+        <TableBodyCell tdClass={cellStyle}><span>{generator?.date}</span></TableBodyCell>
       </TableBodyRow>
     {/if}
   </Table>
@@ -229,21 +230,17 @@
   .tlpclear {
     background: #000;
     color: #fff;
-    padding: 0.3rem;
   }
   .tlpred {
     background: #000;
     color: #ff2b2b;
-    padding: 0.3rem;
   }
   .tlpamber {
     background: #000;
     color: #ffc000;
-    padding: 0.3rem;
   }
   .tlpgreen {
     background: #000;
     color: #33ff00;
-    padding: 0.3rem;
   }
 </style>

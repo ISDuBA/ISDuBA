@@ -12,11 +12,9 @@
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
   import {
-    Button,
     Label,
     PaginationItem,
     Select,
-    Search,
     TableBody,
     TableBodyCell,
     TableBodyRow,
@@ -24,7 +22,7 @@
     TableHeadCell,
     Table
   } from "flowbite-svelte";
-  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
+  import { tdClass, tablePadding, title } from "$lib/table/defaults";
   import { onMount } from "svelte";
   import { Spinner } from "flowbite-svelte";
 

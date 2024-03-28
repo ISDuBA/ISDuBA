@@ -9,23 +9,24 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { marked } from "marked";
   import DOMPurify from "dompurify";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  export let keys: Array<String>;
+  export let keys: Array<string>;
   export let values: any;
   marked.use({ gfm: true });
-  const cellStyle = "px-6 py-2";
+  const cellStyle = "px-6 py-0";
 </script>
 
 <div class="w-max">
-  <Table>
+  <Table noborder>
     <TableBody>
       {#each keys as key, index}
         {#if key == "text" || key == "Text"}
           <TableBodyRow>
-            <TableBodyCell class={cellStyle}>{key}</TableBodyCell>
-            <TableBodyCell class={cellStyle}>
+            <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}>
               <div class="markdown-text">
                 <div class="display-markdown">
                   {@html DOMPurify.sanitize(
@@ -39,8 +40,8 @@
           </TableBodyRow>
         {:else}
           <TableBodyRow
-            ><TableBodyCell class={cellStyle}>{key}</TableBodyCell>
-            <TableBodyCell class={cellStyle}>{values[index]}</TableBodyCell>
+            ><TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}>{values[index]}</TableBodyCell>
           </TableBodyRow>
         {/if}
       {/each}

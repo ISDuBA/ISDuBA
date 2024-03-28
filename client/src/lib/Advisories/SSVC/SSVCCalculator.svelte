@@ -32,8 +32,10 @@
 
   const dispatch = createEventDispatcher();
 
+  export let disabled = false;
   export let documentID: string;
   let startedCalculation = false;
+  let isEditing = false;
   let currentStep = 0;
   let steps: string[] = [];
   let mainDecisions: any[] = [];
@@ -206,24 +208,31 @@
       appStore.displaySuccessMessage("SSVC updated");
     }
   }
+
+  const toggleEditing = () => {
+    isEditing = !isEditing;
+  };
 </script>
 
-<div id="ssvc-calc" class="pe-4">
+<div id="ssvc-calc">
   {#if !startedCalculation}
-    <Label class="mb-4">Enter SSVC vector manually</Label>
-    <Label class="mb-2">
+    <div class="flex gap-x-1">
       <Input
+        disabled={disabled || !isEditing}
         on:keyup={(e) => {
           if (e.key === "Enter") saveSSVC(vectorInput);
         }}
         type="text"
         bind:value={vectorInput}
       />
-      <small class="text-slate-400">Example: SSVCv2/E:N/A:N/T:P/M:M/D:T/2024-03-12T13:26:47Z/</small
-      >
-    </Label>
-    <Label class="mb-4 mt-6">Calculate new SSVC vector</Label>
-    <Button on:click={() => (startedCalculation = true)}>Calculate</Button>
+      {#if isEditing}
+        <Button on:click={() => saveSSVC(vectorInput)}>Save</Button>
+        <Button on:click={toggleEditing} class="!p-2" color="red" outline>Cancel</Button>
+      {:else}
+        <Button {disabled} on:click={toggleEditing}>Edit</Button>
+      {/if}
+    </div>
+    <Button {disabled} on:click={() => (startedCalculation = true)} class="my-4">Calculate</Button>
   {:else}
     <div class="mb-4 flex gap-4">
       <Button

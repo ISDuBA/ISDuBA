@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
@@ -251,6 +252,13 @@
           class:bx-caret-down={orderBy == "-ssvc"}
         ></i></TableHeadCell
       >
+      <TableHeadCell padding={tablePadding} on:click={() => switchSort("state")}
+        >State<i
+          class:bx={true}
+          class:bx-caret-up={orderBy == "state"}
+          class:bx-caret-down={orderBy == "state"}
+        ></i></TableHeadCell
+      >
       <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
       <TableHeadCell padding={tablePadding} on:click={() => switchSort("publisher")}
         >Publisher<i
@@ -294,13 +302,6 @@
           class:bx-caret-down={orderBy == "-version"}
         ></i></TableHeadCell
       >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("state")}
-        >State<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "state"}
-          class:bx-caret-down={orderBy == "state"}
-        ></i></TableHeadCell
-      >
     </TableHead>
     <TableBody>
       {#each documents as item, i}
@@ -324,6 +325,17 @@
             ><span style={item.ssvc ? `color:${item.ssvc.color}` : ""}
               >{item.ssvc?.label || ""}</span
             ></TableBodyCell
+          >
+          <TableBodyCell {tdClass}
+            ><i
+              class:bx={true}
+              class:bxs-star={item.state === "new"}
+              class:bx-show={item.state === "read"}
+              class:bxs-analyse={item.state === "assessing"}
+              class:bx-book-open={item.state === "review"}
+              class:bx-archive={item.state === "archived"}
+              class:bx-trash={item.state === "delete"}
+            ></i></TableBodyCell
           >
           <TableBodyCell {tdClass}
             >{#if item.four_cves[0]}
@@ -353,9 +365,6 @@
           <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
           <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
-          <TableBodyCell {tdClass}
-            ><i class:bx={true} class:bxs-star={item.state === "new"}></i></TableBodyCell
-          >
         </TableBodyRow>
         {#if openRow === i}
           <TableBodyRow>
