@@ -26,6 +26,12 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: secret
 
       KC_HOSTNAME_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
+      # Optional, reduce memory usage
+      JAVA_OPTS: >
+        -XX:MaxHeapFreeRatio=10
+        -XX:MinHeapFreeRatio=10
+        -XX:MinMetaspaceFreeRatio=10
+        -XX:MaxMetaspaceFreeRatio=10
     networks:
       - isduba
     healthcheck:
