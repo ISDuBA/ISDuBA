@@ -78,5 +78,8 @@ func (c *Controller) Bind() http.Handler {
 	// Calculate diff
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)
 
+	// Backend information
+	api.GET("/about", authEdReAu, c.about)
+
 	return r
 }

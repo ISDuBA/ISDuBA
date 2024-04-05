@@ -10,10 +10,26 @@
 
 <script lang="ts">
   import { A, P, Li, List } from "flowbite-svelte";
+  import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { appStore } from "$lib/store";
   const clientVersion: string = __APP_VERSION__;
-  const backendVersion: string = __BACKEND_VERSION__;
+  let backendVersion: string;
+  onMount(async () => {
+    if ($appStore.app.keycloak.authenticated) {
+      $appStore.app.keycloak.updateToken(5).then(async () => {
+        fetch("api/about", {
+          headers: {
+            Authorization: `Bearer ${$appStore.app.keycloak.token}`
+          }
+        }).then((response) => {
+          response.json().then((backendInfo) => {
+            backendVersion = backendInfo.version;
+          });
+        });
+      });
+    }
+  });
 </script>
 
 <SectionHeader title="About ISDuBA"></SectionHeader>
