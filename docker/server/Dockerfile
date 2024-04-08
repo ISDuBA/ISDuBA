@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-FROM mirror.mobydock.de/library/node:20.10-alpine as client
+FROM library/node:20.10-alpine as client
 
 WORKDIR /app/client
 
@@ -18,7 +18,7 @@ COPY ./pkg/version/version.go ../pkg/version/version.go
 RUN npm run build
 
 
-FROM mirror.mobydock.de/library/golang:1.22.1-alpine as server
+FROM library/golang:1.22.1-alpine as server
 
 WORKDIR /app
 

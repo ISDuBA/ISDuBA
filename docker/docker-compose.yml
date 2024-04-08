@@ -9,7 +9,7 @@
 version: "3.8"
 services:
   keycloak:
-    image: mirror.mobydock.de/keycloak/keycloak:23.0
+    image: keycloak/keycloak:23.0
     container_name: "isduba-keycloak"
     ports:
       - "${KC_HOSTNAME_PORT}:8080"
@@ -44,7 +44,7 @@ services:
         condition: service_healthy
 
   keycloak-setup:
-    image: mirror.mobydock.de/keycloak/keycloak:23.0
+    image: keycloak/keycloak:24.0
     container_name: "isduba-keycloak-setup"
     restart: "no"
     entrypoint: ["bash", "/opt/keycloak/init.sh"]
@@ -62,7 +62,7 @@ services:
 
   db:
     container_name: "isduba-db"
-    image: mirror.mobydock.de/library/postgres:16-alpine
+    image: library/postgres:16-alpine
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
