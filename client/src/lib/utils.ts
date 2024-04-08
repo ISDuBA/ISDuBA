@@ -18,7 +18,7 @@ export const request = async (
   await appStore.getKeycloak().updateToken(5);
   const response = await fetch(path, {
     headers: {
-      Authorization: `Bearer ${appStore.getKeycloak().token}`
+      Authorization: `Bearer ${await getAccessToken()}`
     },
     method: requestMethod,
     body: formData
@@ -34,4 +34,15 @@ export const request = async (
     }
     return undefined;
   }
+};
+
+const getAccessToken = async () => {
+  const keycloak = appStore.getKeycloak();
+  try {
+    await keycloak.updateToken(5);
+  } catch (error) {
+    await keycloak.login();
+  }
+
+  return keycloak.token;
 };
