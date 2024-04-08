@@ -30,6 +30,8 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Spinner } from "flowbite-svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import { request } from "$lib/utils";
 
   let openRow: number | null;
 
@@ -38,6 +40,7 @@
   };
   let limit = 10;
   let loading = false;
+  let error: string = "Could not load advisories";
   let offset = 0;
   let count = 0;
   let currentPage = 1;
@@ -102,22 +105,17 @@
   $: documentURL = encodeURI(
     `/api/documents?${searchSuffix}advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
   );
-  const fetchData = () => {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      loading = true;
-      const response = await fetch(documentURL, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      });
-      if (response.ok) {
-        ({ count, documents } = await response.json());
-        documents = calcSSVC(documents);
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
-      loading = false;
-    });
+  const fetchData = async () => {
+    loading = true;
+    error = "";
+    const response = await request(documentURL, "GET");
+    if (response.ok) {
+      ({ count, documents } = response.content);
+      documents = calcSSVC(documents);
+    } else if (response.error) {
+      error = response.error;
+    }
+    loading = false;
   };
 
   const calcSSVC = (documents: any) => {
@@ -225,6 +223,7 @@
       {/if}
     </div>
   </div>
+  <ErrorMessage message={error} plain={true}></ErrorMessage>
   <div class:invisible={!loading} class:mb-4={true}>
     Loading ...
     <Spinner color="gray" size="4"></Spinner>

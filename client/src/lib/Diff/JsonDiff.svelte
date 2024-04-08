@@ -15,8 +15,11 @@
   import type { JsonDiffResult, JsonDiffResultList } from "./JsonDiff";
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
   import { onMount } from "svelte";
+  import { request } from "$lib/utils";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   export let diffDocuments: any;
+  let error: string;
   let diff: any;
   let urlPath: string;
   $: groupedResults = diff
@@ -42,16 +45,13 @@
 
   const getDiff = async () => {
     urlPath = `/api/diff/${diffDocuments.docB.id}/${diffDocuments.docA.id}?word-diff=true`;
-    const response = await fetch(urlPath, {
-      headers: {
-        Authorization: `Bearer ${$appStore.app.keycloak.token}`
-      }
-    });
+    error = "";
+    const response = await request(urlPath, "GET");
     if (response.ok) {
-      const result: JsonDiffResultList = await response.json();
+      const result: JsonDiffResultList = response.content;
       diff = result;
-    } else {
-      appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
+    } else if (response.error) {
+      error = response.error;
     }
   };
 
@@ -68,6 +68,7 @@
 </script>
 
 <div>
+  <ErrorMessage message={error} plain={true}></ErrorMessage>
   {#if diff}
     <Label class="text-lg"
       >Compare Version {diffDocuments.docB.version} with Version {diffDocuments.docA.version}

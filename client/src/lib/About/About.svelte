@@ -13,25 +13,27 @@
   import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { appStore } from "$lib/store";
+  import { request } from "$lib/utils";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+
   let version: string = "Retrieving Version from server";
+  let error: string;
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
-      $appStore.app.keycloak.updateToken(5).then(async () => {
-        fetch("api/about", {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          }
-        }).then((response) => {
-          response.json().then((backendInfo) => {
-            version = backendInfo.version;
-          });
-        });
-      });
+      const response = await request("api/about", "GET");
+      if (response.ok) {
+        const backendInfo = response.content;
+        version = backendInfo.version;
+      } else if (response.error) {
+        error = response.error;
+      }
     }
   });
 </script>
 
 <SectionHeader title="About ISDuBA"></SectionHeader>
+
+<ErrorMessage message={error} plain={true}></ErrorMessage>
 
 <P>
   <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"

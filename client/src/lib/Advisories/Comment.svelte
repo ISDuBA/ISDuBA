@@ -13,10 +13,12 @@
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import CommentTextArea from "./CommentTextArea.svelte";
+  import { request } from "$lib/utils";
 
   export let comment: any;
   let updatedComment = "";
   let isEditing = false;
+  let updateCommentError: string;
 
   onMount(() => {
     updatedComment = comment.message;
@@ -26,26 +28,18 @@
     isEditing = !isEditing;
   }
 
-  function updateComment() {
+  async function updateComment() {
+    updateCommentError = "";
     const formData = new FormData();
     formData.append("message", updatedComment);
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      fetch(`/api/comments/${comment.id}`, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        },
-        method: "PUT",
-        body: formData
-      }).then((response) => {
-        if (response.ok) {
-          comment.message = updatedComment;
-          toggleEditing();
-          appStore.displaySuccessMessage("Comment updated.");
-        } else {
-          appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-        }
-      });
-    });
+    const response = await request(`/api/comments/${comment.id}`, "PUT", formData);
+    if (response.ok) {
+      comment.message = updatedComment;
+      toggleEditing();
+      appStore.displaySuccessMessage("Comment updated.");
+    } else if (response.error) {
+      updateCommentError = response.error;
+    }
   }
 </script>
 
@@ -69,9 +63,11 @@
   {:else}
     <CommentTextArea
       on:cancel={toggleEditing}
+      on:input={() => (updateCommentError = "")}
       on:saveComment={updateComment}
       cancelable={true}
       buttonText="Save"
+      errorMessage={updateCommentError}
       bind:value={updatedComment}
     ></CommentTextArea>
   {/if}

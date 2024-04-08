@@ -9,30 +9,29 @@
  */
 
 import { appStore } from "./store";
+import { type HttpResponse } from "./types";
 
 export const request = async (
   path: string,
   requestMethod: string,
   formData?: FormData
-): any | undefined => {
-  await appStore.getKeycloak().updateToken(5);
-  const response = await fetch(path, {
-    headers: {
-      Authorization: `Bearer ${await getAccessToken()}`
-    },
-    method: requestMethod,
-    body: formData
-  });
-  if (response.ok) {
-    return response;
-  } else {
-    try {
-      const error = await response.json();
-      appStore.displayErrorMessage(`${error.error ?? error.message}`);
-    } catch {
-      appStore.displayErrorMessage(`${response.status} - ${response.statusText}`);
+): Promise<HttpResponse> => {
+  try {
+    const response = await fetch(path, {
+      headers: {
+        Authorization: `Bearer ${await getAccessToken()}`
+      },
+      method: requestMethod,
+      body: formData
+    });
+    const json = await response.json();
+    if (response.ok) {
+      return { content: json, ok: true };
+    } else {
+      return { error: `${json.error ?? json.message}`, ok: false };
     }
-    return undefined;
+  } catch (error: any) {
+    return { error: `${error.name}: ${error.message}`, ok: false };
   }
 };
 

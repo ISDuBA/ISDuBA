@@ -13,24 +13,24 @@
   import { appStore } from "$lib/store";
   import Diff from "$lib/Diff/Diff.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
+  import { request } from "$lib/utils";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   let diff: string;
+  let error: string;
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
-      $appStore.app.keycloak.updateToken(5).then(async () => {
-        fetch("advisory.diff", {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          }
-        }).then((response) => {
-          response.text().then((text) => {
-            diff = text;
-          });
-        });
-      });
+      error = "";
+      const response = await request("advisory.diff", "GET");
+      if (response.ok) {
+        diff = response.content;
+      } else if (response.error) {
+        error = response.error;
+      }
     }
   });
 </script>
 
 <SectionHeader title="Comparison"></SectionHeader>
+<ErrorMessage message={error} plain={true}></ErrorMessage>
 <Diff {diff}></Diff>
