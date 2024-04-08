@@ -301,9 +301,8 @@
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <!-- svelte-ignore a11y-no-static-element-interactions -->
               {#if item.four_cves.length > 1}
+                {item.four_cves[0]}
                 <span on:click|stopPropagation={() => toggleRow(i)}>
-                  {item.four_cves[0]}
-
                   {#if openRow === i}
                     <i class="bx bx-minus"></i>
                   {:else}
