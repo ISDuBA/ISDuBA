@@ -14,7 +14,6 @@ COPY client/package.json .
 RUN npm install
 
 COPY client .
-COPY ./pkg/version/version.go ../pkg/version/version.go
 RUN npm run build
 
 
