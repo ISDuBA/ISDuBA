@@ -14,7 +14,11 @@
   export let content: string;
   let parsedContent: object[];
 
-  const parse = (text: string, level = 0): object[] => {
+  const parse = (textPart: any, level = 0): object[] => {
+    const text = typeof textPart === "number" ? textPart.toString() : textPart;
+    if (text.length === 0) {
+      return [];
+    }
     const firstIndexAdd = text.indexOf("{+");
     const secondIndexAdd = text.indexOf("+}");
     const firstIndexRemove = text.indexOf("[-");
