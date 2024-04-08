@@ -13,8 +13,7 @@
   import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { appStore } from "$lib/store";
-  const clientVersion: string = __APP_VERSION__;
-  let backendVersion: string;
+  let version: string = "Retrieving Version from server";
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
       $appStore.app.keycloak.updateToken(5).then(async () => {
@@ -24,7 +23,7 @@
           }
         }).then((response) => {
           response.json().then((backendInfo) => {
-            backendVersion = backendInfo.version;
+            version = backendInfo.version;
           });
         });
       });
@@ -43,8 +42,7 @@
   <P class="mt-3">
     Versions:
     <List tag="ul" class="space-y-1" list="none">
-      <Li liClass="ml-3">Client: {clientVersion}</Li>
-      <Li liClass="ml-3">Backend: {backendVersion}</Li>
+      <Li liClass="ml-3">ISDuBA: {version}</Li>
     </List>
   </P>
 {/if}
