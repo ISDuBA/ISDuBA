@@ -20,9 +20,9 @@ SEMVER := $(shell echo '$(GITDESC)' | sed -E 's/v?([0-9]+\.[0-9]+\.)([0-9]+)(-[1
 
 LDFLAGS=-ldflags "-X github.com/ISDuBA/ISDuBA/pkg/version.SemVersion=$(SEMVER)"
 
-.PHONY: all build_isdubad build_importer build_pkg test
+.PHONY: all build_isdubad build_importer build_pkg test build_client
 
-all: build_isdubad build_importer
+all: build_isdubad build_importer build_client
 
 build_importer: build_pkg
 	cd cmd/bulkimport && go build $(LDFLAGS)
@@ -32,6 +32,9 @@ build_isdubad: build_pkg
 
 build_pkg:
 	cd pkg && go build $(LDFLAGS) ./...
+
+build_client:
+	cd client && npm run build
 
 test:
 	go test ./...
