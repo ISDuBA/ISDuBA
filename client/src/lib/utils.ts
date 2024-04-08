@@ -24,11 +24,23 @@ export const request = async (
       method: requestMethod,
       body: formData
     });
-    const json = await response.json();
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType?.includes("application/json");
     if (response.ok) {
-      return { content: json, ok: true };
+      if (contentType && isJson) {
+        const json = await response.json();
+        return { content: json, ok: true };
+      } else {
+        const text = await response.text();
+        return { content: text, ok: true };
+      }
     } else {
-      return { error: `${json.error ?? json.message}`, ok: false };
+      if (contentType && isJson) {
+        const json = await response.json();
+        return { error: `${json.error ?? json.message}`, ok: false };
+      } else {
+        return { error: `${response.status}: ${response.statusText}`, ok: false };
+      }
     }
   } catch (error: any) {
     return { error: `${error.name}: ${error.message}`, ok: false };
