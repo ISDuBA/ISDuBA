@@ -17,12 +17,14 @@ SEMVERPATCH := $(shell echo $$(( $(GITDESCPATCH) + 1 )))
 #       followed by a number, by which we assume that git describe
 #       has added a string after the tag
 SEMVER := $(shell echo '$(GITDESC)' | sed -E 's/v?([0-9]+\.[0-9]+\.)([0-9]+)(-[1-9].*)/\1$(SEMVERPATCH)\3/' )
+testsemver:
+	@echo from \'$(GITDESC)\' transformed to \'$(SEMVER)\'
 
 LDFLAGS=-ldflags "-X github.com/ISDuBA/ISDuBA/pkg/version.SemVersion=$(SEMVER)"
 
 .PHONY: all build_isdubad build_importer build_pkg test build_client
 
-all: build_isdubad build_importer build_client
+all: build_isdubad build_importer build_client test
 
 build_importer: build_pkg
 	cd cmd/bulkimport && go build $(LDFLAGS)
