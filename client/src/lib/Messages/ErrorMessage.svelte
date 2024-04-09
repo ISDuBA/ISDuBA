@@ -13,7 +13,6 @@
   import { MESSAGE } from "./messagetypes";
 
   export let message = "";
-  export let plain: boolean = false;
 </script>
 
 <div class="my-2">
