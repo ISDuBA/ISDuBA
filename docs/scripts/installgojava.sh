@@ -10,6 +10,9 @@
 
 set -e # to exit if a command in the script fails
 
+# Install base packages
+sudo apt install -y make bash curl sed tar
+
 # Install Java
 sudo apt install -y openjdk-17-jre-headless
 
@@ -25,7 +28,7 @@ if [ -x "$(command -v go version)" ] && [[ `go version` == *"$go_version"* ]]; t
 else
   latest_go=$go_version".linux-amd64.tar.gz"
 
-  wget -O /tmp/$latest_go https://dl.google.com/go/$latest_go
+  curl -o /tmp/$latest_go https://dl.google.com/go/$latest_go
   sudo rm -rf /usr/local/go # remove any old installations
   sudo tar -C /usr/local -xzf /tmp/$latest_go
 
