@@ -20,14 +20,14 @@
   function login() {
     $appStore.app.keycloak.login();
   }
-  $: activeUrl = $page.url.pathname;
+  $: activeUrl = "/" + $page.url.hash;
   let activeClass =
     "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700";
   let nonActiveClass =
     "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
 </script>
 
-<Sidebar class="h-screen bg-primary-700 p-2" {activeUrl} {activeClass} {nonActiveClass}>
+<Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
   <SidebarWrapper class="bg-primary-700">
     <Heading class="mb-6 text-white">ISDuBA</Heading>
     <SidebarGroup class="bg-primary-700">
@@ -53,17 +53,17 @@
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Sources" href="/#/sources">
+        <SidebarItem label="Sources">
           <svelte:fragment slot="icon">
             <i class="bx bx-git-repo-forked"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Statistics" href="/#/statistics">
+        <SidebarItem label="Statistics">
           <svelte:fragment slot="icon">
             <i class="bx bx-bar-chart-square"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Configuration" href="/#/configuration">
+        <SidebarItem label="Configuration">
           <svelte:fragment slot="icon">
             <i class="bx bx-cog"></i>
           </svelte:fragment>
