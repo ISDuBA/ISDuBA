@@ -33,8 +33,6 @@
 
 <SectionHeader title="About ISDuBA"></SectionHeader>
 
-<ErrorMessage message={error} plain={true}></ErrorMessage>
-
 <P>
   <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
     >Visit the ISDuBA project on Github</A
@@ -46,5 +44,6 @@
     <List tag="ul" class="space-y-1" list="none">
       <Li liClass="ml-3">ISDuBA: {version}</Li>
     </List>
+    <ErrorMessage message={error} plain={true}></ErrorMessage>
   </P>
 {/if}
