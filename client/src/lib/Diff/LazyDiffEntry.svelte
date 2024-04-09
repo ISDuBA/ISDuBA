@@ -35,13 +35,20 @@
 
 <div>
   <div class="mb-1">
-    <b class="me-4">
-      <code>
-        {path}
-      </code>
-    </b>
     {#if !result}
-      <A on:click={loadEntry}>Load Entry</A>
+      <A on:click={loadEntry}>
+        <b class="me-4">
+          <code>
+            {path}
+          </code>
+        </b>
+      </A>
+    {:else}
+      <b class="me-4">
+        <code>
+          {path}
+        </code>
+      </b>
     {/if}
     <ErrorMessage message={error} plain={true}></ErrorMessage>
   </div>
