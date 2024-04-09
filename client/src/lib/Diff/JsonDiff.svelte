@@ -10,11 +10,9 @@
 
 <script lang="ts">
   import { Accordion, AccordionItem, Label } from "flowbite-svelte";
-  import { appStore } from "$lib/store";
   import DiffEntry from "./DiffEntry.svelte";
   import type { JsonDiffResult, JsonDiffResultList } from "./JsonDiff";
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
-  import { onMount } from "svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
@@ -38,10 +36,7 @@
         }
       ]
     : [];
-
-  onMount(() => {
-    getDiff();
-  });
+  $: diffDocuments, getDiff();
 
   const getDiff = async () => {
     urlPath = `/api/diff/${diffDocuments.docB.id}/${diffDocuments.docA.id}?word-diff=true`;
