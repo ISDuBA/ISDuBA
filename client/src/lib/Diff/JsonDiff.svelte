@@ -81,17 +81,14 @@
             <div slot="header" class="pl-2">
               {#if result.op === "add"}
                 <div class="flex items-center gap-2">
-                  <i class="bx bx-plus text-lg"></i>
                   <span>Added ({result.changes.length})</span>
                 </div>
               {:else if result.op === "remove"}
                 <div class="flex items-center gap-2">
-                  <i class="bx bx-x text-lg"></i>
                   <span>Removed ({result.changes.length})</span>
                 </div>
               {:else}
                 <div class="flex items-center gap-2">
-                  <i class="bx bx-pencil text-lg"></i>
                   <span>Edited ({result.changes.length})</span>
                 </div>
               {/if}
