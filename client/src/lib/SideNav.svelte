@@ -17,6 +17,9 @@
     $appStore.app.keycloak.logout();
   }
 
+  let notactivated =
+    "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-primary-100 hover:text-primary-900";
+
   function login() {
     $appStore.app.keycloak.login();
   }
@@ -53,17 +56,17 @@
             <i class="bx bx-spreadsheet"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Sources">
+        <SidebarItem label="Sources" nonActiveClass={notactivated}>
           <svelte:fragment slot="icon">
             <i class="bx bx-git-repo-forked"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Statistics">
+        <SidebarItem label="Statistics" nonActiveClass={notactivated}>
           <svelte:fragment slot="icon">
             <i class="bx bx-bar-chart-square"></i>
           </svelte:fragment>
         </SidebarItem>
-        <SidebarItem label="Configuration">
+        <SidebarItem label="Configuration" nonActiveClass={notactivated}>
           <svelte:fragment slot="icon">
             <i class="bx bx-cog"></i>
           </svelte:fragment>
