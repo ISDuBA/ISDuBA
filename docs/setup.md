@@ -15,7 +15,8 @@ This guide describes how to set up ISDuBA for a development build on Ubuntu 24.0
  - [A postgres database](./postgresql.md)
  - [A keycloak setup](./keycloak.md)
 
- - A recent version of go, see [here on how to download and install go](https://go.dev/doc/install)
+ - A recent version of [go](https://go.dev/doc/install), see commands
+   in [installgojava.sh](./scripts/installgojava.sh).
 
  - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool](https://github.com/csaf-poc/csaf_distribution)
  

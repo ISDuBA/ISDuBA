@@ -6,6 +6,9 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+.PHONY: all build_isdubad build_importer build_pkg test build_client
+
+all: build_isdubad build_importer build_client test
 
 # See comment here (2024-04-05)
 # https://github.com/csaf-poc/csaf_distribution/blob/d909e9de151d5845fe0c0d5b9db2152f9db25e90/Makefile#L40-L49
@@ -22,9 +25,6 @@ testsemver:
 
 LDFLAGS=-ldflags "-X github.com/ISDuBA/ISDuBA/pkg/version.SemVersion=$(SEMVER)"
 
-.PHONY: all build_isdubad build_importer build_pkg test build_client
-
-all: build_isdubad build_importer build_client test
 
 build_importer: build_pkg
 	cd cmd/bulkimport && go build $(LDFLAGS)
