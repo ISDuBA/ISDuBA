@@ -64,6 +64,7 @@
       await keycloak.updateToken(5);
       return true;
     } catch (error) {
+      await keycloak.login();
       return false;
     }
   };
@@ -115,10 +116,9 @@
     "*": NotFound
   };
 
-  const conditionsFailed = async (event: any) => {
+  const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
-      const keycloak = appStore.getKeycloak();
-      await keycloak.login();
+      push("/");
     }
   };
 </script>
