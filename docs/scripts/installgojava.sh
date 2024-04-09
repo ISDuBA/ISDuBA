@@ -13,7 +13,7 @@ set -e # to exit if a command in the script fails
 # Install Java
 sudo apt install -y openjdk-17-jre-headless
 
-# Install Go
+# Install or update Go
 
 # look up current go version
 go_version="$(curl https://go.dev/VERSION\?m=text| head -1)"
