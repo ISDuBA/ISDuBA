@@ -81,6 +81,8 @@ services:
     build:
       context: ../
       dockerfile: ./docker/server/Dockerfile
+      args:
+        BUILD_VERSION: v0.0.0
     networks:
       - isduba
     ports:

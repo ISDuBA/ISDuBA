@@ -7,17 +7,20 @@
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 FROM library/node:20.10-alpine as client
+RUN apk update && apk add --no-cache make
 
-WORKDIR /app/client
+WORKDIR /app
 
-COPY client/package.json .
-RUN npm install
+COPY client/package.json client/package.json
+RUN cd client && npm install
 
-COPY client .
-RUN npm run build
+COPY client client
+COPY Makefile Makefile
+RUN make build_client
 
 
 FROM library/golang:1.22.1-alpine as server
+RUN apk update && apk add --no-cache make
 
 WORKDIR /app
 
@@ -26,15 +29,16 @@ RUN go mod download && go mod verify
 
 COPY cmd cmd
 COPY pkg pkg
+COPY Makefile Makefile
 
-WORKDIR /app/cmd/isdubad
-RUN go build -v -o /app/isdubad
+ARG BUILD_VERSION
+RUN make GITDESC=$BUILD_VERSION build_isdubad
 ENV ISDUBA_DB_MIGRATE true
 
 
 FROM scratch
 
-COPY --from=server /app/isdubad /app/isdubad
+COPY --from=server /app/cmd/isdubad/isdubad /app/isdubad
 COPY --from=client /app/client/build /app/web
 COPY ./docker/server/isdubad.toml /app/isdubad.toml
 
