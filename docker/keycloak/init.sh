@@ -77,6 +77,6 @@ password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
 kcadm.sh set-password --target-realm isduba \
 	--username alex --new-password "$password"
 
-echo "Created user 'alex' with password: $password"
+echo -e "\nCreated user 'alex' with password: $password"
 
 kcadm.sh add-roles -r isduba --uusername alex --rolename bearbeiter
