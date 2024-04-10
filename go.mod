@@ -17,7 +17,9 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/jackc/pgx/v5 v5.5.3
 	github.com/samber/slog-gin v1.10.1
+	github.com/sergi/go-diff v1.3.1
 	golang.org/x/oauth2 v0.17.0
+	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 

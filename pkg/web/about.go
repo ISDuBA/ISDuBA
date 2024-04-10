@@ -6,20 +6,16 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vitest/config";
+package web
 
-export default defineConfig({
-  server: {
-    proxy: {
-      "/api/": {
-        target: "http://localhost:8081/",
-        changeOrigin: true
-      }
-    }
-  },
-  plugins: [sveltekit()],
-  test: {
-    include: ["src/**/*.{test,spec}.{js,ts}"]
-  }
-});
+import (
+	"net/http"
+
+	"github.com/ISDuBA/ISDuBA/pkg/version"
+	"github.com/gin-gonic/gin"
+)
+
+// about return the backend version number.
+func (c *Controller) about(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{"version": version.SemVersion})
+}

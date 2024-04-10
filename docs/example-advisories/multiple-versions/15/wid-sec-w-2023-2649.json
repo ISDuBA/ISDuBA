@@ -1,0 +1,293 @@
+{
+  "document" : {
+    "aggregate_severity" : {
+      "text" : "hoch"
+    },
+    "category" : "csaf_base",
+    "csaf_version" : "2.0",
+    "distribution" : {
+      "tlp" : {
+        "label" : "WHITE",
+        "url" : "https://www.first.org/tlp/"
+      }
+    },
+    "lang" : "de-DE",
+    "notes" : [ {
+      "category" : "legal_disclaimer",
+      "text" : "Das BSI ist als Anbieter für die eigenen, zur Nutzung bereitgestellten Inhalte nach den allgemeinen Gesetzen verantwortlich. Nutzerinnen und Nutzer sind jedoch dafür verantwortlich, die Verwendung und/oder die Umsetzung der mit den Inhalten bereitgestellten Informationen sorgfältig im Einzelfall zu prüfen."
+    }, {
+      "category" : "description",
+      "text" : "Der Kernel stellt den Kern des Linux Betriebssystems dar.",
+      "title" : "Produktbeschreibung"
+    }, {
+      "category" : "summary",
+      "text" : "Ein lokaler Angreifer kann eine Schwachstelle im Linux Kernel ausnutzen, um beliebigen Programmcode auszuführen.",
+      "title" : "Angriff"
+    }, {
+      "category" : "general",
+      "text" : "- Linux",
+      "title" : "Betroffene Betriebssysteme"
+    } ],
+    "publisher" : {
+      "category" : "other",
+      "contact_details" : "csaf-provider@cert-bund.de",
+      "name" : "Bundesamt für Sicherheit in der Informationstechnik",
+      "namespace" : "https://www.bsi.bund.de"
+    },
+    "references" : [ {
+      "category" : "self",
+      "summary" : "wid-sec-w-2023-2649 - CSAF Version",
+      "url" : "https://wid.cert-bund.de/.well-known/csaf/white/2023/wid-sec-w-2023-2649.json"
+    }, {
+      "category" : "self",
+      "summary" : "WID-SEC-2023-2649 - Portal Version",
+      "url" : "https://wid.cert-bund.de/portal/wid/securityadvisory?name=WID-SEC-2023-2649"
+    }, {
+      "category" : "external",
+      "summary" : "Eintrag in der OSS-Mailing-List vom 2023-10-15",
+      "url" : "https://seclists.org/oss-sec/2023/q4/106"
+    }, {
+      "category" : "external",
+      "summary" : "SUSE Security Update SUSE-SU-2023:4375-1 vom 2023-11-06",
+      "url" : "https://lists.suse.com/pipermail/sle-security-updates/2023-November/017006.html"
+    }, {
+      "category" : "external",
+      "summary" : "SUSE Security Update SUSE-SU-2023:4378-1 vom 2023-11-06",
+      "url" : "https://lists.suse.com/pipermail/sle-security-updates/2023-November/017004.html"
+    }, {
+      "category" : "external",
+      "summary" : "SUSE Security Update SUSE-SU-2023:4414-1 vom 2023-11-10",
+      "url" : "https://lists.suse.com/pipermail/sle-security-updates/2023-November/017017.html"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7418 vom 2023-11-21",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7418"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7379 vom 2023-11-21",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7379"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7370 vom 2023-11-21",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7370"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7548 vom 2023-11-28",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7548"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7551 vom 2023-11-28",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7551"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7549 vom 2023-11-28",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7549"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7554 vom 2023-11-29",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7554"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7559 vom 2023-11-29",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7559"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Security Advisory RHSA-2023:7557 vom 2023-11-29",
+      "url" : "https://access.redhat.com/errata/RHSA-2023:7557"
+    }, {
+      "category" : "external",
+      "summary" : "Oracle Linux Security Advisory ELSA-2023-7549 vom 2023-12-02",
+      "url" : "https://linux.oracle.com/errata/ELSA-2023-7549.html"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6536-1 vom 2023-12-06",
+      "url" : "https://ubuntu.com/security/notices/USN-6536-1"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6537-1 vom 2023-12-06",
+      "url" : "https://ubuntu.com/security/notices/USN-6537-1"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6548-1 vom 2023-12-12",
+      "url" : "https://ubuntu.com/security/notices/USN-6548-1"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6549-1 vom 2023-12-12",
+      "url" : "https://ubuntu.com/security/notices/USN-6549-1"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6534-2 vom 2023-12-12",
+      "url" : "https://ubuntu.com/security/notices/USN-6534-2"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6549-2 vom 2023-12-12",
+      "url" : "https://ubuntu.com/security/notices/USN-6549-2"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6548-2 vom 2023-12-12",
+      "url" : "https://ubuntu.com/security/notices/USN-6548-2"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6549-3 vom 2023-12-13",
+      "url" : "https://ubuntu.com/security/notices/USN-6549-3"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6534-3 vom 2023-12-13",
+      "url" : "https://ubuntu.com/security/notices/USN-6534-3"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6548-3 vom 2023-12-13",
+      "url" : "https://ubuntu.com/security/notices/USN-6548-3"
+    }, {
+      "category" : "external",
+      "summary" : "Oracle Linux Security Advisory ELSA-2023-13044 vom 2023-12-14",
+      "url" : "https://linux.oracle.com/errata/ELSA-2023-13044.html"
+    }, {
+      "category" : "external",
+      "summary" : "Oracle Linux Security Advisory ELSA-2023-13043 vom 2023-12-14",
+      "url" : "https://linux.oracle.com/errata/ELSA-2023-13043.html"
+    }, {
+      "category" : "external",
+      "summary" : "Oracle Linux Security Advisory ELSA-2023-13048 vom 2023-12-14",
+      "url" : "https://linux.oracle.com/errata/ELSA-2023-13048.html"
+    }, {
+      "category" : "external",
+      "summary" : "Oracle Linux Security Advisory ELSA-2023-13049 vom 2023-12-14",
+      "url" : "https://linux.oracle.com/errata/ELSA-2023-13049.html"
+    }, {
+      "category" : "external",
+      "summary" : "Debian Security Advisory DSA-5594 vom 2024-01-02",
+      "url" : "https://lists.debian.org/debian-security-announce/2024/msg00001.html"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6549-4 vom 2024-01-05",
+      "url" : "https://ubuntu.com/security/notices/USN-6549-4"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6573-1 vom 2024-01-09",
+      "url" : "https://ubuntu.com/security/notices/USN-6573-1"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6548-4 vom 2024-01-09",
+      "url" : "https://ubuntu.com/security/notices/USN-6548-4"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6548-5 vom 2024-01-10",
+      "url" : "https://ubuntu.com/security/notices/USN-6548-5"
+    }, {
+      "category" : "external",
+      "summary" : "Ubuntu Security Notice USN-6549-5 vom 2024-01-10",
+      "url" : "https://ubuntu.com/security/notices/USN-6549-5"
+    } ],
+    "source_lang" : "en-US",
+    "title" : "Linux Kernel: Schwachstelle ermöglicht Codeausführung",
+    "tracking" : {
+      "current_release_date" : "2024-01-10T23:00:00.000+00:00",
+      "generator" : {
+        "date" : "2024-01-11T09:06:51.026+00:00",
+        "engine" : {
+          "name" : "BSI-WID",
+          "version" : "1.1.0"
+        }
+      },
+      "id" : "WID-SEC-W-2023-2649",
+      "initial_release_date" : "2023-10-15T22:00:00.000+00:00",
+      "revision_history" : [ {
+        "date" : "2023-10-15T22:00:00.000+00:00",
+        "number" : "1",
+        "summary" : "Initiale Fassung"
+      }, {
+        "date" : "2023-11-06T23:00:00.000+00:00",
+        "number" : "2",
+        "summary" : "Neue Updates von SUSE aufgenommen"
+      }, {
+        "date" : "2023-11-12T23:00:00.000+00:00",
+        "number" : "3",
+        "summary" : "Neue Updates von SUSE aufgenommen"
+      }, {
+        "date" : "2023-11-21T23:00:00.000+00:00",
+        "number" : "4",
+        "summary" : "Neue Updates von Red Hat aufgenommen"
+      }, {
+        "date" : "2023-11-28T23:00:00.000+00:00",
+        "number" : "5",
+        "summary" : "Neue Updates von Red Hat aufgenommen"
+      }, {
+        "date" : "2023-12-03T23:00:00.000+00:00",
+        "number" : "6",
+        "summary" : "Neue Updates von Oracle Linux aufgenommen"
+      }, {
+        "date" : "2023-12-06T23:00:00.000+00:00",
+        "number" : "7",
+        "summary" : "Neue Updates von Ubuntu aufgenommen"
+      }, {
+        "date" : "2023-12-11T23:00:00.000+00:00",
+        "number" : "8",
+        "summary" : "Neue Updates von Ubuntu aufgenommen"
+      }, {
+        "date" : "2023-12-12T23:00:00.000+00:00",
+        "number" : "9",
+        "summary" : "Neue Updates von Ubuntu aufgenommen"
+      }, {
+        "date" : "2023-12-13T23:00:00.000+00:00",
+        "number" : "10",
+        "summary" : "Neue Updates von Ubuntu aufgenommen"
+      }, {
+        "date" : "2023-12-14T23:00:00.000+00:00",
+        "number" : "11",
+        "summary" : "Neue Updates von Oracle Linux aufgenommen"
+      }, {
+        "date" : "2024-01-02T23:00:00.000+00:00",
+        "number" : "12",
+        "summary" : "Neue Updates von Debian aufgenommen"
+      }, {
+        "date" : "2024-01-07T23:00:00.000+00:00",
+        "number" : "13",
+        "summary" : "Neue Updates von Ubuntu aufgenommen"
+      }, {
+        "date" : "2024-01-09T23:00:00.000+00:00",
+        "number" : "14",
+        "summary" : "Neue Updates von Ubuntu aufgenommen"
+      }, {
+        "date" : "2024-01-10T23:00:00.000+00:00",
+        "number" : "15",
+        "summary" : "Neue Updates von Ubuntu aufgenommen"
+      } ],
+      "status" : "final",
+      "version" : "15"
+    }
+  },
+  "product_tree" : {
+    "full_product_names" : [ {
+      "name" : "Debian Linux",
+      "product_id" : "2951"
+    }, {
+      "name" : "Red Hat Enterprise Linux",
+      "product_id" : "67646"
+    }, {
+      "name" : "Ubuntu Linux",
+      "product_id" : "T000126"
+    }, {
+      "name" : "SUSE Linux",
+      "product_id" : "T002207"
+    }, {
+      "name" : "Oracle Linux",
+      "product_id" : "T004914"
+    }, {
+      "name" : "Open Source Linux Kernel",
+      "product_id" : "T028979"
+    } ]
+  },
+  "vulnerabilities" : [ {
+    "cve" : "CVE-2023-5178",
+    "notes" : [ {
+      "category" : "description",
+      "text" : "Es existiert eine Schwachstelle im Linux Kernel. Diese besteht im NVMe-oF/TCP subsystem und kann durch das Senden von Nachrichten zu diesem ausgenutzt werden. Ein lokaler Angreifer kann diese Schwachstelle ausnutzen, um beliebigen Programmcode auszuführen."
+    } ],
+    "product_status" : {
+      "known_affected" : [ "2951", "T002207", "67646", "T000126", "T028979", "T004914" ]
+    },
+    "release_date" : "2023-10-15T22:00:00Z",
+    "title" : "CVE-2023-5178"
+  } ]
+}

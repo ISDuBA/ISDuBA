@@ -27,6 +27,7 @@
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import JsonDiff from "$lib/Diff/JsonDiff.svelte";
   import {
     ASSESSING,
     ARCHIVED,
@@ -44,6 +45,7 @@
   } from "$lib/permissions";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   export let params: any = null;
 
   let document = {};
@@ -53,6 +55,8 @@
     : "";
   let comment: string = "";
   let comments: any = [];
+  let loadCommentsError: string;
+  let createCommentError: string;
   let advisoryVersions: string[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
@@ -69,97 +73,74 @@
     isCalculatingAllowed = false;
   }
   const timeoutIDs: number[] = [];
+  let diffDocuments: any;
+  let isDiffOpen = false;
 
   const loadAdvisoryVersions = async () => {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      const response = await fetch(
-        `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
-        {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          }
-        }
-      );
-      if (response.ok) {
-        const result = await response.json();
-        advisoryVersions = result.documents.map((doc: any) => {
-          return { id: doc.id, version: doc.version };
-        });
-        advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
-          acc[version.id] = version.version;
-          return acc;
-        }, {});
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
-    });
+    const response = await request(
+      `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      "GET"
+    );
+    if (response.ok) {
+      const result = await response.content;
+      advisoryVersions = result.documents.map((doc: any) => {
+        return { id: doc.id, version: doc.version };
+      });
+      advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
+        acc[version.id] = version.version;
+        return acc;
+      }, {});
+    } else if (response.error) {
+      appStore.displayErrorMessage(response.error);
+    }
   };
 
   const loadDocument = async () => {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      const response = await fetch(`/api/documents/${params.id}`, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      });
-      if (response.ok) {
-        const doc = await response.json();
-        ({ document } = doc);
-        const docModel = convertToDocModel(doc);
-        appStore.setDocument(docModel);
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
-    });
+    const response = await request(`/api/documents/${params.id}`, "GET");
+    if (response.ok) {
+      const result = await response.content;
+      ({ document } = result);
+      const docModel = convertToDocModel(result);
+      appStore.setDocument(docModel);
+    } else if (response.error) {
+      appStore.displayErrorMessage(response.error);
+    }
   };
 
   const loadDocumentSSVC = async () => {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      const response = await fetch(
-        `/api/documents?columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
-        {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          }
-        }
-      );
-      if (response.ok) {
-        const result = await response.json();
-        if (result.documents[0].ssvc) {
-          ssvc = convertVectorToLabel(result.documents[0].ssvc);
-        }
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
+    const response = await request(
+      `/api/documents?columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      "GET"
+    );
+    if (response.ok) {
+      const result = await response.content;
+      if (result.documents[0].ssvc) {
+        ssvc = convertVectorToLabel(result.documents[0].ssvc);
       }
-    });
+    } else if (response.error) {
+      appStore.displayErrorMessage(response.error);
+    }
   };
 
   function loadComments(): Promise<any[]> {
     return new Promise((resolve) => {
       const newComments: any = [];
-      advisoryVersions.forEach((advVer: any) => {
-        $appStore.app.keycloak.updateToken(5).then(async () => {
-          fetch(`/api/comments/${advVer.id}`, {
-            headers: {
-              Authorization: `Bearer ${$appStore.app.keycloak.token}`
-            }
-          }).then((response) => {
-            if (response.ok) {
-              response.json().then((json) => {
-                if (json) {
-                  json.forEach((c: any) => {
-                    c.documentVersion = advisoryVersionByDocumentID[c.document_id];
-                  });
-                  newComments.push(...json);
-                }
-                comments = newComments;
-                resolve(newComments);
-              });
-            } else {
-              appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-            }
-          });
-        });
+      loadCommentsError = "";
+      advisoryVersions.forEach(async (advVer: any) => {
+        const response = await request(`/api/comments/${advVer.id}`, "GET");
+        if (response.ok) {
+          const loadedComments = response.content;
+          if (loadedComments) {
+            loadedComments.forEach((c: any) => {
+              c.documentVersion = advisoryVersionByDocumentID[c.document_id];
+            });
+            newComments.push(...loadedComments);
+          }
+          comments = newComments;
+          resolve(newComments);
+        } else if (response.error) {
+          loadCommentsError = response.error;
+        }
       });
     });
   }
@@ -167,7 +148,7 @@
     const formData = new FormData();
     formData.append("message", comment);
     const response = await request(`/api/comments/${params.id}`, "POST", formData);
-    if (response) {
+    if (response.ok) {
       comment = "";
       loadComments().then((newComments: any[]) => {
         if (newComments.length === 1) {
@@ -175,53 +156,57 @@
         }
       });
       appStore.displaySuccessMessage("Comment for advisory saved.");
+    } else if (response.error) {
+      createCommentError = response.error;
     }
   }
 
   async function updateState(newState: string) {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      const response = await fetch(
-        `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
-        {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          },
-          method: "PUT"
-        }
-      );
-      if (response.ok) {
-        advisoryState = newState;
-      } else {
-        const error = await response.json();
-        appStore.displayErrorMessage(`${error.error}`);
-      }
-    });
+    const response = await request(
+      `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
+      "PUT"
+    );
+    if (response.ok) {
+      advisoryState = newState;
+    } else if (response.error) {
+      appStore.displayErrorMessage(response.error);
+    }
   }
 
   const loadAdvisoryState = async () => {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      const response = await fetch(
-        `/api/documents?advisories=true&columns=state&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
-        {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          }
-        }
-      );
-      if (response.ok) {
-        const result = await response.json();
-        advisoryState = result.documents[0].state;
-        return result.documents[0].state;
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
-    });
+    const response = await request(
+      `/api/documents?advisories=true&columns=state&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      "GET"
+    );
+    if (response.ok) {
+      const result = response.content;
+      advisoryState = result.documents[0].state;
+      return result.documents[0].state;
+    } else if (response.error) {
+      appStore.displayErrorMessage(response.error);
+    }
   };
 
   function loadMetaData() {
     loadAdvisoryState();
     loadDocumentSSVC();
   }
+
+  const compareLatest = async () => {
+    diffDocuments = {
+      docA: advisoryVersions[advisoryVersions.length - 2],
+      docB: advisoryVersions[advisoryVersions.length - 1]
+    };
+    isDiffOpen = true;
+  };
+
+  const toggleLatestChanges = () => {
+    if (!isDiffOpen) {
+      compareLatest();
+    } else {
+      isDiffOpen = false;
+    }
+  };
 
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
@@ -255,8 +240,8 @@
   });
 </script>
 
-<div class="flex">
-  <div class="flex flex-col">
+<div class="flex gap-x-4">
+  <div class="flex grow flex-col gap-y-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
@@ -324,7 +309,18 @@
       {advisoryVersions}
       selectedDocumentVersion={document.tracking?.version}
     ></Version>
-    <Webview></Webview>
+    {#if advisoryVersions.length > 1}
+      {#if advisoryVersions[0].version === document.tracking?.version}
+        <Button class="w-fit" color="light" on:click={toggleLatestChanges}
+          ><i class="bx bx-transfer me-2 text-lg"></i>Latest Changes</Button
+        >
+      {/if}
+    {/if}
+    {#if isDiffOpen}
+      <JsonDiff {diffDocuments}></JsonDiff>
+    {:else}
+      <Webview></Webview>
+    {/if}
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="ml-auto mr-3 min-w-96 max-w-96">
@@ -344,10 +340,16 @@
           {:else}
             <div class="mb-6 text-gray-600">No comments available.</div>
           {/if}
+          <ErrorMessage message={loadCommentsError} plain={true}></ErrorMessage>
           {#if isCommentingAllowed}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-              <CommentTextArea on:saveComment={createComment} bind:value={comment} buttonText="Send"
+              <CommentTextArea
+                on:input={() => (createCommentError = "")}
+                on:saveComment={createComment}
+                bind:value={comment}
+                errorMessage={createCommentError}
+                buttonText="Send"
               ></CommentTextArea>
             </div>
           {/if}

@@ -81,14 +81,12 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		return
 	}
 
-	parser := database.Parser{}
-
-	query := fmt.Sprintf("$id %d int =", id)
-	expr := parser.MustParse(query)
+	expr := database.FieldEqInt("id", id)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
+		parser := database.Parser{}
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)

@@ -1034,3 +1034,9 @@ export interface Threat {
   product_ids?: ListOfProductIds;
   [k: string]: unknown;
 }
+
+export type HttpResponse = {
+  content?: any;
+  error?: string;
+  ok: boolean;
+};

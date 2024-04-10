@@ -87,6 +87,8 @@ After=network.target
 Type=idle
 User=keycloak
 Group=keycloak
+# Optional, used to reduce memory usage
+Environment="JAVA_OPTS=-XX:MaxHeapFreeRatio=10 -XX:MinHeapFreeRatio=10 -XX:MinMetaspaceFreeRatio=10 -XX:MaxMetaspaceFreeRatio=10"
 ExecStart=/opt/keycloak/bin/kc.sh start-dev
 TimeoutStartSec=600
 TimeoutStopSec=600

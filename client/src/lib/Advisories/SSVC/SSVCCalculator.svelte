@@ -29,6 +29,7 @@
   import { createEventDispatcher, onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { request } from "$lib/utils";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -46,6 +47,7 @@
   let vector: string;
   export let vectorInput = "";
   let result: any;
+  let saveSSVCError: string;
   $: resultStyle = result?.color ? `color: ${result.color}` : "";
 
   onMount(async () => {
@@ -157,6 +159,10 @@
     };
   }
 
+  function resetError() {
+    saveSSVCError = "";
+  }
+
   function stepBack() {
     if (currentStep === steps.length - 1) {
       // Delete ISO string and "/"
@@ -201,11 +207,14 @@
   }
 
   async function saveSSVC(vector: string) {
+    resetError();
     const encodedUrl = encodeURI(`/api/ssvc/${documentID}?vector=${vector}`);
     const response = await request(encodedUrl, "PUT");
-    if (response) {
+    if (response.ok) {
       dispatch("updateSSVC");
       appStore.displaySuccessMessage("SSVC updated");
+    } else if (response.error) {
+      saveSSVCError = response.error;
     }
   }
 
@@ -222,6 +231,7 @@
         on:keyup={(e) => {
           if (e.key === "Enter") saveSSVC(vectorInput);
         }}
+        on:input={resetError}
         type="text"
         bind:value={vectorInput}
       />
@@ -340,4 +350,5 @@
       {/if}
     {/if}
   {/if}
+  <ErrorMessage message={saveSSVCError} plain={true}></ErrorMessage>
 </div>

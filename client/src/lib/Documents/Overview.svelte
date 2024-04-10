@@ -29,6 +29,8 @@
   import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Spinner } from "flowbite-svelte";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import { request } from "$lib/utils";
 
   let openRow: number | null;
 
@@ -56,6 +58,7 @@
   ];
   let orderBy = "-cvss_v3_score";
   let loading = false;
+  let error: string;
 
   const previous = () => {
     if (offset - limit >= 0) {
@@ -99,22 +102,17 @@
   $: documentURL = encodeURI(
     `/api/documents?${searchSuffix}count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
   );
-  const fetchData = () => {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      loading = true;
-      const response = await fetch(documentURL, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      });
-      if (response.ok) {
-        ({ count, documents } = await response.json());
-        documents = documents || [];
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
-      loading = false;
-    });
+  const fetchData = async () => {
+    loading = true;
+    error = "";
+    const response = await request(documentURL, "GET");
+    if (response.ok) {
+      ({ count, documents } = response.content);
+      documents = documents || [];
+    } else if (response.error) {
+      error = response.error;
+    }
+    loading = false;
   };
 
   onMount(async () => {
@@ -214,6 +212,7 @@
       {/if}
     </div>
   </div>
+  <ErrorMessage message={error} plain={true}></ErrorMessage>
   <div class:invisible={!loading} class:mb-4={true}>
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
@@ -301,9 +300,8 @@
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <!-- svelte-ignore a11y-no-static-element-interactions -->
               {#if item.four_cves.length > 1}
+                {item.four_cves[0]}
                 <span on:click|stopPropagation={() => toggleRow(i)}>
-                  {item.four_cves[0]}
-
                   {#if openRow === i}
                     <i class="bx bx-minus"></i>
                   {:else}
@@ -328,6 +326,7 @@
         {#if openRow === i}
           <TableBodyRow>
             <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}>
               <div>
                 {#each item.four_cves as cve, i}
@@ -337,7 +336,6 @@
                 {/each}
               </div>
             </TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>
             <TableBodyCell {tdClass}></TableBodyCell>

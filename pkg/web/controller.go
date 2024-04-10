@@ -75,5 +75,11 @@ func (c *Controller) Bind() http.Handler {
 	// SSVC change
 	api.PUT("/ssvc/:document", authEdRe, c.changeSSVC)
 
+	// Calculate diff
+	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)
+
+	// Backend information
+	api.GET("/about", authEdReAu, c.about)
+
 	return r
 }

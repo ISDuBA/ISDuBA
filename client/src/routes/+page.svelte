@@ -57,8 +57,16 @@
     loginRequired: true
   };
 
-  const loginCondition = () => {
-    return $appStore.app.keycloak.authenticated;
+  const loginCondition = async () => {
+    if (!$appStore.app.keycloak.authenticated) return false;
+    const keycloak = appStore.getKeycloak();
+    try {
+      await keycloak.updateToken(5);
+      return true;
+    } catch (error) {
+      await keycloak.login();
+      return false;
+    }
   };
 
   const routes = {

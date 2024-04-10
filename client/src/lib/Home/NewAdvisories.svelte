@@ -25,6 +25,8 @@
   import { tdClass, tablePadding, title } from "$lib/table/defaults";
   import { onMount } from "svelte";
   import { Spinner } from "flowbite-svelte";
+  import { request } from "$lib/utils";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   let limit = 10;
   let offset = 0;
@@ -33,6 +35,7 @@
   let documents: any = [];
   let searchTerm: string = "";
   let loading = false;
+  let error: string;
   let columns = [
     "id",
     "publisher",
@@ -43,22 +46,17 @@
     "cvss_v3_score"
   ];
   let orderBy = "title";
-  const fetchData = () => {
-    $appStore.app.keycloak.updateToken(5).then(async () => {
-      loading = true;
-      const response = await fetch(documentURL, {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      });
-      if (response.ok) {
-        ({ count, documents } = await response.json());
-        documents = documents || [];
-      } else {
-        appStore.displayErrorMessage(`${response.status}. ${response.statusText}`);
-      }
-      loading = false;
-    });
+  const fetchData = async () => {
+    error = "";
+    loading = true;
+    const response = await request(documentURL, "GET");
+    if (response.ok) {
+      ({ count, documents } = response.content);
+      documents = documents || [];
+    } else if (response.error) {
+      error = response.error;
+    }
+    loading = false;
   };
 
   const previous = () => {
@@ -177,6 +175,7 @@
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
+  <ErrorMessage message={error} plain={true}></ErrorMessage>
   <div class="w-fit">
     <Table hoverable={true} noborder={true}>
       <TableHead class="cursor-pointer">

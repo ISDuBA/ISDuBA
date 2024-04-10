@@ -9,29 +9,51 @@
  */
 
 import { appStore } from "./store";
+import { type HttpResponse } from "./types";
 
 export const request = async (
   path: string,
   requestMethod: string,
   formData?: FormData
-): any | undefined => {
-  await appStore.getKeycloak().updateToken(5);
-  const response = await fetch(path, {
-    headers: {
-      Authorization: `Bearer ${appStore.getKeycloak().token}`
-    },
-    method: requestMethod,
-    body: formData
-  });
-  if (response.ok) {
-    return response;
-  } else {
-    try {
-      const error = await response.json();
-      appStore.displayErrorMessage(`${error.error ?? error.message}`);
-    } catch {
-      appStore.displayErrorMessage(`${response.status} - ${response.statusText}`);
+): Promise<HttpResponse> => {
+  try {
+    const response = await fetch(path, {
+      headers: {
+        Authorization: `Bearer ${await getAccessToken()}`
+      },
+      method: requestMethod,
+      body: formData
+    });
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType?.includes("application/json");
+    if (response.ok) {
+      if (contentType && isJson) {
+        const json = await response.json();
+        return { content: json, ok: true };
+      } else {
+        const text = await response.text();
+        return { content: text, ok: true };
+      }
+    } else {
+      if (contentType && isJson) {
+        const json = await response.json();
+        return { error: `${json.error ?? json.message}`, ok: false };
+      } else {
+        return { error: `${response.status}: ${response.statusText}`, ok: false };
+      }
     }
-    return undefined;
+  } catch (error: any) {
+    return { error: `${error.name}: ${error.message}`, ok: false };
   }
+};
+
+const getAccessToken = async () => {
+  const keycloak = appStore.getKeycloak();
+  try {
+    await keycloak.updateToken(5);
+  } catch (error) {
+    await keycloak.login();
+  }
+
+  return keycloak.token;
 };

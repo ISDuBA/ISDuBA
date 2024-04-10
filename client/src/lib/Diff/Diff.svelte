@@ -11,20 +11,38 @@
 <script lang="ts">
   import "diff2html/bundles/css/diff2html.min.css";
   import { Diff2HtmlUI, type Diff2HtmlUIConfig } from "diff2html/lib/ui/js/diff2html-ui-slim";
+  import { onMount } from "svelte";
+  import { appStore } from "$lib/store";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import { request } from "$lib/utils";
 
-  export let diff: string;
+  let diff: string;
+  let error: string;
 
-  $: {
-    const diffElement = document.getElementById("diff");
-    if (diff?.length > 0 && diffElement) {
-      const config: Diff2HtmlUIConfig = {
-        colorScheme: "light",
-        drawFileList: false
-      };
-      const diff2htmlUi = new Diff2HtmlUI(diffElement, diff, config);
-      diff2htmlUi.draw();
+  onMount(async () => {
+    if ($appStore.app.keycloak.authenticated) {
+      error = "";
+      const response = await request("advisory.diff", "GET");
+      if (response.ok) {
+        diff = response.content;
+      } else if (response.error) {
+        error = response.error;
+      }
+
+      const diffElement = document.getElementById("diff");
+      if (diff?.length > 0 && diffElement) {
+        const config: Diff2HtmlUIConfig = {
+          colorScheme: "light",
+          drawFileList: false
+        };
+        const diff2htmlUi = new Diff2HtmlUI(diffElement, diff, config);
+        diff2htmlUi.draw();
+      }
     }
-  }
+  });
 </script>
 
-<div id="diff"></div>
+<div>
+  <ErrorMessage message={error} plain={true}></ErrorMessage>
+  <div id="diff"></div>
+</div>
