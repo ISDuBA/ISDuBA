@@ -20,10 +20,7 @@
   $: selectionOfDocuments = documents.map((doc) => {
     return {
       name: `${doc.tracking_id} - Version ${doc.version}`,
-      value: {
-        id: doc.id,
-        version: doc.version
-      }
+      value: doc
     };
   });
   let diffDocuments: any;

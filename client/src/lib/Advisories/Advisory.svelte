@@ -78,13 +78,13 @@
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
-      `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      `/api/documents?&columns=id version tracking_id&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
       "GET"
     );
     if (response.ok) {
       const result = await response.content;
       advisoryVersions = result.documents.map((doc: any) => {
-        return { id: doc.id, version: doc.version };
+        return { id: doc.id, version: doc.version, tracking_id: doc.tracking_id };
       });
       advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
         acc[version.id] = version.version;
