@@ -326,6 +326,7 @@
           >
           <TableBodyCell {tdClass}
             ><i
+              title={item.state}
               class:bx={true}
               class:bxs-star={item.state === "new"}
               class:bx-show={item.state === "read"}
