@@ -194,8 +194,8 @@
 
   const compareLatest = async () => {
     diffDocuments = {
-      docA: advisoryVersions[advisoryVersions.length - 2],
-      docB: advisoryVersions[advisoryVersions.length - 1]
+      docA: advisoryVersions[0],
+      docB: advisoryVersions[1]
     };
     isDiffOpen = true;
   };
