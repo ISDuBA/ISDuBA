@@ -336,7 +336,6 @@
               class:bx-archive={item.state === "archived"}
               class:bx-trash={item.state === "delete"}
             ></i>
-            <Tooltip>{item.state}</Tooltip>
           </TableBodyCell>
           <TableBodyCell {tdClass}
             >{#if item.four_cves[0]}
