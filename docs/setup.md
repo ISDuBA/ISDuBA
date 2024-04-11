@@ -98,14 +98,15 @@ A current Version of nodeJS LTS (version `20.11.1`).
 
 ### Prepare keycloak configuration
 
-There is an `.env`-file under `client`
+Within `client/`:
+Copy the `.env.example` file to `.env` and adjust it to your needs.
+
+Example values:
 ```bash
 PUBLIC_KEYCLOAK_URL="http://localhost:8080"
 PUBLIC_KEYCLOAK_REALM="isduba"
 PUBLIC_KEYCLOAK_CLIENTID="auth"
 ```
-
-which allows to adjust your configuration to the settings you chose for your keycloak setup.
 
 ### Install necessary packages
 
