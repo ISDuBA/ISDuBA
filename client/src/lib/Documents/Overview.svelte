@@ -96,13 +96,14 @@
     fetchData();
   };
 
-  $: searchSuffix = searchTerm ? `query="${searchTerm}" german search msg as &` : "";
   $: numberOfPages = Math.ceil(count / limit);
-  $: searchColumn = searchTerm ? " msg" : "";
-  $: documentURL = encodeURI(
-    `/api/documents?${searchSuffix}count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
-  );
+
   const fetchData = async () => {
+    const searchSuffix = searchTerm ? `query="${searchTerm}" german search msg as &` : "";
+    const searchColumn = searchTerm ? " msg" : "";
+    const documentURL = encodeURI(
+      `/api/documents?${searchSuffix}count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
+    );
     loading = true;
     error = "";
     const response = await request(documentURL, "GET");

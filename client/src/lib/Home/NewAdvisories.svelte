@@ -47,6 +47,10 @@
   ];
   let orderBy = "title";
   const fetchData = async () => {
+    const searchSuffix = searchTerm ? ` "${searchTerm}" german search msg as and` : "";
+    const documentURL = encodeURI(
+      `/api/documents?query=$state new workflow =${searchSuffix}&advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
+    );
     error = "";
     loading = true;
     const response = await request(documentURL, "GET");
@@ -95,12 +99,8 @@
     fetchData();
   };
 
-  $: searchSuffix = searchTerm ? ` "${searchTerm}" german search msg as and` : "";
   $: numberOfPages = Math.ceil(count / limit);
-  $: documentURL = encodeURI(
-    `/api/documents?query=$state new workflow =${searchSuffix}&advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
-  );
-  onMount(async () => {
+  $: onMount(async () => {
     fetchData();
   });
 </script>
