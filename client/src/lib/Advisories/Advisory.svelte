@@ -72,6 +72,11 @@
   } else {
     isCalculatingAllowed = false;
   }
+
+  $: {
+    loadData(params.id);
+  }
+
   const timeoutIDs: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
@@ -187,6 +192,28 @@
     }
   };
 
+  const loadData = async (_: any) => {
+    loadDocumentSSVC();
+    await loadDocument();
+    await loadAdvisoryVersions();
+    if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
+      loadComments();
+    }
+    const state = await loadAdvisoryState();
+    // Only set state to 'read' if editor opens the current version.
+    if (
+      state === "new" &&
+      appStore.isEditor() &&
+      (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
+    ) {
+      const id = setTimeout(async () => {
+        await updateState("read");
+        appStore.displayInfoMessage("This advisory is marked as read");
+      }, 3000);
+      timeoutIDs.push(id);
+    }
+  };
+
   function loadMetaData() {
     loadAdvisoryState();
     loadDocumentSSVC();
@@ -216,26 +243,7 @@
 
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
-      loadDocumentSSVC();
-      await loadDocument();
-      await loadAdvisoryVersions();
-      if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
-        loadComments();
-      }
-      const state = await loadAdvisoryState();
-      // Only set state to 'read' if editor opens the current version.
-      if (
-        state === "new" &&
-        appStore.isEditor() &&
-        (advisoryVersions.length === 1 ||
-          advisoryVersions[0].version === document.tracking?.version)
-      ) {
-        const id = setTimeout(async () => {
-          await updateState("read");
-          appStore.displayInfoMessage("This advisory is marked as read");
-        }, 3000);
-        timeoutIDs.push(id);
-      }
+      loadData();
     }
   });
 </script>
