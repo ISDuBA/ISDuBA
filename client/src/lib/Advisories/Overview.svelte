@@ -24,7 +24,8 @@
     TableBodyRow,
     TableHead,
     TableHeadCell,
-    Table
+    Table,
+    Tooltip
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
@@ -334,8 +335,9 @@
               class:bx-book-open={item.state === "review"}
               class:bx-archive={item.state === "archived"}
               class:bx-trash={item.state === "delete"}
-            ></i></TableBodyCell
-          >
+            ></i>
+            <Tooltip>{item.state}</Tooltip>
+          </TableBodyCell>
           <TableBodyCell {tdClass}
             >{#if item.four_cves[0]}
               <!-- svelte-ignore a11y-click-events-have-key-events -->
