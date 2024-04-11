@@ -12,7 +12,7 @@
   import { Heading, Sidebar, SidebarWrapper, SidebarGroup, SidebarItem } from "flowbite-svelte";
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
-
+  import { PUBLIC_KEYCLOAK_URL } from "$env/static/public"
   async function logout() {
     $appStore.app.keycloak.logout();
   }
@@ -28,6 +28,7 @@
     "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700";
   let nonActiveClass =
     "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
+  let profileUrl = PUBLIC_KEYCLOAK_URL+"/realms/isduba/account/#/"
 </script>
 
 <Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
@@ -74,7 +75,7 @@
         <SidebarItem
           label="Profile"
           target="_blank"
-          href="http://localhost:8080/realms/isduba/account/#/"
+          href={profileUrl}
         >
           <svelte:fragment slot="icon">
             <i class="bx bx-user"></i>
