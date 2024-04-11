@@ -340,14 +340,18 @@
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <!-- svelte-ignore a11y-no-static-element-interactions -->
               {#if item.four_cves.length > 1}
-                {item.four_cves[0]}
-                <span on:click|stopPropagation={() => toggleRow(i)}>
-                  {#if openRow === i}
-                    <i class="bx bx-minus"></i>
-                  {:else}
-                    <i class="bx bx-plus"></i>
-                  {/if}
-                </span>
+                <div class="mr-2 flex">
+                  <div class="flex-grow">
+                    {item.four_cves[0]}
+                  </div>
+                  <span on:click|stopPropagation={() => toggleRow(i)}>
+                    {#if openRow === i}
+                      <i class="bx bx-minus"></i>
+                    {:else}
+                      <i class="bx bx-plus"></i>
+                    {/if}
+                  </span>
+                </div>
               {:else}
                 <span>{item.four_cves[0]}</span>
               {/if}
