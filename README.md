@@ -19,7 +19,7 @@ for internal use of a team responsible for a number of IT related topics.
 Using the following components:
  * Backend to be written in Go
  * PostgreSQL as database
- * keycloak as identify provider
+ * [keycloak](https://www.keycloak.org/) as identify provider
  * docker-compose setup example (planned)
  * [svelte-flowbite](https://flowbite-svelte.com/)
      for the single page web application frontend
