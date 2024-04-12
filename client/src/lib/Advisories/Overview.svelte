@@ -24,7 +24,8 @@
     TableBodyRow,
     TableHead,
     TableHeadCell,
-    Table
+    Table,
+    Tooltip
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
@@ -98,14 +99,13 @@
     }
     fetchData();
   };
-
-  $: searchSuffix = searchTerm ? `query="${searchTerm}" german search msg as &` : "";
   $: numberOfPages = Math.ceil(count / limit);
-  $: searchColumn = searchTerm ? " msg" : "";
-  $: documentURL = encodeURI(
-    `/api/documents?${searchSuffix}advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
-  );
   const fetchData = async () => {
+    const searchSuffix = searchTerm ? `query="${searchTerm}" german search msg as &` : "";
+    const searchColumn = searchTerm ? " msg" : "";
+    const documentURL = encodeURI(
+      `/api/documents?${searchSuffix}advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
+    );
     loading = true;
     error = "";
     const response = await request(documentURL, "GET");
@@ -327,6 +327,7 @@
           >
           <TableBodyCell {tdClass}
             ><i
+              title={item.state}
               class:bx={true}
               class:bxs-star={item.state === "new"}
               class:bx-show={item.state === "read"}
@@ -334,21 +335,25 @@
               class:bx-book-open={item.state === "review"}
               class:bx-archive={item.state === "archived"}
               class:bx-trash={item.state === "delete"}
-            ></i></TableBodyCell
-          >
+            ></i>
+          </TableBodyCell>
           <TableBodyCell {tdClass}
             >{#if item.four_cves[0]}
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <!-- svelte-ignore a11y-no-static-element-interactions -->
               {#if item.four_cves.length > 1}
-                {item.four_cves[0]}
-                <span on:click|stopPropagation={() => toggleRow(i)}>
-                  {#if openRow === i}
-                    <i class="bx bx-minus"></i>
-                  {:else}
-                    <i class="bx bx-plus"></i>
-                  {/if}
-                </span>
+                <div class="mr-2 flex">
+                  <div class="flex-grow">
+                    {item.four_cves[0]}
+                  </div>
+                  <span on:click|stopPropagation={() => toggleRow(i)}>
+                    {#if openRow === i}
+                      <i class="bx bx-minus"></i>
+                    {:else}
+                      <i class="bx bx-plus"></i>
+                    {/if}
+                  </span>
+                </div>
               {:else}
                 <span>{item.four_cves[0]}</span>
               {/if}

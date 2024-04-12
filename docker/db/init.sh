@@ -6,9 +6,8 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-# Ignore files for PNPM, NPM and YARN
-pnpm-lock.yaml
-package-lock.json
-yarn.lock
-\.svelte-kit
-build/
+#!/bin/bash
+set -e
+
+psql -c "CREATE USER keycloak WITH PASSWORD 'keycloak'; ALTER USER postgres WITH PASSWORD 'postgres';"
+createdb -O keycloak -E 'UTF-8' keycloak

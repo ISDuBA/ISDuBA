@@ -72,19 +72,24 @@
   } else {
     isCalculatingAllowed = false;
   }
+
+  $: {
+    loadData(params.id);
+  }
+
   const timeoutIDs: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
-      `/api/documents?&columns=id version&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      `/api/documents?&columns=id version tracking_id&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
       "GET"
     );
     if (response.ok) {
       const result = await response.content;
       advisoryVersions = result.documents.map((doc: any) => {
-        return { id: doc.id, version: doc.version };
+        return { id: doc.id, version: doc.version, tracking_id: doc.tracking_id };
       });
       advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
         acc[version.id] = version.version;
@@ -187,6 +192,28 @@
     }
   };
 
+  const loadData = async (_: any) => {
+    loadDocumentSSVC();
+    await loadDocument();
+    await loadAdvisoryVersions();
+    if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
+      loadComments();
+    }
+    const state = await loadAdvisoryState();
+    // Only set state to 'read' if editor opens the current version.
+    if (
+      state === "new" &&
+      appStore.isEditor() &&
+      (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
+    ) {
+      const id = setTimeout(async () => {
+        await updateState("read");
+        appStore.displayInfoMessage("This advisory is marked as read");
+      }, 3000);
+      timeoutIDs.push(id);
+    }
+  };
+
   function loadMetaData() {
     loadAdvisoryState();
     loadDocumentSSVC();
@@ -194,8 +221,8 @@
 
   const compareLatest = async () => {
     diffDocuments = {
-      docA: advisoryVersions[advisoryVersions.length - 2],
-      docB: advisoryVersions[advisoryVersions.length - 1]
+      docA: advisoryVersions[0],
+      docB: advisoryVersions[1]
     };
     isDiffOpen = true;
   };
@@ -216,26 +243,7 @@
 
   onMount(async () => {
     if ($appStore.app.keycloak.authenticated) {
-      loadDocumentSSVC();
-      await loadDocument();
-      await loadAdvisoryVersions();
-      if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
-        loadComments();
-      }
-      const state = await loadAdvisoryState();
-      // Only set state to 'read' if editor opens the current version.
-      if (
-        state === "new" &&
-        appStore.isEditor() &&
-        (advisoryVersions.length === 1 ||
-          advisoryVersions[0].version === document.tracking?.version)
-      ) {
-        const id = setTimeout(async () => {
-          await updateState("read");
-          appStore.displayInfoMessage("This advisory is marked as read");
-        }, 3000);
-        timeoutIDs.push(id);
-      }
+      loadData();
     }
   });
 </script>

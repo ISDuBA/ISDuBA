@@ -1,0 +1,46 @@
+#This file is Free Software under the Apache-2.0 License
+#without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+#
+#SPDX-License-Identifier: Apache-2.0
+#
+#SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+#Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+
+[general]
+advisory_upload_limit = "512K"
+anonymous_event_logging = false
+
+[log]
+file = "/dev/stdout"
+level = "info"
+source = false
+json = false
+
+[keycloak]
+url = "http://isduba-keycloak:8080"
+realm = "isduba"
+certs_caching = "8h"
+timeout = "30s"
+full_certs_path = ""
+
+[web]
+host = "0.0.0.0"
+port = 8081
+gin_mode = "release"
+static = "web"
+
+[database]
+host = "isduba-db"
+port = 5432
+database = "isduba"
+user = "isduba"
+password = "isduba"
+admin_user = "postgres"
+admin_database = "postgres"
+admin_password = "postgres"
+migrate = true
+text_search = ["german", "english"]
+
+[[publishers_tlps]]
+publisher = ""
+tlps = ["WHITE"]

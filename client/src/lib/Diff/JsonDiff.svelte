@@ -65,10 +65,17 @@
 <div>
   <ErrorMessage message={error} plain={true}></ErrorMessage>
   {#if diff}
-    <Label class="text-lg"
-      >Compare Version {diffDocuments.docB.version} with Version {diffDocuments.docA.version}
-    </Label>
-    <span>{diff.length} changes</span>
+    {#if diffDocuments.docA.tracking_id === diffDocuments.docB.tracking_id}
+      <Label class="text-lg"
+        >Changes from Version {diffDocuments.docB.version} to Version {diffDocuments.docA.version}
+      </Label>
+    {:else}
+      <Label class="text-lg"
+        >Changes from {diffDocuments.docB.tracking_id} (Version {diffDocuments.docB.version}) to {diffDocuments
+          .docB.tracking_id} (Version {diffDocuments.docA.version})
+      </Label>
+    {/if}
+    <span class="text-gray-700">{diff.length} changes</span>
     <Accordion flush multiple>
       {#each groupedResults as result}
         {#if result.changes.length > 0}

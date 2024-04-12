@@ -300,6 +300,7 @@ func fetchPublicKey(keyID string, cfg *Config) (*keyEntry, error) {
 		u.Path = path.Join(u.Path, "realms", cfg.Realm, "protocol/openid-connect/certs")
 	}
 
+	slog.Debug("requesting keyclock's public key", "url", u)
 	client := http.Client{}
 	if cfg.timeout != 0 {
 		client.Timeout = cfg.timeout
