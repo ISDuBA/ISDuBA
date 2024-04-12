@@ -59,9 +59,9 @@ kcadm.sh update clients/$id --target-realm=isduba \
       "jsonType.label" : "JSON"
     } } ]'
 
-kcadm.sh create roles --target-realm=isduba --set name=bearbeiter \
-	--set "description=Bearbeiter"
-kcadm.sh update roles/bearbeiter --target-realm isduba \
+kcadm.sh create roles --target-realm=isduba --set name=editor \
+	--set "description=editor"
+kcadm.sh update roles/editor --target-realm isduba \
 	--set 'attributes={
     "TLP" : [ "[{\"publisher\":\"\", \"tlps\":[\"WHITE\", \"GREEN\"]}]" ]
   }'
@@ -79,4 +79,4 @@ kcadm.sh set-password --target-realm isduba \
 
 echo -e "\nCreated user 'alex' with password: $password"
 
-kcadm.sh add-roles -r isduba --uusername alex --rolename bearbeiter
+kcadm.sh add-roles -r isduba --uusername alex --rolename editor
