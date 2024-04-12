@@ -11,7 +11,7 @@
 set -e # to exit if a command in the script fails
 
 # migrate
-ISDUBA_DB_MIGRATE=true ./../../bin/isdubad -c ../../isdubad.toml &
+ISDUBA_DB_MIGRATE=true ./../../cmd/isdubad/isdubad -c ../../isdubad.toml &
 
 touch isduba.log # to ensure file exists for grep
 until grep -q -F "Starting web server" isduba.log
