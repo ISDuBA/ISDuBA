@@ -22,7 +22,6 @@ This guide describes how to set up ISDuBA for a development build on Ubuntu 24.0
  
 # Setup ISDuBA
 This setup can also be performed via the [installisduba.sh script](./scripts/installisduba.sh).
-In case that script was used, the binaries will be placed within the bin directory.
 
 Clone the repository:
 ```
