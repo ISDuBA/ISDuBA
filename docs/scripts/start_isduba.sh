@@ -10,7 +10,7 @@
 
 set -e # to exit if a command in the script fails
 
-./../../bin/isdubad -c ../../isdubad.toml &
+./../../cmd/isdubad/isdubad -c ../../isdubad.toml &
 
 # TODO: handle race conditions
 if curl --head --silent http://localhost:5173/ | grep -F -q "HTTP/1.1 200 OK"; then
