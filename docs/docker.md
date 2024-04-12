@@ -34,3 +34,11 @@ docker logs isduba-keycloak-setup | grep "Created user"
 ## Client application
 
 The application can be reached under http://localhost:5371.
+
+## Production usage considerations
+### Keycloak
+This setup starts Keycloak in a development mode and does not persist configuration across rebuilds. It is preferred to use a Keycloak instance that is already managed. The Keycloak setup container executes the script located in `docker/keycloak/init.sh`. This script is used for automated testing; it is a template on how to set up Keycloak and should not be used to automate the production setup.
+### Database
+It is recommended to run the database outside the container or mount `/var/lib/postgresql/data` to a persistent store. If the database is accessed through a network, the default passwords should be changed.
+### Application
+The application does not provide a secure endpoint. It should be put behind a reverse proxy with a valid TLS certificate.
