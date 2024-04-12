@@ -1,6 +1,5 @@
 # Docker Setup
-
-Use docker compose to build and start the whole stack with
+Use [docker compose](https://docs.docker.com/compose/install/) to build and start the whole stack with
 
 ```bash
 cd docker
