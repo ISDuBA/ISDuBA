@@ -12,11 +12,10 @@ set -e # to exit if a command in the script fails
 
 cd ../..
 
-mkdir -p bin
+sudo apt-get install make
 
-go build -o ./bin/isdubad ./cmd/isdubad
+make all
 
-go build -o ./bin/bulkimport ./cmd/bulkimport
 echo "Successfully created isdubad and bulkimport binaries."
 
 # create the isdubad configuration
