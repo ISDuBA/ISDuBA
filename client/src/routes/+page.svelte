@@ -46,6 +46,8 @@
             firstName: profile.firstName,
             lastName: profile.lastName
           });
+          const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
+          appStore.setExpiryTime(expiry.toLocaleTimeString());
         }
       })
       .catch((error: any) => {
@@ -124,7 +126,12 @@
 </script>
 
 <div class="flex bg-primary-700">
-  <SideNav></SideNav>
+  <div>
+    <SideNav></SideNav>
+    <div style="position:absolute; top:4.5em; left:1.5em; color:white">
+      Session ends at {$appStore.app.expiryTime}
+    </div>
+  </div>
   <main class="w-full bg-white pl-6 pt-6">
     <Router {routes} on:conditionsFailed={conditionsFailed} />
   </main>

@@ -23,6 +23,7 @@ type AppStore = {
       firstName: string;
       lastName: string;
     };
+    expiryTime: string;
     token: any;
     keycloak: any;
     errors: ErrorMessage[];
@@ -66,6 +67,7 @@ const generateInitalState = (): AppStore => {
         firstName: "",
         lastName: ""
       },
+      expiryTime: "",
       isUserLoggedIn: false,
       token: null,
       keycloak: null,
@@ -103,6 +105,12 @@ function createStore() {
   subscribe((v) => (state = v));
   return {
     subscribe,
+    setExpiryTime: (newExpiryTime: string) => {
+      update((settings) => {
+        settings.app.expiryTime = newExpiryTime;
+        return settings;
+      });
+    },
     toggleDocExpandAll: () => {
       update((settings) => {
         if (settings.webview.ui.docToggleExpandAll) {

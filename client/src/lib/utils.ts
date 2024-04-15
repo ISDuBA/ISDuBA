@@ -54,6 +54,8 @@ const getAccessToken = async () => {
   const keycloak = appStore.getKeycloak();
   try {
     await keycloak.updateToken(config.updateIntervall);
+    const expiry = new Date(keycloak.idTokenParsed.exp * 1000);
+    appStore.setExpiryTime(expiry.toLocaleTimeString());
   } catch (error) {
     await keycloak.login();
   }
