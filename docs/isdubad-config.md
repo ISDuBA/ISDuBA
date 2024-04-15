@@ -73,9 +73,8 @@ The configuration consists of the following sections:
 Is a table of pairs of `publisher` and `tlps` of default access.
 Defaults to:
 ```
-[[publishers_tlps]]
-publisher = ""
-tlps = ["WHITE"]
+[publishers_tlps]
+'*' = ["WHITE"]
 ```
 An empty `publisher` means all not explicity stated. `publisher`s with non empty values have a higher priority.
 Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values

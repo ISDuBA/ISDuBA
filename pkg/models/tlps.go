@@ -11,19 +11,17 @@ package models
 import (
 	"fmt"
 	"slices"
+	"sort"
 	"strings"
 )
 
 type (
 	// TLP represents a Traffic Light Protocol 1 value.
 	TLP string
-	// PuplisherTLPs is a list of allowed TLP values per publisher.
-	PuplisherTLPs struct {
-		Publisher string `json:"publisher" toml:"publisher"`
-		TLPs      []TLP  `json:"tlps" toml:"tlps"`
-	}
+	// Publisher represents the publisher name.
+	Publisher string
 	// PublishersTLPs is a list of TLPs per publisher.
-	PublishersTLPs []PuplisherTLPs
+	PublishersTLPs map[Publisher][]TLP
 )
 
 // The different TLP levels
@@ -31,7 +29,7 @@ const (
 	TLPWhite TLP = "WHITE" // TLPWhite represents TLP:WHITE
 	TLPGreen TLP = "GREEN" // TLPGreen represents TLP:GREEN
 	TLPAmber TLP = "AMBER" // TLPAmber represents TLP:AMBER
-	TLPRed   TLP = "RED"   // TLPRed   represents TLP:RED
+	TLPRed   TLP = "RED"   // bearbeiterTLPRed   represents TLP:RED
 )
 
 // UnmarshalText implements [encoding.TextUnmarshaler].
@@ -48,19 +46,16 @@ func (tlp *TLP) UnmarshalText(text []byte) error {
 
 // Allowed checks if a pair of publisher/tlp is allowed.
 func (ptlps PublishersTLPs) Allowed(publisher string, tlp TLP) bool {
-	var wildcard *PuplisherTLPs
-	for i := range ptlps {
-		ptlp := &ptlps[i]
-		if ptlp.Publisher == "" {
-			wildcard = ptlp
-			continue
-		}
-		if ptlp.Publisher == publisher {
-			return slices.Contains(ptlp.TLPs, tlp)
+	wildcard, ok := ptlps[Publisher("*")]
+	if ok {
+		if slices.Contains(wildcard, tlp) {
+			return true
 		}
 	}
-	if wildcard != nil {
-		return slices.Contains(wildcard.TLPs, tlp)
+
+	p, ok := ptlps[Publisher(publisher)]
+	if ok {
+		return slices.Contains(p, tlp)
 	}
 	return false
 }
@@ -69,15 +64,21 @@ func (ptlps PublishersTLPs) Allowed(publisher string, tlp TLP) bool {
 func (ptlps PublishersTLPs) AsConditions() string {
 	var b strings.Builder
 	var noneWildcards int
-	var wildcard *PuplisherTLPs
-	for i := range ptlps {
-		p := &ptlps[i]
-		if p.Publisher == "" {
-			wildcard = p
+	publisherOrder := make([]string, 0, len(ptlps))
+
+	// As map iteration order is random we sort to simplify test
+	for publisher := range ptlps {
+		publisherOrder = append(publisherOrder, string(publisher))
+	}
+	sort.Strings(publisherOrder)
+
+	for _, publisher := range publisherOrder {
+		if publisher == "*" {
 			continue
 		}
 		noneWildcards++
-		for j, t := range p.TLPs {
+		tlps := ptlps[Publisher(publisher)]
+		for j, t := range tlps {
 			b.WriteString(" $tlp ")
 			b.WriteString(string(t))
 			b.WriteString(" =")
@@ -86,18 +87,20 @@ func (ptlps PublishersTLPs) AsConditions() string {
 			}
 		}
 		b.WriteString(` $publisher "`)
-		publisher := strings.ReplaceAll(p.Publisher, `"`, `\"`)
+		publisher := strings.ReplaceAll(string(publisher), `"`, `\"`)
 		b.WriteString(publisher)
 		b.WriteString(`" =`)
-		if len(ptlps[i].TLPs) > 0 {
+		if len(tlps) > 0 {
 			b.WriteString(" and")
 		}
 		if noneWildcards > 1 {
 			b.WriteString(" or")
 		}
 	}
-	if wildcard != nil {
-		for j, t := range wildcard.TLPs {
+
+	wildcard, ok := ptlps[Publisher("*")]
+	if ok {
+		for j, t := range wildcard {
 			b.WriteString(" $tlp ")
 			b.WriteString(string(t))
 			b.WriteString(" =")
@@ -105,17 +108,20 @@ func (ptlps PublishersTLPs) AsConditions() string {
 				b.WriteString(" or")
 			}
 		}
-		for j, k := 0, 0; j < noneWildcards; j, k = j+1, k+1 {
-			for ptlps[k].Publisher == "" {
-				k++
+		first := true
+		for _, publisher := range publisherOrder {
+			if publisher == "*" {
+				continue
 			}
 			b.WriteString(` $publisher "`)
-			publisher := strings.ReplaceAll(ptlps[k].Publisher, `"`, `\"`)
+			publisher := strings.ReplaceAll(string(publisher), `"`, `\"`)
 			b.WriteString(publisher)
 			b.WriteString(`" !=`)
-			if j > 0 {
+			if !first {
 				b.WriteString(" and")
 			}
+
+			first = false
 		}
 		if noneWildcards > 0 {
 			b.WriteString(" and or")

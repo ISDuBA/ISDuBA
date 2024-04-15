@@ -165,7 +165,7 @@ Switch to the Attributes tab and set:
 
 - Key: ```TLP```
 
-- Value: ```[{"publisher":"", "tlps":["WHITE", "GREEN"]}]```
+- Value: ```{"*": [ "WHITE", "GREEN" ]}```
 
 ## Create Users
 

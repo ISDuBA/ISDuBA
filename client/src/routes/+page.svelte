@@ -123,7 +123,7 @@
   };
 </script>
 
-<div class="bg-primary-700 flex">
+<div class="flex bg-primary-700">
   <SideNav></SideNav>
   <main class="w-full bg-white pl-6 pt-6">
     <Router {routes} on:conditionsFailed={conditionsFailed} />

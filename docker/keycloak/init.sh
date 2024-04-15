@@ -63,7 +63,7 @@ kcadm.sh create roles --target-realm=isduba --set name=editor \
 	--set "description=editor"
 kcadm.sh update roles/editor --target-realm isduba \
 	--set 'attributes={
-    "TLP" : [ "[{\"publisher\":\"\", \"tlps\":[\"WHITE\", \"GREEN\"]}]" ]
+    "TLP" : [ "{\"*\": [ \"WHITE\", \"GREEN\" ]}" ]
   }'
 
 #creating  a user

@@ -64,10 +64,7 @@ const (
 )
 
 var defaultPublishersTLPs = models.PublishersTLPs{
-	models.PuplisherTLPs{
-		Publisher: "", // Wildcard
-		TLPs:      []models.TLP{models.TLPWhite},
-	},
+	"*": []models.TLP{models.TLPWhite},
 }
 
 // HumanSize de-serializes sizes from integer strings
