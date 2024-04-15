@@ -37,3 +37,6 @@ ALTER TABLE documents ADD COLUMN cvss_v3_score float
 
 ALTER TABLE documents ADD COLUMN four_cves jsonb
     GENERATED ALWAYS AS (first_four_cves(document)) STORED;
+
+CREATE INDEX documents_cvss2_idx ON documents(coalesce(cvss_v2_score, '0'::double precision) DESC);
+CREATE INDEX documents_cvss3_idx ON documents(coalesce(cvss_v3_score, '0'::double precision) DESC);

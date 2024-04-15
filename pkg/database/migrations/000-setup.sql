@@ -161,6 +161,9 @@ CREATE TRIGGER delete_document AFTER DELETE ON documents
 CREATE INDEX current_release_date_idx ON documents (current_release_date);
 CREATE INDEX initial_release_date_idx ON documents (initial_release_date);
 
+CREATE INDEX documents_cvss2_idx ON documents(coalesce(cvss_v2_score, '0'::double precision) DESC);
+CREATE INDEX documents_cvss3_idx ON documents(coalesce(cvss_v3_score, '0'::double precision) DESC);
+
 CREATE FUNCTION to_tsvector_multilang(text) RETURNS tsvector AS $$
     SELECT {{ range $idx, $lang := .TextSearch -}}
            {{ if $idx }} || {{ end }}to_tsvector({{ $lang | sqlQuote }}, $1)
