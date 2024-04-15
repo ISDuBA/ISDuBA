@@ -125,7 +125,7 @@
   };
 </script>
 
-<div class="bg-primary-700 flex">
+<div class="flex bg-primary-700">
   <div>
     <SideNav></SideNav>
     {#if $appStore.app.keycloak.authenticated}

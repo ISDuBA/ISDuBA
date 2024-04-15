@@ -248,7 +248,7 @@
   });
 </script>
 
-<div class="flex gap-x-4">
+<div class="flex flex-wrap gap-x-4">
   <div class="flex grow flex-col gap-y-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
@@ -331,7 +331,7 @@
     {/if}
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="ml-auto mr-3 min-w-96 max-w-96">
+    <div class="mr-3 min-w-96 max-w-96">
       <Accordion>
         <AccordionItem open>
           <span slot="header"
