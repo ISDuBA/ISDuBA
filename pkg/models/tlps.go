@@ -11,7 +11,6 @@ package models
 import (
 	"fmt"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -46,38 +45,30 @@ func (tlp *TLP) UnmarshalText(text []byte) error {
 
 // Allowed checks if a pair of publisher/tlp is allowed.
 func (ptlps PublishersTLPs) Allowed(publisher string, tlp TLP) bool {
-	wildcard, ok := ptlps[Publisher("*")]
-	if ok {
-		if slices.Contains(wildcard, tlp) {
-			return true
-		}
-	}
-
-	p, ok := ptlps[Publisher(publisher)]
-	if ok {
+	if p, ok := ptlps[Publisher(publisher)]; ok {
 		return slices.Contains(p, tlp)
 	}
-	return false
+	wildcard, ok := ptlps["*"]
+	return ok && slices.Contains(wildcard, tlp)
 }
 
 // AsConditions returns the list of TLP rules as a postfix expression.
 func (ptlps PublishersTLPs) AsConditions() string {
-	var b strings.Builder
-	var noneWildcards int
-	publisherOrder := make([]string, 0, len(ptlps))
 
 	// As map iteration order is random we sort to simplify test
+	publisherOrder := make([]Publisher, 0, len(ptlps))
 	for publisher := range ptlps {
-		publisherOrder = append(publisherOrder, string(publisher))
-	}
-	sort.Strings(publisherOrder)
-
-	for _, publisher := range publisherOrder {
-		if publisher == "*" {
-			continue
+		if publisher != "*" {
+			publisherOrder = append(publisherOrder, publisher)
 		}
+	}
+	slices.Sort(publisherOrder)
+
+	var b strings.Builder
+	var noneWildcards int
+	for _, publisher := range publisherOrder {
 		noneWildcards++
-		tlps := ptlps[Publisher(publisher)]
+		tlps := ptlps[publisher]
 		for j, t := range tlps {
 			b.WriteString(" $tlp ")
 			b.WriteString(string(t))
@@ -98,8 +89,7 @@ func (ptlps PublishersTLPs) AsConditions() string {
 		}
 	}
 
-	wildcard, ok := ptlps[Publisher("*")]
-	if ok {
+	if wildcard, ok := ptlps["*"]; ok {
 		for j, t := range wildcard {
 			b.WriteString(" $tlp ")
 			b.WriteString(string(t))
@@ -110,18 +100,15 @@ func (ptlps PublishersTLPs) AsConditions() string {
 		}
 		first := true
 		for _, publisher := range publisherOrder {
-			if publisher == "*" {
-				continue
-			}
 			b.WriteString(` $publisher "`)
 			publisher := strings.ReplaceAll(string(publisher), `"`, `\"`)
 			b.WriteString(publisher)
 			b.WriteString(`" !=`)
 			if !first {
 				b.WriteString(" and")
+			} else {
+				first = false
 			}
-
-			first = false
 		}
 		if noneWildcards > 0 {
 			b.WriteString(" and or")
