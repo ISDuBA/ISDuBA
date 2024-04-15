@@ -24,7 +24,7 @@ else
   sudo /opt/keycloak/bin/kcadm.sh create roles --target-realm=isduba --set name=$1 \
       --set "description=$2"
   sudo /opt/keycloak/bin/kcadm.sh update roles/$1 --target-realm isduba \
-    --set "attributes={
-      \"TLP\" : [ \"[{\"publisher\":\"$3\", \"tlps\":[$4]}]\" ]
-    }"
+  --set 'attributes={
+    "TLP" : [ "[{\"publisher\":\"\", \"tlps\":[\"WHITE\", \"GREEN\"]}]" ]
+  }'
 fi
