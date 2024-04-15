@@ -154,8 +154,8 @@ Create roles via Realm roles:
 
 E.g. 
 
-- Name: ```bearbeiter```
-- Description: ```bearbeiter```
+- Name: ```editor```
+- Description: ```editor```
 
 ### Add attributes
 

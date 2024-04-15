@@ -25,11 +25,11 @@ const (
 
 // The different roles
 const (
-	Admin    = "admin"      // Admin role
-	Importer = "importer"   // Importer role
-	Editor   = "bearbeiter" // Editor role
-	Reviewer = "reviewer"   // Reviewer role
-	Auditor  = "auditor"    // Auditor role
+	Admin    = "admin"    // Admin role
+	Importer = "importer" // Importer role
+	Editor   = "editor"   // Editor role
+	Reviewer = "reviewer" // Reviewer role
+	Auditor  = "auditor"  // Auditor role
 )
 
 // transitions is a matrix to tell who is allowed to change between certain states.
