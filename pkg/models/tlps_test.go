@@ -21,16 +21,24 @@ func TestAsConditions(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{`[{"publisher": "", "tlps": [ "WHITE", "GREEN" ]}]`, `$tlp WHITE = $tlp GREEN = or`},
-		{`[{"publisher": "A", "tlps": [ "WHITE", "GREEN" ]}]`, `$tlp WHITE = $tlp GREEN = or $publisher "A" = and`},
-		{`[{"publisher": "A", "tlps": [ "AMBER", "RED" ]}, {"publisher": "", "tlps": ["WHITE"]}]`,
-			`$tlp AMBER = $tlp RED = or $publisher "A" = and $tlp WHITE = $publisher "A" != and or`},
-		{`[{"publisher": "A", "tlps": [ "AMBER", "RED" ]}, {"publisher": "", "tlps": ["WHITE", "GREEN"]}]`,
-			`$tlp AMBER = $tlp RED = or $publisher "A" = and $tlp WHITE = $tlp GREEN = or $publisher "A" != and or`},
-		{`[{"publisher": "A", "tlps": [ "AMBER" ]}, {"publisher": "B", "tlps": ["RED"]}, {"publisher": "", "tlps": ["WHITE"]}]`,
-			`$tlp AMBER = $publisher "A" = and $tlp RED = $publisher "B" = and or $tlp WHITE = $publisher "A" != $publisher "B" != and and or`},
-		{`[{"publisher": "", "tlps": ["WHITE"]}, {"publisher": "A", "tlps": [ "AMBER" ]}, {"publisher": "B", "tlps": ["RED"]}]`,
-			`$tlp AMBER = $publisher "A" = and $tlp RED = $publisher "B" = and or $tlp WHITE = $publisher "A" != $publisher "B" != and and or`},
+		{`{"*": [ "WHITE", "GREEN" ]}`, `$tlp WHITE = $tlp GREEN = or`},
+		{`{"A": [ "WHITE", "GREEN" ]}`, `$tlp WHITE = $tlp GREEN = or $publisher "A" = and`},
+		{
+			`{"A": [ "AMBER", "RED" ], "*": ["WHITE"]}`,
+			`$tlp AMBER = $tlp RED = or $publisher "A" = and $tlp WHITE = $publisher "A" != and or`,
+		},
+		{
+			`{"A": [ "AMBER", "RED" ], "*": ["WHITE", "GREEN"]}`,
+			`$tlp AMBER = $tlp RED = or $publisher "A" = and $tlp WHITE = $tlp GREEN = or $publisher "A" != and or`,
+		},
+		{
+			`{"A": [ "AMBER" ], "B": ["RED"], "*": ["WHITE"]}`,
+			`$tlp AMBER = $publisher "A" = and $tlp RED = $publisher "B" = and or $tlp WHITE = $publisher "A" != $publisher "B" != and and or`,
+		},
+		{
+			`{"*": ["WHITE"], "A": [ "AMBER" ], "B": ["RED"]}`,
+			`$tlp AMBER = $publisher "A" = and $tlp RED = $publisher "B" = and or $tlp WHITE = $publisher "A" != $publisher "B" != and and or`,
+		},
 	} {
 		var ptlps PublishersTLPs
 		if err := json.Unmarshal([]byte(x.input), &ptlps); err != nil {
