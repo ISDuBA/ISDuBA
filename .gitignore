@@ -38,6 +38,7 @@ client/.svelte-kit
 client/package
 client/vite.config.js.timestamp-*
 client/vite.config.ts.timestamp-*
+client/.env
 build/
 
 # IDE
