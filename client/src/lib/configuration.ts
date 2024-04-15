@@ -9,12 +9,14 @@
 import {
   PUBLIC_KEYCLOAK_URL,
   PUBLIC_KEYCLOAK_REALM,
-  PUBLIC_KEYCLOAK_CLIENTID
+  PUBLIC_KEYCLOAK_CLIENTID,
+  PUBLIC_UPDATE_INTERVALL
 } from "$env/static/public";
 
 const configuration = {
   getConfiguration: () => {
     return {
+      updateIntervall: PUBLIC_UPDATE_INTERVALL,
       url: PUBLIC_KEYCLOAK_URL,
       realm: PUBLIC_KEYCLOAK_REALM,
       clientId: PUBLIC_KEYCLOAK_CLIENTID

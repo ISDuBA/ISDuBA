@@ -102,6 +102,7 @@ There is an `.env`-file under `client`
 PUBLIC_KEYCLOAK_URL="http://localhost:8080"
 PUBLIC_KEYCLOAK_REALM="isduba"
 PUBLIC_KEYCLOAK_CLIENTID="auth"
+PUBLIC_UPDATE_INTERVALL=5
 ```
 
 which allows to adjust your configuration to the settings you chose for your keycloak setup.
