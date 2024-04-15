@@ -276,7 +276,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 
 	rctx := ctx.Request.Context()
 	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
-		existsSQL := `SELECT exists(SELECT FROM extended_documents WHERE ` + where + `)`
+		existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
 		if err := conn.QueryRow(
 			rctx, existsSQL, replacements...).Scan(&exists); err != nil {
 			return err

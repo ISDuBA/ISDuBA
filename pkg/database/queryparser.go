@@ -197,7 +197,7 @@ func CreateOrder(
 		bracket := false
 		switch field {
 		case "tracking_id", "publisher":
-			b.WriteString("extended_documents.")
+			b.WriteString("documents.")
 		case "cvss_v2_score", "cvss_v3_score":
 			bracket = true
 			b.WriteString("COALESCE(")
@@ -232,12 +232,12 @@ func CheckProjections(proj []string, aliases map[string]string, advisory bool) e
 func createFrom(hasAliases, advisory bool) string {
 	var from string
 	if advisory {
-		from = `extended_documents ` +
+		from = `documents ` +
 			`JOIN advisories ON ` +
-			`advisories.tracking_id = extended_documents.tracking_id AND ` +
-			`advisories.publisher = extended_documents.publisher`
+			`advisories.tracking_id = documents.tracking_id AND ` +
+			`advisories.publisher = documents.publisher`
 	} else {
-		from = `extended_documents`
+		from = `documents`
 	}
 
 	if hasAliases {
@@ -297,7 +297,7 @@ func projectionsWithCasts(proj []string, aliases map[string]string) string {
 			continue
 		}
 		if p == "tracking_id" || p == "publisher" {
-			b.WriteString("extended_documents.")
+			b.WriteString("documents.")
 		}
 		b.WriteString(p)
 		if p == "state" {
@@ -456,7 +456,7 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 	writeAccess := func(e *Expr) {
 		column := e.stringValue
 		if column == "tracking_id" || column == "publisher" {
-			b.WriteString("extended_documents.")
+			b.WriteString("documents.")
 		}
 		b.WriteString(column)
 	}
