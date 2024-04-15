@@ -248,68 +248,68 @@
   });
 </script>
 
-<div
-  class="flex flex-col flex-wrap gap-4 pe-2 md:grid md:grid-cols-[50%_50%] md:grid-rows-6 md:pe-10 2xl:grid-cols-[33%_33%_34%]"
->
-  <div class="col-span-1 row-span-1 flex flex-col">
-    <div class="flex gap-2">
-      <Label class="text-lg">{params.trackingID}</Label>
-      <Button
-        class="!p-1"
-        color="light"
-        disabled={getAllowedWorkflowChanges(advisoryState).length === 0}
-      >
-        <i class="bx bx-dots-vertical-rounded"></i>
-      </Button>
-      <Dropdown>
-        {#if canSetStateNew(advisoryState)}
-          <DropdownItem on:click={() => updateState(NEW)} class="flex items-center gap-2">
-            <i class="bx bx-star text-lg"></i>
-            <span>Mark as new</span>
-          </DropdownItem>
+<div class="flex flex-wrap gap-x-4">
+  <div class="flex grow flex-col gap-y-2">
+    <div class="flex flex-col">
+      <div class="flex gap-2">
+        <Label class="text-lg">{params.trackingID}</Label>
+        <Button
+          class="!p-1"
+          color="light"
+          disabled={getAllowedWorkflowChanges(advisoryState).length === 0}
+        >
+          <i class="bx bx-dots-vertical-rounded"></i>
+        </Button>
+        <Dropdown>
+          {#if canSetStateNew(advisoryState)}
+            <DropdownItem on:click={() => updateState(NEW)} class="flex items-center gap-2">
+              <i class="bx bx-star text-lg"></i>
+              <span>Mark as new</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateRead(advisoryState)}
+            <DropdownItem on:click={() => updateState(READ)} class="flex items-center gap-2">
+              <i class="bx bx-show text-lg"></i>
+              <span>Mark as read</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateReview(advisoryState)}
+            <DropdownItem on:click={() => updateState(REVIEW)} class="flex items-center gap-2">
+              <i class="bx bx-book-open text-lg"></i>
+              <span>Release for review</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateAssessing(advisoryState) && advisoryState === REVIEW}
+            <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
+              <i class="bx bx-analyse text-lg"></i>
+              <span>Back to assessing</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateArchived(advisoryState)}
+            <DropdownItem on:click={() => updateState(ARCHIVED)} class="flex items-center gap-2">
+              <i class="bx bx-archive text-lg"></i>
+              <span>Archive</span>
+            </DropdownItem>
+          {/if}
+          {#if canSetStateDeleted(advisoryState)}
+            <DropdownItem on:click={() => updateState(DELETED)} class="flex items-center gap-2">
+              <i class="bx bx-trash text-lg"></i>
+              <span>Mark for deletion</span>
+            </DropdownItem>
+          {/if}
+        </Dropdown>
+      </div>
+      <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
+      <div class="flex gap-2">
+        {#if advisoryState}
+          <Badge class="w-fit">{advisoryState}</Badge>
+          <Tooltip>Workflow state</Tooltip>
         {/if}
-        {#if canSetStateRead(advisoryState)}
-          <DropdownItem on:click={() => updateState(READ)} class="flex items-center gap-2">
-            <i class="bx bx-show text-lg"></i>
-            <span>Mark as read</span>
-          </DropdownItem>
+        {#if ssvc}
+          <Badge style={ssvcStyle}>{ssvc.label}</Badge>
+          <Tooltip>SSVC</Tooltip>
         {/if}
-        {#if canSetStateReview(advisoryState)}
-          <DropdownItem on:click={() => updateState(REVIEW)} class="flex items-center gap-2">
-            <i class="bx bx-book-open text-lg"></i>
-            <span>Release for review</span>
-          </DropdownItem>
-        {/if}
-        {#if canSetStateAssessing(advisoryState) && advisoryState === REVIEW}
-          <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
-            <i class="bx bx-analyse text-lg"></i>
-            <span>Back to assessing</span>
-          </DropdownItem>
-        {/if}
-        {#if canSetStateArchived(advisoryState)}
-          <DropdownItem on:click={() => updateState(ARCHIVED)} class="flex items-center gap-2">
-            <i class="bx bx-archive text-lg"></i>
-            <span>Archive</span>
-          </DropdownItem>
-        {/if}
-        {#if canSetStateDeleted(advisoryState)}
-          <DropdownItem on:click={() => updateState(DELETED)} class="flex items-center gap-2">
-            <i class="bx bx-trash text-lg"></i>
-            <span>Mark for deletion</span>
-          </DropdownItem>
-        {/if}
-      </Dropdown>
-    </div>
-    <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
-    <div class="flex gap-2">
-      {#if advisoryState}
-        <Badge class="w-fit">{advisoryState}</Badge>
-        <Tooltip>Workflow state</Tooltip>
-      {/if}
-      {#if ssvc}
-        <Badge style={ssvcStyle}>{ssvc.label}</Badge>
-        <Tooltip>SSVC</Tooltip>
-      {/if}
+      </div>
     </div>
     <Version
       publisherNamespace={params.publisherNamespace}
@@ -324,8 +324,6 @@
         >
       {/if}
     {/if}
-  </div>
-  <div class="col-span-1 row-start-2 row-end-6 2xl:col-start-1 2xl:col-end-3">
     {#if isDiffOpen}
       <JsonDiff {diffDocuments}></JsonDiff>
     {:else}
@@ -333,7 +331,7 @@
     {/if}
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="col-span-2 row-start-1 row-end-6 2xl:col-span-1 2xl:col-start-3">
+    <div class="mr-3 min-w-96 max-w-96">
       <Accordion>
         <AccordionItem open>
           <span slot="header"
