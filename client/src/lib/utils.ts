@@ -10,6 +10,7 @@
 
 import { appStore } from "./store";
 import { type HttpResponse } from "./types";
+import { configuration } from "$lib/configuration";
 
 export const request = async (
   path: string,
@@ -17,9 +18,10 @@ export const request = async (
   formData?: FormData
 ): Promise<HttpResponse> => {
   try {
+    const token = await getAccessToken();
     const response = await fetch(path, {
       headers: {
-        Authorization: `Bearer ${await getAccessToken()}`
+        Authorization: `Bearer ${token}`
       },
       method: requestMethod,
       body: formData
@@ -48,9 +50,10 @@ export const request = async (
 };
 
 const getAccessToken = async () => {
+  const config = configuration.getConfiguration();
   const keycloak = appStore.getKeycloak();
   try {
-    await keycloak.updateToken(5);
+    await keycloak.updateToken(config.updateIntervall);
   } catch (error) {
     await keycloak.login();
   }

@@ -23,7 +23,7 @@ export const WORKFLOW_STATES = [NEW, READ, ASSESSING, REVIEW, ARCHIVED, DELETED]
 export type Role = string;
 export const ADMIN: Role = "admin";
 export const IMPORTER: Role = "importer";
-export const EDITOR: Role = "bearbeiter";
+export const EDITOR: Role = "editor";
 export const REVIEWER: Role = "reviewer";
 export const AUDITOR: Role = "auditor";
 
