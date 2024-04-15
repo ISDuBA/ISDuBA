@@ -52,6 +52,6 @@ else
 ./keycloak/createRealm.sh
 fi
 
-./keycloak/createRole.sh 'editor' 'Bearbeiter' '' '\"WHITE\", \"GREEN\"'
+./keycloak/createRole.sh 'editor' 'Bearbeiter' 
 
 ./keycloak/createUser.sh 'beate' 'beate' 'bear' 'bea@ISDuBA.isduba' 'beate' 'editor'
