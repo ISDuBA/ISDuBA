@@ -248,8 +248,10 @@
   });
 </script>
 
-<div class="flex flex-wrap gap-x-4">
-  <div class="flex grow flex-col gap-y-2">
+<div class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll">
+  <div
+    class="flex max-h-full w-full max-w-[96%] grow flex-col gap-y-2 overflow-y-scroll px-2 xl:max-w-[50%]"
+  >
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
@@ -331,7 +333,7 @@
     {/if}
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="mr-3 min-w-96 max-w-96">
+    <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
       <Accordion>
         <AccordionItem open>
           <span slot="header"

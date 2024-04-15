@@ -60,7 +60,7 @@
   const cellStyle = "px-6 py-0";
 </script>
 
-<div class="w-max">
+<div class="2xl:w-max">
   <Table noborder>
     <TableBodyRow>
       <TableBodyCell tdClass={cellStyle}>ID</TableBodyCell>
