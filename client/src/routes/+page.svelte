@@ -134,7 +134,7 @@
       </div>
     {/if}
   </div>
-  <main class="max-h-screen w-full bg-white pl-6 pt-6">
+  <main class="max-h-screen w-full bg-white p-6">
     <Router {routes} on:conditionsFailed={conditionsFailed} />
   </main>
   <Messages></Messages>
