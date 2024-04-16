@@ -45,7 +45,7 @@
 
 <TimelineItem
   classLi="mb-4 ms-4"
-  date={`${new Date(comment.time).toLocaleDateString("en-US")} - ${new Date(comment.time).toLocaleTimeString("en-US")}`}
+  date={`${new Date(comment.time).toISOString()}`}
 >
   {#if !isEditing}
     <P class="mb-2">
