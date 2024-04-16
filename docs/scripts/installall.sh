@@ -24,5 +24,8 @@ else
   cd ISDuBA/docs/scripts
   git pull
 fi
+if [ ! -z "$1" ]; then
+  git checkout "$1"
+fi
 
 ./setup.sh # Execute all the other setup scripts
