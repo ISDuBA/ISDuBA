@@ -15,6 +15,10 @@
   import NewEvents from "./NewEvents.svelte";
 </script>
 
+<svelte:head>
+  <title>Home</title>
+</svelte:head>
+
 {#if $appStore.app.keycloak.authenticated}
   <SectionHeader title="New Events"></SectionHeader>
   <NewEvents></NewEvents>

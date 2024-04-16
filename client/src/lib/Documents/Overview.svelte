@@ -123,6 +123,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Documents</title>
+</svelte:head>
+
 <SectionHeader title="Documents"></SectionHeader>
 {#if documents}
   <div class="mb-3 w-2/3">

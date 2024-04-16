@@ -248,6 +248,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>{params.trackingID}</title>
+</svelte:head>
+
 <div
   class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll xl:flex-nowrap"
 >
