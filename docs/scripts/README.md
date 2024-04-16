@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-Calling installall.sh will, on a new Ubuntu 24.04 setup: 
+Calling installall.sh will, on a fresh Ubuntu 24.04 setup: 
  - install git and download the git repository of ISDuBA and then call setup.sh which will
    - install java and go via installgojava.sh
    - install PostgreSQL via installpostgres.sh
@@ -23,7 +23,7 @@ Calling installall.sh will, on a new Ubuntu 24.04 setup:
 
 To call installall (sudo privileges needed):
 ``` bash
-    curl --fail -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
+    curl -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
     installall.sh
 ```
 
