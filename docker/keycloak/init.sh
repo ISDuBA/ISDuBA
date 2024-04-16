@@ -59,19 +59,24 @@ kcadm.sh update clients/$id --target-realm=isduba \
       "jsonType.label" : "JSON"
     } } ]'
 
-kcadm.sh create roles --target-realm=isduba --set name=editor \
-	--set "description=editor"
-kcadm.sh update roles/editor --target-realm isduba \
+# Create groups
+WHITE_GREEN_ID=$(kcadm.sh create groups --target-realm=isduba --set name=white-green -i)
+kcadm.sh update groups/$WHITE_GREEN_ID --target-realm isduba \
 	--set 'attributes={
     "TLP" : [ "{\"*\": [ \"WHITE\", \"GREEN\" ]}" ]
   }'
 
+# Create roles
+kcadm.sh create roles --target-realm=isduba --set name=editor \
+	--set "description=editor"
+
 #creating  a user
-userid=$(kcadm.sh create users --target-realm isduba \
+ALEX_ID=$(kcadm.sh create users --target-realm isduba \
 	--set username=alex --set enabled=true \
 	--set firstName=Alex --set lastName=Klein \
 	--set email=test@example.org \
-	--set emailVerified=true)
+	--set emailVerified=true \
+	-i)
 
 password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
 kcadm.sh set-password --target-realm isduba \
@@ -80,3 +85,5 @@ kcadm.sh set-password --target-realm isduba \
 echo -e "\nCreated user 'alex' with password: $password"
 
 kcadm.sh add-roles -r isduba --uusername alex --rolename editor
+kcadm.sh update -r isduba users/$ALEX_ID/groups/$WHITE_GREEN_ID \
+	-s realm=isduba -s userId=$ALEX_ID -s groupId=$WHITE_GREEN_ID -n
