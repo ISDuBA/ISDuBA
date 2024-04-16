@@ -24,7 +24,7 @@ Calling installall.sh will, on a fresh Ubuntu 24.04 setup:
 To call installall (sudo privileges needed):
 ``` bash
     curl -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
-    installall.sh # branch_name (optional, using a nonexistant branch name will throw an error) 
+    installall.sh # branch_name (optional, using a nonexistent branch name will throw an error) 
 ```
 
 Finally, the bulkimporter can be used to import manually downloaded documents.
