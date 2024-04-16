@@ -18,7 +18,6 @@
     SidebarItem
   } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
   import "boxicons";
@@ -53,13 +52,6 @@
   } else {
     drawerHidden = true;
   }
-  onMount(() => {
-    if (width >= breakPoint) {
-      drawerHidden = false;
-    } else {
-      drawerHidden = true;
-    }
-  });
   const toggleSide = () => {
     if (width < breakPoint) {
       drawerHidden = !drawerHidden;
@@ -153,6 +145,8 @@
     </Sidebar>
   </Drawer>
   <div class="h-screen bg-white p-2">
-    <box-icon name="menu" color="black" size="lg" on:click={toggleDrawer}>Toggle menu</box-icon>
+    <button on:click={toggleDrawer}>
+      <box-icon name="menu" color="black" size="lg">Toggle menu</box-icon>
+    </button>
   </div>
 </div>
