@@ -15,7 +15,6 @@
   import Home from "$lib/Home/Home.svelte";
   import Statistics from "$lib/Statistics/Overview.svelte";
   import Sources from "$lib/Sources/Overview.svelte";
-  import About from "$lib/About/About.svelte";
   import Diff from "$lib/Diff/DiffPage.svelte";
   import { wrap } from "svelte-spa-router/wrap";
   import Configuration from "$lib/Configuration/Overview.svelte";
@@ -25,48 +24,21 @@
   import NotFound from "$lib/NotFound.svelte";
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
-  import Keycloak from "keycloak-js";
-  import { configuration } from "$lib/configuration";
-  import { onMount } from "svelte";
   import Messages from "$lib/Messages/Messages.svelte";
-
-  appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
-
-  onMount(async () => {
-    await $appStore.app.keycloak
-      .init({
-        onLoad: "check-sso",
-        checkLoginIframe: false,
-        responseMode: "query"
-      })
-      .then(async () => {
-        if ($appStore.app.keycloak.authenticated) {
-          const profile = await $appStore.app.keycloak.loadUserProfile();
-          appStore.setUserProfile({
-            firstName: profile.firstName,
-            lastName: profile.lastName
-          });
-          const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
-          appStore.setExpiryTime(expiry.toLocaleTimeString());
-        }
-      })
-      .catch((error: any) => {
-        console.log("error", error);
-      });
-  });
+  import Login from "$lib/Login/Login.svelte";
 
   const loginRequired = {
     loginRequired: true
   };
 
   const loginCondition = async () => {
+    if (!$appStore.app.keycloak) return false;
     if (!$appStore.app.keycloak.authenticated) return false;
     const keycloak = appStore.getKeycloak();
     try {
-      await keycloak.updateToken(5);
+      await keycloak.updateToken();
       return true;
     } catch (error) {
-      await keycloak.login();
       return false;
     }
   };
@@ -75,10 +47,10 @@
     "/": wrap({
       component: Home,
       userData: loginRequired,
-      conditions: []
+      conditions: [loginCondition]
     }),
-    "/about": wrap({
-      component: About
+    "/login": wrap({
+      component: Login
     }),
     "/advisories/:publisherNamespace/:trackingID/documents/:id": wrap({
       component: Advisory,
@@ -120,19 +92,15 @@
 
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
-      push("/");
+      appStore.setSessionExpired(true);
+      push("/login");
     }
   };
 </script>
 
-<div class="flex bg-primary-700">
+<div class="bg-primary-700 flex">
   <div>
     <SideNav></SideNav>
-    {#if $appStore.app.keycloak.authenticated}
-      <div style="position:absolute; top:4.5em; left:1.5em; color:white">
-        Session ends at {$appStore.app.expiryTime}
-      </div>
-    {/if}
   </div>
   <main class="max-h-screen w-full bg-white pl-6 pt-6">
     <Router {routes} on:conditionsFailed={conditionsFailed} />
