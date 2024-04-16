@@ -219,20 +219,12 @@
     loadDocumentSSVC();
   }
 
-  const compareLatest = async () => {
+  const onSelectedDiffDocuments = async (event: any) => {
     diffDocuments = {
-      docA: advisoryVersions[0],
-      docB: advisoryVersions[1]
+      docA: event.detail.docA,
+      docB: event.detail.docB
     };
     isDiffOpen = true;
-  };
-
-  const toggleLatestChanges = () => {
-    if (!isDiffOpen) {
-      compareLatest();
-    } else {
-      isDiffOpen = false;
-    }
   };
 
   onDestroy(() => {
@@ -322,14 +314,9 @@
       trackingID={params.trackingID}
       {advisoryVersions}
       selectedDocumentVersion={document.tracking?.version}
+      on:selectedDiffDocuments={onSelectedDiffDocuments}
+      on:disableDiff={() => (isDiffOpen = false)}
     ></Version>
-    {#if advisoryVersions.length > 1}
-      {#if advisoryVersions[0].version === document.tracking?.version}
-        <Button class="w-fit" color="light" on:click={toggleLatestChanges}
-          ><i class="bx bx-transfer me-2 text-lg"></i>Latest Changes</Button
-        >
-      {/if}
-    {/if}
     {#if isDiffOpen}
       <JsonDiff {diffDocuments}></JsonDiff>
     {:else}
