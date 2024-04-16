@@ -94,7 +94,7 @@
     }
   }
 
-  function doesContainChildCombo(selectedOptions: any, childCombos: any[]): Boolean {
+  function doesContainChildCombo(selectedOptions: any, childCombos: any[]): boolean {
     const test = childCombos.find((combos: any[]) => {
       let count = 0;
       for (const option in selectedOptions) {

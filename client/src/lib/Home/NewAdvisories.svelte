@@ -9,7 +9,6 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
   import {
     Label,

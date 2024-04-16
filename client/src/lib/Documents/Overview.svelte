@@ -282,7 +282,7 @@
       {#each documents as item, i}
         <TableBodyRow
           class="cursor-pointer"
-          on:click={(event) => {
+          on:click={() => {
             push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
           }}
         >
