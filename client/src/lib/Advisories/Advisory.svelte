@@ -248,10 +248,10 @@
   });
 </script>
 
-<div class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll">
-  <div
-    class="flex max-h-full w-full max-w-[96%] grow flex-col gap-y-2 overflow-y-scroll px-2 xl:max-w-[50%]"
-  >
+<div
+  class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll xl:flex-nowrap"
+>
+  <div class="flex max-h-full w-full grow flex-col gap-y-2 overflow-y-scroll px-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
