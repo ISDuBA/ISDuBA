@@ -17,6 +17,7 @@
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   export let diffDocuments: any;
+  export let title: string;
   let error: string;
   let diff: any;
   let urlPath: string;
@@ -63,19 +64,14 @@
 </script>
 
 <div>
-  <ErrorMessage message={error} plain={true}></ErrorMessage>
+  <ErrorMessage message={error}></ErrorMessage>
   {#if diff}
-    {#if diffDocuments.docA.tracking_id === diffDocuments.docB.tracking_id}
-      <Label class="text-lg"
-        >Changes from Version {diffDocuments.docB.version} to Version {diffDocuments.docA.version}
-      </Label>
-    {:else}
-      <Label class="text-lg"
-        >Changes from {diffDocuments.docB.tracking_id} (Version {diffDocuments.docB.version}) to {diffDocuments
-          .docB.tracking_id} (Version {diffDocuments.docA.version})
-      </Label>
+    {#if title}
+      <Label class="text-lg">{title}</Label>
     {/if}
-    <span class="text-gray-700">{diff.length} changes</span>
+    <span class={`${title ? "text-gray-700" : "text-lg text-black"}`}
+      >{diff.length} changes{title ? "" : ":"}</span
+    >
     <Accordion flush multiple>
       {#each groupedResults as result}
         {#if result.changes.length > 0}

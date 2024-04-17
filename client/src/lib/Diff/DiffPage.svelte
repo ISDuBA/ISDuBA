@@ -26,6 +26,7 @@
   let diffDocuments: any;
   let docA: any;
   let docB: any;
+  let title: string;
 
   const compare = () => {
     if (docA && docB) {
@@ -33,6 +34,7 @@
         docA: docB,
         docB: docA
       };
+      title = `Changes from ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docB.version}) to ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docA.version})`;
     }
   };
 
@@ -58,7 +60,7 @@
     </Label>
     <Button on:click={compare} class="my-2">Compare</Button>
     {#if diffDocuments}
-      <JsonDiff {diffDocuments}></JsonDiff>
+      <JsonDiff {diffDocuments} {title}></JsonDiff>
     {/if}
   </TabItem>
   <TabItem title="Git diff">
