@@ -19,3 +19,39 @@ sudo sed --in-place=.orig -e 's/^#db=postgres/db=postgres/' \
 
 # Give feedback after successful completion
 echo "Succesfully adjusted keycloaks configuration."
+
+# create keycloak admin-user
+export KEYCLOAK_ADMIN="keycloak"
+
+export KEYCLOAK_ADMIN_PASSWORD="keycloak"
+
+# TODO: what if keycloak is running, but does not have an admin user yet?
+
+if curl --silent http://localhost:8080/ | grep -F -q "Welcome to Keycloak"; then
+  echo "keycloak is already running..."
+else
+  sudo --preserve-env=KEYCLOAK_ADMIN,KEYCLOAK_ADMIN_PASSWORD /opt/keycloak/bin/kc.sh start-dev &
+
+  # wait for keycloak to start
+  echo "Waiting for keycloak to start..."
+  until curl --silent http://localhost:8080/ | grep -F -q "Welcome to Keycloak"
+  do
+    sleep 1
+  done
+fi
+
+adminuser=keycloak
+adminpass=keycloak
+
+# log into the master realm with admin rights, token saved in ~/.keycloak/kcadm.config
+sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$adminuser" --password "$adminpass"
+
+if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms' | grep -F -q '"realm" : "isduba",' ; then
+ echo "Realm isduba already exists."
+else
+./keycloak/createRealm.sh
+fi
+
+./keycloak/createRole.sh 'editor' 'Bearbeiter' 
+
+./keycloak/createUser.sh 'beate' 'beate' 'bear' 'bea@ISDuBA.isduba' 'beate' 'editor'

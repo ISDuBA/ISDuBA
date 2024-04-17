@@ -10,22 +10,21 @@
 
 set -e # to exit if a command in the script fails
 
-cd "$HOME"
+# migrate
+ISDUBA_DB_MIGRATE=true ./../../cmd/isdubad/isdubad -c ../../isdubad.toml &
 
-# TODO: Check whether sudo is necessary where used.
+touch isduba.log # to ensure file exists for grep
+until grep -q -F "Starting web server" isduba.log
+do
+  sleep 1
+done
 
-sudo apt-get install git -y # Needed to work with github repositories
+mv isduba.log isduba_migrate.log
 
-# If repository already exists, update it instead of cloning it
-if [ ! -d "ISDuBA" ] ; then
-  git clone https://github.com/ISDuBA/ISDuBA.git
-  cd ISDuBA/docs/scripts
+if ps -p $!; then
+  echo "Migration successful"
+  kill $!
 else
-  cd ISDuBA/docs/scripts
-  git pull
-fi
-if [ ! -z "$1" ]; then
-  git checkout "$1"
+ echo "Couldn't start migration, is isduba already running?"
 fi
 
-./setup.sh # Execute all the other setup scripts

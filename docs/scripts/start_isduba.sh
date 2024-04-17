@@ -10,17 +10,14 @@
 
 set -e # to exit if a command in the script fails
 
-cd ../..
+./../../cmd/isdubad/isdubad -c ../../isdubad.toml &
 
-sudo apt-get install make
+# TODO: handle race conditions
+if curl --head --silent http://localhost:5173/ | grep -F -q "HTTP/1.1 200 OK"; then
+  echo "Port 5173 is already being used. Is isduba already running?"
+else
+ cd ./../../client/
 
-make all
+ npm run dev &
 
-echo "Successfully created isdubad and bulkimport binaries."
-
-# create the isdubad configuration
-cp docs/example_isdubad.toml isdubad.toml
-echo "Successfully created example-configuration isdubad.toml."
-
-cp client/.env.example client/.env
-echo "Successfully created client-env."
+fi
