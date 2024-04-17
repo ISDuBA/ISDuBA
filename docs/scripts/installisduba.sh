@@ -21,3 +21,6 @@ echo "Successfully created isdubad and bulkimport binaries."
 # create the isdubad configuration
 cp docs/example_isdubad.toml isdubad.toml
 echo "Successfully created example-configuration isdubad.toml."
+
+cp client/.env.example client/.env
+echo "Successfully created client-env."
