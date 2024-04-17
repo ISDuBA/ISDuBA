@@ -53,8 +53,8 @@
 
 <div>
   {#if parsedContent}
-    {#each parsedContent as content}
-      <span class={getSpanClass(content.type)}>{content.content}</span>
+    {#each parsedContent as parsedPart}
+      <span class={getSpanClass(parsedPart.type)}>{parsedPart.content}</span>
     {/each}
   {/if}
 </div>
