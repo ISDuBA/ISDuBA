@@ -10,8 +10,9 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { Button, Label, Toggle } from "flowbite-svelte";
+  import { Button, Label } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
+  import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   export let advisoryVersions: any;
   $: reversedAdvisoryVersions = advisoryVersions.toReversed();
   export let publisherNamespace: string;
@@ -21,10 +22,14 @@
   let firstDocumentIndex: number | undefined;
   let secondDocumentIndex: number | undefined;
   let nextColor = "red";
-  const diffButtonBaseClass = "!p-2 h-8 w-8";
+  const diffButtonBaseClass = "!p-2 h-8 w-8 mb-2";
   $: diffButtonClass = diffModeActivated
     ? `${diffButtonBaseClass} bg-gray-800 text-white hover:bg-gray-600 focus-within:ring-transparent`
     : `${diffButtonBaseClass} bg-white text-black border border-solid border-gray-300 hover:bg-gray-200 focus-within:ring-transparent`;
+  const versionButtonClass = "text-black hover:text-black border border-solid";
+  const redButtonClass = `${versionButtonClass} bg-red-100 hover:bg-red-300 border-red-700`;
+  const greenButtonClass = `${versionButtonClass} bg-green-100 hover:bg-green-300 border-green-700`;
+  const lightButtonClass = `${versionButtonClass} bg-white hover:bg-gray-200 border-gray-700`;
 
   const dispatch = createEventDispatcher();
   const navigateToVersion = (version: any) => {
@@ -86,36 +91,36 @@
         {#if diffModeActivated}
           {#each reversedAdvisoryVersions as version, index}
             {@const isDisabled =
-              (nextColor === "red" && secondDocumentIndex && index > secondDocumentIndex) ||
-              (nextColor === "green" && firstDocumentIndex && index < firstDocumentIndex)}
+              (nextColor === "red" &&
+                ((secondDocumentIndex && index >= secondDocumentIndex) ||
+                  index === reversedAdvisoryVersions.length - 1)) ||
+              (nextColor === "green" &&
+                ((firstDocumentIndex && index <= firstDocumentIndex) || index === 0))}
             <div class="group flex flex-col items-center">
               <Button
                 disabled={isDisabled}
-                class={`${diffButtonBaseClass}`}
+                class={`${diffButtonBaseClass} ${index === firstDocumentIndex ? redButtonClass : index === secondDocumentIndex ? greenButtonClass : lightButtonClass}`}
                 on:click={() => {
                   selectDiffDocument(index);
                 }}
                 outline
-                color={index === firstDocumentIndex
-                  ? "red"
-                  : index === secondDocumentIndex
-                    ? "green"
-                    : "light"}
               >
                 {version.version}
               </Button>
               {#if index === firstDocumentIndex}
-                <span><i class="bx bx-minus text-red-700"></i></span>
+                <DiffVersionIndicator color="red" {isDisabled} icon="minus" permanent={true}
+                ></DiffVersionIndicator>
               {:else if index === secondDocumentIndex}
-                <span><i class="bx bx-plus text-green-700"></i></span>
+                <DiffVersionIndicator color="green" {isDisabled} icon="plus" permanent={true}
+                ></DiffVersionIndicator>
               {:else if !isDisabled}
-                <span class="text-white group-hover:text-gray-700">
-                  {#if nextColor === "green"}
-                    <i class="bx bx-plus"></i>
-                  {:else}
-                    <i class="bx bx-minus"></i>
-                  {/if}
-                </span>
+                {#if nextColor === "green"}
+                  <DiffVersionIndicator color="gray" icon="plus" {isDisabled}
+                  ></DiffVersionIndicator>
+                {:else}
+                  <DiffVersionIndicator color="gray" icon="minus" {isDisabled}
+                  ></DiffVersionIndicator>
+                {/if}
               {/if}
             </div>
           {/each}
