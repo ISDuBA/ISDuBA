@@ -32,17 +32,23 @@ Switch into the directory
 cd ISDuBA
 ```
 #### build the tools
-Switch into the bulkimport directory and build it:
+
+It is recommended to use the Makefile to build the tools:
+```
+make all
+```
+
+Alternatively, switch into the bulkimport directory and build the bulkimporter:
 ```
 cd cmd/bulkimport
 go build
 ```
-Switch into the isdubad directory and build it:
+then switch into the isdubad directory and build isdubad:
 ```
 cd ../isdubad
 go build
 ```
-Return to the main directory:
+Finally, return to the main directory:
 ```
 cd ../..
 ```

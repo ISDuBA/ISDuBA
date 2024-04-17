@@ -10,7 +10,7 @@
 
 set -e # to exit if a command in the script fails
 
-sudo apt-get update # Make sure to be up-to-date
+sudo apt-get update # make sure to be up-to-date
 
 ./installgojava.sh # installs go and java
 
@@ -22,8 +22,12 @@ sudo apt-get update # Make sure to be up-to-date
 
 ./configurekeycloak.sh # configures keycloak
 
-./installplaywright.sh # Prepare frontend
+./installplaywright.sh # prepare frontend
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
+
+./migrate.sh # prepare isduba database
+
+./start_isduba.sh # start backend and frontend
 
 echo "All set up!"

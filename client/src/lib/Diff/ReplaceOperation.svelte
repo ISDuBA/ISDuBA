@@ -9,10 +9,9 @@
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
-
   export let content: string;
   let parsedContent: object[];
+  $: parsedContent = parse(content);
 
   const parse = (textPart: any, level = 0): object[] => {
     const text = typeof textPart === "number" ? textPart.toString() : textPart;
@@ -46,10 +45,6 @@
     return parsed;
   };
 
-  onMount(() => {
-    parsedContent = parse(content);
-  });
-
   const getSpanClass = (type: string) => {
     if (type === "add") return "bg-green-200";
     if (type === "remove") return "bg-red-200";
@@ -58,8 +53,8 @@
 
 <div>
   {#if parsedContent}
-    {#each parsedContent as content}
-      <span class={getSpanClass(content.type)}>{content.content}</span>
+    {#each parsedContent as parsedPart}
+      <span class={getSpanClass(parsedPart.type)}>{parsedPart.content}</span>
     {/each}
   {/if}
 </div>
