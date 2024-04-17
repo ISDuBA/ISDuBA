@@ -123,6 +123,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Documents</title>
+</svelte:head>
+
 <SectionHeader title="Documents"></SectionHeader>
 {#if documents}
   <div class="mb-3 w-2/3">
@@ -282,7 +286,7 @@
       {#each documents as item, i}
         <TableBodyRow
           class="cursor-pointer"
-          on:click={(event) => {
+          on:click={() => {
             push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
           }}
         >

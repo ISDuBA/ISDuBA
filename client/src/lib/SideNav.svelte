@@ -9,9 +9,18 @@
 -->
 
 <script lang="ts">
-  import { Heading, Sidebar, SidebarWrapper, SidebarGroup, SidebarItem } from "flowbite-svelte";
+  import {
+    Drawer,
+    Heading,
+    Sidebar,
+    SidebarWrapper,
+    SidebarGroup,
+    SidebarItem
+  } from "flowbite-svelte";
+  import { sineIn } from "svelte/easing";
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
+  import "boxicons";
 
   let notactivated =
     "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-primary-100 hover:text-primary-900";
@@ -21,60 +30,96 @@
     "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700";
   let nonActiveClass =
     "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
+
+  let transitionParams = {
+    x: -320,
+    duration: 200,
+    easing: sineIn
+  };
+  let breakPoint: number = 1280;
+  let width: number;
+  let drawerHidden: boolean = false;
+  $: if (width >= breakPoint) {
+    drawerHidden = false;
+  } else {
+    drawerHidden = true;
+  }
+  const toggleDrawer = () => {
+    drawerHidden = !drawerHidden;
+  };
 </script>
 
+<svelte:window bind:innerWidth={width} />
 {#if $appStore.app.keycloak && ($appStore.app.keycloak.authenticated || $appStore.app.sessionExpired)}
-  <Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
-    <SidebarWrapper class="bg-primary-700">
-      <Heading class="mb-6 text-white">ISDuBA</Heading>
-      <SidebarGroup class="bg-primary-700">
-        <!-- Entries which are available after login should go here-->
-        <SidebarItem label="Home" href="/#/">
-          <svelte:fragment slot="icon">
-            <i class="bx bxs-dashboard"></i>
-          </svelte:fragment>
-        </SidebarItem>
-        <SidebarItem label="Advisories" href="/#/advisories">
-          <svelte:fragment slot="icon">
-            <i class="bx bx-spreadsheet"></i>
-          </svelte:fragment>
-        </SidebarItem>
-        <SidebarItem label="Compare" href="/#/diff">
-          <svelte:fragment slot="icon">
-            <i class="bx bx-transfer"></i>
-          </svelte:fragment>
-        </SidebarItem>
-        <SidebarItem label="Documents" href="/#/documents">
-          <svelte:fragment slot="icon">
-            <i class="bx bx-spreadsheet"></i>
-          </svelte:fragment>
-        </SidebarItem>
-        <SidebarItem label="Sources" nonActiveClass={notactivated}>
-          <svelte:fragment slot="icon">
-            <i class="bx bx-git-repo-forked"></i>
-          </svelte:fragment>
-        </SidebarItem>
-        <SidebarItem label="Statistics" nonActiveClass={notactivated}>
-          <svelte:fragment slot="icon">
-            <i class="bx bx-bar-chart-square"></i>
-          </svelte:fragment>
-        </SidebarItem>
-        <SidebarItem label="Configuration" nonActiveClass={notactivated}>
-          <svelte:fragment slot="icon">
-            <i class="bx bx-cog"></i>
-          </svelte:fragment>
-        </SidebarItem>
-        {#if !$appStore.app.sessionExpired}
-          <SidebarItem
-            label={$appStore.app.keycloak.idTokenParsed.preferred_username}
-            href="/#/login"
-          >
-            <svelte:fragment slot="icon">
-              <i class="bx bx-user"></i>
-            </svelte:fragment>
-          </SidebarItem>
-        {/if}
-      </SidebarGroup>
-    </SidebarWrapper>
-  </Sidebar>
+  <div class="flex">
+    <Drawer
+      transitionType="fly"
+      {transitionParams}
+      bind:hidden={drawerHidden}
+      activateClickOutside={false}
+      width="w-45"
+      backdrop={false}
+      class="bg-primary-700 static h-screen p-2"
+      id="sidebar"
+    >
+      <Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
+        <SidebarWrapper class="bg-primary-700">
+          <Heading class="mb-6 text-white">ISDuBA</Heading>
+          <SidebarGroup class="bg-primary-700">
+            <!-- Entries which are available after login should go here-->
+            <SidebarItem label="Home" href="/#/">
+              <svelte:fragment slot="icon">
+                <i class="bx bxs-dashboard"></i>
+              </svelte:fragment>
+            </SidebarItem>
+            <SidebarItem label="Advisories" href="/#/advisories">
+              <svelte:fragment slot="icon">
+                <i class="bx bx-spreadsheet"></i>
+              </svelte:fragment>
+            </SidebarItem>
+            <SidebarItem label="Compare" href="/#/diff">
+              <svelte:fragment slot="icon">
+                <i class="bx bx-transfer"></i>
+              </svelte:fragment>
+            </SidebarItem>
+            <SidebarItem label="Documents" href="/#/documents">
+              <svelte:fragment slot="icon">
+                <i class="bx bx-spreadsheet"></i>
+              </svelte:fragment>
+            </SidebarItem>
+            <SidebarItem label="Sources" nonActiveClass={notactivated}>
+              <svelte:fragment slot="icon">
+                <i class="bx bx-git-repo-forked"></i>
+              </svelte:fragment>
+            </SidebarItem>
+            <SidebarItem label="Statistics" nonActiveClass={notactivated}>
+              <svelte:fragment slot="icon">
+                <i class="bx bx-bar-chart-square"></i>
+              </svelte:fragment>
+            </SidebarItem>
+            <SidebarItem label="Configuration" nonActiveClass={notactivated}>
+              <svelte:fragment slot="icon">
+                <i class="bx bx-cog"></i>
+              </svelte:fragment>
+            </SidebarItem>
+            {#if !$appStore.app.sessionExpired}
+              <SidebarItem
+                label={$appStore.app.keycloak.idTokenParsed.preferred_username}
+                href="/#/login"
+              >
+                <svelte:fragment slot="icon">
+                  <i class="bx bx-user"></i>
+                </svelte:fragment>
+              </SidebarItem>
+            {/if}
+          </SidebarGroup>
+        </SidebarWrapper>
+      </Sidebar>
+    </Drawer>
+    <div class="h-screen bg-white p-2">
+      <button on:click={toggleDrawer}>
+        <box-icon name="menu" color="black" size="lg">Toggle menu</box-icon>
+      </button>
+    </div>
+  </div>
 {/if}

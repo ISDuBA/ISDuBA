@@ -219,20 +219,12 @@
     loadDocumentSSVC();
   }
 
-  const compareLatest = async () => {
+  const onSelectedDiffDocuments = async (event: any) => {
     diffDocuments = {
-      docA: advisoryVersions[0],
-      docB: advisoryVersions[1]
+      docA: event.detail.docA,
+      docB: event.detail.docB
     };
     isDiffOpen = true;
-  };
-
-  const toggleLatestChanges = () => {
-    if (!isDiffOpen) {
-      compareLatest();
-    } else {
-      isDiffOpen = false;
-    }
   };
 
   onDestroy(() => {
@@ -248,10 +240,14 @@
   });
 </script>
 
-<div class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll">
-  <div
-    class="flex max-h-full w-full max-w-[96%] grow flex-col gap-y-2 overflow-y-scroll px-2 xl:max-w-[50%]"
-  >
+<svelte:head>
+  <title>{params.trackingID}</title>
+</svelte:head>
+
+<div
+  class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll xl:flex-nowrap"
+>
+  <div class="flex max-h-full w-full grow flex-col gap-y-2 overflow-y-scroll px-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
@@ -318,14 +314,9 @@
       trackingID={params.trackingID}
       {advisoryVersions}
       selectedDocumentVersion={document.tracking?.version}
+      on:selectedDiffDocuments={onSelectedDiffDocuments}
+      on:disableDiff={() => (isDiffOpen = false)}
     ></Version>
-    {#if advisoryVersions.length > 1}
-      {#if advisoryVersions[0].version === document.tracking?.version}
-        <Button class="w-fit" color="light" on:click={toggleLatestChanges}
-          ><i class="bx bx-transfer me-2 text-lg"></i>Latest Changes</Button
-        >
-      {/if}
-    {/if}
     {#if isDiffOpen}
       <JsonDiff {diffDocuments}></JsonDiff>
     {:else}

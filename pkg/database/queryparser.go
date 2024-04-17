@@ -113,6 +113,15 @@ func FieldEqInt(field string, value int64) *Expr {
 	}
 }
 
+// BoolField returns an access term that returns a bool value.
+func BoolField(field string) *Expr {
+	return &Expr{
+		valueType:   boolType,
+		exprType:    access,
+		stringValue: field,
+	}
+}
+
 // String implements [fmt.Stringer].
 func (et exprType) String() string {
 	switch et {
@@ -958,14 +967,4 @@ func (p *Parser) Parse(input string) (expr *Expr, err error) {
 		}
 	}()
 	return p.parse(input)
-}
-
-// MustParse parses the given input to an expression.
-// If the parsing failed it panics.
-func (p *Parser) MustParse(input string) *Expr {
-	expr, err := p.Parse(input)
-	if err != nil {
-		panic(fmt.Sprintf("parsing %q failed: %v", input, err))
-	}
-	return expr
 }

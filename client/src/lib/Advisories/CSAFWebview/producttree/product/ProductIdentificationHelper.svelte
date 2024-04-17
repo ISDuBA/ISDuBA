@@ -13,7 +13,7 @@
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
   import XGenericUri from "./XGenericURI.svelte";
-  import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
+  import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   export let helper: any;
 </script>
 

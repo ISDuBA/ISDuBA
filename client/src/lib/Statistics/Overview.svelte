@@ -10,7 +10,6 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { onMount } from "svelte";
 </script>
 
 <SectionHeader title="Statistics"></SectionHeader>

@@ -24,8 +24,7 @@
     TableBodyRow,
     TableHead,
     TableHeadCell,
-    Table,
-    Tooltip
+    Table
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
@@ -132,6 +131,10 @@
     }
   });
 </script>
+
+<svelte:head>
+  <title>Advisories</title>
+</svelte:head>
 
 <SectionHeader title="Advisories"></SectionHeader>
 {#if documents}
@@ -306,7 +309,7 @@
       {#each documents as item, i}
         <TableBodyRow
           class="cursor-pointer"
-          on:click={(event) => {
+          on:click={() => {
             push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
           }}
         >
