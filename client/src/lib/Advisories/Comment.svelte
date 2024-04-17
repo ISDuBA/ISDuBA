@@ -43,10 +43,7 @@
   }
 </script>
 
-<TimelineItem
-  classLi="mb-4 ms-4"
-  date={`${new Date(comment.time).toISOString()}`}
->
+<TimelineItem classLi="mb-4 ms-4" date={`${new Date(comment.time).toISOString()}`}>
   {#if !isEditing}
     <P class="mb-2">
       {comment.message}
