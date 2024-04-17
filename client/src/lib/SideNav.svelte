@@ -26,6 +26,7 @@
     "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-primary-100 hover:text-primary-900";
 
   $: activeUrl = "/" + $page.url.hash;
+
   let activeClass =
     "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700";
   let nonActiveClass =
@@ -44,6 +45,7 @@
   } else {
     drawerHidden = true;
   }
+
   const toggleDrawer = () => {
     drawerHidden = !drawerHidden;
   };
@@ -62,7 +64,7 @@
       class="bg-primary-700 static h-screen p-2"
       id="sidebar"
     >
-      <Sidebar class="bg-primary-700 h-screen p-2" {activeUrl} {activeClass} {nonActiveClass}>
+      <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
         <SidebarWrapper class="bg-primary-700">
           <Heading class="mb-6 text-white">ISDuBA</Heading>
           <SidebarGroup class="bg-primary-700">
