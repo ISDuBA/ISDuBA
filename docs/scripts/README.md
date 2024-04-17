@@ -30,3 +30,5 @@ To call installall (sudo privileges needed):
 Finally, the bulkimporter can be used to import manually downloaded documents.
 
 After that the setup is complete.
+The keycloak will be avaible on localhost port 8080, ISDuBA on port 5173.
+Login is possible via an example-user ```beate``` with the password ```beate```.
