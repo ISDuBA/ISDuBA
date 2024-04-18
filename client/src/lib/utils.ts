@@ -11,6 +11,7 @@
 import { appStore } from "./store";
 import { type HttpResponse } from "./types";
 import { configuration } from "$lib/configuration";
+import { push } from "svelte-spa-router";
 
 export const request = async (
   path: string,
@@ -57,7 +58,8 @@ const getAccessToken = async () => {
     const expiry = new Date(keycloak.idTokenParsed.exp * 1000);
     appStore.setExpiryTime(expiry.toLocaleTimeString());
   } catch (error) {
-    await keycloak.login();
+    appStore.setSessionExpired(true);
+    push("/login");
   }
 
   return keycloak.token;
