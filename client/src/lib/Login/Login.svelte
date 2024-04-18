@@ -14,8 +14,8 @@
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
-  import { Button, Heading } from "flowbite-svelte";
-  import { PUBLIC_KEYCLOAK_URL } from "$env/static/public";
+  import { Button, Heading, Card } from "flowbite-svelte";
+  import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   import { request } from "$lib/utils";
@@ -77,32 +77,49 @@
 </script>
 
 <div class="mt-60 flex items-center justify-center">
-  <div class="flex w-80 flex-col gap-4">
+  <div class="flex w-96 flex-col gap-4">
     <div><Heading class="">ISDuBA</Heading></div>
-    {#if $appStore.app.keycloak && !$appStore.app.keycloak.authenticated}
-      {#if $appStore.app.sessionExpired}
-        <div class="text-yellow-400">
-          <i class="bx bx-message-alt-error"></i> Your session is expired
+    <Card>
+      <div class="flex flex-col gap-4">
+        <div>
+          <img
+            style="height:2rem;"
+            src={`${PUBLIC_KEYCLOAK_URL}/resources/zph0a/admin/keycloak.v2/logo.svg`}
+          />
         </div>
-      {/if}
-      <Button on:click={login}><i class="bx bxs-key mr-1"></i>Login Keycloak</Button>
-      <P>
-        <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
-          >Visit the ISDuBA project on Github</A
-        ></P
-      >
-    {/if}
-    {#if $appStore.app.keycloak && $appStore.app.keycloak.authenticated}
-      <div>Your session ends due to inactivity {$appStore.app.expiryTime}</div>
-      <Button href={profileUrl}><i class="bx bxs-key mr-1"></i> Visit Keycloak UserProfile</Button>
-      <Button on:click={logout}><i class="bx bxs-key mr-1"></i> Logout Keycloak</Button>
-      <P class="mt-3">
-        Versions:
-        <List tag="ul" class="space-y-1" list="none">
-          <Li liClass="ml-3">ISDuBA: {version}</Li>
-        </List>
-        <ErrorMessage message={error} plain={true}></ErrorMessage>
-      </P>
-    {/if}
+        <P class="flex flex-col"
+          ><span><b>Server URL: </b>{PUBLIC_KEYCLOAK_URL}</span><span
+            ><b>Realm: </b>{PUBLIC_KEYCLOAK_REALM}</span
+          ></P
+        >
+        {#if $appStore.app.keycloak && !$appStore.app.keycloak.authenticated}
+          {#if $appStore.app.sessionExpired}
+            <div class="text-yellow-400">
+              <i class="bx bx-message-alt-error"></i> Your session is expired
+            </div>
+          {/if}
+          <Button on:click={login}>Login</Button>
+          <P>
+            <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
+              >Visit the ISDuBA project on Github</A
+            ></P
+          >
+        {/if}
+        {#if $appStore.app.keycloak && $appStore.app.keycloak.authenticated}
+          <Button href={profileUrl}>Profile</Button>
+          <Button on:click={logout}>Logout</Button>
+          <small class="text-gray-400"
+            >Your session ends due to inactivity {$appStore.app.expiryTime}</small
+          >
+        {/if}
+      </div>
+    </Card>
+    <P class="mt-3">
+      Versions:
+      <List tag="ul" class="space-y-1" list="none">
+        <Li liClass="ml-3">ISDuBA: {version}</Li>
+      </List>
+      <ErrorMessage message={error} plain={true}></ErrorMessage>
+    </P>
   </div>
 </div>
