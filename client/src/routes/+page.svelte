@@ -125,14 +125,9 @@
   };
 </script>
 
-<div class="flex bg-primary-700">
+<div class="bg-primary-700 flex">
   <div>
     <SideNav></SideNav>
-    {#if $appStore.app.keycloak.authenticated}
-      <div style="position:absolute; top:4.5em; left:1.5em; color:white">
-        Session ends at {$appStore.app.expiryTime}
-      </div>
-    {/if}
   </div>
   <main class="max-h-screen w-full bg-white p-6">
     <Router {routes} on:conditionsFailed={conditionsFailed} />

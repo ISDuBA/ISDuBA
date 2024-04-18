@@ -73,7 +73,7 @@
     activateClickOutside={false}
     width="w-45"
     backdrop={false}
-    class="static h-screen bg-primary-700 p-2"
+    class="bg-primary-700 static h-screen p-2"
     id="sidebar"
   >
     <Sidebar {activeUrl} {activeClass} {nonActiveClass}>
