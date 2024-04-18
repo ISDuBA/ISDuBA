@@ -20,8 +20,6 @@
 </svelte:head>
 
 {#if $appStore.app.keycloak.authenticated}
-  <SectionHeader title="New Events"></SectionHeader>
-  <NewEvents></NewEvents>
-  <SectionHeader title="New Advisories"></SectionHeader>
+  <SectionHeader title="Overview"></SectionHeader>
   <NewAdvisories></NewAdvisories>
 {/if}

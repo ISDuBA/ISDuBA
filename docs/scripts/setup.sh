@@ -10,8 +10,6 @@
 
 set -e # to exit if a command in the script fails
 
-sudo apt-get update # make sure to be up-to-date
-
 ./installgojava.sh # installs go and java
 
 ./installpostgres.sh # installs postgreSQL
