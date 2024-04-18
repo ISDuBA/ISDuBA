@@ -197,7 +197,7 @@
               class="mr-1 w-16 cursor-pointer border pr-1 text-right"
               on:change={() => {
                 if (!parseInt("" + currentPage)) currentPage = 1;
-                currentPage = Math.floor(currentPage);
+                currentPage = Math.floor(parseInt(currentPage));
                 if (currentPage < 1) currentPage = 1;
                 if (currentPage > numberOfPages) currentPage = numberOfPages;
                 offset = (currentPage - 1) * limit;
