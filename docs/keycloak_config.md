@@ -21,7 +21,7 @@ The key values are ```SSO Session Idle``` and ```SSO Session Max``` found in the
 and ```Access Token Lifespan``` found in the ```Tokens``` tab.
 
 An access token expires ```Access Token Lifespan``` after it's last refresh and is no longer valid. Since shortly before it expires (~ 5 seconds), any action
-taken within the application will refresh it unless it's been longer than ```SSO Session Idle```
+taken within the application will refresh it (even if it already expired) unless it's been longer than ```SSO Session Idle```
 since the last refresh. 
 
 (This also means setting the ```Access Token Lifespan``` to a value more than 5 seconds longer than the ```SSO Session Idle``` will
