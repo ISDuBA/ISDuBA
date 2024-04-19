@@ -11,7 +11,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
-  import { push } from "svelte-spa-router";
   import { Button, Heading, Card } from "flowbite-svelte";
   import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
@@ -57,6 +56,7 @@
       <div class="flex flex-col gap-4">
         <div>
           <img
+            alt="Keycloak Logo"
             style="height:2rem;"
             src={`${PUBLIC_KEYCLOAK_URL}/resources/zph0a/admin/keycloak.v2/logo.svg`}
           />
