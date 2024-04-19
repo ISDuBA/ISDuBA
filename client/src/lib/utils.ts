@@ -59,6 +59,7 @@ const getAccessToken = async () => {
     appStore.setExpiryTime(expiry.toLocaleTimeString());
   } catch (error) {
     appStore.setSessionExpired(true);
+    localStorage.setItem("currentLocation", window.location.hash.substring(1));
     push("/login");
   }
 

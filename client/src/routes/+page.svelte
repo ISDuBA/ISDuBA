@@ -41,7 +41,11 @@
       if ($appStore.app.keycloak.authenticated) {
         const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
         appStore.setExpiryTime(expiry.toLocaleTimeString());
-        push("/");
+        let redirect = localStorage.getItem("currentLocation");
+        if (!redirect) {
+          redirect = "/";
+        }
+        push(redirect);
       }
     })
     .catch((error: any) => {
@@ -113,12 +117,13 @@
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
       appStore.setSessionExpired(true);
+      localStorage.setItem("currentLocation", window.location.hash.substring(1));
       push("/login");
     }
   };
 </script>
 
-<div class="bg-primary-700 flex">
+<div class="flex bg-primary-700">
   <div>
     <SideNav></SideNav>
   </div>
