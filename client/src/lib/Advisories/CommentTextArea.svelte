@@ -41,6 +41,6 @@
         </Label>
       {/if}
     </div>
-    <ErrorMessage message={errorMessage} plain={true}></ErrorMessage>
+    <ErrorMessage message={errorMessage}></ErrorMessage>
   </div>
 </Textarea>

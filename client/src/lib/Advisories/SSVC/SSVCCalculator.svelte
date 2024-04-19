@@ -350,5 +350,5 @@
       {/if}
     {/if}
   {/if}
-  <ErrorMessage message={saveSSVCError} plain={true}></ErrorMessage>
+  <ErrorMessage message={saveSSVCError}></ErrorMessage>
 </div>

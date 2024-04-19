@@ -43,6 +43,6 @@
 </script>
 
 <div>
-  <ErrorMessage message={error} plain={true}></ErrorMessage>
+  <ErrorMessage message={error}></ErrorMessage>
   <div id="diff"></div>
 </div>

@@ -119,7 +119,7 @@
       <List tag="ul" class="space-y-1" list="none">
         <Li liClass="ml-3">ISDuBA: {version}</Li>
       </List>
-      <ErrorMessage message={error} plain={true}></ErrorMessage>
+      <ErrorMessage message={error}></ErrorMessage>
     </P>
   </div>
 </div>

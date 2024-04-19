@@ -50,7 +50,7 @@
         </code>
       </b>
     {/if}
-    <ErrorMessage message={error} plain={true}></ErrorMessage>
+    <ErrorMessage message={error}></ErrorMessage>
   </div>
   {#if result}
     <DiffEntry content={result} {operation}></DiffEntry>

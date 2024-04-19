@@ -17,7 +17,6 @@
 
 <div class="my-2">
   {#if message && message.length > 0}
-    <Message dismissable={false} error={{ type: MESSAGE.ERROR, message: message }} plain={true}
-    ></Message>
+    <Message dismissable={false} error={{ type: MESSAGE.ERROR, message: message }}></Message>
   {/if}
 </div>
