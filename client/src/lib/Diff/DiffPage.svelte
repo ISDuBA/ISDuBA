@@ -41,7 +41,7 @@
   onMount(async () => {
     const documentURL = encodeURI(`/api/documents?limit=20&columns=id version tracking_id`);
     const response = await request(documentURL, "GET");
-    if (response.ok) {
+    if (response.ok && response.content.documents != undefined) {
       documents = response.content.documents;
     }
   });
