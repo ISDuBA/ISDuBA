@@ -55,6 +55,7 @@
         }
       })
       .catch((error: any) => {
+        localStorage.removeItem("cachedKeycloak");
         push("/login");
       });
   }

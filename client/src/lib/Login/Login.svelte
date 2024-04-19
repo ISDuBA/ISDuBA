@@ -22,6 +22,7 @@
 
   async function logout() {
     appStore.setSessionExpired(true);
+    localStorage.removeItem("cachedKeycloak");
     $appStore.app.keycloak.logout();
   }
 

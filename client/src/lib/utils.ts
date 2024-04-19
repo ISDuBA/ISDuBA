@@ -60,6 +60,7 @@ const getAccessToken = async () => {
   } catch (error) {
     appStore.setSessionExpired(true);
     localStorage.setItem("currentLocation", window.location.hash.substring(1));
+    localStorage.removeItem("cachedKeycloak");
     push("/login");
   }
 
