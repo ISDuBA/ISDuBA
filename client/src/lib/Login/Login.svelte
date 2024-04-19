@@ -82,9 +82,6 @@
         {#if $appStore.app.keycloak && $appStore.app.keycloak.authenticated}
           <Button href={profileUrl}>Profile</Button>
           <Button on:click={logout}>Logout</Button>
-          <small class="text-gray-400"
-            >Your session ends due to inactivity {$appStore.app.expiryTime}</small
-          >
         {/if}
       </div>
     </Card>
