@@ -9,8 +9,6 @@
 -->
 
 <script lang="ts">
-  import Keycloak from "keycloak-js";
-  import { configuration } from "$lib/configuration";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
@@ -22,8 +20,6 @@
 
   let version: string = "Retrieving Version from server";
   let error: string;
-
-  if (!$appStore.app.keycloak) appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
 
   async function logout() {
     appStore.setSessionExpired(true);
@@ -42,29 +38,7 @@
   let profileUrl = PUBLIC_KEYCLOAK_URL + "/realms/isduba/account/#/";
 
   onMount(async () => {
-    if (!$appStore.app.keycloak.authenticated) {
-      await $appStore.app.keycloak
-        .init({
-          onLoad: "check-sso",
-          checkLoginIframe: false,
-          responseMode: "query"
-        })
-        .then(async () => {
-          if ($appStore.app.keycloak.authenticated) {
-            const profile = await $appStore.app.keycloak.loadUserProfile();
-            appStore.setUserProfile({
-              firstName: profile.firstName,
-              lastName: profile.lastName
-            });
-            const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
-            appStore.setExpiryTime(expiry.toLocaleTimeString());
-            push("/");
-          }
-        })
-        .catch((error: any) => {
-          console.log("error", error);
-        });
-    } else {
+    if ($appStore.app.keycloak.authenticated) {
       const response = await request("api/about", "GET");
       if (response.ok) {
         const backendInfo = response.content;
@@ -114,12 +88,14 @@
         {/if}
       </div>
     </Card>
-    <P class="mt-3">
-      Versions:
-      <List tag="ul" class="space-y-1" list="none">
-        <Li liClass="ml-3">ISDuBA: {version}</Li>
-      </List>
-      <ErrorMessage message={error}></ErrorMessage>
-    </P>
+    {#if $appStore.app.keycloak.authenticated}
+      <P class="mt-3">
+        Versions:
+        <List tag="ul" class="space-y-1" list="none">
+          <Li liClass="ml-3">ISDuBA: {version}</Li>
+        </List>
+        <ErrorMessage message={error}></ErrorMessage>
+      </P>
+    {/if}
   </div>
 </div>

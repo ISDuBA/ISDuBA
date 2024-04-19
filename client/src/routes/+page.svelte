@@ -26,7 +26,27 @@
   import { push } from "svelte-spa-router";
   import Messages from "$lib/Messages/Messages.svelte";
   import Login from "$lib/Login/Login.svelte";
+  import Keycloak from "keycloak-js";
+  import { configuration } from "$lib/configuration";
 
+  if (!$appStore.app.keycloak) appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
+
+  $appStore.app.keycloak
+    .init({
+      onLoad: "check-sso",
+      checkLoginIframe: false,
+      responseMode: "query"
+    })
+    .then(async () => {
+      if ($appStore.app.keycloak.authenticated) {
+        const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
+        appStore.setExpiryTime(expiry.toLocaleTimeString());
+        push("/");
+      }
+    })
+    .catch((error: any) => {
+      push("/login");
+    });
   const loginRequired = {
     loginRequired: true
   };
