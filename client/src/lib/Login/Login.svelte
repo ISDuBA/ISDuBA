@@ -49,6 +49,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Login</title>
+</svelte:head>
+
 <div class="mt-60 flex items-center justify-center">
   <div class="flex w-96 flex-col gap-4">
     <div><Heading class="">ISDuBA</Heading></div>

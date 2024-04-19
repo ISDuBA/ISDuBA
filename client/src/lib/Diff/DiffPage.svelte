@@ -47,6 +47,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Compare</title>
+</svelte:head>
+
 <SectionHeader title="Comparison"></SectionHeader>
 <Tabs>
   <TabItem open title="JSON diff">
