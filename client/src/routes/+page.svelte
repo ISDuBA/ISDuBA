@@ -31,26 +31,33 @@
 
   if (!$appStore.app.keycloak) appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
 
-  $appStore.app.keycloak
-    .init({
-      onLoad: "check-sso",
-      checkLoginIframe: false,
-      responseMode: "query"
-    })
-    .then(async () => {
-      if ($appStore.app.keycloak.authenticated) {
-        const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
-        appStore.setExpiryTime(expiry.toLocaleTimeString());
-        let redirect = localStorage.getItem("currentLocation");
-        if (!redirect) {
-          redirect = "/";
+  let cachedKeycloak = localStorage.getItem("cachedKeycloak");
+  if (cachedKeycloak) {
+    let newKeycloak = Object.assign(appStore.getKeycloak(), JSON.parse(cachedKeycloak));
+    appStore.setKeycloak(newKeycloak);
+  } else {
+    $appStore.app.keycloak
+      .init({
+        onLoad: "check-sso",
+        checkLoginIframe: false,
+        responseMode: "query"
+      })
+      .then(async () => {
+        if ($appStore.app.keycloak.authenticated) {
+          localStorage.setItem("cachedKeycloak", JSON.stringify(appStore.getKeycloak()));
+          const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
+          appStore.setExpiryTime(expiry.toLocaleTimeString());
+          let redirect = localStorage.getItem("currentLocation");
+          if (!redirect) {
+            redirect = "/";
+          }
+          push(redirect);
         }
-        push(redirect);
-      }
-    })
-    .catch((error: any) => {
-      push("/login");
-    });
+      })
+      .catch((error: any) => {
+        push("/login");
+      });
+  }
   const loginRequired = {
     loginRequired: true
   };
