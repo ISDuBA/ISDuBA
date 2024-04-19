@@ -24,6 +24,10 @@ Calling installall.sh will, on a fresh Ubuntu 24.04 setup:
 To call installall (sudo privileges needed):
 ``` bash
     curl -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
+```
+Then, make installall executable, e.g. via chmod.
+After that:
+```
     installall.sh # branch_name (optional, using a nonexistent branch name will throw an error) 
 ```
 
@@ -31,4 +35,5 @@ Finally, the bulkimporter can be used to import manually downloaded documents.
 
 After that the setup is complete.
 The keycloak will be avaible on localhost port 8080, ISDuBA on port 5173.
-Login is possible via an example-user ```beate``` with the password ```beate```.
+Login to ISDuBA is possible via an example-user ```beate``` with the password ```beate```.
+Login to keycloak as admin is possible via the ```keycloak``` user with the password ```keycloak```.
