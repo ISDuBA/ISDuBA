@@ -11,6 +11,7 @@
 import { appStore } from "./store";
 import { type HttpResponse } from "./types";
 import { configuration } from "$lib/configuration";
+import { push } from "svelte-spa-router";
 
 export const request = async (
   path: string,
@@ -57,8 +58,15 @@ const getAccessToken = async () => {
     const expiry = new Date(keycloak.idTokenParsed.exp * 1000);
     appStore.setExpiryTime(expiry.toLocaleTimeString());
   } catch (error) {
-    await keycloak.login();
+    appStore.setSessionExpired(true);
+    localStorage.setItem("currentLocation", window.location.hash.substring(1));
+    localStorage.removeItem("cachedKeycloak");
+    push("/login");
   }
 
   return keycloak.token;
+};
+
+export const logoutKeycloak = (keycloak: any, options: any) => {
+  window.location.replace(keycloak.createLogoutUrl(options));
 };

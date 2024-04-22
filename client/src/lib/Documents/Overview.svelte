@@ -217,7 +217,7 @@
       {/if}
     </div>
   </div>
-  <ErrorMessage message={error} plain={true}></ErrorMessage>
+  <ErrorMessage message={error}></ErrorMessage>
   <div class:invisible={!loading} class:mb-4={true}>
     Loading ...
     <Spinner color="gray" size="4"></Spinner>

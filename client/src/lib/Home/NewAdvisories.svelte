@@ -174,7 +174,7 @@
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
-  <ErrorMessage message={error} plain={true}></ErrorMessage>
+  <ErrorMessage message={error}></ErrorMessage>
   <div class="w-fit">
     <Table hoverable={true} noborder={true}>
       <TableHead class="cursor-pointer">

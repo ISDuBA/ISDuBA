@@ -341,7 +341,7 @@
           {:else}
             <div class="mb-6 text-gray-600">No comments available.</div>
           {/if}
-          <ErrorMessage message={loadCommentsError} plain={true}></ErrorMessage>
+          <ErrorMessage message={loadCommentsError}></ErrorMessage>
           {#if isCommentingAllowed}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>

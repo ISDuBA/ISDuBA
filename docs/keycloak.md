@@ -15,9 +15,7 @@ These settings may not be suitable for production.
 
  * A recent PostgreSQL installation
    * See [postgresql.md](./postgresql.md) for instructions on how to perform the setup.
-<!---
-   * Alternatively, use the [setup script]() // TODO
---->   
+       
  * A recent version of java, e.g. Java 17
 
  * (Optional) Superuser privileges to allow keycloak to start on system-startup

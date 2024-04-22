@@ -15,7 +15,6 @@
   import Home from "$lib/Home/Home.svelte";
   import Statistics from "$lib/Statistics/Overview.svelte";
   import Sources from "$lib/Sources/Overview.svelte";
-  import About from "$lib/About/About.svelte";
   import Diff from "$lib/Diff/DiffPage.svelte";
   import { wrap } from "svelte-spa-router/wrap";
   import Configuration from "$lib/Configuration/Overview.svelte";
@@ -25,15 +24,19 @@
   import NotFound from "$lib/NotFound.svelte";
   import { appStore } from "$lib/store";
   import { push } from "svelte-spa-router";
+  import Messages from "$lib/Messages/Messages.svelte";
+  import Login from "$lib/Login/Login.svelte";
   import Keycloak from "keycloak-js";
   import { configuration } from "$lib/configuration";
-  import { onMount } from "svelte";
-  import Messages from "$lib/Messages/Messages.svelte";
 
-  appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
+  if (!$appStore.app.keycloak) appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
 
-  onMount(async () => {
-    await $appStore.app.keycloak
+  let cachedKeycloak = localStorage.getItem("cachedKeycloak");
+  if (cachedKeycloak) {
+    let newKeycloak = Object.assign(appStore.getKeycloak(), JSON.parse(cachedKeycloak));
+    appStore.setKeycloak(newKeycloak);
+  } else {
+    $appStore.app.keycloak
       .init({
         onLoad: "check-sso",
         checkLoginIframe: false,
@@ -41,32 +44,33 @@
       })
       .then(async () => {
         if ($appStore.app.keycloak.authenticated) {
-          const profile = await $appStore.app.keycloak.loadUserProfile();
-          appStore.setUserProfile({
-            firstName: profile.firstName,
-            lastName: profile.lastName
-          });
+          localStorage.setItem("cachedKeycloak", JSON.stringify(appStore.getKeycloak()));
           const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
           appStore.setExpiryTime(expiry.toLocaleTimeString());
+          let redirect = localStorage.getItem("currentLocation");
+          if (!redirect || redirect == "/login") {
+            redirect = "/";
+          }
+          push(redirect);
         }
       })
       .catch((error: any) => {
-        console.log("error", error);
+        localStorage.removeItem("cachedKeycloak");
+        push("/login");
       });
-  });
-
+  }
   const loginRequired = {
     loginRequired: true
   };
 
   const loginCondition = async () => {
+    if (!$appStore.app.keycloak) return false;
     if (!$appStore.app.keycloak.authenticated) return false;
     const keycloak = appStore.getKeycloak();
     try {
-      await keycloak.updateToken(5);
+      await keycloak.updateToken();
       return true;
     } catch (error) {
-      await keycloak.login();
       return false;
     }
   };
@@ -75,10 +79,10 @@
     "/": wrap({
       component: Home,
       userData: loginRequired,
-      conditions: []
+      conditions: [loginCondition]
     }),
-    "/about": wrap({
-      component: About
+    "/login": wrap({
+      component: Login
     }),
     "/advisories/:publisherNamespace/:trackingID/documents/:id": wrap({
       component: Advisory,
@@ -120,7 +124,9 @@
 
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
-      push("/");
+      appStore.setSessionExpired(true);
+      localStorage.setItem("currentLocation", window.location.hash.substring(1));
+      push("/login");
     }
   };
 </script>

@@ -24,6 +24,7 @@ type AppStore = {
       lastName: string;
     };
     expiryTime: string;
+    sessionExpired: boolean;
     token: any;
     keycloak: any;
     errors: ErrorMessage[];
@@ -67,6 +68,7 @@ const generateInitalState = (): AppStore => {
         firstName: "",
         lastName: ""
       },
+      sessionExpired: false,
       expiryTime: "",
       isUserLoggedIn: false,
       token: null,
@@ -105,6 +107,12 @@ function createStore() {
   subscribe((v) => (state = v));
   return {
     subscribe,
+    setSessionExpired: (expired: boolean) => {
+      update((settings) => {
+        settings.app.sessionExpired = expired;
+        return settings;
+      });
+    },
     setExpiryTime: (newExpiryTime: string) => {
       update((settings) => {
         settings.app.expiryTime = newExpiryTime;
