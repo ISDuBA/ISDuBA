@@ -66,3 +66,7 @@ const getAccessToken = async () => {
 
   return keycloak.token;
 };
+
+export const logoutKeycloak = (keycloak: any, options: any) => {
+  window.location.replace(keycloak.createLogoutUrl(options));
+};

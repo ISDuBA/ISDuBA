@@ -15,7 +15,7 @@
   import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
-  import { request } from "$lib/utils";
+  import { logoutKeycloak, request } from "$lib/utils";
 
   let version: string = "Retrieving Version from server";
   let error: string;
@@ -23,7 +23,7 @@
   async function logout() {
     appStore.setSessionExpired(true);
     localStorage.removeItem("cachedKeycloak");
-    $appStore.app.keycloak.logout();
+    logoutKeycloak($appStore.app.keycloak);
   }
 
   async function login() {
