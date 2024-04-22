@@ -9,12 +9,45 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Radio, StepIndicator } from "flowbite-svelte";
+  import { Button, Card, Radio, StepIndicator, MultiSelect } from "flowbite-svelte";
+
   let currentSearch = {
     currentStep: 1,
-    searchType: ""
+    searchType: "",
+    chosenColumns: [],
+    activeColumns: []
   };
-  const COLUMNS = [""];
+
+  const COLUMNS = {
+    ADVISORY: [
+      "id",
+      "tracking_id",
+      "version",
+      "publisher",
+      "current_release_date",
+      "initial_release_date",
+      "title",
+      "tlp",
+      "cvss_v2_score",
+      "cvss_v3_score",
+      "ssvc",
+      "four_cves",
+      "state"
+    ],
+    DOCUMENT: [
+      "id",
+      "tracking_id",
+      "version",
+      "publisher",
+      "current_release_date",
+      "initial_release_date",
+      "title",
+      "tlp",
+      "cvss_v2_score",
+      "cvss_v3_score",
+      "four_cves"
+    ]
+  };
   const SEARCHTYPES = {
     ADVISORY: "Advisory",
     DOCUMENT: "Document"
@@ -22,35 +55,63 @@
   const STEPS = {
     CHOOSE_TYPE: 1,
     CHOOSE_COLUMNS: 2,
-    ENTER_FILE_CRITERIA: 3,
-    ENTER_DIRECTIONS: 4
+    SPECIFY_FILE_CRITERIA: 3
   };
 
   const steps = [
     "Choose advisories or documents",
-    "Choose columns",
-    "Enter filter criteria",
-    "Enter directions to order"
+    "Choose columns to include in the search",
+    "Specify filter criteria"
   ];
+
+  const reset = () => {
+    initCurrentSearch();
+  };
 
   const initCurrentSearch = () => {
     currentSearch = {
       currentStep: 1,
-      searchType: ""
+      searchType: "",
+      chosenColumns: [],
+      activeColumns: []
     };
   };
 
   const proceed = () => {
-    if (currentSearch.currentStep < 4) currentSearch.currentStep += 1;
+    if (currentSearch.currentStep < 3) currentSearch.currentStep += 1;
   };
+
   const back = () => {
     if (currentSearch.currentStep > 1) currentSearch.currentStep -= 1;
   };
+
+  let proceedConditionMet = true;
+
+  $: {
+    if (currentSearch.currentStep === STEPS.CHOOSE_TYPE) {
+      proceedConditionMet = currentSearch.searchType !== "";
+    }
+    if (currentSearch.currentStep === STEPS.CHOOSE_COLUMNS) {
+      proceedConditionMet = currentSearch.chosenColumns.length > 0;
+    }
+  }
+
+  $: {
+    const generateSelectable = (el: string) => {
+      return { name: el, value: el };
+    };
+    if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
+      currentSearch.activeColumns = COLUMNS.ADVISORY.map(generateSelectable);
+    }
+    if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
+      currentSearch.activeColumns = COLUMNS.DOCUMENT.map(generateSelectable);
+    }
+  }
 </script>
 
 <h2 class="mb-3 text-lg">User defined queries</h2>
 
-<Card>
+<Card size="lg">
   <h5 class="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">New Query</h5>
   <StepIndicator currentStep={currentSearch.currentStep} {steps} color="gray" />
   <div class="mt-3 flex flex-col gap-3">
@@ -63,16 +124,32 @@
         >Documentsearch</Radio
       >
     {/if}
-    {#if currentSearch.currentStep == STEPS.CHOOSE_COLUMNS}{/if}
+    {#if currentSearch.currentStep == STEPS.CHOOSE_COLUMNS}
+      <MultiSelect items={currentSearch.activeColumns} bind:value={currentSearch.chosenColumns} />
+    {/if}
   </div>
-  <div class="ml-auto">
+  <div class="ml-auto flex gap-3">
     {#if currentSearch.currentStep > 1}
       <Button class="mt-6" color="light" on:click={back}
-        ><i class="bx bx-arrow-back me-2 text-xl"></i>Back</Button
+        ><i class="bx bx-arrow-back text-xl"></i>Back</Button
+      >
+      <Button class="mt-6" color="light" on:click={reset}
+        ><i class="bx bx-undo text-xl"></i>Reset</Button
       >
     {/if}
-    <Button class="mt-3" color="light" outline={true} on:click={proceed}
-      ><i class="bx bx-right-arrow-alt me-2 text-xl"></i>Next</Button
-    >
+    {#if currentSearch.currentStep < 3}
+      <Button
+        disabled={!proceedConditionMet}
+        class="mt-3"
+        color="light"
+        outline={true}
+        on:click={proceed}><i class="bx bx-right-arrow-alt text-xl"></i>Next</Button
+      >
+    {/if}
+    {#if currentSearch.currentStep === 3}
+      <Button class="mt-3" color="light" outline={true}
+        ><i class="bx bx-save text-xl"></i>Finish</Button
+      >
+    {/if}
   </div>
 </Card>
