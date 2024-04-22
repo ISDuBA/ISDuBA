@@ -14,6 +14,7 @@
   import { Button, Heading, Card } from "flowbite-svelte";
   import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
+  import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   import { logoutKeycloak, request } from "$lib/utils";
 
@@ -53,6 +54,11 @@
 <svelte:head>
   <title>Login</title>
 </svelte:head>
+
+{#if $appStore.app.keycloak && $appStore.app.keycloak.authenticated}
+  <SectionHeader title={$appStore.app.keycloak.idTokenParsed.name}></SectionHeader>
+  <hr class="mb-6" />
+{/if}
 
 <div class="mt-60 flex items-center justify-center">
   <div class="flex w-96 flex-col gap-4">

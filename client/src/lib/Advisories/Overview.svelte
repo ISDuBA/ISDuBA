@@ -137,6 +137,7 @@
 </svelte:head>
 
 <SectionHeader title="Advisories"></SectionHeader>
+<hr class="mb-6" />
 {#if documents}
   <div class="mb-3 w-2/3">
     <Search

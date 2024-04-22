@@ -21,5 +21,6 @@
 
 {#if $appStore.app.keycloak.authenticated}
   <SectionHeader title="Overview"></SectionHeader>
+  <hr class="mb-6" />
   <NewAdvisories></NewAdvisories>
 {/if}
