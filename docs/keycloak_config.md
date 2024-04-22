@@ -8,12 +8,12 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-This documents gives a brief overview about the impact of some configurable values within keycloak on the application.
+This documents gives a brief overview about the impact of some configurable values within Keycloak on the application.
 
 ## Session lengths
 
 The session lengths can be configured
-in keycloak under ```admin/master/console/#/isduba/realm-settings/```
+in Keycloak under ```<url_of_keycloak>:/admin/master/console/#/isduba/realm-settings/```
 
 A user stays logged in while they possess an active access token.
 
@@ -28,4 +28,4 @@ since the last refresh.
 prevent the token from being refreshed at all.)
 
 However, any session is limited by the ```SSO Session Max```
-and any access tokens expiry time can be set to the sessions start plus ```SSO Session Max``` at most and cannot be extended past that point in time.
+and any access tokens expiry time can be set to the session's start plus ```SSO Session Max``` at most and cannot be extended past that point in time.
