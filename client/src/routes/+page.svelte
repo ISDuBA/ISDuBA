@@ -48,7 +48,7 @@
           const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
           appStore.setExpiryTime(expiry.toLocaleTimeString());
           let redirect = localStorage.getItem("currentLocation");
-          if (!redirect) {
+          if (!redirect || redirect == "/login") {
             redirect = "/";
           }
           push(redirect);
@@ -131,7 +131,7 @@
   };
 </script>
 
-<div class="flex bg-primary-700">
+<div class="bg-primary-700 flex">
   <div>
     <SideNav></SideNav>
   </div>
