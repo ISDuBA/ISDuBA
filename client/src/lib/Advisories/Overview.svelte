@@ -63,6 +63,8 @@
   ];
   let orderBy = "-cvss_v3_score";
 
+  let anchorLink;
+
   const previous = () => {
     if (offset - limit >= 0) {
       offset = offset - limit > 0 ? offset - limit : 0;
@@ -255,184 +257,194 @@
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
-  <Table hoverable={true} noborder={true}>
-    <TableHead class="cursor-pointer">
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v3_score")}
-        >CVSSv3<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "cvss_v3_score"}
-          class:bx-caret-down={orderBy == "-cvss_v3_score"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v2_score")}
-        >CVSSv2<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "cvss_v2_score"}
-          class:bx-caret-down={orderBy == "-cvss_v2_score"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("ssvc")}
-        >SSVC<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "ssvc"}
-          class:bx-caret-down={orderBy == "-ssvc"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("state")}
-        >State<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "state"}
-          class:bx-caret-down={orderBy == "state"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("publisher")}
-        >Publisher<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "publisher"}
-          class:bx-caret-down={orderBy == "-publisher"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("title")}
-        >Title<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "title"}
-          class:bx-caret-down={orderBy == "-title"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("tracking_id")}
-        >Tracking ID<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "tracking_id"}
-          class:bx-caret-down={orderBy == "tracking_id"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("initial_release_date")}
-        >Initial Release<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "initial_release_date"}
-          class:bx-caret-down={orderBy == "-initial_release_date"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("current_release_date")}
-        >Current Release<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "current_release_date"}
-          class:bx-caret-down={orderBy == "-current_release_date"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => switchSort("version")}
-        >Version<i
-          class:bx={true}
-          class:bx-caret-up={orderBy == "version"}
-          class:bx-caret-down={orderBy == "-version"}
-        ></i></TableHeadCell
-      >
-    </TableHead>
-    <TableBody>
-      {#each documents as item, i}
-        <TableBodyRow
-          class="cursor-pointer"
-          on:click={() => {
-            push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
-          }}
+  <a href={anchorLink}>
+    <Table hoverable={true} noborder={true}>
+      <TableHead class="cursor-pointer">
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v3_score")}
+          >CVSSv3<i
+            class:test={true}
+            class:bx={true}
+            class:bx-caret-up={orderBy == "cvss_v3_score"}
+            class:bx-caret-down={orderBy == "-cvss_v3_score"}
+          ></i></TableHeadCell
         >
-          <TableBodyCell {tdClass}
-            ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
-              >{item.cvss_v3_score == null ? "" : item.cvss_v3_score}</span
-            ></TableBodyCell
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v2_score")}
+          >CVSSv2<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "cvss_v2_score"}
+            class:bx-caret-down={orderBy == "-cvss_v2_score"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("ssvc")}
+          >SSVC<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "ssvc"}
+            class:bx-caret-down={orderBy == "-ssvc"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("state")}
+          >State<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "state"}
+            class:bx-caret-down={orderBy == "state"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("publisher")}
+          >Publisher<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "publisher"}
+            class:bx-caret-down={orderBy == "-publisher"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("title")}
+          >Title<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "title"}
+            class:bx-caret-down={orderBy == "-title"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("tracking_id")}
+          >Tracking ID<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "tracking_id"}
+            class:bx-caret-down={orderBy == "tracking_id"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("initial_release_date")}
+          >Initial Release<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "initial_release_date"}
+            class:bx-caret-down={orderBy == "-initial_release_date"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("current_release_date")}
+          >Current Release<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "current_release_date"}
+            class:bx-caret-down={orderBy == "-current_release_date"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("version")}
+          >Version<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "version"}
+            class:bx-caret-down={orderBy == "-version"}
+          ></i></TableHeadCell
+        >
+      </TableHead>
+      <TableBody>
+        {#each documents as item, i}
+          <tr
+            class="cursor-pointer bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
+            on:click={() => {
+              push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
+            }}
+            on:mouseenter={() => {
+              anchorLink = `#/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`;
+            }}
+            on:mouseleave={() => {
+              anchorLink = null;
+            }}
           >
-          <TableBodyCell {tdClass}
-            ><span class:text-red-500={Number(item.cvss_v2_score) > 5.0}
-              >{item.cvss_v2_score == null ? "" : item.cvss_v2_score}</span
-            ></TableBodyCell
-          >
-          <TableBodyCell {tdClass}
-            ><span style={item.ssvc ? `color:${item.ssvc.color}` : ""}
-              >{item.ssvc?.label || ""}</span
-            ></TableBodyCell
-          >
-          <TableBodyCell {tdClass}
-            ><i
-              title={item.state}
-              class:bx={true}
-              class:bxs-star={item.state === "new"}
-              class:bx-show={item.state === "read"}
-              class:bxs-analyse={item.state === "assessing"}
-              class:bx-book-open={item.state === "review"}
-              class:bx-archive={item.state === "archived"}
-              class:bx-trash={item.state === "delete"}
-            ></i>
-          </TableBodyCell>
-          <TableBodyCell {tdClass}
-            >{#if item.four_cves[0]}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <!-- svelte-ignore a11y-no-static-element-interactions -->
-              {#if item.four_cves.length > 1}
-                <div class="mr-2 flex">
-                  <div class="flex-grow">
-                    {item.four_cves[0]}
-                  </div>
-                  <span on:click|stopPropagation={() => toggleRow(i)}>
-                    {#if openRow === i}
-                      <i class="bx bx-minus"></i>
-                    {:else}
-                      <i class="bx bx-plus"></i>
-                    {/if}
-                  </span>
-                </div>
-              {:else}
-                <span>{item.four_cves[0]}</span>
-              {/if}
-            {/if}</TableBodyCell
-          >
-          <TableBodyCell tdClass={publisher}
-            ><span title={item.publisher}>{item.publisher}</span></TableBodyCell
-          >
-          <TableBodyCell tdClass={title}><span title={item.title}>{item.title}</span></TableBodyCell
-          >
-          <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
-        </TableBodyRow>
-        {#if openRow === i}
-          <TableBodyRow>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}>
-              <div>
-                {#each item.four_cves as cve, i}
-                  {#if i !== 0}
-                    <div>{cve}</div>
-                  {/if}
-                {/each}
-              </div>
+            <TableBodyCell {tdClass}
+              ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
+                >{item.cvss_v3_score == null ? "" : item.cvss_v3_score}</span
+              ></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><span class:text-red-500={Number(item.cvss_v2_score) > 5.0}
+                >{item.cvss_v2_score == null ? "" : item.cvss_v2_score}</span
+              ></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><span style={item.ssvc ? `color:${item.ssvc.color}` : ""}
+                >{item.ssvc?.label || ""}</span
+              ></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><i
+                title={item.state}
+                class:bx={true}
+                class:bxs-star={item.state === "new"}
+                class:bx-show={item.state === "read"}
+                class:bxs-analyse={item.state === "assessing"}
+                class:bx-book-open={item.state === "review"}
+                class:bx-archive={item.state === "archived"}
+                class:bx-trash={item.state === "delete"}
+              ></i>
             </TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-          </TableBodyRow>
-        {/if}
-        {#if item.msg}
-          <TableBodyRow class="border border-indigo-500/100 bg-slate-100">
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}>{@html item.msg}</TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-          </TableBodyRow>
-        {/if}
-      {/each}
-    </TableBody>
-  </Table>
+            <TableBodyCell {tdClass}
+              >{#if item.four_cves[0]}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                {#if item.four_cves.length > 1}
+                  <div class="mr-2 flex">
+                    <div class="flex-grow">
+                      {item.four_cves[0]}
+                    </div>
+                    <span on:click|stopPropagation={() => toggleRow(i)}>
+                      {#if openRow === i}
+                        <i class="bx bx-minus"></i>
+                      {:else}
+                        <i class="bx bx-plus"></i>
+                      {/if}
+                    </span>
+                  </div>
+                {:else}
+                  <span>{item.four_cves[0]}</span>
+                {/if}
+              {/if}</TableBodyCell
+            >
+            <TableBodyCell tdClass={publisher}
+              ><span title={item.publisher}>{item.publisher}</span></TableBodyCell
+            >
+            <TableBodyCell tdClass={title}
+              ><span title={item.title}>{item.title}</span></TableBodyCell
+            >
+            <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
+            <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
+            <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
+            <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
+          </tr>
+          {#if openRow === i}
+            <TableBodyRow>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}>
+                <div>
+                  {#each item.four_cves as cve, i}
+                    {#if i !== 0}
+                      <div>{cve}</div>
+                    {/if}
+                  {/each}
+                </div>
+              </TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+            </TableBodyRow>
+          {/if}
+          {#if item.msg}
+            <TableBodyRow class="border border-indigo-500/100 bg-slate-100">
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}>{@html item.msg}</TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+            </TableBodyRow>
+          {/if}
+        {/each}
+      </TableBody>
+    </Table>
+  </a>
 {/if}
