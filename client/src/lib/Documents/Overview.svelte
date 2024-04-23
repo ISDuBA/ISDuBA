@@ -65,6 +65,7 @@
       offset = offset - limit > 0 ? offset - limit : 0;
       currentPage -= 1;
     }
+    savePosition();
     fetchData();
   };
   const next = () => {
@@ -72,18 +73,21 @@
       offset = offset + limit;
       currentPage += 1;
     }
+    savePosition();
     fetchData();
   };
 
   const first = () => {
     offset = 0;
     currentPage = 1;
+    savePosition();
     fetchData();
   };
 
   const last = () => {
     offset = (numberOfPages - 1) * limit;
     currentPage = numberOfPages;
+    savePosition();
     fetchData();
   };
 
@@ -93,7 +97,20 @@
     } else {
       orderBy = column;
     }
+    savePosition();
     fetchData();
+  };
+
+  const savePosition = () => {
+    let position = [offset, currentPage, limit, orderBy];
+    sessionStorage.setItem("documentPosition", JSON.stringify(position));
+  };
+
+  const restorePosition = () => {
+    let position = JSON.parse(sessionStorage.getItem("documentPosition"));
+    if (position) {
+      [offset, currentPage, limit, orderBy] = position;
+    }
   };
 
   $: numberOfPages = Math.ceil(count / limit);
@@ -117,6 +134,11 @@
   };
 
   onMount(async () => {
+    let savedSearch = sessionStorage.getItem("documentSearchTerm");
+    if (savedSearch) {
+      searchTerm = savedSearch;
+    }
+    restorePosition();
     if ($appStore.app.keycloak.authenticated) {
       fetchData();
     }
@@ -134,6 +156,7 @@
     <Search
       bind:value={searchTerm}
       on:keyup={(e) => {
+        sessionStorage.setItem("documentSearchTerm", searchTerm);
         if (e.key === "Enter") fetchData();
       }}
     >
@@ -170,6 +193,7 @@
           on:change={() => {
             offset = 0;
             currentPage = 1;
+            savePosition();
             fetchData();
           }}
         ></Select>
