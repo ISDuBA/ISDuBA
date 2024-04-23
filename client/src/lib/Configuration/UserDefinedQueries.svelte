@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Radio, StepIndicator, MultiSelect } from "flowbite-svelte";
+  import { Button, Card, Radio, StepIndicator, MultiSelect, Badge, Input } from "flowbite-svelte";
 
   let currentSearch = {
     currentStep: 1,
@@ -64,6 +64,8 @@
     "Specify filter criteria"
   ];
 
+  let queryResult = "";
+
   const reset = () => {
     initCurrentSearch();
   };
@@ -86,6 +88,12 @@
   };
 
   let proceedConditionMet = true;
+
+  const removeColumn = (col: string) => {
+    currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
+      return column !== col;
+    });
+  };
 
   $: {
     if (currentSearch.currentStep === STEPS.CHOOSE_TYPE) {
@@ -127,29 +135,71 @@
     {#if currentSearch.currentStep == STEPS.CHOOSE_COLUMNS}
       <MultiSelect items={currentSearch.activeColumns} bind:value={currentSearch.chosenColumns} />
     {/if}
-  </div>
-  <div class="ml-auto flex gap-3">
-    {#if currentSearch.currentStep > 1}
-      <Button class="mt-6" color="light" on:click={back}
-        ><i class="bx bx-arrow-back text-xl"></i>Back</Button
-      >
-      <Button class="mt-6" color="light" on:click={reset}
-        ><i class="bx bx-undo text-xl"></i>Reset</Button
-      >
+    {#if currentSearch.currentStep == STEPS.SPECIFY_FILE_CRITERIA}
+      <div class="mt-6 flex flex-col">
+        <div class="flex flex-row">
+          <div class="w-1/3">Column name</div>
+          <div class="w-1/3">Filter</div>
+          <div class="w-1/3">Order by</div>
+        </div>
+      </div>
+      {#each currentSearch.chosenColumns as col}
+        <div class="mt-3 flex flex-col">
+          <div class="flex flex-row">
+            <div class="w-1/3">
+              <Badge>{col}</Badge>
+              {#if currentSearch.chosenColumns.length > 1}
+                <i class="bx bx-x text-red-600" on:click={removeColumn(col)}></i>
+              {/if}
+            </div>
+            <div class="w-1/3">
+              <Input />
+            </div>
+          </div>
+        </div>
+      {/each}
     {/if}
-    {#if currentSearch.currentStep < 3}
+  </div>
+  <div class="flex items-center gap-3">
+    {#if currentSearch.currentStep === 3}
       <Button
-        disabled={!proceedConditionMet}
-        class="mt-3"
+        class="mt-6"
         color="light"
         outline={true}
-        on:click={proceed}><i class="bx bx-right-arrow-alt text-xl"></i>Next</Button
+        on:click={() => {
+          setTimeout(() => {
+            queryResult = "1000 entries found";
+          }),
+            300;
+        }}><i class="bx bx-test-tube mr-1 text-xl"></i>Test Query</Button
       >
     {/if}
-    {#if currentSearch.currentStep === 3}
-      <Button class="mt-3" color="light" outline={true}
-        ><i class="bx bx-save text-xl"></i>Finish</Button
-      >
-    {/if}
+    <div class="mt-6">
+      {queryResult}
+    </div>
+    <div class="ml-auto">
+      {#if currentSearch.currentStep > 1}
+        <Button class="mt-6" color="light" on:click={back}
+          ><i class="bx bx-arrow-back mr-1 text-xl"></i>Back</Button
+        >
+        <Button class="mt-6" color="light" on:click={reset}
+          ><i class="bx bx-undo mr-1 text-xl"></i>Reset</Button
+        >
+      {/if}
+      {#if currentSearch.currentStep < 3}
+        <Button
+          disabled={!proceedConditionMet}
+          class="mt-6"
+          color="light"
+          outline={true}
+          on:click={proceed}><i class="bx bx-right-arrow-alt mr-1 text-xl"></i>Next</Button
+        >
+      {/if}
+      {#if currentSearch.currentStep === 3}
+        <Button class="mt-6" color="light" outline={true}
+          ><i class="bx bx-save mr-1 text-xl"></i>Finish</Button
+        >
+      {/if}
+    </div>
   </div>
 </Card>
