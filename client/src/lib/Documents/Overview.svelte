@@ -41,7 +41,7 @@
   let offset = 0;
   let count = 0;
   let currentPage = 1;
-  let documents: any = [];
+  let documents: any = null;
   let searchTerm: string = "";
   let columns = [
     "id",
@@ -124,6 +124,7 @@
     loading = true;
     error = "";
     const response = await request(documentURL, "GET");
+
     if (response.ok) {
       ({ count, documents } = response.content);
       documents = documents || [];
@@ -150,89 +151,87 @@
 </svelte:head>
 
 <SectionHeader title="Documents"></SectionHeader>
-{#if documents}
-  <div class="mb-3 w-2/3">
-    <Search
-      bind:value={searchTerm}
-      on:keyup={(e) => {
-        sessionStorage.setItem("documentSearchTerm", searchTerm);
-        if (e.key === "Enter") fetchData();
-      }}
-    >
-      {#if searchTerm}
-        <button
-          class="mr-3"
-          on:click={() => {
-            searchTerm = "";
-            fetchData();
-          }}>x</button
-        >
-      {/if}
-      <Button
+<div class="mb-3 w-2/3">
+  <Search
+    bind:value={searchTerm}
+    on:keyup={(e) => {
+      sessionStorage.setItem("documentSearchTerm", searchTerm);
+      if (e.key === "Enter") fetchData();
+    }}
+  >
+    {#if searchTerm}
+      <button
+        class="mr-3"
         on:click={() => {
+          searchTerm = "";
           fetchData();
-        }}>Search</Button
+        }}>x</button
       >
-    </Search>
-  </div>
-  <div class="mb-2 mt-8 flex items-center justify-between">
-    {#if documents.length > 0}
-      <div class="flex items-center">
-        <Label class="mr-3">Items per page</Label>
-        <Select
-          id="pagecount"
-          class="mt-2 w-24"
-          items={[
-            { name: "10", value: 10 },
-            { name: "25", value: 25 },
-            { name: "50", value: 50 },
-            { name: "100", value: 100 }
-          ]}
-          bind:value={limit}
-          on:change={() => {
-            offset = 0;
-            currentPage = 1;
-            savePosition();
-            fetchData();
-          }}
-        ></Select>
-      </div>
-      <div>
-        <div class="flex">
-          <div class:invisible={currentPage === 1} class:flex={true}>
-            <PaginationItem on:click={first}>
-              <i class="bx bx-arrow-to-left"></i>
-            </PaginationItem>
-            <PaginationItem on:click={previous}>
-              <i class="bx bx-chevrons-left"></i>
-            </PaginationItem>
-          </div>
-          <div class="mx-3 flex items-center">
-            <input
-              class="mr-1 w-16 cursor-pointer border pr-1 text-right"
-              on:change={() => {
-                if (!parseInt("" + currentPage)) currentPage = 1;
-                currentPage = Math.floor(parseInt(currentPage));
-                if (currentPage < 1) currentPage = 1;
-                if (currentPage > numberOfPages) currentPage = numberOfPages;
-                offset = (currentPage - 1) * limit;
-                fetchData();
-              }}
-              bind:value={currentPage}
-            />
-            <span>of {numberOfPages} pages</span>
-          </div>
-          <div class:invisible={currentPage === numberOfPages} class:flex={true}>
-            <PaginationItem on:click={next}>
-              <i class="bx bx-chevrons-right"></i>
-            </PaginationItem>
-            <PaginationItem on:click={last}>
-              <i class="bx bx-arrow-to-right"></i>
-            </PaginationItem>
-          </div>
+    {/if}
+    <Button
+      on:click={() => {
+        fetchData();
+      }}>Search</Button
+    >
+  </Search>
+</div>
+<div class="mb-2 mt-8 flex items-center justify-between">
+  {#if documents?.length > 0}
+    <div class="flex items-center">
+      <Label class="mr-3">Items per page</Label>
+      <Select
+        id="pagecount"
+        class="mt-2 w-24"
+        items={[
+          { name: "10", value: 10 },
+          { name: "25", value: 25 },
+          { name: "50", value: 50 },
+          { name: "100", value: 100 }
+        ]}
+        bind:value={limit}
+        on:change={() => {
+          offset = 0;
+          currentPage = 1;
+          savePosition();
+          fetchData();
+        }}
+      ></Select>
+    </div>
+    <div>
+      <div class="flex">
+        <div class:invisible={currentPage === 1} class:flex={true}>
+          <PaginationItem on:click={first}>
+            <i class="bx bx-arrow-to-left"></i>
+          </PaginationItem>
+          <PaginationItem on:click={previous}>
+            <i class="bx bx-chevrons-left"></i>
+          </PaginationItem>
+        </div>
+        <div class="mx-3 flex items-center">
+          <input
+            class="mr-1 w-16 cursor-pointer border pr-1 text-right"
+            on:change={() => {
+              if (!parseInt("" + currentPage)) currentPage = 1;
+              currentPage = Math.floor(parseInt(currentPage));
+              if (currentPage < 1) currentPage = 1;
+              if (currentPage > numberOfPages) currentPage = numberOfPages;
+              offset = (currentPage - 1) * limit;
+              fetchData();
+            }}
+            bind:value={currentPage}
+          />
+          <span>of {numberOfPages} pages</span>
+        </div>
+        <div class:invisible={currentPage === numberOfPages} class:flex={true}>
+          <PaginationItem on:click={next}>
+            <i class="bx bx-chevrons-right"></i>
+          </PaginationItem>
+          <PaginationItem on:click={last}>
+            <i class="bx bx-arrow-to-right"></i>
+          </PaginationItem>
         </div>
       </div>
-    {/if}
+    </div>
     <div class="mr-3">
       {#if searchTerm}
         {count} entries found
@@ -240,12 +239,14 @@
         {count} entries in total
       {/if}
     </div>
-  </div>
-  <ErrorMessage message={error}></ErrorMessage>
-  <div class:invisible={!loading} class:mb-4={true}>
-    Loading ...
-    <Spinner color="gray" size="4"></Spinner>
-  </div>
+  {/if}
+</div>
+<div class:invisible={!loading} class:mb-4={true}>
+  Loading ...
+  <Spinner color="gray" size="4"></Spinner>
+</div>
+<ErrorMessage message={error}></ErrorMessage>
+{#if documents?.length > 0}
   <Table hoverable={true} noborder={true}>
     <TableHead class="cursor-pointer">
       <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v3_score")}
