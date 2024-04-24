@@ -12,6 +12,7 @@
   import ReplaceOperation from "./ReplaceOperation.svelte";
 
   export let content: any;
+  export let isSideBySideViewActivated: true;
   export let operation: string;
   export let depth = 0;
 
@@ -37,7 +38,7 @@
       </div>
     {/each}
   {:else if operation === "replace"}
-    <ReplaceOperation {content}></ReplaceOperation>
+    <ReplaceOperation {content} {isSideBySideViewActivated}></ReplaceOperation>
   {:else}
     <span>{content}</span>
   {/if}

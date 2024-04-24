@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Accordion, AccordionItem, Label } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Button, Label } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
   import type { JsonDiffResult, JsonDiffResultList } from "./JsonDiff";
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
@@ -21,6 +21,11 @@
   let error: string;
   let diff: any;
   let urlPath: string;
+  let isSideBySideViewActivated = true;
+  $: sideBySideButtonBaseClass = "!mb-2";
+  $: sideBySideButtonClass = isSideBySideViewActivated
+    ? `${sideBySideButtonBaseClass} bg-gray-800 text-white hover:bg-gray-600 focus-within:ring-transparent`
+    : `${sideBySideButtonBaseClass} bg-white text-black border border-solid border-gray-300 hover:bg-gray-200 focus-within:ring-transparent`;
   $: groupedResults = diff
     ? [
         {
@@ -38,6 +43,10 @@
       ]
     : [];
   $: diffDocuments, getDiff();
+
+  const toggleSideBySideViewActivated = () => {
+    isSideBySideViewActivated = !isSideBySideViewActivated;
+  };
 
   const getDiff = async () => {
     urlPath = `/api/diff/${diffDocuments.docB.id}/${diffDocuments.docA.id}?word-diff=true`;
@@ -91,6 +100,11 @@
                 </div>
               {/if}
             </div>
+            {#if result.op === "replace"}
+              <Button class={sideBySideButtonClass} on:click={toggleSideBySideViewActivated}>
+                Side-by-side
+              </Button>
+            {/if}
             {#each result.changes as change}
               <div class={getBodyClass(change.op)}>
                 {#if change.value}
@@ -101,7 +115,11 @@
                       </code>
                     </b>
                   </div>
-                  <DiffEntry content={change.value} operation={change.op}></DiffEntry>
+                  <DiffEntry
+                    content={change.value}
+                    {isSideBySideViewActivated}
+                    operation={change.op}
+                  ></DiffEntry>
                 {:else}
                   <LazyDiffEntry operation={change.op} {urlPath} path={change.path}></LazyDiffEntry>
                 {/if}
