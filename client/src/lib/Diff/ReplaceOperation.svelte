@@ -10,8 +10,9 @@
 
 <script lang="ts">
   export let content: string;
-  let parsedContent: object[];
-  $: parsedContent = parse(content);
+  export let isSideBySideViewActivated: true;
+  $: parsedContent = isSideBySideViewActivated ? [] : parse(content);
+  $: parsedSideBySideContent = isSideBySideViewActivated ? parseMixed() : [];
 
   const parse = (textPart: any, level = 0): object[] => {
     const text = typeof textPart === "number" ? textPart.toString() : textPart;
@@ -45,6 +46,29 @@
     return parsed;
   };
 
+  const removeAnnotation = (text: string, opening: string, ending: string) => {
+    let areAnnotationsLeft = true;
+    while (areAnnotationsLeft) {
+      const firstIndexAdd = text.indexOf(opening);
+      const secondIndexAdd = text.indexOf(ending);
+      if (firstIndexAdd > -1 && secondIndexAdd > -1 && firstIndexAdd < secondIndexAdd) {
+        text = text.replace(opening, "");
+        text = text.replace(ending, "");
+      } else {
+        areAnnotationsLeft = false;
+      }
+    }
+    return text;
+  };
+
+  const parseMixed = () => {
+    let added = content.replaceAll(/\[-.*?-]/g, "");
+    added = removeAnnotation(added, "{+", "+}");
+    let removed = content.replaceAll(/{+.*?\+}/g, "");
+    removed = removeAnnotation(removed, "[-", "-]");
+    return [removed, added];
+  };
+
   const getSpanClass = (type: string) => {
     if (type === "add") return "bg-green-200";
     if (type === "remove") return "bg-red-200";
@@ -56,5 +80,17 @@
     {#each parsedContent as parsedPart}
       <span class={getSpanClass(parsedPart.type)}>{parsedPart.content}</span>
     {/each}
+  {/if}
+  {#if parsedSideBySideContent.length > 0}
+    <div class="flex justify-between gap-2">
+      <div class="flex w-6/12 items-center gap-1">
+        <i class="bx bx-minus"></i>
+        <div class="h-fit w-fit bg-red-200">{parsedSideBySideContent[0]}</div>
+      </div>
+      <div class="flex w-6/12 items-center gap-1">
+        <i class="bx bx-plus"></i>
+        <div class="h-fit w-fit bg-green-200">{parsedSideBySideContent[1]}</div>
+      </div>
+    </div>
   {/if}
 </div>

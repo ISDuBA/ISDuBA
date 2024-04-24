@@ -44,7 +44,8 @@
       })
       .then(async () => {
         if ($appStore.app.keycloak.authenticated) {
-          localStorage.setItem("cachedKeycloak", JSON.stringify(appStore.getKeycloak()));
+          // TODO: cache refresh token and user information
+          // localStorage.setItem("cachedKeycloak", JSON.stringify(appStore.getKeycloak()));
           const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
           appStore.setExpiryTime(expiry.toLocaleTimeString());
           let redirect = localStorage.getItem("currentLocation");
@@ -131,7 +132,7 @@
   };
 </script>
 
-<div class="bg-primary-700 flex">
+<div class="flex bg-primary-700">
   <div>
     <SideNav></SideNav>
   </div>

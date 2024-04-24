@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { Button, Label } from "flowbite-svelte";
+  import { Button, Label, Tooltip } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   export let advisoryVersions: any;
@@ -143,6 +143,7 @@
         <Button class={diffButtonClass} on:click={toggleDiffModeActivated}>
           <i class="bx bx-transfer"></i>
         </Button>
+        <Tooltip>{diffModeActivated ? "Disable" : "Enable"} comparison</Tooltip>
       {/if}
     </div>
   </div>
