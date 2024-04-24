@@ -9,14 +9,20 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Radio, StepIndicator, MultiSelect, Badge, Input } from "flowbite-svelte";
-
-  let currentSearch = {
-    currentStep: 1,
-    searchType: "",
-    chosenColumns: [],
-    activeColumns: []
-  };
+  import { tablePadding } from "$lib/table/defaults";
+  import {
+    Card,
+    Radio,
+    Badge,
+    Input,
+    Table,
+    TableHead,
+    TableBody,
+    TableHeadCell,
+    TableBodyRow,
+    TableBodyCell,
+    Checkbox
+  } from "flowbite-svelte";
 
   const COLUMNS = {
     ADVISORY: [
@@ -48,158 +54,143 @@
       "four_cves"
     ]
   };
+
+  const ORDERDIRECTIONS = {
+    ASC: "asc",
+    DESC: "desc"
+  };
+
   const SEARCHTYPES = {
     ADVISORY: "Advisory",
     DOCUMENT: "Document"
   };
-  const STEPS = {
-    CHOOSE_TYPE: 1,
-    CHOOSE_COLUMNS: 2,
-    SPECIFY_FILE_CRITERIA: 3
-  };
 
-  const steps = [
-    "Choose advisories or documents",
-    "Choose columns to include in the search",
-    "Specify filter criteria"
+  const STUBQUERIES = [
+    { name: "Redhat", description: "Show all RedHat advisories" },
+    { name: "Sick", description: "Show all Sick advisories" }
   ];
 
-  let queryResult = "";
-
   const reset = () => {
-    initCurrentSearch();
-  };
-
-  const initCurrentSearch = () => {
-    currentSearch = {
+    return {
       currentStep: 1,
-      searchType: "",
+      searchType: SEARCHTYPES.ADVISORY,
       chosenColumns: [],
-      activeColumns: []
+      activeColumns: [],
+      name: "New Query",
+      description: ""
     };
   };
 
-  const proceed = () => {
-    if (currentSearch.currentStep < 3) currentSearch.currentStep += 1;
-  };
-
-  const back = () => {
-    if (currentSearch.currentStep > 1) currentSearch.currentStep -= 1;
-  };
-
-  let proceedConditionMet = true;
-
-  const removeColumn = (col: string) => {
-    currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
-      return column !== col;
-    });
-  };
+  let currentSearch = reset();
+  let orderBy = "";
+  let edit = false;
 
   $: {
-    if (currentSearch.currentStep === STEPS.CHOOSE_TYPE) {
-      proceedConditionMet = currentSearch.searchType !== "";
-    }
-    if (currentSearch.currentStep === STEPS.CHOOSE_COLUMNS) {
-      proceedConditionMet = currentSearch.chosenColumns.length > 0;
-    }
-  }
-
-  $: {
-    const generateSelectable = (el: string) => {
-      return { name: el, value: el };
-    };
     if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
-      currentSearch.activeColumns = COLUMNS.ADVISORY.map(generateSelectable);
+      currentSearch.activeColumns = [...COLUMNS.ADVISORY];
     }
     if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
-      currentSearch.activeColumns = COLUMNS.DOCUMENT.map(generateSelectable);
+      currentSearch.activeColumns = [...COLUMNS.DOCUMENT];
     }
   }
 </script>
 
 <h2 class="mb-3 text-lg">User defined queries</h2>
 
-<Card size="lg">
-  <h5 class="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">New Query</h5>
-  <StepIndicator currentStep={currentSearch.currentStep} {steps} color="gray" />
-  <div class="mt-3 flex flex-col gap-3">
-    {#if currentSearch.currentStep == STEPS.CHOOSE_TYPE}
-      Would you like to start an...
-      <Radio name="example" value={SEARCHTYPES.ADVISORY} bind:group={currentSearch.searchType}
-        >Advisorysearch</Radio
-      >
-      <Radio name="example" value={SEARCHTYPES.DOCUMENT} bind:group={currentSearch.searchType}
-        >Documentsearch</Radio
-      >
-    {/if}
-    {#if currentSearch.currentStep == STEPS.CHOOSE_COLUMNS}
-      <MultiSelect items={currentSearch.activeColumns} bind:value={currentSearch.chosenColumns} />
-    {/if}
-    {#if currentSearch.currentStep == STEPS.SPECIFY_FILE_CRITERIA}
-      <div class="mt-6 flex flex-col">
-        <div class="flex flex-row">
-          <div class="w-1/3">Column name</div>
-          <div class="w-1/3">Filter</div>
-          <div class="w-1/3">Order by</div>
-        </div>
-      </div>
-      {#each currentSearch.chosenColumns as col}
-        <div class="mt-3 flex flex-col">
-          <div class="flex flex-row">
-            <div class="w-1/3">
-              <Badge>{col}</Badge>
-              {#if currentSearch.chosenColumns.length > 1}
-                <i class="bx bx-x text-red-600" on:click={removeColumn(col)}></i>
-              {/if}
-            </div>
-            <div class="w-1/3">
-              <Input />
-            </div>
-          </div>
-        </div>
+<div class="mb-12 w-1/2">
+  <Table hoverable={true} noborder={true}>
+    <TableHead class="cursor-pointer">
+      <TableHeadCell padding={tablePadding} on:click={() => {}}
+        >Name<i
+          class:bx={true}
+          class:bx-caret-up={orderBy == "name"}
+          class:bx-caret-down={orderBy == "-name"}
+        ></i>
+      </TableHeadCell>
+      <TableHeadCell padding={tablePadding} on:click={() => {}}
+        >Description<i
+          class:bx={true}
+          class:bx-caret-up={orderBy == "name"}
+          class:bx-caret-down={orderBy == "-name"}
+        ></i>
+      </TableHeadCell>
+    </TableHead>
+    <TableBody>
+      {#each STUBQUERIES as query}
+        <TableBodyRow class="cursor-pointer">
+          <TableBodyCell>{query.name}</TableBodyCell>
+          <TableBodyCell>{query.description}</TableBodyCell>
+        </TableBodyRow>
       {/each}
-    {/if}
+    </TableBody>
+  </Table>
+</div>
+
+<Card size="lg">
+  <div class="my-3">
+    <span class="mr-3">Name:</span>
+    <button
+      on:click={() => {
+        edit = !edit;
+      }}
+    >
+      {#if edit}
+        <Input
+          autofocus
+          bind:value={currentSearch.name}
+          on:keyup={(e) => {
+            if (e.key === "Enter") edit = false;
+            e.preventDefault();
+          }}
+          on:blur={() => {
+            edit = false;
+          }}
+        />
+      {:else}
+        <h5 class="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">
+          {currentSearch.name}
+        </h5>
+      {/if}
+    </button>
   </div>
-  <div class="flex items-center gap-3">
-    {#if currentSearch.currentStep === 3}
-      <Button
-        class="mt-6"
-        color="light"
-        outline={true}
-        on:click={() => {
-          setTimeout(() => {
-            queryResult = "1000 entries found";
-          }),
-            300;
-        }}><i class="bx bx-test-tube mr-1 text-xl"></i>Test Query</Button
-      >
-    {/if}
-    <div class="mt-6">
-      {queryResult}
+  <h5 class="mb-4 text-lg font-medium text-gray-500 dark:text-gray-400">Choose type of search</h5>
+  <div class="ml-3 flex flex-row gap-3">
+    <Radio name="queryType" value={SEARCHTYPES.ADVISORY} bind:group={currentSearch.searchType}
+      >Advisories</Radio
+    >
+    <Radio name="queryType" value={SEARCHTYPES.DOCUMENT} bind:group={currentSearch.searchType}
+      >Documents</Radio
+    >
+  </div>
+  <div class="flex flex-row">
+    <div class="w-1/2">
+      <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">
+        Choose columns to include
+      </h5>
     </div>
-    <div class="ml-auto">
-      {#if currentSearch.currentStep > 1}
-        <Button class="mt-6" color="light" on:click={back}
-          ><i class="bx bx-arrow-back mr-1 text-xl"></i>Back</Button
-        >
-        <Button class="mt-6" color="light" on:click={reset}
-          ><i class="bx bx-undo mr-1 text-xl"></i>Reset</Button
-        >
-      {/if}
-      {#if currentSearch.currentStep < 3}
-        <Button
-          disabled={!proceedConditionMet}
-          class="mt-6"
-          color="light"
-          outline={true}
-          on:click={proceed}><i class="bx bx-right-arrow-alt mr-1 text-xl"></i>Next</Button
-        >
-      {/if}
-      {#if currentSearch.currentStep === 3}
-        <Button class="mt-6" color="light" outline={true}
-          ><i class="bx bx-save mr-1 text-xl"></i>Finish</Button
-        >
-      {/if}
+    <div class="w-1/2">
+      <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
+    </div>
+  </div>
+  <div class="flex flex-row">
+    <div class="my-3 ml-3 w-1/2">
+      <div class="flex flex-col gap-3">
+        {#each currentSearch.activeColumns as col}
+          <div class="flex items-center">
+            <Checkbox bind:group={currentSearch.chosenColumns} value={col}></Checkbox>
+            <Badge>{col}</Badge>
+          </div>
+        {/each}
+      </div>
+    </div>
+    <div class="my-3 ml-3 w-1/2">
+      <div class="flex flex-col gap-3">
+        {#each currentSearch.chosenColumns as col}
+          <div class="flex items-center">
+            <Badge>{col}</Badge>
+          </div>
+        {/each}
+      </div>
     </div>
   </div>
 </Card>
