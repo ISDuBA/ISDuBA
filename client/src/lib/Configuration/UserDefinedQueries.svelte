@@ -81,9 +81,52 @@
     };
   };
 
+  const chooseColumn = (e, col) => {
+    if (e.currentTarget.checked) {
+      currentSearch.chosenColumns = [
+        ...currentSearch.chosenColumns,
+        { name: col, searchOrder: ORDERDIRECTIONS.ASC }
+      ];
+    } else {
+      currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
+        return column.name !== col;
+      });
+    }
+  };
+
+  const hoverLine = (col) => {
+    hoveredLine = col;
+  };
+
+  const indexOfCol = (col) => {
+    return currentSearch.chosenColumns.map((col) => col.name).indexOf(col);
+  };
+
+  const promoteColumn = (col) => {
+    const index = indexOfCol(col);
+    if (index === 0) return;
+    const tmp = currentSearch.chosenColumns[index - 1];
+    currentSearch.chosenColumns[index - 1] = currentSearch.chosenColumns[index];
+    currentSearch.chosenColumns[index] = tmp;
+  };
+
+  const switchOrder = (col) => {
+    const index = indexOfCol(col);
+    const selectedCol = currentSearch.chosenColumns[index];
+    let searchOrder = ORDERDIRECTIONS.DESC;
+    if (selectedCol.searchOrder === ORDERDIRECTIONS.DESC) {
+      searchOrder = ORDERDIRECTIONS.ASC;
+    }
+    currentSearch.chosenColumns[index] = {
+      name: selectedCol.name,
+      searchOrder: searchOrder
+    };
+  };
+
   let currentSearch = reset();
   let orderBy = "";
   let edit = false;
+  let hoveredLine = "";
 
   $: {
     if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
@@ -152,6 +195,7 @@
         </h5>
       {/if}
     </button>
+    <i class="bx bx-edit-alt ml-1"></i>
   </div>
   <h5 class="mb-4 text-lg font-medium text-gray-500 dark:text-gray-400">Choose type of search</h5>
   <div class="ml-3 flex flex-row gap-3">
@@ -163,31 +207,51 @@
     >
   </div>
   <div class="flex flex-row">
-    <div class="w-1/2">
-      <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">
-        Choose columns to include
-      </h5>
+    <div class="w-1/3">
+      <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
     </div>
-    <div class="w-1/2">
+    <div class="w-2/3">
       <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
     </div>
   </div>
   <div class="flex flex-row">
-    <div class="my-3 ml-3 w-1/2">
+    <div class="my-3 ml-3 w-1/3">
       <div class="flex flex-col gap-3">
         {#each currentSearch.activeColumns as col}
           <div class="flex items-center">
-            <Checkbox bind:group={currentSearch.chosenColumns} value={col}></Checkbox>
+            <Checkbox
+              on:click={(e) => {
+                chooseColumn(e, col);
+              }}
+            ></Checkbox>
             <Badge>{col}</Badge>
           </div>
         {/each}
       </div>
     </div>
-    <div class="my-3 ml-3 w-1/2">
+    <div class="my-3 ml-3 w-2/3">
       <div class="flex flex-col gap-3">
         {#each currentSearch.chosenColumns as col}
-          <div class="flex items-center">
-            <Badge>{col}</Badge>
+          <div
+            class="flex items-center"
+            on:mouseleave={() => {
+              hoveredLine = "";
+            }}
+            on:mouseover={hoverLine(col.name)}
+          >
+            {#if hoveredLine === col.name}
+              <button on:click={promoteColumn(col.name)}>
+                <i class="bx bx-up-arrow-alt"></i>
+              </button>
+            {/if}
+            <Badge>{col.name}</Badge>
+            <button class="ml-1" on:click={switchOrder(col.name)}>
+              {#if col.searchOrder === ORDERDIRECTIONS.ASC}
+                <i class="bx bx-sort-a-z"></i>
+              {:else}
+                <i class="bx bx-sort-z-a"></i>
+              {/if}
+            </button>
           </div>
         {/each}
       </div>
