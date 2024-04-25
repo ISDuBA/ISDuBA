@@ -62,9 +62,10 @@
   };
 
   const parseMixed = () => {
-    let added = content.replaceAll(/\[-.*?-]/g, "");
+    const text = content && typeof content === "number" ? content?.toString() : content;
+    let added = text.replaceAll(/\[-.*?-]/g, "");
     added = removeAnnotation(added, "{+", "+}");
-    let removed = content.replaceAll(/{+.*?\+}/g, "");
+    let removed = text.replaceAll(/{+.*?\+}/g, "");
     removed = removeAnnotation(removed, "[-", "-]");
     return [removed, added];
   };
