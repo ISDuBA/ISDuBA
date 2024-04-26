@@ -16,13 +16,9 @@
   import { request } from "$lib/utils";
 
   export let comment: any;
-  let updatedComment = "";
+  let updatedComment = comment.message;
   let isEditing = false;
   let updateCommentError: string;
-
-  onMount(() => {
-    updatedComment = comment.message;
-  });
 
   function toggleEditing() {
     isEditing = !isEditing;

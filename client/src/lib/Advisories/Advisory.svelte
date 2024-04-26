@@ -333,7 +333,7 @@
           {#if comments?.length > 0}
             <div class="max-h-96 overflow-y-auto pl-2">
               <Timeline class="mb-4 flex flex-col-reverse">
-                {#each comments as comment}
+                {#each comments as comment (comment.id)}
                   <Comment {comment}></Comment>
                 {/each}
               </Timeline>
