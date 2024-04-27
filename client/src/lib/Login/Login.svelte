@@ -79,7 +79,7 @@
           >
         {/if}
         {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
-          <Button href={profileUrl}>Profile</Button>
+          <Button href={profileUrl} target="_blank">Profile</Button>
           <Button on:click={logout}>Logout</Button>
         {/if}
       </div>
