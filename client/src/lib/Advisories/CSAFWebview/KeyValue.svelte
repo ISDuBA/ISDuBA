@@ -31,6 +31,7 @@
                 <div class="display-markdown">
                   {@html DOMPurify.sanitize(
                     marked.parse(
+                      // eslint-disable-next-line no-misleading-character-class
                       values[index].replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")
                     )
                   )}

@@ -36,6 +36,7 @@
 <div class="markdown-text ml-6">
   <div class="display-markdown">
     {@html DOMPurify.sanitize(
+      // eslint-disable-next-line no-misleading-character-class
       marked.parse(note.text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, ""))
     )}
   </div>
