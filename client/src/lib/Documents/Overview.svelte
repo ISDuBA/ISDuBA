@@ -142,7 +142,7 @@
     }
     restorePosition();
     if ($appStore.app.isUserLoggedIn) {
-      fetchData();
+      await fetchData();
     }
   });
 </script>
@@ -213,7 +213,7 @@
             class="mr-1 w-16 cursor-pointer border pr-1 text-right"
             on:change={() => {
               if (!parseInt("" + currentPage)) currentPage = 1;
-              currentPage = Math.floor(parseInt(currentPage));
+              currentPage = Math.floor(currentPage);
               if (currentPage < 1) currentPage = 1;
               if (currentPage > numberOfPages) currentPage = numberOfPages;
               offset = (currentPage - 1) * limit;
@@ -254,58 +254,58 @@
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v3_score")}
           >CVSS3<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "cvss_v3_score"}
-            class:bx-caret-down={orderBy == "-cvss_v3_score"}
+            class:bx-caret-up={orderBy === "cvss_v3_score"}
+            class:bx-caret-down={orderBy === "-cvss_v3_score"}
           ></i></TableHeadCell
         >
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v2_score")}
           >CVSS2<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "cvss_v2_score"}
-            class:bx-caret-down={orderBy == "-cvss_v2_score"}
+            class:bx-caret-up={orderBy === "cvss_v2_score"}
+            class:bx-caret-down={orderBy === "-cvss_v2_score"}
           ></i></TableHeadCell
         >
         <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("publisher")}
           >Publisher<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "publisher"}
-            class:bx-caret-down={orderBy == "-publisher"}
+            class:bx-caret-up={orderBy === "publisher"}
+            class:bx-caret-down={orderBy === "-publisher"}
           ></i></TableHeadCell
         >
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("title")}
           >Title<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "title"}
-            class:bx-caret-down={orderBy == "-title"}
+            class:bx-caret-up={orderBy === "title"}
+            class:bx-caret-down={orderBy === "-title"}
           ></i></TableHeadCell
         >
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("tracking_id")}
           >Tracking ID<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "tracking_id"}
-            class:bx-caret-down={orderBy == "tracking_id"}
+            class:bx-caret-up={orderBy === "tracking_id"}
+            class:bx-caret-down={orderBy === "tracking_id"}
           ></i></TableHeadCell
         >
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("initial_release_date")}
           >Initial Release<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "initial_release_date"}
-            class:bx-caret-down={orderBy == "-initial_release_date"}
+            class:bx-caret-up={orderBy === "initial_release_date"}
+            class:bx-caret-down={orderBy === "-initial_release_date"}
           ></i></TableHeadCell
         >
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("current_release_date")}
           >Current Release<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "current_release_date"}
-            class:bx-caret-down={orderBy == "-current_release_date"}
+            class:bx-caret-up={orderBy === "current_release_date"}
+            class:bx-caret-down={orderBy === "-current_release_date"}
           ></i></TableHeadCell
         >
         <TableHeadCell padding={tablePadding} on:click={() => switchSort("version")}
           >Version<i
             class:bx={true}
-            class:bx-caret-up={orderBy == "version"}
-            class:bx-caret-down={orderBy == "-version"}
+            class:bx-caret-up={orderBy === "version"}
+            class:bx-caret-down={orderBy === "-version"}
           ></i></TableHeadCell
         >
       </TableHead>
