@@ -48,7 +48,7 @@
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   export let params: any = null;
 
-  let document = {};
+  let document: any = {};
   let ssvc: any;
   $: ssvcStyle = ssvc
     ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
@@ -57,7 +57,7 @@
   let comments: any = [];
   let loadCommentsError: string;
   let createCommentError: string;
-  let advisoryVersions: string[] = [];
+  let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
   let isCommentingAllowed: boolean;
@@ -318,7 +318,7 @@
       on:disableDiff={() => (isDiffOpen = false)}
     ></Version>
     {#if isDiffOpen}
-      <JsonDiff {diffDocuments}></JsonDiff>
+      <JsonDiff title="Diff" {diffDocuments}></JsonDiff>
     {:else}
       <Webview></Webview>
     {/if}

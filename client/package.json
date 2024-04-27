@@ -47,6 +47,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@types/dompurify": "^3.0.5",
     "boxicons": "^2.1.4",
     "diff2html": "^3.4.47",
     "dompurify": "^3.0.9",

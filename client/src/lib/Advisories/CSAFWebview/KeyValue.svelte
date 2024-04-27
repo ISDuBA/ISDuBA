@@ -23,7 +23,7 @@
   <Table noborder>
     <TableBody>
       {#each keys as key, index}
-        {#if key == "text" || key == "Text"}
+        {#if key === "text" || key === "Text"}
           <TableBodyRow>
             <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}>
@@ -57,7 +57,5 @@
     width: 100%;
     overflow-x: auto;
     position: relative;
-  }
-  .display-markdown {
   }
 </style>

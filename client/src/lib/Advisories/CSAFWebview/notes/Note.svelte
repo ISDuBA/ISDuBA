@@ -50,6 +50,4 @@
     overflow-x: auto;
     position: relative;
   }
-  .display-markdown {
-  }
 </style>

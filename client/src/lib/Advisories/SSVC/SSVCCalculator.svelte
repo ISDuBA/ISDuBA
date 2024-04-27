@@ -108,8 +108,7 @@
       }
       return count === Object.keys(selectedOptions).length;
     });
-    if (test) return true;
-    return false;
+    return !!test;
   }
 
   function calculateComplexOption() {
@@ -122,7 +121,7 @@
         selectedChildOptions[child.label] = checkedRadioButton.value;
       }
     });
-    let selectedOption: SSVCOption;
+    let selectedOption: SSVCOption | null = null;
     mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
       if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
         selectedOption = option;
@@ -133,7 +132,9 @@
       const option = getOption(decision, selectedChildOptions[decisionLabel]);
       extendVector(`${decision.key}:${option?.key}/`);
     });
-    selectOption(selectedOption);
+    if (selectedOption) {
+      selectOption(selectedOption);
+    }
   }
 
   function calculateResult() {
@@ -151,8 +152,8 @@
     extendVector(
       `${mainDecisions[currentStep].key}:${option?.key}/${createIsoTimeStringForSSVC()}/`
     );
-    const resultText = Object.values(finalDecision)[0];
-    const color = getOption(mainDecisions[currentStep], resultText).color;
+    const resultText: any = Object.values(finalDecision)[0];
+    const color = getOption(mainDecisions[currentStep], resultText)?.color;
     result = {
       text: resultText,
       color: color
