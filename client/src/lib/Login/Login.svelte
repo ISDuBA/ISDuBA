@@ -15,30 +15,24 @@
   import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
-  import { logoutKeycloak, request } from "$lib/utils";
+  import { request } from "$lib/utils";
 
   let version: string = "Retrieving Version from server";
   let error: string;
 
   async function logout() {
     appStore.setSessionExpired(true);
-    localStorage.removeItem("cachedKeycloak");
-    logoutKeycloak($appStore.app.keycloak);
+    await $appStore.app.userManager?.signoutRedirect();
   }
 
   async function login() {
-    try {
-      await $appStore.app.keycloak.login();
-      appStore.setSessionExpired(false);
-    } catch {
-      appStore.setSessionExpired(true);
-    }
+    await $appStore.app.userManager?.signinRedirect();
   }
 
   let profileUrl = PUBLIC_KEYCLOAK_URL + "/realms/isduba/account/#/";
 
   onMount(async () => {
-    if ($appStore.app.keycloak.authenticated) {
+    if ($appStore.app.isUserLoggedIn) {
       const response = await request("api/about", "GET");
       if (response.ok) {
         const backendInfo = response.content;
@@ -71,7 +65,7 @@
             ><b>Realm: </b>{PUBLIC_KEYCLOAK_REALM}</span
           ></P
         >
-        {#if $appStore.app.keycloak && !$appStore.app.keycloak.authenticated}
+        {#if $appStore.app.userManager && !$appStore.app.isUserLoggedIn}
           {#if $appStore.app.sessionExpired}
             <div class="text-yellow-400">
               <i class="bx bx-message-alt-error"></i> Your session is expired
@@ -84,13 +78,13 @@
             ></P
           >
         {/if}
-        {#if $appStore.app.keycloak && $appStore.app.keycloak.authenticated}
+        {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
           <Button href={profileUrl}>Profile</Button>
           <Button on:click={logout}>Logout</Button>
         {/if}
       </div>
     </Card>
-    {#if $appStore.app.keycloak.authenticated}
+    {#if $appStore.app.isUserLoggedIn}
       <P class="mt-3">
         Versions:
         <List tag="ul" class="space-y-1" list="none">

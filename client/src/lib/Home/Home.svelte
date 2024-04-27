@@ -12,14 +12,13 @@
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import NewAdvisories from "./NewAdvisories.svelte";
-  import NewEvents from "./NewEvents.svelte";
 </script>
 
 <svelte:head>
   <title>Home</title>
 </svelte:head>
 
-{#if $appStore.app.keycloak.authenticated}
+{#if $appStore.app.isUserLoggedIn}
   <SectionHeader title="Overview"></SectionHeader>
   <NewAdvisories></NewAdvisories>
 {/if}

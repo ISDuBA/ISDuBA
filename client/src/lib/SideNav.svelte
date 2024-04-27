@@ -40,11 +40,7 @@
   let breakPoint: number = 1280;
   let width: number;
   let drawerHidden: boolean = false;
-  $: if (width >= breakPoint) {
-    drawerHidden = false;
-  } else {
-    drawerHidden = true;
-  }
+  $: drawerHidden = width < breakPoint;
 
   const toggleDrawer = () => {
     drawerHidden = !drawerHidden;
@@ -52,7 +48,7 @@
 </script>
 
 <svelte:window bind:innerWidth={width} />
-{#if $appStore.app.keycloak && ($appStore.app.keycloak.authenticated || $appStore.app.sessionExpired)}
+{#if $appStore.app.userManager && ($appStore.app.isUserLoggedIn || $appStore.app.sessionExpired)}
   <div class="flex">
     <Drawer
       transitionType="fly"
@@ -105,10 +101,7 @@
               </svelte:fragment>
             </SidebarItem>
             {#if !$appStore.app.sessionExpired}
-              <SidebarItem
-                label={$appStore.app.keycloak.idTokenParsed.preferred_username}
-                href="/#/login"
-              >
+              <SidebarItem label={$appStore.app.tokenParsed?.preferred_username} href="/#/login">
                 <svelte:fragment slot="icon">
                   <i class="bx bx-user"></i>
                 </svelte:fragment>

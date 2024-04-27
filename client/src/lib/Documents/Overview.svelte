@@ -17,18 +17,18 @@
     Button,
     Label,
     PaginationItem,
-    Select,
     Search,
+    Select,
+    Spinner,
+    Table,
     TableBody,
     TableBodyCell,
     TableBodyRow,
     TableHead,
-    TableHeadCell,
-    Table
+    TableHeadCell
   } from "flowbite-svelte";
-  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
+  import { publisher, tablePadding, tdClass, title } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Spinner } from "flowbite-svelte";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   import { request } from "$lib/utils";
 
@@ -107,9 +107,9 @@
   };
 
   const restorePosition = () => {
-    let position = JSON.parse(sessionStorage.getItem("documentPosition"));
+    let position = sessionStorage.getItem("documentPosition");
     if (position) {
-      [offset, currentPage, limit, orderBy] = position;
+      [offset, currentPage, limit, orderBy] = JSON.parse(position);
     }
   };
 
@@ -140,7 +140,7 @@
       searchTerm = savedSearch;
     }
     restorePosition();
-    if ($appStore.app.keycloak.authenticated) {
+    if ($appStore.app.isUserLoggedIn) {
       fetchData();
     }
   });

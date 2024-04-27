@@ -63,7 +63,7 @@
   ];
   let orderBy = "-cvss_v3_score";
 
-  let anchorLink;
+  let anchorLink: string | null;
 
   const previous = () => {
     if (offset - limit >= 0) {
@@ -111,9 +111,9 @@
     sessionStorage.setItem("advisoryPosition", JSON.stringify(position));
   };
   const restorePosition = () => {
-    let position = JSON.parse(sessionStorage.getItem("advisoryPosition"));
+    let position = sessionStorage.getItem("advisoryPosition");
     if (position) {
-      [offset, currentPage, limit, orderBy] = position;
+      [offset, currentPage, limit, orderBy] = JSON.parse(position);
     }
   };
 
@@ -151,7 +151,7 @@
       searchTerm = savedSearch;
     }
     restorePosition();
-    if ($appStore.app.keycloak.authenticated) {
+    if ($appStore.app.isUserLoggedIn) {
       fetchData();
     }
   });

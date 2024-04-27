@@ -10,7 +10,6 @@
 
 <script lang="ts">
   import { Button, ButtonGroup, Label, P, TimelineItem } from "flowbite-svelte";
-  import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -44,7 +43,7 @@
     <P class="mb-2">
       {comment.message}
       <small>({comment.commentator})</small>
-      {#if $appStore.app.keycloak.tokenParsed.preferred_username === comment.commentator}
+      {#if $appStore.app.tokenParsed?.preferred_username === comment.commentator}
         <ButtonGroup>
           <Button class="!p-2" on:click={toggleEditing}>
             <i class="bx bx-edit text-lg"></i>

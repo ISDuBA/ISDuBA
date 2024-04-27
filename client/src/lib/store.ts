@@ -8,13 +8,20 @@
 
 import { writable } from "svelte/store";
 import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
-import { ADMIN, EDITOR, REVIEWER, IMPORTER, AUDITOR } from "./permissions";
+import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER } from "./permissions";
 import { MESSAGE } from "./Messages/messagetypes";
+import { UserManager, type UserProfile } from "oidc-client-ts";
 
 type ErrorMessage = {
   id: string;
   type: string;
   message: string;
+};
+
+export type ProfileWithRoles = UserProfile & {
+  realm_access: {
+    roles: string[];
+  };
 };
 
 type AppStore = {
@@ -24,9 +31,10 @@ type AppStore = {
       lastName: string;
     };
     expiryTime: string;
+    isUserLoggedIn: boolean;
     sessionExpired: boolean;
-    token: any;
-    keycloak: any;
+    tokenParsed: ProfileWithRoles | null;
+    userManager: UserManager | null;
     errors: ErrorMessage[];
   };
   webview: {
@@ -61,8 +69,8 @@ const generateMessage = (msg: string, type: string) => {
   };
 };
 
-const generateInitalState = (): AppStore => {
-  const state = {
+const generateInitialState = (): AppStore => {
+  return {
     app: {
       userProfile: {
         firstName: "",
@@ -71,8 +79,8 @@ const generateInitalState = (): AppStore => {
       sessionExpired: false,
       expiryTime: "",
       isUserLoggedIn: false,
-      token: null,
-      keycloak: null,
+      tokenParsed: null,
+      userManager: null,
       errors: []
     },
     webview: {
@@ -98,11 +106,10 @@ const generateInitalState = (): AppStore => {
       }
     }
   };
-  return state;
 };
 
 function createStore() {
-  const { subscribe, set, update } = writable(generateInitalState());
+  const { subscribe, set, update } = writable(generateInitialState());
   let state: any;
   subscribe((v) => (state = v));
   return {
@@ -119,13 +126,21 @@ function createStore() {
         return settings;
       });
     },
+    setIsUserLoggedIn: (isUserLoggedIn: boolean) => {
+      update((settings) => {
+        settings.app.isUserLoggedIn = isUserLoggedIn;
+        return settings;
+      });
+    },
+    setTokenParsed: (tokenParsed: ProfileWithRoles) => {
+      update((settings) => {
+        settings.app.tokenParsed = tokenParsed;
+        return settings;
+      });
+    },
     toggleDocExpandAll: () => {
       update((settings) => {
-        if (settings.webview.ui.docToggleExpandAll) {
-          settings.webview.ui.docToggleExpandAll = false;
-        } else {
-          settings.webview.ui.docToggleExpandAll = true;
-        }
+        settings.webview.ui.docToggleExpandAll = !settings.webview.ui.docToggleExpandAll;
         return settings;
       });
     },
@@ -280,9 +295,9 @@ function createStore() {
         return settings;
       });
     },
-    setKeycloak: (keycloak: any) => {
+    setUserManager: (userManager: UserManager) => {
       update((settings) => {
-        settings.app.keycloak = keycloak;
+        settings.app.userManager = userManager;
         return settings;
       });
     },
@@ -331,15 +346,16 @@ function createStore() {
       });
     },
     reset: () => {
-      set(generateInitalState());
+      set(generateInitialState());
     },
-    getRoles: () => state.app.keycloak.tokenParsed.realm_access.roles,
-    isImporter: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(IMPORTER),
-    isEditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(EDITOR),
-    isReviewer: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(REVIEWER),
-    isAdmin: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(ADMIN),
-    isAuditor: () => state.app.keycloak.tokenParsed.realm_access.roles.includes(AUDITOR),
-    getKeycloak: () => state.app.keycloak
+    getRoles: () => state.app.tokenParsed.realm_access.roles,
+    isImporter: () => appStore.getRoles().includes(IMPORTER),
+    isEditor: () => appStore.getRoles().includes(EDITOR),
+    isReviewer: () => appStore.getRoles().includes(REVIEWER),
+    isAdmin: () => appStore.getRoles().includes(ADMIN),
+    isAuditor: () => appStore.getRoles().includes(AUDITOR),
+    getUserManager: () => state.app.userManager,
+    getIsUserLoggedIn: () => state.app.isUserLoggedIn
   };
 }
 

@@ -10,8 +10,8 @@
 
 import { appStore } from "./store";
 import { type HttpResponse } from "./types";
-import { configuration } from "$lib/configuration";
 import { push } from "svelte-spa-router";
+import type { User } from "oidc-client-ts";
 
 export const request = async (
   path: string,
@@ -51,22 +51,12 @@ export const request = async (
 };
 
 const getAccessToken = async () => {
-  const config = configuration.getConfiguration();
-  const keycloak = appStore.getKeycloak();
-  try {
-    await keycloak.updateToken(config.updateIntervall);
-    const expiry = new Date(keycloak.idTokenParsed.exp * 1000);
-    appStore.setExpiryTime(expiry.toLocaleTimeString());
-  } catch (error) {
-    appStore.setSessionExpired(true);
-    localStorage.setItem("currentLocation", window.location.hash.substring(1));
-    localStorage.removeItem("cachedKeycloak");
-    push("/login");
-  }
-
-  return keycloak.token;
-};
-
-export const logoutKeycloak = (keycloak: any, options: any) => {
-  window.location.replace(keycloak.createLogoutUrl(options));
+  const userManager = appStore.getUserManager();
+  return userManager.getUser().then(async (user: User) => {
+    if (user) {
+      return user.access_token;
+    } else {
+      await push("/login");
+    }
+  });
 };

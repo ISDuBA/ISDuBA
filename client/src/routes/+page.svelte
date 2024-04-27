@@ -26,54 +26,53 @@
   import { push } from "svelte-spa-router";
   import Messages from "$lib/Messages/Messages.svelte";
   import Login from "$lib/Login/Login.svelte";
-  import Keycloak from "keycloak-js";
   import { configuration } from "$lib/configuration";
+  import { type User, UserManager } from "oidc-client-ts";
+  import { jwtDecode } from "jwt-decode";
 
-  if (!$appStore.app.keycloak) appStore.setKeycloak(new Keycloak(configuration.getConfiguration()));
+  let userManager = new UserManager(configuration.getConfiguration());
+  userManager.events.addUserSignedIn(function () {
+    console.log("User loaded");
+  });
+  userManager.events.addAccessTokenExpiring(function () {
+    console.log("token expiring");
+  });
+  userManager.getUser().then(async (user: User | null) => {
+    if (!user) {
+      userManager
+        .signinRedirectCallback()
+        .then(function (user) {
+          console.log("signin response success", user);
+          appStore.setIsUserLoggedIn(true);
+          appStore.setSessionExpired(false);
+          appStore.setTokenParsed(jwtDecode(user.access_token));
+          push("/");
+        })
+        .catch(function (err) {
+          console.log(err);
+          push("/login");
+        });
+    } else {
+      appStore.setIsUserLoggedIn(true);
+      appStore.setSessionExpired(false);
+      appStore.setTokenParsed(jwtDecode(user.access_token));
+    }
+    appStore.setUserManager(userManager);
+  });
 
-  let cachedKeycloak = localStorage.getItem("cachedKeycloak");
-  if (cachedKeycloak) {
-    let newKeycloak = Object.assign(appStore.getKeycloak(), JSON.parse(cachedKeycloak));
-    appStore.setKeycloak(newKeycloak);
-  } else {
-    $appStore.app.keycloak
-      .init({
-        onLoad: "check-sso",
-        checkLoginIframe: false,
-        responseMode: "query"
-      })
-      .then(async () => {
-        if ($appStore.app.keycloak.authenticated) {
-          // TODO: cache refresh token and user information
-          // localStorage.setItem("cachedKeycloak", JSON.stringify(appStore.getKeycloak()));
-          const expiry = new Date($appStore.app.keycloak.idTokenParsed.exp * 1000);
-          appStore.setExpiryTime(expiry.toLocaleTimeString());
-          let redirect = localStorage.getItem("currentLocation");
-          if (!redirect || redirect == "/login") {
-            redirect = "/";
-          }
-          push(redirect);
-        }
-      })
-      .catch((error: any) => {
-        localStorage.removeItem("cachedKeycloak");
-        push("/login");
-      });
-  }
+  userManager.events.addSilentRenewError(function (e) {
+    console.log("silent renew error", e.message);
+    appStore.setIsUserLoggedIn(false);
+    appStore.setSessionExpired(true);
+  });
+
   const loginRequired = {
     loginRequired: true
   };
 
-  const loginCondition = async () => {
-    if (!$appStore.app.keycloak) return false;
-    if (!$appStore.app.keycloak.authenticated) return false;
-    const keycloak = appStore.getKeycloak();
-    try {
-      await keycloak.updateToken();
-      return true;
-    } catch (error) {
-      return false;
-    }
+  const loginCondition = () => {
+    if (!appStore.getUserManager()) return false;
+    return appStore.getIsUserLoggedIn();
   };
 
   const routes = {
@@ -126,7 +125,6 @@
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
       appStore.setSessionExpired(true);
-      localStorage.setItem("currentLocation", window.location.hash.substring(1));
       push("/login");
     }
   };
@@ -137,7 +135,9 @@
     <SideNav></SideNav>
   </div>
   <main class="max-h-screen w-full bg-white p-6">
-    <Router {routes} on:conditionsFailed={conditionsFailed} />
+    {#if $appStore.app.userManager}
+      <Router {routes} on:conditionsFailed={conditionsFailed} />
+    {/if}
   </main>
   <Messages></Messages>
 </div>

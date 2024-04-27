@@ -101,7 +101,7 @@
 
   $: numberOfPages = Math.ceil(count / limit);
   $: onMount(async () => {
-    fetchData();
+    await fetchData();
   });
 </script>
 

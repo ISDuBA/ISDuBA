@@ -74,7 +74,7 @@
   }
 
   $: {
-    loadData(params.id);
+    loadData();
   }
 
   const timeoutIDs: number[] = [];
@@ -192,12 +192,12 @@
     }
   };
 
-  const loadData = async (_: any) => {
-    loadDocumentSSVC();
+  const loadData = async () => {
+    await loadDocumentSSVC();
     await loadDocument();
     await loadAdvisoryVersions();
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
-      loadComments();
+      await loadComments();
     }
     const state = await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
@@ -234,8 +234,8 @@
   });
 
   onMount(async () => {
-    if ($appStore.app.keycloak.authenticated) {
-      loadData();
+    if ($appStore.app.isUserLoggedIn) {
+      await loadData();
     }
   });
 </script>
