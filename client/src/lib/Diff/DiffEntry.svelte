@@ -12,7 +12,7 @@
   import ReplaceOperation from "./ReplaceOperation.svelte";
 
   export let content: any;
-  export let isSideBySideViewActivated: true;
+  export let isSideBySideViewActivated: boolean = true;
   export let operation: string;
   export let depth = 0;
 

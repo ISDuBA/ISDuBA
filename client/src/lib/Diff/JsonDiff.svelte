@@ -11,7 +11,7 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, Label } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
-  import type { JsonDiffResult, JsonDiffResultList } from "./JsonDiff";
+  import type { JsonDiffResult } from "./JsonDiff";
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
@@ -53,8 +53,7 @@
     error = "";
     const response = await request(urlPath, "GET");
     if (response.ok) {
-      const result: JsonDiffResultList = response.content;
-      diff = result;
+      diff = response.content;
     } else if (response.error) {
       error = response.error;
     }

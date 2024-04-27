@@ -26,6 +26,13 @@
     keys.push("Title");
     values.push(note.title);
   }
+
+  const getMarkdown = () => {
+    return marked.parse(
+      // eslint-disable-next-line no-misleading-character-class
+      note.text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")
+    ) as string;
+  };
 </script>
 
 <KeyValue {keys} {values} />
@@ -35,10 +42,7 @@
 
 <div class="markdown-text ml-6">
   <div class="display-markdown">
-    {@html DOMPurify.sanitize(
-      // eslint-disable-next-line no-misleading-character-class
-      marked.parse(note.text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, ""))
-    )}
+    {@html DOMPurify.sanitize(getMarkdown())}
   </div>
 </div>
 
@@ -49,7 +53,5 @@
     width: 100%;
     overflow-x: auto;
     position: relative;
-  }
-  .display-markdown {
   }
 </style>

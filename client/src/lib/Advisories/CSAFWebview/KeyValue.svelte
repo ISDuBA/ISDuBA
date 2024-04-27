@@ -17,24 +17,26 @@
   export let values: any;
   marked.use({ gfm: true });
   const cellStyle = "px-6 py-0";
+
+  const getMarkdown = (index: number) => {
+    return marked.parse(
+      // eslint-disable-next-line no-misleading-character-class
+      values[index].replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")
+    ) as string;
+  };
 </script>
 
 <div class="w-max">
   <Table noborder>
     <TableBody>
       {#each keys as key, index}
-        {#if key == "text" || key == "Text"}
+        {#if key === "text" || key === "Text"}
           <TableBodyRow>
             <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}>
               <div class="markdown-text">
                 <div class="display-markdown">
-                  {@html DOMPurify.sanitize(
-                    marked.parse(
-                      // eslint-disable-next-line no-misleading-character-class
-                      values[index].replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")
-                    )
-                  )}
+                  {@html DOMPurify.sanitize(getMarkdown(index))}
                 </div>
               </div>
             </TableBodyCell>
@@ -57,7 +59,5 @@
     width: 100%;
     overflow-x: auto;
     position: relative;
-  }
-  .display-markdown {
   }
 </style>

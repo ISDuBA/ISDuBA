@@ -10,11 +10,11 @@
 
 <script lang="ts">
   export let content: string;
-  export let isSideBySideViewActivated: true;
+  export let isSideBySideViewActivated: boolean = true;
   $: parsedContent = isSideBySideViewActivated ? [] : parse(content);
   $: parsedSideBySideContent = isSideBySideViewActivated ? parseMixed() : [];
 
-  const parse = (textPart: any, level = 0): object[] => {
+  const parse = (textPart: any, level = 0): any[] => {
     const text = typeof textPart === "number" ? textPart.toString() : textPart;
     if (text.length === 0) {
       return [];
@@ -62,7 +62,7 @@
   };
 
   const parseMixed = () => {
-    const text = content && typeof content === "number" ? content?.toString() : content;
+    const text = content;
     let added = text.replaceAll(/\[-.*?-]/g, "");
     added = removeAnnotation(added, "{+", "+}");
     let removed = text.replaceAll(/{+.*?\+}/g, "");

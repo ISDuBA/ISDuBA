@@ -11,7 +11,7 @@
   import { appStore } from "$lib/store";
   import { Status, TLP } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  import Acknowledgments from "$lib/Advisories/CSAFWebview/acknowledgments/Acknowledgments.svelte";
+  import Acknowledgements from "$lib/Advisories/CSAFWebview/acknowledgements/Acknowledgements.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import Notes from "$lib/Advisories/CSAFWebview/notes/Notes.svelte";
   import References from "$lib/Advisories/CSAFWebview/references/References.svelte";
@@ -213,7 +213,7 @@
 {#if $appStore.webview.doc?.acknowledgements}
   <div>
     <Collapsible header="Acknowledgements" level="3">
-      <Acknowledgments acknowledgements={$appStore.webview.doc?.acknowledgements} />
+      <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
     </Collapsible>
   </div>
 {/if}
