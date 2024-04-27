@@ -10,7 +10,7 @@
 
 <script lang="ts">
   export let content: string;
-  export let isSideBySideViewActivated: true;
+  export let isSideBySideViewActivated: boolean = true;
   $: parsedContent = isSideBySideViewActivated ? [] : parse(content);
   $: parsedSideBySideContent = isSideBySideViewActivated ? parseMixed() : [];
 
