@@ -13,6 +13,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_KEYCLOAK_URL: "http://localhost:8080"
+      PUBLIC_KEYCLOAK_REALM: "isduba"
+      PUBLIC_KEYCLOAK_CLIENTID: "auth"
     defaults:
       run:
         working-directory: ./client
