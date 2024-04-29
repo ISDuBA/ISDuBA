@@ -63,8 +63,8 @@
   };
 
   const SEARCHTYPES = {
-    ADVISORY: "Advisory",
-    DOCUMENT: "Document"
+    ADVISORY: "advisories",
+    DOCUMENT: "documents"
   };
 
   const STUBQUERIES = [
@@ -79,7 +79,8 @@
       chosenColumns: [],
       activeColumns: [],
       name: "New Query",
-      description: ""
+      description: "",
+      query: ""
     };
   };
 
@@ -137,8 +138,28 @@
     };
   };
 
+  const generateQuery = () => {
+    const columns =
+      currentSearch.chosenColumns.length > 0
+        ? `&columns=${currentSearch.chosenColumns.map((col: any) => col.name).join(" ")}`
+        : "";
+    const order =
+      currentSearch.chosenColumns.length > 0
+        ? `&order=${currentSearch.chosenColumns
+            .map((col: any) => {
+              return col.searchOrder === ORDERDIRECTIONS.ASC ? col.name : `-${col.name}`;
+            })
+            .join(" ")}`
+        : "";
+    const query = currentSearch.query ? `&query=${currentSearch.query}` : "";
+    const queryURL = `/api/documents?count=1&advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}${columns}${order}${query}`;
+    console.log(queryURL);
+  };
+
   const testQuery = () => {
     loading = true;
+    queryCount = null;
+    generateQuery();
     setTimeout(() => {
       queryCount = 1000;
       loading = false;
@@ -198,7 +219,7 @@
 
   <Card size="lg">
     <div class="flex flex-row">
-      <div class="my-3 w-1/3">
+      <div class="my-3">
         <span class="mr-3">Name:</span>
         <button
           on:click={() => {
@@ -219,7 +240,7 @@
               }}
             />
           {:else}
-            <h5 class="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">
+            <h5 class="text-xl font-medium text-gray-500 dark:text-gray-400">
               {currentSearch.name}
             </h5>
           {/if}
@@ -230,19 +251,19 @@
           }}><i class="bx bx-edit-alt ml-1"></i></button
         >
       </div>
-      <div class="my-2">
-        <div class="ml-3 flex flex-row gap-3">
-          <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Type</h5>
-          <Radio name="queryType" value={SEARCHTYPES.ADVISORY} bind:group={currentSearch.searchType}
-            >Advisories</Radio
-          >
-          <Radio name="queryType" value={SEARCHTYPES.DOCUMENT} bind:group={currentSearch.searchType}
-            >Documents</Radio
-          >
-        </div>
+    </div>
+    <div class="mt-2 flex flex-row">
+      <div class="flex flex-row gap-3">
+        <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Type</h5>
+        <Radio name="queryType" value={SEARCHTYPES.ADVISORY} bind:group={currentSearch.searchType}
+          >Advisories</Radio
+        >
+        <Radio name="queryType" value={SEARCHTYPES.DOCUMENT} bind:group={currentSearch.searchType}
+          >Documents</Radio
+        >
       </div>
     </div>
-    <div class="flex flex-row">
+    <div class="mt-4 flex flex-row">
       <div class="w-1/3">
         <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
       </div>
@@ -302,22 +323,28 @@
     </div>
     <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
     <div class="flex flex-row">
-      <div class="w-3/4">
-        <Input />
-      </div>
-      <div class="ml-auto">
-        <Button on:click={testQuery} color="light"
-          ><i class="bx bx-test-tube mr-1"></i> Test query</Button
-        >
+      <div class="w-full">
+        <Input bind:value={currentSearch.query} />
       </div>
     </div>
-    <div>
-      <div class:mt-3={true} class:invisible={!loading}>
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
-      </div>
-      <div class:mt-3={true} class:invisible={!queryCount}>
-        The query found {queryCount} results.
+    <div class="mt-3 flex flex-row">
+      {#if loading}
+        <div class="mr-4 mt-3">
+          Loading ...
+          <Spinner color="gray" size="4"></Spinner>
+        </div>
+      {/if}
+      {#if queryCount !== null}
+        <div class:mt-3={true}>
+          The query found {queryCount} results.
+        </div>
+      {/if}
+      <div class="my-2 ml-auto flex flex-row gap-3">
+        <Button on:click={testQuery} color="light"
+          ><i class="bx bx-test-tube me-2"></i> Test query</Button
+        >
+        <Button color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button>
+        <Button color="light"><i class="bx bxs-save me-2"></i> Save</Button>
       </div>
     </div></Card
   >
