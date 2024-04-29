@@ -37,6 +37,12 @@
   userManager.events.addAccessTokenExpiring(function () {
     console.log("token expiring");
   });
+  userManager.events.addSilentRenewError(function (e) {
+    console.log("silent renew error", e.message);
+    appStore.setIsUserLoggedIn(false);
+    appStore.setSessionExpired(true);
+    push("/login");
+  });
   userManager.getUser().then(async (user: User | null) => {
     if (!user) {
       userManager
@@ -58,12 +64,6 @@
       appStore.setTokenParsed(jwtDecode(user.access_token));
     }
     appStore.setUserManager(userManager);
-  });
-
-  userManager.events.addSilentRenewError(function (e) {
-    console.log("silent renew error", e.message);
-    appStore.setIsUserLoggedIn(false);
-    appStore.setSessionExpired(true);
   });
 
   const loginRequired = {
