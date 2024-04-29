@@ -33,6 +33,7 @@ type AppStore = {
     expiryTime: string;
     isUserLoggedIn: boolean;
     sessionExpired: boolean;
+    sessionExpiredMessage: string | null;
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
     errors: ErrorMessage[];
@@ -77,6 +78,7 @@ const generateInitialState = (): AppStore => {
         lastName: ""
       },
       sessionExpired: false,
+      sessionExpiredMessage: null,
       expiryTime: "",
       isUserLoggedIn: false,
       tokenParsed: null,
@@ -117,6 +119,12 @@ function createStore() {
     setSessionExpired: (expired: boolean) => {
       update((settings) => {
         settings.app.sessionExpired = expired;
+        return settings;
+      });
+    },
+    setSessionExpiredMessage: (message: string) => {
+      update((settings) => {
+        settings.app.sessionExpiredMessage = message;
         return settings;
       });
     },

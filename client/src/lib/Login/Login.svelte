@@ -22,6 +22,7 @@
 
   async function logout() {
     appStore.setSessionExpired(true);
+    appStore.setSessionExpiredMessage("Logout");
     await $appStore.app.userManager?.signoutRedirect();
   }
 
@@ -68,7 +69,8 @@
         {#if $appStore.app.userManager && !$appStore.app.isUserLoggedIn}
           {#if $appStore.app.sessionExpired}
             <div class="text-yellow-400">
-              <i class="bx bx-message-alt-error"></i> Your session is expired
+              <i class="bx bx-message-alt-error"></i> Your session is expired: {$appStore.app
+                .sessionExpiredMessage}
             </div>
           {/if}
           <Button on:click={login}>Login</Button>

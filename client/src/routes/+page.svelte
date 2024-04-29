@@ -40,6 +40,7 @@
   userManager.events.addSilentRenewError(function (e) {
     console.log("silent renew error", e.message);
     appStore.setIsUserLoggedIn(false);
+    appStore.setSessionExpiredMessage(e.message);
     appStore.setSessionExpired(true);
     push("/login");
   });
@@ -48,14 +49,14 @@
       userManager
         .signinRedirectCallback()
         .then(function (user) {
-          console.log("signin response success", user);
           appStore.setIsUserLoggedIn(true);
           appStore.setSessionExpired(false);
           appStore.setTokenParsed(jwtDecode(user.access_token));
           push("/");
         })
         .catch(function (err) {
-          console.log(err);
+          appStore.setSessionExpired(true);
+          appStore.setSessionExpiredMessage(err.message());
           push("/login");
         });
     } else {
@@ -125,6 +126,7 @@
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
       appStore.setSessionExpired(true);
+      appStore.setSessionExpiredMessage("User is not logged in");
       push("/login");
     }
   };
