@@ -15,13 +15,15 @@
     Radio,
     Badge,
     Input,
+    Spinner,
     Table,
     TableHead,
     TableBody,
     TableHeadCell,
     TableBodyRow,
     TableBodyCell,
-    Checkbox
+    Checkbox,
+    Button
   } from "flowbite-svelte";
 
   const COLUMNS = {
@@ -82,6 +84,7 @@
   };
 
   const chooseColumn = (e, col) => {
+    queryCount = null;
     if (e.currentTarget.checked) {
       currentSearch.chosenColumns = [
         ...currentSearch.chosenColumns,
@@ -103,6 +106,7 @@
   };
 
   const promoteColumn = (col) => {
+    queryCount = null;
     const index = indexOfCol(col);
     if (index === 0) return;
     const tmp = currentSearch.chosenColumns[index - 1];
@@ -111,6 +115,7 @@
   };
 
   const demoteColumn = (col) => {
+    queryCount = null;
     const index = indexOfCol(col);
     if (index === currentSearch.chosenColumns.length - 1) return;
     const tmp = currentSearch.chosenColumns[index + 1];
@@ -119,6 +124,7 @@
   };
 
   const switchOrder = (col) => {
+    queryCount = null;
     const index = indexOfCol(col);
     const selectedCol = currentSearch.chosenColumns[index];
     let searchOrder = ORDERDIRECTIONS.DESC;
@@ -131,16 +137,28 @@
     };
   };
 
+  const testQuery = () => {
+    loading = true;
+    setTimeout(() => {
+      queryCount = 1000;
+      loading = false;
+    }, 300);
+  };
+
   let currentSearch = reset();
   let orderBy = "";
   let edit = false;
   let hoveredLine = "";
+  let queryCount: any = null;
+  let loading = false;
 
   $: {
     if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
+      queryCount = null;
       currentSearch.activeColumns = [...COLUMNS.ADVISORY];
     }
     if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
+      queryCount = null;
       currentSearch.activeColumns = [...COLUMNS.DOCUMENT];
     }
   }
@@ -179,53 +197,57 @@
   </div>
 
   <Card size="lg">
-    <div class="my-3">
-      <span class="mr-3">Name:</span>
-      <button
-        on:click={() => {
-          edit = !edit;
-        }}
-      >
-        {#if edit}
-          <Input
-            autofocus
-            bind:value={currentSearch.name}
-            on:keyup={(e) => {
-              if (e.key === "Enter") edit = false;
-              if (e.key === "Escape") edit = false;
-              e.preventDefault();
-            }}
-            on:blur={() => {
-              edit = false;
-            }}
-          />
-        {:else}
-          <h5 class="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">
-            {currentSearch.name}
-          </h5>
-        {/if}
-      </button>
-      <button
-        on:click={() => {
-          edit = !edit;
-        }}><i class="bx bx-edit-alt ml-1"></i></button
-      >
-    </div>
-    <h5 class="mb-4 text-lg font-medium text-gray-500 dark:text-gray-400">Choose type of search</h5>
-    <div class="ml-3 flex flex-row gap-3">
-      <Radio name="queryType" value={SEARCHTYPES.ADVISORY} bind:group={currentSearch.searchType}
-        >Advisories</Radio
-      >
-      <Radio name="queryType" value={SEARCHTYPES.DOCUMENT} bind:group={currentSearch.searchType}
-        >Documents</Radio
-      >
+    <div class="flex flex-row">
+      <div class="my-3 w-1/3">
+        <span class="mr-3">Name:</span>
+        <button
+          on:click={() => {
+            edit = !edit;
+          }}
+        >
+          {#if edit}
+            <Input
+              autofocus
+              bind:value={currentSearch.name}
+              on:keyup={(e) => {
+                if (e.key === "Enter") edit = false;
+                if (e.key === "Escape") edit = false;
+                e.preventDefault();
+              }}
+              on:blur={() => {
+                edit = false;
+              }}
+            />
+          {:else}
+            <h5 class="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">
+              {currentSearch.name}
+            </h5>
+          {/if}
+        </button>
+        <button
+          on:click={() => {
+            edit = !edit;
+          }}><i class="bx bx-edit-alt ml-1"></i></button
+        >
+      </div>
+      <div class="my-2">
+        <div class="ml-3 flex flex-row gap-3">
+          <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Type</h5>
+          <Radio name="queryType" value={SEARCHTYPES.ADVISORY} bind:group={currentSearch.searchType}
+            >Advisories</Radio
+          >
+          <Radio name="queryType" value={SEARCHTYPES.DOCUMENT} bind:group={currentSearch.searchType}
+            >Documents</Radio
+          >
+        </div>
+      </div>
     </div>
     <div class="flex flex-row">
       <div class="w-1/3">
-        <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
+        <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
       </div>
-      <div class="w-2/3">
-        <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
+      <div class="ml-4 w-2/3">
+        <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
       </div>
     </div>
     <div class="flex flex-row">
@@ -278,5 +300,25 @@
         </div>
       </div>
     </div>
-  </Card>
+    <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
+    <div class="flex flex-row">
+      <div class="w-3/4">
+        <Input />
+      </div>
+      <div class="ml-auto">
+        <Button on:click={testQuery} color="light"
+          ><i class="bx bx-test-tube mr-1"></i> Test query</Button
+        >
+      </div>
+    </div>
+    <div>
+      <div class:mt-3={true} class:invisible={!loading}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+      <div class:mt-3={true} class:invisible={!queryCount}>
+        The query found {queryCount} results.
+      </div>
+    </div></Card
+  >
 </div>
