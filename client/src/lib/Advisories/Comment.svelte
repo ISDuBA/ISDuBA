@@ -9,10 +9,13 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { Button, ButtonGroup, Label, P, TimelineItem } from "flowbite-svelte";
   import { appStore } from "$lib/store";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
+  import { marked } from "marked";
+  import DOMPurify from "dompurify";
 
   export let comment: any;
   let updatedComment = comment.message;
@@ -36,12 +39,19 @@
       updateCommentError = response.error;
     }
   }
+
+  const parseMarkdown = (markdown: string) => {
+    let html = marked.parse(markdown) as string;
+    return DOMPurify.sanitize(html);
+  };
 </script>
 
 <TimelineItem classLi="mb-4 ms-4" date={`${new Date(comment.time).toISOString()}`}>
   {#if !isEditing}
     <P class="mb-2">
-      {comment.message}
+      <div class="display-markdown">
+        {@html parseMarkdown(comment.message)}
+      </div>
       <small>({comment.commentator})</small>
       {#if $appStore.app.tokenParsed?.preferred_username === comment.commentator}
         <ButtonGroup>
@@ -64,3 +74,75 @@
     ></CommentTextArea>
   {/if}
 </TimelineItem>
+
+<style>
+  /* Reset styles inside markdown block */
+  .display-markdown :global(a) {
+    text-decoration: underline;
+  }
+  .display-markdown :global(ol) {
+    display: block;
+    list-style-type: decimal;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    padding-inline-start: 40px;
+  }
+  .display-markdown :global(ul) {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    padding-inline-start: 40px;
+  }
+  .display-markdown :global(blockquote) {
+    display: block;
+    margin-block: 1em;
+    margin-inline: 40px;
+  }
+  .display-markdown :global(table) {
+    border: 1px solid;
+  }
+  .display-markdown :global(th) {
+    border: 1px solid;
+  }
+  .display-markdown :global(td) {
+    border: 1px solid;
+  }
+  .display-markdown :global(h1) {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+    margin-block: 0.67em;
+  }
+  .display-markdown :global(h2) {
+    display: block;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-block: 0.83em;
+  }
+  .display-markdown :global(h3) {
+    display: block;
+    font-size: 1.17em;
+    font-weight: bold;
+    margin-block: 1em;
+  }
+  .display-markdown :global(h4) {
+    display: block;
+    font-size: 1em;
+    font-weight: bold;
+    margin-block: 1.33em;
+  }
+
+  .display-markdown :global(h5) {
+    display: block;
+    font-size: 0.83em;
+    font-weight: bold;
+    margin-block: 1.67em;
+  }
+  .display-markdown :global(h6) {
+    display: block;
+    font-size: 0.67em;
+    font-weight: bold;
+    margin-block: 2.33em;
+  }
+</style>
