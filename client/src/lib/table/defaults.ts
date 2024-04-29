@@ -8,7 +8,7 @@
 
 const tdClass = "whitespace-nowrap py-2 px-2";
 const tablePadding = "px-2";
-const title = "whitespace-nowrap py-2 px-2 title-column overflow-clip text-ellipsis";
+const title = "whitespace-normal py-2 px-2 title-column overflow-clip text-ellipsis";
 const publisher = "whitespace-nowrap w-48 max-w-48 overflow-clip text-ellipsis";
 
 export { tdClass, tablePadding, title, publisher };
