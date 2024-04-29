@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  export let content: string;
+  export let content: string | number;
   export let isSideBySideViewActivated: boolean = true;
   $: parsedContent = isSideBySideViewActivated ? [] : parse(content);
   $: parsedSideBySideContent = isSideBySideViewActivated ? parseMixed() : [];
@@ -62,7 +62,7 @@
   };
 
   const parseMixed = () => {
-    const text = content;
+    const text = typeof content === "number" ? content.toString() : content;
     let added = text.replaceAll(/\[-.*?-]/g, "");
     added = removeAnnotation(added, "{+", "+}");
     let removed = text.replaceAll(/{+.*?\+}/g, "");
