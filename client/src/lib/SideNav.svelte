@@ -85,17 +85,25 @@
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Sources" nonActiveClass={notactivated}>
+            <SidebarItem label="Sources" href="javascript: void(0)" nonActiveClass={notactivated}>
               <svelte:fragment slot="icon">
                 <i class="bx bx-git-repo-forked"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Statistics" nonActiveClass={notactivated}>
+            <SidebarItem
+              label="Statistics"
+              href="javascript: void(0)"
+              nonActiveClass={notactivated}
+            >
               <svelte:fragment slot="icon">
                 <i class="bx bx-bar-chart-square"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Configuration" nonActiveClass={notactivated}>
+            <SidebarItem
+              label="Configuration"
+              href="javascript: void(0)"
+              nonActiveClass={notactivated}
+            >
               <svelte:fragment slot="icon">
                 <i class="bx bx-cog"></i>
               </svelte:fragment>
