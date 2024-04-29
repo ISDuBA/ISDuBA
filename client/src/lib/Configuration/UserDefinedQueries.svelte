@@ -77,25 +77,36 @@
       currentStep: 1,
       searchType: SEARCHTYPES.ADVISORY,
       chosenColumns: [],
-      activeColumns: [],
+      activeColumns: [...COLUMNS.ADVISORY],
       name: "New Query",
       description: "",
       query: ""
     };
   };
 
-  const chooseColumn = (e, col) => {
+  const chooseColumn = (col) => {
     queryCount = null;
-    if (e.currentTarget.checked) {
-      currentSearch.chosenColumns = [
-        ...currentSearch.chosenColumns,
-        { name: col, searchOrder: ORDERDIRECTIONS.ASC }
-      ];
-    } else {
-      currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
-        return column.name !== col;
-      });
-    }
+    currentSearch.chosenColumns = [
+      ...currentSearch.chosenColumns,
+      { name: col, searchOrder: ORDERDIRECTIONS.ASC }
+    ];
+    currentSearch.activeColumns = currentSearch.activeColumns.filter((column) => {
+      return column !== col;
+    });
+  };
+
+  const undoColumn = (col) => {
+    queryCount = null;
+    currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
+      return column.name !== col.name;
+    });
+    const activeColumns =
+      currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
+    const activeColumnsToChoose = new Set([...currentSearch.activeColumns, col.name]);
+    currentSearch.activeColumns = activeColumns.reduce((acc, column) => {
+      if (activeColumnsToChoose.has(column)) acc.push(column);
+      return acc;
+    }, []);
   };
 
   const hoverLine = (col) => {
@@ -104,6 +115,15 @@
 
   const indexOfCol = (col) => {
     return currentSearch.chosenColumns.map((col) => col.name).indexOf(col);
+  };
+
+  const changeSearchType = () => {
+    if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
+      currentSearch.activeColumns = [...COLUMNS.ADVISORY];
+    } else {
+      currentSearch.activeColumns = [...COLUMNS.DOCUMENT];
+    }
+    currentSearch.chosenColumns = [];
   };
 
   const promoteColumn = (col) => {
@@ -168,21 +188,10 @@
 
   let currentSearch = reset();
   let orderBy = "";
-  let edit = false;
+  let editName = false;
   let hoveredLine = "";
   let queryCount: any = null;
   let loading = false;
-
-  $: {
-    if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
-      queryCount = null;
-      currentSearch.activeColumns = [...COLUMNS.ADVISORY];
-    }
-    if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
-      queryCount = null;
-      currentSearch.activeColumns = [...COLUMNS.DOCUMENT];
-    }
-  }
 </script>
 
 <h2 class="mb-3 text-lg">User defined queries</h2>
@@ -223,20 +232,20 @@
         <span class="mr-3">Name:</span>
         <button
           on:click={() => {
-            edit = !edit;
+            editName = !editName;
           }}
         >
-          {#if edit}
+          {#if editName}
             <Input
               autofocus
               bind:value={currentSearch.name}
               on:keyup={(e) => {
-                if (e.key === "Enter") edit = false;
-                if (e.key === "Escape") edit = false;
+                if (e.key === "Enter") editName = false;
+                if (e.key === "Escape") editName = false;
                 e.preventDefault();
               }}
               on:blur={() => {
-                edit = false;
+                editName = false;
               }}
             />
           {:else}
@@ -247,7 +256,7 @@
         </button>
         <button
           on:click={() => {
-            edit = !edit;
+            editName = !editName;
           }}><i class="bx bx-edit-alt ml-1"></i></button
         >
       </div>
@@ -255,38 +264,76 @@
     <div class="mt-2 flex flex-row">
       <div class="flex flex-row gap-3">
         <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Type</h5>
-        <Radio name="queryType" value={SEARCHTYPES.ADVISORY} bind:group={currentSearch.searchType}
-          >Advisories</Radio
+        <Radio
+          name="queryType"
+          on:change={changeSearchType}
+          value={SEARCHTYPES.ADVISORY}
+          bind:group={currentSearch.searchType}>Advisories</Radio
         >
-        <Radio name="queryType" value={SEARCHTYPES.DOCUMENT} bind:group={currentSearch.searchType}
-          >Documents</Radio
+        <Radio
+          name="queryType"
+          on:change={changeSearchType}
+          value={SEARCHTYPES.DOCUMENT}
+          bind:group={currentSearch.searchType}>Documents</Radio
         >
       </div>
     </div>
     <div class="mt-4 flex flex-row">
-      <div class="w-1/3">
+      <div class="w-1/4">
         <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
       </div>
-      <div class="ml-4 w-2/3">
+      <div class="ml-2 mr-3 mt-2 text-center"><i class="bx bx-move-horizontal"></i></div>
+      <div class="w-1/4">
         <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
       </div>
     </div>
-    <div class="flex flex-row">
-      <div class="my-3 ml-3 w-1/3">
+    <div class="ml-3 mt-4 flex flex-row">
+      <div class="w-1/4">
+        <button
+          on:click={() => {
+            const columns =
+              currentSearch.searchType === SEARCHTYPES.ADVISORY
+                ? COLUMNS.ADVISORY
+                : COLUMNS.DOCUMENT;
+            currentSearch.chosenColumns = columns.map((col) => {
+              return {
+                name: col,
+                searchOrder: ORDERDIRECTIONS.ASC
+              };
+            });
+            currentSearch.activeColumns = [];
+          }}>All <i class="bx bx-right-arrow-alt"></i></button
+        >
+      </div>
+      <div class="ml-2 mr-3 mt-2 text-center"></div>
+      <div class="ml-7 w-1/4">
+        <button
+          on:click={() => {
+            const columns =
+              currentSearch.searchType === SEARCHTYPES.ADVISORY
+                ? COLUMNS.ADVISORY
+                : COLUMNS.DOCUMENT;
+            currentSearch.activeColumns = columns;
+            currentSearch.chosenColumns = [];
+          }}>None <i class="bx bx-left-arrow-alt"></i></button
+        >
+      </div>
+    </div>
+    <div style="height:30rem" class="flex flex-row">
+      <div class="my-3 ml-3 w-1/4">
         <div class="flex flex-col gap-3">
           {#each currentSearch.activeColumns as col}
             <div class="flex items-center">
-              <Checkbox
-                on:click={(e) => {
-                  chooseColumn(e, col);
-                }}
-              ></Checkbox>
-              <Badge>{col}</Badge>
+              <button on:click={chooseColumn(col)} title={`${col} column`}
+                ><Badge>{col}</Badge></button
+              >
             </div>
           {/each}
         </div>
       </div>
-      <div class="my-3 ml-3 w-2/3">
+      <div class="flex w-3 flex-col items-center"></div>
+      <div class="ml-2 mr-3"></div>
+      <div class="my-3 w-1/4">
         <div class="flex flex-col leading-3">
           {#each currentSearch.chosenColumns as col}
             <div
@@ -301,19 +348,21 @@
                 class:flex={true}
                 class:flex-col={true}
               >
-                <button on:click={promoteColumn(col.name)}>
+                <button on:click={promoteColumn(col.name)} title="Promote column">
                   <i class="bx bxs-up-arrow-circle"></i>
                 </button>
-                <button on:click={demoteColumn(col.name)}>
+                <button on:click={demoteColumn(col.name)} title="Demote column">
                   <i class="bx bxs-down-arrow-circle"></i>
                 </button>
               </div>
-              <Badge>{col.name}</Badge>
+              <button on:click={undoColumn(col)} title={`${col.name} column`}
+                ><Badge>{col.name}</Badge></button
+              >
               <button class="ml-1" on:click={switchOrder(col.name)}>
                 {#if col.searchOrder === ORDERDIRECTIONS.ASC}
-                  <i class="bx bx-sort-a-z"></i>
+                  <i class="bx bx-sort-a-z" title={"Ascending order"}></i>
                 {:else}
-                  <i class="bx bx-sort-z-a"></i>
+                  <i class="bx bx-sort-z-a" title={"Descending order"}></i>
                 {/if}
               </button>
             </div>
@@ -343,7 +392,12 @@
         <Button on:click={testQuery} color="light"
           ><i class="bx bx-test-tube me-2"></i> Test query</Button
         >
-        <Button color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button>
+        <Button
+          on:click={() => {
+            currentSearch = reset();
+          }}
+          color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
+        >
         <Button color="light"><i class="bx bxs-save me-2"></i> Save</Button>
       </div>
     </div></Card
