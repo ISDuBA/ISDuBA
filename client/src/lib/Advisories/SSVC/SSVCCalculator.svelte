@@ -222,6 +222,15 @@
   const toggleEditing = () => {
     isEditing = !isEditing;
   };
+
+  $: onChangeDisabled(disabled);
+
+  const onChangeDisabled = (disabled: boolean) => {
+    if (disabled) {
+      startedCalculation = false;
+      resetUserDecisions();
+    }
+  };
 </script>
 
 <div id="ssvc-calc">
