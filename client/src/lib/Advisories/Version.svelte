@@ -38,14 +38,29 @@
   const toggleDiffModeActivated = () => {
     diffModeActivated = !diffModeActivated;
     if (diffModeActivated) {
-      firstDocumentIndex = reversedAdvisoryVersions.length - 2;
-      secondDocumentIndex = reversedAdvisoryVersions.length - 1;
+      if (reversedAdvisoryVersions[0].version === selectedDocumentVersion) {
+        firstDocumentIndex = 0;
+        nextColor = "green";
+      } else {
+        secondDocumentIndex = reversedAdvisoryVersions.findIndex(
+          (advVer: any) => advVer.version === selectedDocumentVersion
+        );
+        if (secondDocumentIndex) {
+          firstDocumentIndex = secondDocumentIndex - 1;
+        }
+      }
       showDiff();
     } else {
       disableDiff();
     }
   };
   const disableDiff = () => {
+    if (
+      secondDocumentIndex &&
+      reversedAdvisoryVersions[secondDocumentIndex].version !== selectedDocumentVersion
+    ) {
+      navigateToVersion(reversedAdvisoryVersions[secondDocumentIndex]);
+    }
     dispatch("disableDiff");
   };
   const showDiff = () => {
