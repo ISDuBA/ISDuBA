@@ -226,9 +226,9 @@
     </Table>
   </div>
 
-  <Card size="lg">
+  <Card padding="xl" size="lg">
     <div class="flex flex-row">
-      <div class="my-3">
+      <div class="mb-3 mt-0">
         <span class="mr-3">Name:</span>
         <button
           on:click={() => {
@@ -261,7 +261,7 @@
         >
       </div>
     </div>
-    <div class="mt-2 flex flex-row">
+    <div class="flex flex-row">
       <div class="flex flex-row gap-3">
         <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Type</h5>
         <Radio
@@ -278,7 +278,7 @@
         >
       </div>
     </div>
-    <div class="mt-4 flex flex-row">
+    <div class="mt-2 flex flex-row">
       <div class="w-1/4">
         <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
       </div>
@@ -287,7 +287,7 @@
         <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
       </div>
     </div>
-    <div class="ml-3 mt-4 flex flex-row">
+    <div class="ml-3 flex flex-row">
       <div class="w-1/4">
         <button
           on:click={() => {
@@ -370,7 +370,7 @@
         </div>
       </div>
     </div>
-    <h5 class="my-4 text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
+    <h5 class="mt-2 text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
     <div class="flex flex-row">
       <div class="w-full">
         <Input bind:value={currentSearch.query} />
@@ -395,6 +395,7 @@
         <Button
           on:click={() => {
             currentSearch = reset();
+            queryCount = null;
           }}
           color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
         >
