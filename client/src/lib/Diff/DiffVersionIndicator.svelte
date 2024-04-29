@@ -11,12 +11,16 @@
 <script lang="ts">
   export let color: "red" | "green" | "gray";
   export let icon: "minus" | "plus";
+  export let hoverIcon: "minus" | "plus" | undefined;
   export let isDisabled = false;
   export let permanent = false;
   $: containerClass = `h-4 flex items-center rounded-full border-solid border-${color}-700 ${isDisabled ? "" : "group-hover:border"}`;
-  $: iconClass = `bx bx-${icon} flex h-4 items-center text-${color}-700 ${permanent ? "" : "opacity-0 group-hover:opacity-100"}`;
+  let basicIconClass = "bx flex h-4 items-center";
+  $: iconClass = `${basicIconClass} bx-${icon} text-${color}-700 ${!permanent ? "!hidden" : ""} ${isDisabled ? "" : "group-hover:!hidden"}`;
+  $: hoverClass = `${basicIconClass} bx-${hoverIcon ?? icon} text-${color}-700 !hidden ${isDisabled ? "" : "group-hover:!inline"}`;
 </script>
 
 <div class={containerClass}>
   <i class={iconClass}></i>
+  <i class={hoverClass}></i>
 </div>
