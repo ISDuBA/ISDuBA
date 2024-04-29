@@ -170,6 +170,7 @@
       >
     {/if}
     <Button
+      class="py-3.5"
       on:click={() => {
         fetchData();
       }}>Search</Button
