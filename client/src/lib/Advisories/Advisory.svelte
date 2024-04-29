@@ -73,10 +73,6 @@
     isCalculatingAllowed = false;
   }
 
-  $: {
-    loadData();
-  }
-
   const timeoutIDs: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
