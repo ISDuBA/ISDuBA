@@ -17,7 +17,7 @@
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   export let diffDocuments: any;
-  export let title: string;
+  export let title: string | undefined;
   let error: string;
   let diff: any;
   let urlPath: string;

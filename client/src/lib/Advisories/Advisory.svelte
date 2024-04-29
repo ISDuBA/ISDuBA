@@ -318,7 +318,7 @@
       on:disableDiff={() => (isDiffOpen = false)}
     ></Version>
     {#if isDiffOpen}
-      <JsonDiff title="Diff" {diffDocuments}></JsonDiff>
+      <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
     {:else}
       <Webview></Webview>
     {/if}
