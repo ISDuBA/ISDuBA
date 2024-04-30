@@ -1,0 +1,343 @@
+<!--
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+
+ SPDX-License-Identifier: Apache-2.0
+
+ SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+-->
+
+<script lang="ts">
+  import { Card, Radio, Badge, Input, Spinner, Button } from "flowbite-svelte";
+
+  const COLUMNS = {
+    ADVISORY: [
+      "id",
+      "tracking_id",
+      "version",
+      "publisher",
+      "current_release_date",
+      "initial_release_date",
+      "title",
+      "tlp",
+      "cvss_v2_score",
+      "cvss_v3_score",
+      "ssvc",
+      "four_cves",
+      "state"
+    ],
+    DOCUMENT: [
+      "id",
+      "tracking_id",
+      "version",
+      "publisher",
+      "current_release_date",
+      "initial_release_date",
+      "title",
+      "tlp",
+      "cvss_v2_score",
+      "cvss_v3_score",
+      "four_cves"
+    ]
+  };
+
+  const ORDERDIRECTIONS = {
+    ASC: "asc",
+    DESC: "desc"
+  };
+
+  const SEARCHTYPES = {
+    ADVISORY: "advisories",
+    DOCUMENT: "documents"
+  };
+
+  const reset = () => {
+    return {
+      currentStep: 1,
+      searchType: SEARCHTYPES.ADVISORY,
+      chosenColumns: [],
+      activeColumns: [...COLUMNS.ADVISORY],
+      description: "New Query",
+      query: ""
+    };
+  };
+
+  const chooseColumn = (col) => {
+    queryCount = null;
+    currentSearch.chosenColumns = [
+      ...currentSearch.chosenColumns,
+      { name: col, searchOrder: ORDERDIRECTIONS.ASC }
+    ];
+    currentSearch.activeColumns = currentSearch.activeColumns.filter((column) => {
+      return column !== col;
+    });
+  };
+
+  const undoColumn = (col) => {
+    queryCount = null;
+    currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
+      return column.name !== col.name;
+    });
+    const activeColumns =
+      currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
+    const activeColumnsToChoose = new Set([...currentSearch.activeColumns, col.name]);
+    currentSearch.activeColumns = activeColumns.reduce((acc, column) => {
+      if (activeColumnsToChoose.has(column)) acc.push(column);
+      return acc;
+    }, []);
+  };
+
+  const hoverLine = (col) => {
+    hoveredLine = col;
+  };
+
+  const indexOfCol = (col) => {
+    return currentSearch.chosenColumns.map((col) => col.name).indexOf(col);
+  };
+
+  const changeSearchType = () => {
+    if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
+      currentSearch.activeColumns = [...COLUMNS.ADVISORY];
+    } else {
+      currentSearch.activeColumns = [...COLUMNS.DOCUMENT];
+    }
+    currentSearch.chosenColumns = [];
+  };
+
+  const promoteColumn = (col) => {
+    queryCount = null;
+    const index = indexOfCol(col);
+    if (index === 0) return;
+    const tmp = currentSearch.chosenColumns[index - 1];
+    currentSearch.chosenColumns[index - 1] = currentSearch.chosenColumns[index];
+    currentSearch.chosenColumns[index] = tmp;
+  };
+
+  const demoteColumn = (col) => {
+    queryCount = null;
+    const index = indexOfCol(col);
+    if (index === currentSearch.chosenColumns.length - 1) return;
+    const tmp = currentSearch.chosenColumns[index + 1];
+    currentSearch.chosenColumns[index + 1] = currentSearch.chosenColumns[index];
+    currentSearch.chosenColumns[index] = tmp;
+  };
+
+  const switchOrder = (col) => {
+    queryCount = null;
+    const index = indexOfCol(col);
+    const selectedCol = currentSearch.chosenColumns[index];
+    let searchOrder = ORDERDIRECTIONS.DESC;
+    if (selectedCol.searchOrder === ORDERDIRECTIONS.DESC) {
+      searchOrder = ORDERDIRECTIONS.ASC;
+    }
+    currentSearch.chosenColumns[index] = {
+      name: selectedCol.name,
+      searchOrder: searchOrder
+    };
+  };
+
+  const generateQuery = () => {
+    const columns =
+      currentSearch.chosenColumns.length > 0
+        ? `&columns=${currentSearch.chosenColumns.map((col: any) => col.name).join(" ")}`
+        : "";
+    const order =
+      currentSearch.chosenColumns.length > 0
+        ? `&order=${currentSearch.chosenColumns
+            .map((col: any) => {
+              return col.searchOrder === ORDERDIRECTIONS.ASC ? col.name : `-${col.name}`;
+            })
+            .join(" ")}`
+        : "";
+    const query = currentSearch.query ? `&query=${currentSearch.query}` : "";
+    const queryURL = `/api/documents?count=1&advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}${columns}${order}${query}`;
+    console.log(queryURL);
+  };
+
+  const testQuery = () => {
+    loading = true;
+    queryCount = null;
+    generateQuery();
+    setTimeout(() => {
+      queryCount = 1000;
+      loading = false;
+    }, 300);
+  };
+
+  let currentSearch = reset();
+  let editDescription = false;
+  let hoveredLine = "";
+  let queryCount: any = null;
+  let loading = false;
+</script>
+
+<Card padding="xl" size="lg">
+  <div class="flex flex-row">
+    <div class="mb-3 mt-0">
+      <span class="mr-3">Description:</span>
+      <button
+        on:click={() => {
+          editDescription = !editDescription;
+        }}
+      >
+        {#if editDescription}
+          <Input
+            autofocus
+            bind:value={currentSearch.description}
+            on:keyup={(e) => {
+              if (e.key === "Enter") editDescription = false;
+              if (e.key === "Escape") editDescription = false;
+              e.preventDefault();
+            }}
+            on:blur={() => {
+              editDescription = false;
+            }}
+          />
+        {:else}
+          <h5 class="text-xl font-medium text-gray-500 dark:text-gray-400">
+            {currentSearch.description}
+          </h5>
+        {/if}
+      </button>
+      <button
+        on:click={() => {
+          editDescription = !editDescription;
+        }}><i class="bx bx-edit-alt ml-1"></i></button
+      >
+    </div>
+  </div>
+  <div class="flex flex-row">
+    <div class="flex flex-row gap-3">
+      <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Type</h5>
+      <Radio
+        name="queryType"
+        on:change={changeSearchType}
+        value={SEARCHTYPES.ADVISORY}
+        bind:group={currentSearch.searchType}>Advisories</Radio
+      >
+      <Radio
+        name="queryType"
+        on:change={changeSearchType}
+        value={SEARCHTYPES.DOCUMENT}
+        bind:group={currentSearch.searchType}>Documents</Radio
+      >
+    </div>
+  </div>
+  <div class="mt-2 flex flex-row">
+    <div class="w-1/4">
+      <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
+    </div>
+    <div class="ml-2 mr-3 mt-2 text-center"><i class="bx bx-move-horizontal"></i></div>
+    <div class="w-1/4">
+      <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
+    </div>
+  </div>
+  <div class="ml-3 flex flex-row">
+    <div class="w-1/4">
+      <button
+        on:click={() => {
+          const columns =
+            currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
+          currentSearch.chosenColumns = columns.map((col) => {
+            return {
+              name: col,
+              searchOrder: ORDERDIRECTIONS.ASC
+            };
+          });
+          currentSearch.activeColumns = [];
+        }}>All <i class="bx bx-right-arrow-alt"></i></button
+      >
+    </div>
+    <div class="ml-2 mr-3 mt-2 text-center"></div>
+    <div class="ml-7 w-1/4">
+      <button
+        on:click={() => {
+          const columns =
+            currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
+          currentSearch.activeColumns = columns;
+          currentSearch.chosenColumns = [];
+        }}>None <i class="bx bx-left-arrow-alt"></i></button
+      >
+    </div>
+  </div>
+  <div style="height:30rem" class="flex flex-row">
+    <div class="my-3 ml-3 w-1/4">
+      <div class="flex flex-col gap-3">
+        {#each currentSearch.activeColumns as col}
+          <div class="flex items-center">
+            <button on:click={chooseColumn(col)} title={`${col} column`}
+              ><Badge>{col}</Badge></button
+            >
+          </div>
+        {/each}
+      </div>
+    </div>
+    <div class="flex w-3 flex-col items-center"></div>
+    <div class="ml-2 mr-3"></div>
+    <div class="my-3 w-1/4">
+      <div class="flex flex-col leading-3">
+        {#each currentSearch.chosenColumns as col}
+          <div
+            class="flex items-center"
+            on:mouseleave={() => {
+              hoveredLine = "";
+            }}
+            on:mouseover={hoverLine(col.name)}
+          >
+            <div class:invisible={hoveredLine !== col.name} class:flex={true} class:flex-col={true}>
+              <button on:click={promoteColumn(col.name)} title="Promote column">
+                <i class="bx bxs-up-arrow-circle"></i>
+              </button>
+              <button on:click={demoteColumn(col.name)} title="Demote column">
+                <i class="bx bxs-down-arrow-circle"></i>
+              </button>
+            </div>
+            <button on:click={undoColumn(col)} title={`${col.name} column`}
+              ><Badge>{col.name}</Badge></button
+            >
+            <button class="ml-1" on:click={switchOrder(col.name)}>
+              {#if col.searchOrder === ORDERDIRECTIONS.ASC}
+                <i class="bx bx-sort-a-z" title={"Ascending order"}></i>
+              {:else}
+                <i class="bx bx-sort-z-a" title={"Descending order"}></i>
+              {/if}
+            </button>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </div>
+  <h5 class="mt-2 text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
+  <div class="flex flex-row">
+    <div class="w-full">
+      <Input bind:value={currentSearch.query} />
+    </div>
+  </div>
+  <div class="mt-3 flex flex-row">
+    {#if loading}
+      <div class="mr-4 mt-3">
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+    {/if}
+    {#if queryCount !== null}
+      <div class:mt-3={true}>
+        The query found {queryCount} results.
+      </div>
+    {/if}
+    <div class="my-2 ml-auto flex flex-row gap-3">
+      <Button on:click={testQuery} color="light"
+        ><i class="bx bx-test-tube me-2"></i> Test query</Button
+      >
+      <Button
+        on:click={() => {
+          currentSearch = reset();
+          queryCount = null;
+        }}
+        color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
+      >
+      <Button color="light"><i class="bx bxs-save me-2"></i> Save</Button>
+    </div>
+  </div>
+</Card>
