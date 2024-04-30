@@ -38,6 +38,11 @@ export const request = async (
         return { content: text, ok: true };
       }
     } else {
+      if (response.status == 401) {
+        appStore.setSessionExpired(true);
+        appStore.setSessionExpiredMessage("User unauthorized");
+        await push("login");
+      }
       if (contentType && isJson) {
         const json = await response.json();
         return { error: `${json.error ?? json.message}`, ok: false };
