@@ -54,6 +54,8 @@ func (c *Controller) Bind() http.Handler {
 		authEdRe   = authRoles(models.Editor, models.Reviewer)
 		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
 		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
+		authAll    = authRoles(models.Admin, models.Importer, models.Editor,
+			models.Reviewer, models.Auditor)
 	)
 
 	api := r.Group("/api")
@@ -67,6 +69,12 @@ func (c *Controller) Bind() http.Handler {
 	api.POST("/comments/:document", authEdRe, c.createComment)
 	api.PUT("/comments/:id", authEdRe, c.updateComment)
 	api.GET("/comments/:document", authEdReAu, c.viewComments)
+
+	// Stored queries
+	api.POST("/queries", authAll, c.createStoredQuery)
+	api.GET("/queries", authAll, c.listStoredQueries)
+	api.PUT("/queries/:query", authAll, c.updateStoredQuery)
+	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
 
 	// State change
 	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)
