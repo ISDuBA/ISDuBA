@@ -55,10 +55,11 @@
   };
 
   const reset = () => {
+    const activeColumns: any[] = [];
     return {
       currentStep: 1,
       searchType: SEARCHTYPES.ADVISORY,
-      chosenColumns: new Array(),
+      chosenColumns: activeColumns,
       activeColumns: [...COLUMNS.ADVISORY],
       description: "New Query",
       query: ""
