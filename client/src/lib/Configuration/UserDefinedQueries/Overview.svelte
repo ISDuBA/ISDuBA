@@ -11,6 +11,7 @@
 <script lang="ts">
   import { tablePadding } from "$lib/table/defaults";
   import {
+    Button,
     Table,
     TableHead,
     TableBody,
@@ -18,7 +19,6 @@
     TableBodyRow,
     TableBodyCell
   } from "flowbite-svelte";
-  import QueryDesigner from "./QueryDesigner.svelte";
   const STUBQUERIES = [
     { description: "Show all RedHat advisories" },
     { description: "Show all Sick advisories" }
@@ -27,7 +27,9 @@
 </script>
 
 <h2 class="mb-3 text-lg">User defined queries</h2>
-
+<Button class="mb-6 mt-3" href="/#/configuration/userqueries"
+  ><i class="bx bx-plus"></i>New query</Button
+>
 <div class="flex flex-row">
   <div class="mb-12 w-1/3">
     <Table hoverable={true} noborder={true}>
@@ -49,5 +51,4 @@
       </TableBody>
     </Table>
   </div>
-  <QueryDesigner></QueryDesigner>
 </div>

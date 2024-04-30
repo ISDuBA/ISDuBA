@@ -29,6 +29,7 @@
   import { configuration } from "$lib/configuration";
   import { type User, UserManager } from "oidc-client-ts";
   import { jwtDecode } from "jwt-decode";
+  import QueryDesigner from "$lib/Configuration/UserDefinedQueries/QueryDesigner.svelte";
 
   let userManager = new UserManager(configuration.getConfiguration());
   userManager.events.addUserSignedIn(function () {
@@ -100,6 +101,11 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
+    "/configuration/userqueries": wrap({
+      component: QueryDesigner,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
     "/documents": wrap({
       component: Documents,
       userData: loginRequired,
@@ -132,7 +138,7 @@
   };
 </script>
 
-<div class="flex bg-primary-700">
+<div class="bg-primary-700 flex">
   <div>
     <SideNav></SideNav>
   </div>

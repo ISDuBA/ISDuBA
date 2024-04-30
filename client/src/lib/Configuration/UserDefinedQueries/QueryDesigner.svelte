@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import SectionHeader from "$lib/SectionHeader.svelte";
   import { Card, Radio, Badge, Input, Spinner, Button } from "flowbite-svelte";
 
   const COLUMNS = {
@@ -171,6 +172,10 @@
   let queryCount: any = null;
   let loading = false;
 </script>
+
+<SectionHeader title="Configuration"></SectionHeader>
+<hr class="mb-3" />
+<h2 class="mb-3 text-lg">User defined queries</h2>
 
 <Card padding="xl" size="lg">
   <div class="flex flex-row">
