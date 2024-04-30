@@ -41,7 +41,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		expr = expr.And(tlpExpr)
@@ -255,7 +255,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
 			return
 		}
 		expr = expr.And(tlpExpr)
