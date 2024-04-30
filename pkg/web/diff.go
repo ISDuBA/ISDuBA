@@ -47,7 +47,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		expr1 = expr1.And(tlpExpr)
@@ -69,7 +69,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		return conn.QueryRow(rctx, fetch2SQL, replacements2...).Scan(&doc2)
 	}); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error:": "document not found"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
 		} else {
 			slog.Error("database error", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
