@@ -33,5 +33,5 @@ else
       --username $1 --new-password "$5"
 
   # set role for user
-  sudo /opt/keycloak/bin/kcadm.sh add-roles -r isduba --uusername $1 --rolename $6
+  # TODO: Add user to group
 fi
