@@ -13,6 +13,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_KEYCLOAK_URL: "http://localhost:8080"
+      PUBLIC_KEYCLOAK_REALM: "isduba"
+      PUBLIC_KEYCLOAK_CLIENTID: "auth"
     defaults:
       run:
         working-directory: ./client
@@ -30,5 +34,11 @@ jobs:
       - name: "Install playwright"
         run: npx playwright install
 
+      - name: "NPM lint"
+        run: npm run lint
+
+      - name: "NPM check"
+        run: npm run check
+        
       - name: "Unit test"
         run: npm run test:unit

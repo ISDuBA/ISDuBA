@@ -15,12 +15,13 @@
   import { appStore } from "$lib/store";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   import { request } from "$lib/utils";
+  import { ColorSchemeType } from "diff2html/lib/types";
 
   let diff: string;
   let error: string;
 
   onMount(async () => {
-    if ($appStore.app.keycloak.authenticated) {
+    if ($appStore.app.isUserLoggedIn) {
       error = "";
       const response = await request("advisory.diff", "GET");
       if (response.ok) {
@@ -32,7 +33,7 @@
       const diffElement = document.getElementById("diff");
       if (diff?.length > 0 && diffElement) {
         const config: Diff2HtmlUIConfig = {
-          colorScheme: "light",
+          colorScheme: ColorSchemeType.LIGHT,
           drawFileList: false
         };
         const diff2htmlUi = new Diff2HtmlUI(diffElement, diff, config);

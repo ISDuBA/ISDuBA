@@ -27,9 +27,9 @@
     ? `${diffButtonBaseClass} bg-gray-800 text-white hover:bg-gray-600 focus-within:ring-transparent`
     : `${diffButtonBaseClass} bg-white text-black border border-solid border-gray-300 hover:bg-gray-200 focus-within:ring-transparent`;
   const versionButtonClass = "text-black hover:text-black border border-solid";
-  const redButtonClass = `${versionButtonClass} bg-red-100 hover:bg-red-300 border-red-700`;
-  const greenButtonClass = `${versionButtonClass} bg-green-100 hover:bg-green-300 border-green-700`;
-  const lightButtonClass = `${versionButtonClass} bg-white hover:bg-gray-200 border-gray-700`;
+  const redButtonClass = `${versionButtonClass} bg-red-100 group-hover:bg-red-300 border-red-700`;
+  const greenButtonClass = `${versionButtonClass} bg-green-100 group-hover:bg-green-300 border-green-700`;
+  const lightButtonClass = `${versionButtonClass} bg-white group-hover:bg-gray-200 border-gray-700`;
 
   const dispatch = createEventDispatcher();
   const navigateToVersion = (version: any) => {
@@ -38,14 +38,29 @@
   const toggleDiffModeActivated = () => {
     diffModeActivated = !diffModeActivated;
     if (diffModeActivated) {
-      firstDocumentIndex = reversedAdvisoryVersions.length - 2;
-      secondDocumentIndex = reversedAdvisoryVersions.length - 1;
+      if (reversedAdvisoryVersions[0].version === selectedDocumentVersion) {
+        firstDocumentIndex = 0;
+        nextColor = "green";
+      } else {
+        secondDocumentIndex = reversedAdvisoryVersions.findIndex(
+          (advVer: any) => advVer.version === selectedDocumentVersion
+        );
+        if (secondDocumentIndex) {
+          firstDocumentIndex = secondDocumentIndex - 1;
+        }
+      }
       showDiff();
     } else {
       disableDiff();
     }
   };
   const disableDiff = () => {
+    if (
+      secondDocumentIndex &&
+      reversedAdvisoryVersions[secondDocumentIndex].version !== selectedDocumentVersion
+    ) {
+      navigateToVersion(reversedAdvisoryVersions[secondDocumentIndex]);
+    }
     dispatch("disableDiff");
   };
   const showDiff = () => {
@@ -91,11 +106,10 @@
         {#if diffModeActivated}
           {#each reversedAdvisoryVersions as version, index}
             {@const isDisabled =
-              (nextColor === "red" &&
-                ((secondDocumentIndex && index >= secondDocumentIndex) ||
-                  index === reversedAdvisoryVersions.length - 1)) ||
+              (nextColor === "red" && index === reversedAdvisoryVersions.length - 1) ||
               (nextColor === "green" &&
                 ((firstDocumentIndex && index <= firstDocumentIndex) || index === 0))}
+            {@const hoverIcon = nextColor === "red" ? "minus" : "plus"}
             <div class="group flex flex-col items-center">
               <Button
                 disabled={isDisabled}
@@ -108,17 +122,27 @@
                 {version.version}
               </Button>
               {#if index === firstDocumentIndex}
-                <DiffVersionIndicator color="red" {isDisabled} icon="minus" permanent={true}
+                <DiffVersionIndicator
+                  color="red"
+                  {isDisabled}
+                  icon="minus"
+                  {hoverIcon}
+                  permanent={true}
                 ></DiffVersionIndicator>
               {:else if index === secondDocumentIndex}
-                <DiffVersionIndicator color="green" {isDisabled} icon="plus" permanent={true}
+                <DiffVersionIndicator
+                  color="green"
+                  {isDisabled}
+                  icon="plus"
+                  {hoverIcon}
+                  permanent={true}
                 ></DiffVersionIndicator>
               {:else if !isDisabled}
                 {#if nextColor === "green"}
-                  <DiffVersionIndicator color="gray" icon="plus" {isDisabled}
+                  <DiffVersionIndicator color="gray" icon="plus" hoverIcon={undefined} {isDisabled}
                   ></DiffVersionIndicator>
                 {:else}
-                  <DiffVersionIndicator color="gray" icon="minus" {isDisabled}
+                  <DiffVersionIndicator color="gray" icon="minus" hoverIcon={undefined} {isDisabled}
                   ></DiffVersionIndicator>
                 {/if}
               {/if}

@@ -16,7 +16,7 @@
   import { Button, Label, Select, TabItem, Tabs } from "flowbite-svelte";
   import JsonDiff from "./JsonDiff.svelte";
 
-  let documents = [];
+  let documents: any[] = [];
   $: selectionOfDocuments = documents.map((doc) => {
     return {
       name: `${doc.tracking_id} - Version ${doc.version}`,

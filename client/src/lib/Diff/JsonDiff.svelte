@@ -11,13 +11,13 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, Label } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
-  import type { JsonDiffResult, JsonDiffResultList } from "./JsonDiff";
+  import type { JsonDiffResult } from "./JsonDiff";
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   export let diffDocuments: any;
-  export let title: string;
+  export let title: string | undefined;
   let error: string;
   let diff: any;
   let urlPath: string;
@@ -53,8 +53,7 @@
     error = "";
     const response = await request(urlPath, "GET");
     if (response.ok) {
-      const result: JsonDiffResultList = response.content;
-      diff = result;
+      diff = response.content;
     } else if (response.error) {
       error = response.error;
     }
@@ -84,7 +83,7 @@
     <Accordion flush multiple>
       {#each groupedResults as result}
         {#if result.changes.length > 0}
-          <AccordionItem open>
+          <AccordionItem open class="justify-start gap-x-4 text-gray-700">
             <div slot="header" class="pl-2">
               {#if result.op === "add"}
                 <div class="flex items-center gap-2">

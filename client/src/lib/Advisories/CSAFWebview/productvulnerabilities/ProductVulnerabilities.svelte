@@ -73,7 +73,7 @@
                   {#if index < 1}
                     <td class="productname"
                       ><a id={crypto.randomUUID()} on:click={openProduct} href={column}
-                        >{$appStore.webview.doc.productsByID[column]} ({column})</a
+                        >{$appStore.webview.doc?.productsByID[column]} ({column})</a
                       ></td
                     >
                   {:else if column === "N.A"}

@@ -13,5 +13,5 @@
 result=$(git status |awk '/modified:   client\/|new file   client\// { contains = 1 } END { if (contains) print "contains" }')
 if [ "$result" = "contains" ]; then
     cd client
-    npm run lint:prettier
+    npm run lint
 fi

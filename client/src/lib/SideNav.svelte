@@ -40,11 +40,7 @@
   let breakPoint: number = 1280;
   let width: number;
   let drawerHidden: boolean = false;
-  $: if (width >= breakPoint) {
-    drawerHidden = false;
-  } else {
-    drawerHidden = true;
-  }
+  $: drawerHidden = width < breakPoint;
 
   const toggleDrawer = () => {
     drawerHidden = !drawerHidden;
@@ -52,7 +48,7 @@
 </script>
 
 <svelte:window bind:innerWidth={width} />
-{#if $appStore.app.keycloak && ($appStore.app.keycloak.authenticated || $appStore.app.sessionExpired)}
+{#if $appStore.app.userManager && ($appStore.app.isUserLoggedIn || $appStore.app.sessionExpired)}
   <div class="flex">
     <Drawer
       transitionType="fly"
@@ -61,7 +57,7 @@
       activateClickOutside={false}
       width="w-45"
       backdrop={false}
-      class="bg-primary-700 static h-screen p-2"
+      class="static h-screen bg-primary-700 p-2"
       id="sidebar"
     >
       <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
@@ -89,26 +85,30 @@
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Sources" nonActiveClass={notactivated}>
+            <SidebarItem label="Sources" href="javascript: void(0)" nonActiveClass={notactivated}>
               <svelte:fragment slot="icon">
                 <i class="bx bx-git-repo-forked"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Statistics" nonActiveClass={notactivated}>
+            <SidebarItem
+              label="Statistics"
+              href="javascript: void(0)"
+              nonActiveClass={notactivated}
+            >
               <svelte:fragment slot="icon">
                 <i class="bx bx-bar-chart-square"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Configuration" href="/#/configuration">
+            <SidebarItem
+              label="Configuration"
+              href="/#/configuration"
+            >
               <svelte:fragment slot="icon">
                 <i class="bx bx-cog"></i>
               </svelte:fragment>
             </SidebarItem>
             {#if !$appStore.app.sessionExpired}
-              <SidebarItem
-                label={$appStore.app.keycloak.idTokenParsed.preferred_username}
-                href="/#/login"
-              >
+              <SidebarItem label={$appStore.app.tokenParsed?.preferred_username} href="/#/login">
                 <svelte:fragment slot="icon">
                   <i class="bx bx-user"></i>
                 </svelte:fragment>

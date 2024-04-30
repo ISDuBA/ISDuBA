@@ -39,7 +39,7 @@ export function parseDecisionTree() {
     if (!addedPoints.includes(decision.label)) {
       mainDecisions.push(decision);
       if (decision.decision_type === "complex") {
-        for (const child of decision.children) {
+        for (const child of decision.children || []) {
           addedPoints.push(child.label);
         }
       } else {

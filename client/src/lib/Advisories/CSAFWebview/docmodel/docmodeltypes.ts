@@ -6,6 +6,13 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //
 
+import type {
+  ContributingOrganization,
+  ListOfAcknowledgedNames,
+  ListOfURLs,
+  SummaryOfTheReference
+} from "$lib/types";
+
 export const CSAFDocProps = {
   ACKNOWLEDGEMENTS: "acknowledgements",
   AGGREGATE_SEVERITY: "aggregate_severity",
@@ -129,10 +136,10 @@ export type Note = {
 };
 
 export type Acknowledgement = {
-  names: string[];
-  organization: string;
-  summary: string;
-  urls: string[];
+  names?: ListOfAcknowledgedNames;
+  organization?: ContributingOrganization;
+  summary?: SummaryOfTheReference;
+  urls?: ListOfURLs;
 };
 
 export type Reference = {

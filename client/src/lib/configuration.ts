@@ -9,17 +9,28 @@
 import {
   PUBLIC_KEYCLOAK_URL,
   PUBLIC_KEYCLOAK_REALM,
-  PUBLIC_KEYCLOAK_CLIENTID,
-  PUBLIC_UPDATE_INTERVALL
+  PUBLIC_KEYCLOAK_CLIENTID
+  // PUBLIC_UPDATE_INTERVALL
 } from "$env/static/public";
+import { type UserManagerSettings, WebStorageStateStore } from "oidc-client-ts";
+
+const url = window.location.origin;
 
 const configuration = {
-  getConfiguration: () => {
+  getConfiguration: (): UserManagerSettings => {
     return {
-      updateIntervall: PUBLIC_UPDATE_INTERVALL,
-      url: PUBLIC_KEYCLOAK_URL,
-      realm: PUBLIC_KEYCLOAK_REALM,
-      clientId: PUBLIC_KEYCLOAK_CLIENTID
+      authority: PUBLIC_KEYCLOAK_URL + "/realms/" + PUBLIC_KEYCLOAK_REALM,
+      client_id: PUBLIC_KEYCLOAK_CLIENTID,
+      redirect_uri: url + "/#/",
+      post_logout_redirect_uri: url + "/#/login",
+      response_type: "code",
+      response_mode: "fragment",
+      scope: "openid",
+
+      automaticSilentRenew: true,
+
+      filterProtocolClaims: true,
+      userStore: new WebStorageStateStore({ store: localStorage })
     };
   }
 };

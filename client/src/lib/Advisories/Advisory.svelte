@@ -48,7 +48,7 @@
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   export let params: any = null;
 
-  let document = {};
+  let document: any = {};
   let ssvc: any;
   $: ssvcStyle = ssvc
     ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
@@ -57,7 +57,7 @@
   let comments: any = [];
   let loadCommentsError: string;
   let createCommentError: string;
-  let advisoryVersions: string[] = [];
+  let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
   let isCommentingAllowed: boolean;
@@ -71,10 +71,6 @@
     isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
   } else {
     isCalculatingAllowed = false;
-  }
-
-  $: {
-    loadData(params.id);
   }
 
   const timeoutIDs: number[] = [];
@@ -192,12 +188,12 @@
     }
   };
 
-  const loadData = async (_: any) => {
-    loadDocumentSSVC();
+  const loadData = async () => {
+    await loadDocumentSSVC();
     await loadDocument();
     await loadAdvisoryVersions();
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
-      loadComments();
+      await loadComments();
     }
     const state = await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
@@ -234,8 +230,8 @@
   });
 
   onMount(async () => {
-    if ($appStore.app.keycloak.authenticated) {
-      loadData();
+    if ($appStore.app.isUserLoggedIn) {
+      await loadData();
     }
   });
 </script>
@@ -318,7 +314,7 @@
       on:disableDiff={() => (isDiffOpen = false)}
     ></Version>
     {#if isDiffOpen}
-      <JsonDiff {diffDocuments}></JsonDiff>
+      <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
     {:else}
       <Webview></Webview>
     {/if}
@@ -333,7 +329,7 @@
           {#if comments?.length > 0}
             <div class="max-h-96 overflow-y-auto pl-2">
               <Timeline class="mb-4 flex flex-col-reverse">
-                {#each comments as comment}
+                {#each comments as comment (comment.id)}
                   <Comment {comment}></Comment>
                 {/each}
               </Timeline>
