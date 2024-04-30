@@ -70,7 +70,7 @@
           {#if $appStore.app.sessionExpired}
             <div class="text-yellow-400">
               <i class="bx bx-message-alt-error"></i> Your session is expired: {$appStore.app
-                .sessionExpiredMessage}
+                .sessionExpiredMessage || "Please login"}
             </div>
           {/if}
           <Button on:click={login}>Login</Button>
