@@ -11,6 +11,7 @@
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Card, Radio, Badge, Input, Spinner, Button } from "flowbite-svelte";
+  import { request } from "$lib/utils";
 
   const COLUMNS = {
     ADVISORY: [
@@ -65,7 +66,7 @@
   };
 
   const chooseColumn = (col) => {
-    queryCount = null;
+    unsetMessages();
     currentSearch.chosenColumns = [
       ...currentSearch.chosenColumns,
       { name: col, searchOrder: ORDERDIRECTIONS.ASC }
@@ -76,7 +77,7 @@
   };
 
   const undoColumn = (col) => {
-    queryCount = null;
+    unsetMessages();
     currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
       return column.name !== col.name;
     });
@@ -107,7 +108,7 @@
   };
 
   const promoteColumn = (col) => {
-    queryCount = null;
+    unsetMessages();
     const index = indexOfCol(col);
     if (index === 0) return;
     const tmp = currentSearch.chosenColumns[index - 1];
@@ -116,7 +117,7 @@
   };
 
   const demoteColumn = (col) => {
-    queryCount = null;
+    unsetMessages();
     const index = indexOfCol(col);
     if (index === currentSearch.chosenColumns.length - 1) return;
     const tmp = currentSearch.chosenColumns[index + 1];
@@ -125,7 +126,6 @@
   };
 
   const switchOrder = (col) => {
-    queryCount = null;
     const index = indexOfCol(col);
     const selectedCol = currentSearch.chosenColumns[index];
     let searchOrder = ORDERDIRECTIONS.DESC;
@@ -153,17 +153,25 @@
         : "";
     const query = currentSearch.query ? `&query=${currentSearch.query}` : "";
     const queryURL = `/api/documents?count=1&advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}${columns}${order}${query}`;
-    console.log(queryURL);
+    return encodeURI(queryURL);
   };
 
-  const testQuery = () => {
-    loading = true;
+  const unsetMessages = () => {
     queryCount = null;
-    generateQuery();
-    setTimeout(() => {
-      queryCount = 1000;
-      loading = false;
-    }, 300);
+    errorMessage = "";
+  };
+
+  const testQuery = async () => {
+    loading = true;
+    unsetMessages();
+    const query = generateQuery();
+    const response = await request(query, "GET");
+    if (response.ok) {
+      queryCount = response.content.count;
+    } else if (response.error) {
+      errorMessage = response.error;
+    }
+    loading = false;
   };
 
   let currentSearch = reset();
@@ -171,6 +179,7 @@
   let hoveredLine = "";
   let queryCount: any = null;
   let loading = false;
+  let errorMessage = "";
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>
@@ -330,6 +339,9 @@
       <div class:mt-3={true}>
         The query found {queryCount} results.
       </div>
+    {/if}
+    {#if errorMessage}
+      <span class="text-red-600">{errorMessage}</span>
     {/if}
     <div class="my-2 ml-auto flex flex-row gap-3">
       <Button on:click={testQuery} color="light"
