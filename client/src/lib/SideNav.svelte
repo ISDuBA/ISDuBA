@@ -99,10 +99,7 @@
                 <i class="bx bx-bar-chart-square"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem
-              label="Configuration"
-              href="/#/configuration"
-            >
+            <SidebarItem label="Configuration" href="/#/configuration">
               <svelte:fragment slot="icon">
                 <i class="bx bx-cog"></i>
               </svelte:fragment>

@@ -293,7 +293,9 @@
       <div class="flex flex-col leading-3">
         {#each currentSearch.chosenColumns as col}
           <div
+            role="presentation"
             class="flex items-center"
+            on:focus={() => {}}
             on:mouseleave={() => {
               hoveredLine = "";
             }}
