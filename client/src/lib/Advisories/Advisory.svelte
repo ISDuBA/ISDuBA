@@ -202,7 +202,7 @@
       appStore.isEditor() &&
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
-      const id = setTimeout(async () => {
+      const id: any = setTimeout(async () => {
         await updateState("read");
         appStore.displayInfoMessage("This advisory is marked as read");
       }, 3000);

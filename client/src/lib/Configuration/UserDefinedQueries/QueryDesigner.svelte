@@ -58,14 +58,14 @@
     return {
       currentStep: 1,
       searchType: SEARCHTYPES.ADVISORY,
-      chosenColumns: [],
+      chosenColumns: new Array(),
       activeColumns: [...COLUMNS.ADVISORY],
       description: "New Query",
       query: ""
     };
   };
 
-  const chooseColumn = (col) => {
+  const chooseColumn = (col: any) => {
     unsetMessages();
     currentSearch.chosenColumns = [
       ...currentSearch.chosenColumns,
@@ -76,7 +76,7 @@
     });
   };
 
-  const undoColumn = (col) => {
+  const undoColumn = (col: any) => {
     unsetMessages();
     currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
       return column.name !== col.name;
@@ -84,17 +84,17 @@
     const activeColumns =
       currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
     const activeColumnsToChoose = new Set([...currentSearch.activeColumns, col.name]);
-    currentSearch.activeColumns = activeColumns.reduce((acc, column) => {
+    currentSearch.activeColumns = activeColumns.reduce((acc: string[], column) => {
       if (activeColumnsToChoose.has(column)) acc.push(column);
       return acc;
     }, []);
   };
 
-  const hoverLine = (col) => {
+  const hoverLine = (col: any) => {
     hoveredLine = col;
   };
 
-  const indexOfCol = (col) => {
+  const indexOfCol = (col: any) => {
     return currentSearch.chosenColumns.map((col) => col.name).indexOf(col);
   };
 
@@ -107,7 +107,7 @@
     currentSearch.chosenColumns = [];
   };
 
-  const promoteColumn = (col) => {
+  const promoteColumn = (col: any) => {
     unsetMessages();
     const index = indexOfCol(col);
     if (index === 0) return;
@@ -116,7 +116,7 @@
     currentSearch.chosenColumns[index] = tmp;
   };
 
-  const demoteColumn = (col) => {
+  const demoteColumn = (col: any) => {
     unsetMessages();
     const index = indexOfCol(col);
     if (index === currentSearch.chosenColumns.length - 1) return;
@@ -125,7 +125,7 @@
     currentSearch.chosenColumns[index] = tmp;
   };
 
-  const switchOrder = (col) => {
+  const switchOrder = (col: any) => {
     const index = indexOfCol(col);
     const selectedCol = currentSearch.chosenColumns[index];
     let searchOrder = ORDERDIRECTIONS.DESC;
@@ -280,8 +280,11 @@
       <div class="flex flex-col gap-3">
         {#each currentSearch.activeColumns as col}
           <div class="flex items-center">
-            <button on:click={chooseColumn(col)} title={`${col} column`}
-              ><Badge>{col}</Badge></button
+            <button
+              on:click={() => {
+                chooseColumn(col);
+              }}
+              title={`${col} column`}><Badge>{col}</Badge></button
             >
           </div>
         {/each}
@@ -299,20 +302,40 @@
             on:mouseleave={() => {
               hoveredLine = "";
             }}
-            on:mouseover={hoverLine(col.name)}
+            on:mouseover={() => {
+              hoverLine(col.name);
+            }}
           >
             <div class:invisible={hoveredLine !== col.name} class:flex={true} class:flex-col={true}>
-              <button on:click={promoteColumn(col.name)} title="Promote column">
+              <button
+                on:click={() => {
+                  promoteColumn(col.name);
+                }}
+                title="Promote column"
+              >
                 <i class="bx bxs-up-arrow-circle"></i>
               </button>
-              <button on:click={demoteColumn(col.name)} title="Demote column">
+              <button
+                on:click={() => {
+                  demoteColumn(col.name);
+                }}
+                title="Demote column"
+              >
                 <i class="bx bxs-down-arrow-circle"></i>
               </button>
             </div>
-            <button on:click={undoColumn(col)} title={`${col.name} column`}
-              ><Badge>{col.name}</Badge></button
+            <button
+              on:click={() => {
+                undoColumn(col);
+              }}
+              title={`${col.name} column`}><Badge>{col.name}</Badge></button
             >
-            <button class="ml-1" on:click={switchOrder(col.name)}>
+            <button
+              class="ml-1"
+              on:click={() => {
+                switchOrder(col.name);
+              }}
+            >
               {#if col.searchOrder === ORDERDIRECTIONS.ASC}
                 <i class="bx bx-sort-a-z" title={"Ascending order"}></i>
               {:else}
