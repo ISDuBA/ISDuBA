@@ -73,12 +73,10 @@
         {#each addChanges as change}
           <div class={getBodyClass("add")}>
             {#if change.value}
-              <div class="mb-1">
-                <b>
-                  <code>
-                    {change.path}
-                  </code>
-                </b>
+              <div class="mb-1 text-sm font-bold">
+                <code>
+                  {change.path}
+                </code>
               </div>
               <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
               ></DiffEntry>
@@ -93,14 +91,12 @@
           </div>
         </div>
         {#each removeChanges as change}
-          <div class={getBodyClass("add")}>
+          <div class={getBodyClass("remove")}>
             {#if change.value}
-              <div class="mb-1">
-                <b>
-                  <code>
-                    {change.path}
-                  </code>
-                </b>
+              <div class="mb-1 text-sm font-bold">
+                <code>
+                  {change.path}
+                </code>
               </div>
               <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
               ></DiffEntry>
@@ -139,14 +135,12 @@
           </div>
         </div>
         {#each replaceChanges as change}
-          <div class={getBodyClass(change.op)}>
+          <div class={getBodyClass("replace")}>
             {#if change.value}
-              <div class="mb-1">
-                <b>
-                  <code>
-                    {change.path}
-                  </code>
-                </b>
+              <div class="mb-1 text-sm font-bold">
+                <code>
+                  {change.path}
+                </code>
               </div>
               <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
               ></DiffEntry>

@@ -11,17 +11,19 @@
 <script lang="ts">
   import { request } from "$lib/utils";
   import DiffEntry from "./DiffEntry.svelte";
-  import { A } from "flowbite-svelte";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import { Button } from "flowbite-svelte";
 
   export let operation: string;
   export let path: string;
   export let urlPath: string;
   let result: any;
   let error: string;
+  let isOpen = false;
 
-  const loadEntry = async (event: any) => {
-    event.preventDefault();
+  const loadEntry = async () => {
+    isOpen = !isOpen;
+    if (result) return;
     error = "";
     const requestPath = encodeURI(`${urlPath}&item_op=${operation}&item_path=${path}`);
     const response = await request(requestPath, "GET");
@@ -34,25 +36,23 @@
 </script>
 
 <div>
-  <div class="mb-1">
-    {#if !result}
-      <A on:click={loadEntry}>
-        <b class="me-4">
-          <code>
-            {path}
-          </code>
-        </b>
-      </A>
+  <Button
+    class="flex items-end gap-x-2 bg-inherit pl-1 text-gray-500 hover:bg-inherit"
+    on:click={loadEntry}
+  >
+    {#if isOpen}
+      <i class="bx bx-chevron-up text-2xl"></i>
     {:else}
-      <b class="me-4">
-        <code>
-          {path}
-        </code>
-      </b>
+      <i class="bx bx-chevron-down text-2xl"></i>
     {/if}
-    <ErrorMessage message={error}></ErrorMessage>
-  </div>
-  {#if result}
-    <DiffEntry content={result} {operation}></DiffEntry>
+    <code class="text-md font-bold">
+      {path}
+    </code>
+  </Button>
+  {#if result && isOpen}
+    <div class="mt-2">
+      <DiffEntry content={result} {operation}></DiffEntry>
+    </div>
   {/if}
+  <ErrorMessage message={error}></ErrorMessage>
 </div>
