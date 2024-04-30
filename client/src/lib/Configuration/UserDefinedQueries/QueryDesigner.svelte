@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Card, Radio, Badge, Input, Spinner, Button } from "flowbite-svelte";
+  import { Radio, Badge, Input, Spinner, Button } from "flowbite-svelte";
   import { request } from "$lib/utils";
 
   const COLUMNS = {
@@ -139,10 +139,10 @@
   };
 
   const generateQuery = () => {
-    const columns =
-      currentSearch.chosenColumns.length > 0
-        ? `&columns=${currentSearch.chosenColumns.map((col: any) => col.name).join(" ")}`
-        : "";
+    const columns = /search msg as/.test(currentSearch.query)
+      ? [{ name: "msg" }, ...currentSearch.chosenColumns]
+      : currentSearch.chosenColumns;
+    const columnsParam = `&columns=${columns.map((col: any) => col.name).join(" ")}`;
     const order =
       currentSearch.chosenColumns.length > 0
         ? `&order=${currentSearch.chosenColumns
@@ -152,7 +152,7 @@
             .join(" ")}`
         : "";
     const query = currentSearch.query ? `&query=${currentSearch.query}` : "";
-    const queryURL = `/api/documents?count=1&advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}${columns}${order}${query}`;
+    const queryURL = `/api/documents?count=1&advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}${columnsParam}${order}${query}`;
     return encodeURI(queryURL);
   };
 
@@ -183,10 +183,10 @@
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>
-<hr class="mb-3" />
-<h2 class="mb-3 text-lg">User defined queries</h2>
+<hr class="mb-6" />
+<h2 class="mb-6 text-lg">User defined queries</h2>
 
-<Card padding="xl" size="lg">
+<div class="w-2/3">
   <div class="flex flex-row">
     <div class="mb-3 mt-0">
       <span class="mr-3">Description:</span>
@@ -223,7 +223,7 @@
   </div>
   <div class="flex flex-row">
     <div class="flex flex-row gap-3">
-      <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Type</h5>
+      <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>
       <Radio
         name="queryType"
         on:change={changeSearchType}
@@ -359,4 +359,4 @@
       <Button color="light"><i class="bx bxs-save me-2"></i> Save</Button>
     </div>
   </div>
-</Card>
+</div>

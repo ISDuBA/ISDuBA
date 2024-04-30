@@ -14,5 +14,5 @@
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>
-<hr class="mb-3" />
+<hr class="mb-6" />
 <UserDefinedQueries></UserDefinedQueries>
