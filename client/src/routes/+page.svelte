@@ -53,6 +53,7 @@
           appStore.setSessionExpired(false);
           appStore.setTokenParsed(jwtDecode(user.access_token));
           push("/");
+          checkRoles();
         })
         .catch(function (err) {
           appStore.setSessionExpired(true);
@@ -63,9 +64,24 @@
       appStore.setIsUserLoggedIn(true);
       appStore.setSessionExpired(false);
       appStore.setTokenParsed(jwtDecode(user.access_token));
+      checkRoles();
     }
     appStore.setUserManager(userManager);
   });
+
+  const checkRoles = () => {
+    let hasRole =
+      appStore.isAdmin() ||
+      appStore.isEditor() ||
+      appStore.isAuditor() ||
+      appStore.isReviewer() ||
+      appStore.isImporter();
+    if (!hasRole) {
+      appStore.setSessionExpired(true);
+      appStore.setSessionExpiredMessage("User has no role");
+      push("/login");
+    }
+  };
 
   const loginRequired = {
     loginRequired: true
