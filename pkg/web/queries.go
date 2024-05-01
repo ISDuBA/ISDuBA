@@ -18,6 +18,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -163,8 +164,54 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 }
 
 func (c *Controller) listStoredQueries(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not implemented, yet"})
+
+	const selectSQL = `SELECT ` +
+		`id,` +
+		`advisories,` +
+		`definer,` +
+		`global,` +
+		`name,` +
+		`description,` +
+		`query,` +
+		`num,` +
+		`columns,` +
+		`orders ` +
+		`FROM stored_queries WHERE ` +
+		`definer = $1 OR global ` +
+		`ORDER BY global desc, definer, num`
+
+	var queries []*models.StoredQuery
+
+	rctx := ctx.Request.Context()
+	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+		definer := ctx.GetString("uid")
+		rows, _ := conn.Query(rctx, selectSQL, definer)
+		var err error
+		queries, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (*models.StoredQuery, error) {
+			var query models.StoredQuery
+			if err := row.Scan(
+				&query.ID,
+				&query.Advisories,
+				&query.Definer,
+				&query.Gobal,
+				&query.Name,
+				&query.Description,
+				&query.Query,
+				&query.Num,
+				&query.Columns,
+				&query.Orders,
+			); err != nil {
+				return nil, err
+			}
+			return &query, nil
+		})
+		return err
+	}); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, queries)
 }
 
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
