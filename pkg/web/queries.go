@@ -215,8 +215,42 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not implemented, yet"})
+
+	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	const (
+		deleteNoAdminSQL = `DELETE FROM stored_queries WHERE id = $1 AND definer = $2`
+		deleteAdminSQL   = `DELETE FROM stored_queries WHERE id = $1 AND global`
+	)
+
+	var tag pgconn.CommandTag
+
+	rctx := ctx.Request.Context()
+	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+		var err error
+		// Admins are allowed to delete globals.
+		if c.hasAnyRole(ctx, models.Admin) {
+			tag, err = conn.Exec(rctx, deleteAdminSQL, queryID)
+		} else {
+			definer := ctx.GetString("uid")
+			tag, err = conn.Exec(rctx, deleteNoAdminSQL, queryID, definer)
+		}
+		return err
+	}); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if tag.RowsAffected() != 0 {
+		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "query not found"})
+	}
 }
 
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
