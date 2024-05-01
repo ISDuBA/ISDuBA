@@ -92,13 +92,11 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	}
 
 	// columns are not optional.
-	if columnsS, ok := ctx.GetPostForm("columns"); !ok {
+	if columns = strings.Fields(ctx.PostForm("columns")); len(columns) == 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing 'columns' value",
 		})
 		return
-	} else {
-		columns = strings.Fields(columnsS)
 	}
 
 	_, _, aliases := expr.Where()
