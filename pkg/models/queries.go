@@ -13,7 +13,7 @@ type StoredQuery struct {
 	ID          int64     `json:"id"`
 	Advisories  bool      `json:"advisories"`
 	Definer     string    `json:"definer"`
-	Gobal       bool      `json:"global"`
+	Global      bool      `json:"global"`
 	Name        string    `json:"name"`
 	Description *string   `json:"description,omitempty"`
 	Query       string    `json:"query"`
