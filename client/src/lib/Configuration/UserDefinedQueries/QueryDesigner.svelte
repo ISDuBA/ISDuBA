@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Radio, Badge, Input, Spinner, Button } from "flowbite-svelte";
+  import { Radio, Badge, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
 
   const COLUMNS = {
@@ -62,7 +62,8 @@
       chosenColumns: activeColumns,
       activeColumns: [...COLUMNS.ADVISORY],
       description: "New Query",
-      query: ""
+      query: "",
+      global: false
     };
   };
 
@@ -220,6 +221,10 @@
           editDescription = !editDescription;
         }}><i class="bx bx-edit-alt ml-1"></i></button
       >
+    </div>
+    <div class="mb-6 ml-6 mt-0 flex flex-row">
+      <span class="mr-3">Global:</span>
+      <Checkbox checked={currentSearch.global}></Checkbox>
     </div>
   </div>
   <div class="flex flex-row">
