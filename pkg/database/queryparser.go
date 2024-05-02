@@ -36,6 +36,7 @@ const (
 	le
 	access
 	search
+	ilike
 )
 
 type valueType int
@@ -151,6 +152,8 @@ func (et exprType) String() string {
 		return "access"
 	case search:
 		return "search"
+	case ilike:
+		return "ilike"
 	default:
 		return fmt.Sprintf("unknown expression type %d", et)
 	}
@@ -470,6 +473,14 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 		b.WriteString(column)
 	}
 
+	writeILike := func(e *Expr) {
+		b.WriteByte('(')
+		recurse(e.children[0])
+		b.WriteString(" ILIKE ")
+		recurse(e.children[1])
+		b.WriteByte(')')
+	}
+
 	recurse = func(e *Expr) {
 		b.WriteByte('(')
 		switch e.exprType {
@@ -499,6 +510,8 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			writeBinary(e, "OR")
 		case search:
 			writeSearch(e)
+		case ilike:
+			writeILike(e)
 		}
 		b.WriteByte(')')
 	}
@@ -814,6 +827,18 @@ func (st *stack) search(p *Parser) {
 	})
 }
 
+func (st *stack) ilike() {
+	needle := st.pop()
+	haystack := st.pop()
+	needle.checkValueType(stringType)
+	haystack.checkValueType(stringType)
+	st.push(&Expr{
+		exprType:  ilike,
+		valueType: boolType,
+		children:  []*Expr{haystack, needle},
+	})
+}
+
 var aliasRe = regexp.MustCompile(`[a-zA-Z][a-zA-Z_0-9]*`)
 
 func validAlias(s string) {
@@ -935,6 +960,8 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.search(p)
 		case "as":
 			st.as(aliases)
+		case "ilike":
+			st.ilike()
 		default:
 			if strings.HasPrefix(field, "$") {
 				st.access(field[1:], p.Advisory)
