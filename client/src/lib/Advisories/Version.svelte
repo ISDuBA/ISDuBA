@@ -64,7 +64,11 @@
     dispatch("disableDiff");
   };
   const showDiff = () => {
-    if (firstDocumentIndex !== undefined && secondDocumentIndex !== undefined) {
+    if (
+      firstDocumentIndex !== undefined &&
+      secondDocumentIndex !== undefined &&
+      nextColor === "red"
+    ) {
       dispatch("selectedDiffDocuments", {
         docA: reversedAdvisoryVersions[secondDocumentIndex],
         docB: reversedAdvisoryVersions[firstDocumentIndex]
