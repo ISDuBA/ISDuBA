@@ -10,88 +10,9 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Radio, Badge, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
+  import { Radio, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
-  import {
-    COLUMNS,
-    ORDERDIRECTIONS,
-    SEARCHTYPES,
-    generateQueryString,
-    newQuery
-  } from "$lib/query/query";
-
-  const chooseColumn = (col: any) => {
-    unsetMessages();
-    currentSearch.chosenColumns = [
-      ...currentSearch.chosenColumns,
-      { name: col, searchOrder: ORDERDIRECTIONS.ASC }
-    ];
-    currentSearch.activeColumns = currentSearch.activeColumns.filter((column: any) => {
-      return column !== col;
-    });
-  };
-
-  const undoColumn = (col: any) => {
-    unsetMessages();
-    currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column: any) => {
-      return column.name !== col.name;
-    });
-    const activeColumns =
-      currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
-    const activeColumnsToChoose = new Set([...currentSearch.activeColumns, col.name]);
-    currentSearch.activeColumns = activeColumns.reduce((acc: string[], column) => {
-      if (activeColumnsToChoose.has(column)) acc.push(column);
-      return acc;
-    }, []);
-  };
-
-  const hoverLine = (col: any) => {
-    hoveredLine = col;
-  };
-
-  const indexOfCol = (col: any) => {
-    return currentSearch.chosenColumns.map((col: any) => col.name).indexOf(col);
-  };
-
-  const changeSearchType = () => {
-    if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
-      currentSearch.activeColumns = [...COLUMNS.ADVISORY];
-    } else {
-      currentSearch.activeColumns = [...COLUMNS.DOCUMENT];
-    }
-    currentSearch.chosenColumns = [];
-  };
-
-  const promoteColumn = (col: any) => {
-    unsetMessages();
-    const index = indexOfCol(col);
-    if (index === 0) return;
-    const tmp = currentSearch.chosenColumns[index - 1];
-    currentSearch.chosenColumns[index - 1] = currentSearch.chosenColumns[index];
-    currentSearch.chosenColumns[index] = tmp;
-  };
-
-  const demoteColumn = (col: any) => {
-    unsetMessages();
-    const index = indexOfCol(col);
-    if (index === currentSearch.chosenColumns.length - 1) return;
-    const tmp = currentSearch.chosenColumns[index + 1];
-    currentSearch.chosenColumns[index + 1] = currentSearch.chosenColumns[index];
-    currentSearch.chosenColumns[index] = tmp;
-  };
-
-  const switchOrder = (col: any) => {
-    const index = indexOfCol(col);
-    const selectedCol = currentSearch.chosenColumns[index];
-    let searchOrder = ORDERDIRECTIONS.DESC;
-    if (selectedCol.searchOrder === ORDERDIRECTIONS.DESC) {
-      searchOrder = ORDERDIRECTIONS.ASC;
-    }
-    currentSearch.chosenColumns[index] = {
-      name: selectedCol.name,
-      searchOrder: searchOrder
-    };
-  };
+  import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/query/query";
 
   const unsetMessages = () => {
     queryCount = null;
@@ -111,22 +32,99 @@
     loading = false;
   };
 
+  const columnsFromNames = (columns: string[]) => {
+    const result = [...columns];
+    return result.map((name) => {
+      return {
+        name: name,
+        visible: false,
+        orderBy: null
+      };
+    });
+  };
+
+  const newQuery = () => {
+    const columns: any[] = columnsFromNames(COLUMNS.ADVISORY);
+    return {
+      searchType: SEARCHTYPES.ADVISORY,
+      columns: columns,
+      name: "New Query",
+      query: "",
+      description: "",
+      global: false
+    };
+  };
+
+  const switchOrderDirection = (index: number) => {
+    if (currentSearch.columns[index].orderBy == null) {
+      currentSearch.columns[index].orderBy = ORDERDIRECTIONS.ASC;
+      return;
+    }
+    if (currentSearch.columns[index].orderBy === ORDERDIRECTIONS.ASC) {
+      currentSearch.columns[index].orderBy = ORDERDIRECTIONS.DESC;
+    } else {
+      currentSearch.columns[index].orderBy = null;
+    }
+  };
+
+  const setVisible = (index: number) => {
+    currentSearch.columns[index].visible = !currentSearch.columns[index].visible;
+  };
+
   let currentSearch = newQuery();
+  let editName = false;
   let editDescription = false;
   let hoveredLine = "";
   let queryCount: any = null;
   let loading = false;
   let errorMessage = "";
+
+  const toggleSearchType = () => {};
+
+  const shorten = (text: string) => {
+    if (text.length < 10) return text;
+    return `${text.substring(0, 10)}...`;
+  };
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>
 <hr class="mb-6" />
 <h2 class="mb-6 text-lg">User defined queries</h2>
 
-<div class="w-2/5">
-  <div class="flex flex-row">
-    <div class="mt-0 w-1/2">
-      <span class="mr-3">Description:</span>
+<div class="w-2/3">
+  <div class="flex h-1 flex-row">
+    <div class="flex w-1/3 flex-row items-center gap-x-2">
+      <span>Name:</span>
+      <button
+        on:click={() => {
+          editName = !editName;
+        }}
+      >
+        {#if editName}
+          <Input
+            autofocus
+            bind:value={currentSearch.name}
+            on:keyup={(e) => {
+              if (e.key === "Enter") editName = false;
+              if (e.key === "Escape") editName = false;
+              e.preventDefault();
+            }}
+            on:blur={() => {
+              editName = false;
+            }}
+          />
+        {:else}
+          <div class="flex flex-row items-center" title={currentSearch.name}>
+            <h5 class="text-xl font-medium text-gray-500 dark:text-gray-400">
+              {shorten(currentSearch.name)}
+            </h5>
+            <i class="bx bx-edit-alt ml-1"></i>
+          </div>
+        {/if}
+      </button>
+    </div>
+    <div class="flex w-1/3 flex-row items-center gap-x-2">
+      <span>Description:</span>
       <button
         on:click={() => {
           editDescription = !editDescription;
@@ -146,184 +144,117 @@
             }}
           />
         {:else}
-          <h5 class="text-xl font-medium text-gray-500 dark:text-gray-400">
-            {currentSearch.description}
-          </h5>
+          <div class="flex flex-row items-center" title={currentSearch.description}>
+            <h5 class="text-xl font-medium text-gray-500 dark:text-gray-400">
+              {shorten(currentSearch.description)}
+            </h5>
+            <i class="bx bx-edit-alt ml-1"></i>
+          </div>
         {/if}
       </button>
-      <button
-        on:click={() => {
-          editDescription = !editDescription;
-        }}><i class="bx bx-edit-alt ml-1"></i></button
-      >
     </div>
-    <div class="mt-1 flex w-1/2 flex-row">
-      <span class="mr-3">Global:</span>
-      <Checkbox checked={currentSearch.global}></Checkbox>
+    <div class="w-1/3">
+      <div class="flex h-1 flex-row items-center gap-x-3">
+        <span>Global:</span>
+        <Checkbox checked={currentSearch.global}></Checkbox>
+      </div>
     </div>
   </div>
-  <hr class="mb-4 mt-2" />
-  <div class="flex flex-row">
-    <div class="flex flex-row gap-3">
+  <hr class="mb-4 mt-4 w-4/5" />
+  <div class="flex w-1/2 flex-row">
+    <div class="w-1/3">
       <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>
+    </div>
+    <div class="w-1/3">
       <Radio
         name="queryType"
-        on:change={changeSearchType}
+        on:change={toggleSearchType}
         value={SEARCHTYPES.ADVISORY}
         bind:group={currentSearch.searchType}>Advisories</Radio
       >
+    </div>
+    <div>
       <Radio
         name="queryType"
-        on:change={changeSearchType}
+        on:change={toggleSearchType}
         value={SEARCHTYPES.DOCUMENT}
         bind:group={currentSearch.searchType}>Documents</Radio
       >
     </div>
   </div>
-  <div class="mt-4 flex flex-row">
-    <div class="w-1/2">
-      <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
-    </div>
-    <div class="w-1/2">
-      <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
-    </div>
-  </div>
-  <div class="ml-3 flex flex-row">
-    <div class="w-1/2">
-      <Button
-        outline
-        size="xs"
-        on:click={() => {
-          const columns =
-            currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
-          currentSearch.chosenColumns = columns.map((col) => {
-            return {
-              name: col,
-              searchOrder: ORDERDIRECTIONS.ASC
-            };
-          });
-          currentSearch.activeColumns = [];
-        }}>All <i class="bx bx-right-arrow-alt"></i></Button
-      >
-    </div>
-    <div class="ml-7 w-1/2">
-      <Button
-        outline
-        size="xs"
-        on:click={() => {
-          const columns =
-            currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
-          currentSearch.activeColumns = columns;
-          currentSearch.chosenColumns = [];
-        }}>None <i class="bx bx-left-arrow-alt"></i></Button
-      >
-    </div>
-  </div>
-  <div style="height:30rem" class="flex flex-row">
-    <div class="my-3 ml-3 w-1/2">
-      <div class="flex flex-col gap-3">
-        {#each currentSearch.activeColumns as col}
-          <div class="flex items-center">
-            <button
-              on:click={() => {
-                chooseColumn(col);
-              }}
-              title={`${col} column`}><Badge>{col}</Badge></button
-            >
-          </div>
-        {/each}
+  <div class="mt-4 w-1/2">
+    <div class="mb-2 flex flex-row">
+      <div class="w-1/3">Column</div>
+      <div class="flex w-1/3 flex-row">
+        <div>Visible</div>
       </div>
+      <div>Order direction</div>
     </div>
-    <div class="flex w-3 flex-col items-center"></div>
-    <div class="ml-2 mr-3"></div>
-    <div class="my-3 w-1/2">
-      <div class="flex flex-col leading-3">
-        {#each currentSearch.chosenColumns as col}
-          <div
-            role="presentation"
-            class="flex items-center"
-            on:focus={() => {}}
-            on:mouseleave={() => {
-              hoveredLine = "";
+    {#each currentSearch.columns as col, index (index)}
+      <div class="mb-1 flex flex-row">
+        <div class="w-1/3">{col.name}</div>
+        <div class="w-1/3">
+          <Checkbox
+            on:change={() => {
+              setVisible(index);
             }}
-            on:mouseover={() => {
-              hoverLine(col.name);
+          ></Checkbox>
+        </div>
+        <div class="">
+          <button
+            on:click={() => {
+              switchOrderDirection(index);
             }}
           >
-            <div class:invisible={hoveredLine !== col.name} class:flex={true} class:flex-col={true}>
-              <button
-                on:click={() => {
-                  promoteColumn(col.name);
-                }}
-                title="Promote column"
-              >
-                <i class="bx bxs-up-arrow-circle"></i>
-              </button>
-              <button
-                on:click={() => {
-                  demoteColumn(col.name);
-                }}
-                title="Demote column"
-              >
-                <i class="bx bxs-down-arrow-circle"></i>
-              </button>
-            </div>
-            <button
-              on:click={() => {
-                undoColumn(col);
-              }}
-              title={`${col.name} column`}><Badge>{col.name}</Badge></button
-            >
-            <button
-              class="ml-1"
-              on:click={() => {
-                switchOrder(col.name);
-              }}
-            >
-              {#if col.searchOrder === ORDERDIRECTIONS.ASC}
-                <i class="bx bx-sort-a-z" title={"Ascending order"}></i>
-              {:else}
-                <i class="bx bx-sort-z-a" title={"Descending order"}></i>
-              {/if}
-            </button>
-          </div>
-        {/each}
+            {#if col.orderBy === ORDERDIRECTIONS.ASC}
+              <i class="bx bx-sort-a-z"></i>
+            {/if}
+            {#if col.orderBy === ORDERDIRECTIONS.DESC}
+              <i class="bx bx-sort-z-a"></i>
+            {/if}
+            {#if col.orderBy === null}
+              <i class="bx bx-minus"></i>
+            {/if}
+          </button>
+        </div>
+      </div>
+    {/each}
+  </div>
+  <div class="mt-6 w-4/5">
+    <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
+    <div class="flex flex-row">
+      <div class="w-full">
+        <Input bind:value={currentSearch.query} />
       </div>
     </div>
-  </div>
-  <h5 class="mt-2 text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
-  <div class="flex flex-row">
-    <div class="w-full">
-      <Input bind:value={currentSearch.query} />
-    </div>
-  </div>
-  <div class="mt-3 flex flex-row">
-    {#if loading}
-      <div class="mr-4 mt-3">
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
+    <div class="mt-3 flex flex-row">
+      {#if loading}
+        <div class="mr-4 mt-3">
+          Loading ...
+          <Spinner color="gray" size="4"></Spinner>
+        </div>
+      {/if}
+      {#if queryCount !== null}
+        <div class:mt-3={true}>
+          The query found {queryCount} results.
+        </div>
+      {/if}
+      {#if errorMessage}
+        <span class="text-red-600">{errorMessage}</span>
+      {/if}
+      <div class="my-2 ml-auto flex flex-row gap-3">
+        <Button on:click={testQuery} color="light"
+          ><i class="bx bx-test-tube me-2"></i> Test query</Button
+        >
+        <Button
+          on:click={() => {
+            currentSearch = newQuery();
+            queryCount = null;
+          }}
+          color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
+        >
+        <Button color="light"><i class="bx bxs-save me-2"></i> Save</Button>
       </div>
-    {/if}
-    {#if queryCount !== null}
-      <div class:mt-3={true}>
-        The query found {queryCount} results.
-      </div>
-    {/if}
-    {#if errorMessage}
-      <span class="text-red-600">{errorMessage}</span>
-    {/if}
-    <div class="my-2 ml-auto flex flex-row gap-3">
-      <Button on:click={testQuery} color="light"
-        ><i class="bx bx-test-tube me-2"></i> Test query</Button
-      >
-      <Button
-        on:click={() => {
-          currentSearch = newQuery();
-          queryCount = null;
-        }}
-        color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
-      >
-      <Button color="light"><i class="bx bxs-save me-2"></i> Save</Button>
     </div>
   </div>
 </div>

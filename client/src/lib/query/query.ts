@@ -47,29 +47,22 @@ const SEARCHTYPES = {
   DOCUMENT: "documents"
 };
 
-const newQuery = () => {
-  const activeColumns: any[] = [];
-  return {
-    currentStep: 1,
-    searchType: SEARCHTYPES.ADVISORY,
-    chosenColumns: activeColumns,
-    activeColumns: [...COLUMNS.ADVISORY],
-    description: "New Query",
-    query: "",
-    global: false
-  };
-};
-
 const generateQueryString = (currentSearch: any) => {
+  const chosenColumns = currentSearch.columns.filter((c: any) => {
+    return c.visible === true;
+  });
+  const orderColumns = currentSearch.columns.filter((c: any) => {
+    return c.orderBy !== null;
+  });
   const columns = /search msg as/.test(currentSearch.query)
-    ? [{ name: "msg" }, ...currentSearch.chosenColumns]
-    : currentSearch.chosenColumns;
+    ? [{ name: "msg" }, ...chosenColumns]
+    : chosenColumns;
   const columnsParam = `&columns=${columns.map((col: any) => col.name).join(" ")}`;
   const order =
-    currentSearch.chosenColumns.length > 0
-      ? `&order=${currentSearch.chosenColumns
+    orderColumns.length > 0
+      ? `&order=${orderColumns
           .map((col: any) => {
-            return col.searchOrder === ORDERDIRECTIONS.ASC ? col.name : `-${col.name}`;
+            return col.orderBy === ORDERDIRECTIONS.ASC ? col.name : `-${col.name}`;
           })
           .join(" ")}`
       : "";
@@ -78,4 +71,4 @@ const generateQueryString = (currentSearch: any) => {
   return encodeURI(queryURL);
 };
 
-export { generateQueryString, COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, newQuery };
+export { generateQueryString, COLUMNS, ORDERDIRECTIONS, SEARCHTYPES };
