@@ -123,9 +123,9 @@
 <hr class="mb-6" />
 <h2 class="mb-6 text-lg">User defined queries</h2>
 
-<div class="w-2/3">
+<div class="w-2/5">
   <div class="flex flex-row">
-    <div class="mb-3 mt-0">
+    <div class="mt-0 w-1/2">
       <span class="mr-3">Description:</span>
       <button
         on:click={() => {
@@ -157,11 +157,12 @@
         }}><i class="bx bx-edit-alt ml-1"></i></button
       >
     </div>
-    <div class="mb-6 ml-6 mt-1 flex flex-row">
+    <div class="mt-1 flex w-1/2 flex-row">
       <span class="mr-3">Global:</span>
       <Checkbox checked={currentSearch.global}></Checkbox>
     </div>
   </div>
+  <hr class="mb-4 mt-2" />
   <div class="flex flex-row">
     <div class="flex flex-row gap-3">
       <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>
@@ -179,17 +180,19 @@
       >
     </div>
   </div>
-  <div class="mt-2 flex flex-row">
-    <div class="w-1/4">
+  <div class="mt-4 flex flex-row">
+    <div class="w-1/2">
       <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
     </div>
-    <div class="w-1/4">
+    <div class="w-1/2">
       <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
     </div>
   </div>
   <div class="ml-3 flex flex-row">
-    <div class="w-1/4">
-      <button
+    <div class="w-1/2">
+      <Button
+        outline
+        size="xs"
         on:click={() => {
           const columns =
             currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
@@ -200,23 +203,24 @@
             };
           });
           currentSearch.activeColumns = [];
-        }}>All <i class="bx bx-right-arrow-alt"></i></button
+        }}>All <i class="bx bx-right-arrow-alt"></i></Button
       >
     </div>
-    <div class="ml-2 mr-3 mt-2 text-center"></div>
-    <div class="ml-7 w-1/4">
-      <button
+    <div class="ml-7 w-1/2">
+      <Button
+        outline
+        size="xs"
         on:click={() => {
           const columns =
             currentSearch.searchType === SEARCHTYPES.ADVISORY ? COLUMNS.ADVISORY : COLUMNS.DOCUMENT;
           currentSearch.activeColumns = columns;
           currentSearch.chosenColumns = [];
-        }}>None <i class="bx bx-left-arrow-alt"></i></button
+        }}>None <i class="bx bx-left-arrow-alt"></i></Button
       >
     </div>
   </div>
   <div style="height:30rem" class="flex flex-row">
-    <div class="my-3 ml-3 w-1/4">
+    <div class="my-3 ml-3 w-1/2">
       <div class="flex flex-col gap-3">
         {#each currentSearch.activeColumns as col}
           <div class="flex items-center">
@@ -232,7 +236,7 @@
     </div>
     <div class="flex w-3 flex-col items-center"></div>
     <div class="ml-2 mr-3"></div>
-    <div class="my-3 w-1/4">
+    <div class="my-3 w-1/2">
       <div class="flex flex-col leading-3">
         {#each currentSearch.chosenColumns as col}
           <div
