@@ -318,7 +318,7 @@
       >
       <Button
         on:click={() => {
-          currentSearch = reset();
+          currentSearch = newQuery();
           queryCount = null;
         }}
         color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
