@@ -12,60 +12,13 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Radio, Badge, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
-
-  const COLUMNS = {
-    ADVISORY: [
-      "id",
-      "tracking_id",
-      "version",
-      "publisher",
-      "current_release_date",
-      "initial_release_date",
-      "title",
-      "tlp",
-      "cvss_v2_score",
-      "cvss_v3_score",
-      "ssvc",
-      "four_cves",
-      "state"
-    ],
-    DOCUMENT: [
-      "id",
-      "tracking_id",
-      "version",
-      "publisher",
-      "current_release_date",
-      "initial_release_date",
-      "title",
-      "tlp",
-      "cvss_v2_score",
-      "cvss_v3_score",
-      "four_cves"
-    ]
-  };
-
-  const ORDERDIRECTIONS = {
-    ASC: "asc",
-    DESC: "desc"
-  };
-
-  const SEARCHTYPES = {
-    ADVISORY: "advisories",
-    DOCUMENT: "documents"
-  };
-
-  const reset = () => {
-    const activeColumns: any[] = [];
-    return {
-      currentStep: 1,
-      searchType: SEARCHTYPES.ADVISORY,
-      chosenColumns: activeColumns,
-      activeColumns: [...COLUMNS.ADVISORY],
-      description: "New Query",
-      query: "",
-      global: false
-    };
-  };
+  import {
+    COLUMNS,
+    ORDERDIRECTIONS,
+    SEARCHTYPES,
+    generateQueryString,
+    newQuery
+  } from "$lib/query/query";
 
   const chooseColumn = (col: any) => {
     unsetMessages();
@@ -73,14 +26,14 @@
       ...currentSearch.chosenColumns,
       { name: col, searchOrder: ORDERDIRECTIONS.ASC }
     ];
-    currentSearch.activeColumns = currentSearch.activeColumns.filter((column) => {
+    currentSearch.activeColumns = currentSearch.activeColumns.filter((column: any) => {
       return column !== col;
     });
   };
 
   const undoColumn = (col: any) => {
     unsetMessages();
-    currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column) => {
+    currentSearch.chosenColumns = currentSearch.chosenColumns.filter((column: any) => {
       return column.name !== col.name;
     });
     const activeColumns =
@@ -97,7 +50,7 @@
   };
 
   const indexOfCol = (col: any) => {
-    return currentSearch.chosenColumns.map((col) => col.name).indexOf(col);
+    return currentSearch.chosenColumns.map((col: any) => col.name).indexOf(col);
   };
 
   const changeSearchType = () => {
@@ -140,24 +93,6 @@
     };
   };
 
-  const generateQuery = () => {
-    const columns = /search msg as/.test(currentSearch.query)
-      ? [{ name: "msg" }, ...currentSearch.chosenColumns]
-      : currentSearch.chosenColumns;
-    const columnsParam = `&columns=${columns.map((col: any) => col.name).join(" ")}`;
-    const order =
-      currentSearch.chosenColumns.length > 0
-        ? `&order=${currentSearch.chosenColumns
-            .map((col: any) => {
-              return col.searchOrder === ORDERDIRECTIONS.ASC ? col.name : `-${col.name}`;
-            })
-            .join(" ")}`
-        : "";
-    const query = currentSearch.query ? `&query=${currentSearch.query}` : "";
-    const queryURL = `/api/documents?count=1&advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}${columnsParam}${order}${query}`;
-    return encodeURI(queryURL);
-  };
-
   const unsetMessages = () => {
     queryCount = null;
     errorMessage = "";
@@ -166,7 +101,7 @@
   const testQuery = async () => {
     loading = true;
     unsetMessages();
-    const query = generateQuery();
+    const query = generateQueryString(currentSearch);
     const response = await request(query, "GET");
     if (response.ok) {
       queryCount = response.content.count;
@@ -176,7 +111,7 @@
     loading = false;
   };
 
-  let currentSearch = reset();
+  let currentSearch = newQuery();
   let editDescription = false;
   let hoveredLine = "";
   let queryCount: any = null;
@@ -222,7 +157,7 @@
         }}><i class="bx bx-edit-alt ml-1"></i></button
       >
     </div>
-    <div class="mb-6 ml-6 mt-0 flex flex-row">
+    <div class="mb-6 ml-6 mt-1 flex flex-row">
       <span class="mr-3">Global:</span>
       <Checkbox checked={currentSearch.global}></Checkbox>
     </div>
@@ -248,7 +183,6 @@
     <div class="w-1/4">
       <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Available columns</h5>
     </div>
-    <div class="ml-2 mr-3 mt-2 text-center"><i class="bx bx-move-horizontal"></i></div>
     <div class="w-1/4">
       <h5 class="my-1 text-lg font-medium text-gray-500 dark:text-gray-400">Choosen columns</h5>
     </div>
