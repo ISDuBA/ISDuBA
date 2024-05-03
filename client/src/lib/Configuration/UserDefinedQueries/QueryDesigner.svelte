@@ -74,7 +74,7 @@
   let currentSearch = newQuery();
   let editName = false;
   let editDescription = false;
-  let hoveredLine = "";
+  // let hoveredLine = "";
   let queryCount: any = null;
   let loading = false;
   let errorMessage = "";
