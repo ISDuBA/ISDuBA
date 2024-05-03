@@ -37,6 +37,7 @@ const (
 	access
 	search
 	ilike
+	ilikePID
 )
 
 type valueType int
@@ -154,6 +155,8 @@ func (et exprType) String() string {
 		return "search"
 	case ilike:
 		return "ilike"
+	case ilikePID:
+		return "ilikepid"
 	default:
 		return fmt.Sprintf("unknown expression type %d", et)
 	}
@@ -481,6 +484,42 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 		b.WriteByte(')')
 	}
 
+	writeILikePID := func(e *Expr) {
+		b.WriteString(`EXISTS (` +
+			`WITH product_ids AS (SELECT jsonb_path_query(` +
+			`document, '$.product_tree.**.product.product_id')::int num ` +
+			`FROM documents ds WHERE ds.id = documents.id)` +
+			`SELECT * FROM documents_texts dts JOIN product_ids ` +
+			`ON product_ids.num = dts.num ` +
+			`WHERE dts.documents_id = documents.id AND ` +
+			`dts.txt ILIKE `)
+		recurse(e.children[0])
+		b.WriteByte(')')
+		/*
+			b.WriteString(`EXISTS (` +
+				`SELECT jsonb_path_query(` +
+				`document, '$.product_tree.**.product.product_id')::int ` +
+				`FROM documents ds WHERE ds.id = documents.id ` +
+				`INTERSECT ` +
+				`SELECT num FROM documents_texts ` +
+				`WHERE documents_id = documents.id AND ` +
+				`txt ILIKE `)
+			recurse(e.children[0])
+			b.WriteByte(')')
+		*/
+		/*
+			b.WriteString(`EXISTS (` +
+				`SELECT num FROM documents_texts ` +
+				`WHERE documents_id = documents.id AND ` +
+				`txt ILIKE `)
+			recurse(e.children[0])
+			b.WriteString(` INTERSECT ` +
+				`SELECT jsonb_path_query(` +
+				`document, '$.product_tree.**.product.product_id')::int ` +
+				`FROM documents ds WHERE ds.id = documents.id)`)
+		*/
+	}
+
 	recurse = func(e *Expr) {
 		b.WriteByte('(')
 		switch e.exprType {
@@ -512,6 +551,8 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			writeSearch(e)
 		case ilike:
 			writeILike(e)
+		case ilikePID:
+			writeILikePID(e)
 		}
 		b.WriteByte(')')
 	}
@@ -839,6 +880,16 @@ func (st *stack) ilike() {
 	})
 }
 
+func (st *stack) ilikePID() {
+	needle := st.pop()
+	needle.checkValueType(stringType)
+	st.push(&Expr{
+		exprType:  ilikePID,
+		valueType: boolType,
+		children:  []*Expr{needle},
+	})
+}
+
 var aliasRe = regexp.MustCompile(`[a-zA-Z][a-zA-Z_0-9]*`)
 
 func validAlias(s string) {
@@ -962,6 +1013,8 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.as(aliases)
 		case "ilike":
 			st.ilike()
+		case "ilikepid":
+			st.ilikePID()
 		default:
 			if strings.HasPrefix(field, "$") {
 				st.access(field[1:], p.Advisory)
