@@ -74,12 +74,26 @@
   let currentSearch = newQuery();
   let editName = false;
   let editDescription = false;
-  // let hoveredLine = "";
+  let hoveredLine = -1;
   let queryCount: any = null;
   let loading = false;
   let errorMessage = "";
 
   const toggleSearchType = () => {};
+
+  const promoteColumn = (index: number) => {
+    if (index === 0) return;
+    let tmp = currentSearch.columns[index - 1];
+    currentSearch.columns[index - 1] = currentSearch.columns[index];
+    currentSearch.columns[index] = tmp;
+  };
+
+  const demoteColumn = (index: number) => {
+    if (index === currentSearch.columns.length - 1) return;
+    let tmp = currentSearch.columns[index + 1];
+    currentSearch.columns[index + 1] = currentSearch.columns[index];
+    currentSearch.columns[index] = tmp;
+  };
 
   const shorten = (text: string) => {
     if (text.length < 10) return text;
@@ -123,7 +137,7 @@
         {/if}
       </button>
     </div>
-    <div class="flex w-1/3 flex-row items-center gap-x-2">
+    <div class="ml-6 flex w-1/3 flex-row items-center gap-x-2">
       <span>Description:</span>
       <button
         on:click={() => {
@@ -165,7 +179,7 @@
     <div class="w-1/3">
       <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>
     </div>
-    <div class="w-1/3">
+    <div class="ml-6 w-1/3">
       <Radio
         name="queryType"
         on:change={toggleSearchType}
@@ -184,14 +198,48 @@
   </div>
   <div class="mt-4 w-1/2">
     <div class="mb-2 flex flex-row">
-      <div class="w-1/3">Column</div>
+      <div class="ml-6 w-1/3">Column</div>
       <div class="flex w-1/3 flex-row">
         <div>Visible</div>
       </div>
       <div>Order direction</div>
     </div>
     {#each currentSearch.columns as col, index (index)}
-      <div class="mb-1 flex flex-row">
+      <div
+        role="presentation"
+        class="mb-1 flex cursor-pointer flex-row items-center"
+        on:mouseover={() => {
+          hoveredLine = index;
+        }}
+        on:mouseout={() => {
+          hoveredLine = -1;
+        }}
+        on:blur={() => {}}
+        on:focus={() => {}}
+      >
+        <div
+          class:w-6={true}
+          class:flex={true}
+          class:flex-col={true}
+          class:invisible={hoveredLine !== index}
+        >
+          <button
+            class="h-4"
+            on:click={() => {
+              promoteColumn(index);
+            }}
+          >
+            <i class="bx bxs-up-arrow-circle"></i>
+          </button>
+          <button
+            on:click={() => {
+              demoteColumn(index);
+            }}
+            class="h-4"
+          >
+            <i class="bx bxs-down-arrow-circle"></i>
+          </button>
+        </div>
         <div class="w-1/3">{col.name}</div>
         <div class="w-1/3">
           <Checkbox
