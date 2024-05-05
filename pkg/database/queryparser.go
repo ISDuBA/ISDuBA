@@ -253,7 +253,8 @@ func createFrom(hasAliases, advisory bool) string {
 	}
 
 	if hasAliases {
-		from += ` JOIN documents_texts ON id = documents_texts.documents_id`
+		from += ` JOIN documents_texts ON id = documents_texts.documents_id ` +
+			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`
 	}
 	return from
 }
@@ -308,7 +309,8 @@ func projectionsWithCasts(proj []string, aliases map[string]string) string {
 			b.WriteString(alias)
 			continue
 		}
-		if p == "tracking_id" || p == "publisher" {
+		switch p {
+		case "id", "tracking_id", "publisher":
 			b.WriteString("documents.")
 		}
 		b.WriteString(p)
