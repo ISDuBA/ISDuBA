@@ -312,10 +312,12 @@ func projectionsWithCasts(proj []string, aliases map[string]string) string {
 		switch p {
 		case "id", "tracking_id", "publisher":
 			b.WriteString("documents.")
-		}
-		b.WriteString(p)
-		if p == "state" {
+			b.WriteString(p)
+		case "state":
+			b.WriteString(p)
 			b.WriteString("::text")
+		default:
+			b.WriteString(p)
 		}
 	}
 	return b.String()
