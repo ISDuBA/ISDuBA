@@ -209,17 +209,20 @@ func CreateOrder(
 		if b.Len() > 0 {
 			b.WriteByte(',')
 		}
-		bracket := false
 		switch field {
 		case "tracking_id", "publisher":
 			b.WriteString("documents.")
+			b.WriteString(field)
 		case "cvss_v2_score", "cvss_v3_score":
-			bracket = true
 			b.WriteString("COALESCE(")
-		}
-		b.WriteString(field)
-		if bracket {
+			b.WriteString(field)
 			b.WriteString(",0)")
+		case "version":
+			// TODO: This is not optimal (SemVer).
+			b.WriteString(
+				`CASE WHEN pg_input_is_valid(version, 'integer') THEN version::int END`)
+		default:
+			b.WriteString(field)
 		}
 
 		if desc {
