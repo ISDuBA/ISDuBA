@@ -9,7 +9,6 @@
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { Button, Heading, Card } from "flowbite-svelte";
   import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
@@ -17,7 +16,6 @@
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
   import { request } from "$lib/utils";
 
-  let version: string = "Retrieving Version from server";
   let error: string;
 
   async function logout() {
@@ -32,17 +30,25 @@
 
   let profileUrl = PUBLIC_KEYCLOAK_URL + "/realms/isduba/account/#/";
 
-  onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
-      const response = await request("api/about", "GET");
-      if (response.ok) {
-        const backendInfo = response.content;
-        version = backendInfo.version;
-      } else if (response.error) {
-        error = response.error;
-      }
+  async function getVersion() {
+    const response = await request("api/about", "GET");
+    if (response.ok) {
+      const backendInfo = response.content;
+      return backendInfo.version;
+    } else if (response.error) {
+      error = response.error;
     }
-  });
+  }
+
+  async function getView() {
+    const response = await request("api/view", "GET");
+    if (response.ok) {
+      return new Map<string, [string]>(Object.entries(response.content));
+    } else if (response.error) {
+      error = response.error;
+    }
+    return new Map<string, [string]>();
+  }
 </script>
 
 <svelte:head>
@@ -88,9 +94,19 @@
     </Card>
     {#if $appStore.app.isUserLoggedIn}
       <P class="mt-3">
-        Versions:
+        {#await getVersion() then version}
+          Versions:
+          <List tag="ul" class="space-y-1" list="none">
+            <Li liClass="ml-3">ISDuBA: {version}</Li>
+          </List>
+        {/await}
+        View:
         <List tag="ul" class="space-y-1" list="none">
-          <Li liClass="ml-3">ISDuBA: {version}</Li>
+          {#await getView() then view}
+            {#each view.entries() as [publisher, tlp]}
+              <Li liClass="ml-3">{publisher}: {tlp}</Li>
+            {/each}
+          {/await}
         </List>
         <ErrorMessage message={error}></ErrorMessage>
       </P>

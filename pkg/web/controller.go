@@ -54,6 +54,7 @@ func (c *Controller) Bind() http.Handler {
 		authEdRe   = authRoles(models.Editor, models.Reviewer)
 		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
 		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
+		authAll    = authRoles(models.Editor, models.Reviewer, models.Admin, models.Auditor)
 	)
 
 	api := r.Group("/api")
@@ -79,7 +80,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)
 
 	// Backend information
-	api.GET("/about", authEdReAu, c.about)
+	api.GET("/about", authAll, c.about)
 
+	// Visibility information
+	api.GET("/view", authAll, c.view)
 	return r
 }
