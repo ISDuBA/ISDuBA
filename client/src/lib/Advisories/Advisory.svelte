@@ -162,6 +162,13 @@
     }
   }
 
+  async function sendForReview() {
+    if (comment.length !== 0) {
+      await createComment();
+    }
+    await updateState(REVIEW);
+  }
+
   async function updateState(newState: string) {
     const response = await request(
       `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
@@ -344,9 +351,11 @@
               <CommentTextArea
                 on:input={() => (createCommentError = "")}
                 on:saveComment={createComment}
+                on:saveForReview={sendForReview}
                 bind:value={comment}
                 errorMessage={createCommentError}
                 buttonText="Send"
+                state={advisoryState}
               ></CommentTextArea>
             </div>
           {/if}
