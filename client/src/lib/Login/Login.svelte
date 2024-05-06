@@ -21,6 +21,7 @@
   async function logout() {
     appStore.setSessionExpired(true);
     appStore.setSessionExpiredMessage("Logout");
+    sessionStorage.clear();
     await $appStore.app.userManager?.signoutRedirect();
   }
 
