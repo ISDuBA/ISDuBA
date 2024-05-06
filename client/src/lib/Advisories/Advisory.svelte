@@ -19,7 +19,7 @@
     Dropdown,
     DropdownItem
   } from "flowbite-svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
@@ -162,6 +162,13 @@
     }
   }
 
+  async function sendForReview() {
+    if (comment.length !== 0) {
+      await createComment();
+    }
+    await updateState(REVIEW);
+  }
+
   async function updateState(newState: string) {
     const response = await request(
       `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
@@ -203,8 +210,10 @@
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
       const id = setTimeout(async () => {
-        await updateState("read");
-        appStore.displayInfoMessage("This advisory is marked as read");
+        if (canSetStateRead(advisoryState)) {
+          await updateState(READ);
+          appStore.displayInfoMessage("This advisory is marked as read");
+        }
       }, 3000);
       timeoutIDs.push(id);
     }
@@ -229,11 +238,9 @@
     });
   });
 
-  onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
-      await loadData();
-    }
-  });
+  $: if (params) {
+    loadData();
+  }
 </script>
 
 <svelte:head>
@@ -321,6 +328,46 @@
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
+      <div class="p-2">
+        {#if appStore.isEditor()}
+          <Button
+            on:click={() => {
+              if (advisoryState === NEW) {
+                updateState(READ);
+              } else {
+                updateState(NEW);
+              }
+            }}
+            disabled={!canSetStateNew(advisoryState) && !canSetStateRead(advisoryState)}
+          >
+            {#if advisoryState === NEW}
+              <i class="bx bx-show text-lg"></i>
+              <span>Mark as read</span>
+            {:else}
+              <i class="bx bx-star text-lg"></i>
+              <span>Mark as new</span>
+            {/if}
+          </Button>
+        {/if}
+        {#if appStore.isReviewer()}
+          <Button
+            on:click={() => updateState(ARCHIVED)}
+            disabled={!canSetStateArchived(advisoryState)}
+          >
+            <i class="bx bx-archive text-lg"></i>
+            <span>Archive</span>
+          </Button>
+        {/if}
+        {#if appStore.isReviewer() || appStore.isEditor()}
+          <Button
+            on:click={() => updateState(DELETED)}
+            disabled={!canSetStateDeleted(advisoryState)}
+          >
+            <i class="bx bx-trash text-lg"></i>
+            <span>Mark for deletion</span>
+          </Button>
+        {/if}
+      </div>
       <Accordion>
         <AccordionItem open>
           <span slot="header"
@@ -344,9 +391,11 @@
               <CommentTextArea
                 on:input={() => (createCommentError = "")}
                 on:saveComment={createComment}
+                on:saveForReview={sendForReview}
                 bind:value={comment}
                 errorMessage={createCommentError}
                 buttonText="Send"
+                state={advisoryState}
               ></CommentTextArea>
             </div>
           {/if}

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, Label } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Button, ButtonGroup, Label } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
   import type { JsonDiffResult } from "./JsonDiff";
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
@@ -21,32 +21,15 @@
   let error: string;
   let diff: any;
   let urlPath: string;
+  let isAddSectionOpen = false;
+  let isRemoveSectionOpen = false;
+  let isEditedSectionOpen = true;
   let isSideBySideViewActivated = true;
-  $: sideBySideButtonBaseClass = "!mb-2";
-  $: sideBySideButtonClass = isSideBySideViewActivated
-    ? `${sideBySideButtonBaseClass} bg-gray-800 text-white hover:bg-gray-600 focus-within:ring-transparent`
-    : `${sideBySideButtonBaseClass} bg-white text-black border border-solid border-gray-300 hover:bg-gray-200 focus-within:ring-transparent`;
-  $: groupedResults = diff
-    ? [
-        {
-          op: "add",
-          changes: diff.filter((result: JsonDiffResult) => result.op === "add")
-        },
-        {
-          op: "replace",
-          changes: diff.filter((result: JsonDiffResult) => result.op === "replace")
-        },
-        {
-          op: "remove",
-          changes: diff.filter((result: JsonDiffResult) => result.op === "remove")
-        }
-      ]
-    : [];
+  let pressedButtonClass = "bg-gray-200 hover:bg-gray-100";
+  $: addChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "add") : [];
+  $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
+  $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
   $: diffDocuments, getDiff();
-
-  const toggleSideBySideViewActivated = () => {
-    isSideBySideViewActivated = !isSideBySideViewActivated;
-  };
 
   const getDiff = async () => {
     urlPath = `/api/diff/${diffDocuments.docB.id}/${diffDocuments.docA.id}?word-diff=true`;
@@ -81,52 +64,92 @@
       >{diff.length} changes{title ? "" : ":"}</span
     >
     <Accordion flush multiple>
-      {#each groupedResults as result}
-        {#if result.changes.length > 0}
-          <AccordionItem open class="justify-start gap-x-4 text-gray-700">
-            <div slot="header" class="pl-2">
-              {#if result.op === "add"}
-                <div class="flex items-center gap-2">
-                  <span>Added ({result.changes.length})</span>
-                </div>
-              {:else if result.op === "remove"}
-                <div class="flex items-center gap-2">
-                  <span>Removed ({result.changes.length})</span>
-                </div>
-              {:else}
-                <div class="flex items-center gap-2">
-                  <span>Edited ({result.changes.length})</span>
-                </div>
-              {/if}
-            </div>
-            {#if result.op === "replace"}
-              <Button class={sideBySideButtonClass} on:click={toggleSideBySideViewActivated}>
+      <AccordionItem bind:open={isAddSectionOpen} class="justify-start gap-x-4 text-gray-700">
+        <div slot="header" class="pl-2">
+          <div class="flex items-center gap-2">
+            <span>Added ({addChanges.length})</span>
+          </div>
+        </div>
+        {#each addChanges as change}
+          <div class={getBodyClass("add")}>
+            {#if change.value}
+              <div class="mb-1 text-sm font-bold">
+                <code>
+                  {change.path}
+                </code>
+              </div>
+              <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
+              ></DiffEntry>
+            {/if}
+          </div>
+        {/each}
+      </AccordionItem>
+      <AccordionItem bind:open={isRemoveSectionOpen} class="justify-start gap-x-4 text-gray-700">
+        <div slot="header" class="pl-2">
+          <div class="flex items-center gap-2">
+            <span>Removed ({removeChanges.length})</span>
+          </div>
+        </div>
+        {#each removeChanges as change}
+          <div class={getBodyClass("remove")}>
+            {#if change.value}
+              <div class="mb-1 text-sm font-bold">
+                <code>
+                  {change.path}
+                </code>
+              </div>
+              <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
+              ></DiffEntry>
+            {:else}
+              <LazyDiffEntry operation={change.op} {urlPath} path={change.path}></LazyDiffEntry>
+            {/if}
+          </div>
+        {/each}
+      </AccordionItem>
+      <AccordionItem bind:open={isEditedSectionOpen} class="justify-start gap-x-4 text-gray-700">
+        <div slot="header" class="pl-2">
+          <div class="flex items-center gap-2">
+            <span>Edited ({replaceChanges.length})</span>
+            <ButtonGroup>
+              <Button
+                color="light"
+                class={`${isSideBySideViewActivated === true ? pressedButtonClass : ""}`}
+                on:click={(event) => {
+                  event.stopPropagation();
+                  isSideBySideViewActivated = true;
+                }}
+              >
                 Side-by-side
               </Button>
-            {/if}
-            {#each result.changes as change}
-              <div class={getBodyClass(change.op)}>
-                {#if change.value}
-                  <div class="mb-1">
-                    <b>
-                      <code>
-                        {change.path}
-                      </code>
-                    </b>
-                  </div>
-                  <DiffEntry
-                    content={change.value}
-                    {isSideBySideViewActivated}
-                    operation={change.op}
-                  ></DiffEntry>
-                {:else}
-                  <LazyDiffEntry operation={change.op} {urlPath} path={change.path}></LazyDiffEntry>
-                {/if}
+              <Button
+                color="light"
+                class={`${isSideBySideViewActivated === false ? pressedButtonClass : ""}`}
+                on:click={(event) => {
+                  event.stopPropagation();
+                  isSideBySideViewActivated = false;
+                }}
+              >
+                Inline
+              </Button>
+            </ButtonGroup>
+          </div>
+        </div>
+        {#each replaceChanges as change}
+          <div class={getBodyClass("replace")}>
+            {#if change.value}
+              <div class="mb-1 text-sm font-bold">
+                <code>
+                  {change.path}
+                </code>
               </div>
-            {/each}
-          </AccordionItem>
-        {/if}
-      {/each}
+              <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
+              ></DiffEntry>
+            {:else}
+              <LazyDiffEntry operation={change.op} {urlPath} path={change.path}></LazyDiffEntry>
+            {/if}
+          </div>
+        {/each}
+      </AccordionItem>
     </Accordion>
   {/if}
 </div>
