@@ -18,7 +18,7 @@
   export let buttonText: string;
   export let cancelable = false;
   export let errorMessage: string;
-  export let state: string;
+  export let state: string = "";
   $: count = value.length;
 
   const dispatch = createEventDispatcher();

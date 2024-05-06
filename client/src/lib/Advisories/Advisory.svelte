@@ -210,8 +210,10 @@
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
       const id = setTimeout(async () => {
-        await updateState("read");
-        appStore.displayInfoMessage("This advisory is marked as read");
+        if (canSetStateRead(advisoryState)) {
+          await updateState(READ);
+          appStore.displayInfoMessage("This advisory is marked as read");
+        }
       }, 3000);
       timeoutIDs.push(id);
     }
@@ -328,6 +330,46 @@
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
+      <div class="p-2">
+        {#if appStore.isEditor()}
+          <Button
+            on:click={() => {
+              if (advisoryState === NEW) {
+                updateState(READ);
+              } else {
+                updateState(NEW);
+              }
+            }}
+            disabled={!canSetStateNew(advisoryState) && !canSetStateRead(advisoryState)}
+          >
+            {#if advisoryState === NEW}
+              <i class="bx bx-show text-lg"></i>
+              <span>Mark as read</span>
+            {:else}
+              <i class="bx bx-star text-lg"></i>
+              <span>Mark as new</span>
+            {/if}
+          </Button>
+        {/if}
+        {#if appStore.isReviewer()}
+          <Button
+            on:click={() => updateState(ARCHIVED)}
+            disabled={!canSetStateArchived(advisoryState)}
+          >
+            <i class="bx bx-archive text-lg"></i>
+            <span>Archive</span>
+          </Button>
+        {/if}
+        {#if appStore.isReviewer() || appStore.isEditor()}
+          <Button
+            on:click={() => updateState(DELETED)}
+            disabled={!canSetStateDeleted(advisoryState)}
+          >
+            <i class="bx bx-trash text-lg"></i>
+            <span>Mark for deletion</span>
+          </Button>
+        {/if}
+      </div>
       <Accordion>
         <AccordionItem open>
           <span slot="header"
