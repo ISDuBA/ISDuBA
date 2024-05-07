@@ -66,7 +66,6 @@ for i in "${IDS[@]}"
 do
   if [ "$i" = "\"$1\"" ]; then
     RESULT=$COUNTER-3
-   # or do whatever with individual element of the array
   fi
 COUNTER=$COUNTER+1
 done
