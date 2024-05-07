@@ -97,6 +97,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {
 			actor.String = commentator
+			actor.Valid = true
 		}
 
 		logEvent := func(event models.Event, state models.Workflow) error {
@@ -219,6 +220,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {
 			actor.String = commentator
+			actor.Valid = true
 		}
 		if _, err := tx.Exec(rctx, eventSQL, now, actor, docID); err != nil {
 			return err
