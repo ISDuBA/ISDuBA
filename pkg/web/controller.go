@@ -87,7 +87,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)
 
 	// Backend information
-	api.GET("/about", authEdReAu, c.about)
+	api.GET("/about", authAll, c.about)
 
+	// Visibility information
+	api.GET("/view", authAll, c.view)
 	return r
 }

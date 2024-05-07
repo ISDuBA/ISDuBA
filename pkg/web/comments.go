@@ -160,7 +160,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	case !commentingAllowed:
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid state to comment"})
 	case forbidden:
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not allowed to change state"})
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "user not allowed to change state"})
 	default:
 		ctx.JSON(http.StatusCreated, gin.H{
 			"id":          commentID,

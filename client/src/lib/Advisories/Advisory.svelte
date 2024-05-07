@@ -19,7 +19,7 @@
     Dropdown,
     DropdownItem
   } from "flowbite-svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
@@ -238,11 +238,9 @@
     });
   });
 
-  onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
-      await loadData();
-    }
-  });
+  $: if (params) {
+    loadData();
+  }
 </script>
 
 <svelte:head>

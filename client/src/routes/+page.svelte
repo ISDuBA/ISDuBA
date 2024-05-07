@@ -56,9 +56,7 @@
           push("/");
           checkRoles();
         })
-        .catch(function (err) {
-          appStore.setSessionExpired(true);
-          appStore.setSessionExpiredMessage(err.message());
+        .catch(function () {
           push("/login");
         });
     } else {
