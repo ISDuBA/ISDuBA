@@ -10,13 +10,22 @@
 
 set -e # to exit if a command in the script fails
 
-# arguments:
-# $1: username
-# $2: first Name
-# $3: last Name
-# $4: E-Mail
-# $5: password
-# $6: role
+# This will work if the standard or custom has been set in env. If neither, this will fail.
+if [[ -z "${KEYCLOAK_ADMIN}" ]]; then
+  export KEYCLOAK_ADMIN="keycloak"
+  echo "No Keycloak admin set. Assuming admin with name \"keycloak\""
+else
+  export KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN}"
+fi
+
+if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+  export KEYCLOAK_ADMIN_PASSWORD="keycloak"
+  echo "No Keycloak admin password set. Assuming admin with password \"keycloak\""
+else
+  export KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
+fi
+
+sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$KEYCLOAK_ADMIN" --password "$KEYCLOAK_ADMIN_PASSWORD"
 
 if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms/isduba/users' | grep -F -q "\"username\" : \"$1\"" ; then
   echo "User $1 already exists."
@@ -31,7 +40,4 @@ else
   # set password for user
   sudo /opt/keycloak/bin/kcadm.sh set-password --target-realm isduba \
       --username $1 --new-password "$5"
-
-  # set role for user
-  # TODO: Add user to group
 fi
