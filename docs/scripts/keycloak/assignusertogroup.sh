@@ -31,8 +31,7 @@ fi
 
 sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$KEYCLOAK_ADMIN" --password "$KEYCLOAK_ADMIN_PASSWORD"
 
-# get user ID:
-# Get the ID from name
+# Get the user ID from name
 USRID=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/isduba/users?search=$1")
 IDU=(${USRID//,/ })
 declare -i COUNTERU=0
@@ -52,9 +51,7 @@ else
   IDUSR=${IDU[$RESULTU]:1:-1}
 fi
 
-
-# get group ID:
-# Get the ID from name
+# Get the group ID from name
 GRPID=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/isduba/groups?search=$2")
 IDG=(${GRPID//,/ })
 declare -i COUNTERG=0
