@@ -15,6 +15,7 @@
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   let error: string;
 
@@ -37,7 +38,7 @@
       const backendInfo = response.content;
       return backendInfo.version;
     } else if (response.error) {
-      error = response.error;
+      error = getErrorMessage(response.error);
     }
   }
 
@@ -46,7 +47,7 @@
     if (response.ok) {
       return new Map<string, [string]>(Object.entries(response.content));
     } else if (response.error) {
-      error = response.error;
+      error = getErrorMessage(response.error);
     }
     return new Map<string, [string]>();
   }

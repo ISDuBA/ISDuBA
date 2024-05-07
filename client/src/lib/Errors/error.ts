@@ -8,12 +8,19 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
-const ERRORTYPES = {
-  GENERALERROR: "GENERALERROR",
-  SERVERERROR: "SERVERERROR",
-  CLIENTERROR: "CLIENTERROR",
-  AUTHORIZATIONERROR: "AUTHORIZATIONERROR",
-  PAYLOADERROR: "PAYLOADERROR"
+const contactAdmin = `Please contact an administrator.`;
+
+const ERRORMESSAGES: any = {
+  "500": `An error occured on the server. ${contactAdmin}`,
+  "400": ``,
+  "401": `You are not allowed to do this. ${contactAdmin}`,
+  "783": `The response from the server is not parsable. ${contactAdmin}`
 };
 
-export { ERRORTYPES };
+const getErrorMessage = (code: string) => {
+  const standardmessage = `A general error occured. ${contactAdmin}`;
+  if (ERRORMESSAGES[code]) return ERRORMESSAGES[code];
+  return standardmessage;
+};
+
+export { getErrorMessage };

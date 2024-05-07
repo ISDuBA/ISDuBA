@@ -11,13 +11,13 @@
 import { appStore } from "./store";
 import { push } from "svelte-spa-router";
 import type { User } from "oidc-client-ts";
-import { ERRORTYPES } from "./Errors/error";
+import type { HttpResponse } from "./types";
 
 export const request = async (
   path: string,
   requestMethod: string,
   formData?: FormData
-): Promise<any> => {
+): Promise<HttpResponse> => {
   try {
     const token = await getAccessToken();
     const response = await fetch(path, {
@@ -39,7 +39,7 @@ export const request = async (
       }
     } else {
       if (response.status == 400) {
-        return { error: `${response.status}`, errorType: ERRORTYPES.CLIENTERROR };
+        return { error: `${response.status}`, content: response.statusText, ok: false };
       }
       if (response.status == 401) {
         appStore.setSessionExpired(true);
@@ -47,31 +47,30 @@ export const request = async (
         await push("/login");
       }
       if (response.status == 402) {
-        return { error: `${response.status}`, errorType: ERRORTYPES.AUTHORIZATIONERROR };
+        return { error: `${response.status}`, content: response.statusText, ok: false };
       }
       if (response.status == 500) {
-        return { error: `${response.status}`, errorType: ERRORTYPES.SERVERERROR };
+        return { error: `${response.status}`, content: response.statusText, ok: false };
       }
       if (contentType && isJson) {
         const json = await response.json();
         return {
-          error: `${json.error ?? json.message}`,
-          ok: false,
-          errorType: ERRORTYPES.PAYLOADERROR
+          error: "783", // Used by Shopify to indicate that the request includes a JSON syntax error. See https://shopify.dev/docs/api/usage/response-codes
+          content: `${json.error ?? json.message}`,
+          ok: false
         };
       } else {
         return {
-          error: `${response.status}: ${response.statusText}`,
-          ok: false,
-          errorType: ERRORTYPES.GENERALERROR
+          error: `${response.status}`,
+          content: response.statusText,
+          ok: false
         };
       }
     }
   } catch (error: any) {
     return {
       error: `${error.name}: ${error.message}`,
-      ok: false,
-      errorType: ERRORTYPES.GENERALERROR
+      ok: false
     };
   }
 };

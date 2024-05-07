@@ -32,6 +32,7 @@
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   let openRow: number | null;
 
@@ -132,7 +133,7 @@
       ({ count, documents } = response.content);
       documents = calcSSVC(documents);
     } else if (response.error) {
-      error = response.error;
+      error = getErrorMessage(response.error);
     }
     loading = false;
   };
