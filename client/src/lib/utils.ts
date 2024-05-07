@@ -9,15 +9,22 @@
  */
 
 import { appStore } from "./store";
-import { type HttpResponse } from "./types";
 import { push } from "svelte-spa-router";
 import type { User } from "oidc-client-ts";
+
+const ERRORTYPES = {
+  GENERALERROR: "GENERALERROR",
+  SERVERERROR: "SERVERERROR",
+  CLIENTERROR: "CLIENTERROR",
+  AUTHORIZATIONERROR: "AUTHORIZATIONERROR",
+  PAYLOADERROR: "PAYLOADERROR"
+};
 
 export const request = async (
   path: string,
   requestMethod: string,
   formData?: FormData
-): Promise<HttpResponse> => {
+): Promise<any> => {
   try {
     const token = await getAccessToken();
     const response = await fetch(path, {
@@ -38,20 +45,41 @@ export const request = async (
         return { content: text, ok: true };
       }
     } else {
+      if (response.status == 400) {
+        return { error: `${response.status}`, errorType: ERRORTYPES.CLIENTERROR };
+      }
       if (response.status == 401) {
         appStore.setSessionExpired(true);
         appStore.setSessionExpiredMessage("User unauthorized");
         await push("/login");
       }
+      if (response.status == 402) {
+        return { error: `${response.status}`, errorType: ERRORTYPES.AUTHORIZATIONERROR };
+      }
+      if (response.status == 500) {
+        return { error: `${response.status}`, errorType: ERRORTYPES.SERVERERROR };
+      }
       if (contentType && isJson) {
         const json = await response.json();
-        return { error: `${json.error ?? json.message}`, ok: false };
+        return {
+          error: `${json.error ?? json.message}`,
+          ok: false,
+          errorType: ERRORTYPES.PAYLOADERROR
+        };
       } else {
-        return { error: `${response.status}: ${response.statusText}`, ok: false };
+        return {
+          error: `${response.status}: ${response.statusText}`,
+          ok: false,
+          errorType: ERRORTYPES.GENERALERROR
+        };
       }
     }
   } catch (error: any) {
-    return { error: `${error.name}: ${error.message}`, ok: false };
+    return {
+      error: `${error.name}: ${error.message}`,
+      ok: false,
+      errorType: ERRORTYPES.GENERALERROR
+    };
   }
 };
 
