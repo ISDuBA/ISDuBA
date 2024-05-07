@@ -54,7 +54,8 @@ func (c *Controller) Bind() http.Handler {
 		authEdRe   = authRoles(models.Editor, models.Reviewer)
 		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
 		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
-		authAll    = authRoles(models.Editor, models.Reviewer, models.Admin, models.Auditor)
+		authAll    = authRoles(models.Admin, models.Importer, models.Editor,
+			models.Reviewer, models.Auditor)
 	)
 
 	api := r.Group("/api")
