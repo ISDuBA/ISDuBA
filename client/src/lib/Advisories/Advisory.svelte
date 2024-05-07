@@ -8,17 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import {
-    Button,
-    Label,
-    Timeline,
-    AccordionItem,
-    Accordion,
-    Badge,
-    Tooltip,
-    Dropdown,
-    DropdownItem
-  } from "flowbite-svelte";
+  import { Label, Timeline, AccordionItem, Accordion, Badge, Tooltip } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
@@ -35,13 +25,8 @@
     NEW,
     READ,
     REVIEW,
-    canSetStateArchived,
-    canSetStateAssessing,
-    canSetStateDeleted,
-    canSetStateNew,
     canSetStateRead,
-    canSetStateReview,
-    getAllowedWorkflowChanges
+    allowedToChangeWorkflow
   } from "$lib/permissions";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -232,6 +217,22 @@
     isDiffOpen = true;
   };
 
+  const updateStateIfAllowed = async (state: string) => {
+    if (allowedToChangeWorkflow(appStore.getRoles(), advisoryState, state)) {
+      await updateState(state);
+    }
+  };
+
+  const getBadgeColor = (state: string, currentState: string) => {
+    if (state === currentState) {
+      return "green";
+    } else if (allowedToChangeWorkflow(appStore.getRoles(), currentState, state)) {
+      return "primary";
+    } else {
+      return "dark";
+    }
+  };
+
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
       clearTimeout(id);
@@ -254,57 +255,62 @@
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
-        <Button
-          class="!p-1"
-          color="light"
-          disabled={getAllowedWorkflowChanges(advisoryState).length === 0}
-        >
-          <i class="bx bx-dots-vertical-rounded"></i>
-        </Button>
-        <Dropdown>
-          {#if canSetStateNew(advisoryState)}
-            <DropdownItem on:click={() => updateState(NEW)} class="flex items-center gap-2">
-              <i class="bx bx-star text-lg"></i>
-              <span>Mark as new</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateRead(advisoryState)}
-            <DropdownItem on:click={() => updateState(READ)} class="flex items-center gap-2">
-              <i class="bx bx-show text-lg"></i>
-              <span>Mark as read</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateReview(advisoryState)}
-            <DropdownItem on:click={() => updateState(REVIEW)} class="flex items-center gap-2">
-              <i class="bx bx-book-open text-lg"></i>
-              <span>Release for review</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateAssessing(advisoryState) && advisoryState === REVIEW}
-            <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
-              <i class="bx bx-analyse text-lg"></i>
-              <span>Back to assessing</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateArchived(advisoryState)}
-            <DropdownItem on:click={() => updateState(ARCHIVED)} class="flex items-center gap-2">
-              <i class="bx bx-archive text-lg"></i>
-              <span>Archive</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateDeleted(advisoryState)}
-            <DropdownItem on:click={() => updateState(DELETED)} class="flex items-center gap-2">
-              <i class="bx bx-trash text-lg"></i>
-              <span>Mark for deletion</span>
-            </DropdownItem>
-          {/if}
-        </Dropdown>
       </div>
       <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
       <div class="flex gap-2">
         {#if advisoryState}
-          <Badge class="w-fit">{advisoryState}</Badge>
-          <Tooltip>Workflow state</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(NEW)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(NEW, advisoryState)}>{NEW}</Badge>
+          </a>
+          <Tooltip>Mark as new</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(READ)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(READ, advisoryState)}>{READ}</Badge>
+          </a>
+          <Tooltip>Mark as read</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(ASSESSING)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(ASSESSING, advisoryState)}>{ASSESSING}</Badge>
+          </a>
+          <Tooltip>Back to assessing</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(REVIEW)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(REVIEW, advisoryState)}>{REVIEW}</Badge>
+          </a>
+          <Tooltip>Release for review</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(ARCHIVED)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}>{ARCHIVED}</Badge>
+          </a>
+          <Tooltip>Archive</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(DELETED)}
+          >
+            <Badge
+              on:click={() => updateState(DELETED)}
+              class="w-fit"
+              color={getBadgeColor(DELETED, advisoryState)}>{DELETED}</Badge
+            >
+          </a>
+          <Tooltip>Mark for deletion</Tooltip>
         {/if}
         {#if ssvc}
           <Badge style={ssvcStyle}>{ssvc.label}</Badge>
@@ -328,46 +334,6 @@
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
-      <div class="p-2">
-        {#if appStore.isEditor()}
-          <Button
-            on:click={() => {
-              if (advisoryState === NEW) {
-                updateState(READ);
-              } else {
-                updateState(NEW);
-              }
-            }}
-            disabled={!canSetStateNew(advisoryState) && !canSetStateRead(advisoryState)}
-          >
-            {#if advisoryState === NEW}
-              <i class="bx bx-show text-lg"></i>
-              <span>Mark as read</span>
-            {:else}
-              <i class="bx bx-star text-lg"></i>
-              <span>Mark as new</span>
-            {/if}
-          </Button>
-        {/if}
-        {#if appStore.isReviewer()}
-          <Button
-            on:click={() => updateState(ARCHIVED)}
-            disabled={!canSetStateArchived(advisoryState)}
-          >
-            <i class="bx bx-archive text-lg"></i>
-            <span>Archive</span>
-          </Button>
-        {/if}
-        {#if appStore.isReviewer() || appStore.isEditor()}
-          <Button
-            on:click={() => updateState(DELETED)}
-            disabled={!canSetStateDeleted(advisoryState)}
-          >
-            <i class="bx bx-trash text-lg"></i>
-            <span>Mark for deletion</span>
-          </Button>
-        {/if}
-      </div>
       <Accordion>
         <AccordionItem open>
           <span slot="header"
