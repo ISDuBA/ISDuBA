@@ -61,12 +61,12 @@ declare -i RESULTG=-1
 for j in "${IDG[@]}"
 do
   if [ "$j" = \"$2\" ]; then
-    RESULTG=$COUNTERG-3
+    if [[ "${IDG[$COUNTER-2]}" = "\"name\"" ]]; then
+      RESULTG=$COUNTERG-3
+    fi
   fi
 COUNTERG=$COUNTERG+1
 done
-
-fi
 
 if [ $RESULTG = -1 ]; then
   echo "Couldn't find group $2"

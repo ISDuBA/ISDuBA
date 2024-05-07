@@ -65,7 +65,9 @@ declare -i RESULT=-1
 for i in "${IDS[@]}"
 do
   if [ "$i" = "\"$1\"" ]; then
-    RESULT=$COUNTER-3
+    if [[ "${IDS[$COUNTER-2]}" = "\"name\"" ]]; then
+      RESULT=$COUNTER-3
+    fi
   fi
 COUNTER=$COUNTER+1
 done
