@@ -45,7 +45,7 @@
   } from "$lib/permissions";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   export let params: any = null;
 
   let document: any = {};

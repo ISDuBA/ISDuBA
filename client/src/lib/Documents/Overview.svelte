@@ -29,7 +29,7 @@
   } from "flowbite-svelte";
   import { publisher, tablePadding, tdClass, title } from "$lib/table/defaults";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
 
   let openRow: number | null;

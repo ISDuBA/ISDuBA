@@ -25,7 +25,7 @@
   import { onMount } from "svelte";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/utils";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
   let limit = 10;
   let offset = 0;

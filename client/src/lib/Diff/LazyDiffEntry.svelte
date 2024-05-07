@@ -11,7 +11,7 @@
 <script lang="ts">
   import { request } from "$lib/utils";
   import DiffEntry from "./DiffEntry.svelte";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { Button } from "flowbite-svelte";
 
   export let operation: string;

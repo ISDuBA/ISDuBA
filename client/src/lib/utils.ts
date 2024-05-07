@@ -11,14 +11,7 @@
 import { appStore } from "./store";
 import { push } from "svelte-spa-router";
 import type { User } from "oidc-client-ts";
-
-const ERRORTYPES = {
-  GENERALERROR: "GENERALERROR",
-  SERVERERROR: "SERVERERROR",
-  CLIENTERROR: "CLIENTERROR",
-  AUTHORIZATIONERROR: "AUTHORIZATIONERROR",
-  PAYLOADERROR: "PAYLOADERROR"
-};
+import { ERRORTYPES } from "./Errors/error";
 
 export const request = async (
   path: string,
