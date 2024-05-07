@@ -62,7 +62,7 @@ declare -i RESULTG=-1
 for j in "${IDG[@]}"
 do
   if [ "$j" = \"$2\" ]; then
-    if [[ "${IDG[$COUNTER-2]}" = "\"name\"" ]]; then
+    if [[ "${IDG[$COUNTERG-2]}" = "\"name\"" ]]; then
       RESULTG=$COUNTERG-3
     fi
   fi
