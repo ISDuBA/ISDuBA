@@ -23,13 +23,13 @@ if ! [[ -z "$3" ]]; then
     publisher="$3"
 fi
 if [ "$2" = "1" ]; then
-    tlp="\"TLP\" : [ \"[{\\\"$publisher\\\": [\\\"WHITE\\\"]}]\" ]"
+    tlp="\"TLP\" : [ \"{\\\"$publisher\\\": [\\\"WHITE\\\"]}\" ]"
 fi
 if [ "$2" = "2" ]; then
-    tlp="\"TLP\" : [ \"[{\\\"$publisher\\\": [\\\"GREEN\\\"]}]\" ]"
+    tlp="\"TLP\" : [ \"{\\\"$publisher\\\": [\\\"GREEN\\\"]}\" ]"
 fi
 if [ "$2" = "3" ]; then
-    tlp="\"TLP\" : [ \"[{\\\"$publisher\\\": [\\\"WHITE\\\", \\\"GREEN\\\"]}]\" ]"
+    tlp="\"TLP\" : [ \"{\\\"$publisher\\\": [\\\"WHITE\\\", \\\"GREEN\\\"]}\" ]"
 fi
 
 # This will work if the standard or custom has been set in env. If neither, this will fail.
