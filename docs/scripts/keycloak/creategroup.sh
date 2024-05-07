@@ -60,7 +60,18 @@ fi
 # Get the ID from name
 GRP=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/isduba/groups?search=$1")
 IDS=(${GRP//,/ })
-ID=${IDS[4]:1:-1}
+declare -i COUNTER=0
+declare -i RESULT=-1
+for i in "${IDS[@]}"
+do
+  if [ "$i" = "\"$1\"" ]; then
+    RESULT=$COUNTER-3
+   # or do whatever with individual element of the array
+  fi
+COUNTER=$COUNTER+1
+done
+
+ID=${IDS[$RESULT]:1:-1}
 
 if [ "$tlp" != "" ]; then
   if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms/isduba/groups' | grep -F -q "\"name\" : \"$1\"", ; then
