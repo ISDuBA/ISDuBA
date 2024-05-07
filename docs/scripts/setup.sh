@@ -18,7 +18,7 @@ set -e # to exit if a command in the script fails
 
 ./installkeycloak.sh # installs keycloak
 
-./keycloak/configurekeycloak.sh # configures keycloak
+./keycloak/configureKeycloak.sh # configures keycloak
 
 ./installplaywright.sh # prepare frontend
 
