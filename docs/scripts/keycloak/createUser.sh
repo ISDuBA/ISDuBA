@@ -10,6 +10,14 @@
 
 set -e # to exit if a command in the script fails
 
+# arguments:
+# $1: Username
+# $2: First name
+# $3: Last name
+# $4: E-Mail Adress
+# $5: Password
+
+
 # This will work if the standard or custom has been set in env. If neither, this will fail.
 if [[ -z "${KEYCLOAK_ADMIN}" ]]; then
   export KEYCLOAK_ADMIN="keycloak"
