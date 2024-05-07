@@ -49,7 +49,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	where, replacements, _ := expr.Where()
 
 	type event struct {
-		Event      models.Event    `json:"event"`
+		Event      models.Event    `json:"event_type"`
 		State      models.Workflow `json:"state"`
 		Time       time.Time       `json:"time"`
 		Actor      *string         `json:"actor"`

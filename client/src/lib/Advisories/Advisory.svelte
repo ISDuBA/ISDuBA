@@ -31,6 +31,7 @@
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import Event from "$lib/Advisories/Event.svelte";
   export let params: any = null;
 
   let document: any = {};
@@ -40,7 +41,9 @@
     : "";
   let comment: string = "";
   let comments: any = [];
+  let events: any = [];
   let loadCommentsError: string;
+  let loadEventsError: string;
   let createCommentError: string;
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
@@ -108,6 +111,29 @@
     }
   };
 
+  function loadEvents(): Promise<any[]> {
+    return new Promise((resolve) => {
+      const newEvents: any = [];
+      loadEventsError = "";
+      advisoryVersions.forEach(async (advVer: any) => {
+        const response = await request(`/api/events/${advVer.id}`, "GET");
+        if (response.ok) {
+          const loadedEvents = response.content;
+          if (loadedEvents) {
+            loadedEvents.forEach((c: any) => {
+              c.documentVersion = advisoryVersionByDocumentID[c.document_id];
+            });
+            newEvents.push(...loadedEvents);
+          }
+          events = newEvents;
+          resolve(newEvents);
+        } else if (response.error) {
+          loadEventsError = response.error;
+        }
+      });
+    });
+  }
+
   function loadComments(): Promise<any[]> {
     return new Promise((resolve) => {
       const newComments: any = [];
@@ -145,6 +171,7 @@
     } else if (response.error) {
       createCommentError = response.error;
     }
+    await loadEvents();
   }
 
   async function sendForReview() {
@@ -164,6 +191,7 @@
     } else if (response.error) {
       appStore.displayErrorMessage(response.error);
     }
+    await loadEvents();
   }
 
   const loadAdvisoryState = async () => {
@@ -186,6 +214,7 @@
     await loadAdvisoryVersions();
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
       await loadComments();
+      await loadEvents();
     }
     const state = await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
@@ -343,7 +372,7 @@
             <div class="max-h-96 overflow-y-auto pl-2">
               <Timeline class="mb-4 flex flex-col-reverse">
                 {#each comments as comment (comment.id)}
-                  <Comment {comment}></Comment>
+                  <Comment on:commentUpdate={loadEvents} {comment}></Comment>
                 {/each}
               </Timeline>
             </div>
@@ -365,6 +394,25 @@
               ></CommentTextArea>
             </div>
           {/if}
+        </AccordionItem>
+      </Accordion>
+      <Accordion class="mt-3">
+        <AccordionItem open>
+          <span slot="header"
+            ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
+          >
+          {#if events?.length > 0}
+            <div class="max-h-96 overflow-y-auto pl-2">
+              <Timeline class="mb-4 flex flex-col-reverse">
+                {#each events as event}
+                  <Event {event}></Event>
+                {/each}
+              </Timeline>
+            </div>
+          {:else}
+            <div class="mb-6 text-gray-600">No events available.</div>
+          {/if}
+          <ErrorMessage message={loadEventsError}></ErrorMessage>
         </AccordionItem>
       </Accordion>
       <Accordion class="mt-3">
