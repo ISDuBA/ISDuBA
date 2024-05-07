@@ -17,6 +17,7 @@
 
 <div class="my-2">
   {#if message && message.length > 0}
-    <Message dismissable={false} error={{ type: MESSAGE.ERROR, message: message }}></Message>
+    <Message dismissable={true} autoclose={false} error={{ type: MESSAGE.ERROR, message: message }}
+    ></Message>
   {/if}
 </div>
