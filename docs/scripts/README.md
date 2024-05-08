@@ -17,7 +17,8 @@ The following scripts exist:
 This script will install git if needed and download the ISDuBA repository in the current directory unless it already exists, in which case it will update it.
 Then it will call the setup.sh script that calls all other scripts to set up a testing environment.
 
-``` Usage: installall.sh [--help] [branch name]
+``` 
+ Usage: installall.sh [--help] [branch name]
  where:
   --help       show this help text
   branch name  set up ISDuBA on the 'branch name' branch instead of main
@@ -55,7 +56,8 @@ This script configures a PostgreSQL for use with Keycloak.
 <!---
  TODO: either needs to be expanded to cover all TLP levels and utilizing proper flags, or needs to be reworked
 -->
-``` Usage: createGroup name [tlp] [publisher]
+``` 
+ Usage: createGroup name [tlp] [publisher]
  where tlp:
   1 - Group will only be able to see TLP WHITE advisories (default) 
   2 - Group will only be able to see TLP GREEN advisories
@@ -66,15 +68,18 @@ This script configures a PostgreSQL for use with Keycloak.
 ```
 ### keycloak/createRole.sh
 
-``` Usage: createRole name description
+```
+ Usage: createRole name description
  where name: name of the role
  description: description of the role
 ```
 ### keycloak/createUser.sh
- ```Usage: createUser.sh username first_name last_name e-mail-adress password
+```
+Usage: createUser.sh username first_name last_name e-mail-adress password
 ```
 ### keycloak/assignUserToRoleAndGroup.sh
- ```Usage: assignUserToRoleAndGroup.sh username groupname rolename
+```
+Usage: assignUserToRoleAndGroup.sh username groupname rolename
 ```
 ### installplaywright.sh
   This script installs node, the npm dependencies and playwright for the client.
