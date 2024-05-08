@@ -40,15 +40,15 @@ type migration struct {
 
 // CheckMigrations checks if the version of the database matches
 // migration level of the application.
-func CheckMigrations(ctx context.Context, cfg *config.Database) error {
+func CheckMigrations(ctx context.Context, cfg *config.Database) (bool, error) {
 
 	migs, err := listMigrations()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if len(migs) == 0 {
-		return errors.New("no migrations found")
+		return false, errors.New("no migrations found")
 	}
 
 	checkVersion := func() (int64, error) {
@@ -73,10 +73,10 @@ func CheckMigrations(ctx context.Context, cfg *config.Database) error {
 	}
 	version, err := checkVersion()
 	if err == nil {
-		return nil
+		return false, nil
 	}
 	if !cfg.Migrate {
-		return fmt.Errorf(
+		return true, fmt.Errorf(
 			"database version check failed. Maybe starting a migration helps? %w", err)
 	}
 	slog.Warn("Migration needed", "err", err)
@@ -89,7 +89,7 @@ func doMigrations(
 	cfg *config.Database,
 	version int64,
 	migs []migration,
-) error {
+) (bool, error) {
 	if err := func() error {
 		slog.InfoContext(ctx, "admin url", "url", cfg.AdminURL())
 		conn, err := pgx.Connect(ctx, cfg.AdminURL())
@@ -102,12 +102,12 @@ func doMigrations(
 		}
 		return createDatabase(ctx, conn, cfg)
 	}(); err != nil {
-		return err
+		return true, err
 	}
 
 	conn, err := pgx.Connect(ctx, cfg.AdminUserURL())
 	if err != nil {
-		return err
+		return true, err
 	}
 	defer conn.Close(ctx)
 
@@ -125,15 +125,15 @@ func doMigrations(
 		}
 		data, err := migrations.ReadFile(mig.path)
 		if err != nil {
-			return fmt.Errorf("loading migration %q failed: %w", mig.path, err)
+			return true, fmt.Errorf("loading migration %q failed: %w", mig.path, err)
 		}
 		tmpl, err := template.New("sql").Funcs(funcs).Parse(string(data))
 		if err != nil {
-			return fmt.Errorf("parsing migration %q failed: %w", mig.path, err)
+			return true, fmt.Errorf("parsing migration %q failed: %w", mig.path, err)
 		}
 		var script bytes.Buffer
 		if err := tmpl.Execute(&script, cfg); err != nil {
-			return fmt.Errorf("templating migration %q failed: %w", mig.path, err)
+			return true, fmt.Errorf("templating migration %q failed: %w", mig.path, err)
 		}
 		const insertVersion = `INSERT INTO versions (version, description) VALUES ($1, $2)`
 		if err := func() error {
@@ -156,11 +156,11 @@ func doMigrations(
 			}
 			return tx.Commit(ctx)
 		}(); err != nil {
-			return fmt.Errorf("applying migration %q failed: %w", mig.path, err)
+			return true, fmt.Errorf("applying migration %q failed: %w", mig.path, err)
 		}
 	}
 	slog.Info("Migrations are done and database is ready")
-	return nil
+	return cfg.TerminateAfterMigration, nil
 }
 
 func sqlQuote(s string) string {

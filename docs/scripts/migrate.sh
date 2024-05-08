@@ -13,18 +13,4 @@ set -e # to exit if a command in the script fails
 # migrate
 ISDUBA_DB_MIGRATE=true ./../../cmd/isdubad/isdubad -c ../../isdubad.toml &
 
-touch isduba.log # to ensure file exists for grep
-until grep -q -F "Starting web server" isduba.log
-do
-  sleep 1
-done
-
-mv isduba.log isduba_migrate.log
-
-if ps -p $!; then
-  echo "Migration successful"
-  kill $!
-else
- echo "Couldn't start migration, is isduba already running?"
-fi
-
+mv -f isduba.log isduba_migrate.log

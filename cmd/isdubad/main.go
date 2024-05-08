@@ -38,8 +38,12 @@ func run(cfg *config.Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGKILL)
 	defer stop()
 
-	if err := database.CheckMigrations(ctx, &cfg.Database); err != nil {
-		return err
+	terminate, err := database.CheckMigrations(ctx, &cfg.Database)
+	if err != nil {
+		return fmt.Errorf("migrating failed: %w", err)
+	}
+	if terminate {
+		return nil
 	}
 	db, err := database.NewDB(ctx, &cfg.Database)
 	if err != nil {
