@@ -99,8 +99,7 @@
   };
 </script>
 
-<div class="my-2">
-  <Label class="mb-1">Versions</Label>
+<div class="mb-2 flex flex-row items-center gap-4">
   <div class="flex items-center">
     <div class="flex">
       <div class="me-2 flex flex-row flex-wrap gap-2">
@@ -119,6 +118,7 @@
                   selectDiffDocument(index);
                 }}
                 outline
+                title={`Version ${version.version}`}
               >
                 {version.version}
               </Button>
@@ -158,6 +158,7 @@
                 navigateToVersion(version);
               }}
               color="light"
+              title={`Version ${version.version}`}
             >
               {version.version}
             </Button>
