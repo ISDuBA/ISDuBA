@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { Button, Label } from "flowbite-svelte";
+  import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   export let advisoryVersions: any;
