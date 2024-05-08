@@ -32,6 +32,7 @@
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Event from "$lib/Advisories/Event.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
   export let params: any = null;
 
   let document: any = {};
@@ -44,7 +45,10 @@
   let events: any = [];
   let loadCommentsError: string;
   let loadEventsError: string;
+  let loadAdvisoryVersionsError: string;
+  let loadDocumentError: string;
   let createCommentError: string;
+  let loadDocumentSSVCError: string;
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
@@ -80,7 +84,7 @@
         return acc;
       }, {});
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      loadAdvisoryVersionsError = `Could not load versions. ${getErrorMessage(response.error)}`;
     }
   };
 
@@ -92,7 +96,7 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      loadDocumentError = `Could not load document. ${getErrorMessage(response.error)}`;
     }
   };
 
@@ -107,7 +111,7 @@
         ssvc = convertVectorToLabel(result.documents[0].ssvc);
       }
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      loadDocumentSSVCError = `Could not load SSVC. ${getErrorMessage(response.error)}`;
     }
   };
 
@@ -167,9 +171,8 @@
           loadAdvisoryState();
         }
       });
-      appStore.displaySuccessMessage("Comment for advisory saved.");
     } else if (response.error) {
-      createCommentError = response.error;
+      createCommentError = `Could not create comment. ${getErrorMessage(response.error)}`;
     }
     await loadEvents();
   }
@@ -347,19 +350,23 @@
         {/if}
       </div>
     </div>
-    <Version
-      publisherNamespace={params.publisherNamespace}
-      trackingID={params.trackingID}
-      {advisoryVersions}
-      selectedDocumentVersion={document.tracking?.version}
-      on:selectedDiffDocuments={onSelectedDiffDocuments}
-      on:disableDiff={() => (isDiffOpen = false)}
-    ></Version>
+    <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
+    {#if advisoryVersions.length > 0}
+      <Version
+        publisherNamespace={params.publisherNamespace}
+        trackingID={params.trackingID}
+        {advisoryVersions}
+        selectedDocumentVersion={document.tracking?.version}
+        on:selectedDiffDocuments={onSelectedDiffDocuments}
+        on:disableDiff={() => (isDiffOpen = false)}
+      ></Version>
+    {/if}
     {#if isDiffOpen}
       <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
     {:else}
       <Webview></Webview>
     {/if}
+    <ErrorMessage message={loadDocumentError}></ErrorMessage>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
@@ -418,6 +425,7 @@
       <Accordion class="mt-3">
         <AccordionItem open>
           <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
+          <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
           <SsvcCalculator
             vectorInput={ssvc?.vector}
             disabled={!isCalculatingAllowed}
