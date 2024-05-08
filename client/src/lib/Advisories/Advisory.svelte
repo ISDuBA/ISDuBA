@@ -117,36 +117,36 @@
 
   const loadEvents = async () => {
     let loadedEvents: any = [];
-    try {
-      const result = await Promise.all(
-        advisoryVersions.map(async (v) => {
-          return request(`/api/events/${v.id}`, "GET");
-        })
-      );
-      result.forEach((c) => {
-        loadedEvents = loadedEvents.concat(c.content);
-      });
-      events = loadedEvents;
-    } catch (error) {
-      loadEventsError = `Could not load all Events.`;
-    }
+    const result = await Promise.all(
+      advisoryVersions.map(async (v) => {
+        return request(`/api/events/${v.id}`, "GET");
+      })
+    );
+    result.forEach((e) => {
+      if (e.content !== "undefined") {
+        loadedEvents = loadedEvents.concat(e.content);
+      } else {
+        loadEventsError = `Could not load all events.`;
+      }
+    });
+    events = loadedEvents;
   };
 
   const loadComments = async () => {
     let loadedComments: any = [];
-    try {
-      const result = await Promise.all(
-        advisoryVersions.map(async (v) => {
-          return request(`/api/comments/${v.id}`, "GET");
-        })
-      );
-      result.forEach((c) => {
+    const result = await Promise.all(
+      advisoryVersions.map(async (v) => {
+        return request(`/api/comments/${v.id}`, "GET");
+      })
+    );
+    result.forEach((c) => {
+      if (c.content !== "undefined") {
         loadedComments = loadedComments.concat(c.content);
-      });
-      comments = loadedComments;
-    } catch (error) {
-      loadCommentsError = `Could not load all Comments.`;
-    }
+      } else {
+        loadCommentsError = `Could not load all comments.`;
+      }
+    });
+    comments = loadedComments;
   };
 
   async function createComment() {
