@@ -95,4 +95,4 @@ This script starts backend and frontend in the background, avaible on localhost 
 
 
 ## Filling the database
-The bulkimporter set up via ```installisduba.sh``` can be used to import documents.
+The bulkimporter set up via [installisduba.sh](https://github.com/ISDuBA/ISDuBA/blob/groups_not_roles_scripts/docs/scripts/README.md#installisdubash) can be used to import documents.
