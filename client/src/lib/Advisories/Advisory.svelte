@@ -115,62 +115,48 @@
     }
   };
 
-  function loadEvents(): Promise<any[]> {
-    return new Promise((resolve) => {
-      const newEvents: any = [];
-      loadEventsError = "";
-      advisoryVersions.forEach(async (advVer: any) => {
-        const response = await request(`/api/events/${advVer.id}`, "GET");
-        if (response.ok) {
-          const loadedEvents = response.content;
-          if (loadedEvents) {
-            loadedEvents.forEach((c: any) => {
-              c.documentVersion = advisoryVersionByDocumentID[c.document_id];
-            });
-            newEvents.push(...loadedEvents);
-          }
-          events = newEvents;
-          resolve(newEvents);
-        } else if (response.error) {
-          loadEventsError = response.error;
-        }
+  const loadEvents = async () => {
+    let loadedEvents: any = [];
+    try {
+      const result = await Promise.all(
+        advisoryVersions.map(async (v) => {
+          return request(`/api/events/${v.id}`, "GET");
+        })
+      );
+      result.forEach((c) => {
+        loadedEvents = loadedEvents.concat(c.content);
       });
-    });
-  }
+      events = loadedEvents;
+    } catch (error) {
+      loadEventsError = `Could not load all Events.`;
+    }
+  };
 
-  function loadComments(): Promise<any[]> {
-    return new Promise((resolve) => {
-      const newComments: any = [];
-      loadCommentsError = "";
-      advisoryVersions.forEach(async (advVer: any) => {
-        const response = await request(`/api/comments/${advVer.id}`, "GET");
-        if (response.ok) {
-          const loadedComments = response.content;
-          if (loadedComments) {
-            loadedComments.forEach((c: any) => {
-              c.documentVersion = advisoryVersionByDocumentID[c.document_id];
-            });
-            newComments.push(...loadedComments);
-          }
-          comments = newComments;
-          resolve(newComments);
-        } else if (response.error) {
-          loadCommentsError = response.error;
-        }
+  const loadComments = async () => {
+    let loadedComments: any = [];
+    try {
+      const result = await Promise.all(
+        advisoryVersions.map(async (v) => {
+          return request(`/api/comments/${v.id}`, "GET");
+        })
+      );
+      result.forEach((c) => {
+        loadedComments = loadedComments.concat(c.content);
       });
-    });
-  }
+      comments = loadedComments;
+    } catch (error) {
+      loadCommentsError = `Could not load all Comments.`;
+    }
+  };
+
   async function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
     const response = await request(`/api/comments/${params.id}`, "POST", formData);
     if (response.ok) {
       comment = "";
-      loadComments().then((newComments: any[]) => {
-        if (newComments.length === 1) {
-          loadAdvisoryState();
-        }
-      });
+      await loadComments();
+      await loadAdvisoryState();
     } else if (response.error) {
       createCommentError = `Could not create comment. ${getErrorMessage(response.error)}`;
     }
@@ -236,9 +222,9 @@
     }
   };
 
-  function loadMetaData() {
-    loadAdvisoryState();
-    loadDocumentSSVC();
+  async function loadMetaData() {
+    await loadAdvisoryState();
+    await loadDocumentSSVC();
   }
 
   const onSelectedDiffDocuments = async (event: any) => {
