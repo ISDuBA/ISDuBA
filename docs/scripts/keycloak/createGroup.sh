@@ -17,7 +17,7 @@ set -e # to exit if a command in the script fails
 
 
 # Simplified tlp chooser
-tlp=""
+tlp="\"TLP\" : [ \"{\\\"*\\\": [\\\"WHITE\\\"]}\" ]"
 publisher="*"
 if ! [[ -z "$3" ]]; then
     publisher="$3"
