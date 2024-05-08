@@ -73,6 +73,9 @@ func CheckMigrations(ctx context.Context, cfg *config.Database) (bool, error) {
 	}
 	version, err := checkVersion()
 	if err == nil {
+		if cfg.Migrate {
+			return cfg.TerminateAfterMigration, nil
+		}
 		return false, nil
 	}
 	if !cfg.Migrate {
