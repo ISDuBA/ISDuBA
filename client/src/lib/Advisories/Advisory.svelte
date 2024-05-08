@@ -282,53 +282,62 @@
             class="inline-flex"
             on:click={() => updateStateIfAllowed(NEW)}
           >
-            <Badge class="w-fit" color={getBadgeColor(NEW, advisoryState)}>{NEW}</Badge>
+            <Badge title="Mark as new" class="w-fit" color={getBadgeColor(NEW, advisoryState)}
+              >{NEW}</Badge
+            >
           </a>
-          <Tooltip>Mark as new</Tooltip>
           <a
             href={"javascript:void(0);"}
             class="inline-flex"
             on:click={() => updateStateIfAllowed(READ)}
           >
-            <Badge class="w-fit" color={getBadgeColor(READ, advisoryState)}>{READ}</Badge>
+            <Badge title="Mark as read" class="w-fit" color={getBadgeColor(READ, advisoryState)}
+              >{READ}</Badge
+            >
           </a>
-          <Tooltip>Mark as read</Tooltip>
           <a
             href={"javascript:void(0);"}
             class="inline-flex"
             on:click={() => updateStateIfAllowed(ASSESSING)}
           >
-            <Badge class="w-fit" color={getBadgeColor(ASSESSING, advisoryState)}>{ASSESSING}</Badge>
+            <Badge
+              title="Mark as assesing"
+              class="w-fit"
+              color={getBadgeColor(ASSESSING, advisoryState)}>{ASSESSING}</Badge
+            >
           </a>
-          <Tooltip>Back to assessing</Tooltip>
           <a
             href={"javascript:void(0);"}
             class="inline-flex"
             on:click={() => updateStateIfAllowed(REVIEW)}
           >
-            <Badge class="w-fit" color={getBadgeColor(REVIEW, advisoryState)}>{REVIEW}</Badge>
+            <Badge
+              title="Release for review"
+              class="w-fit"
+              color={getBadgeColor(REVIEW, advisoryState)}>{REVIEW}</Badge
+            >
           </a>
-          <Tooltip>Release for review</Tooltip>
           <a
             href={"javascript:void(0);"}
             class="inline-flex"
             on:click={() => updateStateIfAllowed(ARCHIVED)}
           >
-            <Badge class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}>{ARCHIVED}</Badge>
+            <Badge title="Archive" class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}
+              >{ARCHIVED}</Badge
+            >
           </a>
-          <Tooltip>Archive</Tooltip>
           <a
             href={"javascript:void(0);"}
             class="inline-flex"
             on:click={() => updateStateIfAllowed(DELETED)}
           >
             <Badge
+              title="Mark for deletion"
               on:click={() => updateState(DELETED)}
               class="w-fit"
               color={getBadgeColor(DELETED, advisoryState)}>{DELETED}</Badge
             >
           </a>
-          <Tooltip>Mark for deletion</Tooltip>
         {/if}
         {#if ssvc}
           <Badge style={ssvcStyle}>{ssvc.label}</Badge>
