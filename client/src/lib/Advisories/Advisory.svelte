@@ -8,18 +8,8 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import {
-    Button,
-    Label,
-    Timeline,
-    AccordionItem,
-    Accordion,
-    Badge,
-    Tooltip,
-    Dropdown,
-    DropdownItem
-  } from "flowbite-svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { Label, Timeline, AccordionItem, Accordion, Badge, Tooltip } from "flowbite-svelte";
+  import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
@@ -35,17 +25,13 @@
     NEW,
     READ,
     REVIEW,
-    canSetStateArchived,
-    canSetStateAssessing,
-    canSetStateDeleted,
-    canSetStateNew,
     canSetStateRead,
-    canSetStateReview,
-    getAllowedWorkflowChanges
+    allowedToChangeWorkflow
   } from "$lib/permissions";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import Event from "$lib/Advisories/Event.svelte";
   export let params: any = null;
 
   let document: any = {};
@@ -55,7 +41,9 @@
     : "";
   let comment: string = "";
   let comments: any = [];
+  let events: any = [];
   let loadCommentsError: string;
+  let loadEventsError: string;
   let createCommentError: string;
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
@@ -123,6 +111,29 @@
     }
   };
 
+  function loadEvents(): Promise<any[]> {
+    return new Promise((resolve) => {
+      const newEvents: any = [];
+      loadEventsError = "";
+      advisoryVersions.forEach(async (advVer: any) => {
+        const response = await request(`/api/events/${advVer.id}`, "GET");
+        if (response.ok) {
+          const loadedEvents = response.content;
+          if (loadedEvents) {
+            loadedEvents.forEach((c: any) => {
+              c.documentVersion = advisoryVersionByDocumentID[c.document_id];
+            });
+            newEvents.push(...loadedEvents);
+          }
+          events = newEvents;
+          resolve(newEvents);
+        } else if (response.error) {
+          loadEventsError = response.error;
+        }
+      });
+    });
+  }
+
   function loadComments(): Promise<any[]> {
     return new Promise((resolve) => {
       const newComments: any = [];
@@ -160,6 +171,14 @@
     } else if (response.error) {
       createCommentError = response.error;
     }
+    await loadEvents();
+  }
+
+  async function sendForReview() {
+    if (comment.length !== 0) {
+      await createComment();
+    }
+    await updateState(REVIEW);
   }
 
   async function updateState(newState: string) {
@@ -172,6 +191,7 @@
     } else if (response.error) {
       appStore.displayErrorMessage(response.error);
     }
+    await loadEvents();
   }
 
   const loadAdvisoryState = async () => {
@@ -194,6 +214,7 @@
     await loadAdvisoryVersions();
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
       await loadComments();
+      await loadEvents();
     }
     const state = await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
@@ -203,8 +224,10 @@
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
       const id = setTimeout(async () => {
-        await updateState("read");
-        appStore.displayInfoMessage("This advisory is marked as read");
+        if (canSetStateRead(advisoryState)) {
+          await updateState(READ);
+          appStore.displayInfoMessage("This advisory is marked as read");
+        }
       }, 3000);
       timeoutIDs.push(id);
     }
@@ -223,17 +246,31 @@
     isDiffOpen = true;
   };
 
+  const updateStateIfAllowed = async (state: string) => {
+    if (allowedToChangeWorkflow(appStore.getRoles(), advisoryState, state)) {
+      await updateState(state);
+    }
+  };
+
+  const getBadgeColor = (state: string, currentState: string) => {
+    if (state === currentState) {
+      return "green";
+    } else if (allowedToChangeWorkflow(appStore.getRoles(), currentState, state)) {
+      return "primary";
+    } else {
+      return "dark";
+    }
+  };
+
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
       clearTimeout(id);
     });
   });
 
-  onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
-      await loadData();
-    }
-  });
+  $: if (params) {
+    loadData();
+  }
 </script>
 
 <svelte:head>
@@ -247,57 +284,62 @@
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
-        <Button
-          class="!p-1"
-          color="light"
-          disabled={getAllowedWorkflowChanges(advisoryState).length === 0}
-        >
-          <i class="bx bx-dots-vertical-rounded"></i>
-        </Button>
-        <Dropdown>
-          {#if canSetStateNew(advisoryState)}
-            <DropdownItem on:click={() => updateState(NEW)} class="flex items-center gap-2">
-              <i class="bx bx-star text-lg"></i>
-              <span>Mark as new</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateRead(advisoryState)}
-            <DropdownItem on:click={() => updateState(READ)} class="flex items-center gap-2">
-              <i class="bx bx-show text-lg"></i>
-              <span>Mark as read</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateReview(advisoryState)}
-            <DropdownItem on:click={() => updateState(REVIEW)} class="flex items-center gap-2">
-              <i class="bx bx-book-open text-lg"></i>
-              <span>Release for review</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateAssessing(advisoryState) && advisoryState === REVIEW}
-            <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
-              <i class="bx bx-analyse text-lg"></i>
-              <span>Back to assessing</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateArchived(advisoryState)}
-            <DropdownItem on:click={() => updateState(ARCHIVED)} class="flex items-center gap-2">
-              <i class="bx bx-archive text-lg"></i>
-              <span>Archive</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateDeleted(advisoryState)}
-            <DropdownItem on:click={() => updateState(DELETED)} class="flex items-center gap-2">
-              <i class="bx bx-trash text-lg"></i>
-              <span>Mark for deletion</span>
-            </DropdownItem>
-          {/if}
-        </Dropdown>
       </div>
       <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
       <div class="flex gap-2">
         {#if advisoryState}
-          <Badge class="w-fit">{advisoryState}</Badge>
-          <Tooltip>Workflow state</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(NEW)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(NEW, advisoryState)}>{NEW}</Badge>
+          </a>
+          <Tooltip>Mark as new</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(READ)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(READ, advisoryState)}>{READ}</Badge>
+          </a>
+          <Tooltip>Mark as read</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(ASSESSING)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(ASSESSING, advisoryState)}>{ASSESSING}</Badge>
+          </a>
+          <Tooltip>Back to assessing</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(REVIEW)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(REVIEW, advisoryState)}>{REVIEW}</Badge>
+          </a>
+          <Tooltip>Release for review</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(ARCHIVED)}
+          >
+            <Badge class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}>{ARCHIVED}</Badge>
+          </a>
+          <Tooltip>Archive</Tooltip>
+          <a
+            href={"javascript:void(0);"}
+            class="inline-flex"
+            on:click={() => updateStateIfAllowed(DELETED)}
+          >
+            <Badge
+              on:click={() => updateState(DELETED)}
+              class="w-fit"
+              color={getBadgeColor(DELETED, advisoryState)}>{DELETED}</Badge
+            >
+          </a>
+          <Tooltip>Mark for deletion</Tooltip>
         {/if}
         {#if ssvc}
           <Badge style={ssvcStyle}>{ssvc.label}</Badge>
@@ -330,7 +372,7 @@
             <div class="max-h-96 overflow-y-auto pl-2">
               <Timeline class="mb-4 flex flex-col-reverse">
                 {#each comments as comment (comment.id)}
-                  <Comment {comment}></Comment>
+                  <Comment on:commentUpdate={loadEvents} {comment}></Comment>
                 {/each}
               </Timeline>
             </div>
@@ -344,12 +386,33 @@
               <CommentTextArea
                 on:input={() => (createCommentError = "")}
                 on:saveComment={createComment}
+                on:saveForReview={sendForReview}
                 bind:value={comment}
                 errorMessage={createCommentError}
                 buttonText="Send"
+                state={advisoryState}
               ></CommentTextArea>
             </div>
           {/if}
+        </AccordionItem>
+      </Accordion>
+      <Accordion class="mt-3">
+        <AccordionItem open>
+          <span slot="header"
+            ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
+          >
+          {#if events?.length > 0}
+            <div class="max-h-96 overflow-y-auto pl-2">
+              <Timeline class="mb-4 flex flex-col-reverse">
+                {#each events as event}
+                  <Event {event}></Event>
+                {/each}
+              </Timeline>
+            </div>
+          {:else}
+            <div class="mb-6 text-gray-600">No events available.</div>
+          {/if}
+          <ErrorMessage message={loadEventsError}></ErrorMessage>
         </AccordionItem>
       </Accordion>
       <Accordion class="mt-3">

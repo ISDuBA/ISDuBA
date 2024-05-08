@@ -97,6 +97,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {
 			actor.String = commentator
+			actor.Valid = true
 		}
 
 		logEvent := func(event models.Event, state models.Workflow) error {
@@ -160,7 +161,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	case !commentingAllowed:
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid state to comment"})
 	case forbidden:
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not allowed to change state"})
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "user not allowed to change state"})
 	default:
 		ctx.JSON(http.StatusCreated, gin.H{
 			"id":          commentID,
@@ -219,6 +220,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {
 			actor.String = commentator
+			actor.Valid = true
 		}
 		if _, err := tx.Exec(rctx, eventSQL, now, actor, docID); err != nil {
 			return err

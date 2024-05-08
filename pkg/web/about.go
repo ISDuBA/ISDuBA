@@ -19,3 +19,8 @@ import (
 func (c *Controller) about(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"version": version.SemVersion})
 }
+
+// view Returns the publisher and tlp levels that are visible.
+func (c *Controller) view(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, c.tlps(ctx))
+}

@@ -9,9 +9,9 @@
  */
 
 import { appStore } from "./store";
-import { type HttpResponse } from "./types";
 import { push } from "svelte-spa-router";
 import type { User } from "oidc-client-ts";
+import type { HttpResponse } from "./types";
 
 export const request = async (
   path: string,
@@ -38,20 +38,40 @@ export const request = async (
         return { content: text, ok: true };
       }
     } else {
+      if (response.status == 400) {
+        return { error: `${response.status}`, content: response.statusText, ok: false };
+      }
       if (response.status == 401) {
         appStore.setSessionExpired(true);
         appStore.setSessionExpiredMessage("User unauthorized");
         await push("/login");
       }
+      if (response.status == 402) {
+        return { error: `${response.status}`, content: response.statusText, ok: false };
+      }
+      if (response.status == 500) {
+        return { error: `${response.status}`, content: response.statusText, ok: false };
+      }
       if (contentType && isJson) {
         const json = await response.json();
-        return { error: `${json.error ?? json.message}`, ok: false };
+        return {
+          error: "783", // Used by Shopify to indicate that the request includes a JSON syntax error. See https://shopify.dev/docs/api/usage/response-codes
+          content: `${json.error ?? json.message}`,
+          ok: false
+        };
       } else {
-        return { error: `${response.status}: ${response.statusText}`, ok: false };
+        return {
+          error: `${response.status}`,
+          content: response.statusText,
+          ok: false
+        };
       }
     }
   } catch (error: any) {
-    return { error: `${error.name}: ${error.message}`, ok: false };
+    return {
+      error: `${error.name}: ${error.message}`,
+      ok: false
+    };
   }
 };
 

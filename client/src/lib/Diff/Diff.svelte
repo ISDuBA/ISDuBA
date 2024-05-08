@@ -13,7 +13,7 @@
   import { Diff2HtmlUI, type Diff2HtmlUIConfig } from "diff2html/lib/ui/js/diff2html-ui-slim";
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
   import { ColorSchemeType } from "diff2html/lib/types";
 

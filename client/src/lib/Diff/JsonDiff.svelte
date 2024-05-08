@@ -14,7 +14,7 @@
   import type { JsonDiffResult } from "./JsonDiff";
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
   import { request } from "$lib/utils";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
   export let diffDocuments: any;
   export let title: string | undefined;
