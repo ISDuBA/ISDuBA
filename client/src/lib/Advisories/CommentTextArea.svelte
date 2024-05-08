@@ -11,7 +11,7 @@
 <script lang="ts">
   import { Button, Label, Textarea } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { canSetStateReview } from "$lib/permissions";
 
   export let value: string;

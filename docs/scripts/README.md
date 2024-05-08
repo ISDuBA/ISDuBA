@@ -28,7 +28,7 @@ To call installall (sudo privileges needed):
 Then, make installall executable, e.g. via chmod.
 After that:
 ```
-    installall.sh # branch_name (optional, using a nonexistent branch name will throw an error) 
+    ./installall.sh # branch_name (optional, using a nonexistent branch name will throw an error) 
 ```
 
 Finally, the bulkimporter can be used to import manually downloaded documents.

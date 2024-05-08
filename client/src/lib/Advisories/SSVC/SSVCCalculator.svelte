@@ -29,7 +29,7 @@
   import { createEventDispatcher, onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { request } from "$lib/utils";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
   const dispatch = createEventDispatcher();
 

@@ -9,9 +9,9 @@
  */
 
 import { appStore } from "./store";
-import { type HttpResponse } from "./types";
 import { push } from "svelte-spa-router";
 import type { User } from "oidc-client-ts";
+import type { HttpResponse } from "./types";
 
 export const request = async (
   path: string,
@@ -29,29 +29,48 @@ export const request = async (
     });
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
+    let json;
+    if (contentType && isJson) {
+      try {
+        json = await response.json();
+      } catch (_) {
+        return {
+          error: "783", // Used by Shopify to indicate that the request includes a JSON syntax error. See https://shopify.dev/docs/api/usage/response-codes
+          content: `${json.error}`,
+          ok: false
+        };
+      }
+    }
     if (response.ok) {
       if (contentType && isJson) {
-        const json = await response.json();
         return { content: json, ok: true };
       } else {
         const text = await response.text();
         return { content: text, ok: true };
       }
-    } else {
-      if (response.status == 401) {
-        appStore.setSessionExpired(true);
-        appStore.setSessionExpiredMessage("User unauthorized");
-        await push("/login");
-      }
-      if (contentType && isJson) {
-        const json = await response.json();
-        return { error: `${json.error ?? json.message}`, ok: false };
-      } else {
-        return { error: `${response.status}: ${response.statusText}`, ok: false };
-      }
     }
+    if (response.status == 401) {
+      appStore.setSessionExpired(true);
+      appStore.setSessionExpiredMessage("User unauthorized");
+      await push("/login");
+    }
+    if (contentType && isJson) {
+      return { error: `response.status`, content: json.message, ok: false };
+    }
+    switch (response.status) {
+      case 400:
+      case 402:
+      case 500:
+        return { error: `${response.status}`, content: response.statusText, ok: false };
+      default:
+      // do nothing and return later
+    }
+    return { error: `${response.status}`, content: response.statusText, ok: false };
   } catch (error: any) {
-    return { error: `${error.name}: ${error.message}`, ok: false };
+    return {
+      error: `${error.name}: ${error.message}`,
+      ok: false
+    };
   }
 };
 

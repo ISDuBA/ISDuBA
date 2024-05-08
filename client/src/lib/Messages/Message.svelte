@@ -18,6 +18,7 @@
   export let error: any = null;
   export let plain = false;
   export let dismissable = true;
+  export let autoclose = true;
   $: divClass = plain
     ? "w-full max-w-xs p-0 text-gray-500 bg-white dark:text-gray-400 dark:bg-gray-800 gap-3"
     : "w-full max-w-xs p-4 text-gray-500 bg-white shadow dark:text-gray-400 dark:bg-gray-800 gap-3";
@@ -32,6 +33,7 @@
   };
 
   onMount(async () => {
+    if (!autoclose) return;
     setTimeout(() => {
       open = false;
       appStore.removeError(error.id);
