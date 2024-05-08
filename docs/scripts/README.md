@@ -34,20 +34,20 @@ This script will call all other scripts (with the exception of installall)
  - Use this in the scripts folder if you already cloned the repository
 
 ### installgojava.sh
- This script installs the latest go and Java jdk 17.
+This script installs the latest go and Java jdk 17.
 
 ### installkeycloak.sh
- This script creates a keycloak user and installs keycloak.
+This script creates a keycloak user and installs keycloak.
 
 ### installpostgres.sh
- This script installs a current PostgreSQL database via apt.
+This script installs a current PostgreSQL database via apt.
 
 ### configurepostgres.sh
 This script configures a PostgreSQL for use with Keycloak.
 
 ### keycloak/configureKeycloak.sh
- This script performs initial configuration steps to work with ISDuBA and starts keycloak on port 8080.
-  To do this, it calls upon the other scripts in the keycloak directory
+This script performs initial configuration steps to work with ISDuBA and starts keycloak on port 8080.
+To do this, it calls upon the other scripts in the keycloak directory
    - the hereby created initial admin user will have both username and password ```keycloak```
    - the hereby created initial user will be the ``` editor ``` (role and group) ``` beate Bearbeiter ```
    - username and password for the initial user are ```beate```, the created editor group has access to all TLP WHITE advisories
@@ -82,16 +82,17 @@ Usage: createUser.sh username first_name last_name e-mail-adress password
 Usage: assignUserToRoleAndGroup.sh username groupname rolename
 ```
 ### installplaywright.sh
-  This script installs node, the npm dependencies and playwright for the client.
+This script installs node, the npm dependencies and playwright for the client.
 
 ###  installisduba.sh
- This script creates config files, installs make and executes the Makefile to build binaries, distributions and exectutes integrationtests.
+This script creates config files, installs make and executes the Makefile to build binaries, distributions and exectutes integrationtests.
 
 ### migrate.sh
-  This script prepares a database for use with ISDuBA.
+This script prepares a database for use with ISDuBA.
 
 ### start_isduba.sh
- This script starts backend and frontend in the background, avaible on localhost port 5173.
+This script starts backend and frontend in the background, avaible on localhost port 5173.
 
 
-The bulkimporter can be used to import manually downloaded documents.
+## Filling the database
+The bulkimporter set up via ```installisduba.sh``` can be used to import documents.
