@@ -9,9 +9,6 @@
 -->
 
 <script lang="ts">
-  import Message from "$lib/Messages/Message.svelte";
-  import { MESSAGE } from "$lib/Messages/messagetypes";
-
   export let message = "";
 </script>
 
