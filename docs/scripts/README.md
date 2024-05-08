@@ -51,8 +51,9 @@ installall.sh can be downloaded via:
     - username and password for this user are ```beate```, the created editor group has access to all TLP WHITE advisories
 
  - keycloak/createGroup.sh
-
- # TODO: either needs to be expanded to cover all TLP levels and utilizing proper flags, or needs to be reworked
+<!---
+ TODO: either needs to be expanded to cover all TLP levels and utilizing proper flags, or needs to be reworked
+-->
  Usage: createGroup name [tlp] [publisher]
  where tlp:
   1 - Group will only be able to see TLP WHITE advisories (default) 
