@@ -50,7 +50,6 @@
   let createCommentError: string;
   let loadDocumentSSVCError: string;
   let advisoryVersions: any[] = [];
-  let advisoryVersionByDocumentID: any;
   let advisoryState: string;
   let isCommentingAllowed: boolean;
   $: if ([READ, ASSESSING].includes(advisoryState)) {
@@ -79,10 +78,6 @@
       advisoryVersions = result.documents.map((doc: any) => {
         return { id: doc.id, version: doc.version, tracking_id: doc.tracking_id };
       });
-      advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
-        acc[version.id] = version.version;
-        return acc;
-      }, {});
     } else if (response.error) {
       loadAdvisoryVersionsError = `Could not load versions. ${getErrorMessage(response.error)}`;
     }
@@ -245,7 +240,7 @@
     if (state === currentState) {
       return "green";
     } else if (allowedToChangeWorkflow(appStore.getRoles(), currentState, state)) {
-      return "light";
+      return "none";
     } else {
       return "dark";
     }
