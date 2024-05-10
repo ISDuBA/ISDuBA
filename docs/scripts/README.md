@@ -21,7 +21,7 @@ installall.sh can be downloaded via:
 ``` bash
     curl -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
 ```
-Then you can use it to set up the testing environment with default values:
+Then you can make it executable (e.g. via chmod) and use it to set up the testing environment with default values:
  * Keycloak admin credentials: username: ```keycloak```, password: ```keycloak```
  * ISDuBA user credentials: username: ```beate```, password: ```beate```
  * Keycloak runs on localhost port 8080
