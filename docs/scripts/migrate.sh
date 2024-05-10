@@ -11,6 +11,6 @@
 set -e # to exit if a command in the script fails
 
 # migrate
-ISDUBA_DB_MIGRATE=true ./../../cmd/isdubad/isdubad -c ../../isdubad.toml &
+ISDUBA_DB_MIGRATE=true ./../../cmd/isdubad/isdubad -c ../../isdubad.toml
 
 mv -f isduba.log isduba_migrate.log
