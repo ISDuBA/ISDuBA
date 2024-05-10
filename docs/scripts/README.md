@@ -114,6 +114,6 @@ The bulkimporter set up via [installisduba.sh](https://github.com/ISDuBA/ISDuBA/
 
  * Keycloak is located in /opt/keycloak
 
- * The ISDuBA-backend can be started via ```isdubad -c isdubad.toml```
+ * The ISDuBA-backend can be started via the ```isdubad``` binary (in cmd/isdubad/) utilizing a config [toml](https://toml.io/en/) file given via the ```-c``` flag, e.g. the  ```isdubad.toml``` cloned from the docs directory into the main directory
 
  * The ISDuBA-frontend can be started in development mode via ```npm run dev``` in the client directory
