@@ -63,6 +63,9 @@ To do this, it calls upon the other scripts in the keycloak directory
    - username and password for the initial user are ```beate```, the created editor group has access to all TLP WHITE advisories
 
 ### keycloak/createGroup.sh
+This script creates and adjusts the Keycloak ```isduba``` realm.
+
+### keycloak/createGroup.sh
 <!---
  TODO: either needs to be expanded to cover all TLP levels and utilizing proper flags, or needs to be reworked
 -->
