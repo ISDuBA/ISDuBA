@@ -27,7 +27,7 @@ Then you can make it executable (e.g. via chmod) and use it to set up the testin
  * Keycloak runs on localhost port 8080
  * ISDuBA-Frontend runs on localhost port 5173
 
-``` 
+```
  Usage: installall.sh [--help] [branch name]
  where:
   --help       show this help text
@@ -70,10 +70,10 @@ This script creates and adjusts the Keycloak ```isduba``` realm and requires Key
  TODO: either needs to be expanded to cover all TLP levels and utilizing proper flags, or needs to be reworked
 -->
 This script creates a group that can handle TLP WHITE and/or GREEN advisories and requires Keycloak to be running to function.
-``` 
+```
  Usage: createGroup name [tlp] [publisher]
  where tlp:
-  1 - Group will only be able to see TLP WHITE advisories (default) 
+  1 - Group will only be able to see TLP WHITE advisories (default)
   2 - Group will only be able to see TLP GREEN advisories
   3 - Group will be able to see TLP WHITE and TLP GREEN advisories
 
