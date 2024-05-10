@@ -63,12 +63,13 @@ To do this, it calls upon the other scripts in the keycloak directory
    - username and password for the initial user are ```beate```, the created editor group has access to all TLP WHITE advisories
 
 ### [keycloak/createRealm.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createRealm.sh)
-This script creates and adjusts the Keycloak ```isduba``` realm.
+This script creates and adjusts the Keycloak ```isduba``` realm and requires Keycloak to be running to function.
 
 ### [keycloak/createGroup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createGroup.sh)
 <!---
  TODO: either needs to be expanded to cover all TLP levels and utilizing proper flags, or needs to be reworked
 -->
+This script creates a group that can handle TLP WHITE and/or GREEN advisories and requires Keycloak to be running to function.
 ``` 
  Usage: createGroup name [tlp] [publisher]
  where tlp:
@@ -80,6 +81,7 @@ This script creates and adjusts the Keycloak ```isduba``` realm.
   Name of the publishers whose advisories the group can see. (Can only be set if tlp has been set)
 ```
 ### [keycloak/createRole.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createRole.sh)
+This script creates a role and requires Keycloak to be running to function.
 
 ```
  Usage: createRole name description
@@ -87,10 +89,12 @@ This script creates and adjusts the Keycloak ```isduba``` realm.
  description: description of the role
 ```
 ### [keycloak/createUser.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createUser.sh)
+This script creates a user and requires Keycloak to be running to function.
 ```
 Usage: createUser.sh username first_name last_name email_address password
 ```
 ### [keycloak/assignUserToRoleAndGroup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/assignUserToRoleAndGroup.sh)
+This script assigns roles and groups to users and requires Keycloak to be running to function.
 ```
 Usage: assignUserToRoleAndGroup.sh username groupname rolename
 ```
