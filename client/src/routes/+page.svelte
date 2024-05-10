@@ -139,8 +139,6 @@
 
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
-      appStore.setSessionExpired(true);
-      appStore.setSessionExpiredMessage("User is not logged in");
       push("/login");
     }
   };
