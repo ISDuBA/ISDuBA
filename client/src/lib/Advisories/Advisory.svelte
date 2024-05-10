@@ -240,9 +240,9 @@
     if (state === currentState) {
       return "green";
     } else if (allowedToChangeWorkflow(appStore.getRoles(), currentState, state)) {
-      return "none";
-    } else {
       return "dark";
+    } else {
+      return "none";
     }
   };
 
