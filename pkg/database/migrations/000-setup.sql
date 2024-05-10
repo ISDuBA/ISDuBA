@@ -207,7 +207,8 @@ CREATE TABLE events_log (
     state        workflow,
     time         timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actor        varchar,
-    documents_id int REFERENCES documents(id) ON DELETE SET NULL
+    documents_id int REFERENCES documents(id) ON DELETE SET NULL,
+    comments_id int REFERENCES comments(id) ON DELETE SET NULL
 );
 
 GRANT SELECT ON versions TO {{ .User | sanitize }};
