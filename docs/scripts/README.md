@@ -111,8 +111,9 @@ This script prepares a database for use with ISDuBA.
 The bulkimporter set up via [installisduba.sh](https://github.com/ISDuBA/ISDuBA/blob/groups_not_roles_scripts/docs/scripts/README.md#installisdubash) can be used to import documents.
 
 ## Starting the application
+To get testing, start up keycloak, the frontend and the backend:
 
- * Keycloak is located in /opt/keycloak
+ * Keycloak is located in /opt/keycloak, start it up e.g. via ``` /opt/keycloak/bin/kc.sh start-dev```
 
  * The ISDuBA-backend can be started via the ```isdubad``` binary (in cmd/isdubad/) utilizing a config [toml](https://toml.io/en/) file given via the ```-c``` flag, e.g. the  ```isdubad.toml``` cloned from the docs directory into the main directory
 
