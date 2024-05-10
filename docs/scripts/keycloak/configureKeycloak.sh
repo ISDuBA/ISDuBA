@@ -25,7 +25,6 @@ else
   export KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
 fi
 
-
 # Alter the keycloak configuration
 sudo sed --in-place=.orig -e 's/^#db=postgres/db=postgres/' \
             -e 's/^#db-username=/db-username=/' \
@@ -38,14 +37,14 @@ echo "Succesfully adjusted keycloaks configuration."
 
 # TODO: what if keycloak is running, but does not have an admin user yet?
 
-if curl --silent http://localhost:8080/ | grep -F -q "Welcome to Keycloak"; then
+if curl --silent --head -fsS http://localhost:8080/health/ready; then
   echo "keycloak is already running..."
 else
-  sudo --preserve-env=KEYCLOAK_ADMIN,KEYCLOAK_ADMIN_PASSWORD /opt/keycloak/bin/kc.sh start-dev &
+  sudo --preserve-env=KEYCLOAK_ADMIN,KEYCLOAK_ADMIN_PASSWORD /opt/keycloak/bin/kc.sh start-dev --health-enabled=true &
 
   # wait for keycloak to start
   echo "Waiting for keycloak to start..."
-  until curl --silent http://localhost:8080/ | grep -F -q "Welcome to Keycloak"
+  until curl --silent --head -fsS http://localhost:8080/health/ready
   do
     sleep 1
   done
