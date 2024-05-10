@@ -13,9 +13,19 @@ some important setup-steps.
 
 The following scripts exist:
 
-### installall.sh
+## installall.sh
 This script will install git if needed and download the ISDuBA repository in the current directory unless it already exists, in which case it will update it.
 Then it will call the setup.sh script that calls all other scripts to set up a testing environment.
+
+installall.sh can be downloaded via:
+``` bash
+    curl -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
+```
+Then you can use it to set up the testing environment with default values:
+ * Keycloak admin credentials: username: ```keycloak```, password: ```keycloak```
+ * ISDuBA user credentials: username: ```beate```, password: ```beate```
+ * Keycloak runs on localhost port 8080
+ * ISDuBA runs on localhost port 5173
 
 ``` 
  Usage: installall.sh [--help] [branch name]
@@ -24,14 +34,14 @@ Then it will call the setup.sh script that calls all other scripts to set up a t
   branch name  set up ISDuBA on the 'branch name' branch instead of main
 ```
 
-installall.sh can be downloaded via:
-``` bash
-    curl -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
-```
+## Description of the scripts called
+The installall.sh script will call other scripts to do the setup. Some of these scripts
+can be reused manually to update or adjust their respective parts of the application.
+Explanations of the scripts follow.
 
 ### setup.sh
 This script will call all other scripts (with the exception of installall)
- - Use this in the scripts folder if you already cloned the repository
+ - This script can be used in the scripts folder if you already cloned the repository
 
 ### installgojava.sh
 This script installs the latest go and Java jdk 17.
