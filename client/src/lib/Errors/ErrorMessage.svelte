@@ -12,6 +12,8 @@
   export let message = "";
 </script>
 
-<div class="my-2 flex flex-row items-center">
-  <span class="text-lg text-red-600"> {message}</span>
-</div>
+{#if message}
+  <div class="my-2 flex flex-row items-center">
+    <span class="text-lg text-red-600"> {message}</span>
+  </div>
+{/if}
