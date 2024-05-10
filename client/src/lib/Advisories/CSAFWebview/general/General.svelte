@@ -36,11 +36,11 @@
   $: if (tlp?.label === TLP.WHITE) {
     tlpStyle = "tlpclear";
   } else if (tlp?.label === TLP.RED) {
-    tlpStyle = "tlred";
+    tlpStyle = "tlpred";
   } else if (tlp?.label === TLP.AMBER) {
-    tlpStyle = "tlamber";
+    tlpStyle = "tlpamber";
   } else if (tlp?.label === TLP.GREEN) {
-    tlpStyle = "tlgreen";
+    tlpStyle = "tlpgreen";
   }
   $: id = $appStore.webview.doc?.id;
   $: published = $appStore.webview.doc?.published;

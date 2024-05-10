@@ -51,6 +51,18 @@
     }
     return new Map<string, [string]>();
   }
+
+  const getTLPClass = (label: string) => {
+    if (label === "WHITE") {
+      return "tlpclear";
+    } else if (label === "RED") {
+      return "tlpred";
+    } else if (label === "AMBER") {
+      return "tlpamber";
+    } else if (label === "GREEN") {
+      return "tlpgreen";
+    }
+  };
 </script>
 
 <svelte:head>
@@ -105,8 +117,18 @@
         View:
         <List tag="ul" class="space-y-1" list="none">
           {#await getView() then view}
-            {#each view.entries() as [publisher, tlp]}
-              <Li liClass="ml-3">{publisher}: {tlp}</Li>
+            {#each view.entries() as [publisher, tlps]}
+              <Li liClass="ml-3"
+                >{publisher === "*" ? "all" : publisher}:
+                {#each tlps as tlp}
+                  <div
+                    class={getTLPClass(tlp)}
+                    style="width: fit-content; display: inline; margin-right: 0.25em;"
+                  >
+                    {tlp}
+                  </div>
+                {/each}
+              </Li>
             {/each}
           {/await}
         </List>
@@ -115,3 +137,22 @@
     {/if}
   </div>
 </div>
+
+<style>
+  .tlpclear {
+    background: #000;
+    color: #fff;
+  }
+  .tlpred {
+    background: #000;
+    color: #ff2b2b;
+  }
+  .tlpamber {
+    background: #000;
+    color: #ffc000;
+  }
+  .tlpgreen {
+    background: #000;
+    color: #33ff00;
+  }
+</style>

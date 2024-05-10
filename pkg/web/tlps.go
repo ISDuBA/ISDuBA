@@ -26,9 +26,9 @@ func extractTLPs(claims func(any) error, kc *ginkeycloak.KeycloakToken) error {
 	tlps := models.PublishersTLPs{}
 	for _, tlp := range wrapper.TLP {
 		for key, value := range tlp {
-			v, ok := tlps[key]
+			_, ok := tlps[key]
 			if ok {
-				tlps[key] = append(v, value...)
+				tlps[key] = append(tlps[key], value...)
 			} else {
 				tlps[key] = value
 			}
