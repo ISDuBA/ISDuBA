@@ -107,9 +107,13 @@ This script creates config files, installs make and executes the Makefile to bui
 ### [migrate.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/migrate.sh)
 This script prepares a database for use with ISDuBA.
 
-### [start_isduba.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/start_isduba.sh)
-This script starts backend and frontend in the background, available on localhost port 5173.
-
-
 ## Filling the database
 The bulkimporter set up via [installisduba.sh](https://github.com/ISDuBA/ISDuBA/blob/groups_not_roles_scripts/docs/scripts/README.md#installisdubash) can be used to import documents.
+
+## Starting the application
+
+ * Keycloak is located in /opt/keycloak
+
+ * The ISDuBA-backend can be started via ```isdubad -c isdubad.toml```
+
+ * The ISDuBA-frontend can be started in development mode via ```npm run dev``` in the client directory

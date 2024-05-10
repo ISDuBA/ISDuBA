@@ -31,6 +31,7 @@ sudo sed --in-place=.orig -e 's/^#db=postgres/db=postgres/' \
             -e 's/^#db-password=password/db-password=keycloak/' \
             -e 's/^#db-url=/db-url=/' /opt/keycloak/conf/keycloak.conf
 
+nkid=""
 
 # Give feedback after successful completion
 echo "Succesfully adjusted keycloaks configuration."
@@ -48,6 +49,7 @@ else
   do
     sleep 1
   done
+  nkid=$!
 fi
 
 # log into the master realm with admin rights, token saved in ~/.keycloak/kcadm.config
@@ -66,3 +68,9 @@ fi
 ./keycloak/createUser.sh 'beate' 'beate' 'bear' 'bea@ISDuBA.isduba' 'beate' 'editor'
 
 ./keycloak/assignUserToRoleAndGroup.sh 'beate' 'editor' 'editor'
+
+if [ ! -z "$nkid" ]; then
+  if ps -p $nkid; then
+    kill $nkid
+  fi
+fi

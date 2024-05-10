@@ -26,6 +26,4 @@ set -e # to exit if a command in the script fails
 
 ./migrate.sh # prepare isduba database
 
-./start_isduba.sh # start backend and frontend
-
 echo "All set up!"
