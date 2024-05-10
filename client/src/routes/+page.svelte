@@ -30,6 +30,7 @@
   import { type User, UserManager } from "oidc-client-ts";
   import { jwtDecode } from "jwt-decode";
 
+  let Banane = "Banana";
   let userManager = new UserManager(configuration.getConfiguration());
   userManager.events.addUserSignedIn(function () {
     console.log("User loaded");
@@ -146,7 +147,7 @@
   };
 </script>
 
-<div class="flex bg-primary-700">
+<div class="bg-primary-700 flex">
   <div>
     <SideNav></SideNav>
   </div>
