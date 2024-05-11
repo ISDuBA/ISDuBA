@@ -36,6 +36,7 @@ isduba-bsi.toml
 client/node_modules
 client/.svelte-kit
 client/package
+client/.eslintcache
 client/vite.config.js.timestamp-*
 client/vite.config.ts.timestamp-*
 client/.env
