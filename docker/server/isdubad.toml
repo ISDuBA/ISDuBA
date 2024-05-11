@@ -39,8 +39,8 @@ admin_user = "postgres"
 admin_database = "postgres"
 admin_password = "postgres"
 migrate = true
+terminate_after_migration = false
 text_search = ["german", "english"]
 
-[[publishers_tlps]]
-publisher = ""
-tlps = ["WHITE"]
+[publishers_tlps]
+'*' = ["WHITE"]
