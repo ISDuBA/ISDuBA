@@ -26,6 +26,7 @@
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
   let openRow: number | null;
 
@@ -37,10 +38,12 @@
   let count = 0;
   let currentPage = 1;
   let documents: any = null;
-  let searchTerm: string = "";
   let loading = false;
   let error: string;
   export let columns: string[];
+  export let query: string = "";
+  export let searchTerm: string = "";
+  export let loadAdvisories: boolean;
 
   let anchorLink: string | null;
 
@@ -64,24 +67,69 @@
     return names[column] ?? column;
   };
 
+  const calcSSVC = (documents: any) => {
+    if (!documents) return [];
+    documents.map((d: any) => {
+      if (d["ssvc"]) d["ssvc"] = convertVectorToLabel(d["ssvc"]);
+    });
+    return documents;
+  };
+
+  const savePosition = () => {
+    let position = [offset, currentPage, limit, orderBy];
+    sessionStorage.setItem("tablePosition" + query + loadAdvisories, JSON.stringify(position));
+  };
+
+  let postitionRestored: boolean = false;
+  const restorePosition = () => {
+    let position = sessionStorage.getItem("tablePosition" + query + loadAdvisories);
+    if (position) {
+      [offset, currentPage, limit, orderBy] = JSON.parse(position);
+    }
+  };
+
+  let searchTimeout: any = null;
+
+  $: if (searchTerm !== undefined) {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    searchTimeout = setTimeout(() => {
+      fetchData();
+    }, 500);
+  }
+
+  $: if (offset || currentPage || limit || orderBy) {
+    if (!postitionRestored) {
+      restorePosition();
+      postitionRestored = true;
+    }
+    savePosition();
+  }
+
   let orderBy = "title";
-  const fetchData = async () => {
-    const searchSuffix = searchTerm ? ` "${searchTerm}" german search msg as and` : "";
+  export async function fetchData(): Promise<void> {
+    const searchSuffix = searchTerm ? `"${searchTerm}" german search msg as ` : "";
+    const searchColumn = searchTerm ? " msg" : "";
+
+    let queryParam = "";
+    if (query || searchSuffix) {
+      queryParam = `query=${query}${searchSuffix}`;
+    }
     const documentURL = encodeURI(
-      `/api/documents?query=$state new workflow =${searchSuffix}&advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}`
+      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=id ${columns.join(" ")}${searchColumn}`
     );
     error = "";
     loading = true;
     const response = await request(documentURL, "GET");
-    console.log(response);
     if (response.ok) {
       ({ count, documents } = response.content);
-      documents = documents || [];
+      documents = calcSSVC(documents) || [];
     } else if (response.error) {
       error = getErrorMessage(response.error);
     }
     loading = false;
-  };
+  }
 
   const previous = () => {
     if (offset - limit >= 0) {
@@ -121,6 +169,8 @@
 
   $: numberOfPages = Math.ceil(count / limit);
   $: onMount(async () => {
+    restorePosition();
+    postitionRestored = true;
     await fetchData();
   });
 </script>
@@ -197,9 +247,9 @@
   </div>
   <ErrorMessage message={error}></ErrorMessage>
   {#if documents?.length > 0}
-    <div class="w-fit">
+    <div class="w-auto">
       <a href={anchorLink}>
-        <Table hoverable={true} noborder={true}>
+        <Table style="w-auto" hoverable={true} noborder={true}>
           <TableHead class="cursor-pointer">
             {#each columns as column}
               <TableHeadCell
@@ -261,7 +311,7 @@
                     >
                   {:else if column === "title"}
                     <TableBodyCell tdClass={title}
-                      ><span title={item.title}>{item.title}</span></TableBodyCell
+                      ><span title={item[column]}>{item[column]}</span></TableBodyCell
                     >
                   {:else if column === "publisher"}
                     <TableBodyCell tdClass={publisher}
@@ -277,7 +327,10 @@
                             <div class="flex-grow">
                               {item[column][0]}
                             </div>
-                            <span on:click|stopPropagation={() => toggleRow(i)}>
+                            <span
+                              on:mouseenter={() => (anchorLink = null)}
+                              on:click|stopPropagation={() => toggleRow(i)}
+                            >
                               {#if openRow === i}
                                 <i class="bx bx-minus"></i>
                               {:else}
