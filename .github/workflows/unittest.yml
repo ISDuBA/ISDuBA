@@ -1,0 +1,44 @@
+# This file is Free Software under the Apache-2.0 License
+# without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+# Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
+name: Unittest
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_KEYCLOAK_URL: "http://localhost:8080"
+      PUBLIC_KEYCLOAK_REALM: "isduba"
+      PUBLIC_KEYCLOAK_CLIENTID: "auth"
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Install Node"
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: "Install Deps"
+        run: npm install
+
+      - name: "Install playwright"
+        run: npx playwright install
+
+      - name: "NPM lint"
+        run: npm run lint
+
+      - name: "NPM check"
+        run: npm run check
+        
+      - name: "Unit test"
+        run: npm run test:unit

@@ -1,6 +1,6 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -10,24 +10,64 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { appStore } from "$lib/store";
   import Diff from "$lib/Diff/Diff.svelte";
+  import SectionHeader from "$lib/SectionHeader.svelte";
+  import { request } from "$lib/utils";
+  import { Button, Label, Select, TabItem, Tabs } from "flowbite-svelte";
+  import JsonDiff from "./JsonDiff.svelte";
 
-  let diff: string;
+  let documents: any[] = [];
+  $: selectionOfDocuments = documents.map((doc) => {
+    return {
+      name: `${doc.tracking_id} - Version ${doc.version}`,
+      value: doc
+    };
+  });
+  let diffDocuments: any;
+  let docA: any;
+  let docB: any;
+  let title: string;
+
+  const compare = () => {
+    if (docA && docB) {
+      diffDocuments = {
+        docA: docB,
+        docB: docA
+      };
+      title = `Changes from ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docB.version}) to ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docA.version})`;
+    }
+  };
+
   onMount(async () => {
-    if ($appStore.app.isUserLoggedIn) {
-      fetch("advisory.diff", {
-        headers: {
-          Authorization: `Bearer ${$appStore.app.keycloak.token}`
-        }
-      }).then((response) => {
-        response.text().then((text) => {
-          diff = text;
-        });
-      });
+    const documentURL = encodeURI(`/api/documents?limit=20&columns=id version tracking_id`);
+    const response = await request(documentURL, "GET");
+    if (response.ok && response.content.documents != undefined) {
+      documents = response.content.documents;
     }
   });
 </script>
 
-<h1 class="text-lg">Comparison</h1>
-<Diff {diff}></Diff>
+<svelte:head>
+  <title>Compare</title>
+</svelte:head>
+
+<SectionHeader title="Comparison"></SectionHeader>
+<Tabs>
+  <TabItem open title="JSON diff">
+    <Label class="mb-6">
+      Document 1:
+      <Select id="firstDoc" bind:value={docA} items={selectionOfDocuments}></Select>
+    </Label>
+    <Label>
+      Document 2:
+      <Select id="secondDoc" bind:value={docB} items={selectionOfDocuments}></Select>
+    </Label>
+    <Button on:click={compare} class="my-2">Compare</Button>
+    {#if diffDocuments}
+      <JsonDiff {diffDocuments} {title}></JsonDiff>
+    {/if}
+  </TabItem>
+  <TabItem title="Git diff">
+    <Diff></Diff>
+  </TabItem>
+</Tabs>

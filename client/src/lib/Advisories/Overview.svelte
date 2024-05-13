@@ -1,6 +1,6 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -9,230 +9,445 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { onMount } from "svelte";
   import { appStore } from "$lib/store";
-  import { goto } from "$app/navigation";
+  import { push } from "svelte-spa-router";
   import {
-    Table,
+    Button,
+    Label,
+    PaginationItem,
+    Select,
+    Search,
     TableBody,
     TableBodyCell,
     TableBodyRow,
     TableHead,
     TableHeadCell,
-    TableSearch
+    Table
   } from "flowbite-svelte";
-  import { tdClass, tablePadding } from "$lib/table/defaults";
+  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
+  import SectionHeader from "$lib/SectionHeader.svelte";
+  import { Spinner } from "flowbite-svelte";
+  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { request } from "$lib/utils";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   let openRow: number | null;
 
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
   };
-  let documents: any = [];
+  let limit = 10;
+  let loading = false;
+  let error: string = "Could not load advisories";
+  let offset = 0;
+  let count = 0;
+  let currentPage = 1;
+  let documents: any = null;
   let searchTerm: string = "";
-  const sortState: any = {
-    id: "",
-    cvss: "",
-    publisher: "",
-    title: "",
-    trackingID: "",
-    version: "",
-    activeSortColumn: ""
+  let columns = [
+    "id",
+    "tracking_id",
+    "version",
+    "publisher",
+    "current_release_date",
+    "initial_release_date",
+    "title",
+    "tlp",
+    "cvss_v2_score",
+    "cvss_v3_score",
+    "ssvc",
+    "four_cves",
+    "state"
+  ];
+  let orderBy = "-cvss_v3_score";
+
+  let anchorLink: string | null;
+
+  const previous = () => {
+    if (offset - limit >= 0) {
+      offset = offset - limit > 0 ? offset - limit : 0;
+      currentPage -= 1;
+    }
+    savePosition();
+    fetchData();
   };
-  const defaultSortFunction = (attribute: string) => {
-    return {
-      asc: (ad1: any, ad2: any) => {
-        if (ad1[attribute] < ad2[attribute]) return -1;
-        if (ad1[attribute] > ad2[attribute]) return 1;
-        return 0;
-      },
-      desc: (ad2: any, ad1: any) => {
-        if (ad1[attribute] < ad2[attribute]) return -1;
-        if (ad1[attribute] > ad2[attribute]) return 1;
-        return 0;
-      }
-    };
+  const next = () => {
+    if (offset + limit <= count) {
+      offset = offset + limit;
+      currentPage += 1;
+    }
+    savePosition();
+    fetchData();
   };
-  const sortFunctionsByColumn: any = {
-    id: defaultSortFunction("id"),
-    cvss: defaultSortFunction("cvss_v3_score"),
-    publisher: defaultSortFunction("publisher"),
-    title: defaultSortFunction("title"),
-    trackingID: defaultSortFunction("tracking_id"),
-    version: defaultSortFunction("version"),
-    state: defaultSortFunction("state")
+
+  const first = () => {
+    offset = 0;
+    currentPage = 1;
+    savePosition();
+    fetchData();
   };
-  const sortDocuments = (column: string) => {
-    sortState["activeSortColumn"] = column;
-    if (sortState[column] === "asc") {
-      documents = [...documents.sort(sortFunctionsByColumn[column]["desc"])];
-      sortState[column] = "desc";
+
+  const last = () => {
+    offset = (numberOfPages - 1) * limit;
+    currentPage = numberOfPages;
+    savePosition();
+    fetchData();
+  };
+
+  const switchSort = (column: string) => {
+    if (column === orderBy) {
+      orderBy[0] === "-" ? (orderBy = column) : (orderBy = `-${column}`);
     } else {
-      documents = [...documents.sort(sortFunctionsByColumn[column]["asc"])];
-      sortState[column] = "asc";
+      orderBy = column;
+    }
+    savePosition();
+    fetchData();
+  };
+
+  const savePosition = () => {
+    let position = [offset, currentPage, limit, orderBy];
+    sessionStorage.setItem("advisoryPosition", JSON.stringify(position));
+  };
+  const restorePosition = () => {
+    let position = sessionStorage.getItem("advisoryPosition");
+    if (position) {
+      [offset, currentPage, limit, orderBy] = JSON.parse(position);
     }
   };
-  const allUnreadDocuments = encodeURI(
-    "/api/documents?columns=id state tracking_id version publisher current_release_date initial_release_date title tlp cvss_v2_score cvss_v3_score four_cves"
-  );
-  $: filteredItems = documents;
+
+  $: numberOfPages = Math.ceil(count / limit);
+  const fetchData = async () => {
+    const searchSuffix = searchTerm ? `query="${searchTerm}" german search msg as &` : "";
+    const searchColumn = searchTerm ? " msg" : "";
+    const documentURL = encodeURI(
+      `/api/documents?${searchSuffix}advisories=true&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${columns.join(" ")}${searchColumn}`
+    );
+    loading = true;
+    error = "";
+    const response = await request(documentURL, "GET");
+    console.log(response);
+    if (response.ok) {
+      ({ count, documents } = response.content);
+      documents = calcSSVC(documents);
+    } else if (response.error) {
+      error = getErrorMessage(response.error);
+    }
+    loading = false;
+  };
+
+  const calcSSVC = (documents: any) => {
+    if (!documents) return [];
+    documents.map((d: any) => {
+      if (d["ssvc"]) d["ssvc"] = convertVectorToLabel(d["ssvc"]);
+    });
+    return documents;
+  };
+
   onMount(async () => {
+    let savedSearch = sessionStorage.getItem("documentSearchTerm");
+    if (savedSearch) {
+      searchTerm = savedSearch;
+    }
+    restorePosition();
     if ($appStore.app.isUserLoggedIn) {
-      $appStore.app.keycloak.updateToken(5).then(async () => {
-        const response = await fetch(allUnreadDocuments, {
-          headers: {
-            Authorization: `Bearer ${$appStore.app.keycloak.token}`
-          }
-        });
-        if (response.ok) {
-          ({ documents } = await response.json());
-          sortDocuments("id");
-        } else {
-          // Do errorhandling
-        }
-      });
+      await fetchData();
     }
   });
 </script>
 
-<h1 class="mb-3 text-lg">Advisories</h1>
-{#if documents}
-  <TableSearch
-    placeholder="Search by maker name"
-    hoverable={true}
-    bind:inputValue={searchTerm}
-    noborder={true}
-  >
-    <TableHead class="cursor-pointer">
-      <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("id")}
-        >ID<i
-          class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "id" && sortState["id"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "id" && sortState["id"] === "desc"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("cvss")}
-        >CVSS<i
-          class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "cvss" && sortState["cvss"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "cvss" &&
-            sortState["id"] === "desc"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
-      <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("publisher")}
-        >Publisher<i
-          class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "publisher" &&
-            sortState["publisher"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "publisher" &&
-            sortState["publisher"] === "desc"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("title")}
-        >Title<i
-          class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "title" &&
-            sortState["title"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "title" &&
-            sortState["title"] === "desc"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("trackingID")}
-        >Tracking ID<i
-          class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "trackingID" &&
-            sortState["trackingID"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "trackingID" &&
-            sortState["trackingID"] === "desc"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding}>Initial Release</TableHeadCell>
-      <TableHeadCell padding={tablePadding}>Current Release</TableHeadCell>
-      <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("version")}
-        >Version<i
-          class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "version" &&
-            sortState["version"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "version" &&
-            sortState["version"] === "desc"}
-        ></i></TableHeadCell
-      >
-      <TableHeadCell padding={tablePadding} on:click={() => sortDocuments("state")}
-        >State<i
-          class:bx={true}
-          class:bx-caret-up={sortState["activeSortColumn"] == "state" &&
-            sortState["state"] === "asc"}
-          class:bx-caret-down={sortState["activeSortColumn"] == "state" &&
-            sortState["state"] === "desc"}
-        ></i></TableHeadCell
-      >
-    </TableHead>
-    <TableBody>
-      {#each filteredItems as item, i}
-        <TableBodyRow
-          class="cursor-pointer"
-          on:click={(event) => {
-            goto(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
-          }}
-        >
-          <TableBodyCell {tdClass}>{item.id}</TableBodyCell>
-          <TableBodyCell {tdClass}
-            ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}>{item.cvss_v3_score}</span
-            ></TableBodyCell
-          >
-          <TableBodyCell {tdClass}
-            >{#if item.four_cves[0]}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <!-- svelte-ignore a11y-no-static-element-interactions -->
-              {#if item.four_cves.length > 1}
-                <span on:click|stopPropagation={() => toggleRow(i)}>
-                  {item.four_cves[0]}
+<svelte:head>
+  <title>Advisories</title>
+</svelte:head>
 
-                  {#if openRow === i}
-                    <i class="bx bx-minus"></i>
-                  {:else}
-                    <i class="bx bx-plus"></i>
-                  {/if}
-                </span>
-              {:else}
-                <span>{item.four_cves[0]}</span>
-              {/if}
-            {/if}</TableBodyCell
+<SectionHeader title="Advisories"></SectionHeader>
+<div class="mb-3 w-2/3">
+  <Search
+    bind:value={searchTerm}
+    on:keyup={(e) => {
+      sessionStorage.setItem("documentSearchTerm", searchTerm);
+      if (e.key === "Enter") fetchData();
+    }}
+  >
+    {#if searchTerm}
+      <button
+        class="mr-3"
+        on:click={() => {
+          searchTerm = "";
+          fetchData();
+        }}>x</button
+      >
+    {/if}
+    <Button
+      class="py-3.5"
+      on:click={() => {
+        fetchData();
+      }}>Search</Button
+    >
+  </Search>
+</div>
+<div class="mb-2 mt-8 flex items-center justify-between">
+  {#if documents?.length > 0}
+    <div class="flex items-center">
+      <Label class="mr-3">Items per page</Label>
+      <Select
+        id="pagecount"
+        class="mt-2 w-24"
+        items={[
+          { name: "10", value: 10 },
+          { name: "25", value: 25 },
+          { name: "50", value: 50 },
+          { name: "100", value: 100 }
+        ]}
+        bind:value={limit}
+        on:change={() => {
+          offset = 0;
+          currentPage = 1;
+          savePosition();
+          fetchData();
+        }}
+      ></Select>
+    </div>
+    <div>
+      <div class="flex">
+        <div class:invisible={currentPage === 1} class:flex={true}>
+          <PaginationItem on:click={first}>
+            <i class="bx bx-arrow-to-left"></i>
+          </PaginationItem>
+          <PaginationItem on:click={previous}>
+            <i class="bx bx-chevrons-left"></i>
+          </PaginationItem>
+        </div>
+        <div class="mx-3 flex items-center">
+          <input
+            class="mr-1 w-16 cursor-pointer border pr-1 text-right"
+            on:change={() => {
+              if (!parseInt("" + currentPage)) currentPage = 1;
+              currentPage = Math.floor(currentPage);
+              if (currentPage < 1) currentPage = 1;
+              if (currentPage > numberOfPages) currentPage = numberOfPages;
+              offset = (currentPage - 1) * limit;
+              fetchData();
+            }}
+            bind:value={currentPage}
+          />
+          <span>of {numberOfPages} Pages</span>
+        </div>
+        <div class:invisible={currentPage === numberOfPages} class:flex={true}>
+          <PaginationItem on:click={next}>
+            <i class="bx bx-chevrons-right"></i>
+          </PaginationItem>
+          <PaginationItem on:click={last}>
+            <i class="bx bx-arrow-to-right"></i>
+          </PaginationItem>
+        </div>
+      </div>
+    </div>
+    <div class="mr-3">
+      {#if searchTerm}
+        {count} entries found
+      {:else}
+        {count} entries in total
+      {/if}
+    </div>
+  {/if}
+</div>
+<div class:invisible={!loading} class:mb-4={true}>
+  Loading ...
+  <Spinner color="gray" size="4"></Spinner>
+</div>
+<ErrorMessage message={error}></ErrorMessage>
+{#if documents?.length > 0}
+  <a href={anchorLink}>
+    <Table hoverable={true} noborder={true}>
+      <TableHead class="cursor-pointer">
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v3_score")}
+          >CVSSv3<i
+            class:test={true}
+            class:bx={true}
+            class:bx-caret-up={orderBy === "cvss_v3_score"}
+            class:bx-caret-down={orderBy === "-cvss_v3_score"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("cvss_v2_score")}
+          >CVSSv2<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "cvss_v2_score"}
+            class:bx-caret-down={orderBy === "-cvss_v2_score"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("ssvc")}
+          >SSVC<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "ssvc"}
+            class:bx-caret-down={orderBy === "-ssvc"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("state")}
+          >State<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "state"}
+            class:bx-caret-down={orderBy === "state"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding}>CVEs</TableHeadCell>
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("publisher")}
+          >Publisher<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "publisher"}
+            class:bx-caret-down={orderBy === "-publisher"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("title")}
+          >Title<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "title"}
+            class:bx-caret-down={orderBy === "-title"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("tracking_id")}
+          >Tracking ID<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "tracking_id"}
+            class:bx-caret-down={orderBy === "tracking_id"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("initial_release_date")}
+          >Initial Release<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "initial_release_date"}
+            class:bx-caret-down={orderBy === "-initial_release_date"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("current_release_date")}
+          >Current Release<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "current_release_date"}
+            class:bx-caret-down={orderBy === "-current_release_date"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => switchSort("version")}
+          >Version<i
+            class:bx={true}
+            class:bx-caret-up={orderBy === "version"}
+            class:bx-caret-down={orderBy === "-version"}
+          ></i></TableHeadCell
+        >
+      </TableHead>
+      <TableBody>
+        {#each documents as item, i}
+          <tr
+            class="cursor-pointer bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
+            on:click={() => {
+              push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
+            }}
+            on:mouseenter={() => {
+              anchorLink = `#/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`;
+            }}
+            on:mouseleave={() => {
+              anchorLink = null;
+            }}
           >
-          <TableBodyCell {tdClass}>{item.publisher}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.title}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
-          <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
-          <TableBodyCell {tdClass}
-            ><i class:bx={true} class:bxs-star={item.state === "new"}></i></TableBodyCell
-          >
-        </TableBodyRow>
-        {#if openRow === i}
-          <TableBodyRow>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}>
-              <div>
-                {#each item.four_cves as cve, i}
-                  {#if i !== 0}
-                    <div>{cve}</div>
-                  {/if}
-                {/each}
-              </div>
+            <TableBodyCell {tdClass}
+              ><span class:text-red-500={Number(item.cvss_v3_score) > 5.0}
+                >{item.cvss_v3_score == null ? "" : item.cvss_v3_score}</span
+              ></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><span class:text-red-500={Number(item.cvss_v2_score) > 5.0}
+                >{item.cvss_v2_score == null ? "" : item.cvss_v2_score}</span
+              ></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><span style={item.ssvc ? `color:${item.ssvc.color}` : ""}
+                >{item.ssvc?.label || ""}</span
+              ></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><i
+                title={item.state}
+                class:bx={true}
+                class:bxs-star={item.state === "new"}
+                class:bx-show={item.state === "read"}
+                class:bxs-analyse={item.state === "assessing"}
+                class:bx-book-open={item.state === "review"}
+                class:bx-archive={item.state === "archived"}
+                class:bx-trash={item.state === "delete"}
+              ></i>
             </TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-            <TableBodyCell {tdClass}></TableBodyCell>
-          </TableBodyRow>
-        {/if}
-      {/each}
-    </TableBody>
-  </TableSearch>
+            <TableBodyCell {tdClass}
+              >{#if item.four_cves[0]}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                {#if item.four_cves.length > 1}
+                  <div class="mr-2 flex">
+                    <div class="flex-grow">
+                      {item.four_cves[0]}
+                    </div>
+                    <span on:click|stopPropagation={() => toggleRow(i)}>
+                      {#if openRow === i}
+                        <i class="bx bx-minus"></i>
+                      {:else}
+                        <i class="bx bx-plus"></i>
+                      {/if}
+                    </span>
+                  </div>
+                {:else}
+                  <span>{item.four_cves[0]}</span>
+                {/if}
+              {/if}</TableBodyCell
+            >
+            <TableBodyCell tdClass={publisher}
+              ><span title={item.publisher}>{item.publisher}</span></TableBodyCell
+            >
+            <TableBodyCell tdClass={title}
+              ><span title={item.title}>{item.title}</span></TableBodyCell
+            >
+            <TableBodyCell {tdClass}>{item.tracking_id}</TableBodyCell>
+            <TableBodyCell {tdClass}>{item.initial_release_date.split("T")[0]}</TableBodyCell>
+            <TableBodyCell {tdClass}>{item.current_release_date.split("T")[0]}</TableBodyCell>
+            <TableBodyCell {tdClass}>{item.version}</TableBodyCell>
+          </tr>
+          {#if openRow === i}
+            <TableBodyRow>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}>
+                <div>
+                  {#each item.four_cves as cve, i}
+                    {#if i !== 0}
+                      <div>{cve}</div>
+                    {/if}
+                  {/each}
+                </div>
+              </TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+            </TableBodyRow>
+          {/if}
+          {#if item.msg}
+            <TableBodyRow class="border border-indigo-500/100 bg-slate-100">
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}>{@html item.msg}</TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell {tdClass}></TableBodyCell>
+            </TableBodyRow>
+          {/if}
+        {/each}
+      </TableBody>
+    </Table>
+  </a>
 {/if}

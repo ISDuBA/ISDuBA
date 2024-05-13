@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# This file is Free Software under the MIT License
-# without warranty, see README.md and LICENSES/MIT.txt for details.
+# This file is Free Software under the Apache-2.0 License
+# without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -18,8 +18,12 @@ set -e # to exit if a command in the script fails
 
 ./installkeycloak.sh # installs keycloak
 
-./configurekeycloak.sh # configures keycloak
+./keycloak/configureKeycloak.sh # configures keycloak
 
-./installplaywright.sh # Prepare frontend
+./installplaywright.sh # prepare frontend
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
+
+./migrate.sh # prepare isduba database
+
+echo "All set up!"

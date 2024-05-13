@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -8,5 +8,7 @@
 
 const tdClass = "whitespace-nowrap py-2 px-2";
 const tablePadding = "px-2";
+const title = "whitespace-normal py-2 px-2 title-column overflow-clip text-ellipsis";
+const publisher = "whitespace-nowrap w-48 max-w-48 overflow-clip text-ellipsis";
 
-export { tdClass, tablePadding };
+export { tdClass, tablePadding, title, publisher };

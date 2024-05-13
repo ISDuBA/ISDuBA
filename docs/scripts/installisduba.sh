@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# This file is Free Software under the MIT License
-# without warranty, see README.md and LICENSES/MIT.txt for details.
+# This file is Free Software under the Apache-2.0 License
+# without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -12,11 +12,16 @@ set -e # to exit if a command in the script fails
 
 cd ../..
 
-mkdir bin
-
-go build -o ./bin/isdubad ./cmd/isdubad
-
-go build -o ./bin/bulkimport ./cmd/bulkimport
-
 # create the isdubad configuration
 cp docs/example_isdubad.toml isdubad.toml
+echo "Successfully created example-configuration isdubad.toml."
+
+cp client/.env.example client/.env
+echo "Successfully created env file."
+
+sudo apt-get install make
+
+make all
+
+echo "Successfully created isdubad and bulkimport binaries."
+

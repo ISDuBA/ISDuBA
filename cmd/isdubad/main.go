@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -38,8 +38,12 @@ func run(cfg *config.Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGKILL)
 	defer stop()
 
-	if err := database.CheckMigrations(ctx, &cfg.Database); err != nil {
-		return err
+	terminate, err := database.CheckMigrations(ctx, &cfg.Database)
+	if err != nil {
+		return fmt.Errorf("migrating failed: %w", err)
+	}
+	if terminate {
+		return nil
 	}
 	db, err := database.NewDB(ctx, &cfg.Database)
 	if err != nil {

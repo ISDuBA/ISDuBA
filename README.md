@@ -1,6 +1,6 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -16,21 +16,19 @@ Plan: Develop a web application
 for downloading and evaluating security advisories in CSAF 2.0 format
 for internal use of a team responsible for a number of IT related topics.
 
-Will be published as Free Software.
-
-Envisoned is to use the following components:
- * Backend to be written in Go using
+Using the following components:
+ * Backend to be written in Go
  * PostgreSQL as database
- * keycloak as identify provider
- * docker-compose setup example
+ * [keycloak](https://www.keycloak.org/) as identify provider
+ * docker-compose setup example (planned)
  * [svelte-flowbite](https://flowbite-svelte.com/)
      for the single page web application frontend
  * [csaf_distribution](https://github.com/csaf-poc/csaf_distribution)
      for downloading advisories
  * [csaf_webview](https://github.com/csaf-poc/csaf_webview)
      for viewing documents
- * https://github.com/CERTCC/SSVC/tree/main/docs/ssvc-calc
- * https://github.com/rtfpessoa/diff2html
+ * https://github.com/CERTCC/SSVC/tree/main/docs/ssvc-calc (or alternative)
+ * https://github.com/rtfpessoa/diff2html (or alternative)
 
 
 ## How to get started

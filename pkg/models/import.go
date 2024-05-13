@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -299,8 +299,11 @@ func ImportDocument(
 	defer tx.Rollback(ctx)
 
 	const (
-		insertDoc = `INSERT INTO documents (document, original) VALUES ($1, $2) RETURNING id`
-		insertLog = `INSERT INTO events_log (event, state, actor, documents_id) VALUES ('import_document', 'new', $1, $2)`
+		insertDoc     = `INSERT INTO documents (document, original) VALUES ($1, $2) RETURNING id`
+		insertLog     = `INSERT INTO events_log (event, state, actor, documents_id) VALUES ('import_document', 'new', $1, $2)`
+		queryText     = `SELECT id FROM unique_texts WHERE txt = $1`
+		insertText    = `INSERT INTO unique_texts (txt) VALUES ($1) RETURNING id`
+		insertDocText = `INSERT INTO documents_texts (documents_id, num, txt_id) VALUES ($1, $2, $3)`
 	)
 
 	var id int64
@@ -319,25 +322,44 @@ func ImportDocument(
 		return 0, fmt.Errorf("inserting log failed: %w", err)
 	}
 
-	row := [3]any{id}
-	sidx := 0
+	txtIDs := make([]int64, len(idxer.elements))
 
-	cfs := pgx.CopyFromFunc(func() ([]any, error) {
-		if sidx >= len(idxer.elements) {
-			return nil, nil
+	insertTextBatch := &pgx.Batch{}
+
+	scanText := func(idx int) func(pgx.Row) error {
+		return func(row pgx.Row) error {
+			if err := row.Scan(&txtIDs[idx]); err != nil {
+				if !errors.Is(err, pgx.ErrNoRows) {
+					return fmt.Errorf("finding unique text failed: %w", err)
+				}
+				insertTextBatch.Queue(insertText, idxer.elements[idx]).QueryRow(
+					func(row pgx.Row) error { return row.Scan(&txtIDs[idx]) })
+			}
+			return nil
 		}
-		row[1], row[2] = sidx, idxer.elements[sidx]
-		sidx++
-		return row[:], nil
-	})
+	}
+	textIDsBatch := &pgx.Batch{}
+	for i, txt := range idxer.elements {
+		textIDsBatch.Queue(queryText, txt).QueryRow(scanText(i))
+	}
 
-	if _, err := tx.CopyFrom(
-		ctx,
-		pgx.Identifier{"documents_texts"},
-		[]string{"documents_id", "num", "txt"},
-		cfs,
-	); err != nil {
-		return 0, fmt.Errorf("copying documents texts failed: %w", err)
+	if err := tx.SendBatch(ctx, textIDsBatch).Close(); err != nil {
+		return 0, fmt.Errorf("finding txt failed: %w", err)
+	}
+
+	// We need to insert some
+	if insertTextBatch.Len() > 0 {
+		if err := tx.SendBatch(ctx, insertTextBatch).Close(); err != nil {
+			return 0, fmt.Errorf("inserting txt failed: %w", err)
+		}
+	}
+
+	batch := &pgx.Batch{}
+	for i, txtID := range txtIDs {
+		batch.Queue(insertDocText, id, i, txtID)
+	}
+	if err := tx.SendBatch(ctx, batch).Close(); err != nil {
+		return 0, fmt.Errorf("inserting txt failed: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

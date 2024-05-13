@@ -1,5 +1,5 @@
-#This file is Free Software under the MIT License
-#without warranty, see README.md and LICENSES/MIT.txt for details.
+#This file is Free Software under the Apache-2.0 License
+#without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 #
 #SPDX-License-Identifier: Apache-2.0
 #
@@ -39,8 +39,8 @@
 # admin_database = "postgres"
 # admin_password = "postgres"
 # migrate = false
+# terminate_after_migration = true
 # text_search = ["german", "english"]
 
-# [[publishers_tlps]]
-# publisher = ""
-# tlps = ["WHITE"]
+# [publishers_tlps]
+# '*' = ["WHITE"]

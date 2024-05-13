@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -10,10 +10,12 @@
 package main
 
 import (
+	"compress/gzip"
 	"context"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -44,9 +46,14 @@ func processFile(
 		if err != nil {
 			return err
 		}
-		if !d.Type().IsRegular() || !strings.EqualFold(filepath.Ext(path), ".json") {
+		if !d.Type().IsRegular() {
 			return nil
 		}
+		lower := strings.ToLower(path)
+		if !(strings.HasSuffix(lower, ".json") || strings.HasSuffix(lower, "json.gz")) {
+			return nil
+		}
+
 		slog.Info("processing document", "file", filepath.Base(path))
 
 		file, err := os.Open(path)
@@ -55,9 +62,18 @@ func processFile(
 		}
 		defer file.Close()
 
+		var r io.Reader
+		if strings.HasSuffix(lower, ".gz") {
+			if r, err = gzip.NewReader(file); err != nil {
+				return err
+			}
+		} else {
+			r = file
+		}
+
 		var id int64
 		if err = db.Run(ctx, func(conn *pgxpool.Conn) error {
-			id, err = models.ImportDocument(ctx, conn, file, actor, nil, dry)
+			id, err = models.ImportDocument(ctx, conn, r, actor, nil, dry)
 			return err
 		}); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {

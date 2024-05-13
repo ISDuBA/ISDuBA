@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -31,9 +31,10 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 
 	const (
 		findAdvisory = `SELECT id, state::text, tlp ` +
-			`FROM advisories ads JOIN documents docs ON ads.documents_id = docs.id ` +
-			`WHERE publisher = $1 AND tracking_id = $2`
-		updateState = `UPDATE advisories SET state = $1::workflow WHERE documents_id = $2`
+			`FROM advisories ads ` +
+			`JOIN documents docs ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.Publisher) ` +
+			`WHERE docs.publisher = $1 AND docs.tracking_id = $2`
+		updateState = `UPDATE advisories SET state = $1::workflow WHERE (tracking_id, publisher) = ($2, $3)`
 		insertLog   = `INSERT INTO events_log (event, state, actor, documents_id) ` +
 			`VALUES ('state_change', $1::workflow, $2, $3)`
 	)
@@ -99,7 +100,9 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 			}
 
 			// At this point the state change can be done.
-			if _, err := tx.Exec(rctx, updateState, string(input.State), documentID); err != nil {
+			if _, err := tx.Exec(rctx, updateState,
+				string(input.State), input.TrackingID, input.Publisher,
+			); err != nil {
 				return err
 			}
 

@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -305,6 +305,7 @@ func fetchPublicKey(keyID string, cfg *Config) (*keyEntry, error) {
 		client.Timeout = cfg.timeout
 	}
 
+	slog.Debug("requesting keyclock's public key", "url", u)
 	resp, err := client.Get(u.String())
 	if err != nil {
 		return nil, err

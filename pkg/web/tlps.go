@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -17,12 +17,24 @@ import (
 // extractTLPs extracts the TLP from the JWT token.
 func extractTLPs(claims func(any) error, kc *ginkeycloak.KeycloakToken) error {
 	var wrapper struct {
-		TLP models.PublishersTLPs `json:"TLP"`
+		TLP []models.PublishersTLPs `json:"TLP"`
 	}
 	if err := claims(&wrapper); err != nil {
 		return err
 	}
-	kc.CustomClaims = wrapper.TLP
+	// Merge multivalued attributes
+	tlps := models.PublishersTLPs{}
+	for _, tlp := range wrapper.TLP {
+		for key, value := range tlp {
+			_, ok := tlps[key]
+			if ok {
+				tlps[key] = append(tlps[key], value...)
+			} else {
+				tlps[key] = value
+			}
+		}
+	}
+	kc.CustomClaims = tlps
 	return nil
 }
 
@@ -37,7 +49,7 @@ func (c *Controller) tlps(ctx *gin.Context) models.PublishersTLPs {
 		return c.cfg.PublishersTLPs
 	}
 	tlps, ok := kct.CustomClaims.(models.PublishersTLPs)
-	if !ok {
+	if !ok || tlps == nil {
 		return c.cfg.PublishersTLPs
 	}
 	return tlps

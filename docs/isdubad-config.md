@@ -1,6 +1,6 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -66,6 +66,7 @@ The configuration consists of the following sections:
 - `admin_database`: Name of an admin database. Only needed in case of migrations. Defaults to `"postgres"`.
 - `admin_password`: Password of the admin user. For migrations only. Defaults to `"postgres"`.
 - `migrate`: Should a migration be performed if needed? Better triggered by the **ISDUBA_DB_MIGRATE** env variable. Defaults to `false`.
+- `terminate_after_migration` When a migration is started the program terminates by default.
 - `text_search`: When a database is first setup which languages should to used for full-text searches. Defaults to `["german", "english"]`.
 
 ### <a name="section_publishers_tlps"></a> Section `[[publishers_tlps]]` publishers/TLP filters
@@ -73,9 +74,8 @@ The configuration consists of the following sections:
 Is a table of pairs of `publisher` and `tlps` of default access.
 Defaults to:
 ```
-[[publishers_tlps]]
-publisher = ""
-tlps = ["WHITE"]
+[publishers_tlps]
+'*' = ["WHITE"]
 ```
 An empty `publisher` means all not explicity stated. `publisher`s with non empty values have a higher priority.
 Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values
@@ -109,3 +109,4 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_DB_ADMIN_USER` | `database admin_user` |
 | `ISDUBA_DB_ADMIN_PASSWORD` | `database admin_password` |
 | `ISDUBA_DB_MIGRATE` | `database migrate` |
+| `ISDUBA_DB_TERMINATE_AFTER_MIGRATION` | `database `terminate_after_migration` |

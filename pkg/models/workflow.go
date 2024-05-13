@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -13,6 +13,7 @@ import "fmt"
 // Workflow is a state of an advisory.
 type Workflow string
 
+// Different Workflows
 const (
 	NewWorkflow       Workflow = "new"       // NewWorkflow represents 'new'.
 	ReadWorkflow      Workflow = "read"      // ReadWorkflow represents 'read'.
@@ -22,24 +23,24 @@ const (
 	DeleteWorkflow    Workflow = "delete"    // DeleteWorkflow represents 'delete'.
 )
 
+// The different roles
 const (
-	Admin    = "admin"      // Admin role
-	Importer = "importer"   // Importer role
-	Editor   = "bearbeiter" // Editor role
-	Reviewer = "reviewer"   // Reviewer role
-	Auditor  = "auditor"    // Auditor role
+	Admin    = "admin"    // Admin role
+	Importer = "importer" // Importer role
+	Editor   = "editor"   // Editor role
+	Reviewer = "reviewer" // Reviewer role
+	Auditor  = "auditor"  // Auditor role
 )
 
-// TODO: Why is there no way back from read to new?
 // transitions is a matrix to tell who is allowed to change between certain states.
 var transitions = map[[2]Workflow][]string{
 	{"", NewWorkflow}:                   {Importer},
 	{NewWorkflow, ReadWorkflow}:         {Editor},
+	{ReadWorkflow, NewWorkflow}:         {Editor},
 	{ReadWorkflow, AssessingWorkflow}:   {Editor},
 	{AssessingWorkflow, NewWorkflow}:    {Importer},
 	{ReviewWorkflow, NewWorkflow}:       {Importer},
 	{ArchivedWorkflow, NewWorkflow}:     {Importer},
-	{ReadWorkflow, AssessingWorkflow}:   {Editor},
 	{AssessingWorkflow, ReviewWorkflow}: {Editor},
 	{ReviewWorkflow, AssessingWorkflow}: {Reviewer},
 	{ReviewWorkflow, ArchivedWorkflow}:  {Reviewer},
@@ -74,4 +75,9 @@ func (wf *Workflow) UnmarshalText(text []byte) error {
 // transition.
 func (wf Workflow) TransitionsRoles(other Workflow) []string {
 	return transitions[[2]Workflow{wf, other}]
+}
+
+// CommentingAllowed returns true if commenting is allowed.
+func (wf Workflow) CommentingAllowed() bool {
+	return wf == ReadWorkflow || wf == AssessingWorkflow
 }

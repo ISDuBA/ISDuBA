@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -49,6 +49,14 @@ const (
 	workflowType
 )
 
+// Parser helps parsing database queries,
+type Parser struct {
+	// Advisory indicates that only advisories should be considered.
+	Advisory bool
+	// Languages are the languages supported by full-text search.
+	Languages []string
+}
+
 // Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
 type Expr struct {
 	exprType  exprType
@@ -92,6 +100,28 @@ func (vt valueType) String() string {
 	}
 }
 
+// FieldEqInt is a shortcut mainly for building expressions
+// accessing an integer column like 'id's.
+func FieldEqInt(field string, value int64) *Expr {
+	return &Expr{
+		valueType: boolType,
+		exprType:  eq,
+		children: []*Expr{
+			{valueType: intType, exprType: cnst, intValue: value},
+			{valueType: intType, exprType: access, stringValue: field},
+		},
+	}
+}
+
+// BoolField returns an access term that returns a bool value.
+func BoolField(field string) *Expr {
+	return &Expr{
+		valueType:   boolType,
+		exprType:    access,
+		stringValue: field,
+	}
+}
+
 // String implements [fmt.Stringer].
 func (et exprType) String() string {
 	switch et {
@@ -132,6 +162,7 @@ func (pe parseError) Error() string {
 
 var columns = []documentColumn{
 	{"id", intType, false, false},
+	{"latest", boolType, false, false},
 	{"state", workflowType, true, false},
 	{"tracking_id", stringType, false, false},
 	{"version", stringType, false, false},
@@ -141,12 +172,14 @@ var columns = []documentColumn{
 	{"rev_history_length", intType, false, false},
 	{"title", stringType, false, false},
 	{"tlp", stringType, false, false},
+	{"ssvc", stringType, false, false},
 	{"cvss_v2_score", floatType, false, false},
 	{"cvss_v3_score", floatType, false, false},
 	{"four_cves", stringType, false, true},
 }
 
-// TODO: make this configurable?
+// supportedLangs are the default languages.
+// Can be overwritten in Parser.
 var supportedLangs = []string{
 	"english",
 	"german",
@@ -170,7 +203,22 @@ func CreateOrder(
 		if b.Len() > 0 {
 			b.WriteByte(',')
 		}
-		b.WriteString(field)
+		switch field {
+		case "tracking_id", "publisher":
+			b.WriteString("documents.")
+			b.WriteString(field)
+		case "cvss_v2_score", "cvss_v3_score":
+			b.WriteString("COALESCE(")
+			b.WriteString(field)
+			b.WriteString(",0)")
+		case "version":
+			// TODO: This is not optimal (SemVer).
+			b.WriteString(
+				`CASE WHEN pg_input_is_valid(version, 'integer') THEN version::int END`)
+		default:
+			b.WriteString(field)
+		}
+
 		if desc {
 			b.WriteString(" DESC")
 		} else {
@@ -196,13 +244,17 @@ func CheckProjections(proj []string, aliases map[string]string, advisory bool) e
 func createFrom(hasAliases, advisory bool) string {
 	var from string
 	if advisory {
-		from = `extended_documents JOIN advisories ON advisories.documents_id = id`
+		from = `documents ` +
+			`JOIN advisories ON ` +
+			`advisories.tracking_id = documents.tracking_id AND ` +
+			`advisories.publisher = documents.publisher`
 	} else {
-		from = `extended_documents`
+		from = `documents`
 	}
 
 	if hasAliases {
-		from += ` JOIN documents_texts ON id = documents_texts.documents_id`
+		from += ` JOIN documents_texts ON id = documents_texts.documents_id ` +
+			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`
 	}
 	return from
 }
@@ -257,9 +309,15 @@ func projectionsWithCasts(proj []string, aliases map[string]string) string {
 			b.WriteString(alias)
 			continue
 		}
-		b.WriteString(p)
-		if p == "state" {
+		switch p {
+		case "id", "tracking_id", "publisher":
+			b.WriteString("documents.")
+			b.WriteString(p)
+		case "state":
+			b.WriteString(p)
 			b.WriteString("::text")
+		default:
+			b.WriteString(p)
 		}
 	}
 	return b.String()
@@ -411,11 +469,19 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 		b.WriteByte(')')
 	}
 
+	writeAccess := func(e *Expr) {
+		column := e.stringValue
+		if column == "tracking_id" || column == "publisher" {
+			b.WriteString("documents.")
+		}
+		b.WriteString(column)
+	}
+
 	recurse = func(e *Expr) {
 		b.WriteByte('(')
 		switch e.exprType {
 		case access:
-			b.WriteString(e.stringValue)
+			writeAccess(e)
 		case cnst:
 			writeCnst(e)
 		case cast:
@@ -728,15 +794,25 @@ func (st *stack) workflow() {
 	}
 }
 
-func (st *stack) search() {
+func (p *Parser) checkLanguage(lang string) {
+	var langs []string
+	if p.Languages != nil {
+		langs = p.Languages
+	} else {
+		langs = supportedLangs
+	}
+	if !slices.Contains(langs, lang) {
+		panic(parseError(
+			fmt.Sprintf("unsupported search language %q", lang)))
+	}
+}
+
+func (st *stack) search(p *Parser) {
 	lang := st.pop()
 	term := st.pop()
 	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
-	if !slices.Contains(supportedLangs, lang.stringValue) {
-		panic(parseError(
-			fmt.Sprintf("unsupported search language %q", lang.stringValue)))
-	}
+	p.checkLanguage(lang.stringValue)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
@@ -820,7 +896,7 @@ func split(input string, fn func(string, bool)) {
 	}
 }
 
-func parse(input string, advisory bool) (*Expr, error) {
+func (p *Parser) parse(input string) (*Expr, error) {
 	st := stack{}
 	aliases := map[string]struct{}{}
 
@@ -863,12 +939,12 @@ func parse(input string, advisory bool) (*Expr, error) {
 		case ">=":
 			st.cmp(ge)
 		case "search":
-			st.search()
+			st.search(p)
 		case "as":
 			st.as(aliases)
 		default:
 			if strings.HasPrefix(field, "$") {
-				st.access(field[1:], advisory)
+				st.access(field[1:], p.Advisory)
 			} else {
 				st.pushString(field)
 			}
@@ -887,7 +963,7 @@ func parse(input string, advisory bool) (*Expr, error) {
 }
 
 // Parse returns an expression.
-func Parse(input string, advisory bool) (expr *Expr, err error) {
+func (p *Parser) Parse(input string) (expr *Expr, err error) {
 	defer func() {
 		if x := recover(); x != nil {
 			if pe, ok := x.(parseError); ok {
@@ -897,15 +973,5 @@ func Parse(input string, advisory bool) (expr *Expr, err error) {
 			}
 		}
 	}()
-	return parse(input, advisory)
-}
-
-// MustParse parses the given input to an expression.
-// If the parsing failed it panics.
-func MustParse(input string, advisory bool) *Expr {
-	expr, err := Parse(input, advisory)
-	if err != nil {
-		panic(fmt.Sprintf("parsing %q failed: %v", input, err))
-	}
-	return expr
+	return p.parse(input)
 }

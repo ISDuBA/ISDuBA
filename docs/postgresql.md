@@ -1,24 +1,23 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
  SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
+
 Everything described here can also be done via the [postgres install](./scripts/installpostgres.sh)
 and [postgres configuration](./scripts/configurepostgres.sh) scripts.
+
+This guide describes how to set up a postgres database for a development build on Ubuntu 24.04. These settings may not be suitable for production.
 
 # Get PostgreSQL
 Download PostgreSQL version 15 or newer.
 PostgreSQL 16 has been used for development.
 ```
-apt install vim gnupg2 -y
-curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc| gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
-sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' 
-apt update
-apt install postgresql-16
+apt install postgresql
 ```
 
 # Create PostgreSQL keycloak user
@@ -81,11 +80,15 @@ Open the pg_hba.conf:
 ```
 vim pg_hba.conf
 ```
-Add the following two lines:
+Add lines that allow logins via the network,
+replace `192.168.56.1/32` in the following example
+with the subnet you want to allow access from:
 ```
 host    all             all             192.168.56.1/32         scram-sha-256
 host    all             all             127.0.0.1/32            scram-sha-256
 ```
+
+Use a method to reload that config file, e.g. `pg_ctl reload`.
 
 Exit the postgres user:
 ```

@@ -1,5 +1,5 @@
-// This file is Free Software under the MIT License
-// without warranty, see README.md and LICENSES/MIT.txt for details.
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -52,22 +52,20 @@ const (
 )
 
 const (
-	defaultDatabaseHost          = "localhost"
-	defaultDatabasePort          = 5432
-	defaultDatabaseDatabase      = "isduba"
-	defaultDatabaseUser          = "isduba"
-	defaultDatabasePassword      = "isduba"
-	defaultDatabaseAdminDatabase = "postgres"
-	defaultDatabaseAdminUser     = "postgres"
-	defaultDatabaseAdminPassword = "postgres"
-	defaultDatabaseMigrate       = false
+	defaultDatabaseHost                    = "localhost"
+	defaultDatabasePort                    = 5432
+	defaultDatabaseDatabase                = "isduba"
+	defaultDatabaseUser                    = "isduba"
+	defaultDatabasePassword                = "isduba"
+	defaultDatabaseAdminDatabase           = "postgres"
+	defaultDatabaseAdminUser               = "postgres"
+	defaultDatabaseAdminPassword           = "postgres"
+	defaultDatabaseMigrate                 = false
+	defaultDatabaseTerminateAfterMigration = true
 )
 
 var defaultPublishersTLPs = models.PublishersTLPs{
-	models.PuplisherTLPs{
-		Publisher: "", // Wildcard
-		TLPs:      []models.TLP{models.TLPWhite},
-	},
+	"*": []models.TLP{models.TLPWhite},
 }
 
 // HumanSize de-serializes sizes from integer strings
@@ -108,16 +106,17 @@ type Web struct {
 
 // Database are the config options for the database.
 type Database struct {
-	Host          string   `toml:"host"`
-	Port          int      `toml:"port"`
-	Database      string   `toml:"database"`
-	User          string   `toml:"user"`
-	Password      string   `toml:"password"`
-	AdminUser     string   `toml:"admin_user"`
-	AdminDatabase string   `toml:"admin_database"`
-	AdminPassword string   `toml:"admin_password"`
-	Migrate       bool     `toml:"migrate"`
-	TextSearch    []string `toml:"text_search"`
+	Host                    string   `toml:"host"`
+	Port                    int      `toml:"port"`
+	Database                string   `toml:"database"`
+	User                    string   `toml:"user"`
+	Password                string   `toml:"password"`
+	AdminUser               string   `toml:"admin_user"`
+	AdminDatabase           string   `toml:"admin_database"`
+	AdminPassword           string   `toml:"admin_password"`
+	Migrate                 bool     `toml:"migrate"`
+	TerminateAfterMigration bool     `toml:"terminate_after_migration"`
+	TextSearch              []string `toml:"text_search"`
 }
 
 var defaultTextSearch = []string{"german", "english"}
@@ -211,16 +210,17 @@ func Load(file string) (*Config, error) {
 			Static:  defaultWebStatic,
 		},
 		Database: Database{
-			Host:          defaultDatabaseHost,
-			Port:          defaultDatabasePort,
-			Database:      defaultDatabaseDatabase,
-			User:          defaultDatabaseUser,
-			Password:      defaultDatabasePassword,
-			AdminDatabase: defaultDatabaseAdminDatabase,
-			AdminUser:     defaultDatabaseAdminUser,
-			AdminPassword: defaultDatabaseAdminPassword,
-			Migrate:       defaultDatabaseMigrate,
-			TextSearch:    defaultTextSearch,
+			Host:                    defaultDatabaseHost,
+			Port:                    defaultDatabasePort,
+			Database:                defaultDatabaseDatabase,
+			User:                    defaultDatabaseUser,
+			Password:                defaultDatabasePassword,
+			AdminDatabase:           defaultDatabaseAdminDatabase,
+			AdminUser:               defaultDatabaseAdminUser,
+			AdminPassword:           defaultDatabaseAdminPassword,
+			Migrate:                 defaultDatabaseMigrate,
+			TerminateAfterMigration: defaultDatabaseTerminateAfterMigration,
+			TextSearch:              defaultTextSearch,
 		},
 		PublishersTLPs: defaultPublishersTLPs,
 	}
@@ -274,6 +274,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_DB_ADMIN_USER", storeString(&cfg.Database.AdminUser)},
 		envStore{"ISDUBA_DB_ADMIN_PASSWORD", storeString(&cfg.Database.AdminPassword)},
 		envStore{"ISDUBA_DB_MIGRATE", storeBool(&cfg.Database.Migrate)},
+		envStore{"ISDUBA_DB_TERMINATE_AFTER_MIGRATION", storeBool(&cfg.Database.TerminateAfterMigration)},
 	)
 }
 

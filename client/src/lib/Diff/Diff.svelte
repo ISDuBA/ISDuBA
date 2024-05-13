@@ -1,6 +1,6 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -9,26 +9,41 @@
 -->
 
 <script lang="ts">
+  import "diff2html/bundles/css/diff2html.min.css";
   import { Diff2HtmlUI, type Diff2HtmlUIConfig } from "diff2html/lib/ui/js/diff2html-ui-slim";
+  import { onMount } from "svelte";
+  import { appStore } from "$lib/store";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { request } from "$lib/utils";
+  import { ColorSchemeType } from "diff2html/lib/types";
 
-  export let diff: string;
+  let diff: string;
+  let error: string;
 
-  $: {
-    const diffElement = document.getElementById("diff");
-    if (diff?.length > 0 && diffElement) {
-      const config: Diff2HtmlUIConfig = {
-        colorScheme: "light",
-        drawFileList: false
-      };
-      const diff2htmlUi = new Diff2HtmlUI(diffElement, diff, config);
-      diff2htmlUi.draw();
+  onMount(async () => {
+    if ($appStore.app.isUserLoggedIn) {
+      error = "";
+      const response = await request("advisory.diff", "GET");
+      if (response.ok) {
+        diff = response.content;
+      } else if (response.error) {
+        error = response.error;
+      }
+
+      const diffElement = document.getElementById("diff");
+      if (diff?.length > 0 && diffElement) {
+        const config: Diff2HtmlUIConfig = {
+          colorScheme: ColorSchemeType.LIGHT,
+          drawFileList: false
+        };
+        const diff2htmlUi = new Diff2HtmlUI(diffElement, diff, config);
+        diff2htmlUi.draw();
+      }
     }
-  }
+  });
 </script>
 
-<link
-  rel="stylesheet"
-  type="text/css"
-  href="../../node_modules/diff2html/bundles/css/diff2html.min.css"
-/>
-<div id="diff"></div>
+<div>
+  <ErrorMessage message={error}></ErrorMessage>
+  <div id="diff"></div>
+</div>

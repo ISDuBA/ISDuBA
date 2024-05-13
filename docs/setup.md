@@ -1,6 +1,6 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -8,19 +8,20 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
+This guide describes how to set up ISDuBA for a development build on Ubuntu 24.04. These settings may not be suitable for production.
+
 # Prerequisites
 
+ - [A postgres database](./postgresql.md)
  - [A keycloak setup](./keycloak.md)
 
- - [A postgres database](./postgres.md)
-
- - A recent version of go, see [here on how to download and install go](https://go.dev/doc/install)
+ - A recent version of [go](https://go.dev/doc/install), see commands
+   in [installgojava.sh](./scripts/installgojava.sh).
 
  - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool](https://github.com/csaf-poc/csaf_distribution)
  
 # Setup ISDuBA
 This setup can also be performed via the [installisduba.sh script](./scripts/installisduba.sh).
-In case that script was used, the binaries will be placed within the bin directory.
 
 Clone the repository:
 ```
@@ -31,17 +32,23 @@ Switch into the directory
 cd ISDuBA
 ```
 #### build the tools
-Switch into the bulkimport directory and build it:
+
+It is recommended to use the Makefile to build the tools:
+```
+make all
+```
+
+Alternatively, switch into the bulkimport directory and build the bulkimporter:
 ```
 cd cmd/bulkimport
 go build
 ```
-Switch into the isdubad directory and build it:
+then switch into the isdubad directory and build isdubad:
 ```
 cd ../isdubad
 go build
 ```
-Return to the main directory:
+Finally, return to the main directory:
 ```
 cd ../..
 ```
@@ -59,11 +66,11 @@ vim isdubad.toml
 From the repositories main directory, start the isdubad program,
 which creates the db and users according to the ./cmd/isdubad/isdubad -c isdubad.toml:
 ```
-ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isdubad.toml 
+ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isdubad.toml
 ```
 
 After the initial migration you can un-configure the `admin_` parts In
-the configuration file adn start `isdubad` without the `ISDUBA_DB_MIGRATE`
+the configuration file and start `isdubad` without the `ISDUBA_DB_MIGRATE`
 env var set.
 
 ### Import advisories
@@ -94,6 +101,19 @@ echo $TOKEN
 
 A current Version of nodeJS LTS (version `20.11.1`).
 
+### Prepare keycloak configuration
+
+Within `client/`:
+Copy the `.env.example` file to `.env` and adjust it to your needs.
+
+Example values:
+```bash
+PUBLIC_KEYCLOAK_URL="http://localhost:8080"
+PUBLIC_KEYCLOAK_REALM="isduba"
+PUBLIC_KEYCLOAK_CLIENTID="auth"
+PUBLIC_UPDATE_INTERVALL=5
+```
+
 ### Install necessary packages
 
 Assuming you are in the checked out repository
@@ -107,7 +127,8 @@ npx playwright install
 ### Run the client application in a dev environment
 
 ```bash
-npm run dev -- --open
+npm run dev
 ```
 
-This will start the client application and opens a window in your default browser.
+This will start the client application and
+print the URL you can point your browser to.

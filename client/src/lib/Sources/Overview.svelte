@@ -1,6 +1,6 @@
 <!--
- This file is Free Software under the MIT License
- without warranty, see README.md and LICENSES/MIT.txt for details.
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
+  import SectionHeader from "$lib/SectionHeader.svelte";
 </script>
 
-<h1>Sources</h1>
+<SectionHeader title="Sources"></SectionHeader>
