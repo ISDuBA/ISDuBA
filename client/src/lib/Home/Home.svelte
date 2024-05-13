@@ -11,7 +11,17 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import NewAdvisories from "./NewAdvisories.svelte";
+  import AdvisoryTable from "$lib/table/AdvisoryTable.svelte";
+
+  let columns = [
+    "id",
+    "publisher",
+    "title",
+    "tracking_id",
+    "version",
+    "cvss_v2_score",
+    "cvss_v3_score"
+  ];
 </script>
 
 <svelte:head>
@@ -20,5 +30,5 @@
 
 {#if $appStore.app.isUserLoggedIn}
   <SectionHeader title="Overview"></SectionHeader>
-  <NewAdvisories></NewAdvisories>
+  <AdvisoryTable {columns}></AdvisoryTable>
 {/if}
