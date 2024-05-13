@@ -60,12 +60,15 @@
     {#if title}
       <Label class="text-lg">{title}</Label>
     {/if}
-    <span class={`${title ? "text-gray-700" : "text-lg text-black"}`}
-      >{diff.length} changes{title ? "" : ":"}</span
+    <span class={`${title ? "text-gray-700" : "text-sm text-gray-500"}`}>{diff.length} changes</span
     >
-    <Accordion flush multiple>
-      <AccordionItem bind:open={isAddSectionOpen} class="justify-start gap-x-4 text-gray-700">
-        <div slot="header" class="pl-2">
+    <Accordion flush multiple class={title ? "mt-8" : "mt-1"}>
+      <AccordionItem
+        paddingFlush="pt-0 pb-3"
+        bind:open={isAddSectionOpen}
+        class="justify-start gap-x-4 text-gray-700"
+      >
+        <div slot="header">
           <div class="flex items-center gap-2">
             <span>Added ({addChanges.length})</span>
           </div>
@@ -84,8 +87,12 @@
           </div>
         {/each}
       </AccordionItem>
-      <AccordionItem bind:open={isRemoveSectionOpen} class="justify-start gap-x-4 text-gray-700">
-        <div slot="header" class="pl-2">
+      <AccordionItem
+        paddingFlush="py-3"
+        bind:open={isRemoveSectionOpen}
+        class="justify-start gap-x-4 text-gray-700"
+      >
+        <div slot="header">
           <div class="flex items-center gap-2">
             <span>Removed ({removeChanges.length})</span>
           </div>
@@ -106,14 +113,18 @@
           </div>
         {/each}
       </AccordionItem>
-      <AccordionItem bind:open={isEditedSectionOpen} class="justify-start gap-x-4 text-gray-700">
-        <div slot="header" class="pl-2">
+      <AccordionItem
+        paddingFlush="py-3"
+        bind:open={isEditedSectionOpen}
+        class="justify-start gap-x-4 text-gray-700"
+      >
+        <div slot="header">
           <div class="flex items-center gap-2">
             <span>Edited ({replaceChanges.length})</span>
             <ButtonGroup>
               <Button
                 color="light"
-                class={`${isSideBySideViewActivated === true ? pressedButtonClass : ""}`}
+                class={`py-1 text-xs ${isSideBySideViewActivated === true ? pressedButtonClass : ""}`}
                 on:click={(event) => {
                   event.stopPropagation();
                   isSideBySideViewActivated = true;
@@ -123,7 +134,7 @@
               </Button>
               <Button
                 color="light"
-                class={`${isSideBySideViewActivated === false ? pressedButtonClass : ""}`}
+                class={`py-1 text-xs ${isSideBySideViewActivated === false ? pressedButtonClass : ""}`}
                 on:click={(event) => {
                   event.stopPropagation();
                   isSideBySideViewActivated = false;
