@@ -13,10 +13,12 @@
   import { Radio, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/query/query";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
 
   const unsetMessages = () => {
     queryCount = null;
     errorMessage = "";
+    saveErrorMessage = "";
   };
 
   const testQuery = async () => {
@@ -55,6 +57,28 @@
     };
   };
 
+  const saveQuery = async () => {
+    const formData = new FormData();
+    formData.append("advisories", `${currentSearch.searchType === SEARCHTYPES.ADVISORY}`);
+    formData.append("name", currentSearch.name);
+    formData.append("global", `${currentSearch.global}`);
+    if (currentSearch.description.length > 0) {
+      formData.append("description", currentSearch.description);
+    }
+    if (currentSearch.query.length > 0) {
+      formData.append("query", currentSearch.query);
+    }
+    const columns = currentSearch.columns.filter((c) => c.visible).map((c) => c.name);
+    formData.append("columns", columns.join(" "));
+    const columnsForOrder = currentSearch.columns.filter((c) => c.orderBy);
+    const orderBy = columnsForOrder.map((c) => `${c.orderBy === "desc" ? "-" : ""}${c.name}`);
+    formData.append("orderBy", orderBy.join(" "));
+    const response = await request("/api/queries", "POST", formData);
+    if (!response.ok && response.error) {
+      saveErrorMessage = response.error;
+    }
+  };
+
   const switchOrderDirection = (index: number) => {
     if (currentSearch.columns[index].orderBy == null) {
       currentSearch.columns[index].orderBy = ORDERDIRECTIONS.ASC;
@@ -78,6 +102,7 @@
   let queryCount: any = null;
   let loading = false;
   let errorMessage = "";
+  let saveErrorMessage = "";
 
   const toggleSearchType = () => {};
 
@@ -301,8 +326,11 @@
           }}
           color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
         >
-        <Button color="light"><i class="bx bxs-save me-2"></i> Save</Button>
+        <Button on:click={saveQuery} color="light"><i class="bx bxs-save me-2"></i> Save</Button>
       </div>
     </div>
+    {#if saveErrorMessage.length > 0}
+      <ErrorMessage message={saveErrorMessage}></ErrorMessage>
+    {/if}
   </div>
 </div>

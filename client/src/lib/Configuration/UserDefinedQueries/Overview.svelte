@@ -19,11 +19,22 @@
     TableBodyRow,
     TableBodyCell
   } from "flowbite-svelte";
-  const STUBQUERIES = [
-    { description: "Show all RedHat advisories" },
-    { description: "Show all Sick advisories" }
-  ];
+  import { onMount } from "svelte";
+  import { request } from "$lib/utils";
+  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+
+  let queries: any[] = [];
   let orderBy = "";
+  let errorMessage = "";
+
+  onMount(async () => {
+    const response = await request("/api/queries", "GET");
+    if (response.ok) {
+      queries = response.content;
+    } else if (response.error) {
+      errorMessage = response.error;
+    }
+  });
 </script>
 
 <h2 class="mb-3 text-lg">User defined queries</h2>
@@ -35,20 +46,29 @@
     <Table hoverable={true} noborder={true}>
       <TableHead class="cursor-pointer">
         <TableHeadCell padding={tablePadding} on:click={() => {}}
-          >Description<i
+          >Name<i
             class:bx={true}
             class:bx-caret-up={orderBy == "name"}
             class:bx-caret-down={orderBy == "-name"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => {}}
+          >Description<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "description"}
+            class:bx-caret-down={orderBy == "-description"}
           ></i>
         </TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each STUBQUERIES as query}
+        {#each queries as query}
           <TableBodyRow class="cursor-pointer">
-            <TableBodyCell>{query.description}</TableBodyCell>
+            <TableBodyCell>{query.name ?? "-"}</TableBodyCell>
+            <TableBodyCell>{query.description ?? "-"}</TableBodyCell>
           </TableBodyRow>
         {/each}
       </TableBody>
     </Table>
+    <ErrorMessage message={errorMessage}></ErrorMessage>
   </div>
 </div>
