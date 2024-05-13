@@ -51,9 +51,9 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		Event      models.Event    `json:"event_type"`
 		State      models.Workflow `json:"state"`
 		Time       time.Time       `json:"time"`
-		Actor      *string         `json:"actor"`
+		Actor      *string         `json:"actor,omitempty"`
 		DocumentID int64           `json:"document_id"`
-		CommentID  *int64          `json:"comment_id"`
+		CommentID  *int64          `json:"comment_id,omitempty"`
 	}
 
 	var events []event
