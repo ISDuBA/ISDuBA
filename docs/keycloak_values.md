@@ -17,15 +17,4 @@ in Keycloak under ```<url_of_keycloak>:/admin/master/console/#/isduba/realm-sett
 
 A user stays logged in while they possess an active access token.
 
-The key values are ```SSO Session Idle``` and ```SSO Session Max``` found in the ```Sessions``` tab
-and ```Access Token Lifespan``` found in the ```Tokens``` tab.
-
-An access token expires ```Access Token Lifespan``` after it's last refresh and is no longer valid. Since shortly before it expires (~ 5 seconds), any action
-taken within the application will refresh it (even if it already expired) unless it's been longer than ```SSO Session Idle```
-since the last refresh. 
-
-(This also means setting the ```Access Token Lifespan``` to a value more than 5 seconds longer than the ```SSO Session Idle``` will
-prevent the token from being refreshed at all.)
-
-However, any session is limited by the ```SSO Session Max```
-and any access tokens expiry time can be set to the session's start plus ```SSO Session Max``` at most and cannot be extended past that point in time.
+The key value is ```SSO Session Max``` found in the ```Sessions``` tab. This will limit the maximum duration of an active session to it's value. 
