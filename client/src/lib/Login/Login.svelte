@@ -132,6 +132,25 @@
             {/each}
           {/await}
         </List>
+        Roles:
+        <List tag="ul" class="space-y-1" list="none">
+          {#if appStore.isAdmin()}
+            <Li liClass="ml-3">Admin</Li>
+          {/if}
+          {#if appStore.isReviewer()}
+            <Li liClass="ml-3">Reviewer</Li>
+          {/if}
+          {#if appStore.isAuditor()}
+            <Li liClass="ml-3">Auditor</Li>
+          {/if}
+          {#if appStore.isImporter()}
+            <Li liClass="ml-3">Importer</Li>
+          {/if}
+          {#if appStore.isEditor()}
+            <Li liClass="ml-3">Editor</Li>
+          {/if}
+        </List>
+
         <ErrorMessage message={error}></ErrorMessage>
       </P>
     {/if}
