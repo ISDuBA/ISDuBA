@@ -146,7 +146,9 @@ ID/Name: ```auth```
 
 - Claim JSON type: ```JSON```
 
-- For the switches, Multivalued should be turned off, the rest on
+- For the switches, all should be turned on
+
+## Users, groups and roles
 
 Create roles via Realm roles:
 
@@ -155,17 +157,22 @@ E.g.
 - Name: ```editor```
 - Description: ```editor```
 
-### Add attributes
+Create groups via Groups:
+
+E.g.
+- Name: ```whitegreen```
+
 
 The following attribute allows the role to handle
 the WHITE and GREEN TLP levels of all publishers. Adjust as necessary:
-Switch to the Attributes tab and set:
+Click on the group in the Groups tab.
+Switch to the group's Attributes tab and set:
 
 - Key: ```TLP```
 
 - Value: ```{"*": [ "WHITE", "GREEN" ]}```
 
-## Create Users
+### Create Users
 
 Via ```Users``` use ```Create User``` to create a user.
 USERNAME and USERPASSWORD are example credentials.
@@ -177,9 +184,10 @@ Then, set the password via ```Credentials```. This example uses the password
 ```USERPASSWORD```
 Turn ```temporary``` off.
 
-### Assign Users their roles
 Via ```Users``` via ```Role Mapping``` via ```Assign Role``` assign the users
-their role.
+their role. Then, do the same for groups. A users role indicates the actions
+they are allowed to take, their group's attribute sets the filter to which
+advisories they are allowed to handle.
 
 
 ### (Optional) Adjust necessary profile information
