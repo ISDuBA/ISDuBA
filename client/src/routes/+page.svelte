@@ -42,6 +42,7 @@
     appStore.setIsUserLoggedIn(false);
     appStore.setSessionExpiredMessage(e.message);
     appStore.setSessionExpired(true);
+    userManager.removeUser();
     push("/login");
   });
   userManager.getUser().then(async (user: User | null) => {
