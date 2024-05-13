@@ -10,20 +10,19 @@ package web
 
 import (
 	"database/sql"
-	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func (c *Controller) viewEvents(ctx *gin.Context) {
-
 	idS := ctx.Param("document")
 	id, err := strconv.ParseInt(idS, 10, 64)
 	if err != nil {
@@ -52,8 +51,9 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		Event      models.Event    `json:"event_type"`
 		State      models.Workflow `json:"state"`
 		Time       time.Time       `json:"time"`
-		Actor      *string         `json:"actor"`
+		Actor      *string         `json:"actor,omitempty"`
 		DocumentID int64           `json:"document_id"`
+		CommentID  *int64          `json:"comment_id,omitempty"`
 	}
 
 	var events []event
@@ -69,7 +69,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		if !exists {
 			return nil
 		}
-		const fetchSQL = `SELECT event, documents_id, time, actor, state FROM events_log ` +
+		const fetchSQL = `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
 			`WHERE documents_id = $1 ORDER BY time DESC`
 		rows, _ := conn.Query(rctx, fetchSQL, id)
 		var err error
@@ -79,7 +79,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 			func(row pgx.CollectableRow) (event, error) {
 				var ev event
 				var act sql.NullString
-				err := row.Scan(&ev.Event, &ev.DocumentID, &ev.Time, &ev.Actor, &ev.State)
+				err := row.Scan(&ev.Event, &ev.DocumentID, &ev.Time, &ev.Actor, &ev.State, &ev.CommentID)
 				ev.Time = ev.Time.UTC()
 				if act.Valid {
 					ev.Actor = &act.String
