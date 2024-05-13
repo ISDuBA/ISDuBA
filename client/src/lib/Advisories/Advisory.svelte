@@ -50,6 +50,7 @@
   let createCommentError: string;
   let loadDocumentSSVCError: string;
   let advisoryVersions: any[] = [];
+  let advisoryVersionByDocumentID: any;
   let advisoryState: string;
   let isCommentingAllowed: boolean;
   $: if ([READ, ASSESSING].includes(advisoryState)) {
@@ -78,6 +79,10 @@
       advisoryVersions = result.documents.map((doc: any) => {
         return { id: doc.id, version: doc.version, tracking_id: doc.tracking_id };
       });
+      advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
+        acc[version.id] = version.version;
+        return acc;
+      }, {});
     } else if (response.error) {
       loadAdvisoryVersionsError = `Could not load versions. ${getErrorMessage(response.error)}`;
     }
@@ -136,7 +141,11 @@
     );
     result.forEach((c) => {
       if (c.content !== "undefined") {
-        loadedComments = loadedComments.concat(c.content);
+        let comments = c.content;
+        for (let i = 0; i < comments.length; i++) {
+          comments[i].documentVersion = advisoryVersionByDocumentID[comments[i].document_id];
+        }
+        loadedComments = loadedComments.concat(comments);
       } else {
         loadCommentsError = `Could not load all comments.`;
       }
