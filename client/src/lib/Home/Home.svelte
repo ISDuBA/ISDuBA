@@ -30,5 +30,5 @@
 
 {#if $appStore.app.isUserLoggedIn}
   <SectionHeader title="Overview"></SectionHeader>
-  <AdvisoryTable {columns}></AdvisoryTable>
+  <AdvisoryTable query="$state new workflow =" loadAdvisories={true} {columns}></AdvisoryTable>
 {/if}
