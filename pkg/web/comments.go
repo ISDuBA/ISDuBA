@@ -54,7 +54,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		commentator            = ctx.GetString("uid")
 		message, _             = ctx.GetPostForm("message")
 		now                    = time.Now().UTC()
-		commentID              int64
+		commentID              *int64
 		rctx                   = ctx.Request.Context()
 	)
 
