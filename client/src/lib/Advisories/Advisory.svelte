@@ -49,6 +49,7 @@
   let loadDocumentError: string;
   let createCommentError: string;
   let loadDocumentSSVCError: string;
+  let stateError: string;
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
@@ -182,7 +183,7 @@
     if (response.ok) {
       advisoryState = newState;
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      stateError = `Couldn't load state. ${getErrorMessage(response.error)}`;
     }
     await loadEvents();
   }
@@ -197,7 +198,7 @@
       advisoryState = result.documents[0].state;
       return result.documents[0].state;
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      stateError = `Couldn't load state. ${getErrorMessage(response.error)}`;
     }
   };
 
@@ -353,6 +354,8 @@
       <hr class="mb-4 mt-2" />
     </div>
     <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
+    <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+    <ErrorMessage message={stateError}></ErrorMessage>
     {#if advisoryVersions.length > 0}
       <Version
         publisherNamespace={params.publisherNamespace}
