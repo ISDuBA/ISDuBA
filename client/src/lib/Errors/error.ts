@@ -20,7 +20,7 @@ const ERRORMESSAGES: any = {
 };
 
 const getErrorMessage = (code: string) => {
-  const standardmessage = `A general error occured. ${contactAdmin}`;
+  const standardmessage = `An error occured. ${contactAdmin}`;
   if (ERRORMESSAGES[code]) return ERRORMESSAGES[code];
   return standardmessage;
 };
