@@ -151,6 +151,7 @@
             on:blur={() => {
               editName = false;
             }}
+            on:click={(e) => e.stopPropagation()}
           />
         {:else}
           <div class="flex flex-row items-center" title={currentSearch.name}>
@@ -181,6 +182,7 @@
             on:blur={() => {
               editDescription = false;
             }}
+            on:click={(e) => e.stopPropagation()}
           />
         {:else}
           <div class="flex flex-row items-center" title={currentSearch.description}>
