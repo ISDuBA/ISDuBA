@@ -12,6 +12,7 @@
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import NewAdvisories from "./NewAdvisories.svelte";
+  import Queries from "./Queries.svelte";
 </script>
 
 <svelte:head>
@@ -22,4 +23,5 @@
   <SectionHeader title="Overview"></SectionHeader>
   <hr class="mb-6" />
   <NewAdvisories></NewAdvisories>
+  <Queries></Queries>
 {/if}
