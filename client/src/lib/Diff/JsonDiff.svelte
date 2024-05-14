@@ -15,6 +15,7 @@
   import LazyDiffEntry from "./LazyDiffEntry.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   export let diffDocuments: any;
   export let title: string | undefined;
@@ -38,7 +39,7 @@
     if (response.ok) {
       diff = response.content;
     } else if (response.error) {
-      error = response.error;
+      error = `Couldn't load diffs. ${getErrorMessage(response.error)}`;
     }
   };
 
