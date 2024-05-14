@@ -67,6 +67,13 @@ export const request = async (
     }
     return { error: `${response.status}`, content: response.statusText, ok: false };
   } catch (error: any) {
+    if (/fetch/.test(error)) {
+      return {
+        error: "600",
+        content: error,
+        ok: false
+      };
+    }
     return {
       error: `${error.name}: ${error.message}`,
       ok: false

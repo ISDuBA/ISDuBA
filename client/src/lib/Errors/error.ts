@@ -12,6 +12,7 @@ const contactAdmin = `Please contact an administrator.`;
 
 const ERRORMESSAGES: any = {
   "500": `An error occured on the server. ${contactAdmin}`,
+  "600": `A network error occured. Try again later. If the error persists: ${contactAdmin}`,
   "400": `The request sent from the client could not be understood. ${contactAdmin}`,
   "401": `You are unauthorized. Please re-login.`,
   "402": `You are not allowed to do this. ${contactAdmin}`,
