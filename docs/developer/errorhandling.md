@@ -50,7 +50,7 @@ Regarding Network errors we inform the user in the following categories:
   - `401`: `You are unauthorized. Please re-login.`
   - `402`: `You are not allowed to do this. Please contact an administrator.`
   - `500`: `An error occured on the server. Please contact an administrator.`
-  - `600`: `A network error occured. Try again later. If the error persists:Please contact an administrator.`
+  - `600`: `A network error occured. Try again later. If the error persists: Please contact an administrator.`
 
 ### Special case
   When client is unable to parse the JSON returned from the server:
