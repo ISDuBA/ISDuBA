@@ -24,7 +24,7 @@ The configuration consists of the following sections:
 - [`[keycloak]`](#section_keycloak) Keycloak
 - [`[web]`](#section_web) Web interface
 - [`[database]`](#section_database) Database credentials
-- [`[[publishers_tlps]]`](#section_publishers_tlps) publishers/TLPs filters
+- [`[publishers_tlps]`](#section_publishers_tlps) publishers/TLPs filters
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
@@ -69,7 +69,7 @@ The configuration consists of the following sections:
 - `terminate_after_migration` When a migration is started the program terminates by default.
 - `text_search`: When a database is first setup which languages should to used for full-text searches. Defaults to `["german", "english"]`.
 
-### <a name="section_publishers_tlps"></a> Section `[[publishers_tlps]]` publishers/TLP filters
+### <a name="section_publishers_tlps"></a> Section `[publishers_tlps]` publishers/TLP filters
 
 Is a table of pairs of `publisher` and `tlps` of default access.
 Defaults to:
