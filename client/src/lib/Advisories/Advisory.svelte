@@ -183,7 +183,7 @@
     if (response.ok) {
       advisoryState = newState;
     } else if (response.error) {
-      stateError = `Couldn't load state. ${getErrorMessage(response.error)}`;
+      stateError = `Could not load state. ${getErrorMessage(response.error)}`;
     }
     await loadEvents();
   }
