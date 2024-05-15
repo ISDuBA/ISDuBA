@@ -12,7 +12,7 @@
   export let content: string | number;
   export let isSideBySideViewActivated: boolean = true;
   $: parsedContent = isSideBySideViewActivated ? [] : parse(content);
-  $: parsedSideBySideContent = isSideBySideViewActivated ? parseMixed() : [];
+  $: parsedSideBySideContent = isSideBySideViewActivated ? parseMixed(content) : [];
 
   const parse = (textPart: any, level = 0): any[] => {
     const text = typeof textPart === "number" ? textPart.toString() : textPart;
@@ -61,8 +61,8 @@
     return text;
   };
 
-  const parseMixed = () => {
-    const text = typeof content === "number" ? content.toString() : content;
+  const parseMixed = (textToParse: any) => {
+    const text = typeof textToParse === "number" ? textToParse.toString() : textToParse;
     let added = text.replaceAll(/\[-.*?-]/g, "");
     added = removeAnnotation(added, "{+", "+}");
     let removed = text.replaceAll(/{+.*?\+}/g, "");
