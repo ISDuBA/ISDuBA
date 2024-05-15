@@ -12,6 +12,7 @@
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/table/AdvisoryTable.svelte";
+  import Queries from "./Queries.svelte";
 
   let columns = [
     "id",
@@ -30,5 +31,7 @@
 
 {#if $appStore.app.isUserLoggedIn}
   <SectionHeader title="Overview"></SectionHeader>
+  <hr class="mb-6" />
   <AdvisoryTable query="$state new workflow =" loadAdvisories={true} {columns}></AdvisoryTable>
+  <Queries></Queries>
 {/if}

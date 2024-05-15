@@ -36,16 +36,18 @@
 </script>
 
 {#if $appStore.app.isUserLoggedIn}
-  <SectionHeader title="Queries"></SectionHeader>
-  <ButtonGroup>
-    {#each queries as query, index}
-      <Button
-        on:click={() => selectQuery(index)}
-        class={`${index === selectedIndex ? pressedButtonClass : ""} flex flex-col p-0`}
-      >
-        <span title={query.description} class="m-2 h-full w-full">{query.name}</span>
-      </Button>
-    {/each}
-  </ButtonGroup>
+  {#if queries.length > 0}
+    <SectionHeader title="Queries"></SectionHeader>
+    <ButtonGroup>
+      {#each queries as query, index}
+        <Button
+          on:click={() => selectQuery(index)}
+          class={`${index === selectedIndex ? pressedButtonClass : ""} flex flex-col p-0`}
+        >
+          <span title={query.description} class="m-2 h-full w-full">{query.name}</span>
+        </Button>
+      {/each}
+    </ButtonGroup>
+  {/if}
   <ErrorMessage message={errorMessage}></ErrorMessage>
 {/if}
