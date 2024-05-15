@@ -16,11 +16,14 @@
   import { request } from "$lib/utils";
   import { marked } from "marked";
   import DOMPurify from "dompurify";
+  import { createEventDispatcher } from "svelte";
 
   export let comment: any;
   let updatedComment = comment.message;
   let isEditing = false;
   let updateCommentError: string;
+
+  const dispatch = createEventDispatcher();
 
   function toggleEditing() {
     isEditing = !isEditing;
@@ -38,6 +41,7 @@
     } else if (response.error) {
       updateCommentError = response.error;
     }
+    dispatch("commentUpdate");
   }
 
   const parseMarkdown = (markdown: string) => {

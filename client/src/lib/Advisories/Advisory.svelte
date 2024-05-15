@@ -8,17 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import {
-    Button,
-    Label,
-    Timeline,
-    AccordionItem,
-    Accordion,
-    Badge,
-    Tooltip,
-    Dropdown,
-    DropdownItem
-  } from "flowbite-svelte";
+  import { Label, Timeline, AccordionItem, Accordion, Badge, Tooltip } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comment.svelte";
@@ -35,17 +25,14 @@
     NEW,
     READ,
     REVIEW,
-    canSetStateArchived,
-    canSetStateAssessing,
-    canSetStateDeleted,
-    canSetStateNew,
     canSetStateRead,
-    canSetStateReview,
-    getAllowedWorkflowChanges
+    allowedToChangeWorkflow
   } from "$lib/permissions";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import Event from "$lib/Advisories/Event.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
   export let params: any = null;
 
   let document: any = {};
@@ -55,8 +42,14 @@
     : "";
   let comment: string = "";
   let comments: any = [];
+  let events: any = [];
   let loadCommentsError: string;
+  let loadEventsError: string;
+  let loadAdvisoryVersionsError: string;
+  let loadDocumentError: string;
   let createCommentError: string;
+  let loadDocumentSSVCError: string;
+  let stateError: string;
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState: string;
@@ -92,7 +85,7 @@
         return acc;
       }, {});
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      loadAdvisoryVersionsError = `Could not load versions. ${getErrorMessage(response.error)}`;
     }
   };
 
@@ -104,7 +97,7 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      loadDocumentError = `Could not load document. ${getErrorMessage(response.error)}`;
     }
   };
 
@@ -119,47 +112,60 @@
         ssvc = convertVectorToLabel(result.documents[0].ssvc);
       }
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      loadDocumentSSVCError = `Could not load SSVC. ${getErrorMessage(response.error)}`;
     }
   };
 
-  function loadComments(): Promise<any[]> {
-    return new Promise((resolve) => {
-      const newComments: any = [];
-      loadCommentsError = "";
-      advisoryVersions.forEach(async (advVer: any) => {
-        const response = await request(`/api/comments/${advVer.id}`, "GET");
-        if (response.ok) {
-          const loadedComments = response.content;
-          if (loadedComments) {
-            loadedComments.forEach((c: any) => {
-              c.documentVersion = advisoryVersionByDocumentID[c.document_id];
-            });
-            newComments.push(...loadedComments);
-          }
-          comments = newComments;
-          resolve(newComments);
-        } else if (response.error) {
-          loadCommentsError = response.error;
-        }
-      });
+  const loadEvents = async () => {
+    let loadedEvents: any = [];
+    const result = await Promise.all(
+      advisoryVersions.map(async (v) => {
+        return request(`/api/events/${v.id}`, "GET");
+      })
+    );
+    result.forEach((e) => {
+      if (e.content !== "undefined") {
+        loadedEvents = loadedEvents.concat(e.content);
+      } else {
+        loadEventsError = `Could not load all events.`;
+      }
     });
-  }
+    events = loadedEvents;
+  };
+
+  const loadComments = async () => {
+    let loadedComments: any = [];
+    const result = await Promise.all(
+      advisoryVersions.map(async (v) => {
+        return request(`/api/comments/${v.id}`, "GET");
+      })
+    );
+    result.forEach((c) => {
+      if (c.content !== "undefined") {
+        let comments = c.content;
+        for (let i = 0; i < comments.length; i++) {
+          comments[i].documentVersion = advisoryVersionByDocumentID[comments[i].document_id];
+        }
+        loadedComments = loadedComments.concat(comments);
+      } else {
+        loadCommentsError = `Could not load all comments.`;
+      }
+    });
+    comments = loadedComments;
+  };
+
   async function createComment() {
     const formData = new FormData();
     formData.append("message", comment);
     const response = await request(`/api/comments/${params.id}`, "POST", formData);
     if (response.ok) {
       comment = "";
-      loadComments().then((newComments: any[]) => {
-        if (newComments.length === 1) {
-          loadAdvisoryState();
-        }
-      });
-      appStore.displaySuccessMessage("Comment for advisory saved.");
+      await loadComments();
+      await loadAdvisoryState();
     } else if (response.error) {
-      createCommentError = response.error;
+      createCommentError = `Could not create comment. ${getErrorMessage(response.error)}`;
     }
+    await loadEvents();
   }
 
   async function sendForReview() {
@@ -177,8 +183,9 @@
     if (response.ok) {
       advisoryState = newState;
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      stateError = `Couldn't load state. ${getErrorMessage(response.error)}`;
     }
+    await loadEvents();
   }
 
   const loadAdvisoryState = async () => {
@@ -191,7 +198,7 @@
       advisoryState = result.documents[0].state;
       return result.documents[0].state;
     } else if (response.error) {
-      appStore.displayErrorMessage(response.error);
+      stateError = `Couldn't load state. ${getErrorMessage(response.error)}`;
     }
   };
 
@@ -201,6 +208,7 @@
     await loadAdvisoryVersions();
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
       await loadComments();
+      await loadEvents();
     }
     const state = await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
@@ -209,7 +217,7 @@
       appStore.isEditor() &&
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
-      const id = setTimeout(async () => {
+      const id: any = setTimeout(async () => {
         if (canSetStateRead(advisoryState)) {
           await updateState(READ);
           appStore.displayInfoMessage("This advisory is marked as read");
@@ -219,9 +227,9 @@
     }
   };
 
-  function loadMetaData() {
-    loadAdvisoryState();
-    loadDocumentSSVC();
+  async function loadMetaData() {
+    await loadAdvisoryState();
+    await loadDocumentSSVC();
   }
 
   const onSelectedDiffDocuments = async (event: any) => {
@@ -230,6 +238,22 @@
       docB: event.detail.docB
     };
     isDiffOpen = true;
+  };
+
+  const updateStateIfAllowed = async (state: string) => {
+    if (allowedToChangeWorkflow(appStore.getRoles(), advisoryState, state)) {
+      await updateState(state);
+    }
+  };
+
+  const getBadgeColor = (state: string, currentState: string) => {
+    if (state === currentState) {
+      return "green";
+    } else if (allowedToChangeWorkflow(appStore.getRoles(), currentState, state)) {
+      return "dark";
+    } else {
+      return "none";
+    }
   };
 
   onDestroy(() => {
@@ -254,120 +278,103 @@
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
-        <Button
-          class="!p-1"
-          color="light"
-          disabled={getAllowedWorkflowChanges(advisoryState).length === 0}
-        >
-          <i class="bx bx-dots-vertical-rounded"></i>
-        </Button>
-        <Dropdown>
-          {#if canSetStateNew(advisoryState)}
-            <DropdownItem on:click={() => updateState(NEW)} class="flex items-center gap-2">
-              <i class="bx bx-star text-lg"></i>
-              <span>Mark as new</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateRead(advisoryState)}
-            <DropdownItem on:click={() => updateState(READ)} class="flex items-center gap-2">
-              <i class="bx bx-show text-lg"></i>
-              <span>Mark as read</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateReview(advisoryState)}
-            <DropdownItem on:click={() => updateState(REVIEW)} class="flex items-center gap-2">
-              <i class="bx bx-book-open text-lg"></i>
-              <span>Release for review</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateAssessing(advisoryState) && advisoryState === REVIEW}
-            <DropdownItem on:click={() => updateState(ASSESSING)} class="flex items-center gap-2">
-              <i class="bx bx-analyse text-lg"></i>
-              <span>Back to assessing</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateArchived(advisoryState)}
-            <DropdownItem on:click={() => updateState(ARCHIVED)} class="flex items-center gap-2">
-              <i class="bx bx-archive text-lg"></i>
-              <span>Archive</span>
-            </DropdownItem>
-          {/if}
-          {#if canSetStateDeleted(advisoryState)}
-            <DropdownItem on:click={() => updateState(DELETED)} class="flex items-center gap-2">
-              <i class="bx bx-trash text-lg"></i>
-              <span>Mark for deletion</span>
-            </DropdownItem>
-          {/if}
-        </Dropdown>
       </div>
-      <Label class="mb-2 text-gray-600">{params.publisherNamespace}</Label>
-      <div class="flex gap-2">
-        {#if advisoryState}
-          <Badge class="w-fit">{advisoryState}</Badge>
-          <Tooltip>Workflow state</Tooltip>
-        {/if}
-        {#if ssvc}
-          <Badge style={ssvcStyle}>{ssvc.label}</Badge>
-          <Tooltip>SSVC</Tooltip>
-        {/if}
+      <div class="flex flex-row">
+        <Label class="text-gray-600">{params.publisherNamespace}</Label>
+        <div class="ml-auto flex flex-row gap-2">
+          {#if advisoryState}
+            <a
+              href={"javascript:void(0);"}
+              class="inline-flex"
+              on:click={() => updateStateIfAllowed(NEW)}
+            >
+              <Badge title="Mark as new" class="w-fit" color={getBadgeColor(NEW, advisoryState)}
+                >{NEW}</Badge
+              >
+            </a>
+            <a
+              href={"javascript:void(0);"}
+              class="inline-flex"
+              on:click={() => updateStateIfAllowed(READ)}
+            >
+              <Badge title="Mark as read" class="w-fit" color={getBadgeColor(READ, advisoryState)}
+                >{READ}</Badge
+              >
+            </a>
+            <a
+              href={"javascript:void(0);"}
+              class="inline-flex"
+              on:click={() => updateStateIfAllowed(ASSESSING)}
+            >
+              <Badge
+                title="Mark as assesing"
+                class="w-fit"
+                color={getBadgeColor(ASSESSING, advisoryState)}>{ASSESSING}</Badge
+              >
+            </a>
+            <a
+              href={"javascript:void(0);"}
+              class="inline-flex"
+              on:click={() => updateStateIfAllowed(REVIEW)}
+            >
+              <Badge
+                title="Release for review"
+                class="w-fit"
+                color={getBadgeColor(REVIEW, advisoryState)}>{REVIEW}</Badge
+              >
+            </a>
+            <a
+              href={"javascript:void(0);"}
+              class="inline-flex"
+              on:click={() => updateStateIfAllowed(ARCHIVED)}
+            >
+              <Badge title="Archive" class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}
+                >{ARCHIVED}</Badge
+              >
+            </a>
+            <a
+              href={"javascript:void(0);"}
+              class="inline-flex"
+              on:click={() => updateStateIfAllowed(DELETED)}
+            >
+              <Badge
+                title="Mark for deletion"
+                on:click={() => updateState(DELETED)}
+                class="w-fit"
+                color={getBadgeColor(DELETED, advisoryState)}>{DELETED}</Badge
+              >
+            </a>
+          {/if}
+          {#if ssvc}
+            <Badge style={ssvcStyle}>{ssvc.label}</Badge>
+            <Tooltip>SSVC</Tooltip>
+          {/if}
+        </div>
       </div>
+      <hr class="mb-4 mt-2" />
     </div>
-    <Version
-      publisherNamespace={params.publisherNamespace}
-      trackingID={params.trackingID}
-      {advisoryVersions}
-      selectedDocumentVersion={document.tracking?.version}
-      on:selectedDiffDocuments={onSelectedDiffDocuments}
-      on:disableDiff={() => (isDiffOpen = false)}
-    ></Version>
+    <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
+    <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+    <ErrorMessage message={stateError}></ErrorMessage>
+    {#if advisoryVersions.length > 0}
+      <Version
+        publisherNamespace={params.publisherNamespace}
+        trackingID={params.trackingID}
+        {advisoryVersions}
+        selectedDocumentVersion={document.tracking?.version}
+        on:selectedDiffDocuments={onSelectedDiffDocuments}
+        on:disableDiff={() => (isDiffOpen = false)}
+      ></Version>
+    {/if}
     {#if isDiffOpen}
       <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
     {:else}
       <Webview></Webview>
     {/if}
+    <ErrorMessage message={loadDocumentError}></ErrorMessage>
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
-      <div class="p-2">
-        {#if appStore.isEditor()}
-          <Button
-            on:click={() => {
-              if (advisoryState === NEW) {
-                updateState(READ);
-              } else {
-                updateState(NEW);
-              }
-            }}
-            disabled={!canSetStateNew(advisoryState) && !canSetStateRead(advisoryState)}
-          >
-            {#if advisoryState === NEW}
-              <i class="bx bx-show text-lg"></i>
-              <span>Mark as read</span>
-            {:else}
-              <i class="bx bx-star text-lg"></i>
-              <span>Mark as new</span>
-            {/if}
-          </Button>
-        {/if}
-        {#if appStore.isReviewer()}
-          <Button
-            on:click={() => updateState(ARCHIVED)}
-            disabled={!canSetStateArchived(advisoryState)}
-          >
-            <i class="bx bx-archive text-lg"></i>
-            <span>Archive</span>
-          </Button>
-        {/if}
-        {#if appStore.isReviewer() || appStore.isEditor()}
-          <Button
-            on:click={() => updateState(DELETED)}
-            disabled={!canSetStateDeleted(advisoryState)}
-          >
-            <i class="bx bx-trash text-lg"></i>
-            <span>Mark for deletion</span>
-          </Button>
-        {/if}
-      </div>
       <Accordion>
         <AccordionItem open>
           <span slot="header"
@@ -377,7 +384,7 @@
             <div class="max-h-96 overflow-y-auto pl-2">
               <Timeline class="mb-4 flex flex-col-reverse">
                 {#each comments as comment (comment.id)}
-                  <Comment {comment}></Comment>
+                  <Comment on:commentUpdate={loadEvents} {comment}></Comment>
                 {/each}
               </Timeline>
             </div>
@@ -403,7 +410,27 @@
       </Accordion>
       <Accordion class="mt-3">
         <AccordionItem open>
+          <span slot="header"
+            ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
+          >
+          {#if events?.length > 0}
+            <div class="max-h-96 overflow-y-auto pl-2">
+              <Timeline class="mb-4 flex flex-col-reverse">
+                {#each events as event}
+                  <Event {event}></Event>
+                {/each}
+              </Timeline>
+            </div>
+          {:else}
+            <div class="mb-6 text-gray-600">No events available.</div>
+          {/if}
+          <ErrorMessage message={loadEventsError}></ErrorMessage>
+        </AccordionItem>
+      </Accordion>
+      <Accordion class="mt-3">
+        <AccordionItem open>
           <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
+          <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
           <SsvcCalculator
             vectorInput={ssvc?.vector}
             disabled={!isCalculatingAllowed}

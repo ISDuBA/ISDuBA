@@ -13,10 +13,11 @@
   import { Button, Heading, Card } from "flowbite-svelte";
   import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
+  import { getErrorMessage } from "$lib/Errors/error";
 
-  let error: string;
+  let error = "";
 
   async function logout() {
     appStore.setSessionExpired(true);
@@ -37,7 +38,7 @@
       const backendInfo = response.content;
       return backendInfo.version;
     } else if (response.error) {
-      error = response.error;
+      error = getErrorMessage(response.error);
     }
   }
 
@@ -46,10 +47,22 @@
     if (response.ok) {
       return new Map<string, [string]>(Object.entries(response.content));
     } else if (response.error) {
-      error = response.error;
+      error = getErrorMessage(response.error);
     }
     return new Map<string, [string]>();
   }
+
+  const getTLPClass = (label: string) => {
+    if (label === "WHITE") {
+      return "tlpclear";
+    } else if (label === "RED") {
+      return "tlpred";
+    } else if (label === "AMBER") {
+      return "tlpamber";
+    } else if (label === "GREEN") {
+      return "tlpgreen";
+    }
+  };
 </script>
 
 <svelte:head>
@@ -94,23 +107,72 @@
       </div>
     </Card>
     {#if $appStore.app.isUserLoggedIn}
-      <P class="mt-3">
-        {#await getVersion() then version}
-          Versions:
-          <List tag="ul" class="space-y-1" list="none">
-            <Li liClass="ml-3">ISDuBA: {version}</Li>
-          </List>
-        {/await}
-        View:
-        <List tag="ul" class="space-y-1" list="none">
-          {#await getView() then view}
-            {#each view.entries() as [publisher, tlp]}
-              <Li liClass="ml-3">{publisher}: {tlp}</Li>
-            {/each}
+      {#if error === ""}
+        <P class="mt-3">
+          {#await getVersion() then version}
+            Versions:
+            <List tag="ul" class="space-y-1" list="none">
+              <Li liClass="ml-3">ISDuBA: {version}</Li>
+            </List>
           {/await}
-        </List>
-        <ErrorMessage message={error}></ErrorMessage>
-      </P>
+          View:
+          <List tag="ul" class="space-y-1" list="none">
+            {#await getView() then view}
+              {#each view.entries() as [publisher, tlps]}
+                <Li liClass="ml-3"
+                  >{publisher === "*" ? "all" : publisher}:
+                  {#each tlps as tlp}
+                    <div
+                      class={getTLPClass(tlp)}
+                      style="width: fit-content; display: inline; margin-right: 0.25em;"
+                    >
+                      {tlp}
+                    </div>
+                  {/each}
+                </Li>
+              {/each}
+            {/await}
+          </List>
+          Roles:
+          <List tag="ul" class="space-y-1" list="none">
+            {#if appStore.isAdmin()}
+              <Li liClass="ml-3">Admin</Li>
+            {/if}
+            {#if appStore.isReviewer()}
+              <Li liClass="ml-3">Reviewer</Li>
+            {/if}
+            {#if appStore.isAuditor()}
+              <Li liClass="ml-3">Auditor</Li>
+            {/if}
+            {#if appStore.isImporter()}
+              <Li liClass="ml-3">Importer</Li>
+            {/if}
+            {#if appStore.isEditor()}
+              <Li liClass="ml-3">Editor</Li>
+            {/if}
+          </List>
+        </P>
+      {/if}
     {/if}
+    <ErrorMessage message={error}></ErrorMessage>
   </div>
 </div>
+
+<style>
+  .tlpclear {
+    background: #000;
+    color: #fff;
+  }
+  .tlpred {
+    background: #000;
+    color: #ff2b2b;
+  }
+  .tlpamber {
+    background: #000;
+    color: #ffc000;
+  }
+  .tlpgreen {
+    background: #000;
+    color: #33ff00;
+  }
+</style>

@@ -17,12 +17,24 @@ import (
 // extractTLPs extracts the TLP from the JWT token.
 func extractTLPs(claims func(any) error, kc *ginkeycloak.KeycloakToken) error {
 	var wrapper struct {
-		TLP models.PublishersTLPs `json:"TLP"`
+		TLP []models.PublishersTLPs `json:"TLP"`
 	}
 	if err := claims(&wrapper); err != nil {
 		return err
 	}
-	kc.CustomClaims = wrapper.TLP
+	// Merge multivalued attributes
+	tlps := models.PublishersTLPs{}
+	for _, tlp := range wrapper.TLP {
+		for key, value := range tlp {
+			_, ok := tlps[key]
+			if ok {
+				tlps[key] = append(tlps[key], value...)
+			} else {
+				tlps[key] = value
+			}
+		}
+	}
+	kc.CustomClaims = tlps
 	return nil
 }
 

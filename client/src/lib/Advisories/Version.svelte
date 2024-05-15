@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { Button, Label, Tooltip } from "flowbite-svelte";
+  import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   export let advisoryVersions: any;
@@ -23,9 +23,6 @@
   let secondDocumentIndex: number | undefined;
   let nextColor = "red";
   const diffButtonBaseClass = "!p-2 h-8 w-8 mb-2";
-  $: diffButtonClass = diffModeActivated
-    ? `${diffButtonBaseClass} bg-gray-800 text-white hover:bg-gray-600 focus-within:ring-transparent`
-    : `${diffButtonBaseClass} bg-white text-black border border-solid border-gray-300 hover:bg-gray-200 focus-within:ring-transparent`;
   const versionButtonClass = "text-black hover:text-black border border-solid";
   const redButtonClass = `${versionButtonClass} bg-red-100 group-hover:bg-red-300 border-red-700`;
   const greenButtonClass = `${versionButtonClass} bg-green-100 group-hover:bg-green-300 border-green-700`;
@@ -102,11 +99,10 @@
   };
 </script>
 
-<div class="my-2">
-  <Label class="mb-1">Versions</Label>
+<div class="mb-2 flex flex-row items-center gap-4">
   <div class="flex items-center">
     <div class="flex">
-      <div class="me-2 flex flex-row gap-2">
+      <div class="me-2 flex flex-row flex-wrap gap-2">
         {#if diffModeActivated}
           {#each reversedAdvisoryVersions as version, index}
             {@const isDisabled =
@@ -122,6 +118,7 @@
                   selectDiffDocument(index);
                 }}
                 outline
+                title={`Version ${version.version}`}
               >
                 {version.version}
               </Button>
@@ -161,18 +158,19 @@
                 navigateToVersion(version);
               }}
               color="light"
+              title={`Version ${version.version}`}
             >
               {version.version}
             </Button>
           {/each}
         {/if}
+        {#if advisoryVersions.length > 1}
+          <Button color="light" class="flex h-8 gap-x-2 px-3" on:click={toggleDiffModeActivated}>
+            <i class="bx bx-transfer"></i>
+            <span class="text-nowrap">{diffModeActivated ? "Hide" : "Show"} changes</span>
+          </Button>
+        {/if}
       </div>
-      {#if advisoryVersions.length > 1}
-        <Button class={diffButtonClass} on:click={toggleDiffModeActivated}>
-          <i class="bx bx-transfer"></i>
-        </Button>
-        <Tooltip>{diffModeActivated ? "Disable" : "Enable"} comparison</Tooltip>
-      {/if}
     </div>
   </div>
 </div>

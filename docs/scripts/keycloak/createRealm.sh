@@ -49,5 +49,6 @@ sudo /opt/keycloak/bin/kcadm.sh update clients/$id --target-realm=isduba \
       "lightweight.claim" : "true",
       "access.token.claim" : "true",
       "claim.name" : "TLP",
-      "jsonType.label" : "JSON"
+      "jsonType.label" : "JSON",
+      "multivalued" : "true"
     } } ]'

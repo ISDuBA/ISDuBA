@@ -9,14 +9,11 @@
 -->
 
 <script lang="ts">
-  import Message from "./Message.svelte";
-  import { MESSAGE } from "./messagetypes";
-
   export let message = "";
 </script>
 
-<div class="my-2">
-  {#if message && message.length > 0}
-    <Message dismissable={false} error={{ type: MESSAGE.ERROR, message: message }}></Message>
-  {/if}
-</div>
+{#if message}
+  <div class="my-2 flex flex-row items-center">
+    <span class="text-lg text-red-600"> {message}</span>
+  </div>
+{/if}

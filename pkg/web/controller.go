@@ -76,6 +76,9 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/queries/:query", authAll, c.updateStoredQuery)
 	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
 
+	// Events
+	api.GET("/events/:document", authEdReAu, c.viewEvents)
+
 	// State change
 	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)
 	api.PUT("/status", authEdReAd, c.changeStatusBulk)

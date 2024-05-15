@@ -39,6 +39,7 @@
 # admin_database = "postgres"
 # admin_password = "postgres"
 # migrate = false
+# terminate_after_migration = true
 # text_search = ["german", "english"]
 
 # [publishers_tlps]

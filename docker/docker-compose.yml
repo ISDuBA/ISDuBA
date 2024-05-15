@@ -34,7 +34,11 @@ services:
     networks:
       - isduba
     healthcheck:
-      test: ["CMD-SHELL", "timeout 1 bash -c 'cat < /dev/null > /dev/tcp/localhost/8080'"]
+      test:
+        [
+          "CMD-SHELL",
+          "timeout 1 bash -c 'cat < /dev/null > /dev/tcp/localhost/8080'",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -82,12 +86,13 @@ services:
       dockerfile: ./docker/server/Dockerfile
       args:
         BUILD_VERSION: v0.0.0
+        PUBLIC_KEYCLOAK_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
+        PUBLIC_KEYCLOAK_REALM: "isduba"
+        PUBLIC_KEYCLOAK_CLIENTID: "auth"
     networks:
       - isduba
     ports:
       - "${CLIENT_PORT}:8081"
-    environment:
-      PUBLIC_KEYCLOAK_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
     depends_on:
       db:
         condition: service_healthy
@@ -97,4 +102,3 @@ services:
 networks:
   isduba:
     name: isduba
-
