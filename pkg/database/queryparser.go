@@ -497,7 +497,7 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			`document, '$.product_tree.**.product.product_id')::int num ` +
 			`FROM documents ds WHERE ds.id = documents.id)` +
 			`SELECT * FROM documents_texts dts JOIN product_ids ` +
-			`ON product_ids.num = dts.num ` +
+			`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
 			`WHERE dts.documents_id = documents.id AND ` +
 			`dts.txt ILIKE `)
 		recurse(e.children[0])
