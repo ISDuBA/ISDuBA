@@ -152,7 +152,7 @@ const getTlp = (csafDoc: any): TLP => {
       label = TLP.AMBER;
       break;
     case TLP.GREEN:
-      label = TLP.AMBER;
+      label = TLP.GREEN;
       break;
     case TLP.WHITE:
       label = TLP.WHITE;
