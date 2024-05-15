@@ -14,7 +14,8 @@
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
   import { Button, ButtonGroup } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   let queries: any[] = [];
   let selectedIndex = 0;
@@ -26,7 +27,7 @@
     if (response.ok) {
       queries = response.content;
     } else if (response.error) {
-      errorMessage = response.error;
+      errorMessage = `Could not load user defined queries. ${getErrorMessage(response.error)}`;
     }
   });
 
