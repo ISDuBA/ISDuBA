@@ -37,6 +37,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>User defined queries</title>
+</svelte:head>
+
 <h2 class="mb-3 text-lg">User defined queries</h2>
 <Button class="mb-6 mt-3" href="/#/configuration/userqueries"
   ><i class="bx bx-plus"></i>New query</Button
