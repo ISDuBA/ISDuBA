@@ -43,16 +43,16 @@
   let comment: string = "";
   let comments: any = [];
   let events: any = [];
-  let loadCommentsError: string;
-  let loadEventsError: string;
-  let loadAdvisoryVersionsError: string;
-  let loadDocumentError: string;
-  let createCommentError: string;
-  let loadDocumentSSVCError: string;
-  let stateError: string;
+  let loadCommentsError = "";
+  let loadEventsError = "";
+  let loadAdvisoryVersionsError = "";
+  let loadDocumentError = "";
+  let createCommentError = "";
+  let loadDocumentSSVCError = "";
+  let stateError = "";
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
-  let advisoryState: string;
+  let advisoryState = "";
   let isCommentingAllowed: boolean;
   $: if ([READ, ASSESSING].includes(advisoryState)) {
     isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
@@ -118,40 +118,64 @@
 
   const loadEvents = async () => {
     let loadedEvents: any = [];
-    const result = await Promise.all(
-      advisoryVersions.map(async (v) => {
-        return request(`/api/events/${v.id}`, "GET");
-      })
-    );
-    result.forEach((e) => {
-      if (e.content !== "undefined") {
-        loadedEvents = loadedEvents.concat(e.content);
-      } else {
+    if (advisoryVersions.length > 0) {
+      const promises = await Promise.allSettled(
+        advisoryVersions.map(async (v) => {
+          return request(`/api/events/${v.id}`, "GET");
+        })
+      );
+      const result = promises
+        .filter((p: any) => p.status === "fulfilled")
+        .map((p: any) => {
+          return p.value;
+        });
+      if (promises.length != result.length) {
         loadEventsError = `Could not load all events.`;
       }
-    });
-    events = loadedEvents;
+      result.forEach((e) => {
+        if (e.content !== "undefined") {
+          loadedEvents = loadedEvents.concat(e.content);
+        } else {
+          loadEventsError = `Could not load all events.`;
+        }
+      });
+      events = loadedEvents;
+    } else {
+      loadEventsError = `Could not load events.`;
+    }
   };
 
   const loadComments = async () => {
     let loadedComments: any = [];
-    const result = await Promise.all(
-      advisoryVersions.map(async (v) => {
-        return request(`/api/comments/${v.id}`, "GET");
-      })
-    );
-    result.forEach((c) => {
-      if (c.content !== "undefined") {
-        let comments = c.content;
-        for (let i = 0; i < comments.length; i++) {
-          comments[i].documentVersion = advisoryVersionByDocumentID[comments[i].document_id];
-        }
-        loadedComments = loadedComments.concat(comments);
-      } else {
+    if (advisoryVersions.length > 0) {
+      const promises = await Promise.allSettled(
+        advisoryVersions.map(async (v) => {
+          return request(`/api/comments/${v.id}`, "GET");
+        })
+      );
+      const result = promises
+        .filter((p: any) => p.status === "fulfilled")
+        .map((p: any) => {
+          return p.value;
+        });
+      if (promises.length != result.length) {
         loadCommentsError = `Could not load all comments.`;
       }
-    });
-    comments = loadedComments;
+      result.forEach((c) => {
+        if (c.content !== "undefined") {
+          let comments = c.content;
+          for (let i = 0; i < comments.length; i++) {
+            comments[i].documentVersion = advisoryVersionByDocumentID[comments[i].document_id];
+          }
+          loadedComments = loadedComments.concat(comments);
+        } else {
+          loadCommentsError = `Could not load all comments.`;
+        }
+      });
+      comments = loadedComments;
+    } else {
+      loadCommentsError = `Could not load comments.`;
+    }
   };
 
   async function createComment() {
@@ -380,16 +404,18 @@
           <span slot="header"
             ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
           >
-          {#if comments?.length > 0}
-            <div class="max-h-96 overflow-y-auto pl-2">
-              <Timeline class="mb-4 flex flex-col-reverse">
-                {#each comments as comment (comment.id)}
-                  <Comment on:commentUpdate={loadEvents} {comment}></Comment>
-                {/each}
-              </Timeline>
-            </div>
-          {:else}
-            <div class="mb-6 text-gray-600">No comments available.</div>
+          {#if loadCommentsError === ""}
+            {#if comments?.length > 0}
+              <div class="max-h-96 overflow-y-auto pl-2">
+                <Timeline class="mb-4 flex flex-col-reverse">
+                  {#each comments as comment (comment.id)}
+                    <Comment on:commentUpdate={loadEvents} {comment}></Comment>
+                  {/each}
+                </Timeline>
+              </div>
+            {:else}
+              <div class="mb-6 text-gray-600">No comments available.</div>
+            {/if}
           {/if}
           <ErrorMessage message={loadCommentsError}></ErrorMessage>
           {#if isCommentingAllowed}
@@ -413,16 +439,18 @@
           <span slot="header"
             ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
           >
-          {#if events?.length > 0}
-            <div class="max-h-96 overflow-y-auto pl-2">
-              <Timeline class="mb-4 flex flex-col-reverse">
-                {#each events as event}
-                  <Event {event}></Event>
-                {/each}
-              </Timeline>
-            </div>
-          {:else}
-            <div class="mb-6 text-gray-600">No events available.</div>
+          {#if loadCommentsError === ""}
+            {#if events?.length > 0}
+              <div class="max-h-96 overflow-y-auto pl-2">
+                <Timeline class="mb-4 flex flex-col-reverse">
+                  {#each events as event}
+                    <Event {event}></Event>
+                  {/each}
+                </Timeline>
+              </div>
+            {:else}
+              <div class="mb-6 text-gray-600">No events available.</div>
+            {/if}
           {/if}
           <ErrorMessage message={loadEventsError}></ErrorMessage>
         </AccordionItem>
