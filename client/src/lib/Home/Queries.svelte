@@ -16,6 +16,7 @@
   import { Button, ButtonGroup } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import AdvisoryTable from "$lib/table/AdvisoryTable.svelte";
 
   let queries: any[] = [];
   let selectedIndex = 0;
@@ -49,6 +50,13 @@
         </Button>
       {/each}
     </ButtonGroup>
+    {@const query = queries[selectedIndex]}
+    <AdvisoryTable
+      columns={query.columns}
+      loadAdvisories={query.advisories}
+      query={query.query}
+      orderBy={query.orders?.join(" ") ?? ""}
+    ></AdvisoryTable>
   {/if}
   <ErrorMessage message={errorMessage}></ErrorMessage>
 {/if}
