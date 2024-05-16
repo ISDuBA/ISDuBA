@@ -30,7 +30,7 @@
     if (response.ok) {
       queryCount = response.content.count;
     } else if (response.error) {
-      errorMessage = getErrorMessage(response.error);
+      errorMessage = `An error occured: ${response.content}`;
     }
     loading = false;
   };

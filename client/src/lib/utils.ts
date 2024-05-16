@@ -55,7 +55,7 @@ export const request = async (
       await push("/login");
     }
     if (contentType && isJson) {
-      return { error: `response.status`, content: json.message, ok: false };
+      return { error: `${response.status}`, content: json.error, ok: false };
     }
     switch (response.status) {
       case 400:
