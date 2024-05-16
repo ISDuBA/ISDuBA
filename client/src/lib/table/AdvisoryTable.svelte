@@ -44,6 +44,7 @@
   export let query: string = "";
   export let searchTerm: string = "";
   export let loadAdvisories: boolean;
+  export let orderBy = "title";
 
   let anchorLink: string | null;
 
@@ -99,6 +100,10 @@
     }, 500);
   }
 
+  $: if (columns || query || loadAdvisories || !loadAdvisories) {
+    fetchData();
+  }
+
   $: if (offset || currentPage || limit || orderBy) {
     if (!postitionRestored) {
       restorePosition();
@@ -107,7 +112,6 @@
     savePosition();
   }
 
-  let orderBy = "title";
   export async function fetchData(): Promise<void> {
     const searchSuffix = searchTerm ? `"${searchTerm}" german search msg as ` : "";
     const searchColumn = searchTerm ? " msg" : "";
