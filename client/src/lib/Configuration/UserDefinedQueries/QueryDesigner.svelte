@@ -72,7 +72,7 @@
     formData.append("columns", columns.join(" "));
     const columnsForOrder = currentSearch.columns.filter((c) => c.orderBy);
     const orderBy = columnsForOrder.map((c) => `${c.orderBy === "desc" ? "-" : ""}${c.name}`);
-    formData.append("orderBy", orderBy.join(" "));
+    formData.append("order", orderBy.join(" "));
     const response = await request("/api/queries", "POST", formData);
     if (!response.ok && response.error) {
       saveErrorMessage = response.error;
