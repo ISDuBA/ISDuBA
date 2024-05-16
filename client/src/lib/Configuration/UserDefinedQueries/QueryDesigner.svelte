@@ -14,6 +14,7 @@
   import { request } from "$lib/utils";
   import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/query/query";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   const unsetMessages = () => {
     queryCount = null;
@@ -29,7 +30,7 @@
     if (response.ok) {
       queryCount = response.content.count;
     } else if (response.error) {
-      errorMessage = response.error;
+      errorMessage = getErrorMessage(response.error);
     }
     loading = false;
   };
@@ -75,7 +76,7 @@
     formData.append("order", orderBy.join(" "));
     const response = await request("/api/queries", "POST", formData);
     if (!response.ok && response.error) {
-      saveErrorMessage = response.error;
+      saveErrorMessage = getErrorMessage(response.error);
     }
   };
 
