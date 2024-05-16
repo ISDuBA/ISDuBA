@@ -130,18 +130,18 @@
           return p.value;
         });
       if (promises.length != result.length) {
-        loadEventsError = `Could not load all events.`;
+        loadEventsError = `Could not load all events. An error occured on the server. Please contact an administrator.`;
       }
       result.forEach((e) => {
         if (e.content !== "undefined") {
           loadedEvents = loadedEvents.concat(e.content);
         } else {
-          loadEventsError = `Could not load all events.`;
+          loadEventsError = `Could not load all events. An error occured on the server. Please contact an administrator.`;
         }
       });
       events = loadedEvents;
     } else {
-      loadEventsError = `Could not load events.`;
+      loadEventsError = `Could not load events. An error occured on the server. Please contact an administrator.`;
     }
   };
 
@@ -159,7 +159,7 @@
           return p.value;
         });
       if (promises.length != result.length) {
-        loadCommentsError = `Could not load all comments.`;
+        loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
       }
       result.forEach((c) => {
         if (c.content !== "undefined") {
@@ -169,12 +169,12 @@
           }
           loadedComments = loadedComments.concat(comments);
         } else {
-          loadCommentsError = `Could not load all comments.`;
+          loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
         }
       });
       comments = loadedComments;
     } else {
-      loadCommentsError = `Could not load comments.`;
+      loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
     }
   };
 
