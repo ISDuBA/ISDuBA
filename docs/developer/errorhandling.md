@@ -12,7 +12,7 @@
 
 ## Requests
 
-Every request is done centralized in `client/src/utils.ts`.
+Every request is done centralized in `client/src/lib/utils.ts`.
 
 ### Requests per component
 
@@ -25,7 +25,7 @@ Every request is done centralized in `client/src/utils.ts`.
 |                     | load advisory versions | `/documents`            |
 |                     | load SSVC              | `/documents`            |
 |                     | load events            | `/events`               |
-|                     | load comments          | `/commens`              |
+|                     | load comments          | `/comments`              |
 |                     | create comment         | `/comments`             |
 |                     | update state           | `/status`               |
 |                     | load advisory state    | `/documents`            |
@@ -36,7 +36,7 @@ Every request is done centralized in `client/src/utils.ts`.
 
 ## Error categories
 
-The messages are defined in `error.ts`.
+The messages are defined in `client/src/lib/Errors/errors.ts`.
 
 ### Not Found
 
