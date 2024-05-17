@@ -17,7 +17,6 @@
   import { marked } from "marked";
   import DOMPurify from "dompurify";
   import { createEventDispatcher } from "svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
 
   export let comment: any;
   let updatedComment = comment.message;
@@ -38,8 +37,9 @@
     if (response.ok) {
       comment.message = updatedComment;
       toggleEditing();
+      appStore.displaySuccessMessage("Comment updated.");
     } else if (response.error) {
-      updateCommentError = getErrorMessage(response.error);
+      updateCommentError = response.error;
     }
     dispatch("commentUpdate");
   }
