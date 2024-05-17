@@ -62,6 +62,7 @@ const (
 	defaultDatabaseAdminPassword           = "postgres"
 	defaultDatabaseMigrate                 = false
 	defaultDatabaseTerminateAfterMigration = true
+	defaultMaxQueryDuration                = 30 * time.Second
 )
 
 var defaultPublishersTLPs = models.PublishersTLPs{
@@ -106,17 +107,18 @@ type Web struct {
 
 // Database are the config options for the database.
 type Database struct {
-	Host                    string   `toml:"host"`
-	Port                    int      `toml:"port"`
-	Database                string   `toml:"database"`
-	User                    string   `toml:"user"`
-	Password                string   `toml:"password"`
-	AdminUser               string   `toml:"admin_user"`
-	AdminDatabase           string   `toml:"admin_database"`
-	AdminPassword           string   `toml:"admin_password"`
-	Migrate                 bool     `toml:"migrate"`
-	TerminateAfterMigration bool     `toml:"terminate_after_migration"`
-	TextSearch              []string `toml:"text_search"`
+	Host                    string        `toml:"host"`
+	Port                    int           `toml:"port"`
+	Database                string        `toml:"database"`
+	User                    string        `toml:"user"`
+	Password                string        `toml:"password"`
+	AdminUser               string        `toml:"admin_user"`
+	AdminDatabase           string        `toml:"admin_database"`
+	AdminPassword           string        `toml:"admin_password"`
+	Migrate                 bool          `toml:"migrate"`
+	TerminateAfterMigration bool          `toml:"terminate_after_migration"`
+	TextSearch              []string      `toml:"text_search"`
+	MaxQueryDuration        time.Duration `toml:"max_query_time"`
 }
 
 var defaultTextSearch = []string{"german", "english"}
@@ -221,6 +223,7 @@ func Load(file string) (*Config, error) {
 			Migrate:                 defaultDatabaseMigrate,
 			TerminateAfterMigration: defaultDatabaseTerminateAfterMigration,
 			TextSearch:              defaultTextSearch,
+			MaxQueryDuration:        defaultMaxQueryDuration,
 		},
 		PublishersTLPs: defaultPublishersTLPs,
 	}
@@ -275,6 +278,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_DB_ADMIN_PASSWORD", storeString(&cfg.Database.AdminPassword)},
 		envStore{"ISDUBA_DB_MIGRATE", storeBool(&cfg.Database.Migrate)},
 		envStore{"ISDUBA_DB_TERMINATE_AFTER_MIGRATION", storeBool(&cfg.Database.TerminateAfterMigration)},
+		envStore{"ISDUBA_DB_MAX_QUERY_DURATION", storeDuration(&cfg.Database.MaxQueryDuration)},
 	)
 }
 
