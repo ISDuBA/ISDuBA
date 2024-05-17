@@ -256,7 +256,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			results = append(results, result)
 		}
 		return rows.Err()
-	}, 0); err != nil {
+	}, c.cfg.Database.MaxQueryDuration); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
