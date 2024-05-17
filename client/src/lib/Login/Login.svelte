@@ -17,7 +17,7 @@
   import { request } from "$lib/utils";
   import { getErrorMessage } from "$lib/Errors/error";
 
-  let error: string;
+  let error = "";
 
   async function logout() {
     appStore.setSessionExpired(true);
@@ -107,53 +107,54 @@
       </div>
     </Card>
     {#if $appStore.app.isUserLoggedIn}
-      <P class="mt-3">
-        {#await getVersion() then version}
-          Versions:
-          <List tag="ul" class="space-y-1" list="none">
-            <Li liClass="ml-3">ISDuBA: {version}</Li>
-          </List>
-        {/await}
-        View:
-        <List tag="ul" class="space-y-1" list="none">
-          {#await getView() then view}
-            {#each view.entries() as [publisher, tlps]}
-              <Li liClass="ml-3"
-                >{publisher === "*" ? "all" : publisher}:
-                {#each tlps as tlp}
-                  <div
-                    class={getTLPClass(tlp)}
-                    style="width: fit-content; display: inline; margin-right: 0.25em;"
-                  >
-                    {tlp}
-                  </div>
-                {/each}
-              </Li>
-            {/each}
+      {#if error === ""}
+        <P class="mt-3">
+          {#await getVersion() then version}
+            Versions:
+            <List tag="ul" class="space-y-1" list="none">
+              <Li liClass="ml-3">ISDuBA: {version}</Li>
+            </List>
           {/await}
-        </List>
-        Roles:
-        <List tag="ul" class="space-y-1" list="none">
-          {#if appStore.isAdmin()}
-            <Li liClass="ml-3">Admin</Li>
-          {/if}
-          {#if appStore.isReviewer()}
-            <Li liClass="ml-3">Reviewer</Li>
-          {/if}
-          {#if appStore.isAuditor()}
-            <Li liClass="ml-3">Auditor</Li>
-          {/if}
-          {#if appStore.isImporter()}
-            <Li liClass="ml-3">Importer</Li>
-          {/if}
-          {#if appStore.isEditor()}
-            <Li liClass="ml-3">Editor</Li>
-          {/if}
-        </List>
-
-        <ErrorMessage message={error}></ErrorMessage>
-      </P>
+          View:
+          <List tag="ul" class="space-y-1" list="none">
+            {#await getView() then view}
+              {#each view.entries() as [publisher, tlps]}
+                <Li liClass="ml-3"
+                  >{publisher === "*" ? "all" : publisher}:
+                  {#each tlps as tlp}
+                    <div
+                      class={getTLPClass(tlp)}
+                      style="width: fit-content; display: inline; margin-right: 0.25em;"
+                    >
+                      {tlp}
+                    </div>
+                  {/each}
+                </Li>
+              {/each}
+            {/await}
+          </List>
+          Roles:
+          <List tag="ul" class="space-y-1" list="none">
+            {#if appStore.isAdmin()}
+              <Li liClass="ml-3">Admin</Li>
+            {/if}
+            {#if appStore.isReviewer()}
+              <Li liClass="ml-3">Reviewer</Li>
+            {/if}
+            {#if appStore.isAuditor()}
+              <Li liClass="ml-3">Auditor</Li>
+            {/if}
+            {#if appStore.isImporter()}
+              <Li liClass="ml-3">Importer</Li>
+            {/if}
+            {#if appStore.isEditor()}
+              <Li liClass="ml-3">Editor</Li>
+            {/if}
+          </List>
+        </P>
+      {/if}
     {/if}
+    <ErrorMessage message={error}></ErrorMessage>
   </div>
 </div>
 

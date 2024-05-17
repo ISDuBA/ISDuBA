@@ -70,6 +70,12 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/comments/:id", authEdRe, c.updateComment)
 	api.GET("/comments/:document", authEdReAu, c.viewComments)
 
+	// Stored queries
+	api.POST("/queries", authAll, c.createStoredQuery)
+	api.GET("/queries", authAll, c.listStoredQueries)
+	api.PUT("/queries/:query", authAll, c.updateStoredQuery)
+	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
+
 	// Events
 	api.GET("/events/:document", authEdReAu, c.viewEvents)
 

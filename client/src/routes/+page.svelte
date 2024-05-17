@@ -29,6 +29,7 @@
   import { configuration } from "$lib/configuration";
   import { type User, UserManager } from "oidc-client-ts";
   import { jwtDecode } from "jwt-decode";
+  import QueryDesigner from "$lib/Configuration/UserDefinedQueries/QueryDesigner.svelte";
 
   let userManager = new UserManager(configuration.getConfiguration());
   userManager.events.addUserSignedIn(function () {
@@ -42,6 +43,7 @@
     appStore.setIsUserLoggedIn(false);
     appStore.setSessionExpiredMessage(e.message);
     appStore.setSessionExpired(true);
+    userManager.removeUser();
     push("/login");
   });
   userManager.getUser().then(async (user: User | null) => {
@@ -111,6 +113,11 @@
     }),
     "/configuration": wrap({
       component: Configuration,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/configuration/userqueries": wrap({
+      component: QueryDesigner,
       userData: loginRequired,
       conditions: [loginCondition]
     }),

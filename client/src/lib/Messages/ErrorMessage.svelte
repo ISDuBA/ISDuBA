@@ -9,10 +9,14 @@
 -->
 
 <script lang="ts">
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import UserDefinedQueries from "./UserDefinedQueries/Overview.svelte";
+  import Message from "./Message.svelte";
+  import { MESSAGE } from "./messagetypes";
+
+  export let message = "";
 </script>
 
-<SectionHeader title="Configuration"></SectionHeader>
-<hr class="mb-6" />
-<UserDefinedQueries></UserDefinedQueries>
+<div class="my-2">
+  {#if message && message.length > 0}
+    <Message dismissable={false} error={{ type: MESSAGE.ERROR, message: message }}></Message>
+  {/if}
+</div>

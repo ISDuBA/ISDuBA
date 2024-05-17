@@ -52,6 +52,7 @@
 </svelte:head>
 
 <SectionHeader title="Comparison"></SectionHeader>
+<hr class="mb-6" />
 <Tabs>
   <TabItem open title="JSON diff">
     <Label class="mb-6">

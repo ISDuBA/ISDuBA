@@ -56,6 +56,7 @@ kcadm.sh update clients/$id --target-realm=isduba \
       "lightweight.claim" : "true",
       "access.token.claim" : "true",
       "claim.name" : "TLP",
+      "multivalued" : "true",
       "jsonType.label" : "JSON"
     } } ]'
 

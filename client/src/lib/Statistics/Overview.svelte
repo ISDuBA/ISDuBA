@@ -13,3 +13,4 @@
 </script>
 
 <SectionHeader title="Statistics"></SectionHeader>
+<hr class="mb-6" />

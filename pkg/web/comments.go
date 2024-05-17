@@ -24,7 +24,6 @@ import (
 )
 
 func (c *Controller) createComment(ctx *gin.Context) {
-
 	docIDs := ctx.Param("document")
 	docID, err := strconv.ParseInt(docIDs, 10, 64)
 	if err != nil {
@@ -55,7 +54,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		commentator            = ctx.GetString("uid")
 		message, _             = ctx.GetPostForm("message")
 		now                    = time.Now().UTC()
-		commentID              int64
+		commentID              *int64
 		rctx                   = ctx.Request.Context()
 	)
 
@@ -102,10 +101,10 @@ func (c *Controller) createComment(ctx *gin.Context) {
 
 		logEvent := func(event models.Event, state models.Workflow) error {
 			const eventSQL = `INSERT INTO events_log ` +
-				`(event, state, time, actor, documents_id) ` +
-				`VALUES($1::events, $2::workflow, $3, $4, $5)`
+				`(event, state, time, actor, documents_id, comments_id) ` +
+				`VALUES($1::events, $2::workflow, $3, $4, $5, $6)`
 			_, err := tx.Exec(
-				rctx, eventSQL, string(event), string(state), now, actor, docID)
+				rctx, eventSQL, string(event), string(state), now, actor, docID, commentID)
 			return err
 		}
 
@@ -210,19 +209,19 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		exists = true
 
 		const eventSQL = `INSERT INTO events_log ` +
-			`(event, state, time, actor, documents_id) ` +
+			`(event, state, time, actor, documents_id, comments_id) ` +
 			`VALUES('change_comment', ` +
 			`(SELECT state FROM advisories ads JOIN documents docs ` +
 			`ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.publisher) ` +
 			`WHERE docs.id = $3), ` +
-			`$1, $2, $3)`
+			`$1, $2, $3, $4)`
 
 		var actor sql.NullString
 		if !c.cfg.General.AnonymousEventLogging {
 			actor.String = commentator
 			actor.Valid = true
 		}
-		if _, err := tx.Exec(rctx, eventSQL, now, actor, docID); err != nil {
+		if _, err := tx.Exec(rctx, eventSQL, now, actor, docID, commentID); err != nil {
 			return err
 		}
 
@@ -240,7 +239,6 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 }
 
 func (c *Controller) viewComments(ctx *gin.Context) {
-
 	idS := ctx.Param("document")
 	id, err := strconv.ParseInt(idS, 10, 64)
 	if err != nil {

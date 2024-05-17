@@ -55,7 +55,7 @@ export const request = async (
       await push("/login");
     }
     if (contentType && isJson) {
-      return { error: `response.status`, content: json.message, ok: false };
+      return { error: `${response.status}`, content: json.error, ok: false };
     }
     switch (response.status) {
       case 400:
@@ -67,6 +67,13 @@ export const request = async (
     }
     return { error: `${response.status}`, content: response.statusText, ok: false };
   } catch (error: any) {
+    if (/fetch/.test(error)) {
+      return {
+        error: "600",
+        content: error,
+        ok: false
+      };
+    }
     return {
       error: `${error.name}: ${error.message}`,
       ok: false
