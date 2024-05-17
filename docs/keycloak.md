@@ -141,7 +141,7 @@ ID/Name: ```auth```
 
 - Turn off ```consent required```
 
-- Safe your settings
+- Safe the settings
 
 ### Switch from "settings" to "client scopes" and click on auth-dedicated
 
@@ -156,6 +156,7 @@ ID/Name: ```auth```
 - Claim JSON type: ```JSON```
 
 - For the switches, all should be turned on
+- Safe the settings
 
 ## Users, groups and roles
 
