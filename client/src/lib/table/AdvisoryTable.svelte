@@ -120,8 +120,16 @@
     if (query || searchSuffix) {
       queryParam = `query=${query}${searchSuffix}`;
     }
+    let fetchColumns = [...columns];
+    let requiredColumns = ["id", "tracking_id", "publisher"];
+    for (let c of requiredColumns) {
+      if (!fetchColumns.includes(c)) {
+        fetchColumns.push(c);
+      }
+    }
+
     const documentURL = encodeURI(
-      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=id ${columns.join(" ")}${searchColumn}`
+      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
     );
     error = "";
     loading = true;
