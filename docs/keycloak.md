@@ -141,6 +141,8 @@ ID/Name: ```auth```
 
 - Turn off ```consent required```
 
+- Safe your settings
+
 ### Switch from "settings" to "client scopes" and click on auth-dedicated
 
 #### Add mapper "User Attribute" with
