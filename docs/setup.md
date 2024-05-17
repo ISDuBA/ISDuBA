@@ -85,7 +85,7 @@ From the repositories main directory:
 ./cmd/bulkimport/bulkimport -database isduba -user isduba -password isduba -host localhost /path/to/advisories/to/import
 ```
 
-### Example use of `isdubad`
+### (Optional) Check if `isdubad` is correctly installed
 The following will define a TOKEN variable which holds the information 
 about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
 (You can check whether the TOKEN is correct via e.g. jwt.io)
