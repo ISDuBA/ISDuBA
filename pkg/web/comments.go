@@ -9,6 +9,7 @@
 package web
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log/slog"
@@ -58,7 +59,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		rctx                   = ctx.Request.Context()
 	)
 
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
 		if err != nil {
 			return err
@@ -149,7 +150,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		}
 
 		return tx.Commit(rctx)
-	}); err != nil {
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -184,7 +185,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		message, _  = ctx.GetPostForm("message")
 		rctx        = ctx.Request.Context()
 	)
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
 		if err != nil {
 			return err
@@ -226,7 +227,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		}
 
 		return tx.Commit(rctx)
-	}); err != nil {
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -275,7 +276,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	var exists bool
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
 		if err := conn.QueryRow(
 			rctx, existsSQL, replacements...).Scan(&exists); err != nil {
@@ -297,7 +298,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 				return com, err
 			})
 		return err
-	}); err != nil {
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -9,6 +9,7 @@
 package web
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log/slog"
@@ -50,7 +51,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 	var forbidden, unchanged, bad bool
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
 		if err != nil {
 			return err
@@ -130,7 +131,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 			return err
 		}
 		return tx.Commit(rctx)
-	}); err != nil {
+	}, 0); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 		} else {

@@ -9,6 +9,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -135,7 +136,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	var queryID, queryNum int64
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		return conn.QueryRow(rctx, insertSQL,
 			query.Advisories,
 			query.Definer,
@@ -146,7 +147,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 			query.Columns,
 			query.Orders,
 		).Scan(&queryID, &queryNum)
-	}); err != nil {
+	}, 0); err != nil {
 		var pgErr *pgconn.PgError
 		// Unique constraint violation
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -183,7 +184,7 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 	var queries []*models.StoredQuery
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		definer := ctx.GetString("uid")
 		rows, _ := conn.Query(rctx, selectSQL, definer)
 		var err error
@@ -207,7 +208,7 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 				return &query, nil
 			})
 		return err
-	}); err != nil {
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -232,7 +233,7 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 	var tag pgconn.CommandTag
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		// Admins are allowed to delete globals.
 		var deleteSQL string
 		if c.hasAnyRole(ctx, models.Admin) {
@@ -244,7 +245,7 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 		var err error
 		tag, err = conn.Exec(rctx, deleteSQL, queryID, definer)
 		return err
-	}); err != nil {
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -286,7 +287,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 	var notFound, unchanged bool
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
 		if err != nil {
 			return err
@@ -471,7 +472,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 		}
 		unchanged = tag.RowsAffected() == 0
 		return tx.Commit(rctx)
-	}); err != nil {
+	}, 0); err != nil {
 		// As name and num changes can cause unique constraint violations
 		// don't report these not as internal server errors as this expected.
 		var pgErr *pgconn.PgError

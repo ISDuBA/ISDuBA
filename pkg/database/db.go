@@ -12,6 +12,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -32,9 +33,7 @@ func NewDB(ctx context.Context, cfg *config.Database) (*DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("creating postgresql pool failed: %w", err)
 	}
-	db := &DB{pool: pool}
-
-	return db, nil
+	return &DB{pool: pool}, nil
 }
 
 // Close closes the connection pool.
@@ -47,6 +46,19 @@ func (db *DB) Close(context.Context) error {
 }
 
 // Run handles a database connection from the connection pool.
-func (db *DB) Run(ctx context.Context, fn func(*pgxpool.Conn) error) error {
-	return db.pool.AcquireFunc(ctx, fn)
+func (db *DB) Run(
+	ctx context.Context,
+	fn func(context.Context, *pgxpool.Conn) error,
+	timeout time.Duration,
+) error {
+	if timeout == 0 {
+		return db.pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+			return fn(ctx, conn)
+		})
+	}
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	return db.pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+		return fn(timeoutCtx, conn)
+	})
 }

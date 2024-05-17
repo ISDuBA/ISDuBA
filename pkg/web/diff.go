@@ -9,6 +9,7 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -59,7 +60,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		doc1, doc2               []byte
 		rctx                     = ctx.Request.Context()
 	)
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		const fetchSQL = `SELECT original FROM documents WHERE `
 		fetch1SQL := fetchSQL + where1
 		fetch2SQL := fetchSQL + where2
@@ -67,7 +68,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 			return err
 		}
 		return conn.QueryRow(rctx, fetch2SQL, replacements2...).Scan(&doc2)
-	}); err != nil {
+	}, 0); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
 		} else {

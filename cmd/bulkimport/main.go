@@ -72,10 +72,10 @@ func processFile(
 		}
 
 		var id int64
-		if err = db.Run(ctx, func(conn *pgxpool.Conn) error {
+		if err = db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
 			id, err = models.ImportDocument(ctx, conn, r, actor, nil, dry)
 			return err
-		}); err != nil {
+		}, 0); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {
 				slog.Warn("advisory already in database", "file", filepath.Base(path))
 				err = nil

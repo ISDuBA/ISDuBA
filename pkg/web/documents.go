@@ -10,6 +10,7 @@ package web
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -53,11 +54,11 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var id int64
 
-	if err = c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err = c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		id, err = models.ImportDocument(
 			rctx, conn, limited, actor, c.tlps(ctx), false)
 		return err
-	}); err != nil {
+	}, 0); err != nil {
 		switch {
 		case errors.Is(err, models.ErrAlreadyInDatabase):
 			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
@@ -103,9 +104,9 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 	var original []byte
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		return conn.QueryRow(rctx, sql, replacements...).Scan(&original)
-	}); err != nil {
+	}, 0); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
 		} else {
@@ -212,7 +213,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		if calcCount {
 			if err := conn.QueryRow(
 				rctx,
@@ -255,7 +256,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			results = append(results, result)
 		}
 		return rows.Err()
-	}); err != nil {
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

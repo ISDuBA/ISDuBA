@@ -9,6 +9,7 @@
 package web
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"net/http"
@@ -60,7 +61,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	var exists bool
 
 	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(conn *pgxpool.Conn) error {
+	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
 		existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
 		if err := conn.QueryRow(
 			rctx, existsSQL, replacements...).Scan(&exists); err != nil {
@@ -87,7 +88,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 				return ev, err
 			})
 		return err
-	}); err != nil {
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
