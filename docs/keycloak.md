@@ -106,6 +106,13 @@ systemctl start keycloak
 # Adjust keycloak
 Configure Keycloak.
 
+If keycloak hasn't been started yet, then it can be started via the kc.sh binary in keycloak/bin/kc.sh.
+If the keycloak installation was moved into /opt/keycloak, then you can start it in development mode e.g via:
+
+```
+sudo /opt/keycloak/bin/kc.sh start-dev
+```
+
 Open Keycloak's web-interface, running on localhost:8080,
 create an admin user if you haven't done so, and log in to the admin console.
 
