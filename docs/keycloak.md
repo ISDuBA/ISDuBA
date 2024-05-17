@@ -159,6 +159,7 @@ ID/Name: ```auth```
 - Safe the settings
 
 ## Users, groups and roles
+Roles define what a user can do. Groups define what a user can work with.
 
 Create roles via Realm roles:
 
