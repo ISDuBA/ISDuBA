@@ -88,7 +88,7 @@ From the repositories main directory:
 ### (Optional) Check if `isdubad` is correctly installed
 The following will define a TOKEN variable which holds the information 
 about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
-(You can check whether the TOKEN is correct via e.g. jwt.io)
+(You can check whether the TOKEN is correct via e.g. jwt.io, keycloak needs to be up and running.)
 ```
 TOKEN=`curl -d 'client_id=auth'  -d 'username=USERNAME' -d 'password=USERPASSWORD' -d 'grant_type=password' 'http://127.0.0.1:8080/realms/isduba/protocol/openid-connect/token' | jq -r .access_token`
 ```
