@@ -34,6 +34,8 @@ cd ISDuBA
 #### build the tools
 
 It is recommended to use the Makefile to build the tools:
+(Note that a recent version of node is required to run the Makefile, since
+it also builds the frontend)
 ```
 make all
 ```
