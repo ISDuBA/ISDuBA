@@ -14,8 +14,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 )
 
 // DB implements the handling with the database connection pool.
@@ -45,7 +46,9 @@ func (db *DB) Close(context.Context) error {
 	return nil
 }
 
-// Run handles a database connection from the connection pool.
+// Run a function hands over a database connection from the connection pool.
+// If the given timeout is not zero the given context will be cancelled
+// after this duration.
 func (db *DB) Run(
 	ctx context.Context,
 	fn func(context.Context, *pgxpool.Conn) error,
@@ -58,7 +61,7 @@ func (db *DB) Run(
 	}
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	return db.pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+	return db.pool.AcquireFunc(timeoutCtx, func(conn *pgxpool.Conn) error {
 		return fn(timeoutCtx, conn)
 	})
 }
