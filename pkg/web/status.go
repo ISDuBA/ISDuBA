@@ -14,10 +14,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
 type advisoryState struct {
@@ -50,71 +51,73 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 
 	var forbidden, noTransition, bad bool
 
-	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
-		tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
-		if err != nil {
-			return err
-		}
-		defer tx.Rollback(rctx)
-
-		for i := range inputs {
-			var (
-				input      = &inputs[i]
-				documentID int64
-				current    string
-				tlp        string
-			)
-
-			if input.Publisher == "" || input.TrackingID == "" {
-				bad = true
-				return nil
-			}
-			slog.Debug("state change",
-				"publisher", input.Publisher,
-				"tracking_id", input.TrackingID,
-				"state", input.State)
-
-			if err := tx.QueryRow(rctx, findAdvisory, input.Publisher, input.TrackingID).Scan(
-				&documentID, &current, &tlp,
-			); err != nil {
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
+			if err != nil {
 				return err
 			}
+			defer tx.Rollback(rctx)
 
-			// Check if we are allowed to access it.
-			if len(tlps) > 0 && !tlps.Allowed(input.Publisher, models.TLP(tlp)) {
-				forbidden = true
-				return nil
+			for i := range inputs {
+				var (
+					input      = &inputs[i]
+					documentID int64
+					current    string
+					tlp        string
+				)
+
+				if input.Publisher == "" || input.TrackingID == "" {
+					bad = true
+					return nil
+				}
+				slog.Debug("state change",
+					"publisher", input.Publisher,
+					"tracking_id", input.TrackingID,
+					"state", input.State)
+
+				if err := tx.QueryRow(rctx, findAdvisory, input.Publisher, input.TrackingID).Scan(
+					&documentID, &current, &tlp,
+				); err != nil {
+					return err
+				}
+
+				// Check if we are allowed to access it.
+				if len(tlps) > 0 && !tlps.Allowed(input.Publisher, models.TLP(tlp)) {
+					forbidden = true
+					return nil
+				}
+
+				slog.Debug("current state", "state", current)
+
+				// Check if the transition is allowed to user.
+				roles := models.Workflow(current).TransitionsRoles(input.State)
+				if len(roles) == 0 {
+					noTransition = true
+					return nil
+				}
+				if !c.hasAnyRole(ctx, roles...) {
+					forbidden = true
+					return nil
+				}
+
+				// At this point the state change can be done.
+				if _, err := tx.Exec(rctx, updateState,
+					string(input.State), input.TrackingID, input.Publisher,
+				); err != nil {
+					return err
+				}
+
+				// Log the event
+				if _, err := tx.Exec(rctx, insertLog, string(input.State), actor, documentID); err != nil {
+					return err
+				}
 			}
 
-			slog.Debug("current state", "state", current)
-
-			// Check if the transition is allowed to user.
-			roles := models.Workflow(current).TransitionsRoles(input.State)
-			if len(roles) == 0 {
-				noTransition = true
-				return nil
-			}
-			if !c.hasAnyRole(ctx, roles...) {
-				forbidden = true
-				return nil
-			}
-
-			// At this point the state change can be done.
-			if _, err := tx.Exec(rctx, updateState,
-				string(input.State), input.TrackingID, input.Publisher,
-			); err != nil {
-				return err
-			}
-
-			// Log the event
-			if _, err := tx.Exec(rctx, insertLog, string(input.State), actor, documentID); err != nil {
-				return err
-			}
-		}
-
-		return tx.Commit(rctx)
-	}, 0); err != nil {
+			return tx.Commit(rctx)
+		}, 0,
+	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 		} else {

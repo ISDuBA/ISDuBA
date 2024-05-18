@@ -50,88 +50,90 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 
 	var forbidden, unchanged, bad bool
 
-	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
-		tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
-		if err != nil {
-			return err
-		}
-		defer tx.Rollback(rctx)
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
+			if err != nil {
+				return err
+			}
+			defer tx.Rollback(rctx)
 
-		var (
-			ssvc       sql.NullString
-			trackingID string
-			publisher  string
-			tlp        string
-			state      string
-		)
-		if err := tx.QueryRow(rctx, findSSVC, documentID).Scan(
-			&ssvc, &trackingID, &publisher, &tlp, &state,
-		); err != nil {
-			return err
-		}
+			var (
+				ssvc       sql.NullString
+				trackingID string
+				publisher  string
+				tlp        string
+				state      string
+			)
+			if err := tx.QueryRow(rctx, findSSVC, documentID).Scan(
+				&ssvc, &trackingID, &publisher, &tlp, &state,
+			); err != nil {
+				return err
+			}
 
-		// check if we are allowed to do
-		if tlps := c.tlps(ctx); len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
-			forbidden = true
-			return nil
-		}
-
-		// check if its a real change
-		if ssvc.Valid && ssvc.String == vector {
-			unchanged = true
-			return nil
-		}
-
-		// check if we are in a state that allows changing
-		if st := models.Workflow(state); st != models.ReadWorkflow && st != models.AssessingWorkflow {
-			bad = true
-			return nil
-		}
-
-		var actor *string
-		if !c.cfg.General.AnonymousEventLogging {
-			uid := ctx.GetString("uid")
-			actor = &uid
-		}
-		logEvent := func(event models.Event, state models.Workflow) error {
-			_, err := tx.Exec(rctx, insertLog, string(event), string(state), actor, documentID)
-			return err
-		}
-
-		// If we are in the 'read' state switch to 'assessing'.
-		if st := models.Workflow(state); st == models.ReadWorkflow {
-			// Check if the transition is allowed to user.
-			roles := st.TransitionsRoles(models.AssessingWorkflow)
-			if len(roles) == 0 || !c.hasAnyRole(ctx, roles...) {
+			// check if we are allowed to do
+			if tlps := c.tlps(ctx); len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
 				forbidden = true
 				return nil
 			}
-			// Do the actual state change
-			if _, err := tx.Exec(rctx, switchToAssessing, trackingID, publisher); err != nil {
+
+			// check if its a real change
+			if ssvc.Valid && ssvc.String == vector {
+				unchanged = true
+				return nil
+			}
+
+			// check if we are in a state that allows changing
+			if st := models.Workflow(state); st != models.ReadWorkflow && st != models.AssessingWorkflow {
+				bad = true
+				return nil
+			}
+
+			var actor *string
+			if !c.cfg.General.AnonymousEventLogging {
+				uid := ctx.GetString("uid")
+				actor = &uid
+			}
+			logEvent := func(event models.Event, state models.Workflow) error {
+				_, err := tx.Exec(rctx, insertLog, string(event), string(state), actor, documentID)
 				return err
 			}
-			// Log the state change.
-			if err := logEvent(models.StateChangeEvent, models.AssessingWorkflow); err != nil {
+
+			// If we are in the 'read' state switch to 'assessing'.
+			if st := models.Workflow(state); st == models.ReadWorkflow {
+				// Check if the transition is allowed to user.
+				roles := st.TransitionsRoles(models.AssessingWorkflow)
+				if len(roles) == 0 || !c.hasAnyRole(ctx, roles...) {
+					forbidden = true
+					return nil
+				}
+				// Do the actual state change
+				if _, err := tx.Exec(rctx, switchToAssessing, trackingID, publisher); err != nil {
+					return err
+				}
+				// Log the state change.
+				if err := logEvent(models.StateChangeEvent, models.AssessingWorkflow); err != nil {
+					return err
+				}
+			}
+
+			// Now do the actual SSVC update.
+			if _, err := tx.Exec(rctx, updateSSVC, vector, documentID); err != nil {
 				return err
 			}
-		}
 
-		// Now do the actual SSVC update.
-		if _, err := tx.Exec(rctx, updateSSVC, vector, documentID); err != nil {
-			return err
-		}
-
-		// Log the SSVC change.
-		event := models.ChangeSSVCEvent
-		if !ssvc.Valid { // Its new.
-			event = models.AddSSVCEvent
-		}
-		if err := logEvent(event, models.AssessingWorkflow); err != nil {
-			return err
-		}
-		return tx.Commit(rctx)
-	}, 0); err != nil {
+			// Log the SSVC change.
+			event := models.ChangeSSVCEvent
+			if !ssvc.Valid { // Its new.
+				event = models.AddSSVCEvent
+			}
+			if err := logEvent(event, models.AssessingWorkflow); err != nil {
+				return err
+			}
+			return tx.Commit(rctx)
+		}, 0,
+	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 		} else {

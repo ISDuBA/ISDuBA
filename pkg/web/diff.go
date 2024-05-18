@@ -18,12 +18,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"gomodules.xyz/jsonpatch/v2"
+
+	"github.com/ISDuBA/ISDuBA/pkg/database"
 )
 
 func (c *Controller) viewDiff(ctx *gin.Context) {
@@ -58,17 +59,19 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		where1, replacements1, _ = expr1.Where()
 		where2, replacements2, _ = expr2.Where()
 		doc1, doc2               []byte
-		rctx                     = ctx.Request.Context()
 	)
-	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
-		const fetchSQL = `SELECT original FROM documents WHERE `
-		fetch1SQL := fetchSQL + where1
-		fetch2SQL := fetchSQL + where2
-		if err := conn.QueryRow(rctx, fetch1SQL, replacements1...).Scan(&doc1); err != nil {
-			return err
-		}
-		return conn.QueryRow(rctx, fetch2SQL, replacements2...).Scan(&doc2)
-	}, 0); err != nil {
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			const fetchSQL = `SELECT original FROM documents WHERE `
+			fetch1SQL := fetchSQL + where1
+			fetch2SQL := fetchSQL + where2
+			if err := conn.QueryRow(rctx, fetch1SQL, replacements1...).Scan(&doc1); err != nil {
+				return err
+			}
+			return conn.QueryRow(rctx, fetch2SQL, replacements2...).Scan(&doc2)
+		}, 0,
+	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
 		} else {

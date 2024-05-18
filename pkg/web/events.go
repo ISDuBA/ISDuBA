@@ -60,35 +60,37 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	var events []event
 	var exists bool
 
-	rctx := ctx.Request.Context()
-	if err := c.db.Run(rctx, func(rctx context.Context, conn *pgxpool.Conn) error {
-		existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
-		if err := conn.QueryRow(
-			rctx, existsSQL, replacements...).Scan(&exists); err != nil {
-			return err
-		}
-		if !exists {
-			return nil
-		}
-		const fetchSQL = `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
-			`WHERE documents_id = $1 ORDER BY time DESC`
-		rows, _ := conn.Query(rctx, fetchSQL, id)
-		var err error
-		events, err = pgx.CollectRows(
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
+			if err := conn.QueryRow(
+				rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+				return err
+			}
+			if !exists {
+				return nil
+			}
+			const fetchSQL = `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
+				`WHERE documents_id = $1 ORDER BY time DESC`
+			rows, _ := conn.Query(rctx, fetchSQL, id)
+			var err error
+			events, err = pgx.CollectRows(
 
-			rows,
-			func(row pgx.CollectableRow) (event, error) {
-				var ev event
-				var act sql.NullString
-				err := row.Scan(&ev.Event, &ev.DocumentID, &ev.Time, &ev.Actor, &ev.State, &ev.CommentID)
-				ev.Time = ev.Time.UTC()
-				if act.Valid {
-					ev.Actor = &act.String
-				}
-				return ev, err
-			})
-		return err
-	}, 0); err != nil {
+				rows,
+				func(row pgx.CollectableRow) (event, error) {
+					var ev event
+					var act sql.NullString
+					err := row.Scan(&ev.Event, &ev.DocumentID, &ev.Time, &ev.Actor, &ev.State, &ev.CommentID)
+					ev.Time = ev.Time.UTC()
+					if act.Valid {
+						ev.Actor = &act.String
+					}
+					return ev, err
+				})
+			return err
+		}, 0,
+	); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
