@@ -34,6 +34,8 @@ cd ISDuBA
 #### build the tools
 
 It is recommended to use the Makefile to build the tools:
+(Note that a recent version of node is required to run the Makefile, since
+it also builds the frontend)
 ```
 make all
 ```
@@ -83,10 +85,10 @@ From the repositories main directory:
 ./cmd/bulkimport/bulkimport -database isduba -user isduba -password isduba -host localhost /path/to/advisories/to/import
 ```
 
-### Example use of `isdubad`
+### (Optional) Check if `isdubad` is correctly installed
 The following will define a TOKEN variable which holds the information 
 about a user with name USERNAME and password USERPASSWORD as configured in keycloak.
-(You can check whether the TOKEN is correct via e.g. jwt.io)
+(You can check whether the TOKEN is correct via e.g. jwt.io, keycloak needs to be up and running.)
 ```
 TOKEN=`curl -d 'client_id=auth'  -d 'username=USERNAME' -d 'password=USERPASSWORD' -d 'grant_type=password' 'http://127.0.0.1:8080/realms/isduba/protocol/openid-connect/token' | jq -r .access_token`
 ```

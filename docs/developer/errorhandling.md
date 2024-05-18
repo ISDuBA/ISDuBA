@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-# Errorhandling
+# Errorhandling in the frontend
 
 ## Requests
 
