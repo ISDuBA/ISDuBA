@@ -9,9 +9,10 @@
 package web
 
 import (
+	"github.com/gin-gonic/gin"
+
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
-	"github.com/gin-gonic/gin"
 )
 
 // extractTLPs extracts the TLP from the JWT token.

@@ -16,11 +16,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
-	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
 func (c *Controller) viewEvents(ctx *gin.Context) {

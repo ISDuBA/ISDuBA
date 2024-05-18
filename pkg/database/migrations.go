@@ -23,8 +23,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 )
 
 //go:embed migrations

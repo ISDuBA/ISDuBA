@@ -11,8 +11,9 @@ package web
 import (
 	"net/http"
 
-	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/gin-gonic/gin"
+
+	"github.com/ISDuBA/ISDuBA/pkg/version"
 )
 
 // about return the backend version number.

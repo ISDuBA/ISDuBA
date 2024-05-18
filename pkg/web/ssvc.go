@@ -16,10 +16,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
 func (c *Controller) changeSSVC(ctx *gin.Context) {
