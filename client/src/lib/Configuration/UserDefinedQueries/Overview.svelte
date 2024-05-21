@@ -22,6 +22,8 @@
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Messages/ErrorMessage.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
+  import { push } from "svelte-spa-router";
 
   let queries: any[] = [];
   let orderBy = "";
@@ -32,7 +34,7 @@
     if (response.ok) {
       queries = response.content;
     } else if (response.error) {
-      errorMessage = response.error;
+      errorMessage = `Could not load queries. ${getErrorMessage(response.error)}`;
     }
   });
 </script>
@@ -67,7 +69,12 @@
         </TableHead>
         <TableBody>
           {#each queries as query}
-            <TableBodyRow class="cursor-pointer">
+            <TableBodyRow
+              on:click={() => {
+                push(`/configuration/userqueries/${query.id}`);
+              }}
+              class="cursor-pointer"
+            >
               <TableBodyCell>{query.name ?? "-"}</TableBodyCell>
               <TableBodyCell>{query.description ?? "-"}</TableBodyCell>
             </TableBodyRow>

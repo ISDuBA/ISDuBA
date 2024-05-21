@@ -121,6 +121,11 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
+    "/configuration/userqueries/:id": wrap({
+      component: QueryDesigner,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
     "/documents": wrap({
       component: Documents,
       userData: loginRequired,
