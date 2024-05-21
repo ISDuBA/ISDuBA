@@ -16,6 +16,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
+  import { push } from "svelte-spa-router";
 
   export let params: any = null;
 
@@ -86,6 +87,14 @@
     if (!response.ok && response.error) {
       saveErrorMessage = getErrorMessage(response.error);
     }
+    if (response.ok) {
+      if (loadedData) {
+        fetchData();
+      } else {
+        let { id } = response.content;
+        push(`/configuration/userqueries/${id}`);
+      }
+    }
   };
 
   const switchOrderDirection = (index: number) => {
@@ -132,6 +141,7 @@
   };
 
   const shorten = (text: string) => {
+    if (!text) return "";
     if (text.length < 10) return text;
     return `${text.substring(0, 10)}...`;
   };
@@ -175,10 +185,12 @@
   };
 
   onMount(async () => {
-    if (params.id) {
+    if (params && params.id) {
       fetchData();
     }
   });
+
+  $: disableSave = currentSearch.columns.every((c) => c.visible == false);
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>
@@ -389,7 +401,9 @@
             }}
             color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
           >
-          <Button on:click={saveQuery} color="light"><i class="bx bxs-save me-2"></i> Save</Button>
+          <Button disabled={disableSave} on:click={saveQuery} color="light"
+            ><i class="bx bxs-save me-2"></i> Save</Button
+          >
         </div>
       </div>
       {#if saveErrorMessage.length > 0}

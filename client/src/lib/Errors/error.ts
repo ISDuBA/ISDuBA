@@ -16,6 +16,7 @@ const ERRORMESSAGES: any = {
   "400": `The request sent from the client could not be understood. ${contactAdmin}`,
   "401": `You are unauthorized. Please re-login.`,
   "402": `You are not allowed to do this. ${contactAdmin}`,
+  "404": `Content not found. ${contactAdmin}`,
   "783": `The response from the server is not parsable. ${contactAdmin}`
 };
 
