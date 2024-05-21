@@ -13,24 +13,42 @@ set -e # to exit if a command in the script fails
 # arguments:
 # $1: name
 # $2: description
+# $3: whether to login before attempting to create the role. Default: true.
 
-# This will work if the standard or custom has been set in env. If neither, this will fail.
-if [[ -z "${KEYCLOAK_ADMIN}" ]]; then
-  export KEYCLOAK_ADMIN="keycloak"
-  echo "No Keycloak admin set. Assuming admin with name \"keycloak\""
-else
-  export KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN}"
+login=true
+if [ ! -z "$3" ]; then
+  case "$3" in
+    true)
+      # login is already true
+      ;;
+    false)
+      login=false
+      ;;
+    *)
+      echo "createRole.sh login can only be set to true or false"
+      exit 1
+      ;;
+  esac
 fi
 
-if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
-  export KEYCLOAK_ADMIN_PASSWORD="keycloak"
-  echo "No Keycloak admin password set. Assuming admin with password \"keycloak\""
-else
-  export KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
+if "$login"; then
+  # This will work if the standard or custom has been set in env. If neither, this will fail.
+  if [[ -z "${KEYCLOAK_ADMIN}" ]]; then
+    export KEYCLOAK_ADMIN="keycloak"
+    echo "No Keycloak admin set. Assuming admin with name \"keycloak\""
+  else
+    export KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN}"
+  fi
+
+  if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+    export KEYCLOAK_ADMIN_PASSWORD="keycloak"
+    echo "No Keycloak admin password set. Assuming admin with password \"keycloak\""
+  else
+    export KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
+  fi
+
+  sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$KEYCLOAK_ADMIN" --password "$KEYCLOAK_ADMIN_PASSWORD"
 fi
-
-sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$KEYCLOAK_ADMIN" --password "$KEYCLOAK_ADMIN_PASSWORD"
-
 
 if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms/isduba/roles' | grep -F -q "\"name\" : \"$1\"", ; then
   echo "Role $1 already exists."

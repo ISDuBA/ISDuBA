@@ -10,20 +10,39 @@
 
 set -e # to exit if a command in the script fails
 
-./installgojava.sh # installs go and java
+keycloak_running=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -k|--keycloakRunning)
+      echo "Assuming keycloak is running..."
+      keycloak_running=true
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
 
-./installpostgres.sh # installs postgreSQL
+#./installgojava.sh # installs go and java
 
-./configurepostgres.sh # creates necessary postgres users and databases
+#./installpostgres.sh # installs postgreSQL
 
-./installkeycloak.sh # installs keycloak
+#./configurepostgres.sh # creates necessary postgres users and databases
 
-./keycloak/configureKeycloak.sh # configures keycloak
+#./installkeycloak.sh # installs keycloak
 
-./installplaywright.sh # prepare frontend
+if $keycloak_running; then
+  ./keycloak/configureKeycloak.sh -k # configures keycloak
+else
+  ./keycloak/configureKeycloak.sh # configures keycloak
+fi
 
-./installisduba.sh # build the isdubad and bulkimporter tools
+#./installplaywright.sh # prepare frontend
 
-./migrate.sh # prepare isduba database
+#./installisduba.sh # build the isdubad and bulkimporter tools
+
+#./migrate.sh # prepare isduba database
 
 echo "All set up!"
