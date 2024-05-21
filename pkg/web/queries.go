@@ -265,6 +265,57 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 	}
 }
 
+func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
+
+	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	const (
+		selectSQL = `SELECT ` +
+			`advisories,` +
+			`global,` +
+			`name,` +
+			`description,` +
+			`query,` +
+			`num,` +
+			`columns,` +
+			`orders ` +
+			`FROM stored_queries WHERE id = $1 AND ` +
+			`(global OR definer = $2)`
+	)
+
+	var query models.StoredQuery
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			definer := ctx.GetString("uid")
+			return conn.QueryRow(rctx, selectSQL, queryID, definer).Scan(
+				&query.Advisories,
+				&query.Global,
+				&query.Name,
+				&query.Description,
+				&query.Query,
+				&query.Num,
+				&query.Columns,
+				&query.Orders,
+			)
+		}, 0,
+	); err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		default:
+			slog.Error("database error", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	ctx.JSON(http.StatusInternalServerError, &query)
+}
+
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 
 	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)

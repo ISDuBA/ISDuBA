@@ -74,6 +74,7 @@ func (c *Controller) Bind() http.Handler {
 	// Stored queries
 	api.POST("/queries", authAll, c.createStoredQuery)
 	api.GET("/queries", authAll, c.listStoredQueries)
+	api.GET("/queries/:query", authAll, c.fetchStoredQuery)
 	api.PUT("/queries/:query", authAll, c.updateStoredQuery)
 	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
 
