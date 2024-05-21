@@ -313,7 +313,7 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 		}
 		return
 	}
-	ctx.JSON(http.StatusInternalServerError, &query)
+	ctx.JSON(http.StatusOK, &query)
 }
 
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
