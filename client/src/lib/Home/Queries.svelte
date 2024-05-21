@@ -16,7 +16,7 @@
   import { Button, ButtonGroup } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
-  import AdvisoryTable from "$lib/table/AdvisoryTable.svelte";
+  import AdvisoryTable from "$lib/Advisories/AdvisoryTable.svelte";
 
   let queries: any[] = [];
   let selectedIndex = 0;

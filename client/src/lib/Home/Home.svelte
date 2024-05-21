@@ -11,7 +11,7 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import AdvisoryTable from "$lib/table/AdvisoryTable.svelte";
+  import AdvisoryTable from "$lib/Advisories/AdvisoryTable.svelte";
   import Queries from "./Queries.svelte";
 
   let columns = [
