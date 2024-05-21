@@ -184,7 +184,9 @@
         loadedData = result;
       }
       currentSearch = generateQueryFrom(result);
-      currentSearch.name = `(clone) ${currentSearch.name}`;
+      if (queryString.clone) {
+        currentSearch.name = `(clone) ${currentSearch.name}`;
+      }
     } else if (response.error) {
       loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
     }
