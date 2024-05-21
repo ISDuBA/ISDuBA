@@ -16,7 +16,9 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
+  import { push, querystring } from "svelte-spa-router";
+  // @ts-expect-error ignore complaining qs has not type declaration
+  import { parse } from "qs";
 
   export let params: any = null;
 
@@ -88,12 +90,7 @@
       saveErrorMessage = getErrorMessage(response.error);
     }
     if (response.ok) {
-      if (loadedData) {
-        fetchData();
-      } else {
-        let { id } = response.content;
-        push(`/configuration/userqueries/${id}`);
-      }
+      push(`/configuration/`);
     }
   };
 
@@ -168,25 +165,28 @@
       columns: columns,
       name: result.name,
       query: result.query,
-      description: result.description,
+      description: result.description || "",
       global: result.global
     };
   };
 
-  const fetchData = async () => {
-    const response = await request(`/api/queries/${params.id}`, "GET");
+  onMount(async () => {
+    const queryString = parse($querystring);
+    let id;
+    if (queryString.clone) {
+      id = queryString.clone;
+    }
+    if (params) id = params.id;
+    const response = await request(`/api/queries/${id}`, "GET");
     if (response.ok) {
       const result = await response.content;
-      loadedData = result;
+      if (params && params.id) {
+        loadedData = result;
+      }
       currentSearch = generateQueryFrom(result);
+      currentSearch.name = `(clone) ${currentSearch.name}`;
     } else if (response.error) {
       loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
-    }
-  };
-
-  onMount(async () => {
-    if (params && params.id) {
-      fetchData();
     }
   });
 
