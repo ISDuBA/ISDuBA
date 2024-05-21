@@ -273,27 +273,29 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	const (
-		selectSQL = `SELECT ` +
-			`advisories,` +
-			`global,` +
-			`name,` +
-			`description,` +
-			`query,` +
-			`num,` +
-			`columns,` +
-			`orders ` +
-			`FROM stored_queries WHERE id = $1 AND ` +
-			`(global OR definer = $2)`
-	)
+	const selectSQL = `SELECT ` +
+		`advisories,` +
+		`definer,` +
+		`global,` +
+		`name,` +
+		`description,` +
+		`query,` +
+		`num,` +
+		`columns,` +
+		`orders ` +
+		`FROM stored_queries WHERE id = $1 AND ` +
+		`(global OR definer = $2)`
 
-	var query models.StoredQuery
+	query := models.StoredQuery{
+		ID: queryID,
+	}
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			definer := ctx.GetString("uid")
 			return conn.QueryRow(rctx, selectSQL, queryID, definer).Scan(
 				&query.Advisories,
+				&query.Definer,
 				&query.Global,
 				&query.Name,
 				&query.Description,
