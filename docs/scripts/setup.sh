@@ -25,13 +25,13 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-#./installgojava.sh # installs go and java
+./installgojava.sh # installs go and java
 
-#./installpostgres.sh # installs postgreSQL
+./installpostgres.sh # installs postgreSQL
 
-#./configurepostgres.sh # creates necessary postgres users and databases
+./configurepostgres.sh # creates necessary postgres users and databases
 
-#./installkeycloak.sh # installs keycloak
+./installkeycloak.sh # installs keycloak
 
 if $keycloak_running; then
   ./keycloak/configureKeycloak.sh -k # configures keycloak
@@ -39,10 +39,10 @@ else
   ./keycloak/configureKeycloak.sh # configures keycloak
 fi
 
-#./installplaywright.sh # prepare frontend
+./installplaywright.sh # prepare frontend
 
-#./installisduba.sh # build the isdubad and bulkimporter tools
+./installisduba.sh # build the isdubad and bulkimporter tools
 
-#./migrate.sh # prepare isduba database
+./migrate.sh # prepare isduba database
 
 echo "All set up!"
