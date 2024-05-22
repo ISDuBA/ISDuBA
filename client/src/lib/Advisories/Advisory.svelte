@@ -244,7 +244,6 @@
       const id: any = setTimeout(async () => {
         if (canSetStateRead(advisoryState)) {
           await updateState(READ);
-          appStore.displayInfoMessage("This advisory is marked as read");
         }
       }, 3000);
       timeoutIDs.push(id);
