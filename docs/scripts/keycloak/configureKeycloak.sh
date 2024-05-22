@@ -117,7 +117,7 @@ fi
 
 ./createUser.sh 'augustus'  'Augustus'       'Auditor'       'aug@ISDuBA.isduba' 'augustus'   false
 
-./createUser.sh 'admin'     'Admin'          'Administrator' 'bea@ISDuBA.isduba' 'beate'      false
+./createUser.sh 'admin'     'Admin'          'Administrator' 'adm@ISDuBA.isduba' 'admin'      false
 
 ./createUser.sh 'adrian'    'Adrian'         'Karma'         'Adr@ISDuBA.isduba' 'adrian'     false
 
