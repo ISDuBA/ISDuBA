@@ -16,6 +16,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
   import { ColorSchemeType } from "diff2html/lib/types";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   let diff: string;
   let error: string;
@@ -27,7 +28,7 @@
       if (response.ok) {
         diff = response.content;
       } else if (response.error) {
-        error = response.error;
+        error = getErrorMessage(response.error);
       }
 
       const diffElement = document.getElementById("diff");
