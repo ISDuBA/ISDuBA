@@ -16,17 +16,30 @@ import type { HttpResponse } from "./types";
 export const request = async (
   path: string,
   requestMethod: string,
-  formData?: FormData
+  formData?: FormData,
+  abortController?: AbortController
 ): Promise<HttpResponse> => {
   try {
     const token = await getAccessToken();
-    const response = await fetch(path, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      method: requestMethod,
-      body: formData
-    });
+    let response;
+    if (abortController) {
+      response = await fetch(path, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        method: requestMethod,
+        body: formData,
+        signal: abortController.signal
+      });
+    } else {
+      response = await fetch(path, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        method: requestMethod,
+        body: formData
+      });
+    }
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
     let json;

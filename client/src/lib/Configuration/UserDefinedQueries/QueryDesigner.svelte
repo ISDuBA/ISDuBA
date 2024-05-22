@@ -21,6 +21,16 @@
   import { parse } from "qs";
 
   export let params: any = null;
+  let editName = false;
+  let editDescription = false;
+  let hoveredLine = -1;
+  let queryCount: any = null;
+  let loading = false;
+  let errorMessage = "";
+  let saveErrorMessage = "";
+  let loadQueryError = "";
+  let loadedData: any = null;
+  let abortController: AbortController;
 
   const unsetMessages = () => {
     queryCount = null;
@@ -31,12 +41,17 @@
   const testQuery = async () => {
     loading = true;
     unsetMessages();
+    abortController = new AbortController();
     const query = generateQueryString(currentSearch);
-    const response = await request(query, "GET");
+    const response = await request(query, "GET", undefined, abortController);
     if (response.ok) {
       queryCount = response.content.count;
     } else if (response.error) {
-      errorMessage = `An error occured: ${response.content}`;
+      if (/Error/.test(response.error)) {
+        // Intentionally ignore errors induced by aborting the request
+      } else {
+        errorMessage = `An error occured: ${response.content}`;
+      }
     }
     loading = false;
   };
@@ -63,6 +78,8 @@
       global: false
     };
   };
+
+  let currentSearch = newQuery();
 
   const saveQuery = async () => {
     const formData = new FormData();
@@ -109,17 +126,6 @@
   const setVisible = (index: number) => {
     currentSearch.columns[index].visible = !currentSearch.columns[index].visible;
   };
-
-  let currentSearch = newQuery();
-  let editName = false;
-  let editDescription = false;
-  let hoveredLine = -1;
-  let queryCount: any = null;
-  let loading = false;
-  let errorMessage = "";
-  let saveErrorMessage = "";
-  let loadQueryError = "";
-  let loadedData: any = null;
 
   const toggleSearchType = () => {};
 
@@ -391,9 +397,21 @@
           <span class="text-red-600">{errorMessage}</span>
         {/if}
         <div class="my-2 ml-auto flex flex-row gap-3">
-          <Button on:click={testQuery} color="light"
-            ><i class="bx bx-test-tube me-2"></i> Test query</Button
-          >
+          {#if !loading}
+            <Button on:click={testQuery} color="light"
+              ><i class="bx bx-test-tube me-2"></i> Test query</Button
+            >
+          {/if}
+          {#if loading}
+            <Button
+              on:click={() => {
+                if (abortController) abortController.abort();
+                loading = false;
+                unsetMessages();
+              }}
+              color="light"><i class="bx bx-stop-circle"></i> Abort query</Button
+            >
+          {/if}
           <Button
             on:click={() => {
               if (loadedData) {
