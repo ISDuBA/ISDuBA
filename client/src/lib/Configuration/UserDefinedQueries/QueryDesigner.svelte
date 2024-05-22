@@ -159,6 +159,11 @@
       searchType = SEARCHTYPES.DOCUMENT;
       columns = COLUMNS.DOCUMENT;
     }
+    columns = result.columns.concat(
+      columns.filter((c: string) => {
+        if (!result.columns.includes(c)) return c;
+      })
+    );
     columns = columnsFromNames(columns);
     columns = columns.map((c) => {
       if (result.columns.includes(c.name)) c.visible = true;
