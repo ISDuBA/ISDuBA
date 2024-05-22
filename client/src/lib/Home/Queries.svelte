@@ -10,7 +10,6 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store";
-  import SectionHeader from "$lib/SectionHeader.svelte";
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
   import { Button, ButtonGroup } from "flowbite-svelte";
@@ -18,6 +17,22 @@
   import { getErrorMessage } from "$lib/Errors/error";
   import AdvisoryTable from "$lib/Advisories/AdvisoryTable.svelte";
 
+  let defaultQueries = [
+    {
+      name: "New advisories",
+      query: "$state new workflow =",
+      advisories: true,
+      columns: [
+        "id",
+        "publisher",
+        "title",
+        "tracking_id",
+        "version",
+        "cvss_v2_score",
+        "cvss_v3_score"
+      ]
+    }
+  ];
   let queries: any[] = [];
   let selectedIndex = 0;
   let pressedButtonClass = "bg-gray-200 hover:bg-gray-100";
@@ -26,7 +41,7 @@
   onMount(async () => {
     const response = await request("/api/queries", "GET");
     if (response.ok) {
-      queries = response.content;
+      queries = [...defaultQueries, ...response.content];
     } else if (response.error) {
       errorMessage = `Could not load user defined queries. ${getErrorMessage(response.error)}`;
     }
@@ -39,15 +54,24 @@
 
 {#if $appStore.app.isUserLoggedIn}
   {#if queries.length > 0}
-    <SectionHeader title="Queries"></SectionHeader>
+    <ButtonGroup class="me-2">
+      <Button
+        on:click={() => selectQuery(0)}
+        class={`${0 === selectedIndex ? pressedButtonClass : ""} flex flex-col p-0`}
+      >
+        <span title="New advisories" class="m-2 h-full w-full">New advisories</span>
+      </Button>
+    </ButtonGroup>
     <ButtonGroup>
       {#each queries as query, index}
-        <Button
-          on:click={() => selectQuery(index)}
-          class={`${index === selectedIndex ? pressedButtonClass : ""} flex flex-col p-0`}
-        >
-          <span title={query.description} class="m-2 h-full w-full">{query.name}</span>
-        </Button>
+        {#if index > defaultQueries.length - 1}
+          <Button
+            on:click={() => selectQuery(index)}
+            class={`${index + defaultQueries.length - 1 === selectedIndex ? pressedButtonClass : ""} flex flex-col p-0`}
+          >
+            <span title={query.description} class="m-2 h-full w-full">{query.name}</span>
+          </Button>
+        {/if}
       {/each}
     </ButtonGroup>
     {@const query = queries[selectedIndex]}
