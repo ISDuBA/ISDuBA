@@ -216,7 +216,11 @@
       dispatch("updateSSVC");
       appStore.displaySuccessMessage("SSVC updated");
     } else if (response.error) {
-      saveSSVCError = getErrorMessage(response.error);
+      if (response.error === "400") {
+        saveSSVCError = `An error occured: ${response.content}.`;
+      } else {
+        saveSSVCError = getErrorMessage(response.error);
+      }
     }
   }
 
