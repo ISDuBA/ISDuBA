@@ -19,6 +19,8 @@
   import { push, querystring } from "svelte-spa-router";
   // @ts-expect-error ignore complaining qs has not type declaration
   import { parse } from "qs";
+  import { appStore } from "$lib/store";
+  import { ADMIN, isRoleIncluded } from "$lib/permissions";
 
   export let params: any = null;
   let editName = false;
@@ -278,10 +280,12 @@
         </button>
       </div>
       <div class="w-1/3">
-        <div class="flex h-1 flex-row items-center gap-x-3">
-          <span>Global:</span>
-          <Checkbox checked={currentSearch.global}></Checkbox>
-        </div>
+        {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
+          <div class="flex h-1 flex-row items-center gap-x-3">
+            <span>Global:</span>
+            <Checkbox checked={currentSearch.global}></Checkbox>
+          </div>
+        {/if}
       </div>
     </div>
     <hr class="mb-4 mt-4 w-4/5" />

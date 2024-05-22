@@ -50,7 +50,7 @@ const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
   { from: ARCHIVED, to: DELETED, roles: [EDITOR, REVIEWER] }
 ];
 
-function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
+export function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
   for (let i = 0; i < rolesToCheck.length; i++) {
     if (roles.includes(rolesToCheck[i])) {
       return true;
