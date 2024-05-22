@@ -319,7 +319,7 @@
                     </TableBodyCell>
                   {:else if column === "initial_release_date" || column === "current_release_date"}
                     <TableBodyCell {tdClass}
-                      >{item.initial_release_date.split("T")[0]}</TableBodyCell
+                      >{item.initial_release_date?.split("T")[0]}</TableBodyCell
                     >
                   {:else if column === "title"}
                     <TableBodyCell tdClass={title}
