@@ -77,7 +77,7 @@ sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:808
 if sudo /opt/keycloak/bin/kcadm.sh get 'http://localhost:8080/admin/realms' | grep -F -q '"realm" : "isduba",' ; then
  echo "Realm isduba already exists."
 else
-./keycloak/createRealm.sh
+./createRealm.sh
 fi
 
 # create groups  name                tlps        login
