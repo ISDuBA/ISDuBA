@@ -16,9 +16,9 @@ keycloak_running=false
 help() {
 echo "Usage: installall.sh [OPTIONS]"
 echo "where OPTIONS:"
-echo "  -h, help                       show this help text and exit script (optional)"
-echo "  -b, branch=name                set up ISDuBA on the branch 'name' instead of main (optional)"
-echo "  -k, keycloakRunning            signal the script that there is a keycloak running"
+echo "  -h, --help                       show this help text and exit script (optional)"
+echo "  -b, --branch=name                set up ISDuBA on the branch 'name' instead of main (optional)"
+echo "  -k, --keycloakRunning            signal the script that there is a keycloak running"
 echo "                                  on port 8080 that may not have health checks enabled (optional)"
 
 }
