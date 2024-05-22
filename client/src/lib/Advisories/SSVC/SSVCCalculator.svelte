@@ -30,6 +30,7 @@
   import { appStore } from "$lib/store";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   const dispatch = createEventDispatcher();
 
@@ -215,7 +216,7 @@
       dispatch("updateSSVC");
       appStore.displaySuccessMessage("SSVC updated");
     } else if (response.error) {
-      saveSSVCError = response.error;
+      saveSSVCError = getErrorMessage(response.error);
     }
   }
 
