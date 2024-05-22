@@ -33,11 +33,13 @@ done
 
 ./installkeycloak.sh # installs keycloak
 
+cd keycloak
 if $keycloak_running; then
-  ./keycloak/configureKeycloak.sh -k # configures keycloak
+  ./configureKeycloak.sh -k # configures keycloak
 else
-  ./keycloak/configureKeycloak.sh # configures keycloak
+  ./configureKeycloak.sh # configures keycloak
 fi
+cd ..
 
 ./installplaywright.sh # prepare frontend
 
