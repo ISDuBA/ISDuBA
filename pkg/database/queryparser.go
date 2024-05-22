@@ -38,6 +38,7 @@ const (
 	search
 	ilike
 	ilikePID
+	now
 )
 
 type valueType int
@@ -49,6 +50,7 @@ const (
 	stringType
 	timeType
 	workflowType
+	durationType
 )
 
 // Parser helps parsing database queries,
@@ -64,13 +66,14 @@ type Expr struct {
 	exprType  exprType
 	valueType valueType
 
-	stringValue string
-	intValue    int64
-	floatValue  float64
-	timeValue   time.Time
-	boolValue   bool
-	langValue   string
-	alias       string
+	stringValue   string
+	intValue      int64
+	floatValue    float64
+	timeValue     time.Time
+	boolValue     bool
+	langValue     string
+	durationValue time.Duration
+	alias         string
 
 	children []*Expr
 }
@@ -97,6 +100,8 @@ func (vt valueType) String() string {
 		return "time"
 	case workflowType:
 		return "workflow"
+	case durationType:
+		return "duration"
 	default:
 		return fmt.Sprintf("unknown value type %d", vt)
 	}
@@ -156,6 +161,8 @@ func (et exprType) String() string {
 	case ilike:
 		return "ilike"
 	case ilikePID:
+		return "ilikepid"
+	case now:
 		return "ilikepid"
 	default:
 		return fmt.Sprintf("unknown expression type %d", et)
@@ -458,6 +465,8 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			b.WriteByte('\'')
 			b.WriteString(e.stringValue)
 			b.WriteString("'::workflow")
+		case durationType:
+			fmt.Fprintf(&b, "'%.2f seconds'::interval", e.durationValue.Seconds())
 		}
 	}
 
@@ -481,6 +490,10 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			b.WriteString("documents.")
 		}
 		b.WriteString(column)
+	}
+
+	writeNow := func(_ *Expr) {
+		b.WriteString("current_timestamp")
 	}
 
 	writeILike := func(e *Expr) {
@@ -560,6 +573,8 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			writeILike(e)
 		case ilikePID:
 			writeILikePID(e)
+		case now:
+			writeNow(e)
 		}
 		b.WriteByte(')')
 	}
@@ -682,6 +697,14 @@ func parseInt(s string) int64 {
 		panic(parseError(fmt.Sprintf("%q is not an int: %v", s, err)))
 	}
 	return v
+}
+
+func parseDuration(s string) time.Duration {
+	duration, err := time.ParseDuration(s)
+	if err != nil {
+		panic(parseError(fmt.Sprintf("cannot parse %q as duration", s)))
+	}
+	return duration
 }
 
 func (st *stack) float() {
@@ -897,6 +920,39 @@ func (st *stack) ilikePID() {
 	})
 }
 
+func (st *stack) now() {
+	needle := st.pop()
+	needle.checkValueType(stringType)
+	st.push(&Expr{
+		exprType:  now,
+		valueType: timeType,
+	})
+}
+
+func (st *stack) duration() {
+	if st.top().valueType == durationType {
+		return
+	}
+	switch e := st.pop(); e.exprType {
+	case cnst:
+		switch e.valueType {
+		case stringType:
+			st.push(&Expr{
+				exprType:      cnst,
+				valueType:     durationType,
+				durationValue: parseDuration(e.stringValue),
+			})
+		default:
+			panic(parseError(
+				fmt.Sprintf("value type %q is not supported as duration",
+					e.valueType)))
+		}
+	default:
+		panic(parseError(
+			fmt.Sprintf("type %q is not supported as duration", e.exprType)))
+	}
+}
+
 var aliasRe = regexp.MustCompile(`[a-zA-Z][a-zA-Z_0-9]*`)
 
 func validAlias(s string) {
@@ -1022,6 +1078,10 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.ilike()
 		case "ilikepid":
 			st.ilikePID()
+		case "now":
+			st.now()
+		case "duration":
+			st.duration()
 		default:
 			if strings.HasPrefix(field, "$") {
 				st.access(field[1:], p.Advisory)
