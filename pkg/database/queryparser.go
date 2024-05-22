@@ -39,6 +39,10 @@ const (
 	ilike
 	ilikePID
 	now
+	add
+	sub
+	mul
+	div
 )
 
 type valueType int
@@ -83,6 +87,39 @@ type documentColumn struct {
 	valueType      valueType
 	advisoryOnly   bool
 	projectionOnly bool
+}
+
+type binaryCompat struct {
+	left     valueType
+	operator exprType
+	right    valueType
+}
+
+var binaryCompatMatrix = map[binaryCompat]valueType{
+	{boolType, and, boolType}:         boolType,
+	{boolType, or, boolType}:          boolType,
+	{intType, add, intType}:           intType,
+	{intType, sub, intType}:           intType,
+	{intType, mul, intType}:           intType,
+	{intType, div, intType}:           intType,
+	{intType, add, floatType}:         floatType,
+	{intType, sub, floatType}:         floatType,
+	{intType, mul, floatType}:         floatType,
+	{intType, div, floatType}:         floatType,
+	{floatType, add, intType}:         floatType,
+	{floatType, sub, intType}:         floatType,
+	{floatType, mul, intType}:         floatType,
+	{floatType, div, intType}:         floatType,
+	{timeType, add, durationType}:     timeType,
+	{timeType, sub, durationType}:     timeType,
+	{durationType, add, timeType}:     timeType,
+	{durationType, sub, timeType}:     timeType,
+	{durationType, add, durationType}: durationType,
+	{durationType, sub, durationType}: durationType,
+	{durationType, mul, intType}:      durationType,
+	{durationType, div, intType}:      durationType,
+	{durationType, mul, floatType}:    durationType,
+	{durationType, div, floatType}:    durationType,
 }
 
 // String implements [fmt.Stringer].
@@ -163,7 +200,15 @@ func (et exprType) String() string {
 	case ilikePID:
 		return "ilikepid"
 	case now:
-		return "ilikepid"
+		return "now"
+	case add:
+		return "+"
+	case sub:
+		return "-"
+	case mul:
+		return "*"
+	case div:
+		return "/"
 	default:
 		return fmt.Sprintf("unknown expression type %d", et)
 	}
@@ -301,7 +346,7 @@ func CreateQuerySQL(
 		sql += " ORDER BY " + order
 	}
 
-	if limit > 0 {
+	if limit >= 0 {
 		sql += " LIMIT " + strconv.FormatInt(limit, 10)
 	}
 	if offset > 0 {
@@ -436,6 +481,8 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			b.WriteString("boolean")
 		case workflowType:
 			b.WriteString("workflow")
+		case durationType:
+			b.WriteString("interval")
 		}
 		b.WriteByte(')')
 	}
@@ -575,6 +622,14 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			writeILikePID(e)
 		case now:
 			writeNow(e)
+		case add:
+			writeBinary(e, "+")
+		case sub:
+			writeBinary(e, "-")
+		case mul:
+			writeBinary(e, "*")
+		case div:
+			writeBinary(e, "/")
 		}
 		b.WriteByte(')')
 	}
@@ -635,14 +690,14 @@ func (st *stack) pushString(s string) {
 func (e *Expr) checkValueType(vt valueType) {
 	if e.valueType != vt {
 		panic(parseError(
-			fmt.Sprintf("value type mismatch: %s %s", e.valueType, vt)))
+			fmt.Sprintf("value type mismatch: %q %q", e.valueType, vt)))
 	}
 }
 
 func (e *Expr) checkExprType(et exprType) {
 	if e.exprType != et {
 		panic(parseError(
-			fmt.Sprintf("expression type mismatch: %s %s", e.exprType, et)))
+			fmt.Sprintf("expression type mismatch: %q %q", e.exprType, et)))
 	}
 }
 
@@ -659,11 +714,19 @@ func (st *stack) not() {
 func (st *stack) binary(et exprType) {
 	right := st.pop()
 	left := st.pop()
-	left.checkValueType(boolType)
-	right.checkValueType(boolType)
+	resultValueType, ok := binaryCompatMatrix[binaryCompat{
+		left:     left.valueType,
+		operator: et,
+		right:    right.valueType,
+	}]
+	if !ok {
+		panic(parseError(
+			fmt.Sprintf("invalid binary operation: %q %q %q",
+				left.valueType, et, right.valueType)))
+	}
 	st.push(&Expr{
 		exprType:  et,
-		valueType: boolType,
+		valueType: resultValueType,
 		children:  []*Expr{left, right},
 	})
 }
@@ -921,8 +984,6 @@ func (st *stack) ilikePID() {
 }
 
 func (st *stack) now() {
-	needle := st.pop()
-	needle.checkValueType(stringType)
 	st.push(&Expr{
 		exprType:  now,
 		valueType: timeType,
@@ -1082,6 +1143,14 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.now()
 		case "duration":
 			st.duration()
+		case "+":
+			st.binary(add)
+		case "-":
+			st.binary(sub)
+		case "/":
+			st.binary(div)
+		case "*":
+			st.binary(mul)
 		default:
 			if strings.HasPrefix(field, "$") {
 				st.access(field[1:], p.Advisory)
