@@ -39,7 +39,7 @@
   let errorMessage = "";
   let isAdvancedParametersEnabled = false;
   let advancedQuery = "";
-  let appliedAdvancedQuery = ";";
+  let appliedAdvancedQuery = "";
   let isAdvancedQueryValid = true;
   let advancedQueryErrorMessage = "";
 
