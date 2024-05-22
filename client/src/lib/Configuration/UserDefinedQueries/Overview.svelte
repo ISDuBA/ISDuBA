@@ -9,15 +9,15 @@
 -->
 
 <script lang="ts">
-  import { tablePadding } from "$lib/table/defaults";
+  import { tablePadding, tdClass } from "$lib/table/defaults";
   import {
     Button,
     Table,
     TableHead,
     TableBody,
     TableHeadCell,
-    TableBodyRow,
-    TableBodyCell
+    TableBodyCell,
+    Spinner
   } from "flowbite-svelte";
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
@@ -35,14 +35,21 @@
   let orderBy = "";
   let errorMessage = "";
   let querytoDelete: any = resetQueryToDelete();
+  let hoveredQuery: any;
+  let loading = false;
 
   const fetchQueries = async () => {
+    loading = true;
     const response = await request("/api/queries", "GET");
     if (response.ok) {
-      queries = response.content;
+      const result = response.content;
+      queries = result.sort((q1: any, q2: any) => {
+        return q1.num > q2.num;
+      });
     } else if (response.error) {
       errorMessage = `Could not load queries. ${getErrorMessage(response.error)}`;
     }
+    loading = false;
   };
 
   const deleteQuery = async () => {
@@ -53,6 +60,49 @@
       deleteModalOpen = false;
     }
     fetchQueries();
+  };
+
+  const swapQueryNum = async (query1: any, query2: any) => {
+    loading = true;
+    let formData = new FormData();
+    let TEMP_NUM = queries.length + 1;
+    formData.append("num", `${TEMP_NUM}`);
+    const response1 = await request(`/api/queries/${query1.id}`, "PUT", formData);
+    if (response1.ok) {
+      formData = new FormData();
+      formData.append("num", `${query1.num}`);
+      const response2 = await request(`/api/queries/${query2.id}`, "PUT", formData);
+      if (response2.ok) {
+        formData = new FormData();
+        formData.append("num", `${query2.num}`);
+        const response3 = await request(`/api/queries/${query1.id}`, "PUT", formData);
+        if (response3.error) {
+          errorMessage = `An error occured while swapping order of queries`;
+        }
+      }
+      if (response2.error) {
+        errorMessage = `An error occured while swapping order of queries`;
+      }
+    }
+    if (response1.error) {
+      errorMessage = `An error occured while swapping order of queries`;
+    }
+    loading = false;
+    fetchQueries();
+  };
+
+  const promote = () => {
+    if (hoveredQuery === 0) return;
+    const first = queries[hoveredQuery];
+    const second = queries[hoveredQuery - 1];
+    swapQueryNum(second, first);
+  };
+
+  const demote = () => {
+    if (hoveredQuery === queries.length - 1) return;
+    const first = queries[hoveredQuery];
+    const second = queries[hoveredQuery + 1];
+    swapQueryNum(first, second);
   };
 
   onMount(() => {
@@ -81,6 +131,10 @@
 </Modal>
 
 <h2 class="mb-3 text-lg">User defined queries</h2>
+<div class:invisible={!loading} class:mb-4={true}>
+  Loading ...
+  <Spinner color="gray" size="4"></Spinner>
+</div>
 <Button class="mb-6 mt-3" href="/#/configuration/userqueries"
   ><i class="bx bx-plus"></i>New query</Button
 >
@@ -89,6 +143,7 @@
     <div class="mb-12 w-1/3">
       <Table hoverable={true} noborder={true}>
         <TableHead class="cursor-pointer">
+          <TableHeadCell padding={tablePadding}></TableHeadCell>
           <TableHeadCell padding={tablePadding} on:click={() => {}}
             >Name<i
               class:bx={true}
@@ -106,15 +161,49 @@
           <TableHeadCell></TableHeadCell>
         </TableHead>
         <TableBody>
-          {#each queries as query}
-            <TableBodyRow
+          {#each queries as query, index (index)}
+            <tr
               on:click={() => {
                 push(`/configuration/userqueries/${query.id}`);
               }}
+              on:mouseover={() => {
+                hoveredQuery = index;
+              }}
+              on:mouseout={() => {
+                hoveredQuery = -1;
+              }}
+              on:blur={() => {}}
+              on:focus={() => {}}
               class="cursor-pointer"
-            >
-              <TableBodyCell>{query.name ?? "-"}</TableBodyCell>
-              <TableBodyCell>{query.description ?? "-"}</TableBodyCell>
+              ><TableBodyCell {tdClass}
+                ><div
+                  class:invisible={hoveredQuery !== index}
+                  class:w-1={true}
+                  class:flex={true}
+                  class:flex-col={true}
+                >
+                  <button
+                    class="h-4"
+                    on:click|stopPropagation={() => {
+                      promote();
+                    }}
+                  >
+                    <i class="bx bxs-up-arrow-circle"></i>
+                  </button>
+                  <button
+                    on:click|stopPropagation={() => {
+                      demote();
+                    }}
+                    class="h-4"
+                  >
+                    <i class="bx bxs-down-arrow-circle"></i>
+                  </button>
+                </div></TableBodyCell
+              >
+              <TableBodyCell {tdClass}>
+                <span>{query.name ?? "-"}</span>
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
               <td>
                 <button
                   title={`clone ${query.name}`}
@@ -133,7 +222,7 @@
                   title={`delete ${query.name}`}><i class="bx bx-trash text-red-500"></i></button
                 >
               </td>
-            </TableBodyRow>
+            </tr>
           {/each}
         </TableBody>
       </Table>
