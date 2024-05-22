@@ -61,6 +61,7 @@
   };
 
   const testAdvancedQuery = async () => {
+    advancedQueryErrorMessage = "";
     const selectedQuery = queries[selectedIndex];
     const query = `${selectedQuery.query} ${advancedQuery.length > 0 ? advancedQuery.concat(" and") : ""}`;
     const documentURL = encodeURI(
