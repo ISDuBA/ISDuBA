@@ -13,6 +13,7 @@
   import DiffEntry from "./DiffEntry.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { Button } from "flowbite-svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   export let operation: string;
   export let path: string;
@@ -30,7 +31,7 @@
     if (response.ok) {
       result = response.content;
     } else if (response.error) {
-      error = response.error;
+      error = getErrorMessage(response.error);
     }
   };
 </script>
