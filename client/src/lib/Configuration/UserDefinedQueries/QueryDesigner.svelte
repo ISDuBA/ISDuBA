@@ -177,18 +177,20 @@
       id = queryString.clone;
     }
     if (params) id = params.id;
-    const response = await request(`/api/queries/${id}`, "GET");
-    if (response.ok) {
-      const result = await response.content;
-      if (params && params.id) {
-        loadedData = result;
+    if (id) {
+      const response = await request(`/api/queries/${id}`, "GET");
+      if (response.ok) {
+        const result = await response.content;
+        if (params && params.id) {
+          loadedData = result;
+        }
+        currentSearch = generateQueryFrom(result);
+        if (queryString.clone) {
+          currentSearch.name = `(clone) ${currentSearch.name}`;
+        }
+      } else if (response.error) {
+        loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
       }
-      currentSearch = generateQueryFrom(result);
-      if (queryString.clone) {
-        currentSearch.name = `(clone) ${currentSearch.name}`;
-      }
-    } else if (response.error) {
-      loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
     }
   });
 
