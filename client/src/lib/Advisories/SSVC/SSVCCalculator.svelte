@@ -27,7 +27,6 @@
     type SSVCOption
   } from "./SSVCCalculator";
   import { createEventDispatcher, onMount } from "svelte";
-  import { appStore } from "$lib/store";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
