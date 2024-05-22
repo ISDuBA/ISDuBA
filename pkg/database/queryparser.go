@@ -499,7 +499,7 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 			`SELECT * FROM documents_texts dts JOIN product_ids ` +
 			`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
 			`WHERE dts.documents_id = documents.id AND ` +
-			`dts.txt ILIKE `)
+			`unique_texts.txt ILIKE `)
 		recurse(e.children[0])
 		b.WriteByte(')')
 		/*
