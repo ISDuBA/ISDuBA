@@ -60,44 +60,70 @@ This script configures a PostgreSQL for use with Keycloak.
 This script performs initial configuration steps to work with ISDuBA and starts keycloak on port 8080.
 To do this, it calls upon the other scripts in the keycloak directory
    - the hereby created initial admin user will have both username and password ```keycloak```
-   - the hereby created initial user will be the ``` editor ``` (role and group) ``` beate Bearbeiter ```
-   - username and password for the initial user are ```beate```, the created editor group has access to all TLP WHITE advisories
+   - the hereby created initial users are listed in [keycloak/users.txt](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/users.txt)
 
 ### [keycloak/createRealm.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createRealm.sh)
 This script creates and adjusts the Keycloak ```isduba``` realm and requires Keycloak to be running to function.
 
 ### [keycloak/createGroup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createGroup.sh)
-<!---
- TODO: either needs to be expanded to cover all TLP levels and utilizing proper flags, or needs to be reworked
--->
-This script creates a group that can handle TLP WHITE and/or GREEN advisories and requires Keycloak to be running to function.
+This script creates a group and requires Keycloak to be running to function.
 ```
- Usage: createGroup name [tlp] [publisher]
- where tlp:
-  1 - Group will only be able to see TLP WHITE advisories (default)
-  2 - Group will only be able to see TLP GREEN advisories
-  3 - Group will be able to see TLP WHITE and TLP GREEN advisories
+Usage: createGroup.sh [OPTIONS] --name name"
+where OPTIONS:"
+  -h, --help                       show this help text and exit script (optional).
+  -w, --white                      grant the group access to TLP:WHITE advisories (optional).
+  -g, --green                      grant the group access to TLP:GREEN advisories (optional).
+  -a, --amber                      grant the group access to TLP:AMBER advisories (optional).
+  -r, --red                        grant the group access to TLP:RED advisories (optional).
+  -p, --publisher=name             restrict access to advisories of the named publisher (optional).
+      --noLogin                    do not attempt to log into keycloak. Requires active login to not cause errors (optional).
+and
+  -n, --name=name                  name of the group that is supposed to be created (mandatory).
 
- and publisher:
-  Name of the publishers whose advisories the group can see. (Can only be set if tlp has been set)
 ```
 ### [keycloak/createRole.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createRole.sh)
 This script creates a role and requires Keycloak to be running to function.
 
 ```
- Usage: createRole name description
- where name: name of the role
- description: description of the role
+ Usage: createRole name description [login]
+ where:
+  name: name of the role
+  description: description of the role
+  login=[true|false]: Whether to log into keycloak again (default:true).
 ```
+### [keycloak/createUsers.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createUsers.sh)
+This script creates a user and assigns a role and group to them via the createUser and assignUserToRoleAndGroup scripts.
+The user parameters are read from a file, see [keycloak/users.txt](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/users.txt)
+for an example.
+```
+ Usage: createUsers.sh --file filename [OPTIONS]
+ where OPTIONS:
+  -h, --help                       show this help text and exit script (optional).
+  -f, --file=filename              name of the file that contains all user information (mandatory).
+      --noLogin                    do not attempt to log into keycloak. Requires active login to not cause errors (optional).
+```
+
 ### [keycloak/createUser.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/createUser.sh)
 This script creates a user and requires Keycloak to be running to function.
 ```
-Usage: createUser.sh username first_name last_name email_address password
+ Usage: createUser.sh username first_name last_name email_address password [login]
+ where:
+  username: username of the user
+  first_name: first name of the user
+  last_name: surname of the user
+  email_address: the users registrered email-address
+  password: password of the user
+  login=[true|false]: whether to login to keycloak again (default:true)
 ```
 ### [keycloak/assignUserToRoleAndGroup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/keycloak/assignUserToRoleAndGroup.sh)
 This script assigns roles and groups to users and requires Keycloak to be running to function.
 ```
-Usage: assignUserToRoleAndGroup.sh username groupname rolename
+ Usage: assignUserToRoleAndGroup.sh username groupname rolename [login]
+ where:
+  username: username of the user
+  groupname: group the user is going to be assigned to
+  rolename: role the user is going to be assigned to
+  login=[true|false]: whether to login to keycloak again (default:true)
 ```
 ### [installplaywright.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/installplaywright.sh)
 This script installs node, the npm dependencies and playwright for the client.

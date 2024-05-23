@@ -13,16 +13,18 @@ set -e # to exit if a command in the script fails
 # Simplified tlp chooser
 
 help() {
-echo "Usage: createGroup.sh OPTIONS"
+echo "Usage: createGroup.sh [OPTIONS] --name name"
 echo "where OPTIONS:"
 echo "  -h, --help                       show this help text and exit script (optional)."
-echo "  -n, --name=name                  name of the group that is supposed to be created (mandatory)."
 echo "  -w, --white                      grant the group access to TLP:WHITE advisories (optional)."
 echo "  -g, --green                      grant the group access to TLP:GREEN advisories (optional)."
 echo "  -a, --amber                      grant the group access to TLP:AMBER advisories (optional)."
 echo "  -r, --red                        grant the group access to TLP:RED advisories (optional)."
 echo "  -p, --publisher=name             restrict access to advisories of the named publisher (optional)."
 echo "      --noLogin                    do not attempt to log into keycloak. Requires active login to not cause errors (optional)."
+
+echo "and "
+echo "  -n, --name=name                  name of the group that is supposed to be created (mandatory)."
 }
 
 publisher="*"
