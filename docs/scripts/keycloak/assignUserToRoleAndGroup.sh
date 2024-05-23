@@ -99,7 +99,6 @@ if [[ -z "$IDUSR" || -z "IDGRP" ]]; then
     echo "Failed to add user $1 to group $2"
 else
   sudo /opt/keycloak/bin/kcadm.sh update users/$IDUSR/groups/$IDGRP -r isduba -s realm=isduba -s userId=$IDUSR -s groupId=$IDGRP -n
-  echo "Added user $1 to group $2"
 fi
 
 sudo /opt/keycloak/bin/kcadm.sh add-roles -r isduba --uusername $1 --rolename $3
