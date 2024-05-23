@@ -98,7 +98,7 @@
     formData.append("columns", columns.join(" "));
     const columnsForOrder = currentSearch.columns.filter((c) => c.orderBy);
     const orderBy = columnsForOrder.map((c) => `${c.orderBy === "desc" ? "-" : ""}${c.name}`);
-    formData.append("order", orderBy.join(" "));
+    formData.append("orders", orderBy.join(" "));
     let response;
     if (loadedData) {
       response = await request(`/api/queries/${loadedData.id}`, "PUT", formData);
