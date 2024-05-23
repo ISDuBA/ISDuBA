@@ -25,6 +25,8 @@
   import { getErrorMessage } from "$lib/Errors/error";
   import { push } from "svelte-spa-router";
   import { Modal } from "flowbite-svelte";
+  import { ADMIN, isRoleIncluded } from "$lib/permissions";
+  import { appStore } from "$lib/store";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
@@ -176,30 +178,32 @@
               on:focus={() => {}}
               class="cursor-pointer"
               ><TableBodyCell {tdClass}
-                ><div
-                  class:invisible={hoveredQuery !== index}
-                  class:w-1={true}
-                  class:flex={true}
-                  class:flex-col={true}
-                >
-                  <button
-                    class="h-4"
-                    on:click|stopPropagation={() => {
-                      promote();
-                    }}
+                >{#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
+                  <div
+                    class:invisible={hoveredQuery !== index}
+                    class:w-1={true}
+                    class:flex={true}
+                    class:flex-col={true}
                   >
-                    <i class="bx bxs-up-arrow-circle"></i>
-                  </button>
-                  <button
-                    on:click|stopPropagation={() => {
-                      demote();
-                    }}
-                    class="h-4"
-                  >
-                    <i class="bx bxs-down-arrow-circle"></i>
-                  </button>
-                </div></TableBodyCell
-              >
+                    <button
+                      class="h-4"
+                      on:click|stopPropagation={() => {
+                        promote();
+                      }}
+                    >
+                      <i class="bx bxs-up-arrow-circle"></i>
+                    </button>
+                    <button
+                      on:click|stopPropagation={() => {
+                        demote();
+                      }}
+                      class="h-4"
+                    >
+                      <i class="bx bxs-down-arrow-circle"></i>
+                    </button>
+                  </div>
+                {/if}
+              </TableBodyCell>
               <TableBodyCell {tdClass}>
                 <span>{query.name ?? "-"}</span>
               </TableBodyCell>
