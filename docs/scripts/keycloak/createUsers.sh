@@ -62,6 +62,6 @@ user=($line)
 if [ "${#user[@]}" -eq 7 ]; then
   echo "creating user ${user[0]}..."
   ./createUser.sh  "${user[0]}" "${user[1]}" "${user[2]}" "${user[3]}" "${user[4]}"  false
-  ./assignUsertoRoleAndGroup.sh "${user[0]}" "${user[5]}" "${user[6]}" false
+  ./assignUserToRoleAndGroup.sh "${user[0]}" "${user[5]}" "${user[6]}" false
 fi
 done < $file
