@@ -18,6 +18,14 @@
   import AdvisoryTable from "$lib/Advisories/AdvisoryTable.svelte";
 
   let queries: any[] = [];
+  $: sortedQueries = queries.sort((a: any, b: any) => {
+    if (a.global && !b.global) {
+      return -1;
+    } else if (!a.global && b.global) {
+      return 1;
+    }
+    return 0;
+  });
   let selectedIndex = 0;
   let pressedButtonClass = "bg-gray-200 hover:bg-gray-100";
   let errorMessage = "";
@@ -67,7 +75,7 @@
   {#if queries.length > 0}
     <div class="mb-4 flex gap-x-4">
       <ButtonGroup>
-        {#each queries as query, index}
+        {#each sortedQueries as query, index}
           <Button
             on:click={() => selectQuery(index)}
             class={`${index === selectedIndex ? pressedButtonClass : ""} flex flex-col p-0`}
