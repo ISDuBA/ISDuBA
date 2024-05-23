@@ -52,7 +52,7 @@ const generateQueryString = (currentSearch: any) => {
     return c.visible === true;
   });
   const orderColumns = currentSearch.columns.filter((c: any) => {
-    return c.orderBy !== null;
+    return c.orderBy !== "";
   });
   const columns = /search msg as/.test(currentSearch.query)
     ? [{ name: "msg" }, ...chosenColumns]
