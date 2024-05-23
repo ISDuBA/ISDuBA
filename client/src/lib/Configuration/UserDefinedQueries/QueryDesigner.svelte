@@ -283,7 +283,12 @@
         {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
           <div class="flex h-1 flex-row items-center gap-x-3">
             <span>Global:</span>
-            <Checkbox checked={currentSearch.global}></Checkbox>
+            <Checkbox
+              checked={currentSearch.global}
+              on:change={() => {
+                currentSearch.global = !currentSearch.global;
+              }}
+            ></Checkbox>
           </div>
         {/if}
       </div>
