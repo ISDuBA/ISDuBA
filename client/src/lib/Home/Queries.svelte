@@ -27,13 +27,29 @@
     return 0;
   });
   let selectedIndex = 0;
-  let pressedButtonClass = "bg-gray-200 hover:bg-gray-100";
   let errorMessage = "";
   let isAdvancedParametersEnabled = false;
   let advancedQuery = "";
   let appliedAdvancedQuery = "";
   let isAdvancedQueryValid = true;
   let advancedQueryErrorMessage = "";
+  let globalQueryButtonColor = "primary";
+  let defaultQueryButtonClass = "flex flex-col p-0 focus:text-black hover:text-black";
+  let queryButtonClass = "bg-white hover:bg-gray-100";
+  let pressedQueryButtonClass = "bg-gray-200 text-black hover:!bg-gray-100";
+  let globalQueryButtonClass = `border-${globalQueryButtonColor}-500 hover:!bg-${globalQueryButtonColor}-500 hover:!text-white`;
+  let pressedGlobalQueryButtonClass = `border-white bg-${globalQueryButtonColor}-600 focus:text-white text-white hover:!bg-${globalQueryButtonColor}-500 hover:text-white`;
+
+  const getClass = (isGlobal: boolean, isPressed: boolean) => {
+    const addition = isGlobal
+      ? isPressed
+        ? pressedGlobalQueryButtonClass
+        : globalQueryButtonClass
+      : isPressed
+        ? pressedQueryButtonClass
+        : queryButtonClass;
+    return `${defaultQueryButtonClass} ${addition}`;
+  };
 
   onMount(async () => {
     const response = await request("/api/queries", "GET");
@@ -78,7 +94,7 @@
         {#each sortedQueries as query, index}
           <Button
             on:click={() => selectQuery(index)}
-            class={`${index === selectedIndex ? pressedButtonClass : ""} flex flex-col p-0`}
+            class={getClass(query.global, index === selectedIndex)}
           >
             <span title={query.description} class="m-2 h-full w-full">{query.name}</span>
           </Button>
