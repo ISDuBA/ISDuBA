@@ -140,7 +140,7 @@
 >
 {#if queries.length > 0}
   <div class="flex flex-row">
-    <div class="mb-12 w-1/3">
+    <div class="mb-12 w-fit">
       <Table hoverable={true} noborder={true}>
         <TableHead class="cursor-pointer">
           <TableHeadCell padding={tablePadding}></TableHeadCell>
