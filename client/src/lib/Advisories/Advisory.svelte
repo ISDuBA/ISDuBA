@@ -302,9 +302,9 @@
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
       </div>
-      <div class="flex flex-row">
+      <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
-        <div class="ml-auto flex flex-row gap-2">
+        <div class="flex h-fit flex-row gap-2">
           {#if advisoryState}
             <a
               href={"javascript:void(0);"}
