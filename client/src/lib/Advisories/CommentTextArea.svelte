@@ -32,6 +32,7 @@
           <Button
             on:click={() => dispatch("saveForReview")}
             disabled={!canSetStateReview(state) && count === 0}
+            color="light"
           >
             {#if count > 0}
               <span>Release for review with comment</span>
