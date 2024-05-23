@@ -65,7 +65,7 @@
   const swapQueryNum = async (query1: any, query2: any) => {
     loading = true;
     let formData = new FormData();
-    let TEMP_NUM = queries.length + 1;
+    let TEMP_NUM = 1_000_000;
     formData.append("num", `${TEMP_NUM}`);
     const response1 = await request(`/api/queries/${query1.id}`, "PUT", formData);
     if (response1.ok) {
@@ -140,7 +140,7 @@
 >
 {#if queries.length > 0}
   <div class="flex flex-row">
-    <div class="mb-12 w-1/3">
+    <div class="mb-12 w-fit">
       <Table hoverable={true} noborder={true}>
         <TableHead class="cursor-pointer">
           <TableHeadCell padding={tablePadding}></TableHeadCell>

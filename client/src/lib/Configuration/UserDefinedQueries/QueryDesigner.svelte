@@ -98,7 +98,7 @@
     formData.append("columns", columns.join(" "));
     const columnsForOrder = currentSearch.columns.filter((c) => c.orderBy);
     const orderBy = columnsForOrder.map((c) => `${c.orderBy === "desc" ? "-" : ""}${c.name}`);
-    formData.append("order", orderBy.join(" "));
+    formData.append("orders", orderBy.join(" "));
     let response;
     if (loadedData) {
       response = await request(`/api/queries/${loadedData.id}`, "PUT", formData);
@@ -114,14 +114,14 @@
   };
 
   const switchOrderDirection = (index: number) => {
-    if (currentSearch.columns[index].orderBy == null) {
+    if (currentSearch.columns[index].orderBy == "") {
       currentSearch.columns[index].orderBy = ORDERDIRECTIONS.ASC;
       return;
     }
     if (currentSearch.columns[index].orderBy === ORDERDIRECTIONS.ASC) {
       currentSearch.columns[index].orderBy = ORDERDIRECTIONS.DESC;
     } else {
-      currentSearch.columns[index].orderBy = null;
+      currentSearch.columns[index].orderBy = "";
     }
   };
 
@@ -129,7 +129,17 @@
     currentSearch.columns[index].visible = !currentSearch.columns[index].visible;
   };
 
-  const toggleSearchType = () => {};
+  const toggleSearchType = () => {
+    if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
+      currentSearch.columns = currentSearch.columns.filter((c) => {
+        if (c.name !== "ssvc" && c.name !== "state") return c;
+      });
+    }
+    if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
+      const newCols = columnsFromNames(["ssvc", "state"]);
+      currentSearch.columns = [...currentSearch.columns, ...newCols];
+    }
+  };
 
   const promoteColumn = (index: number) => {
     if (index === 0) return;
@@ -283,7 +293,12 @@
         {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
           <div class="flex h-1 flex-row items-center gap-x-3">
             <span>Global:</span>
-            <Checkbox checked={currentSearch.global}></Checkbox>
+            <Checkbox
+              checked={currentSearch.global}
+              on:change={() => {
+                currentSearch.global = !currentSearch.global;
+              }}
+            ></Checkbox>
           </div>
         {/if}
       </div>
@@ -375,7 +390,7 @@
               {#if col.orderBy === ORDERDIRECTIONS.DESC}
                 <i class="bx bx-sort-z-a"></i>
               {/if}
-              {#if col.orderBy === null}
+              {#if col.orderBy === ""}
                 <i class="bx bx-minus"></i>
               {/if}
             </button>
