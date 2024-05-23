@@ -63,8 +63,8 @@ func (c *Controller) Bind() http.Handler {
 
 	// Documents
 	api.POST("/documents", authIm, c.importDocument)
-	api.GET("/documents", authEdReAu, c.overviewDocuments)
-	api.GET("/documents/:id", authEdReAu, c.viewDocument)
+	api.GET("/documents", authAll /* authEdReAu */, c.overviewDocuments)
+	api.GET("/documents/:id", authAll /* authEdReAu */, c.viewDocument)
 
 	// Comments
 	api.POST("/comments/:document", authEdRe, c.createComment)
