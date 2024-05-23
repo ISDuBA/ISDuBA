@@ -179,8 +179,8 @@
     columns = columnsFromNames(columns);
     columns = columns.map((c) => {
       if (result.columns.includes(c.name)) c.visible = true;
-      if (result.orders.includes(c.name)) c.orderBy = ORDERDIRECTIONS.ASC;
-      if (result.orders.includes(`-${c.name}`)) c.orderBy = ORDERDIRECTIONS.DESC;
+      if (result.orders?.includes(c.name)) c.orderBy = ORDERDIRECTIONS.ASC;
+      if (result.orders?.includes(`-${c.name}`)) c.orderBy = ORDERDIRECTIONS.DESC;
       return c;
     });
     return {
