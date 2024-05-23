@@ -108,71 +108,8 @@ fi
 
 ./createRole.sh 'admin'     'Administrator'  false
 
-# create users  username    first name       last name       email address       password     login
-./createUser.sh 'beate'     'Beate'          'Bear'          'bea@ISDuBA.isduba' 'beate'      false
-
-./createUser.sh 'revy'      'Revy'           'Reviewer'      'rev@ISDuBA.isduba' 'revy'       false
-
-./createUser.sh 'imke'      'Imke'           'Importer'      'imk@ISDuBA.isduba' 'imke'       false
-
-./createUser.sh 'augustus'  'Augustus'       'Auditor'       'aug@ISDuBA.isduba' 'augustus'   false
-
-./createUser.sh 'admin'     'Admin'          'Administrator' 'adm@ISDuBA.isduba' 'admin'      false
-
-./createUser.sh 'adrian'    'Adrian'         'Karma'         'Adr@ISDuBA.isduba' 'adrian'     false
-
-./createUser.sh 'alex'      'Alex'           'Klein'         'ale@ISDuBA.isduba' 'alex'       false
-
-./createUser.sh 'max'       'Max'            'Maier'         'max@ISDuBA.isduba' 'max'        false
-
-./createUser.sh 'white'     'White'          'Weiss'         'whi@ISDuBA.isduba' 'white'      false
-
-./createUser.sh 'green'     'Green'          'Gruen'         'gru@ISDuBA.isduba' 'green'      false
-
-./createUser.sh 'amber'     'Amber'          'Bernstein'     'amb@ISDuBA.isduba' 'amber'      false
-
-./createUser.sh 'red'       'Red'            'Rot'           'red@ISDuBA.isduba' 'red'        false
-
-./createUser.sh 'low'       'Low'            'Niedrig'       'low@ISDuBA.isduba' 'low'        false
-
-./createUser.sh 'medium'    'Medium'         'Geisterseher'  'med@ISDuBA.isduba' 'medium'     false
-
-./createUser.sh 'high'      'High'           'Hoch'          'hig@ISDuBA.isduba' 'high'       false
-
-./createUser.sh 'all'       'All'            'Alle'          'all@ISDuBA.isduba' 'all'        false
-
-# assign users to groups      username       group         role          login
-./assignUserToRoleAndGroup.sh 'beate'        'all'         'editor'      false
-
-./assignUserToRoleAndGroup.sh 'revy'         'all'         'reviewer'    false
-
-./assignUserToRoleAndGroup.sh 'imke'         'all'         'importer'    false
-
-./assignUserToRoleAndGroup.sh 'augustus'     'all'         'auditor'     false
-
-./assignUserToRoleAndGroup.sh 'admin'        'all'         'admin'       false
-
-./assignUserToRoleAndGroup.sh 'adrian'       'all'         'editor'      false
-
-./assignUserToRoleAndGroup.sh 'alex'         'all'         'editor'      false
-
-./assignUserToRoleAndGroup.sh 'max'          'all'         'editor'      false
-
-./assignUserToRoleAndGroup.sh 'white'        'white'       'editor'      false
-
-./assignUserToRoleAndGroup.sh 'green'        'green'       'editor'      false
-
-./assignUserToRoleAndGroup.sh 'amber'        'amber'       'editor'      false
-
-./assignUserToRoleAndGroup.sh 'red'          'red'         'editor'      false
-
-./assignUserToRoleAndGroup.sh 'low'          'whitegreen'  'editor'      false
-
-./assignUserToRoleAndGroup.sh 'medium'       'greenamber'  'editor'      false
-
-./assignUserToRoleAndGroup.sh 'high'         'amberred'    'editor'      false
-
-./assignUserToRoleAndGroup.sh 'all'          'all'         'editor'      false
+# create Users  file containing users  login
+./createUsers  -f users.txt            --noLogin
 
 if [ ! -z "$nkid" ]; then
   if ps -p $nkid; then

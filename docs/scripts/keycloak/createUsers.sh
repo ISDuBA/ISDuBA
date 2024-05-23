@@ -1,0 +1,67 @@
+#! /bin/bash
+
+help() {
+echo "Usage: createUsers.sh OPTIONS"
+echo "where OPTIONS:"
+echo "  -h, --help                       show this help text and exit script (optional)."
+echo "  -f, --file=file                  name of the file that contains all user information (mandatory)."
+echo "      --noLogin                    do not attempt to log into keycloak. Requires active login to not cause errors (optional)."
+}
+
+
+login=true
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      help
+      exit 0
+      ;;
+    -f|--file)
+      if [[ -n "$2" ]]; then
+        file="$2"
+        shift
+      else
+        echo "Error: No file given."
+        exit 1
+      fi
+      ;;
+    --noLogin)
+      login=false
+      ;;
+    *)
+      echo "Unknown option: $1"
+      help
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if $login; then
+  # This will work if the standard or custom has been set in env. If neither, this will fail.
+  if [[ -z "${KEYCLOAK_ADMIN}" ]]; then
+    export KEYCLOAK_ADMIN="keycloak"
+    echo "No Keycloak admin set. Assuming admin with name \"keycloak\""
+  else
+    export KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN}"
+  fi
+
+  if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+    export KEYCLOAK_ADMIN_PASSWORD="keycloak"
+    echo "No Keycloak admin password set. Assuming admin with password \"keycloak\""
+  else
+    export KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
+  fi
+
+
+  sudo /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$KEYCLOAK_ADMIN" --password "$KEYCLOAK_ADMIN_PASSWORD"
+fi
+
+while read line; do
+user=($line)
+if [ "${#user[@]}" -eq 7 ]; then
+  echo "creating user ${user[0]}..."
+  ./createUser.sh  "${user[0]}" "${user[1]}" "${user[2]}" "${user[3]}" "${user[4]}"  false
+  ./assignUsertoRoleAndGroup.sh "${user[0]}" "${user[5]}" "${user[6]}" false
+fi
+done < $file

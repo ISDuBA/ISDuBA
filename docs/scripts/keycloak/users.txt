@@ -1,0 +1,17 @@
+# Username  First_Name  Last_Name      Email-Adress       Password Group      Role
+  beate     Beate       Bear           bea@ISDuBA.isduba  beate    all        editor
+  revy      Revy        Reviewer       rev@ISDuBA.isduba  revy     all        reviewer
+  imke      Imke        Importer       imk@ISDuBA.isduba  imke     all        importer
+  augustus  Augustus    Auditor        aug@ISDuBA.isduba  augustus all        auditor
+  admin     Admin       Administrator  adm@ISDuBA.isduba  admin    all        admin
+  adrian    Adrian      Karma          adr@ISDuBA.isduba  adrian   all        editor
+  alex      Alex        Klein          ale@ISDuBA.isduba  alex     all        editor
+  max       Max         Maier          max@ISDuBA.isduba  max      all        editor
+  white     White       Weiss          whi@ISDuBA.isduba  white    white      editor
+  green     Green       Gruen          gru@ISDuBA.isduba  green    green      editor
+  amber     Amber       Bernstein      amb@ISDuBA.isduba  amber    amber      editor
+  red       Red         Rot            red@ISDuBA.isduba  red      red        editor
+  low       Low         Niedrig        low@ISDuBA.isduba  low      whitegreen editor
+  medium    Medium      Geisterseher   med@ISDuBA.isduba  medium   greenamber editor
+  high      High        Hoch           hig@ISDuBA.isduba  high     amberred   editor
+  all       All         Alle           all@ISDuBA.isduba  all      all        editor
