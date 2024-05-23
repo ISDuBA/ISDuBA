@@ -114,14 +114,14 @@
   };
 
   const switchOrderDirection = (index: number) => {
-    if (currentSearch.columns[index].orderBy == null) {
+    if (currentSearch.columns[index].orderBy == "") {
       currentSearch.columns[index].orderBy = ORDERDIRECTIONS.ASC;
       return;
     }
     if (currentSearch.columns[index].orderBy === ORDERDIRECTIONS.ASC) {
       currentSearch.columns[index].orderBy = ORDERDIRECTIONS.DESC;
     } else {
-      currentSearch.columns[index].orderBy = null;
+      currentSearch.columns[index].orderBy = "";
     }
   };
 
@@ -380,7 +380,7 @@
               {#if col.orderBy === ORDERDIRECTIONS.DESC}
                 <i class="bx bx-sort-z-a"></i>
               {/if}
-              {#if col.orderBy === null}
+              {#if col.orderBy === ""}
                 <i class="bx bx-minus"></i>
               {/if}
             </button>
