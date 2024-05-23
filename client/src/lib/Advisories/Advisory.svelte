@@ -245,7 +245,7 @@
         if (canSetStateRead(advisoryState)) {
           await updateState(READ);
         }
-      }, 3000);
+      }, 20000);
       timeoutIDs.push(id);
     }
   };
