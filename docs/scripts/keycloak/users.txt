@@ -7,19 +7,19 @@
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 # Username  First_Name  Last_Name      Email-Adress       Password Group      Role
-  beate     Beate       Bear           bea@ISDuBA.isduba  beate    all        editor
-  revy      Revy        Reviewer       rev@ISDuBA.isduba  revy     all        reviewer
-  imke      Imke        Importer       imk@ISDuBA.isduba  imke     all        importer
-  augustus  Augustus    Auditor        aug@ISDuBA.isduba  augustus all        auditor
-  admin     Admin       Administrator  adm@ISDuBA.isduba  admin    all        admin
-  adrian    Adrian      Karma          adr@ISDuBA.isduba  adrian   all        editor
-  alex      Alex        Klein          ale@ISDuBA.isduba  alex     all        editor
-  max       Max         Maier          max@ISDuBA.isduba  max      all        editor
-  white     White       Weiss          whi@ISDuBA.isduba  white    white      editor
-  green     Green       Gruen          gru@ISDuBA.isduba  green    green      editor
-  amber     Amber       Bernstein      amb@ISDuBA.isduba  amber    amber      editor
-  red       Red         Rot            red@ISDuBA.isduba  red      red        editor
-  low       Low         Niedrig        low@ISDuBA.isduba  low      whitegreen editor
-  medium    Medium      Geisterseher   med@ISDuBA.isduba  medium   greenamber editor
-  high      High        Hoch           hig@ISDuBA.isduba  high     amberred   editor
-  all       All         Alle           all@ISDuBA.isduba  all      all        editor
+  beate     Beate       Bear           bea@example.com    beate    all        editor
+  revy      Revy        Reviewer       rev@example.com    revy     all        reviewer
+  imke      Imke        Importer       imk@example.com    imke     all        importer
+  augustus  Augustus    Auditor        aug@example.com    augustus all        auditor
+  admin     Admin       Administrator  adm@example.com    admin    all        admin
+  adrian    Adrian      Karma          adr@example.com    adrian   all        editor
+  alex      Alex        Klein          ale@example.com    alex     all        editor
+  max       Max         Maier          max@example.com    max      all        editor
+  white     White       Weiss          whi@example.com    white    white      editor
+  green     Green       Gruen          gru@example.com    green    green      editor
+  amber     Amber       Bernstein      amb@example.com    amber    amber      editor
+  red       Red         Rot            red@example.com    red      red        editor
+  low       Low         Niedrig        low@example.com    low      whitegreen editor
+  medium    Medium      Geisterseher   med@example.com    medium   greenamber editor
+  high      High        Hoch           hig@example.com    high     amberred   editor
+  all       All         Alle           all@example.com    all      all        editor
