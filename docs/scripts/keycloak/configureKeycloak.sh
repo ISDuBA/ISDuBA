@@ -109,7 +109,7 @@ fi
 ./createRole.sh 'admin'     'Administrator'  false
 
 # create Users  file containing users  login
-./createUsers  -f users.txt            --noLogin
+./createUsers.sh  -f users.txt            --noLogin
 
 if [ ! -z "$nkid" ]; then
   if ps -p $nkid; then
