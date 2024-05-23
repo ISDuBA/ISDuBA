@@ -129,7 +129,17 @@
     currentSearch.columns[index].visible = !currentSearch.columns[index].visible;
   };
 
-  const toggleSearchType = () => {};
+  const toggleSearchType = () => {
+    if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
+      currentSearch.columns = currentSearch.columns.filter((c) => {
+        if (c.name !== "ssvc" && c.name !== "state") return c;
+      });
+    }
+    if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
+      const newCols = columnsFromNames(["ssvc", "state"]);
+      currentSearch.columns = [...currentSearch.columns, ...newCols];
+    }
+  };
 
   const promoteColumn = (index: number) => {
     if (index === 0) return;
