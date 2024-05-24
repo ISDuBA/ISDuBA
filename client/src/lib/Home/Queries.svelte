@@ -12,7 +12,7 @@
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
-  import { Button, ButtonGroup, Input, Label } from "flowbite-svelte";
+  import { Button, ButtonGroup, Input } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import AdvisoryTable from "$lib/Advisories/AdvisoryTable.svelte";
@@ -84,9 +84,9 @@
 
 {#if $appStore.app.isUserLoggedIn}
   {#if queries.length > 0}
-    <div class="mb-8 flex flex-row flex-wrap items-center gap-4">
+    <div class="mb-8 flex flex-col flex-wrap gap-4">
       <div class="flex gap-x-4">
-        <ButtonGroup>
+        <ButtonGroup class="flex-wrap">
           {#each sortedQueries as query, index}
             <Button
               size="xs"
@@ -99,8 +99,7 @@
         </ButtonGroup>
       </div>
       <div class="flex flex-row flex-wrap items-center gap-2 leading-3">
-        <Label for="advanced-parameters">Advanced search:</Label>
-        <div class="flex flex-wrap gap-x-2">
+        <div class="mt-3 flex flex-wrap gap-x-2">
           <Input
             class="h-8 w-96"
             size="sm"
@@ -108,6 +107,7 @@
             on:input={testAdvancedQuery}
             id="advanced-parameters"
             type="text"
+            placeholder="Advanced search"
           />
           <Button
             size="xs"
