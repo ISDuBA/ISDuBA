@@ -30,6 +30,7 @@
       <div>
         {#if !cancelable}
           <Button
+            size="xs"
             on:click={() => dispatch("saveForReview")}
             disabled={!canSetStateReview(state) && count === 0}
             color="light"
@@ -41,11 +42,15 @@
             {/if}
           </Button>
         {/if}
-        <Button on:click={() => dispatch("saveComment")} disabled={count > 10000 || count === 0}>
+        <Button
+          size="xs"
+          on:click={() => dispatch("saveComment")}
+          disabled={count > 10000 || count === 0}
+        >
           <span>{buttonText}</span>
         </Button>
         {#if cancelable}
-          <Button on:click={() => dispatch("cancel")} outline color="red">
+          <Button size="xs" on:click={() => dispatch("cancel")} outline color="red">
             <span>Cancel</span>
           </Button>
         {/if}

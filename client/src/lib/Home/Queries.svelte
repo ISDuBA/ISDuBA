@@ -36,8 +36,8 @@
   let defaultQueryButtonClass = "flex flex-col p-0 focus:text-black hover:text-black";
   let queryButtonClass = "bg-white hover:bg-gray-100";
   let pressedQueryButtonClass = "bg-gray-200 text-black hover:!bg-gray-100";
-  let globalQueryButtonClass = `border-${globalQueryButtonColor}-500 hover:!bg-${globalQueryButtonColor}-500 hover:!text-white`;
-  let pressedGlobalQueryButtonClass = `border-white bg-${globalQueryButtonColor}-600 focus:text-white text-white hover:!bg-${globalQueryButtonColor}-500 hover:text-white`;
+  let globalQueryButtonClass = `border-${globalQueryButtonColor}-500 hover:!text-black`;
+  let pressedGlobalQueryButtonClass = `border-${globalQueryButtonColor}-500 bg-${globalQueryButtonColor}-600 focus:text-white text-white hover:text-black`;
 
   const getClass = (isGlobal: boolean, isPressed: boolean) => {
     const addition = isGlobal
@@ -84,11 +84,12 @@
 
 {#if $appStore.app.isUserLoggedIn}
   {#if queries.length > 0}
-    <div class="mb-8 flex flex-row items-center gap-4">
+    <div class="mb-8 flex flex-row flex-wrap items-center gap-4">
       <div class="flex gap-x-4">
         <ButtonGroup>
           {#each sortedQueries as query, index}
             <Button
+              size="xs"
               on:click={() => selectQuery(index)}
               class={getClass(query.global, index === selectedIndex)}
             >
@@ -97,18 +98,22 @@
           {/each}
         </ButtonGroup>
       </div>
-      <div class="flex flex-row items-center gap-2 leading-3">
-        <Label for="advanced-parameters">Advanced search parameters:</Label>
-        <div class="flex gap-x-2">
+      <div class="flex flex-row flex-wrap items-center gap-2 leading-3">
+        <Label for="advanced-parameters">Advanced search:</Label>
+        <div class="flex flex-wrap gap-x-2">
           <Input
+            class="h-8 w-96"
             size="sm"
             bind:value={advancedQuery}
             on:input={testAdvancedQuery}
             id="advanced-parameters"
             type="text"
           />
-          <Button color="light" on:click={applyAdvancedQueries} disabled={!isAdvancedQueryValid}
-            >Apply</Button
+          <Button
+            size="xs"
+            color="light"
+            on:click={applyAdvancedQueries}
+            disabled={!isAdvancedQueryValid}>Apply</Button
           >
         </div>
       </div>

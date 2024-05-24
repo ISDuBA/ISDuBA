@@ -249,28 +249,32 @@
         bind:value={vectorInput}
       />
       {#if isEditing}
-        <Button on:click={() => saveSSVC(vectorInput)}>Save</Button>
-        <Button on:click={toggleEditing} class="!p-2" color="red" outline>Cancel</Button>
+        <Button size="xs" on:click={() => saveSSVC(vectorInput)}>Save</Button>
+        <Button size="xs" on:click={toggleEditing} class="!p-2" color="red" outline>Cancel</Button>
       {:else}
         <Button {disabled} on:click={toggleEditing}>Edit</Button>
       {/if}
     </div>
-    <Button {disabled} on:click={() => (startedCalculation = true)} class="my-4">Calculate</Button>
+    <Button size="xs" {disabled} on:click={() => (startedCalculation = true)} class="my-4"
+      >Calculate</Button
+    >
   {:else}
     <div class="mb-4 flex gap-4">
       <Button
+        size="xs"
         color="light"
         on:click={() => {
           resetUserDecisions();
           startedCalculation = false;
         }}><i class="bx bx-arrow-back me-2 text-xl"></i>Back</Button
       >
-      <Button color="light" on:click={resetUserDecisions}>
+
+      <Button size="xs" color="light" on:click={resetUserDecisions}>
         <i class="bx bx-reset me-2 text-xl"></i>
         Restart</Button
       >
       {#if currentStep > 0}
-        <Button class="h-10" color="light" on:click={stepBack}>
+        <Button size="xs" class="h-10" color="light" on:click={stepBack}>
           <i class="bx bx-undo me-2 text-xl"></i>
           Undo
         </Button>
@@ -293,7 +297,9 @@
             {#each mainDecisions[currentStep].options as option}
               <Card class="flex w-80 justify-between">
                 <div class="flex flex-col">
-                  <Button on:click={() => selectOption(option)} class="mb-2">{option.label}</Button>
+                  <Button size="xs" on:click={() => selectOption(option)} class="mb-2"
+                    >{option.label}</Button
+                  >
                   <p class="mb-4">{option.description}</p>
                 </div>
               </Card>
@@ -304,7 +310,9 @@
             {#each mainDecisions[currentStep].options as option}
               <Card class="flex justify-between">
                 <div class="flex flex-col">
-                  <Button on:click={() => selectOption(option)} class="mb-2">{option.label}</Button>
+                  <Button size="xs" on:click={() => selectOption(option)} class="mb-2"
+                    >{option.label}</Button
+                  >
                   <p class="mb-4">{option.description}</p>
                 </div>
               </Card>
@@ -347,7 +355,7 @@
                   </div>
                 {/each}
               </div>
-              <Button type="submit">Calculate</Button>
+              <Button size="xs" type="submit">Calculate</Button>
             </form>
           </Card>
         {/if}
@@ -357,7 +365,7 @@
           <span style={resultStyle}>{result.text}</span>
         </Label>
         <Label class="text-lg">Vector: {vector}</Label>
-        <Button on:click={() => saveSSVC(vector)}>
+        <Button size="xs" on:click={() => saveSSVC(vector)}>
           <i class="bx bx-save me-2 text-xl"></i>Save</Button
         >
       {/if}

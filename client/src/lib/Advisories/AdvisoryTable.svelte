@@ -190,11 +190,11 @@
 <div>
   <div class="mb-2 mt-2 flex items-center justify-between">
     {#if documents?.length > 0}
-      <div class="flex items-center">
+      <div class="flex items-baseline">
         <Label class="mr-3">Items per page</Label>
         <Select
           id="pagecount"
-          class="mt-2 w-24 leading-3"
+          class="mt-2 h-7 w-24 p-1 leading-3"
           items={[
             { name: "10", value: 10 },
             { name: "25", value: 25 },
