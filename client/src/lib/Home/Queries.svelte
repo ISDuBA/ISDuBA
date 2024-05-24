@@ -101,6 +101,7 @@
         <Label for="advanced-parameters">Advanced search parameters:</Label>
         <div class="flex gap-x-2">
           <Input
+            size="sm"
             bind:value={advancedQuery}
             on:input={testAdvancedQuery}
             id="advanced-parameters"
