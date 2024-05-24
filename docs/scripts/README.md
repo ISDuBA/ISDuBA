@@ -28,8 +28,8 @@ Then you can make it executable (e.g. via chmod) and use it to set up the testin
  * ISDuBA-Frontend runs on localhost port 5173
 
 ```
-Usage: installall.sh [OPTIONS]"
-where OPTIONS:"
+Usage: installall.sh [OPTIONS]
+where OPTIONS:
   -h, --help                       show this help text (optional)
   -b, --branch=name                set up ISDuBA on branch 'name' instead of main (optional)
   -k, --keycloakRunning            signal the script that there is a keycloak running on port 8080 (optional)
