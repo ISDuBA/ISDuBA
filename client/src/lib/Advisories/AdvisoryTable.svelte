@@ -194,7 +194,7 @@
         <Label class="mr-3">Items per page</Label>
         <Select
           id="pagecount"
-          class="mt-2 w-24"
+          class="mt-2 w-24 leading-3"
           items={[
             { name: "10", value: 10 },
             { name: "25", value: 25 },

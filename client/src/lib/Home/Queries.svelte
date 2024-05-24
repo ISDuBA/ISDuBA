@@ -28,7 +28,6 @@
   });
   let selectedIndex = 0;
   let errorMessage = "";
-  let isAdvancedParametersEnabled = false;
   let advancedQuery = "";
   let appliedAdvancedQuery = "";
   let isAdvancedQueryValid = true;
@@ -64,10 +63,6 @@
     selectedIndex = index;
   };
 
-  const toggleAdvancedParameters = () => {
-    isAdvancedParametersEnabled = !isAdvancedParametersEnabled;
-  };
-
   const testAdvancedQuery = async () => {
     advancedQueryErrorMessage = "";
     const selectedQuery = queries[selectedIndex];
@@ -89,45 +84,35 @@
 
 {#if $appStore.app.isUserLoggedIn}
   {#if queries.length > 0}
-    <div class="mb-4 flex gap-x-4">
-      <ButtonGroup>
-        {#each sortedQueries as query, index}
-          <Button
-            on:click={() => selectQuery(index)}
-            class={getClass(query.global, index === selectedIndex)}
+    <div class="mb-8 flex flex-row items-center gap-4">
+      <div class="flex gap-x-4">
+        <ButtonGroup>
+          {#each sortedQueries as query, index}
+            <Button
+              on:click={() => selectQuery(index)}
+              class={getClass(query.global, index === selectedIndex)}
+            >
+              <span title={query.description} class="p-2">{query.name}</span>
+            </Button>
+          {/each}
+        </ButtonGroup>
+      </div>
+      <div class="flex flex-row items-center gap-2 leading-3">
+        <Label for="advanced-parameters">Advanced search parameters:</Label>
+        <div class="flex gap-x-2">
+          <Input
+            bind:value={advancedQuery}
+            on:input={testAdvancedQuery}
+            id="advanced-parameters"
+            type="text"
+          />
+          <Button color="light" on:click={applyAdvancedQueries} disabled={!isAdvancedQueryValid}
+            >Apply</Button
           >
-            <span title={query.description} class="m-2 h-full w-full">{query.name}</span>
-          </Button>
-        {/each}
-      </ButtonGroup>
-      <Button on:click={toggleAdvancedParameters} color="light">
-        <span>Advanced</span>
-        {#if isAdvancedParametersEnabled}
-          <i class="bx bx-chevron-up text-xl"></i>
-        {:else}
-          <i class="bx bx-chevron-down text-xl"></i>
-        {/if}
-      </Button>
-    </div>
-    {#if isAdvancedParametersEnabled}
-      <div class="flex items-end gap-x-2">
-        <div>
-          <Label for="advanced-parameters">Parameters:</Label>
-          <div class="flex gap-x-2">
-            <Input
-              bind:value={advancedQuery}
-              on:input={testAdvancedQuery}
-              id="advanced-parameters"
-              type="text"
-            />
-            <Button on:click={applyAdvancedQueries} disabled={!isAdvancedQueryValid}>Apply</Button>
-          </div>
         </div>
       </div>
-      {#if advancedQueryErrorMessage.length > 0}
-        <ErrorMessage message={advancedQueryErrorMessage}></ErrorMessage>
-      {/if}
-    {/if}
+      <ErrorMessage message={advancedQueryErrorMessage}></ErrorMessage>
+    </div>
     {@const query = queries[selectedIndex]}
     <AdvisoryTable
       columns={query.columns}
