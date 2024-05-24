@@ -84,6 +84,7 @@
   let currentSearch = newQuery();
 
   const saveQuery = async () => {
+    unsetMessages();
     const formData = new FormData();
     formData.append("advisories", `${currentSearch.searchType === SEARCHTYPES.ADVISORY}`);
     formData.append("name", currentSearch.name);
@@ -106,7 +107,9 @@
       response = await request("/api/queries", "POST", formData);
     }
     if (!response.ok && response.error) {
-      saveErrorMessage = getErrorMessage(response.error);
+      saveErrorMessage = `${getErrorMessage(response.error)} Reason: "${response.content}"`;
+      if (response.error === "409")
+        saveErrorMessage = `A query with the name "${currentSearch.name}" already exists.`;
     }
     if (response.ok) {
       push(`/configuration/`);
@@ -157,8 +160,8 @@
 
   const shorten = (text: string) => {
     if (!text) return "";
-    if (text.length < 10) return text;
-    return `${text.substring(0, 10)}...`;
+    if (text.length < 20) return text;
+    return `${text.substring(0, 20)}...`;
   };
 
   const generateQueryFrom = (result: any) => {
@@ -209,7 +212,7 @@
         }
         currentSearch = generateQueryFrom(result);
         if (queryString.clone) {
-          currentSearch.name = `(clone) ${currentSearch.name}`;
+          currentSearch.name = ``;
         }
       } else if (response.error) {
         loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
@@ -217,7 +220,8 @@
     }
   });
 
-  $: disableSave = currentSearch.columns.every((c) => c.visible == false);
+  $: disableSave =
+    currentSearch.columns.every((c) => c.visible == false) || currentSearch.name == "";
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>
