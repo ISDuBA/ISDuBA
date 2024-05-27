@@ -197,6 +197,20 @@
     };
   };
 
+  const proposeName = (result: any, name: string) => {
+    const clones = result
+      .filter((r: any) => {
+        return r.name.includes(name) && r.name.includes("clone");
+      })
+      .map((r: any) => {
+        return r.name;
+      })
+      .sort((a: string, b: string) => a.localeCompare(b, "en", { numeric: true }));
+    if (clones.length === 0) return `${name} (clone1)`;
+    const highestIndex = parseInt(clones[clones.length - 1].split("clone")[1]);
+    return `${name} (clone${highestIndex + 1})`;
+  };
+
   onMount(async () => {
     const queryString = parse($querystring);
     let id;
@@ -205,17 +219,18 @@
     }
     if (params) id = params.id;
     if (id) {
-      const response = await request(`/api/queries/${id}`, "GET");
+      const response = await request(`/api/queries/`, "GET");
       if (response.ok) {
         const result = await response.content;
+        const thisQuery = result.find((q: any) => {
+          return q.id == id;
+        });
         if (params && params.id) {
-          loadedData = result;
+          loadedData = thisQuery;
         }
-        currentSearch = generateQueryFrom(result);
+        currentSearch = generateQueryFrom(thisQuery);
         if (queryString.clone) {
-          currentSearch.name = ``;
-          editName = true;
-          placeholder = "Please enter a name";
+          currentSearch.name = proposeName(result, currentSearch.name);
         }
       } else if (response.error) {
         loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
