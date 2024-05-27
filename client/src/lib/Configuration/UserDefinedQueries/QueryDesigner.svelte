@@ -197,18 +197,39 @@
     };
   };
 
+  /**
+   * Takes the list of existing queries, looks for already given clones and returns a proper name.
+   * Expamples:
+   *
+   * For non existing clones
+   *
+   * Monat -> Monat (1)
+   * Monat (1) -> Monat (1) (1)
+   *
+   * Say there is already a clone
+   *
+   * Monat and Monat (1) -> Monat (2)
+   * Monat (1) and Monat (1) (1) -> Monat (1) (2)
+   * Monat (1) (2) and Monat (1) (1) -> Monat (1) (3)
+   *
+   * And so on.
+   *
+   * @param result list of queries
+   * @param name name of the query
+   */
   const proposeName = (result: any, name: string) => {
     const clones = result
       .filter((r: any) => {
-        return r.name.includes(name) && r.name.includes("clone");
+        const re = new RegExp(name.replaceAll("(", "\\(").replaceAll(")", "\\)") + " \\(\\d+\\)");
+        return re.test(r.name);
       })
       .map((r: any) => {
         return r.name;
       })
       .sort((a: string, b: string) => a.localeCompare(b, "en", { numeric: true }));
-    if (clones.length === 0) return `${name} (clone1)`;
-    const highestIndex = parseInt(clones[clones.length - 1].split("clone")[1]);
-    return `${name} (clone${highestIndex + 1})`;
+    if (clones.length === 0) return `${name} (1)`;
+    const highestIndex = parseInt(clones[clones.length - 1].split(name + " (")[1]);
+    return `${name} (${highestIndex + 1})`;
   };
 
   onMount(async () => {
@@ -327,9 +348,7 @@
       </div>
     </div>
     <div class="my-2">
-      <small class={currentSearch.name === "" ? "text-red-500" : "text-gray-400"}
-        >This field is required</small
-      >
+      <small class={currentSearch.name === "" ? "text-red-500" : "text-gray-400"}>Required</small>
     </div>
     <hr class="mb-4 w-4/5" />
     <div class="flex w-1/2 flex-row">
