@@ -10,13 +10,14 @@
 
 set -e # to exit if a command in the script fails
 
-# arguments:
-# $1: Username
-# $2: First name
-# $3: Last name
-# $4: E-Mail Adress
-# $5: Password
-# $6: whether to login before attempting to create the role. Default: true.
+# Usage: createUser.sh username first_name last_name email_address password [login]
+# where:
+#  username: username of the user
+#  first_name: first name of the user
+#  last_name: surname of the user
+#  email_address: the users registrered email-address
+#  password: password of the user
+#  login=[true|false]: whether to login to keycloak again (default:true)
 
 login=true
 if [ ! -z "$6" ]; then

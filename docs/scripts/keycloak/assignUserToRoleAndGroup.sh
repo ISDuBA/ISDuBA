@@ -10,11 +10,12 @@
 
 set -e # to exit if a command in the script fails
 
-# arguments:
-# $1: username
-# $2: group name
-# $3: role name
-# $4: whether to login before attempting to create the role. Default: true.
+# Usage: assignUserToRoleAndGroup.sh username groupname rolename [login]
+# where:
+#  username: username of the user
+#  groupname: group the user is going to be assigned to
+#  rolename: role the user is going to be assigned to
+#  login=[true|false]: whether to login to keycloak again (default:true)
 
 login=true
 if [ ! -z "$4" ]; then
