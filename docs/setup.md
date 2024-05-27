@@ -12,7 +12,7 @@ This guide describes how to set up ISDuBA for a development build on Ubuntu 24.0
 
 ## Prerequisites
 
- - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool](https://github.com/csaf-poc/csaf_distribution)
+ - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool.](https://github.com/csaf-poc/csaf_distribution)
  
 ## Setup ISDuBA
 This setup should be performed via the [installation scripts.](./scripts/README.md)
@@ -21,10 +21,10 @@ An example-configuration for isdubad can be found in [example_isdubad.toml](./ex
 
 To manually start a database migration, use [the migration script.](./scripts/migrate.sh)
 
-To create additional users, use the [createUsers script.](./keycloak/createUsers.sh)
+To create additional users, use the [createUsers script.](./scripts/keycloak/createUsers.sh)
 A list of users created by the setup scripts can be found in [the users.txt.](./developer/users.txt)
 
-To create additional groups, use the [createGroup script.](./keycloak/createGroup.sh)
+To create additional groups, use the [createGroup script.](./scripts/keycloak/createGroup.sh)
 
 The keycloak admin user created via the scripts will have the username and password ```keycloak```.
 
