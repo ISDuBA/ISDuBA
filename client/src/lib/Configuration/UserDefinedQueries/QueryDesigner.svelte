@@ -33,6 +33,7 @@
   let loadQueryError = "";
   let loadedData: any = null;
   let abortController: AbortController;
+  let placeholder = "";
 
   const unsetMessages = () => {
     queryCount = null;
@@ -213,6 +214,8 @@
         currentSearch = generateQueryFrom(result);
         if (queryString.clone) {
           currentSearch.name = ``;
+          editName = true;
+          placeholder = "Please enter a name";
         }
       } else if (response.error) {
         loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
@@ -241,6 +244,7 @@
           {#if editName}
             <Input
               autofocus
+              {placeholder}
               bind:value={currentSearch.name}
               on:keyup={(e) => {
                 if (e.key === "Enter") editName = false;
