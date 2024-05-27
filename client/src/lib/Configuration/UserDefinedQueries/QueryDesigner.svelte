@@ -268,9 +268,9 @@
 <h2 class="mb-6 text-lg">User defined queries</h2>
 
 {#if loadQueryError === ""}
-  <div class="w-2/3">
+  <div class="w-3/4">
     <div class="flex h-1 flex-row">
-      <div class="flex w-1/3 flex-row items-center gap-x-2">
+      <div class="flex w-1/3 min-w-40 flex-row items-center gap-x-2">
         <span class={currentSearch.name === "" ? "text-red-500" : ""}>Name:</span>
         <button
           on:click={() => {
@@ -294,7 +294,7 @@
             />
           {:else}
             <div class="flex flex-row items-center" title={currentSearch.name}>
-              <h5 class="text-xl font-medium text-gray-500 dark:text-gray-400">
+              <h5 class="font-medium text-gray-500 dark:text-gray-400">
                 {shorten(currentSearch.name)}
               </h5>
               <i class="bx bx-edit-alt ml-1"></i>
@@ -302,7 +302,7 @@
           {/if}
         </button>
       </div>
-      <div class="ml-6 flex w-1/3 flex-row items-center gap-x-2">
+      <div class="ml-6 flex w-1/3 min-w-96 flex-row items-center gap-x-2">
         <span>Description:</span>
         <button
           on:click={() => {
@@ -325,7 +325,7 @@
             />
           {:else}
             <div class="flex flex-row items-center" title={currentSearch.description}>
-              <h5 class="text-xl font-medium text-gray-500 dark:text-gray-400">
+              <h5 class="font-medium text-gray-500 dark:text-gray-400">
                 {shorten(currentSearch.description)}
               </h5>
               <i class="bx bx-edit-alt ml-1"></i>
@@ -333,7 +333,7 @@
           {/if}
         </button>
       </div>
-      <div class="w-1/3">
+      <div>
         {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
           <div class="flex h-1 flex-row items-center gap-x-3">
             <span>Global:</span>
@@ -350,12 +350,12 @@
     <div class="my-2">
       <small class={currentSearch.name === "" ? "text-red-500" : "text-gray-400"}>Required</small>
     </div>
-    <hr class="mb-4 w-4/5" />
-    <div class="flex w-1/2 flex-row">
-      <div class="w-1/3">
+    <hr class="mb-4 w-4/5 min-w-96" />
+    <div class="flex flex-row">
+      <div class="w-1/3 min-w-40">
         <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>
       </div>
-      <div class="ml-6 w-1/3">
+      <div class="ml-6 w-1/4 min-w-28">
         <Radio
           name="queryType"
           on:change={toggleSearchType}
@@ -372,13 +372,11 @@
         >
       </div>
     </div>
-    <div class="mt-4 w-1/2">
+    <div class="mt-4">
       <div class="mb-2 flex flex-row">
-        <div class="ml-6 w-1/3">Column</div>
-        <div class="flex w-1/3 flex-row">
-          <div>Visible</div>
-        </div>
-        <div>Order direction</div>
+        <div class="ml-6 w-1/3 min-w-40">Column</div>
+        <div class="w-1/4 min-w-28">Visible</div>
+        <div class="text-nowrap">Orderdirection</div>
       </div>
       {#each currentSearch.columns as col, index (index)}
         <div
@@ -416,8 +414,8 @@
               <i class="bx bxs-down-arrow-circle"></i>
             </button>
           </div>
-          <div class="w-1/3">{col.name}</div>
-          <div class="w-1/3">
+          <div class="w-1/3 min-w-40">{col.name}</div>
+          <div class="w-1/4 min-w-28">
             <Checkbox
               on:change={() => {
                 setVisible(index);
@@ -445,12 +443,10 @@
         </div>
       {/each}
     </div>
-    <div class="mt-6 w-4/5">
+    <div class="mt-6 w-full min-w-96">
       <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
       <div class="flex flex-row">
-        <div class="w-full">
-          <Input bind:value={currentSearch.query} />
-        </div>
+        <Input bind:value={currentSearch.query} />
       </div>
       <div class="mt-3 flex flex-row">
         {#if loading}
