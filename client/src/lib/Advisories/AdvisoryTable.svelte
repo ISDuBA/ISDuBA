@@ -193,6 +193,7 @@
       <div class="flex items-baseline">
         <Label class="mr-3">Items per page</Label>
         <Select
+          size="sm"
           id="pagecount"
           class="mt-2 h-7 w-24 p-1 leading-3"
           items={[

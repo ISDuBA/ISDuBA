@@ -42,6 +42,7 @@
 <SectionHeader title="Documents"></SectionHeader>
 <div class="mb-3 w-2/3">
   <Search
+    size="sm"
     bind:value={searchTerm}
     on:keyup={(e) => {
       sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
@@ -58,7 +59,8 @@
       >
     {/if}
     <Button
-      class="py-3.5"
+      size="xs"
+      class="h-7 py-3.5"
       on:click={() => {
         advisoryTable.fetchData();
       }}>Search</Button
