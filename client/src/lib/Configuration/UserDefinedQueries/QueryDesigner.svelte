@@ -235,7 +235,10 @@
   <div class="w-2/3">
     <div class="flex h-1 flex-row">
       <div class="flex w-1/3 flex-row items-center gap-x-2">
-        <span>Name:</span>
+        <span
+          title={currentSearch.name === "" ? "This field is required" : ""}
+          class={currentSearch.name === "" ? "text-red-500" : ""}>Name <sup>✱</sup>:</span
+        >
         <button
           on:click={() => {
             editName = !editName;
