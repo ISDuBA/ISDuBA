@@ -250,7 +250,7 @@
   <div class="w-2/3">
     <div class="flex h-1 flex-row">
       <div class="flex w-1/3 flex-row items-center gap-x-2">
-        <span class={currentSearch.name === "" ? "text-red-500" : ""}>Name <sup>✱</sup>:</span>
+        <span class={currentSearch.name === "" ? "text-red-500" : ""}>Name:</span>
         <button
           on:click={() => {
             editName = !editName;
@@ -327,7 +327,9 @@
       </div>
     </div>
     <div class="my-2">
-      <small class="text-gray-400"><sup>✱</sup> This field is required</small>
+      <small class={currentSearch.name === "" ? "text-red-500" : "text-gray-400"}
+        >This field is required</small
+      >
     </div>
     <hr class="mb-4 w-4/5" />
     <div class="flex w-1/2 flex-row">
