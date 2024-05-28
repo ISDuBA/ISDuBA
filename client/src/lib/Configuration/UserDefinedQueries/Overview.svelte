@@ -37,7 +37,8 @@
   let orderBy = "";
   let errorMessage = "";
   let querytoDelete: any = resetQueryToDelete();
-  let hoveredQuery: any;
+  let hoveredAdminQuery: any;
+  let hoveredUserQuery: any;
   let loading = false;
 
   const fetchQueries = async () => {
@@ -93,22 +94,42 @@
     fetchQueries();
   };
 
-  const promote = () => {
-    if (hoveredQuery === 0) return;
-    const first = queries[hoveredQuery];
-    const second = queries[hoveredQuery - 1];
+  const promoteUserQuery = () => {
+    if (hoveredUserQuery === 0) return;
+    const first = useryQueries[hoveredUserQuery];
+    const second = useryQueries[hoveredUserQuery - 1];
     swapQueryNum(second, first);
   };
 
-  const demote = () => {
-    if (hoveredQuery === queries.length - 1) return;
-    const first = queries[hoveredQuery];
-    const second = queries[hoveredQuery + 1];
+  const demoteUserQuery = () => {
+    if (hoveredUserQuery === useryQueries.length - 1) return;
+    const first = useryQueries[hoveredUserQuery];
+    const second = useryQueries[hoveredUserQuery + 1];
+    swapQueryNum(first, second);
+  };
+
+  const promoteAdminQuery = () => {
+    if (hoveredAdminQuery === 0) return;
+    const first = adminQueries[hoveredAdminQuery];
+    const second = adminQueries[hoveredAdminQuery - 1];
+    swapQueryNum(second, first);
+  };
+
+  const demoteAdminQuery = () => {
+    if (hoveredAdminQuery === adminQueries.length - 1) return;
+    const first = adminQueries[hoveredAdminQuery];
+    const second = adminQueries[hoveredAdminQuery + 1];
     swapQueryNum(first, second);
   };
 
   onMount(() => {
     fetchQueries();
+  });
+  $: useryQueries = queries.filter((q: any) => {
+    return !q.global;
+  });
+  $: adminQueries = queries.filter((q: any) => {
+    return q.global;
   });
 </script>
 
@@ -132,8 +153,8 @@
   </div>
 </Modal>
 
-<h2 class="mb-3 text-lg">User defined queries</h2>
-<div class:invisible={!loading} class:mb-4={true}>
+<h2 class="text-lg">User defined queries</h2>
+<div class:invisible={!loading}>
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>
@@ -141,10 +162,12 @@
   ><i class="bx bx-plus"></i>New query</Button
 >
 {#if queries.length > 0}
-  <div class="flex flex-row">
+  <div class="flex flex-row gap-12">
     <div class="mb-12 w-fit">
+      <span class="text-2xl">Personal</span>
+      <hr class="mb-6" />
       <Table hoverable={true} noborder={true}>
-        <TableHead class="cursor-pointer">
+        <TableHead>
           <TableHeadCell padding={tablePadding}></TableHeadCell>
           <TableHeadCell padding={tablePadding} on:click={() => {}}
             >Name<i
@@ -163,46 +186,44 @@
           <TableHeadCell></TableHeadCell>
         </TableHead>
         <TableBody>
-          {#each queries as query, index (index)}
+          {#each useryQueries as query, index (index)}
             <tr
               on:click={() => {
                 push(`/configuration/userqueries/${query.id}`);
               }}
               on:mouseover={() => {
-                hoveredQuery = index;
+                hoveredUserQuery = index;
               }}
               on:mouseout={() => {
-                hoveredQuery = -1;
+                hoveredUserQuery = -1;
               }}
               on:blur={() => {}}
               on:focus={() => {}}
               class="cursor-pointer"
-              ><TableBodyCell {tdClass}
-                >{#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
-                  <div
-                    class:invisible={hoveredQuery !== index}
-                    class:w-1={true}
-                    class:flex={true}
-                    class:flex-col={true}
+              ><TableBodyCell {tdClass}>
+                <div
+                  class:invisible={hoveredUserQuery !== index}
+                  class:w-1={true}
+                  class:flex={true}
+                  class:flex-col={true}
+                >
+                  <button
+                    class="h-4"
+                    on:click|stopPropagation={() => {
+                      promoteUserQuery();
+                    }}
                   >
-                    <button
-                      class="h-4"
-                      on:click|stopPropagation={() => {
-                        promote();
-                      }}
-                    >
-                      <i class="bx bxs-up-arrow-circle"></i>
-                    </button>
-                    <button
-                      on:click|stopPropagation={() => {
-                        demote();
-                      }}
-                      class="h-4"
-                    >
-                      <i class="bx bxs-down-arrow-circle"></i>
-                    </button>
-                  </div>
-                {/if}
+                    <i class="bx bxs-up-arrow-circle"></i>
+                  </button>
+                  <button
+                    on:click|stopPropagation={() => {
+                      demoteUserQuery();
+                    }}
+                    class="h-4"
+                  >
+                    <i class="bx bxs-down-arrow-circle"></i>
+                  </button>
+                </div>
               </TableBodyCell>
               <TableBodyCell {tdClass}>
                 <span>{query.name ?? "-"}</span>
@@ -225,6 +246,102 @@
                   }}
                   title={`delete ${query.name}`}><i class="bx bx-trash text-red-500"></i></button
                 >
+              </td>
+            </tr>
+          {/each}
+        </TableBody>
+      </Table>
+      <ErrorMessage message={errorMessage}></ErrorMessage>
+    </div>
+    <div class="mb-12 w-fit">
+      <span class="text-2xl">Global</span>
+      <hr class="mb-6" />
+      <Table hoverable={true} noborder={true}>
+        <TableHead>
+          <TableHeadCell padding={tablePadding}></TableHeadCell>
+          <TableHeadCell padding={tablePadding} on:click={() => {}}
+            >Name<i
+              class:bx={true}
+              class:bx-caret-up={orderBy == "name"}
+              class:bx-caret-down={orderBy == "-name"}
+            ></i></TableHeadCell
+          >
+          <TableHeadCell padding={tablePadding} on:click={() => {}}
+            >Description<i
+              class:bx={true}
+              class:bx-caret-up={orderBy == "description"}
+              class:bx-caret-down={orderBy == "-description"}
+            ></i>
+          </TableHeadCell>
+          <TableHeadCell></TableHeadCell>
+        </TableHead>
+        <TableBody>
+          {#each adminQueries as query, index (index)}
+            <tr
+              on:click={() => {
+                push(`/configuration/userqueries/${query.id}`);
+              }}
+              on:mouseover={() => {
+                hoveredAdminQuery = index;
+              }}
+              on:mouseout={() => {
+                hoveredAdminQuery = -1;
+              }}
+              on:blur={() => {}}
+              on:focus={() => {}}
+              class={!(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))
+                ? "cursor-pointer"
+                : ""}
+              ><TableBodyCell {tdClass}>
+                {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
+                  <div
+                    class:invisible={hoveredAdminQuery !== index}
+                    class:w-1={true}
+                    class:flex={true}
+                    class:flex-col={true}
+                  >
+                    <button
+                      class="h-4"
+                      on:click|stopPropagation={() => {
+                        promoteAdminQuery();
+                      }}
+                    >
+                      <i class="bx bxs-up-arrow-circle"></i>
+                    </button>
+                    <button
+                      on:click|stopPropagation={() => {
+                        demoteAdminQuery();
+                      }}
+                      class="h-4"
+                    >
+                      <i class="bx bxs-down-arrow-circle"></i>
+                    </button>
+                  </div>
+                {/if}
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>
+                <span>{query.name ?? "-"}</span>
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
+              <td>
+                {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
+                  <button
+                    title={`clone ${query.name}`}
+                    on:click|stopPropagation={() => {
+                      push(`/configuration/userqueries/?clone=${query.id}`);
+                    }}><i class="bx bx-copy"></i></button
+                  >
+                  <button
+                    on:click|stopPropagation={() => {
+                      querytoDelete = {
+                        name: query.name,
+                        id: query.id
+                      };
+                      deleteModalOpen = true;
+                    }}
+                    title={`delete ${query.name}`}><i class="bx bx-trash text-red-500"></i></button
+                  >
+                {/if}
               </td>
             </tr>
           {/each}
