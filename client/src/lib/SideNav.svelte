@@ -57,7 +57,7 @@
       activateClickOutside={false}
       width="w-45"
       backdrop={false}
-      class="static h-screen bg-primary-700 p-2"
+      class="static bg-primary-700 p-2"
       id="sidebar"
     >
       <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
@@ -70,7 +70,7 @@
                 <i class="bx bxs-dashboard"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Advisories" href="/#/advisories">
+            <SidebarItem label="Documents" href="/#/documents">
               <svelte:fragment slot="icon">
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>
@@ -78,11 +78,6 @@
             <SidebarItem label="Compare" href="/#/diff">
               <svelte:fragment slot="icon">
                 <i class="bx bx-transfer"></i>
-              </svelte:fragment>
-            </SidebarItem>
-            <SidebarItem label="Documents" href="/#/documents">
-              <svelte:fragment slot="icon">
-                <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>
             </SidebarItem>
             <SidebarItem label="Sources" href="javascript: void(0)" nonActiveClass={notactivated}>

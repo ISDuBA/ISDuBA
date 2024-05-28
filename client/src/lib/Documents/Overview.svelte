@@ -10,24 +10,40 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Search } from "flowbite-svelte";
+  import { Button, Checkbox, Search } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import AdvisoryTable from "$lib/Advisories/AdvisoryTable.svelte";
+  import AdvisoryTable from "$lib/Documents/Table.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
-  let columns = [
-    "cvss_v3_score",
-    "cvss_v2_score",
-    "ssvc",
-    "four_cves",
-    "publisher",
-    "title",
-    "tracking_id",
-    "initial_release_date",
-    "current_release_date",
-    "version"
-  ];
+  let advisoriesOnly = false;
+
+  $: columns = advisoriesOnly
+    ? [
+        "cvss_v3_score",
+        "cvss_v2_score",
+        "ssvc",
+        "state",
+        "four_cves",
+        "publisher",
+        "title",
+        "tracking_id",
+        "initial_release_date",
+        "current_release_date",
+        "version"
+      ]
+    : [
+        "cvss_v3_score",
+        "cvss_v2_score",
+        "ssvc",
+        "four_cves",
+        "publisher",
+        "title",
+        "tracking_id",
+        "initial_release_date",
+        "current_release_date",
+        "version"
+      ];
 
   onMount(async () => {
     let savedSearch = sessionStorage.getItem("documentSearchTerm");
@@ -39,8 +55,13 @@
   <title>Documents</title>
 </svelte:head>
 
-<SectionHeader title="Documents"></SectionHeader>
-<div class="mb-3 w-2/3">
+<div class="flex flex-row">
+  <SectionHeader title="Documents"></SectionHeader><Checkbox
+    bind:checked={advisoriesOnly}
+    class="w-40">Advisories only</Checkbox
+  >
+</div>
+<div class="mb-3 flex w-2/3">
   <Search
     size="sm"
     bind:value={searchTerm}
@@ -68,6 +89,6 @@
   </Search>
 </div>
 {#if searchTerm !== null}
-  <AdvisoryTable {searchTerm} bind:this={advisoryTable} loadAdvisories={false} {columns}
+  <AdvisoryTable {searchTerm} bind:this={advisoryTable} loadAdvisories={advisoriesOnly} {columns}
   ></AdvisoryTable>
 {/if}
