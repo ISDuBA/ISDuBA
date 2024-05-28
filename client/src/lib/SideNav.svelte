@@ -115,11 +115,8 @@
     </Drawer>
     <div class="h-screen bg-white p-2">
       <button on:click={toggleDrawer}>
-        {#if !drawerHidden}
-          <i title="close navigation" class="bx bx-left-arrow-alt"></i>
-        {:else}
-          <i title="open navigantion" class="bx bx-right-arrow-alt"></i>
-        {/if}
+        <i title={drawerHidden ? "open navigation" : "close navigation"} class="bx bx-menu text-2xl"
+        ></i>
       </button>
     </div>
   </div>
