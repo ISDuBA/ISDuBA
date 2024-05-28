@@ -252,6 +252,9 @@
         currentSearch = generateQueryFrom(thisQuery);
         if (queryString.clone) {
           currentSearch.name = proposeName(result, currentSearch.name);
+          if (!isRoleIncluded(appStore.getRoles(), [ADMIN])) {
+            currentSearch.global = false;
+          }
         }
       } else if (response.error) {
         loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;

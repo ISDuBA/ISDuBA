@@ -327,13 +327,13 @@
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <td>
+                  <button
+                    title={`clone ${query.name}`}
+                    on:click|stopPropagation={() => {
+                      push(`/queries/new?clone=${query.id}`);
+                    }}><i class="bx bx-copy"></i></button
+                  >
                   {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
-                    <button
-                      title={`clone ${query.name}`}
-                      on:click|stopPropagation={() => {
-                        push(`/queries/new?clone=${query.id}`);
-                      }}><i class="bx bx-copy"></i></button
-                    >
                     <button
                       on:click|stopPropagation={() => {
                         querytoDelete = {
