@@ -20,7 +20,6 @@
   import { sineIn } from "svelte/easing";
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
-  import "boxicons";
 
   let notactivated =
     "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-primary-100 hover:text-primary-900";
@@ -116,7 +115,11 @@
     </Drawer>
     <div class="h-screen bg-white p-2">
       <button on:click={toggleDrawer}>
-        <box-icon name="menu" color="black" size="lg">Toggle menu</box-icon>
+        {#if !drawerHidden}
+          <i class="bx bx-left-arrow-alt"></i>
+        {:else}
+          <i class="bx bx-right-arrow-alt"></i>
+        {/if}
       </button>
     </div>
   </div>
