@@ -29,7 +29,8 @@
   import { configuration } from "$lib/configuration";
   import { type User, UserManager } from "oidc-client-ts";
   import { jwtDecode } from "jwt-decode";
-  import QueryDesigner from "$lib/Configuration/UserDefinedQueries/QueryDesigner.svelte";
+  import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
+  import QueryOverview from "$lib/Queries/Overview.svelte";
 
   let userManager = new UserManager(configuration.getConfiguration());
   userManager.events.addUserSignedIn(function () {
@@ -116,12 +117,17 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/configuration/userqueries": wrap({
+    "/queries/": wrap({
+      component: QueryOverview,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/queries/new": wrap({
       component: QueryDesigner,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/configuration/userqueries/:id": wrap({
+    "/queries/:id": wrap({
       component: QueryDesigner,
       userData: loginRequired,
       conditions: [loginCondition]

@@ -113,7 +113,7 @@
         saveErrorMessage = `A query with the name "${currentSearch.name}" already exists.`;
     }
     if (response.ok) {
-      push(`/configuration/`);
+      push(`/queries/`);
     }
   };
 
@@ -263,9 +263,8 @@
     currentSearch.columns.every((c) => c.visible == false) || currentSearch.name == "";
 </script>
 
-<SectionHeader title="Configuration"></SectionHeader>
+<SectionHeader title="Queries"></SectionHeader>
 <hr class="mb-6" />
-<h2 class="mb-6 text-lg">User defined queries</h2>
 
 {#if loadQueryError === ""}
   <div class="w-3/4">

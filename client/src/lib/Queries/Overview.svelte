@@ -153,14 +153,12 @@
   </div>
 </Modal>
 
-<h2 class="text-lg">User defined queries</h2>
+<h2 class="text-lg">Queries</h2>
 <div class:invisible={!loading}>
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>
-<Button class="mb-6 mt-3" href="/#/configuration/userqueries"
-  ><i class="bx bx-plus"></i>New query</Button
->
+<Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
 {#if queries.length > 0}
   <div class="flex flex-row gap-12">
     <div class="mb-12 w-fit">
@@ -189,7 +187,7 @@
           {#each useryQueries as query, index (index)}
             <tr
               on:click={() => {
-                push(`/configuration/userqueries/${query.id}`);
+                push(`/queries/${query.id}`);
               }}
               on:mouseover={() => {
                 hoveredUserQuery = index;
@@ -233,7 +231,7 @@
                 <button
                   title={`clone ${query.name}`}
                   on:click|stopPropagation={() => {
-                    push(`/configuration/userqueries/?clone=${query.id}`);
+                    push(`/queries/?clone=${query.id}`);
                   }}><i class="bx bx-copy"></i></button
                 >
                 <button
@@ -279,7 +277,7 @@
           {#each adminQueries as query, index (index)}
             <tr
               on:click={() => {
-                push(`/configuration/userqueries/${query.id}`);
+                push(`/queries/${query.id}`);
               }}
               on:mouseover={() => {
                 hoveredAdminQuery = index;
@@ -328,7 +326,7 @@
                   <button
                     title={`clone ${query.name}`}
                     on:click|stopPropagation={() => {
-                      push(`/configuration/userqueries/?clone=${query.id}`);
+                      push(`/queries/?clone=${query.id}`);
                     }}><i class="bx bx-copy"></i></button
                   >
                   <button

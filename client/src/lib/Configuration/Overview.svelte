@@ -10,9 +10,7 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import UserDefinedQueries from "./UserDefinedQueries/Overview.svelte";
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>
 <hr class="mb-6" />
-<UserDefinedQueries></UserDefinedQueries>

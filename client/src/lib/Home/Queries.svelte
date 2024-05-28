@@ -16,6 +16,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import AdvisoryTable from "$lib/Advisories/AdvisoryTable.svelte";
+  import { push } from "svelte-spa-router";
 
   let queries: any[] = [];
   $: sortedQueries = queries.sort((a: any, b: any) => {
@@ -96,6 +97,15 @@
               <span title={query.description} class="p-2">{query.name}</span>
             </Button>
           {/each}
+          <Button
+            title="Configure queries"
+            size="xs"
+            on:click={() => {
+              push("/queries");
+            }}
+          >
+            <i class="bx bx-cog"></i>
+          </Button>
         </ButtonGroup>
       </div>
       <div class="flex flex-row flex-wrap items-center gap-2 leading-3">
