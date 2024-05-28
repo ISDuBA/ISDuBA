@@ -116,9 +116,9 @@
     <div class="h-screen bg-white p-2">
       <button on:click={toggleDrawer}>
         {#if !drawerHidden}
-          <i class="bx bx-left-arrow-alt"></i>
+          <i title="close navigation" class="bx bx-left-arrow-alt"></i>
         {:else}
-          <i class="bx bx-right-arrow-alt"></i>
+          <i title="open navigantion" class="bx bx-right-arrow-alt"></i>
         {/if}
       </button>
     </div>
