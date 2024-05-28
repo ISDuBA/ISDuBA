@@ -22,14 +22,14 @@
   import { page } from "$app/stores";
 
   let notactivated =
-    "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-primary-100 hover:text-primary-900";
+    "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-900";
 
   $: activeUrl = "/" + $page.url.hash;
 
   let activeClass =
-    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700";
+    "flex items-center p-2 text-base font-normal text-gray-900 bg-gray-200 dark:bg-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700";
   let nonActiveClass =
-    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:text-primary-900";
+    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-gray-100 hover:text-gray-900";
 
   let transitionParams = {
     x: -320,
@@ -56,13 +56,13 @@
       activateClickOutside={false}
       width="w-45"
       backdrop={false}
-      class="static bg-primary-700 p-2"
+      class="static bg-gray-800 p-2"
       id="sidebar"
     >
-      <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
-        <SidebarWrapper class="bg-primary-700">
+      <Sidebar class="bg-gray-800" {activeUrl} {activeClass} {nonActiveClass}>
+        <SidebarWrapper class="bg-gray-800">
           <Heading class="mb-6 text-white">ISDuBA</Heading>
-          <SidebarGroup class="bg-primary-700">
+          <SidebarGroup class="bg-gray-800">
             <!-- Entries which are available after login should go here-->
             <SidebarItem label="Home" href="/#/">
               <svelte:fragment slot="icon">
