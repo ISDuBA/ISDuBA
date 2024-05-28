@@ -162,7 +162,7 @@
   };
 </script>
 
-<div class="flex bg-gray-900">
+<div class="flex bg-gray-800">
   <div>
     <SideNav></SideNav>
   </div>
