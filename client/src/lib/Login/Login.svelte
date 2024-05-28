@@ -71,7 +71,7 @@
 
 <div class="mt-60 flex items-center justify-center">
   <div class="flex w-96 flex-col gap-4">
-    <div><Heading class="">ISDuBA</Heading></div>
+    <div><Heading class="mb-2">ISDuBA</Heading></div>
     <Card>
       <div class="flex flex-col gap-4">
         <div>
@@ -108,49 +108,59 @@
     </Card>
     {#if $appStore.app.isUserLoggedIn}
       {#if error === ""}
-        <P class="mt-3">
+        <div class="mt-4 flex w-full flex-row gap-4">
+          <div class="flex flex-grow flex-col">
+            <span class="text-xl">User:</span>
+            <span class="ml-3">{$appStore.app.tokenParsed?.preferred_username}</span>
+          </div>
+          <div class="flex flex-grow flex-col">
+            <span class="text-xl">View: </span>
+            <List tag="ul" class="space-y-1" list="none">
+              {#await getView() then view}
+                {#each view.entries() as [publisher, tlps]}
+                  <Li liClass="ml-3"
+                    >{publisher === "*" ? "all" : publisher}:
+                    {#each tlps as tlp}
+                      <div
+                        class={getTLPClass(tlp)}
+                        style="width: fit-content; display: inline; margin-right: 0.25em;"
+                      >
+                        {tlp}
+                      </div>
+                    {/each}
+                  </Li>
+                {/each}
+              {/await}
+            </List>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xl">Roles:</span>
+            <List tag="ul" class="space-y-1" list="none">
+              {#if appStore.isAdmin()}
+                <Li liClass="ml-3">Admin</Li>
+              {/if}
+              {#if appStore.isReviewer()}
+                <Li liClass="ml-3">Reviewer</Li>
+              {/if}
+              {#if appStore.isAuditor()}
+                <Li liClass="ml-3">Auditor</Li>
+              {/if}
+              {#if appStore.isImporter()}
+                <Li liClass="ml-3">Importer</Li>
+              {/if}
+              {#if appStore.isEditor()}
+                <Li liClass="ml-3">Editor</Li>
+              {/if}
+            </List>
+          </div>
+        </div>
+        <P>
           {#await getVersion() then version}
-            Versions:
+            <span class="text-xl">Versions:</span>
             <List tag="ul" class="space-y-1" list="none">
               <Li liClass="ml-3">ISDuBA: {version}</Li>
             </List>
           {/await}
-          View:
-          <List tag="ul" class="space-y-1" list="none">
-            {#await getView() then view}
-              {#each view.entries() as [publisher, tlps]}
-                <Li liClass="ml-3"
-                  >{publisher === "*" ? "all" : publisher}:
-                  {#each tlps as tlp}
-                    <div
-                      class={getTLPClass(tlp)}
-                      style="width: fit-content; display: inline; margin-right: 0.25em;"
-                    >
-                      {tlp}
-                    </div>
-                  {/each}
-                </Li>
-              {/each}
-            {/await}
-          </List>
-          Roles:
-          <List tag="ul" class="space-y-1" list="none">
-            {#if appStore.isAdmin()}
-              <Li liClass="ml-3">Admin</Li>
-            {/if}
-            {#if appStore.isReviewer()}
-              <Li liClass="ml-3">Reviewer</Li>
-            {/if}
-            {#if appStore.isAuditor()}
-              <Li liClass="ml-3">Auditor</Li>
-            {/if}
-            {#if appStore.isImporter()}
-              <Li liClass="ml-3">Importer</Li>
-            {/if}
-            {#if appStore.isEditor()}
-              <Li liClass="ml-3">Editor</Li>
-            {/if}
-          </List>
         </P>
       {/if}
     {/if}
