@@ -233,7 +233,7 @@
                   <button
                     title={`clone ${query.name}`}
                     on:click|stopPropagation={() => {
-                      push(`/queries/?clone=${query.id}`);
+                      push(`/queries/new?clone=${query.id}`);
                     }}><i class="bx bx-copy"></i></button
                   >
                   <button
@@ -329,7 +329,7 @@
                     <button
                       title={`clone ${query.name}`}
                       on:click|stopPropagation={() => {
-                        push(`/queries/?clone=${query.id}`);
+                        push(`/queries/new?clone=${query.id}`);
                       }}><i class="bx bx-copy"></i></button
                     >
                     <button
