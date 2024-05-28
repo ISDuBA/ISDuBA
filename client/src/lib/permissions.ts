@@ -16,9 +16,9 @@ export const READ: WorkflowState = "read";
 export const ASSESSING: WorkflowState = "assessing";
 export const REVIEW: WorkflowState = "review";
 export const ARCHIVED: WorkflowState = "archived";
-export const DELETED: WorkflowState = "delete";
+export const DELETE: WorkflowState = "delete";
 
-export const WORKFLOW_STATES = [NEW, READ, ASSESSING, REVIEW, ARCHIVED, DELETED];
+export const WORKFLOW_STATES = [NEW, READ, ASSESSING, REVIEW, ARCHIVED, DELETE];
 
 export type Role = string;
 export const ADMIN: Role = "admin";
@@ -26,6 +26,7 @@ export const IMPORTER: Role = "importer";
 export const EDITOR: Role = "editor";
 export const REVIEWER: Role = "reviewer";
 export const AUDITOR: Role = "auditor";
+export const SOURCE_MANAGER: Role = "source-manager";
 
 export type WorkflowStateTransition = {
   from: WorkflowState;
@@ -41,13 +42,20 @@ const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
   },
   { from: READ, to: NEW, roles: [EDITOR] },
   { from: READ, to: ASSESSING, roles: [EDITOR] },
+  { from: READ, to: DELETE, roles: [EDITOR, REVIEWER] },
   { from: ASSESSING, to: REVIEW, roles: [EDITOR] },
+  { from: ASSESSING, to: DELETE, roles: [EDITOR, REVIEWER] },
   { from: REVIEW, to: ASSESSING, roles: [REVIEWER] },
   { from: REVIEW, to: ARCHIVED, roles: [REVIEWER] },
-  { from: REVIEW, to: DELETED, roles: [REVIEWER] },
-  { from: READ, to: DELETED, roles: [EDITOR, REVIEWER] },
-  { from: ASSESSING, to: DELETED, roles: [EDITOR, REVIEWER] },
-  { from: ARCHIVED, to: DELETED, roles: [EDITOR, REVIEWER] }
+  { from: REVIEW, to: DELETE, roles: [REVIEWER] },
+  { from: ARCHIVED, to: READ, roles: [ADMIN] },
+  { from: ARCHIVED, to: ASSESSING, roles: [ADMIN] },
+  { from: ARCHIVED, to: REVIEW, roles: [ADMIN] },
+  { from: ARCHIVED, to: DELETE, roles: [EDITOR, REVIEWER] },
+  { from: DELETE, to: READ, roles: [ADMIN] },
+  { from: DELETE, to: ASSESSING, roles: [ADMIN] },
+  { from: DELETE, to: REVIEW, roles: [ADMIN] },
+  { from: DELETE, to: ARCHIVED, roles: [ADMIN] },
 ];
 
 export function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
@@ -80,7 +88,7 @@ export function canSetStateArchived(currentState: WorkflowState) {
 }
 
 export function canSetStateDeleted(currentState: WorkflowState) {
-  return allowedToChangeWorkflow(appStore.getRoles(), currentState, DELETED);
+  return allowedToChangeWorkflow(appStore.getRoles(), currentState, DELETE);
 }
 
 export function allowedToChangeWorkflow(

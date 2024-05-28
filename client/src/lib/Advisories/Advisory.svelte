@@ -21,7 +21,7 @@
   import {
     ASSESSING,
     ARCHIVED,
-    DELETED,
+    DELETE,
     NEW,
     READ,
     REVIEW,
@@ -358,13 +358,13 @@
             <a
               href={"javascript:void(0);"}
               class="inline-flex"
-              on:click={() => updateStateIfAllowed(DELETED)}
+              on:click={() => updateStateIfAllowed(DELETE)}
             >
               <Badge
                 title="Mark for deletion"
-                on:click={() => updateState(DELETED)}
+                on:click={() => updateState(DELETE)}
                 class="w-fit"
-                color={getBadgeColor(DELETED, advisoryState)}>{DELETED}</Badge
+                color={getBadgeColor(DELETE, advisoryState)}>{DELETE}</Badge
               >
             </a>
           {/if}
