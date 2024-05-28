@@ -280,7 +280,9 @@
             {#each adminQueries as query, index (index)}
               <tr
                 on:click={() => {
-                  push(`/queries/${query.id}`);
+                  if (query.global && isRoleIncluded(appStore.getRoles(), [ADMIN])) {
+                    push(`/queries/${query.id}`);
+                  }
                 }}
                 on:mouseover={() => {
                   hoveredAdminQuery = index;
