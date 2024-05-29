@@ -19,6 +19,13 @@ echo "      --noLogin                    do not attempt to log into keycloak. Re
 }
 
 
+# If 1 or 0 arguments are given, then there
+# cannot be the mandatory file option
+if [[ $# -lt 2 ]]; then
+  help
+  exit 1
+fi
+
 login=true
 while [[ $# -gt 0 ]]; do
   case "$1" in
