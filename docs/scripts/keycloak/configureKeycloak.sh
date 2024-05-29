@@ -97,16 +97,20 @@ fi
 
 ./createGroup.sh --name 'all'        -w -g -a -r --noLogin
 
-# create roles  name        description      login
-./createRole.sh 'editor'    'Bearbeiter'     false
+./createGroup.sh --name 'none'                   --noLogin
 
-./createRole.sh 'reviewer'  'Reviewer'       false
+# create roles  name        description               login
+./createRole.sh 'editor'    'Bearbeiter'              false
 
-./createRole.sh 'auditor'   'Auditor'        false
+./createRole.sh 'reviewer'  'Reviewer'                false
 
-./createRole.sh 'importer'  'Importierer'    false
+./createRole.sh 'auditor'   'Auditor'                 false
 
-./createRole.sh 'admin'     'Administrator'  false
+./createRole.sh 'importer'  'Importierer'             false
+
+./createRole.sh 'admin'     'Administrator'           false
+
+./createRole.sh 'none'      'Role outside the system' false
 
 # create Users  file containing users  login
 ./createUsers.sh  -f users.txt            --noLogin
