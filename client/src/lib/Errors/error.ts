@@ -15,7 +15,7 @@ const ERRORMESSAGES: any = {
   "600": `A network error occured. Try again later. If the error persists: ${contactAdmin}`,
   "400": `The request sent could not be understood.`,
   "401": `You are unauthorized. Please re-login.`,
-  "402": `You are not allowed to do this. ${contactAdmin}`,
+  "403": `You are not allowed to do this. ${contactAdmin}`,
   "404": `Content not found. ${contactAdmin}`,
   "783": `The response from the server is not parsable. ${contactAdmin}`
 };
