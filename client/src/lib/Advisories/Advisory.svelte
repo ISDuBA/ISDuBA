@@ -186,10 +186,10 @@
       comment = "";
       await loadComments();
       await loadAdvisoryState();
+      await loadEvents();
     } else if (response.error) {
       createCommentError = `Could not create comment. ${getErrorMessage(response.error)}`;
     }
-    await loadEvents();
   }
 
   async function sendForReview() {
@@ -206,10 +206,10 @@
     );
     if (response.ok) {
       advisoryState = newState;
+      await loadEvents();
     } else if (response.error) {
-      stateError = `Could not load state. ${getErrorMessage(response.error)}`;
+      stateError = `Could not save state. ${getErrorMessage(response.error)}`;
     }
-    await loadEvents();
   }
 
   const loadAdvisoryState = async () => {
