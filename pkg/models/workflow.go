@@ -34,21 +34,31 @@ const (
 
 // transitions is a matrix to tell who is allowed to change between certain states.
 var transitions = map[[2]Workflow][]string{
-	{"", NewWorkflow}:                   {Importer},
-	{NewWorkflow, ReadWorkflow}:         {Editor},
-	{ReadWorkflow, NewWorkflow}:         {Editor},
-	{ReadWorkflow, AssessingWorkflow}:   {Editor},
-	{AssessingWorkflow, NewWorkflow}:    {Importer},
-	{ReviewWorkflow, NewWorkflow}:       {Importer},
-	{ArchivedWorkflow, NewWorkflow}:     {Importer},
-	{AssessingWorkflow, ReviewWorkflow}: {Editor},
-	{ReviewWorkflow, AssessingWorkflow}: {Reviewer},
-	{ReviewWorkflow, ArchivedWorkflow}:  {Reviewer},
-	{ReadWorkflow, DeleteWorkflow}:      {Editor, Reviewer},
-	{AssessingWorkflow, DeleteWorkflow}: {Editor, Reviewer},
-	{ReviewWorkflow, DeleteWorkflow}:    {Reviewer},
-	{ArchivedWorkflow, DeleteWorkflow}:  {Editor, Reviewer},
-	{DeleteWorkflow, ""}:                {Admin},
+	{"", NewWorkflow}:                     {Importer}, // Forward
+	{NewWorkflow, ReadWorkflow}:           {Editor},
+	{ReadWorkflow, AssessingWorkflow}:     {Editor},
+	{AssessingWorkflow, ReviewWorkflow}:   {Editor},
+	{ReviewWorkflow, ArchivedWorkflow}:    {Reviewer},
+	{ReadWorkflow, DeleteWorkflow}:        {Editor, Reviewer},
+	{AssessingWorkflow, DeleteWorkflow}:   {Editor, Reviewer},
+	{ReviewWorkflow, DeleteWorkflow}:      {Reviewer},
+	{ArchivedWorkflow, DeleteWorkflow}:    {Editor, Reviewer},
+	{DeleteWorkflow, ArchivedWorkflow}:    {Admin}, // Backward
+	{DeleteWorkflow, ReviewWorkflow}:      {Admin},
+	{DeleteWorkflow, AssessingWorkflow}:   {Admin},
+	{DeleteWorkflow, ReadWorkflow}:        {Admin},
+	{DeleteWorkflow, NewWorkflow}:         {Admin},
+	{ArchivedWorkflow, ReviewWorkflow}:    {Admin},
+	{ArchivedWorkflow, AssessingWorkflow}: {Admin},
+	{ArchivedWorkflow, ReadWorkflow}:      {Admin},
+	{ArchivedWorkflow, NewWorkflow}:       {Admin, Importer},
+	{ReviewWorkflow, AssessingWorkflow}:   {Admin, Reviewer},
+	{ReviewWorkflow, ReadWorkflow}:        {Admin},
+	{ReviewWorkflow, NewWorkflow}:         {Admin, Importer},
+	{AssessingWorkflow, ReadWorkflow}:     {Admin, Importer},
+	{AssessingWorkflow, NewWorkflow}:      {Admin, Importer},
+	{ReadWorkflow, NewWorkflow}:           {Admin, Editor},
+	{DeleteWorkflow, ""}:                  {Admin},
 }
 
 // Valid returns true is the workflow represents a valid state.
