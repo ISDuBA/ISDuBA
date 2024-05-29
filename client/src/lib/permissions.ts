@@ -55,7 +55,7 @@ const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
   { from: DELETE, to: READ, roles: [ADMIN] },
   { from: DELETE, to: ASSESSING, roles: [ADMIN] },
   { from: DELETE, to: REVIEW, roles: [ADMIN] },
-  { from: DELETE, to: ARCHIVED, roles: [ADMIN] },
+  { from: DELETE, to: ARCHIVED, roles: [ADMIN] }
 ];
 
 export function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
