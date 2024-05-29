@@ -336,7 +336,7 @@
                     >
                   {:else if column === "four_cves"}
                     <TableBodyCell {tdClass}
-                      >{#if item[column][0]}
+                      >{#if item[column] && item[column][0]}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                         {#if item[column] > 1}
