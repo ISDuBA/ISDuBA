@@ -208,7 +208,7 @@
       advisoryState = newState;
       await loadEvents();
     } else if (response.error) {
-      stateError = `Could not save state. ${getErrorMessage(response.error)}`;
+      stateError = `Could not change state. ${getErrorMessage(response.error)}`;
     }
   }
 
