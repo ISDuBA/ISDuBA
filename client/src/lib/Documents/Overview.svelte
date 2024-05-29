@@ -16,7 +16,7 @@
 
   let searchTerm: string | null;
   let advisoryTable: any;
-  let advisoriesOnly = false;
+  let advisoriesOnly = true;
 
   $: columns = advisoriesOnly
     ? [
