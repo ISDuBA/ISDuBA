@@ -14,24 +14,67 @@ set -e # to exit if a command in the script fails
 # where:
 #  username: username of the user
 #  groupname: group the user is going to be assigned to
-#  rolename: role the user is going to be assigned to
-#  login=[true|false]: whether to login to keycloak again (default:true)
+#  rolename: role the user is going to be assigned to (optional)
+#  login=[true|false]: whether to login to keycloak again (default:true) (optional, rolename needs to be set)
 
 login=true
-if [ ! -z "$4" ]; then
-  case "$4" in
-    true)
-      # login is already true
+
+help() {
+echo "Usage: assignUserToRoleAndGroup.sh name OPTIONS"
+echo "where name:"
+echo "  -n, --name=name                  username of the user to be added to roles or groups."
+echo "where OPTIONS:"
+echo "  -h, --help                       show this help text and exit script (optional)."
+echo "  -g, --group=name                 name of the group the user should be added to (optional)."
+echo "  -r, --role=name                  name of the role the user should be added to (optional)."
+echo "      --noLogin                    do not attempt to log into keycloak. Requires active login to not cause errors (optional)."
+}
+
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      help
+      exit 0
       ;;
-    false)
+    -n|--name)
+      if [[ -n "$2" ]]; then
+        name="$2"
+        shift
+      else
+        echo "Error: No name given."
+        exit 1
+      fi
+      ;;
+    -g|--group)
+      if [[ -n "$2" ]]; then
+        group="$2"
+        shift
+      else
+        echo "Error: No group given."
+        exit 1
+      fi
+      ;;
+    -r|--role)
+      if [[ -n "$2" ]]; then
+        role="$2"
+        shift
+      else
+        echo "Error: No role given."
+        exit 1
+      fi
+      ;;
+    --noLogin)
       login=false
       ;;
     *)
-      echo "assignUserToRoleAndGroup.sh login can only be set to true or false"
+      echo "Unknown option: $1"
+      help
       exit 1
       ;;
   esac
-fi
+  shift
+done
 
 if "$login"; then
   # This will work if the standard or custom has been set in env. If neither, this will fail.
@@ -53,7 +96,7 @@ if "$login"; then
 fi
 
 # Get the user ID from name
-USRID=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/isduba/users?search=$1")
+USRID=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/isduba/users?search=$name")
 IDU=(${USRID//,/ })
 declare -i COUNTERU=0
 declare -i RESULTU=-1
@@ -68,38 +111,43 @@ COUNTERU=$COUNTERU+1
 done
 
 if [ $RESULTU = -1 ]; then
-  echo "Couldn't find user $1"
-  IDUSR=""
+  echo "Couldn't find user $name"
+  exit 1
 else
   IDUSR=${IDU[$RESULTU]:1:-1}
 fi
 
-# Get the group ID from name
-GRPID=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/isduba/groups?search=$2")
-IDG=(${GRPID//,/ })
-declare -i COUNTERG=0
-declare -i RESULTG=-1
-for j in "${IDG[@]}"
-do
-  if [ "$j" = \"$2\" ]; then
-    if [[ "${IDG[$COUNTERG-2]}" = "\"name\"" ]]; then
-      RESULTG=$COUNTERG-3
+
+if [ ! -z "$group" ]; then
+  # Get the group ID from name
+  GRPID=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/isduba/groups?search=$group")
+  IDG=(${GRPID//,/ })
+  declare -i COUNTERG=0
+  declare -i RESULTG=-1
+  for j in "${IDG[@]}"
+  do
+    if [ "$j" = \"$group\" ]; then
+      if [[ "${IDG[$COUNTERG-2]}" = "\"name\"" ]]; then
+        RESULTG=$COUNTERG-3
+      fi
     fi
+  COUNTERG=$COUNTERG+1
+  done
+
+  if [ $RESULTG = -1 ]; then
+    echo "Couldn't find group $group"
+    IDGRP=""
+  else
+    IDGRP=${IDG[$RESULTG]:1:-1}
   fi
-COUNTERG=$COUNTERG+1
-done
 
-if [ $RESULTG = -1 ]; then
-  echo "Couldn't find group $2"
-  IDGRP=""
-else
-  IDGRP=${IDG[$RESULTG]:1:-1}
+  if [[ -z "$IDUSR" || -z "IDGRP" ]]; then
+      echo "Failed to add user $name to group $group"
+  else
+    sudo /opt/keycloak/bin/kcadm.sh update users/$IDUSR/groups/$IDGRP -r isduba -s realm=isduba -s userId=$IDUSR -s groupId=$IDGRP -n
+  fi
 fi
 
-if [[ -z "$IDUSR" || -z "IDGRP" ]]; then
-    echo "Failed to add user $1 to group $2"
-else
-  sudo /opt/keycloak/bin/kcadm.sh update users/$IDUSR/groups/$IDGRP -r isduba -s realm=isduba -s userId=$IDUSR -s groupId=$IDGRP -n
+if [ ! -z "$role" ]; then
+  sudo /opt/keycloak/bin/kcadm.sh add-roles -r isduba --uusername $name --rolename $role
 fi
-
-sudo /opt/keycloak/bin/kcadm.sh add-roles -r isduba --uusername $1 --rolename $3

@@ -25,6 +25,7 @@ To create additional users, use the [createUsers script.](./scripts/keycloak/cre
 A list of users created by the setup scripts can be found in [the users.txt.](./developer/users.txt)
 
 To create additional groups, use the [createGroup script.](./scripts/keycloak/createGroup.sh)
+The restrictions set with the script are explained in [keycloak_values.md](./keycloak_values.md)
 
 The keycloak admin user created via the scripts will have the username and password ```keycloak```.
 
