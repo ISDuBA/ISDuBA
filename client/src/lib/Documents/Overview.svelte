@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Checkbox, Search } from "flowbite-svelte";
+  import { Button, ButtonGroup, Search } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/Documents/Table.svelte";
 
@@ -56,10 +56,25 @@
 </svelte:head>
 
 <div class="flex flex-row">
-  <SectionHeader title="Documents"></SectionHeader><Checkbox
-    bind:checked={advisoriesOnly}
-    class="w-40">Advisories only</Checkbox
-  >
+  <SectionHeader title="Documents"></SectionHeader>
+  <ButtonGroup class="h-7">
+    <Button
+      size="xs"
+      color="light"
+      class={`h-7 py-1 text-xs ${advisoriesOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+      on:click={() => {
+        advisoriesOnly = true;
+      }}>Advisories</Button
+    >
+    <Button
+      size="xs"
+      color="light"
+      class={`h-7 py-1 text-xs ${!advisoriesOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+      on:click={() => {
+        advisoriesOnly = false;
+      }}>Documents</Button
+    >
+  </ButtonGroup>
 </div>
 <div class="mb-3 flex w-2/3">
   <Search
