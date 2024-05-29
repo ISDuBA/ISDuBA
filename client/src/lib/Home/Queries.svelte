@@ -84,30 +84,30 @@
 </script>
 
 {#if $appStore.app.isUserLoggedIn}
-  {#if queries.length > 0}
-    <div class="mb-8 flex flex-col flex-wrap gap-4">
-      <div class="flex gap-x-4">
-        <ButtonGroup class="flex-wrap">
-          {#each sortedQueries as query, index}
-            <Button
-              size="xs"
-              on:click={() => selectQuery(index)}
-              class={getClass(query.global, index === selectedIndex)}
-            >
-              <span title={query.description} class="p-2">{query.name}</span>
-            </Button>
-          {/each}
+  <div class="mb-8 flex flex-col flex-wrap gap-4">
+    <div class="flex gap-x-4">
+      <ButtonGroup class="flex-wrap">
+        {#each sortedQueries as query, index}
           <Button
-            title="Configure queries"
             size="xs"
-            on:click={() => {
-              push("/queries");
-            }}
+            on:click={() => selectQuery(index)}
+            class={getClass(query.global, index === selectedIndex)}
           >
-            <i class="bx bx-cog"></i>
+            <span title={query.description} class="p-2">{query.name}</span>
           </Button>
-        </ButtonGroup>
-      </div>
+        {/each}
+        <Button
+          title="Configure queries"
+          size="xs"
+          on:click={() => {
+            push("/queries");
+          }}
+        >
+          <i class="bx bx-cog"></i>
+        </Button>
+      </ButtonGroup>
+    </div>
+    {#if queries.length > 0}
       <div class="flex flex-row flex-wrap items-center gap-2 leading-3">
         <div class="mt-3 flex flex-wrap gap-x-2">
           <Input
@@ -127,8 +127,10 @@
           >
         </div>
       </div>
-      <ErrorMessage message={advancedQueryErrorMessage}></ErrorMessage>
-    </div>
+    {/if}
+    <ErrorMessage message={advancedQueryErrorMessage}></ErrorMessage>
+  </div>
+  {#if queries.length > 0}
     {@const query = queries[selectedIndex]}
     <AdvisoryTable
       columns={query.columns}
