@@ -18,28 +18,17 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import {
-    ASSESSING,
-    ARCHIVED,
-    DELETE,
-    NEW,
-    READ,
-    REVIEW,
-    canSetStateRead,
-    allowedToChangeWorkflow
-  } from "$lib/permissions";
+  import { ASSESSING, READ, REVIEW, canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Event from "$lib/Advisories/Event.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import WorkflowStates from "./WorkflowStates.svelte";
   export let params: any = null;
 
   let document: any = {};
   let ssvc: any;
-  $: ssvcStyle = ssvc
-    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
-    : "";
   let comment: string = "";
   let comments: any = [];
   let events: any = [];
@@ -263,22 +252,6 @@
     isDiffOpen = true;
   };
 
-  const updateStateIfAllowed = async (state: string) => {
-    if (allowedToChangeWorkflow(appStore.getRoles(), advisoryState, state)) {
-      await updateState(state);
-    }
-  };
-
-  const getBadgeColor = (state: string, currentState: string) => {
-    if (state === currentState) {
-      return "green";
-    } else if (allowedToChangeWorkflow(appStore.getRoles(), currentState, state)) {
-      return "dark";
-    } else {
-      return "none";
-    }
-  };
-
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
       clearTimeout(id);
@@ -288,6 +261,9 @@
   $: if (params) {
     loadData();
   }
+  $: ssvcStyle = ssvc
+    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
+    : "";
 </script>
 
 <svelte:head>
@@ -305,69 +281,7 @@
       <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
         <div class="flex h-fit flex-row gap-2">
-          {#if advisoryState}
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(NEW)}
-            >
-              <Badge title="Mark as new" class="w-fit" color={getBadgeColor(NEW, advisoryState)}
-                >{NEW}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(READ)}
-            >
-              <Badge title="Mark as read" class="w-fit" color={getBadgeColor(READ, advisoryState)}
-                >{READ}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(ASSESSING)}
-            >
-              <Badge
-                title="Mark as assesing"
-                class="w-fit"
-                color={getBadgeColor(ASSESSING, advisoryState)}>{ASSESSING}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(REVIEW)}
-            >
-              <Badge
-                title="Release for review"
-                class="w-fit"
-                color={getBadgeColor(REVIEW, advisoryState)}>{REVIEW}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(ARCHIVED)}
-            >
-              <Badge title="Archive" class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}
-                >{ARCHIVED}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(DELETE)}
-            >
-              <Badge
-                title="Mark for deletion"
-                on:click={() => updateState(DELETE)}
-                class="w-fit"
-                color={getBadgeColor(DELETE, advisoryState)}>{DELETE}</Badge
-              >
-            </a>
-          {/if}
+          <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
           {#if ssvc}
             <Badge style={ssvcStyle}>{ssvc.label}</Badge>
             <Tooltip>SSVC</Tooltip>
