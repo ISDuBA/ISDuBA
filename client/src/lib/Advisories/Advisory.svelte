@@ -291,7 +291,7 @@
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
-    <div class="flex flex-row overflow-auto">
+    <div class="flex flex-row flex-wrap-reverse overflow-auto">
       <div class="flex flex-col">
         {#if advisoryVersions.length > 0}
           <Version
