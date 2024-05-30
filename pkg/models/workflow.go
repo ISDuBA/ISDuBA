@@ -39,10 +39,10 @@ var transitions = map[[2]Workflow][]string{
 	{ReadWorkflow, AssessingWorkflow}:     {Editor},
 	{AssessingWorkflow, ReviewWorkflow}:   {Editor},
 	{ReviewWorkflow, ArchivedWorkflow}:    {Reviewer},
-	{ReadWorkflow, DeleteWorkflow}:        {Editor, Reviewer},
-	{AssessingWorkflow, DeleteWorkflow}:   {Editor, Reviewer},
+	{ReadWorkflow, DeleteWorkflow}:        {Reviewer},
+	{AssessingWorkflow, DeleteWorkflow}:   {Reviewer},
 	{ReviewWorkflow, DeleteWorkflow}:      {Reviewer},
-	{ArchivedWorkflow, DeleteWorkflow}:    {Editor, Reviewer},
+	{ArchivedWorkflow, DeleteWorkflow}:    {Reviewer},
 	{DeleteWorkflow, ArchivedWorkflow}:    {Admin}, // Backward
 	{DeleteWorkflow, ReviewWorkflow}:      {Admin},
 	{DeleteWorkflow, AssessingWorkflow}:   {Admin},
