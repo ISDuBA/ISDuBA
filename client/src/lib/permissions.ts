@@ -10,7 +10,7 @@
 
 import { appStore } from "./store";
 import type { Role, WorkflowState } from "./workflow";
-import { NEW, READ, REVIEW, ASSESSING, ARCHIVED, DELETE } from "./workflow";
+import { NEW, READ, REVIEW, ASSESSING, ARCHIVED, DELETE, WORKFLOW_TRANSITIONS } from "./workflow";
 
 export function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
   for (let i = 0; i < rolesToCheck.length; i++) {

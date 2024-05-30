@@ -8,6 +8,9 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
+// THIS FILE IS MACHINE GENERATED!
+// Use "go generate ./..." in the root folder to regenerate it.
+
 export type WorkflowState = string;
 export const NEW: WorkflowState = "new";
 export const READ: WorkflowState = "read";
@@ -33,34 +36,26 @@ export type WorkflowStateTransition = {
 };
 
 export const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
-  {
-    from: NEW,
-    to: READ,
-    roles: [EDITOR]
-  },
-  { from: READ, to: NEW, roles: [EDITOR] },
-  { from: READ, to: ASSESSING, roles: [EDITOR] },
-  { from: READ, to: REVIEW, roles: [] },
-  { from: READ, to: ARCHIVED, roles: [] },
-  { from: READ, to: DELETE, roles: [EDITOR, REVIEWER] },
-  { from: ASSESSING, to: NEW, roles: [EDITOR] },
+  { from: ARCHIVED, to: ASSESSING, roles: [ADMIN] },
+  { from: ARCHIVED, to: DELETE, roles: [EDITOR, REVIEWER] },
+  { from: ARCHIVED, to: NEW, roles: [IMPORTER] },
+  { from: ARCHIVED, to: READ, roles: [ADMIN] },
+  { from: ARCHIVED, to: REVIEW, roles: [ADMIN] },
+  { from: ASSESSING, to: DELETE, roles: [EDITOR, REVIEWER] },
+  { from: ASSESSING, to: NEW, roles: [EDITOR, IMPORTER] },
   { from: ASSESSING, to: READ, roles: [EDITOR] },
   { from: ASSESSING, to: REVIEW, roles: [EDITOR] },
-  { from: ASSESSING, to: ARCHIVED, roles: [] },
-  { from: ASSESSING, to: DELETE, roles: [EDITOR, REVIEWER] },
-  { from: REVIEW, to: NEW, roles: [REVIEWER] },
-  { from: REVIEW, to: READ, roles: [REVIEWER] },
-  { from: REVIEW, to: ASSESSING, roles: [REVIEWER] },
-  { from: REVIEW, to: ARCHIVED, roles: [REVIEWER] },
-  { from: REVIEW, to: DELETE, roles: [REVIEWER] },
-  { from: ARCHIVED, to: NEW, roles: [] },
-  { from: ARCHIVED, to: READ, roles: [ADMIN] },
-  { from: ARCHIVED, to: ASSESSING, roles: [ADMIN] },
-  { from: ARCHIVED, to: REVIEW, roles: [ADMIN] },
-  { from: ARCHIVED, to: DELETE, roles: [EDITOR, REVIEWER] },
-  { from: DELETE, to: NEW, roles: [] },
-  { from: DELETE, to: READ, roles: [ADMIN] },
+  { from: DELETE, to: ARCHIVED, roles: [ADMIN] },
   { from: DELETE, to: ASSESSING, roles: [ADMIN] },
+  { from: DELETE, to: READ, roles: [ADMIN] },
   { from: DELETE, to: REVIEW, roles: [ADMIN] },
-  { from: DELETE, to: ARCHIVED, roles: [ADMIN] }
+  { from: NEW, to: READ, roles: [EDITOR] },
+  { from: READ, to: ASSESSING, roles: [EDITOR] },
+  { from: READ, to: DELETE, roles: [EDITOR, REVIEWER] },
+  { from: READ, to: NEW, roles: [EDITOR] },
+  { from: REVIEW, to: ARCHIVED, roles: [REVIEWER] },
+  { from: REVIEW, to: ASSESSING, roles: [REVIEWER] },
+  { from: REVIEW, to: DELETE, roles: [REVIEWER] },
+  { from: REVIEW, to: NEW, roles: [IMPORTER] },
+  { from: REVIEW, to: READ, roles: [REVIEWER] }
 ];
