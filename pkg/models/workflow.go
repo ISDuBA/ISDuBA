@@ -32,8 +32,10 @@ const (
 	Auditor  = "auditor"  // Auditor role
 )
 
-// transitions is a matrix to tell who is allowed to change between certain states.
-var transitions = map[[2]Workflow][]string{
+// Transitions is a matrix to tell who is allowed to change between certain states.
+// Please call "go generate ./..." in the root dir to update docs/workflow.svg
+// if you change this.
+var Transitions = map[[2]Workflow][]string{
 	{"", NewWorkflow}:                     {Importer}, // Forward
 	{NewWorkflow, ReadWorkflow}:           {Editor},
 	{ReadWorkflow, AssessingWorkflow}:     {Editor},
@@ -84,7 +86,7 @@ func (wf *Workflow) UnmarshalText(text []byte) error {
 // TransitionsRoles return a list of roles that are allowed to do the requested
 // transition.
 func (wf Workflow) TransitionsRoles(other Workflow) []string {
-	return transitions[[2]Workflow{wf, other}]
+	return Transitions[[2]Workflow{wf, other}]
 }
 
 // CommentingAllowed returns true if commenting is allowed.
