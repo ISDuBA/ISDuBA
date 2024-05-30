@@ -188,10 +188,10 @@
 </script>
 
 <div>
-  <div class="mb-2 mt-2 flex items-center justify-between">
+  <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
-      <div class="flex items-baseline">
-        <Label class="mr-3">Items per page</Label>
+      <div class="flex flex-row items-baseline">
+        <Label class="mr-3 text-nowrap">Items per page</Label>
         <Select
           size="sm"
           id="pagecount"
@@ -211,8 +211,8 @@
         ></Select>
       </div>
       <div>
-        <div class="flex">
-          <div class:invisible={currentPage === 1} class:flex={true}>
+        <div class="mx-3 flex flex-row">
+          <div class:invisible={currentPage === 1} class:flex={true} class:mr-3={true}>
             <PaginationItem on:click={first}>
               <i class="bx bx-arrow-to-left"></i>
             </PaginationItem>
@@ -220,9 +220,9 @@
               <i class="bx bx-chevrons-left"></i>
             </PaginationItem>
           </div>
-          <div class="mx-3 flex items-center">
+          <div class="flex items-center">
             <input
-              class="mr-1 w-16 cursor-pointer border pr-1 text-right"
+              class="w-16 cursor-pointer border pr-1 text-right"
               on:change={() => {
                 if (!parseInt("" + currentPage)) currentPage = 1;
                 currentPage = Math.floor(currentPage);
@@ -233,7 +233,7 @@
               }}
               bind:value={currentPage}
             />
-            <span>of {numberOfPages} Pages</span>
+            <span class="ml-2 mr-3 text-nowrap">of {numberOfPages} Pages</span>
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
             <PaginationItem on:click={next}>
@@ -245,7 +245,7 @@
           </div>
         </div>
       </div>
-      <div class="mr-3">
+      <div class="mr-3 text-nowrap">
         {#if searchTerm}
           {count} entries found
         {:else}
