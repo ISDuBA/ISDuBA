@@ -11,7 +11,7 @@
   import { Label, Timeline, AccordionItem, Accordion, Badge, Tooltip } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
-  import Comment from "$lib/Advisories/Comment.svelte";
+  import Comment from "$lib/Advisories/Comments/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
@@ -28,7 +28,7 @@
     canSetStateRead,
     allowedToChangeWorkflow
   } from "$lib/permissions";
-  import CommentTextArea from "./CommentTextArea.svelte";
+  import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Event from "$lib/Advisories/Event.svelte";
