@@ -306,7 +306,9 @@
         {#if isDiffOpen}
           <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
         {:else}
-          <Webview></Webview>
+          <div class="max-w-[90%]">
+            <Webview></Webview>
+          </div>
         {/if}
       </div>
       <div class="ml-auto mr-3 flex max-w-96 flex-col">
