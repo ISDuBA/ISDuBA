@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Label, Timeline, AccordionItem, Accordion, Badge, Tooltip } from "flowbite-svelte";
+  import { Label, Timeline, AccordionItem, Accordion, Badge } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comments/Comment.svelte";
@@ -281,8 +281,7 @@
         <div class="flex h-fit flex-row gap-2">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
           {#if ssvc}
-            <Badge style={ssvcStyle}>{ssvc.label}</Badge>
-            <Tooltip>SSVC</Tooltip>
+            <Badge title="SSVC" style={ssvcStyle}>{ssvc.label}</Badge>
           {/if}
         </div>
       </div>
