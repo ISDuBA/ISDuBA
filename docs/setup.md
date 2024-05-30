@@ -77,7 +77,7 @@ Make sure to have keycloak running when trying to access the application.
 
 (If set up via the script available under:)
 ``` bash
- sudo ./opt/keycloak/bin/kc.sh start-dev
+ sudo /opt/keycloak/bin/kc.sh start-dev
 ```
 
 (The isduba-keycloak-specific-config is configured in the client/.env.)
