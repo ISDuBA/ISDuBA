@@ -310,7 +310,7 @@
           <Webview></Webview>
         {/if}
       </div>
-      <div class="ml-auto flex flex-col">
+      <div class="ml-auto mr-3 flex max-w-96 flex-col">
         {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
           <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
             <Accordion flush>
