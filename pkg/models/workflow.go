@@ -57,7 +57,7 @@ var Transitions = map[[2]Workflow][]string{
 	{ReviewWorkflow, ReadWorkflow}:        {Reviewer},
 	{ReviewWorkflow, NewWorkflow}:         {Importer},
 	{AssessingWorkflow, ReadWorkflow}:     {Editor},
-	{AssessingWorkflow, NewWorkflow}:      {Editor, Importer},
+	{AssessingWorkflow, NewWorkflow}:      {Importer},
 	{ReadWorkflow, NewWorkflow}:           {Editor},
 	{DeleteWorkflow, ""}:                  {Admin},
 }

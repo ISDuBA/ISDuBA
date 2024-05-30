@@ -28,8 +28,12 @@ digraph workflow_transitions {
 	node [fontname="Helvetica,Arial,sans-serif"]
 	edge [fontname="Helvetica,Arial,sans-serif"]
 	rankdir=TB;
-	node [shape = doublecircle]; start end;
-	node [shape = box];
+
+	start [shape = doublecircle];
+	subgraph inner {
+		node [shape = box];
+		read assessing review archived delete;
+	}
 	{{ range $j, $states := $.keys }}
 	{{- $who := index $.workflow $states -}}
 	{{- $from := index $states 0 -}}
@@ -40,6 +44,8 @@ digraph workflow_transitions {
 	{{- if $i }}, {{ end }}{{ $role -}} 
 	{{ end -}}"];
 	{{ end }}
+
+	end [shape = doublecircle];
 }
 `
 
