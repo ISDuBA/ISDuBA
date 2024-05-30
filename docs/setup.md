@@ -67,7 +67,7 @@ npm run dev
 This will start the client application and
 print the URL a browser could be pointed to.
 
-Witg a previously created configuration file (named e.g. `isduba.toml`) you could start the backend from the main directory:
+With a previously created configuration file (named e.g. `isduba.toml`) you could start the backend from the main directory:
 
 ```bash
   ./cmd/isdubad/isdubad -c isdubad.toml
@@ -77,7 +77,7 @@ Make sure to have keycloak running when trying to access the application.
 
 (If set up via the script available under:)
 ``` bash
- sudo /opt/keycloak/bin/kc.sh start-dev
+ sudo -u keycloak /opt/keycloak/bin/kc.sh start-dev
 ```
 
 (The isduba-keycloak-specific-config is configured in the client/.env.)
