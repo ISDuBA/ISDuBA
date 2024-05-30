@@ -312,8 +312,8 @@
   </div>
   {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
     <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
-      <Accordion>
-        <AccordionItem open>
+      <Accordion flush>
+        <AccordionItem class="h-4" open>
           <span slot="header"
             ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
           >
@@ -347,8 +347,8 @@
           {/if}
         </AccordionItem>
       </Accordion>
-      <Accordion class="mt-3">
-        <AccordionItem open>
+      <Accordion flush class="mt-3">
+        <AccordionItem class="h-4" open>
           <span slot="header"
             ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
           >
@@ -368,8 +368,8 @@
           <ErrorMessage message={loadEventsError}></ErrorMessage>
         </AccordionItem>
       </Accordion>
-      <Accordion class="mt-3">
-        <AccordionItem open>
+      <Accordion class="mt-3" flush>
+        <AccordionItem class="h-4" borderClass="border-0" open>
           <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
           <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
           <SsvcCalculator
