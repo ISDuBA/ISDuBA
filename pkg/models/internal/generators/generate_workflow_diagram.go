@@ -11,10 +11,12 @@
 package main
 
 import (
+	"cmp"
 	"flag"
 	"fmt"
 	"log"
 	"os/exec"
+	"slices"
 	"text/template"
 
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -28,7 +30,8 @@ digraph workflow_transitions {
 	rankdir=TB;
 	node [shape = doublecircle]; start end;
 	node [shape = box];
-	{{ range $states, $who := . }}
+	{{ range $j, $states := $.keys }}
+	{{- $who := index $.workflow $states -}}
 	{{- $from := index $states 0 -}}
 	{{- $to   := index $states 1 -}}
 	{{- if eq $from "" }}{{ $from = "start" }}{{ end -}}
@@ -48,6 +51,14 @@ func check(err error) {
 	}
 }
 
+func keys[K comparable, V any](m map[K]V) []K {
+	ks := make([]K, 0, len(m))
+	for k := range m {
+		ks = append(ks, k)
+	}
+	return ks
+}
+
 func main() {
 	output := flag.String("o", "workflow.svg", "SVG file to generate")
 	flag.Parse()
@@ -56,9 +67,20 @@ func main() {
 	stdin, err := cmd.StdinPipe()
 	check(err)
 
+	ks := keys(models.Transitions)
+	slices.SortFunc(ks, func(a, b [2]models.Workflow) int {
+		if d := cmp.Compare(a[0], b[0]); d != 0 {
+			return d
+		}
+		return cmp.Compare(a[1], b[1])
+	})
+
 	go func() {
 		defer stdin.Close()
-		check(tmpl.Execute(stdin, models.Transitions))
+		check(tmpl.Execute(stdin, map[string]any{
+			"keys":     ks,
+			"workflow": models.Transitions,
+		}))
 	}()
 	out, err := cmd.CombinedOutput()
 	check(err)
