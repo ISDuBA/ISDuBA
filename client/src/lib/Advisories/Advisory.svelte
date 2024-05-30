@@ -270,10 +270,8 @@
   <title>{params.trackingID}</title>
 </svelte:head>
 
-<div
-  class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll xl:flex-nowrap"
->
-  <div class="flex max-h-full w-full grow flex-col gap-y-2 overflow-y-scroll px-2">
+<div class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 xl:flex-nowrap">
+  <div class="flex max-h-full w-full grow flex-col gap-y-2 px-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
@@ -293,93 +291,101 @@
     <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
-    {#if advisoryVersions.length > 0}
-      <Version
-        publisherNamespace={params.publisherNamespace}
-        trackingID={params.trackingID}
-        {advisoryVersions}
-        selectedDocumentVersion={document.tracking?.version}
-        on:selectedDiffDocuments={onSelectedDiffDocuments}
-        on:disableDiff={() => (isDiffOpen = false)}
-      ></Version>
-    {/if}
-    {#if isDiffOpen}
-      <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
-    {:else}
-      <Webview></Webview>
-    {/if}
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
-  </div>
-  {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
-      <Accordion flush>
-        <AccordionItem class="h-4" open>
-          <span slot="header"
-            ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
-          >
-          {#if loadCommentsError === ""}
-            {#if comments?.length > 0}
-              <div class="max-h-96 overflow-y-auto pl-2">
-                <Timeline class="mb-4 flex flex-col-reverse">
-                  {#each comments as comment (comment.id)}
-                    <Comment on:commentUpdate={loadEvents} {comment}></Comment>
-                  {/each}
-                </Timeline>
-              </div>
-            {:else}
-              <div class="mb-6 text-gray-600">No comments available.</div>
-            {/if}
-          {/if}
-          <ErrorMessage message={loadCommentsError}></ErrorMessage>
-          {#if isCommentingAllowed}
-            <div class="mt-6">
-              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-              <CommentTextArea
-                on:input={() => (createCommentError = "")}
-                on:saveComment={createComment}
-                on:saveForReview={sendForReview}
-                bind:value={comment}
-                errorMessage={createCommentError}
-                buttonText="Send"
-                state={advisoryState}
-              ></CommentTextArea>
-            </div>
-          {/if}
-        </AccordionItem>
-      </Accordion>
-      <Accordion flush class="mt-3">
-        <AccordionItem class="h-4" open>
-          <span slot="header"
-            ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
-          >
-          {#if loadCommentsError === ""}
-            {#if events?.length > 0}
-              <div class="max-h-96 overflow-y-auto pl-2">
-                <Timeline class="mb-4 flex flex-col-reverse">
-                  {#each events as event}
-                    <Event {event}></Event>
-                  {/each}
-                </Timeline>
-              </div>
-            {:else}
-              <div class="mb-6 text-gray-600">No events available.</div>
-            {/if}
-          {/if}
-          <ErrorMessage message={loadEventsError}></ErrorMessage>
-        </AccordionItem>
-      </Accordion>
-      <Accordion class="mt-3" flush>
-        <AccordionItem class="h-4" borderClass="border-0" open>
-          <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
-          <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-          <SsvcCalculator
-            vectorInput={ssvc?.vector}
-            disabled={!isCalculatingAllowed}
-            documentID={params.id}
-            on:updateSSVC={loadMetaData}
-          ></SsvcCalculator>
-        </AccordionItem>
-      </Accordion>
+    <div class="flex flex-row overflow-auto">
+      <div class="flex flex-col">
+        {#if advisoryVersions.length > 0}
+          <Version
+            publisherNamespace={params.publisherNamespace}
+            trackingID={params.trackingID}
+            {advisoryVersions}
+            selectedDocumentVersion={document.tracking?.version}
+            on:selectedDiffDocuments={onSelectedDiffDocuments}
+            on:disableDiff={() => (isDiffOpen = false)}
+          ></Version>
+        {/if}
+        {#if isDiffOpen}
+          <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
+        {:else}
+          <Webview></Webview>
+        {/if}
+      </div>
+      <div class="ml-auto flex flex-col">
+        {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+          <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
+            <Accordion flush>
+              <AccordionItem class="h-4" open>
+                <span slot="header"
+                  ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
+                >
+                {#if loadCommentsError === ""}
+                  {#if comments?.length > 0}
+                    <div class="max-h-96 overflow-y-auto pl-2">
+                      <Timeline class="mb-4 flex flex-col-reverse">
+                        {#each comments as comment (comment.id)}
+                          <Comment on:commentUpdate={loadEvents} {comment}></Comment>
+                        {/each}
+                      </Timeline>
+                    </div>
+                  {:else}
+                    <div class="mb-6 text-gray-600">No comments available.</div>
+                  {/if}
+                {/if}
+                <ErrorMessage message={loadCommentsError}></ErrorMessage>
+                {#if isCommentingAllowed}
+                  <div class="mt-6">
+                    <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+                    <CommentTextArea
+                      on:input={() => (createCommentError = "")}
+                      on:saveComment={createComment}
+                      on:saveForReview={sendForReview}
+                      bind:value={comment}
+                      errorMessage={createCommentError}
+                      buttonText="Send"
+                      state={advisoryState}
+                    ></CommentTextArea>
+                  </div>
+                {/if}
+              </AccordionItem>
+            </Accordion>
+            <Accordion flush class="mt-3">
+              <AccordionItem class="h-4" open>
+                <span slot="header"
+                  ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
+                >
+                {#if loadCommentsError === ""}
+                  {#if events?.length > 0}
+                    <div class="max-h-96 overflow-y-auto pl-2">
+                      <Timeline class="mb-4 flex flex-col-reverse">
+                        {#each events as event}
+                          <Event {event}></Event>
+                        {/each}
+                      </Timeline>
+                    </div>
+                  {:else}
+                    <div class="mb-6 text-gray-600">No events available.</div>
+                  {/if}
+                {/if}
+                <ErrorMessage message={loadEventsError}></ErrorMessage>
+              </AccordionItem>
+            </Accordion>
+            <Accordion class="mt-3" flush>
+              <AccordionItem class="h-4" borderClass="border-0" open>
+                <span slot="header"
+                  ><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span
+                >
+                <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+                <SsvcCalculator
+                  vectorInput={ssvc?.vector}
+                  disabled={!isCalculatingAllowed}
+                  documentID={params.id}
+                  on:updateSSVC={loadMetaData}
+                ></SsvcCalculator>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        {/if}
+      </div>
     </div>
-  {/if}
+  </div>
 </div>
