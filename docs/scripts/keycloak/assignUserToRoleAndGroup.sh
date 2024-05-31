@@ -10,13 +10,6 @@
 
 set -e # to exit if a command in the script fails
 
-# Usage: assignUserToRoleAndGroup.sh username groupname rolename [login]
-# where:
-#  username: username of the user
-#  groupname: group the user is going to be assigned to
-#  rolename: role the user is going to be assigned to (optional)
-#  login=[true|false]: whether to login to keycloak again (default:true) (optional, rolename needs to be set)
-
 login=true
 
 help() {
