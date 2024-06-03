@@ -20,7 +20,8 @@
   // @ts-expect-error ignore complaining qs has not type declaration
   import { parse } from "qs";
   import { appStore } from "$lib/store";
-  import { ADMIN, isRoleIncluded } from "$lib/permissions";
+  import { ADMIN } from "$lib/workflow";
+  import { isRoleIncluded } from "$lib/permissions";
 
   export let params: any = null;
   let editName = false;

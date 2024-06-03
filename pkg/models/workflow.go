@@ -32,23 +32,34 @@ const (
 	Auditor  = "auditor"  // Auditor role
 )
 
-// transitions is a matrix to tell who is allowed to change between certain states.
-var transitions = map[[2]Workflow][]string{
-	{"", NewWorkflow}:                   {Importer},
-	{NewWorkflow, ReadWorkflow}:         {Editor},
-	{ReadWorkflow, NewWorkflow}:         {Editor},
-	{ReadWorkflow, AssessingWorkflow}:   {Editor},
-	{AssessingWorkflow, NewWorkflow}:    {Importer},
-	{ReviewWorkflow, NewWorkflow}:       {Importer},
-	{ArchivedWorkflow, NewWorkflow}:     {Importer},
-	{AssessingWorkflow, ReviewWorkflow}: {Editor},
-	{ReviewWorkflow, AssessingWorkflow}: {Reviewer},
-	{ReviewWorkflow, ArchivedWorkflow}:  {Reviewer},
-	{ReadWorkflow, DeleteWorkflow}:      {Editor, Reviewer},
-	{AssessingWorkflow, DeleteWorkflow}: {Editor, Reviewer},
-	{ReviewWorkflow, DeleteWorkflow}:    {Reviewer},
-	{ArchivedWorkflow, DeleteWorkflow}:  {Editor, Reviewer},
-	{DeleteWorkflow, ""}:                {Admin},
+// Transitions is a matrix to tell who is allowed to change between certain states.
+// Please call "go generate ./..." in the root dir to update docs/workflow.svg
+// if you change this.
+var Transitions = map[[2]Workflow][]string{
+	{"", NewWorkflow}:                     {Importer}, // Forward
+	{NewWorkflow, ReadWorkflow}:           {Editor},
+	{ReadWorkflow, AssessingWorkflow}:     {Editor},
+	{AssessingWorkflow, ReviewWorkflow}:   {Editor},
+	{ReviewWorkflow, ArchivedWorkflow}:    {Reviewer},
+	{ReadWorkflow, DeleteWorkflow}:        {Editor, Reviewer},
+	{AssessingWorkflow, DeleteWorkflow}:   {Editor, Reviewer},
+	{ReviewWorkflow, DeleteWorkflow}:      {Reviewer},
+	{ArchivedWorkflow, DeleteWorkflow}:    {Editor, Reviewer},
+	{DeleteWorkflow, ArchivedWorkflow}:    {Admin}, // Backward
+	{DeleteWorkflow, ReviewWorkflow}:      {Admin},
+	{DeleteWorkflow, AssessingWorkflow}:   {Admin},
+	{DeleteWorkflow, ReadWorkflow}:        {Admin},
+	{ArchivedWorkflow, ReviewWorkflow}:    {Admin},
+	{ArchivedWorkflow, AssessingWorkflow}: {Admin},
+	{ArchivedWorkflow, ReadWorkflow}:      {Admin},
+	{ArchivedWorkflow, NewWorkflow}:       {Importer},
+	{ReviewWorkflow, AssessingWorkflow}:   {Reviewer},
+	{ReviewWorkflow, ReadWorkflow}:        {Reviewer},
+	{ReviewWorkflow, NewWorkflow}:         {Importer},
+	{AssessingWorkflow, ReadWorkflow}:     {Editor},
+	{AssessingWorkflow, NewWorkflow}:      {Importer},
+	{ReadWorkflow, NewWorkflow}:           {Editor},
+	{DeleteWorkflow, ""}:                  {Admin},
 }
 
 // Valid returns true is the workflow represents a valid state.
@@ -74,7 +85,7 @@ func (wf *Workflow) UnmarshalText(text []byte) error {
 // TransitionsRoles return a list of roles that are allowed to do the requested
 // transition.
 func (wf Workflow) TransitionsRoles(other Workflow) []string {
-	return transitions[[2]Workflow{wf, other}]
+	return Transitions[[2]Workflow{wf, other}]
 }
 
 // CommentingAllowed returns true if commenting is allowed.
