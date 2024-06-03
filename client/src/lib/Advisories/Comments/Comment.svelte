@@ -34,7 +34,7 @@
     updateCommentError = "";
     const formData = new FormData();
     formData.append("message", updatedComment);
-    const response = await request(`/api/comments/${comment.id}`, "PUT", formData);
+    const response = await request(`/api/comments/${comment.comment_id}`, "PUT", formData);
     if (response.ok) {
       comment.message = updatedComment;
       toggleEditing();
@@ -50,14 +50,14 @@
   };
 </script>
 
-<TimelineItem classLi="mb-4 ms-4" date={`${new Date(comment.time).toISOString()}`}>
+<TimelineItem classLi="mb-4 ms-4" date={comment.time}>
   {#if !isEditing}
     <P class="mb-2">
       <div class="display-markdown">
         {@html parseMarkdown(comment.message)}
       </div>
-      <small>({comment.commentator})</small>
-      {#if $appStore.app.tokenParsed?.preferred_username === comment.commentator}
+      <small>({comment.actor})</small>
+      {#if $appStore.app.tokenParsed?.preferred_username === comment.actor}
         <ButtonGroup>
           <Button class="!p-2" on:click={toggleEditing}>
             <i class="bx bx-edit text-lg"></i>

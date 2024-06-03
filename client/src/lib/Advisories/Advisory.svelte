@@ -8,10 +8,9 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Label, Timeline, Badge, ButtonGroup, Button } from "flowbite-svelte";
+  import { Label, Badge } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
-  import Comment from "$lib/Advisories/Comments/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
@@ -22,16 +21,14 @@
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import Event from "$lib/Advisories/Event.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import WorkflowStates from "./WorkflowStates.svelte";
+  import History from "./History.svelte/History.svelte";
   export let params: any = null;
 
   let document: any = {};
   let ssvc: any;
   let comment: string = "";
-  let comments: any = [];
-  let events: any = [];
   let loadCommentsError = "";
   let loadEventsError = "";
   let loadAdvisoryVersionsError = "";
@@ -42,6 +39,7 @@
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState = "";
+  let historyEntries: any = [];
   let isCommentingAllowed: boolean;
   $: if ([READ, ASSESSING].includes(advisoryState)) {
     isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
@@ -58,7 +56,6 @@
   const timeoutIDs: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
-  let historyOnly = true;
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
@@ -129,9 +126,10 @@
           loadEventsError = `Could not load all events. An error occured on the server. Please contact an administrator.`;
         }
       });
-      events = loadedEvents.reverse();
+      return loadedEvents;
     } else {
       loadEventsError = `Could not load events. An error occured on the server. Please contact an administrator.`;
+      return [];
     }
   };
 
@@ -162,10 +160,29 @@
           loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
         }
       });
-      comments = loadedComments.reverse();
+      return loadedComments;
     } else {
       loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
+      return [];
     }
+  };
+
+  const buildHistory = async () => {
+    const comments = await loadComments();
+    let events = await loadEvents();
+    const commentsByTime = comments.reduce((o: any, n: any) => {
+      o[`${n.time}:${n.commentator}`] = { message: n.message, id: n.id };
+      return o;
+    }, {});
+    events.map((e: any) => {
+      if (e.event_type === "add_comment") {
+        const comment = commentsByTime[`${e.time}:${e.actor}`];
+        e["message"] = comment.message;
+        e["comment_id"] = comment.id;
+      }
+      return e;
+    });
+    historyEntries = events;
   };
 
   async function createComment() {
@@ -174,9 +191,8 @@
     const response = await request(`/api/comments/${params.id}`, "POST", formData);
     if (response.ok) {
       comment = "";
-      await loadComments();
       await loadAdvisoryState();
-      await loadEvents();
+      await buildHistory();
     } else if (response.error) {
       createCommentError = `Could not create comment. ${getErrorMessage(response.error)}`;
     }
@@ -196,7 +212,7 @@
     );
     if (response.ok) {
       advisoryState = newState;
-      await loadEvents();
+      await buildHistory();
     } else if (response.error) {
       stateError = `Could not change state. ${getErrorMessage(response.error)}`;
     }
@@ -220,9 +236,9 @@
     await loadDocumentSSVC();
     await loadDocument();
     await loadAdvisoryVersions();
+    await buildHistory();
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
-      await loadComments();
-      await loadEvents();
+      await buildHistory();
     }
     const state = await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
@@ -318,60 +334,12 @@
       </div>
       <div class="ml-auto mr-3 flex w-96 flex-col">
         {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-          <div class="mb-5 ml-auto">
-            <ButtonGroup class="ml-auto h-7">
-              <Button
-                size="xs"
-                color="light"
-                class={`h-7 py-1 text-xs ${historyOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-                on:click={() => {
-                  historyOnly = true;
-                }}>Full history</Button
-              >
-              <Button
-                size="xs"
-                color="light"
-                class={`h-7 py-1 text-xs ${!historyOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-                on:click={() => {
-                  historyOnly = false;
-                }}>Comments only</Button
-              >
-            </ButtonGroup>
-          </div>
-          <div class="max-h-96 overflow-y-auto">
-            {#if historyOnly}
-              {#if loadCommentsError === ""}
-                {#if events?.length > 0}
-                  <div class="pl-2">
-                    <Timeline class="mb-4 flex flex-col-reverse">
-                      {#each events as event, index (index)}
-                        <Event {event}></Event>
-                      {/each}
-                    </Timeline>
-                  </div>
-                {:else}
-                  <div class="mb-6 text-gray-600">No events available.</div>
-                {/if}
-              {/if}
-              <ErrorMessage message={loadEventsError}></ErrorMessage>
-            {/if}
-            {#if !historyOnly}
-              {#if loadCommentsError === ""}
-                {#if comments?.length > 0}
-                  <div class="pl-2">
-                    <Timeline class="mb-4 flex flex-col-reverse">
-                      {#each comments as comment (comment.id)}
-                        <Comment on:commentUpdate={loadEvents} {comment}></Comment>
-                      {/each}
-                    </Timeline>
-                  </div>
-                {:else}
-                  <div class="mb-6 text-gray-600">No comments available.</div>
-                {/if}
-              {/if}
-              <ErrorMessage message={loadCommentsError}></ErrorMessage>
-            {/if}
-          </div>
+          <History
+            on:commentUpdate={() => {
+              buildHistory();
+            }}
+            entries={historyEntries}
+          ></History>
           {#if isCommentingAllowed}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
@@ -386,6 +354,8 @@
               ></CommentTextArea>
             </div>
           {/if}
+          <ErrorMessage message={loadEventsError}></ErrorMessage>
+          <ErrorMessage message={loadCommentsError}></ErrorMessage>
           <div class="mt-4">
             <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
             <Label class="mb-2" for="ssvc-calculator">SSVC:</Label>
