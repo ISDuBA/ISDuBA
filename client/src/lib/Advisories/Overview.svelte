@@ -10,27 +10,43 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Search } from "flowbite-svelte";
+  import { Button, ButtonGroup, Search } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import AdvisoryTable from "$lib/Documents/Table.svelte";
+  import AdvisoryTable from "$lib/Advisories/Table.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
-  let columns = [
-    "cvss_v3_score",
-    "cvss_v2_score",
-    "ssvc",
-    "state",
-    "four_cves",
-    "publisher",
-    "title",
-    "tracking_id",
-    "initial_release_date",
-    "current_release_date",
-    "version"
-  ];
+  let advisoriesOnly = true;
+
+  $: columns = advisoriesOnly
+    ? [
+        "cvss_v3_score",
+        "cvss_v2_score",
+        "ssvc",
+        "state",
+        "four_cves",
+        "publisher",
+        "title",
+        "tracking_id",
+        "initial_release_date",
+        "current_release_date",
+        "version"
+      ]
+    : [
+        "cvss_v3_score",
+        "cvss_v2_score",
+        "ssvc",
+        "four_cves",
+        "publisher",
+        "title",
+        "tracking_id",
+        "initial_release_date",
+        "current_release_date",
+        "version"
+      ];
+
   onMount(async () => {
-    let savedSearch = sessionStorage.getItem("advisorySearchTerm");
+    let savedSearch = sessionStorage.getItem("documentSearchTerm");
     searchTerm = savedSearch ?? "";
   });
 </script>
@@ -39,13 +55,33 @@
   <title>Advisories</title>
 </svelte:head>
 
-<SectionHeader title="Advisories"></SectionHeader>
-<div class="mb-3 w-2/3">
+<div class="flex flex-row">
+  <SectionHeader title="Advisories"></SectionHeader>
+  <ButtonGroup class="h-7">
+    <Button
+      size="xs"
+      color="light"
+      class={`h-7 py-1 text-xs ${advisoriesOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+      on:click={() => {
+        advisoriesOnly = true;
+      }}>Advisories</Button
+    >
+    <Button
+      size="xs"
+      color="light"
+      class={`h-7 py-1 text-xs ${!advisoriesOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+      on:click={() => {
+        advisoriesOnly = false;
+      }}>Documents</Button
+    >
+  </ButtonGroup>
+</div>
+<div class="mb-3 flex w-2/3">
   <Search
     size="sm"
     bind:value={searchTerm}
     on:keyup={(e) => {
-      sessionStorage.setItem("advisorySearchTerm", searchTerm ?? "");
+      sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
       if (e.key === "Enter") advisoryTable.fetchData();
     }}
   >
@@ -68,6 +104,6 @@
   </Search>
 </div>
 {#if searchTerm !== null}
-  <AdvisoryTable {searchTerm} bind:this={advisoryTable} loadAdvisories={true} {columns}
+  <AdvisoryTable {searchTerm} bind:this={advisoryTable} loadAdvisories={advisoriesOnly} {columns}
   ></AdvisoryTable>
 {/if}

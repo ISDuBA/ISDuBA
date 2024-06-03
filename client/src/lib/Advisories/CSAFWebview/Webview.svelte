@@ -24,38 +24,40 @@
   );
 </script>
 
-{#if isCSAF}
-  {#if $appStore.webview.doc}
-    <Collapsible header="General" open={$appStore.webview.ui.isGeneralSectionVisible}>
-      <General />
-    </Collapsible>
-  {/if}
+<div class="flex flex-col">
+  {#if isCSAF}
+    {#if $appStore.webview.doc}
+      <Collapsible header="General" open={$appStore.webview.ui.isGeneralSectionVisible}>
+        <General />
+      </Collapsible>
+    {/if}
 
-  {#if $appStore.webview.doc && $appStore.webview.doc["isProductTreePresent"]}
-    <Collapsible
-      header="Product tree"
-      onOpen={() => {
-        appStore.setProductTreeOpen();
-      }}
-      open={$appStore.webview.ui.isProductTreeVisible}
-      onClose={() => {
-        appStore.setProductTreeSectionInVisible();
-        appStore.resetSelectedProduct();
-        appStore.setProductTreeClosed();
-      }}
-    >
-      <ProductTree />
-    </Collapsible>
+    {#if $appStore.webview.doc && $appStore.webview.doc["isProductTreePresent"]}
+      <Collapsible
+        header="Product tree"
+        onOpen={() => {
+          appStore.setProductTreeOpen();
+        }}
+        open={$appStore.webview.ui.isProductTreeVisible}
+        onClose={() => {
+          appStore.setProductTreeSectionInVisible();
+          appStore.resetSelectedProduct();
+          appStore.setProductTreeClosed();
+        }}
+      >
+        <ProductTree />
+      </Collapsible>
+    {/if}
+    {#if $appStore.webview.doc && $appStore.webview.doc["isVulnerabilitiesPresent"]}
+      <Collapsible
+        header="Vulnerabilities"
+        open={$appStore.webview.ui.isVulnerabilitiesSectionVisible}
+        onClose={() => {
+          appStore.setVulnerabilitiesSectionInvisible();
+        }}
+      >
+        <Vulnerabilities />
+      </Collapsible>
+    {/if}
   {/if}
-  {#if $appStore.webview.doc && $appStore.webview.doc["isVulnerabilitiesPresent"]}
-    <Collapsible
-      header="Vulnerabilities"
-      open={$appStore.webview.ui.isVulnerabilitiesSectionVisible}
-      onClose={() => {
-        appStore.setVulnerabilitiesSectionInvisible();
-      }}
-    >
-      <Vulnerabilities />
-    </Collapsible>
-  {/if}
-{/if}
+</div>

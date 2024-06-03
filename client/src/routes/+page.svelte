@@ -18,7 +18,6 @@
   import Diff from "$lib/Diff/DiffPage.svelte";
   import { wrap } from "svelte-spa-router/wrap";
   import Configuration from "$lib/Configuration/Overview.svelte";
-  import Documents from "$lib/Documents/Overview.svelte";
   import Advisories from "$lib/Advisories/Overview.svelte";
   import Advisory from "$lib/Advisories/Advisory.svelte";
   import NotFound from "$lib/NotFound.svelte";
@@ -129,11 +128,6 @@
     }),
     "/queries/:id": wrap({
       component: QueryDesigner,
-      userData: loginRequired,
-      conditions: [loginCondition]
-    }),
-    "/documents": wrap({
-      component: Documents,
       userData: loginRequired,
       conditions: [loginCondition]
     }),

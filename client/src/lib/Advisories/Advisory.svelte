@@ -8,30 +8,28 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Label, Timeline, AccordionItem, Accordion, Badge, Tooltip } from "flowbite-svelte";
+  import { Label, Timeline, AccordionItem, Accordion, Badge } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
-  import Comment from "$lib/Advisories/Comment.svelte";
+  import Comment from "$lib/Advisories/Comments/Comment.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
-  import { canSetStateRead, allowedToChangeWorkflow } from "$lib/permissions";
-  import CommentTextArea from "./CommentTextArea.svelte";
+  import { ASSESSING, READ, REVIEW } from "$lib/workflow";
+  import { canSetStateRead } from "$lib/permissions";
+  import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Event from "$lib/Advisories/Event.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import WorkflowStates from "./WorkflowStates.svelte";
   export let params: any = null;
 
   let document: any = {};
   let ssvc: any;
-  $: ssvcStyle = ssvc
-    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
-    : "";
   let comment: string = "";
   let comments: any = [];
   let events: any = [];
@@ -255,22 +253,6 @@
     isDiffOpen = true;
   };
 
-  const updateStateIfAllowed = async (state: string) => {
-    if (allowedToChangeWorkflow(appStore.getRoles(), advisoryState, state)) {
-      await updateState(state);
-    }
-  };
-
-  const getBadgeColor = (state: string, currentState: string) => {
-    if (state === currentState) {
-      return "green";
-    } else if (allowedToChangeWorkflow(appStore.getRoles(), currentState, state)) {
-      return "dark";
-    } else {
-      return "none";
-    }
-  };
-
   onDestroy(() => {
     timeoutIDs.forEach((id: number) => {
       clearTimeout(id);
@@ -280,16 +262,17 @@
   $: if (params) {
     loadData();
   }
+  $: ssvcStyle = ssvc
+    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
+    : "";
 </script>
 
 <svelte:head>
   <title>{params.trackingID}</title>
 </svelte:head>
 
-<div
-  class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 overflow-y-scroll xl:flex-nowrap"
->
-  <div class="flex max-h-full w-full grow flex-col gap-y-2 overflow-y-scroll px-2">
+<div class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 xl:flex-nowrap">
+  <div class="flex max-h-full w-full grow flex-col gap-y-2 px-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">{params.trackingID}</Label>
@@ -297,72 +280,9 @@
       <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
         <div class="flex h-fit flex-row gap-2">
-          {#if advisoryState}
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(NEW)}
-            >
-              <Badge title="Mark as new" class="w-fit" color={getBadgeColor(NEW, advisoryState)}
-                >{NEW}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(READ)}
-            >
-              <Badge title="Mark as read" class="w-fit" color={getBadgeColor(READ, advisoryState)}
-                >{READ}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(ASSESSING)}
-            >
-              <Badge
-                title="Mark as assesing"
-                class="w-fit"
-                color={getBadgeColor(ASSESSING, advisoryState)}>{ASSESSING}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(REVIEW)}
-            >
-              <Badge
-                title="Release for review"
-                class="w-fit"
-                color={getBadgeColor(REVIEW, advisoryState)}>{REVIEW}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(ARCHIVED)}
-            >
-              <Badge title="Archive" class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}
-                >{ARCHIVED}</Badge
-              >
-            </a>
-            <a
-              href={"javascript:void(0);"}
-              class="inline-flex"
-              on:click={() => updateStateIfAllowed(DELETE)}
-            >
-              <Badge
-                title="Mark for deletion"
-                on:click={() => updateState(DELETE)}
-                class="w-fit"
-                color={getBadgeColor(DELETE, advisoryState)}>{DELETE}</Badge
-              >
-            </a>
-          {/if}
+          <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
           {#if ssvc}
-            <Badge style={ssvcStyle}>{ssvc.label}</Badge>
-            <Tooltip>SSVC</Tooltip>
+            <Badge title="SSVC" style={ssvcStyle}>{ssvc.label}</Badge>
           {/if}
         </div>
       </div>
@@ -371,93 +291,103 @@
     <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
-    {#if advisoryVersions.length > 0}
-      <Version
-        publisherNamespace={params.publisherNamespace}
-        trackingID={params.trackingID}
-        {advisoryVersions}
-        selectedDocumentVersion={document.tracking?.version}
-        on:selectedDiffDocuments={onSelectedDiffDocuments}
-        on:disableDiff={() => (isDiffOpen = false)}
-      ></Version>
-    {/if}
-    {#if isDiffOpen}
-      <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
-    {:else}
-      <Webview></Webview>
-    {/if}
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
-  </div>
-  {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-    <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
-      <Accordion>
-        <AccordionItem open>
-          <span slot="header"
-            ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
-          >
-          {#if loadCommentsError === ""}
-            {#if comments?.length > 0}
-              <div class="max-h-96 overflow-y-auto pl-2">
-                <Timeline class="mb-4 flex flex-col-reverse">
-                  {#each comments as comment (comment.id)}
-                    <Comment on:commentUpdate={loadEvents} {comment}></Comment>
-                  {/each}
-                </Timeline>
-              </div>
-            {:else}
-              <div class="mb-6 text-gray-600">No comments available.</div>
-            {/if}
-          {/if}
-          <ErrorMessage message={loadCommentsError}></ErrorMessage>
-          {#if isCommentingAllowed}
-            <div class="mt-6">
-              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-              <CommentTextArea
-                on:input={() => (createCommentError = "")}
-                on:saveComment={createComment}
-                on:saveForReview={sendForReview}
-                bind:value={comment}
-                errorMessage={createCommentError}
-                buttonText="Send"
-                state={advisoryState}
-              ></CommentTextArea>
-            </div>
-          {/if}
-        </AccordionItem>
-      </Accordion>
-      <Accordion class="mt-3">
-        <AccordionItem open>
-          <span slot="header"
-            ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
-          >
-          {#if loadCommentsError === ""}
-            {#if events?.length > 0}
-              <div class="max-h-96 overflow-y-auto pl-2">
-                <Timeline class="mb-4 flex flex-col-reverse">
-                  {#each events as event}
-                    <Event {event}></Event>
-                  {/each}
-                </Timeline>
-              </div>
-            {:else}
-              <div class="mb-6 text-gray-600">No events available.</div>
-            {/if}
-          {/if}
-          <ErrorMessage message={loadEventsError}></ErrorMessage>
-        </AccordionItem>
-      </Accordion>
-      <Accordion class="mt-3">
-        <AccordionItem open>
-          <span slot="header"><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span>
-          <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-          <SsvcCalculator
-            vectorInput={ssvc?.vector}
-            disabled={!isCalculatingAllowed}
-            documentID={params.id}
-            on:updateSSVC={loadMetaData}
-          ></SsvcCalculator>
-        </AccordionItem>
-      </Accordion>
+    <div class="flex flex-row flex-wrap-reverse overflow-auto">
+      <div class="flex flex-col">
+        {#if advisoryVersions.length > 0}
+          <Version
+            publisherNamespace={params.publisherNamespace}
+            trackingID={params.trackingID}
+            {advisoryVersions}
+            selectedDocumentVersion={document.tracking?.version}
+            on:selectedDiffDocuments={onSelectedDiffDocuments}
+            on:disableDiff={() => (isDiffOpen = false)}
+          ></Version>
+        {/if}
+        {#if isDiffOpen}
+          <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
+        {:else}
+          <div class="max-w-[90%]">
+            <Webview></Webview>
+          </div>
+        {/if}
+      </div>
+      <div class="ml-auto mr-3 flex max-w-96 flex-col">
+        {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+          <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
+            <Accordion flush>
+              <AccordionItem class="h-4" open>
+                <span slot="header"
+                  ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
+                >
+                {#if loadCommentsError === ""}
+                  {#if comments?.length > 0}
+                    <div class="max-h-96 overflow-y-auto pl-2">
+                      <Timeline class="mb-4 flex flex-col-reverse">
+                        {#each comments as comment (comment.id)}
+                          <Comment on:commentUpdate={loadEvents} {comment}></Comment>
+                        {/each}
+                      </Timeline>
+                    </div>
+                  {:else}
+                    <div class="mb-6 text-gray-600">No comments available.</div>
+                  {/if}
+                {/if}
+                <ErrorMessage message={loadCommentsError}></ErrorMessage>
+                {#if isCommentingAllowed}
+                  <div class="mt-6">
+                    <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+                    <CommentTextArea
+                      on:input={() => (createCommentError = "")}
+                      on:saveComment={createComment}
+                      on:saveForReview={sendForReview}
+                      bind:value={comment}
+                      errorMessage={createCommentError}
+                      buttonText="Send"
+                      state={advisoryState}
+                    ></CommentTextArea>
+                  </div>
+                {/if}
+              </AccordionItem>
+            </Accordion>
+            <Accordion flush class="mt-3">
+              <AccordionItem class="h-4" open>
+                <span slot="header"
+                  ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
+                >
+                {#if loadCommentsError === ""}
+                  {#if events?.length > 0}
+                    <div class="max-h-96 overflow-y-auto pl-2">
+                      <Timeline class="mb-4 flex flex-col-reverse">
+                        {#each events as event}
+                          <Event {event}></Event>
+                        {/each}
+                      </Timeline>
+                    </div>
+                  {:else}
+                    <div class="mb-6 text-gray-600">No events available.</div>
+                  {/if}
+                {/if}
+                <ErrorMessage message={loadEventsError}></ErrorMessage>
+              </AccordionItem>
+            </Accordion>
+            <Accordion class="mt-3" flush>
+              <AccordionItem class="h-4" borderClass="border-0" open>
+                <span slot="header"
+                  ><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span
+                >
+                <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+                <SsvcCalculator
+                  vectorInput={ssvc?.vector}
+                  disabled={!isCalculatingAllowed}
+                  documentID={params.id}
+                  on:updateSSVC={loadMetaData}
+                ></SsvcCalculator>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        {/if}
+      </div>
     </div>
-  {/if}
+  </div>
 </div>

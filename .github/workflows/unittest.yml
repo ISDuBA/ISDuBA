@@ -39,6 +39,6 @@ jobs:
 
       - name: "NPM check"
         run: npm run check
-        
+
       - name: "Unit test"
         run: npm run test:unit
