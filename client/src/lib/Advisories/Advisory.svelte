@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Label, Timeline, AccordionItem, Accordion, Badge } from "flowbite-svelte";
+  import { Label, Timeline, Badge, ButtonGroup, Button } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Comment from "$lib/Advisories/Comments/Comment.svelte";
@@ -58,6 +58,7 @@
   const timeoutIDs: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
+  let historyOnly = true;
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
@@ -128,7 +129,7 @@
           loadEventsError = `Could not load all events. An error occured on the server. Please contact an administrator.`;
         }
       });
-      events = loadedEvents;
+      events = loadedEvents.reverse();
     } else {
       loadEventsError = `Could not load events. An error occured on the server. Please contact an administrator.`;
     }
@@ -161,7 +162,7 @@
           loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
         }
       });
-      comments = loadedComments;
+      comments = loadedComments.reverse();
     } else {
       loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
     }
@@ -291,99 +292,109 @@
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
-    <div class="flex flex-row flex-wrap-reverse overflow-auto">
+    <div class="flex flex-row overflow-auto">
       <div class="flex flex-col">
-        {#if advisoryVersions.length > 0}
-          <Version
-            publisherNamespace={params.publisherNamespace}
-            trackingID={params.trackingID}
-            {advisoryVersions}
-            selectedDocumentVersion={document.tracking?.version}
-            on:selectedDiffDocuments={onSelectedDiffDocuments}
-            on:disableDiff={() => (isDiffOpen = false)}
-          ></Version>
-        {/if}
-        {#if isDiffOpen}
-          <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
-        {:else}
-          <div class="max-w-[90%]">
-            <Webview></Webview>
-          </div>
-        {/if}
+        <div class="flex flex-row">
+          {#if advisoryVersions.length > 0}
+            <Version
+              publisherNamespace={params.publisherNamespace}
+              trackingID={params.trackingID}
+              {advisoryVersions}
+              selectedDocumentVersion={document.tracking?.version}
+              on:selectedDiffDocuments={onSelectedDiffDocuments}
+              on:disableDiff={() => (isDiffOpen = false)}
+            ></Version>
+          {/if}
+        </div>
+        <div class="flex flex-row">
+          {#if isDiffOpen}
+            <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
+          {:else}
+            <div>
+              <Webview></Webview>
+            </div>
+          {/if}
+        </div>
       </div>
-      <div class="ml-auto mr-3 flex max-w-96 flex-col">
+      <div class="ml-auto mr-3 flex w-96 flex-col">
         {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-          <div class="mr-3 w-full min-w-96 max-w-[96%] xl:w-[50%] xl:max-w-[46%] 2xl:max-w-[33%]">
-            <Accordion flush>
-              <AccordionItem class="h-4" open>
-                <span slot="header"
-                  ><i class="bx bx-comment-detail"></i><span class="ml-2">Comments</span></span
-                >
-                {#if loadCommentsError === ""}
-                  {#if comments?.length > 0}
-                    <div class="max-h-96 overflow-y-auto pl-2">
-                      <Timeline class="mb-4 flex flex-col-reverse">
-                        {#each comments as comment (comment.id)}
-                          <Comment on:commentUpdate={loadEvents} {comment}></Comment>
-                        {/each}
-                      </Timeline>
-                    </div>
-                  {:else}
-                    <div class="mb-6 text-gray-600">No comments available.</div>
-                  {/if}
-                {/if}
-                <ErrorMessage message={loadCommentsError}></ErrorMessage>
-                {#if isCommentingAllowed}
-                  <div class="mt-6">
-                    <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-                    <CommentTextArea
-                      on:input={() => (createCommentError = "")}
-                      on:saveComment={createComment}
-                      on:saveForReview={sendForReview}
-                      bind:value={comment}
-                      errorMessage={createCommentError}
-                      buttonText="Send"
-                      state={advisoryState}
-                    ></CommentTextArea>
+          <div class="mb-5 ml-auto">
+            <ButtonGroup class="ml-auto h-7">
+              <Button
+                size="xs"
+                color="light"
+                class={`h-7 py-1 text-xs ${historyOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+                on:click={() => {
+                  historyOnly = true;
+                }}>Full history</Button
+              >
+              <Button
+                size="xs"
+                color="light"
+                class={`h-7 py-1 text-xs ${!historyOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+                on:click={() => {
+                  historyOnly = false;
+                }}>Comments only</Button
+              >
+            </ButtonGroup>
+          </div>
+          <div class="max-h-96 overflow-y-auto">
+            {#if historyOnly}
+              {#if loadCommentsError === ""}
+                {#if events?.length > 0}
+                  <div class="pl-2">
+                    <Timeline class="mb-4 flex flex-col-reverse">
+                      {#each events as event, index (index)}
+                        <Event {event}></Event>
+                      {/each}
+                    </Timeline>
                   </div>
+                {:else}
+                  <div class="mb-6 text-gray-600">No events available.</div>
                 {/if}
-              </AccordionItem>
-            </Accordion>
-            <Accordion flush class="mt-3">
-              <AccordionItem class="h-4" open>
-                <span slot="header"
-                  ><i class="bx bx-calendar-event"></i><span class="ml-2">Events</span></span
-                >
-                {#if loadCommentsError === ""}
-                  {#if events?.length > 0}
-                    <div class="max-h-96 overflow-y-auto pl-2">
-                      <Timeline class="mb-4 flex flex-col-reverse">
-                        {#each events as event}
-                          <Event {event}></Event>
-                        {/each}
-                      </Timeline>
-                    </div>
-                  {:else}
-                    <div class="mb-6 text-gray-600">No events available.</div>
-                  {/if}
+              {/if}
+              <ErrorMessage message={loadEventsError}></ErrorMessage>
+            {/if}
+            {#if !historyOnly}
+              {#if loadCommentsError === ""}
+                {#if comments?.length > 0}
+                  <div class="pl-2">
+                    <Timeline class="mb-4 flex flex-col-reverse">
+                      {#each comments as comment (comment.id)}
+                        <Comment on:commentUpdate={loadEvents} {comment}></Comment>
+                      {/each}
+                    </Timeline>
+                  </div>
+                {:else}
+                  <div class="mb-6 text-gray-600">No comments available.</div>
                 {/if}
-                <ErrorMessage message={loadEventsError}></ErrorMessage>
-              </AccordionItem>
-            </Accordion>
-            <Accordion class="mt-3" flush>
-              <AccordionItem class="h-4" borderClass="border-0" open>
-                <span slot="header"
-                  ><i class="bx bx-calculator"></i><span class="ml-2">SSVC</span></span
-                >
-                <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-                <SsvcCalculator
-                  vectorInput={ssvc?.vector}
-                  disabled={!isCalculatingAllowed}
-                  documentID={params.id}
-                  on:updateSSVC={loadMetaData}
-                ></SsvcCalculator>
-              </AccordionItem>
-            </Accordion>
+              {/if}
+              <ErrorMessage message={loadCommentsError}></ErrorMessage>
+            {/if}
+          </div>
+          {#if isCommentingAllowed}
+            <div class="mt-6">
+              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+              <CommentTextArea
+                on:input={() => (createCommentError = "")}
+                on:saveComment={createComment}
+                on:saveForReview={sendForReview}
+                bind:value={comment}
+                errorMessage={createCommentError}
+                buttonText="Send"
+                state={advisoryState}
+              ></CommentTextArea>
+            </div>
+          {/if}
+          <div class="mt-4">
+            <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+            <Label class="mb-2" for="ssvc-calculator">SSVC:</Label>
+            <SsvcCalculator
+              vectorInput={ssvc?.vector}
+              disabled={!isCalculatingAllowed}
+              documentID={params.id}
+              on:updateSSVC={loadMetaData}
+            ></SsvcCalculator>
           </div>
         {/if}
       </div>
