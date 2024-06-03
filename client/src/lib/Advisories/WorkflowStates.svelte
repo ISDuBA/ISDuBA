@@ -8,15 +8,8 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import {
-    ASSESSING,
-    ARCHIVED,
-    DELETE,
-    NEW,
-    READ,
-    REVIEW,
-    allowedToChangeWorkflow
-  } from "$lib/permissions";
+  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
+  import { allowedToChangeWorkflow } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { Badge } from "flowbite-svelte";
 

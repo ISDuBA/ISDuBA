@@ -8,3 +8,6 @@
 
 // Package models implements the handling with advisories.
 package models
+
+//go:generate go run ./internal/generators/generate_workflow_diagram.go -o ../../docs/workflow.svg
+//go:generate go run ./internal/generators/generate_workflow_ts.go -o ../../client/src/lib/workflow.ts
