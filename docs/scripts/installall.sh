@@ -64,8 +64,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -b|--branch)
       if [[ -n "$2" ]]; then
-        prepare
-        checkout "$2"
+        NAME="$2"
         shift
       else
         echo "Error: Branch requires a value."
@@ -81,9 +80,13 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-if [ -z "$1" ]; then # if a an argument was given, prepare was already called or the script finished
-  prepare
+prepare
+
+if [ ! -z "$NAME" ]; then # check out branch if given
+  checkout "$NAME"
 fi
+
+
 
 if $keycloak_running; then
   ./setup.sh -k # Execute all other setup scripts, assuming keycloak is running

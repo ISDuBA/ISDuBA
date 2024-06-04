@@ -10,10 +10,11 @@
 
 set -e # to exit if a command in the script fails
 
-# arguments:
-# $1: name
-# $2: description
-# $3: whether to login before attempting to create the role. Default: true.
+# Usage: createRole name description [login]
+# where:
+#  name: name of the role
+#  description: description of the role
+#  login=[true|false]: Whether to log into keycloak again (default:true).
 
 login=true
 if [ ! -z "$3" ]; then

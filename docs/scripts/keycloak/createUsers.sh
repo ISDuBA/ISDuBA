@@ -19,6 +19,13 @@ echo "      --noLogin                    do not attempt to log into keycloak. Re
 }
 
 
+# If 1 or 0 arguments are given, then there
+# cannot be the mandatory file option
+if [[ $# -lt 2 ]]; then
+  help
+  exit 1
+fi
+
 login=true
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -72,6 +79,6 @@ user=($line)
 if [ "${#user[@]}" -eq 7 ]; then
   echo "creating user ${user[0]}..."
   ./createUser.sh  "${user[0]}" "${user[1]}" "${user[2]}" "${user[3]}" "${user[4]}"  false
-  ./assignUserToRoleAndGroup.sh "${user[0]}" "${user[5]}" "${user[6]}" false
+  ./assignUserToRoleAndGroup.sh --name "${user[0]}" --group "${user[5]}" --role "${user[6]}" --noLogin
 fi
 done < $file

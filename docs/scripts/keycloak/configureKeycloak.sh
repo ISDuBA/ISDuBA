@@ -112,9 +112,10 @@ fi
 
 ./createRole.sh 'none'      'Role outside the system' false
 
-# create Users  file containing users  login
-./createUsers.sh  -f users.txt            --noLogin
+# create Users    file containing users            login
+./createUsers.sh  -f ./../../developer/users.txt  --noLogin
 
+# end keycloak now that setup is done.
 if [ ! -z "$nkid" ]; then
   if ps -p $nkid; then
     kill $nkid
