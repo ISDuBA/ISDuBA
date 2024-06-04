@@ -172,7 +172,11 @@
     const comments = await loadComments();
     let events = await loadEvents();
     const commentsByTime = comments.reduce((o: any, n: any) => {
-      o[`${n.time}:${n.commentator}`] = { message: n.message, id: n.id };
+      o[`${n.time}:${n.commentator}`] = {
+        message: n.message,
+        id: n.id,
+        documentVersion: n.documentVersion
+      };
       return o;
     }, {});
     events.map((e: any) => {
@@ -180,6 +184,7 @@
         const comment = commentsByTime[`${e.time}:${e.actor}`];
         e["message"] = comment.message;
         e["comment_id"] = comment.id;
+        e["documentVersion"] = comment.documentVersion;
       }
       return e;
     });
