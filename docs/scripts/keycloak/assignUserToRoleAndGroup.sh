@@ -95,7 +95,7 @@ declare -i COUNTERU=0
 declare -i RESULTU=-1
 for i in "${IDU[@]}"
 do
-  if [ "$i" = "\"$1\"" ]; then
+  if [ "$i" = "\"$name\"" ]; then
     if [[ "${IDU[$COUNTERU-2]}" = "\"username\"" ]]; then
       RESULTU=$COUNTERU-3
     fi
