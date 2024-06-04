@@ -69,7 +69,7 @@
                 <i class="bx bxs-dashboard"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Documents" href="/#/documents">
+            <SidebarItem label="Advisories" href="/#/advisories">
               <svelte:fragment slot="icon">
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>

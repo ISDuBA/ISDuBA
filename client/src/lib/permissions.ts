@@ -9,63 +9,8 @@
  */
 
 import { appStore } from "./store";
-
-export type WorkflowState = string;
-export const NEW: WorkflowState = "new";
-export const READ: WorkflowState = "read";
-export const ASSESSING: WorkflowState = "assessing";
-export const REVIEW: WorkflowState = "review";
-export const ARCHIVED: WorkflowState = "archived";
-export const DELETE: WorkflowState = "delete";
-
-export const WORKFLOW_STATES = [NEW, READ, ASSESSING, REVIEW, ARCHIVED, DELETE];
-
-export type Role = string;
-export const ADMIN: Role = "admin";
-export const IMPORTER: Role = "importer";
-export const EDITOR: Role = "editor";
-export const REVIEWER: Role = "reviewer";
-export const AUDITOR: Role = "auditor";
-export const SOURCE_MANAGER: Role = "source-manager";
-
-export type WorkflowStateTransition = {
-  from: WorkflowState;
-  to: WorkflowState;
-  roles: Role[];
-};
-
-const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
-  {
-    from: NEW,
-    to: READ,
-    roles: [EDITOR]
-  },
-  { from: READ, to: NEW, roles: [EDITOR, ADMIN] },
-  { from: READ, to: ASSESSING, roles: [EDITOR] },
-  { from: READ, to: REVIEW, roles: [] },
-  { from: READ, to: ARCHIVED, roles: [] },
-  { from: READ, to: DELETE, roles: [REVIEWER] },
-  { from: ASSESSING, to: NEW, roles: [ADMIN] },
-  { from: ASSESSING, to: READ, roles: [ADMIN] },
-  { from: ASSESSING, to: REVIEW, roles: [EDITOR] },
-  { from: ASSESSING, to: ARCHIVED, roles: [] },
-  { from: ASSESSING, to: DELETE, roles: [REVIEWER] },
-  { from: REVIEW, to: NEW, roles: [ADMIN] },
-  { from: REVIEW, to: READ, roles: [ADMIN] },
-  { from: REVIEW, to: ASSESSING, roles: [REVIEWER, ADMIN] },
-  { from: REVIEW, to: ARCHIVED, roles: [REVIEWER] },
-  { from: REVIEW, to: DELETE, roles: [REVIEWER] },
-  { from: ARCHIVED, to: NEW, roles: [ADMIN] },
-  { from: ARCHIVED, to: READ, roles: [ADMIN] },
-  { from: ARCHIVED, to: ASSESSING, roles: [ADMIN] },
-  { from: ARCHIVED, to: REVIEW, roles: [ADMIN] },
-  { from: ARCHIVED, to: DELETE, roles: [REVIEWER] },
-  { from: DELETE, to: NEW, roles: [ADMIN] },
-  { from: DELETE, to: READ, roles: [ADMIN] },
-  { from: DELETE, to: ASSESSING, roles: [ADMIN] },
-  { from: DELETE, to: REVIEW, roles: [ADMIN] },
-  { from: DELETE, to: ARCHIVED, roles: [ADMIN] }
-];
+import type { Role, WorkflowState } from "./workflow";
+import { NEW, READ, REVIEW, ASSESSING, ARCHIVED, DELETE, WORKFLOW_TRANSITIONS } from "./workflow";
 
 export function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
   for (let i = 0; i < rolesToCheck.length; i++) {

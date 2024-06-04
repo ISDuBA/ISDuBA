@@ -18,7 +18,8 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import { ASSESSING, READ, REVIEW, canSetStateRead } from "$lib/permissions";
+  import { ASSESSING, READ, REVIEW } from "$lib/workflow";
+  import { canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";

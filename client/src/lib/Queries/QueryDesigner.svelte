@@ -20,7 +20,8 @@
   // @ts-expect-error ignore complaining qs has not type declaration
   import { parse } from "qs";
   import { appStore } from "$lib/store";
-  import { ADMIN, isRoleIncluded } from "$lib/permissions";
+  import { ADMIN } from "$lib/workflow";
+  import { isRoleIncluded } from "$lib/permissions";
 
   export let params: any = null;
   let editName = false;
@@ -262,8 +263,8 @@
     }
   });
 
-  $: disableSave =
-    currentSearch.columns.every((c) => c.visible == false) || currentSearch.name == "";
+  $: noColumnSelected = currentSearch.columns.every((c) => c.visible == false);
+  $: disableSave = noColumnSelected || currentSearch.name == "";
 </script>
 
 <SectionHeader title="Queries"></SectionHeader>
@@ -354,8 +355,11 @@
     </div>
     <hr class="mb-4 w-4/5 min-w-96" />
     <div class="flex flex-row">
-      <div class="w-1/3 min-w-40">
+      <div class="flex w-1/3 min-w-40 -flex-row items-baseline gap-x-3">
         <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>
+        <small class:text-red-500={noColumnSelected} class:text-gray-400={!noColumnSelected}
+          >Select at least 1 column</small
+        >
       </div>
       <div class="ml-6 w-1/4 min-w-28">
         <Radio

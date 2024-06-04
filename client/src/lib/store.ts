@@ -8,7 +8,7 @@
 
 import { writable } from "svelte/store";
 import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
-import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER } from "./permissions";
+import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER } from "./workflow";
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 

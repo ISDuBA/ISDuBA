@@ -25,7 +25,8 @@
   import { getErrorMessage } from "$lib/Errors/error";
   import { push } from "svelte-spa-router";
   import { Modal } from "flowbite-svelte";
-  import { ADMIN, isRoleIncluded } from "$lib/permissions";
+  import { ADMIN } from "$lib/workflow";
+  import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   let deleteModalOpen = false;
 
