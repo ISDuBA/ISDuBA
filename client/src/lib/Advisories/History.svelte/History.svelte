@@ -9,7 +9,6 @@
 -->
 <script lang="ts">
   import {
-    Badge,
     Button,
     ButtonGroup,
     Table,
@@ -105,7 +104,9 @@
                   <small class="mb-1 flex-grow text-xs text-slate-400"
                     >{`${new Date(event.time).toISOString()}`}</small
                   >
-                  <Badge color="dark" class="text-xs text-gray-800">{event.state}</Badge>
+                  <div class="border-1 border p-1 text-xs text-gray-800">
+                    {event.state}
+                  </div>
                 </div>
                 <span class="mb-2">{getEventDescription(event)}</span>
               </div>
