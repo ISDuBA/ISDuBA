@@ -70,7 +70,7 @@ print the URL a browser could be pointed to.
 With a previously created configuration file (named e.g. `isduba.toml`) you could start the backend from the main directory:
 
 ```bash
-  ./cmd/isdubad/isdubad -c isdubad.toml
+  ./cmd/isdubad/isdubad -c isduba.toml
 ```
 
 Make sure to have keycloak running when trying to access the application.
