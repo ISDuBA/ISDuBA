@@ -40,8 +40,8 @@
   <h5>Text</h5>
 </div>
 
-<div class="markdown-text ml-6">
-  <div class="display-markdown">
+<div class="markdown-text">
+  <div class="display-markdown max-w-2/3">
     {@html DOMPurify.sanitize(getMarkdown())}
   </div>
 </div>

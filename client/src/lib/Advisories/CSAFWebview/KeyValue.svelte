@@ -26,7 +26,7 @@
   };
 </script>
 
-<div class="w-max">
+<div>
   <Table noborder>
     <TableBody>
       {#each keys as key, index}
@@ -35,7 +35,7 @@
             <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}>
               <div class="markdown-text">
-                <div class="display-markdown">
+                <div class="display-markdown max-w-2/3">
                   {@html DOMPurify.sanitize(getMarkdown(index))}
                 </div>
               </div>
@@ -56,8 +56,5 @@
   .markdown-text {
     padding: 0.5rem;
     border: 1px solid lightgray;
-    width: 100%;
-    overflow-x: auto;
-    position: relative;
   }
 </style>

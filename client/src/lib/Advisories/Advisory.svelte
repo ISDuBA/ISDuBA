@@ -314,8 +314,8 @@
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
-    <div class="flex flex-row overflow-auto">
-      <div class="flex flex-col">
+    <div class="flex flex-row">
+      <div class="mr-12 flex w-2/3 flex-col">
         <div class="flex flex-row">
           {#if advisoryVersions.length > 0}
             <Version
@@ -332,9 +332,7 @@
           {#if isDiffOpen}
             <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
           {:else}
-            <div>
-              <Webview></Webview>
-            </div>
+            <Webview></Webview>
           {/if}
         </div>
       </div>
