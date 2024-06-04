@@ -26,31 +26,29 @@
   };
 </script>
 
-<div>
-  <Table noborder>
-    <TableBody>
-      {#each keys as key, index}
-        {#if key === "text" || key === "Text"}
-          <TableBodyRow>
-            <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}>
-              <div class="markdown-text">
-                <div class="display-markdown max-w-2/3">
-                  {@html DOMPurify.sanitize(getMarkdown(index))}
-                </div>
+<Table noborder>
+  <TableBody>
+    {#each keys as key, index}
+      {#if key === "text" || key === "Text"}
+        <TableBodyRow>
+          <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
+          <TableBodyCell tdClass={cellStyle}>
+            <div class="markdown-text">
+              <div class="display-markdown max-w-2/3">
+                {@html DOMPurify.sanitize(getMarkdown(index))}
               </div>
-            </TableBodyCell>
-          </TableBodyRow>
-        {:else}
-          <TableBodyRow
-            ><TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}>{values[index]}</TableBodyCell>
-          </TableBodyRow>
-        {/if}
-      {/each}
-    </TableBody>
-  </Table>
-</div>
+            </div>
+          </TableBodyCell>
+        </TableBodyRow>
+      {:else}
+        <TableBodyRow
+          ><TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
+          <TableBodyCell tdClass={cellStyle}>{values[index]}</TableBodyCell>
+        </TableBodyRow>
+      {/if}
+    {/each}
+  </TableBody>
+</Table>
 
 <style>
   .markdown-text {

@@ -23,49 +23,6 @@
 
   export let entries;
   let historyOnly = true;
-  const getEventDescription = (e: any) => {
-    let msg: string = "";
-    switch (e.event_type) {
-      case "import_document":
-        msg = "Document imported";
-        if (e.actor) {
-          msg += " by " + e.actor;
-        }
-        break;
-      case "state_change":
-        if (e.actor) {
-          msg = e.actor + " changed status to: " + e.state;
-        } else {
-          msg = "Status changed to: " + e.state;
-        }
-        break;
-      case "add_comment":
-        if (e.actor) {
-          msg = e.actor + " added a comment";
-        } else {
-          msg = "A comment has been added";
-        }
-        break;
-      case "add_sscv":
-      case "add_ssvc":
-        if (e.actor) {
-          msg = e.actor + " added a SŚVC";
-        } else {
-          msg = "A SSVC has been added";
-        }
-        break;
-      case "change_comment":
-        if (e.actor) {
-          msg = e.actor + " edited a comment";
-        } else {
-          msg = "A comment has been edited";
-        }
-        break;
-      default:
-        msg = e.event_type;
-    }
-    return msg;
-  };
   $: historyEntries = historyOnly
     ? entries
     : entries.filter((e: any) => {
@@ -101,14 +58,27 @@
             <TableBodyCell {tdClass}>
               <div class="ml-1 flex flex-col">
                 <div class="flex flex-row items-baseline">
-                  <small class="mb-1 flex-grow text-xs text-slate-400"
+                  <small class="mb-1 text-xs text-slate-400"
                     >{`${new Date(event.time).toISOString()}`}</small
                   >
+                  <small class="ml-1 flex-grow">
+                    {#if event.event_type === "state_change"}
+                      Statechange ( {event.actor} )
+                    {/if}
+                    {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv"}
+                      SSVC ( {event.actor} )
+                    {/if}
+                    {#if event.event_type === "import_document"}
+                      Import ( {event.actor} )
+                    {/if}
+                    {#if event.event_type === "change_comment"}
+                      Edit comment ( {event.actor} )
+                    {/if}
+                  </small>
                   <div class="border-1 border p-1 text-xs text-gray-800">
                     {event.state}
                   </div>
                 </div>
-                <span class="mb-2">{getEventDescription(event)}</span>
               </div>
             </TableBodyCell>
           {/if}

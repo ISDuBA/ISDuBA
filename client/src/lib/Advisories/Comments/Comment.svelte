@@ -10,7 +10,7 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { Label, TableBodyCell } from "flowbite-svelte";
+  import { TableBodyCell } from "flowbite-svelte";
   import { appStore } from "$lib/store";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -53,7 +53,11 @@
 
 <TableBodyCell {tdClass}>
   <div class="ml-1 flex flex-col">
-    <small class="text-xs text-slate-400">{comment.time}</small>
+    <div class="flex flex-row items-baseline">
+      <small class="text-xs text-slate-400">{comment.time}</small>
+      <small class="ml-1 flex-grow">({comment.actor})</small>
+      <small class="text-xs text-slate-400">Document-Version: {comment.documentVersion}</small>
+    </div>
     {#if !isEditing}
       <div class="flex flex-row items-center">
         <div class="display-markdown">
@@ -67,8 +71,6 @@
           {/if}
         </div>
       </div>
-      <small>({comment.actor})</small>
-      <Label class="text-xs text-gray-400">Document-Version: {comment.documentVersion}</Label>
     {:else}
       <CommentTextArea
         on:cancel={toggleEditing}

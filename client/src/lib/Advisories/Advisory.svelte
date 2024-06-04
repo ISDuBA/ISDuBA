@@ -188,6 +188,7 @@
       }
       return e;
     });
+    console.log(events);
     historyEntries = events;
   };
 
@@ -265,6 +266,7 @@
   async function loadMetaData() {
     await loadAdvisoryState();
     await loadDocumentSSVC();
+    await buildHistory();
   }
 
   const onSelectedDiffDocuments = async (event: any) => {
@@ -314,7 +316,7 @@
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
-    <div class="flex flex-row">
+    <div class="flex flex-row max-[800px]:flex-wrap-reverse">
       <div class="mr-12 flex w-2/3 flex-col">
         <div class="flex flex-row">
           {#if advisoryVersions.length > 0}
@@ -336,7 +338,7 @@
           {/if}
         </div>
       </div>
-      <div class="ml-auto mr-3 flex w-96 flex-col">
+      <div class="mr-3 flex w-96 flex-col min-[800px]:ml-auto">
         {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
           <History
             on:commentUpdate={() => {
