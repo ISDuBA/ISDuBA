@@ -82,7 +82,7 @@ done
 
 prepare
 
-if [ -z "$NAME" ]; then # check out branch if given
+if [ ! -z "$NAME" ]; then # check out branch if given
   checkout "$NAME"
 fi
 
