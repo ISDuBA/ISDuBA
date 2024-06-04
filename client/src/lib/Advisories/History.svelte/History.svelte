@@ -49,14 +49,14 @@
   >
 </ButtonGroup>
 
-<div class="max-h-96 overflow-auto">
+<div class="max-h-96 overflow-auto p-1">
   <Table>
     <TableBody>
       {#each historyEntries as event}
         <TableBodyRow>
           {#if event.event_type !== "add_comment"}
             <TableBodyCell {tdClass}>
-              <div class="ml-1 flex flex-col">
+              <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
                   <small class="mb-1 text-xs text-slate-400"
                     >{`${new Date(event.time).toISOString()}`}</small
@@ -66,7 +66,7 @@
                       Statechange ( {event.actor} )
                     {/if}
                     {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv"}
-                      SSVC ( {event.actor} )
+                      SSVC added ( {event.actor} )
                     {/if}
                     {#if event.event_type === "import_document"}
                       Import ( {event.actor} )

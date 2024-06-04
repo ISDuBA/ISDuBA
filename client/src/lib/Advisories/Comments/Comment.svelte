@@ -52,11 +52,11 @@
 </script>
 
 <TableBodyCell {tdClass}>
-  <div class="ml-1 flex flex-col">
+  <div class="flex flex-col">
     <div class="flex flex-row items-baseline">
       <small class="text-xs text-slate-400">{comment.time}</small>
-      <small class="ml-1 flex-grow">({comment.actor})</small>
-      <small class="text-xs text-slate-400">Document-Version: {comment.documentVersion}</small>
+      <small class="ml-1 flex-grow">Comment ({comment.actor})</small>
+      <small class="text-xs text-slate-400">on version: {comment.documentVersion}</small>
     </div>
     {#if !isEditing}
       <div class="flex flex-row items-center">
