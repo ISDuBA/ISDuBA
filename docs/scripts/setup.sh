@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-./installgojava.sh # installs go and java
+./installutilities.sh # installs utilities like go and java
 
 ./installpostgres.sh # installs postgreSQL
 
