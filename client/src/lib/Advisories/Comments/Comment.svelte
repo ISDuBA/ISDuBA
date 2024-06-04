@@ -10,7 +10,7 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { Button, ButtonGroup, Label, P, TimelineItem } from "flowbite-svelte";
+  import { Label, TableBodyCell } from "flowbite-svelte";
   import { appStore } from "$lib/store";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -18,6 +18,7 @@
   import DOMPurify from "dompurify";
   import { createEventDispatcher } from "svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import { tdClass } from "$lib/table/defaults";
 
   export let comment: any;
   let updatedComment = comment.message;
@@ -50,34 +51,37 @@
   };
 </script>
 
-<TimelineItem classLi="mb-4 ms-4" date={comment.time}>
-  {#if !isEditing}
-    <P class="mb-2">
-      <div class="display-markdown">
-        {@html parseMarkdown(comment.message)}
+<TableBodyCell {tdClass}>
+  <div class="ml-1 flex flex-col">
+    <small class="text-xs text-slate-400">{comment.time}</small>
+    {#if !isEditing}
+      <div class="flex flex-row items-center">
+        <div class="display-markdown">
+          {@html parseMarkdown(comment.message)}
+        </div>
+        <div>
+          {#if $appStore.app.tokenParsed?.preferred_username === comment.actor}
+            <button class="h-7 !p-2" on:click={toggleEditing}>
+              <i class="bx bx-edit text-lg"></i>
+            </button>
+          {/if}
+        </div>
       </div>
       <small>({comment.actor})</small>
-      {#if $appStore.app.tokenParsed?.preferred_username === comment.actor}
-        <ButtonGroup>
-          <Button class="!p-2" on:click={toggleEditing}>
-            <i class="bx bx-edit text-lg"></i>
-          </Button>
-        </ButtonGroup>
-      {/if}
-    </P>
-    <Label class="text-xs text-slate-400">Document-Version: {comment.documentVersion}</Label>
-  {:else}
-    <CommentTextArea
-      on:cancel={toggleEditing}
-      on:input={() => (updateCommentError = "")}
-      on:saveComment={updateComment}
-      cancelable={true}
-      buttonText="Save"
-      errorMessage={updateCommentError}
-      bind:value={updatedComment}
-    ></CommentTextArea>
-  {/if}
-</TimelineItem>
+      <Label class="text-xs text-gray-400">Document-Version: {comment.documentVersion}</Label>
+    {:else}
+      <CommentTextArea
+        on:cancel={toggleEditing}
+        on:input={() => (updateCommentError = "")}
+        on:saveComment={updateComment}
+        cancelable={true}
+        buttonText="Save"
+        errorMessage={updateCommentError}
+        bind:value={updatedComment}
+      ></CommentTextArea>
+    {/if}
+  </div>
+</TableBodyCell>
 
 <style>
   /* Reset styles inside markdown block */

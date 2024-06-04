@@ -8,9 +8,18 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, ButtonGroup, Label, P, Timeline, TimelineItem } from "flowbite-svelte";
+  import {
+    Badge,
+    Button,
+    ButtonGroup,
+    Table,
+    TableBody,
+    TableBodyCell,
+    TableBodyRow
+  } from "flowbite-svelte";
   import Comment from "$lib/Advisories/Comments/Comment.svelte";
   import { createEventDispatcher } from "svelte";
+  import { tdClass } from "$lib/table/defaults";
   const dispatch = createEventDispatcher();
 
   export let entries;
@@ -65,7 +74,7 @@
       });
 </script>
 
-<ButtonGroup class="mb-6 ml-auto h-7">
+<ButtonGroup class="mb-9 ml-auto mt-2 h-7">
   <Button
     size="xs"
     color="light"
@@ -85,22 +94,33 @@
 </ButtonGroup>
 
 <div class="max-h-96 overflow-auto">
-  <Timeline class="mb-4 ml-1 flex flex-col">
-    {#each historyEntries as event}
-      {#if event.event_type !== "add_comment"}
-        <TimelineItem classLi="mb-4 ms-4" date={`${new Date(event.time).toISOString()}`}>
-          <P class="mb-2">{getEventDescription(event)}</P>
-          <Label class="text-xs text-slate-400">State: {event.state}</Label>
-        </TimelineItem>
-      {/if}
-      {#if event.event_type === "add_comment"}
-        <Comment
-          on:commentUpdate={() => {
-            dispatch("commentUpdate");
-          }}
-          comment={event}
-        ></Comment>
-      {/if}
-    {/each}
-  </Timeline>
+  <Table>
+    <TableBody>
+      {#each historyEntries as event}
+        <TableBodyRow>
+          {#if event.event_type !== "add_comment"}
+            <TableBodyCell {tdClass}>
+              <div class="ml-1 flex flex-col">
+                <div class="flex flex-row items-baseline">
+                  <small class="mb-1 flex-grow text-xs text-slate-400"
+                    >{`${new Date(event.time).toISOString()}`}</small
+                  >
+                  <Badge color="dark" class="text-xs text-gray-800">{event.state}</Badge>
+                </div>
+                <span class="mb-2">{getEventDescription(event)}</span>
+              </div>
+            </TableBodyCell>
+          {/if}
+          {#if event.event_type === "add_comment"}
+            <Comment
+              on:commentUpdate={() => {
+                dispatch("commentUpdate");
+              }}
+              comment={event}
+            ></Comment>
+          {/if}
+        </TableBodyRow>
+      {/each}
+    </TableBody>
+  </Table>
 </div>
