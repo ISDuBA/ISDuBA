@@ -21,10 +21,10 @@
 
   const dispatch = createEventDispatcher();
   export let entries;
-  let historyOnly = true;
+  let fullHistory = true;
   const tdClass = "py-2 px-2";
 
-  $: historyEntries = historyOnly
+  $: historyEntries = fullHistory
     ? entries
     : entries.filter((e: any) => {
         if (e.event_type === "add_comment") return e;
@@ -35,17 +35,17 @@
   <Button
     size="xs"
     color="light"
-    class={`h-7 py-1 text-xs ${historyOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+    class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
     on:click={() => {
-      historyOnly = true;
+      fullHistory = true;
     }}>Full history</Button
   >
   <Button
     size="xs"
     color="light"
-    class={`h-7 py-1 text-xs ${!historyOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+    class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
     on:click={() => {
-      historyOnly = false;
+      fullHistory = false;
     }}>Comments only</Button
   >
 </ButtonGroup>
@@ -59,8 +59,8 @@
             <TableBodyCell {tdClass}>
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
-                  <small class="w-18 mb-1 text-xs text-slate-400" title={event.time}
-                    >{`${new Date(event.time).toISOString().split("T")[0]}`}</small
+                  <small class="mb-1 w-32 text-xs text-slate-400" title={event.time}
+                    >{`${new Date(event.time).toISOString().replace("T", " ").split(".")[0]}`}</small
                   >
                   <small class="ml-1 flex-grow">
                     {#if event.event_type === "state_change"}
@@ -91,6 +91,7 @@
                 dispatch("commentUpdate");
               }}
               comment={event}
+              {fullHistory}
             ></Comment>
           {/if}
         </TableBodyRow>
