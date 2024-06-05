@@ -306,7 +306,7 @@
         <div class="flex h-fit flex-row gap-2">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
           {#if ssvc}
-            <Badge title="SSVC" style={ssvcStyle}>{ssvc.label}</Badge>
+            <Badge title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
           {/if}
         </div>
       </div>
