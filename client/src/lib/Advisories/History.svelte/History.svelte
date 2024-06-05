@@ -60,7 +60,7 @@
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
                   <small class="mb-1 w-32 text-xs text-slate-400" title={event.time}
-                    >{`${new Date(event.time).toISOString().replace("T", " ").split(".")[0]}`}</small
+                    >{`${event.time.replace("T", " ").split(".")[0]}`}</small
                   >
                   <small class="ml-1 flex-grow">
                     {#if event.event_type === "state_change"}

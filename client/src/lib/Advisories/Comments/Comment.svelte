@@ -56,7 +56,7 @@
   <div class="flex flex-col">
     <div class="flex flex-row items-baseline">
       <small class="w-32 text-xs text-slate-400" title={comment.time}
-        >{new Date(comment.time).toISOString().replace("T", " ").split(".")[0]}</small
+        >{comment.time.replace("T", " ").split(".")[0]}</small
       >
       <small class="ml-1 flex-grow"
         >{fullHistory ? `Comment (${comment.actor})` : `${comment.actor}`}
