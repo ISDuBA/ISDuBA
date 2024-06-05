@@ -59,7 +59,7 @@
         >{new Date(comment.time).toISOString().replace("T", " ").split(".")[0]}</small
       >
       <small class="ml-1 flex-grow"
-        >{fullHistory ? `Comment: (${comment.actor})` : `${comment.actor}`}
+        >{fullHistory ? `Comment (${comment.actor})` : `${comment.actor}`}
       </small>
       <small class="text-xs text-slate-400">on version: {comment.documentVersion}</small>
     </div>
