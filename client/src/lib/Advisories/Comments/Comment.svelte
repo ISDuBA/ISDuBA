@@ -68,7 +68,7 @@
         <div class="display-markdown">
           {@html parseMarkdown(comment.message)}
         </div>
-        <div>
+        <div class="ml-auto">
           {#if $appStore.app.tokenParsed?.preferred_username === comment.actor}
             <button class="h-7 !p-2" on:click={toggleEditing}>
               <i class="bx bx-edit text-lg"></i>
