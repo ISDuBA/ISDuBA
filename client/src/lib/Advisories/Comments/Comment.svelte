@@ -18,12 +18,12 @@
   import DOMPurify from "dompurify";
   import { createEventDispatcher } from "svelte";
   import { getErrorMessage } from "$lib/Errors/error";
-  import { tdClass } from "$lib/table/defaults";
 
   export let comment: any;
   let updatedComment = comment.message;
   let isEditing = false;
   let updateCommentError: string;
+  const tdClass = "py-2 px-2";
 
   const dispatch = createEventDispatcher();
 
@@ -59,7 +59,7 @@
       <small class="text-xs text-slate-400">on version: {comment.documentVersion}</small>
     </div>
     {#if !isEditing}
-      <div class="flex flex-row items-center">
+      <div class="mt-1 flex flex-row items-center">
         <div class="display-markdown">
           {@html parseMarkdown(comment.message)}
         </div>

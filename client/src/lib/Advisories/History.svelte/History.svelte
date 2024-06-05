@@ -18,11 +18,12 @@
   } from "flowbite-svelte";
   import Comment from "$lib/Advisories/Comments/Comment.svelte";
   import { createEventDispatcher } from "svelte";
-  import { tdClass } from "$lib/table/defaults";
-  const dispatch = createEventDispatcher();
 
+  const dispatch = createEventDispatcher();
   export let entries;
   let historyOnly = true;
+  const tdClass = "py-2 px-2";
+
   $: historyEntries = historyOnly
     ? entries
     : entries.filter((e: any) => {
