@@ -59,8 +59,8 @@
             <TableBodyCell {tdClass}>
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
-                  <small class="mb-1 text-xs text-slate-400"
-                    >{`${new Date(event.time).toISOString()}`}</small
+                  <small class="w-18 mb-1 text-xs text-slate-400" title={event.time}
+                    >{`${new Date(event.time).toISOString().split("T")[0]}`}</small
                   >
                   <small class="ml-1 flex-grow">
                     {#if event.event_type === "state_change"}
@@ -76,9 +76,11 @@
                       Edit comment ( {event.actor} )
                     {/if}
                   </small>
-                  <div class="border-1 border p-1 text-xs text-gray-800">
-                    {event.state}
-                  </div>
+                  {#if /state_change|import_document/.test(event.event_type)}
+                    <div class="border-1 border p-1 text-xs text-gray-800">
+                      {event.state}
+                    </div>
+                  {/if}
                 </div>
               </div>
             </TableBodyCell>

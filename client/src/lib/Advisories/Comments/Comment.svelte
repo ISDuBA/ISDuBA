@@ -54,7 +54,9 @@
 <TableBodyCell {tdClass}>
   <div class="flex flex-col">
     <div class="flex flex-row items-baseline">
-      <small class="text-xs text-slate-400">{comment.time}</small>
+      <small class="w-18 text-xs text-slate-400" title={comment.time}
+        >{new Date(comment.time).toISOString().split("T")[0]}</small
+      >
       <small class="ml-1 flex-grow">Comment ({comment.actor})</small>
       <small class="text-xs text-slate-400">on version: {comment.documentVersion}</small>
     </div>
