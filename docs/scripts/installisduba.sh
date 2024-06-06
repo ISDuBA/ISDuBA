@@ -13,13 +13,11 @@ set -e # to exit if a command in the script fails
 cd ../..
 
 # create the isdubad configuration
-cp docs/example_isdubad.toml isdubad.toml
+cp docs/example_isdubad.toml isduba.toml
 echo "Successfully created example-configuration isdubad.toml."
 
 cp client/.env.example client/.env
 echo "Successfully created env file."
-
-sudo apt-get install make
 
 make all
 
