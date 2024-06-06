@@ -113,7 +113,7 @@
         })
       );
       const result = promises
-        .filter((p: any) => p.status === "fulfilled" && p.ok)
+        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
         .map((p: any) => {
           return p.value;
         });
@@ -143,7 +143,7 @@
         })
       );
       const result = promises
-        .filter((p: any) => p.status === "fulfilled" && p.ok)
+        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
         .map((p: any) => {
           return p.value;
         });
