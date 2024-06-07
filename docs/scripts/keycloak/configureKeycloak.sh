@@ -35,7 +35,9 @@ else
 fi
 
 if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
-  export KEYCLOAK_ADMIN_PASSWORD="keycloak"
+  password=$(pwgen -1)
+  echo $password > ./../password.txt
+  export KEYCLOAK_ADMIN_PASSWORD="$password"
   echo "No Keycloak admin password set. Creating admin with password \"keycloak\""
 else
   export KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"

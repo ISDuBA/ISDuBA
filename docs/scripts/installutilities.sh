@@ -21,6 +21,10 @@ sudo apt install -y openjdk-17-jre-headless
 # look up current go version
 go_version="$(curl https://go.dev/VERSION\?m=text| head -1)"
 
+if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+    sudo apt install pwgen
+fi
+
 # if go exists and is the newest version
 if [ -x "$(command -v go version)" ] && [[ `go version` == *"$go_version"* ]]; then
   echo "Newest go version already installed."
