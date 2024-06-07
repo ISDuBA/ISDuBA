@@ -10,14 +10,15 @@
 
 # ISDuBA
 
-**Work in progress** **early-development**
+**Work in progress** **pre-alpha**
 
-Plan: Develop a web application
-for downloading and evaluating security advisories in CSAF 2.0 format
-for internal use of a team responsible for a number of IT related topics.
+A web application
+for downloading and evaluating security advisories in CSAF 2.0 format.
+Mainly ISDuBa wants to support teams that are responsible for
+the IT security of a group of products.
 
-Using the following components:
- * Backend to be written in Go
+ISDuBA uses the following components:
+ * Go as programming language for the backend.
  * PostgreSQL as database
  * [keycloak](https://www.keycloak.org/) as identify provider
  * docker-compose setup example (planned)
@@ -27,8 +28,6 @@ Using the following components:
      for downloading advisories
  * [csaf_webview](https://github.com/csaf-poc/csaf_webview)
      for viewing documents
- * https://github.com/CERTCC/SSVC/tree/main/docs/ssvc-calc (or alternative)
- * https://github.com/rtfpessoa/diff2html (or alternative)
 
 
 ## How to get started
