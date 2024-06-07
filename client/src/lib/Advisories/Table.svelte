@@ -18,7 +18,9 @@
     TableBodyCell,
     TableHead,
     TableHeadCell,
-    Table
+    Table,
+    Modal,
+    Button
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
   import { onMount } from "svelte";
@@ -27,6 +29,9 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import { ADMIN } from "$lib/workflow";
+  import { isRoleIncluded } from "$lib/permissions";
+  import { appStore } from "$lib/store";
 
   let openRow: number | null;
 
@@ -47,6 +52,8 @@
   export let orderBy = "title";
 
   let anchorLink: string | null;
+  let deleteModalOpen = false;
+  let documentToDelete: any = {};
 
   const getColumnDisplayName = (column: string): string => {
     let names: { [key: string]: string } = {
@@ -111,6 +118,8 @@
     }
     savePosition();
   }
+
+  $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
   export async function fetchData(): Promise<void> {
     const searchSuffix = searchTerm ? `"${searchTerm}" german search msg as ` : "";
@@ -179,6 +188,10 @@
     fetchData();
   };
 
+  const deleteDocument = () => {
+    console.log(`Document ${documentToDelete.id} will be deleted`);
+  };
+
   $: numberOfPages = Math.ceil(count / limit);
   $: onMount(async () => {
     restorePosition();
@@ -186,6 +199,22 @@
     await fetchData();
   });
 </script>
+
+<Modal size="xs" title={documentToDelete.title} bind:open={deleteModalOpen} autoclose outsideclose>
+  <div class="text-center">
+    <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+      Are you sure you want to delete this document?
+    </h3>
+    <Button
+      on:click={() => {
+        deleteDocument();
+      }}
+      color="red"
+      class="me-2">Yes, I'm sure</Button
+    >
+    <Button color="alternative">No, cancel</Button>
+  </div>
+</Modal>
 
 <div>
   <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
@@ -277,6 +306,9 @@
                 ></i></TableHeadCell
               >
             {/each}
+            {#if isAdmin}
+              <TableHeadCell padding={tablePadding}></TableHeadCell>
+            {/if}
           </TableHead>
           <TableBody>
             {#each documents as item, i}
@@ -364,6 +396,22 @@
                     <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
                   {/if}
                 {/each}
+                {#if isAdmin}
+                  <TableBodyCell {tdClass}>
+                    <button
+                      on:click|stopPropagation={(e) => {
+                        documentToDelete = {
+                          title: item.title,
+                          id: item.id
+                        };
+                        deleteModalOpen = true;
+                        e.preventDefault();
+                      }}
+                      title={`delete ${item.tracking_id}`}
+                      ><i class="bx bx-trash text-red-500"></i></button
+                    >
+                  </TableBodyCell>
+                {/if}
               </tr>
             {/each}
           </TableBody>
