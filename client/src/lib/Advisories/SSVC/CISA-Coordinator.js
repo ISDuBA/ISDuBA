@@ -157,7 +157,7 @@ export default {
           label: "medium",
           key: "M",
           description:
-            "{Mission Prevalence is Support and Public well-being is Minimal or Material} OR {Mission Prevalence is Minimal or Support and Public well-being is Material}",
+            "Mission Prevalence is Support and Public well-being is Minimal or Material} OR {Mission Prevalence is Minimal or Support and Public well-being is Material",
           child_combinations: [
             [
               {

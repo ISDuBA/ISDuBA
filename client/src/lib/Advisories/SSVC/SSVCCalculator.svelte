@@ -18,7 +18,8 @@
     StepIndicator,
     P,
     Tooltip,
-    Input
+    Input,
+    ButtonGroup
   } from "flowbite-svelte";
   import {
     createIsoTimeStringForSSVC,
@@ -294,29 +295,30 @@
       {#if currentStep < mainDecisions.length - 1}
         {#if mainDecisions[currentStep].decision_type === "simple"}
           <div class="flex flex-wrap gap-3">
-            {#each mainDecisions[currentStep].options as option}
-              <Card class="flex w-80 justify-between">
-                <div class="flex flex-col">
-                  <Button size="xs" on:click={() => selectOption(option)} class="mb-2"
-                    >{option.label}</Button
-                  >
-                  <p class="mb-4">{option.description}</p>
-                </div>
-              </Card>
-            {/each}
+            <ButtonGroup>
+              {#each mainDecisions[currentStep].options as option}
+                <Button
+                  size="xs"
+                  title={option.description}
+                  on:click={() => selectOption(option)}
+                  class="mb-2"
+                  >{option.label}
+                </Button>
+              {/each}
+            </ButtonGroup>
           </div>
         {:else if mainDecisions[currentStep].decision_type === "complex"}
           <div class="flex flex-wrap gap-3">
-            {#each mainDecisions[currentStep].options as option}
-              <Card class="flex justify-between">
-                <div class="flex flex-col">
-                  <Button size="xs" on:click={() => selectOption(option)} class="mb-2"
-                    >{option.label}</Button
-                  >
-                  <p class="mb-4">{option.description}</p>
-                </div>
-              </Card>
-            {/each}
+            <ButtonGroup>
+              {#each mainDecisions[currentStep].options as option}
+                <Button
+                  title={option.description}
+                  size="xs"
+                  on:click={() => selectOption(option)}
+                  class="mb-2">{option.label}</Button
+                >
+              {/each}
+            </ButtonGroup>
           </div>
           <div class="my-2 flex">
             <div class="flex flex-col justify-between">
