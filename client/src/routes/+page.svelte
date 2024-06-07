@@ -30,6 +30,7 @@
   import { jwtDecode } from "jwt-decode";
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
   import QueryOverview from "$lib/Queries/Overview.svelte";
+  import Test from "$lib/Test.svelte";
 
   let userManager = new UserManager(configuration.getConfiguration());
   userManager.events.addUserSignedIn(function () {
@@ -143,6 +144,11 @@
     }),
     "/sources": wrap({
       component: Sources,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/test": wrap({
+      component: Test,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
