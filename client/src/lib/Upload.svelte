@@ -11,8 +11,8 @@
 <script lang="ts">
   import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   export let label;
-  export let upload = () => {
-    console.log("upload started");
+  export let upload = (files: any) => {
+    console.log(files);
   };
   let files: any;
 </script>
@@ -33,7 +33,7 @@
   </div>
   <Button
     on:click={() => {
-      upload();
+      upload(files);
     }}
     class="ml-auto mt-auto"
     color="primary">Upload</Button
