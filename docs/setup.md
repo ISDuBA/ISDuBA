@@ -19,7 +19,8 @@ The setup should be performed via the [installation scripts.](./scripts/README.m
 
 An example-configuration for isdubad can be found in [example_isdubad.toml](./example_isdubad.toml). Please edit to your needs.
 
-Initially there is a migration needed to configure the database via [a migration script.](./scripts/migrate.sh). This could be used subsequently when future migrations are necessary.
+Initially there is a migration needed to configure the database by starting isdubad with the ISDUBA_DB_MIGRATE=true environment variable or by
+adjusting the toml file.
 
 Create additional users via [createUsers script.](./scripts/keycloak/createUsers.sh) A list of users created by the setup scripts can be found in [the users.txt.](./developer/users.txt)
 
