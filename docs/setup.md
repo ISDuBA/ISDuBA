@@ -26,8 +26,10 @@ Create additional users via [createUsers script.](./scripts/keycloak/createUsers
 Create groups via [createGroup script.](./scripts/keycloak/createGroup.sh)
 The restrictions set with the script are explained in [keycloak_values.md](./keycloak_values.md)
 
-The keycloak admin user created via the scripts will have the username and password ```keycloak```, unless otherwise specified via the environment variables KEYCLOAK_ADMIN (username) and 
-KEYCLOAK_ADMIN_PASSWORD (password).
+The keycloak admin user created via the scripts will have the username password ```keycloak```, unless otherwise specified via the environment variable KEYCLOAK_ADMIN.
+The password can be specified via the environment variable KEYCLOAK_ADMIN_PASSWORD, a file (-f option) or directly (using the -p option). 
+If neither is set, then the script will try to see if docs/scripts/password.txt contains a password.
+If this is not set either, then a random password will be generated and stored in docs/scripts/password.txt.
 
 ### Import advisories
 Import the previously downloaded advisories into the database via the bulk importer. There are two options:
