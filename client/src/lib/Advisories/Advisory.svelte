@@ -305,9 +305,6 @@
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
         <div class="flex h-fit flex-row gap-2">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
-          {#if ssvc}
-            <Badge title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
-          {/if}
         </div>
       </div>
       <hr class="mb-4 mt-2" />
@@ -330,10 +327,22 @@
             ></Version>
           {/if}
         </div>
-        <div class="flex flex-row">
+        <div class="flex flex-col">
           {#if isDiffOpen}
             <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
           {:else}
+            <div class="mb-4 flex flex-row items-center gap-x-3">
+              {#if ssvc}
+                <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
+              {/if}
+              <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+              <SsvcCalculator
+                vectorInput={ssvc?.vector}
+                disabled={!isCalculatingAllowed}
+                documentID={params.id}
+                on:updateSSVC={loadMetaData}
+              ></SsvcCalculator>
+            </div>
             <Webview></Webview>
           {/if}
         </div>
@@ -362,16 +371,6 @@
           {/if}
           <ErrorMessage message={loadEventsError}></ErrorMessage>
           <ErrorMessage message={loadCommentsError}></ErrorMessage>
-          <div class="mt-4">
-            <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-            <Label class="mb-2" for="ssvc-calculator">SSVC:</Label>
-            <SsvcCalculator
-              vectorInput={ssvc?.vector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-            ></SsvcCalculator>
-          </div>
         {/if}
       </div>
     </div>
