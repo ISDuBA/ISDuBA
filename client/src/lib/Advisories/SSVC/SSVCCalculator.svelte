@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Label, Radio, StepIndicator, P, Tooltip, Input } from "flowbite-svelte";
+  import { Button, Label, Input } from "flowbite-svelte";
   import {
     createIsoTimeStringForSSVC,
     parseDecisionTree,
@@ -84,48 +84,48 @@
     }
   }
 
-  function doesContainChildCombo(selectedOptions: any, childCombos: any[]): boolean {
-    const test = childCombos.find((combos: any[]) => {
-      let count = 0;
-      for (const option in selectedOptions) {
-        const result = combos.find((combo: any) => {
-          return (
-            combo.child_label === option &&
-            combo.child_option_labels.includes(selectedOptions[option])
-          );
-        });
-        if (result) count++;
-      }
-      return count === Object.keys(selectedOptions).length;
-    });
-    return !!test;
-  }
+  // function doesContainChildCombo(selectedOptions: any, childCombos: any[]): boolean {
+  //   const test = childCombos.find((combos: any[]) => {
+  //     let count = 0;
+  //     for (const option in selectedOptions) {
+  //       const result = combos.find((combo: any) => {
+  //         return (
+  //           combo.child_label === option &&
+  //           combo.child_option_labels.includes(selectedOptions[option])
+  //         );
+  //       });
+  //       if (result) count++;
+  //     }
+  //     return count === Object.keys(selectedOptions).length;
+  //   });
+  //   return !!test;
+  // }
 
-  function calculateComplexOption() {
-    const selectedChildOptions: any = {};
-    mainDecisions[currentStep].children.forEach((child: any) => {
-      const checkedRadioButton: any = document.querySelector(
-        `input[name="${child.label}"]:checked`
-      );
-      if (checkedRadioButton) {
-        selectedChildOptions[child.label] = checkedRadioButton.value;
-      }
-    });
-    let selectedOption: SSVCOption | null = null;
-    mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
-      if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
-        selectedOption = option;
-      }
-    });
-    Object.keys(selectedChildOptions).forEach((decisionLabel) => {
-      const decision = getDecision(decisionLabel);
-      const option = getOption(decision, selectedChildOptions[decisionLabel]);
-      extendVector(`${decision.key}:${option?.key}/`);
-    });
-    if (selectedOption) {
-      selectOption(selectedOption);
-    }
-  }
+  // function calculateComplexOption() {
+  //   const selectedChildOptions: any = {};
+  //   mainDecisions[currentStep].children.forEach((child: any) => {
+  //     const checkedRadioButton: any = document.querySelector(
+  //       `input[name="${child.label}"]:checked`
+  //     );
+  //     if (checkedRadioButton) {
+  //       selectedChildOptions[child.label] = checkedRadioButton.value;
+  //     }
+  //   });
+  //   let selectedOption: SSVCOption | null = null;
+  //   mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
+  //     if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
+  //       selectedOption = option;
+  //     }
+  //   });
+  //   Object.keys(selectedChildOptions).forEach((decisionLabel) => {
+  //     const decision = getDecision(decisionLabel);
+  //     const option = getOption(decision, selectedChildOptions[decisionLabel]);
+  //     extendVector(`${decision.key}:${option?.key}/`);
+  //   });
+  //   if (selectedOption) {
+  //     selectOption(selectedOption);
+  //   }
+  // }
 
   function calculateResult() {
     let filteredDecisions = decisionsTable;
@@ -204,6 +204,7 @@
     if (response.ok) {
       dispatch("updateSSVC");
       isEditing = false;
+      startedCalculation = false;
     } else if (response.error) {
       if (response.error === "400") {
         saveSSVCError = `An error occured: ${response.content}.`;
@@ -273,30 +274,7 @@
       {/if}
     </div>
   {:else}
-    <div class="flex flex-row items-baseline gap-4">
-      <Button
-        class="h-6"
-        size="xs"
-        color="light"
-        on:click={() => {
-          resetUserDecisions();
-          startedCalculation = false;
-        }}><i class="bx bx-arrow-back me-2 text-xl"></i>Back</Button
-      >
-
-      <Button class="h-6 text-nowrap" size="xs" color="light" on:click={resetUserDecisions}>
-        <i class="bx bx-reset me-2 text-xl"></i>
-        Start over</Button
-      >
-      {#if currentStep > 0}
-        <Button class="h-6" size="xs" color="light" on:click={stepBack}>
-          <i class="bx bx-undo me-2 text-xl"></i>
-          Undo
-        </Button>
-      {/if}
-    </div>
-    <StepIndicator class="" color="gray" hideLabel={true} currentStep={currentStep + 1} {steps}
-    ></StepIndicator>
+    <span class="text-gray-400" color="gray">Step {currentStep + 1}/{steps.length}</span>
     {#if steps[currentStep]}
       <span class="max-w-fit">{steps[currentStep]}</span>
     {/if}
@@ -316,7 +294,7 @@
             {/each}
           </div>
         {:else if mainDecisions[currentStep].decision_type === "complex"}
-          <div class="flex flex-row gap-3">
+          <div class="flex flex-row gap-x-3">
             {#each mainDecisions[currentStep].options as option}
               <Button
                 class="h-6"
@@ -327,58 +305,68 @@
               >
             {/each}
           </div>
-          <div class="my-2 flex">
-            <div class="flex flex-col justify-between">
-              <i class="bx bx-up-arrow-alt text-xl"></i>
-              <i class="bx bx-down-arrow-alt text-xl"></i>
-            </div>
-            <div class="flex flex-col">
-              <P>Choose</P>
-              <P class="ml-2">- or -</P>
-              <P>Calculate</P>
-            </div>
-          </div>
-          <Card class="flex min-w-fit justify-between">
-            <form on:submit={calculateComplexOption}>
-              <div class="flex flex-row flex-wrap gap-x-6 gap-y-4">
-                {#each mainDecisions[currentStep].children as child}
-                  {@const childOptions = getDecision(child.label).options}
-                  <div class="min-w-60">
-                    <h5
-                      class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
-                    >
-                      {child.label}
-                    </h5>
-                    <div class="mb-4">
-                      {#each childOptions as option}
-                        <div
-                          class="mb-2 cursor-pointer rounded border border-gray-200 dark:border-gray-700"
+          <!-- <form on:submit={calculateComplexOption}>
+            <div class="flex flex-row flex-wrap gap-x-6 gap-y-4">
+              {#each mainDecisions[currentStep].children as child}
+                {@const childOptions = getDecision(child.label).options}
+                <div class="min-w-60">
+                  <h5 class="mb-2 font-bold tracking-tight text-gray-900 dark:text-white">
+                    {child.label}
+                  </h5>
+                  <div class="mb-4">
+                    {#each childOptions as option}
+                      <div
+                        class="mb-2 cursor-pointer rounded border border-gray-200 dark:border-gray-700"
+                      >
+                        <Radio name={child.label} value={option.label} class="w-full p-4"
+                          >{option.label}</Radio
                         >
-                          <Radio name={child.label} value={option.label} class="w-full p-4"
-                            >{option.label}</Radio
-                          >
-                        </div>
-                        <Tooltip class="max-w-96">{option.description}</Tooltip>
-                      {/each}
-                    </div>
+                      </div>
+                      <Tooltip class="max-w-96">{option.description}</Tooltip>
+                    {/each}
                   </div>
-                {/each}
-              </div>
-              <Button size="xs" type="submit">Calculate</Button>
-            </form>
-          </Card>
+                </div>
+              {/each}
+            </div>
+            <Button size="xs" type="submit">Calculate</Button>
+          </form> -->
         {/if}
       {:else if result}
-        <Label class="me-1 text-lg"
+        <Label
           >Result:
           <span style={resultStyle}>{result.text}</span>
         </Label>
-        <Label class="text-lg">Vector: {vector}</Label>
-        <Button size="xs" on:click={() => saveSSVC(vector)}>
-          <i class="bx bx-save me-2 text-xl"></i>Save</Button
+        <Label class="text-gray-400">Vector: {vector}</Label>
+        <button title="Save" on:click={() => saveSSVC(vector)}>
+          <i class="bx bx-save me-2 text-xl"></i></button
         >
       {/if}
     {/if}
+    <div class="flex flex-row items-baseline gap-x-1">
+      <button
+        class="h-6"
+        color="light"
+        title="Back"
+        on:click={() => {
+          resetUserDecisions();
+          startedCalculation = false;
+        }}><i class="bx bx-arrow-back me-2 text-xl"></i></button
+      >
+
+      <button
+        title="Start over"
+        class="h-6 text-nowrap"
+        color="light"
+        on:click={resetUserDecisions}
+      >
+        <i class="bx bx-reset me-2 text-xl"></i>
+      </button>
+      {#if currentStep > 0}
+        <button title="Undo" class="h-6" color="light" on:click={stepBack}>
+          <i class="bx bx-undo me-2 text-xl"></i>
+        </button>
+      {/if}
+    </div>
   {/if}
   <ErrorMessage message={saveSSVCError}></ErrorMessage>
 </div>

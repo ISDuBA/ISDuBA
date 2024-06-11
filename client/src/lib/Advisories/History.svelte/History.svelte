@@ -31,7 +31,7 @@
       });
 </script>
 
-<ButtonGroup class="mb-9 ml-auto mt-2 h-7">
+<ButtonGroup class="mb-9 ml-auto h-7">
   <Button
     size="xs"
     color="light"
