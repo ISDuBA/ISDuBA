@@ -204,7 +204,7 @@
     if (response.ok) {
       isEditing = false;
       startedCalculation = false;
-      currentStep = 0;
+      resetUserDecisions();
       dispatch("updateSSVC");
     } else if (response.error) {
       if (response.error === "400") {
