@@ -203,6 +203,7 @@
     const response = await request(encodedUrl, "PUT");
     if (response.ok) {
       dispatch("updateSSVC");
+      isEditing = false;
     } else if (response.error) {
       if (response.error === "400") {
         saveSSVCError = `An error occured: ${response.content}.`;
