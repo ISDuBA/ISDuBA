@@ -51,6 +51,7 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
+		authAdm    = authRoles(models.Admin)
 		authIm     = authRoles(models.Importer)
 		authEdRe   = authRoles(models.Editor, models.Reviewer)
 		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
@@ -62,9 +63,13 @@ func (c *Controller) Bind() http.Handler {
 	api := r.Group("/api")
 
 	// Documents
+	// Importer can import (POST) documents
 	api.POST("/documents", authIm, c.importDocument)
+	// Everyone can view (GET) overviewDocuments and viewDocuments?
 	api.GET("/documents", authAll /* authEdReAu */, c.overviewDocuments)
 	api.GET("/documents/:id", authAll /* authEdReAu */, c.viewDocument)
+	// Admin can delete documents
+	api.DELETE("/documents/:id", authAdm, c.deleteDocument)
 
 	// Comments
 	api.POST("/comments/:document", authEdRe, c.createComment)

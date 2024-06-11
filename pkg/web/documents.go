@@ -28,6 +28,62 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
+// deleteDocument is an end point for deleting a document.
+func (c *Controller) deleteDocument(ctx *gin.Context) {
+	// Get an ID from context
+	idS := ctx.Param("id")
+	id, err := strconv.ParseInt(idS, 10, 64)
+	// Error handling for id acquisition
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+    // FieldEqInt is a shortcut mainly for building expressions
+    // accessing an integer column like 'id's.
+	expr := database.FieldEqInt("id", id)
+
+	// Filter the allowed
+	if tlps := c.tlps(ctx); len(tlps) > 0 {
+		conditions := tlps.AsConditions()
+		parser := database.Parser{}
+		tlpExpr, err := parser.Parse(conditions)
+		if err != nil {
+			slog.Warn("TLP filter failed", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+		// And concats two expressions and-wise.
+		expr = expr.And(tlpExpr)
+	}
+	// expr := ID matches AND TLP-level allowed; TODO: Publisher also checked?
+
+    // fields := array of strings, initially just ["original"]
+	fields := []string{"original"}
+	// whereclause, needs to be understood
+	where, replacements, aliases := expr.Where()
+	// sql= Query as described below
+	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1, false)
+
+	// array of bytes, initially empty
+	var original []byte
+
+	// run command, alter for deletion
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, sql, replacements...).Scan(&original)
+		}, 0,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		}
+		return
+	}
+}
+
 // importDocument is an end point to import a document.
 func (c *Controller) importDocument(ctx *gin.Context) {
 
