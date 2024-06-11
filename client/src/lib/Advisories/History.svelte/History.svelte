@@ -50,7 +50,7 @@
   >
 </ButtonGroup>
 
-<div class="max-h-[50%] overflow-auto p-1">
+<div class="max-h-[34rem] overflow-auto p-1">
   <Table>
     <TableBody>
       {#each historyEntries as event}
