@@ -27,6 +27,7 @@
   export let documentID: string;
   let startedCalculation = false;
   let isEditing = false;
+  let isComplex = false;
   let currentStep = 0;
   let steps: string[] = [];
   let mainDecisions: any[] = [];
@@ -61,6 +62,7 @@
     userDecisions = {};
     currentStep = 0;
     vector = vectorBeginning;
+    isComplex = false;
   }
 
   function getDecision(label: string): SSVCDecision {
@@ -277,7 +279,7 @@
   {:else}
     <span class="text-gray-400" color="gray">Step {currentStep + 1}/{steps.length}</span>
     {#if steps[currentStep]}
-      <span class="max-w-fit">{steps[currentStep]}</span>
+      <span>{steps[currentStep]}</span>
     {/if}
     {#if mainDecisions[currentStep]}
       {#if currentStep < mainDecisions.length - 1}
@@ -295,19 +297,29 @@
             {/each}
           </div>
         {:else if mainDecisions[currentStep].decision_type === "complex"}
-          <div class="flex flex-row gap-x-3">
-            {#each mainDecisions[currentStep].options as option}
-              <Button
-                class="h-6"
-                outline
-                title={option.description}
-                size="xs"
-                on:click={() => selectOption(option)}>{option.label}</Button
-              >
-            {/each}
-          </div>
-          or
-          <form on:submit={calculateComplexOption}>
+          {#if !isComplex}
+            <div class="flex flex-row gap-x-3">
+              {#each mainDecisions[currentStep].options as option}
+                <Button
+                  class="h-6"
+                  outline
+                  title={option.description}
+                  size="xs"
+                  on:click={() => selectOption(option)}>{option.label}</Button
+                >
+              {/each}
+            </div>
+            or
+            <Button
+              class="h-6"
+              outline
+              title="Custom"
+              size="xs"
+              on:click={() => {
+                isComplex = true;
+              }}>Custom</Button
+            >
+          {:else}
             <div class="flex flex-row gap-x-5">
               {#each mainDecisions[currentStep].children as child}
                 {@const childOptions = getDecision(child.label).options}
@@ -331,12 +343,17 @@
                 </div>
               {/each}
             </div>
-          </form>
-          <div class="flex flex-row items-center gap-x-3">
-            <button class="h-6" title="Calculate" type="submit"
-              ><i class="bx bx-calculator"></i></button
-            >
-          </div>
+            <div class="flex flex-row items-center gap-x-3">
+              <button
+                on:click={() => {
+                  calculateComplexOption();
+                }}
+                class="h-6"
+                title="Calculate"
+                type="submit"><i class="bx bx-calculator"></i></button
+              >
+            </div>
+          {/if}
         {/if}
       {:else if result}
         <Label
@@ -350,6 +367,19 @@
       {/if}
     {/if}
     <div class="flex flex-row items-baseline gap-x-1">
+      {#if currentStep > 0}
+        <button title="Undo" class="h-6" color="light" on:click={stepBack}>
+          <i class="bx bx-undo me-2 text-xl"></i>
+        </button>
+      {/if}
+      <button
+        title="Start over"
+        class="h-6 text-nowrap"
+        color="light"
+        on:click={resetUserDecisions}
+      >
+        <i class="bx bx-reset me-2 text-xl"></i>
+      </button>
       <button
         class="h-6"
         color="light"
@@ -359,20 +389,6 @@
           startedCalculation = false;
         }}><i class="bx bx-arrow-back me-2 text-xl"></i></button
       >
-
-      <button
-        title="Start over"
-        class="h-6 text-nowrap"
-        color="light"
-        on:click={resetUserDecisions}
-      >
-        <i class="bx bx-reset me-2 text-xl"></i>
-      </button>
-      {#if currentStep > 0}
-        <button title="Undo" class="h-6" color="light" on:click={stepBack}>
-          <i class="bx bx-undo me-2 text-xl"></i>
-        </button>
-      {/if}
     </div>
   {/if}
   <ErrorMessage message={saveSSVCError}></ErrorMessage>
