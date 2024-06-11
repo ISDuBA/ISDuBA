@@ -188,7 +188,6 @@
       }
       return e;
     });
-    console.log(events);
     historyEntries = events;
   };
 
