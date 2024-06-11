@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, Label, Input } from "flowbite-svelte";
+  import { Button, Label, Input, Radio } from "flowbite-svelte";
   import {
     createIsoTimeStringForSSVC,
     parseDecisionTree,
@@ -84,48 +84,48 @@
     }
   }
 
-  // function doesContainChildCombo(selectedOptions: any, childCombos: any[]): boolean {
-  //   const test = childCombos.find((combos: any[]) => {
-  //     let count = 0;
-  //     for (const option in selectedOptions) {
-  //       const result = combos.find((combo: any) => {
-  //         return (
-  //           combo.child_label === option &&
-  //           combo.child_option_labels.includes(selectedOptions[option])
-  //         );
-  //       });
-  //       if (result) count++;
-  //     }
-  //     return count === Object.keys(selectedOptions).length;
-  //   });
-  //   return !!test;
-  // }
+  function doesContainChildCombo(selectedOptions: any, childCombos: any[]): boolean {
+    const test = childCombos.find((combos: any[]) => {
+      let count = 0;
+      for (const option in selectedOptions) {
+        const result = combos.find((combo: any) => {
+          return (
+            combo.child_label === option &&
+            combo.child_option_labels.includes(selectedOptions[option])
+          );
+        });
+        if (result) count++;
+      }
+      return count === Object.keys(selectedOptions).length;
+    });
+    return !!test;
+  }
 
-  // function calculateComplexOption() {
-  //   const selectedChildOptions: any = {};
-  //   mainDecisions[currentStep].children.forEach((child: any) => {
-  //     const checkedRadioButton: any = document.querySelector(
-  //       `input[name="${child.label}"]:checked`
-  //     );
-  //     if (checkedRadioButton) {
-  //       selectedChildOptions[child.label] = checkedRadioButton.value;
-  //     }
-  //   });
-  //   let selectedOption: SSVCOption | null = null;
-  //   mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
-  //     if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
-  //       selectedOption = option;
-  //     }
-  //   });
-  //   Object.keys(selectedChildOptions).forEach((decisionLabel) => {
-  //     const decision = getDecision(decisionLabel);
-  //     const option = getOption(decision, selectedChildOptions[decisionLabel]);
-  //     extendVector(`${decision.key}:${option?.key}/`);
-  //   });
-  //   if (selectedOption) {
-  //     selectOption(selectedOption);
-  //   }
-  // }
+  function calculateComplexOption() {
+    const selectedChildOptions: any = {};
+    mainDecisions[currentStep].children.forEach((child: any) => {
+      const checkedRadioButton: any = document.querySelector(
+        `input[name="${child.label}"]:checked`
+      );
+      if (checkedRadioButton) {
+        selectedChildOptions[child.label] = checkedRadioButton.value;
+      }
+    });
+    let selectedOption: SSVCOption | null = null;
+    mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
+      if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
+        selectedOption = option;
+      }
+    });
+    Object.keys(selectedChildOptions).forEach((decisionLabel) => {
+      const decision = getDecision(decisionLabel);
+      const option = getOption(decision, selectedChildOptions[decisionLabel]);
+      extendVector(`${decision.key}:${option?.key}/`);
+    });
+    if (selectedOption) {
+      selectOption(selectedOption);
+    }
+  }
 
   function calculateResult() {
     let filteredDecisions = decisionsTable;
@@ -281,7 +281,7 @@
     {#if mainDecisions[currentStep]}
       {#if currentStep < mainDecisions.length - 1}
         {#if mainDecisions[currentStep].decision_type === "simple"}
-          <div class="flex flex-row gap-3">
+          <div class="flex flex-row items-baseline gap-3">
             {#each mainDecisions[currentStep].options as option}
               <Button
                 outline
@@ -305,31 +305,37 @@
               >
             {/each}
           </div>
-          <!-- <form on:submit={calculateComplexOption}>
-            <div class="flex flex-row flex-wrap gap-x-6 gap-y-4">
+          or
+          <form on:submit={calculateComplexOption}>
+            <div class="flex flex-row gap-x-5">
               {#each mainDecisions[currentStep].children as child}
                 {@const childOptions = getDecision(child.label).options}
-                <div class="min-w-60">
-                  <h5 class="mb-2 font-bold tracking-tight text-gray-900 dark:text-white">
+                <div class="flex flex-col">
+                  <span
+                    class="text-gary-400 text-xs font-bold tracking-tight text-gray-900 dark:text-white"
+                  >
                     {child.label}
-                  </h5>
-                  <div class="mb-4">
+                  </span>
+                  <div class="flex flex-row gap-x-3">
                     {#each childOptions as option}
-                      <div
-                        class="mb-2 cursor-pointer rounded border border-gray-200 dark:border-gray-700"
-                      >
-                        <Radio name={child.label} value={option.label} class="w-full p-4"
-                          >{option.label}</Radio
+                      <div title={option.description} class="mb-2 cursor-pointer">
+                        <Radio
+                          name={child.label}
+                          value={option.label}
+                          class="flex h-6 flex-col text-xs tracking-tight">{option.label}</Radio
                         >
                       </div>
-                      <Tooltip class="max-w-96">{option.description}</Tooltip>
                     {/each}
                   </div>
                 </div>
               {/each}
             </div>
-            <Button size="xs" type="submit">Calculate</Button>
-          </form> -->
+          </form>
+          <div class="flex flex-row items-center gap-x-3">
+            <button class="h-6" title="Calculate" type="submit"
+              ><i class="bx bx-calculator"></i></button
+            >
+          </div>
         {/if}
       {:else if result}
         <Label
