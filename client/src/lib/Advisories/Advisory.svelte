@@ -286,9 +286,7 @@
   $: if (params) {
     loadData();
   }
-  $: ssvcStyle = ssvc
-    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
-    : "";
+  $: ssvcStyle = ssvc ? `color: white; background-color: ${ssvc.color};` : "";
 </script>
 
 <svelte:head>

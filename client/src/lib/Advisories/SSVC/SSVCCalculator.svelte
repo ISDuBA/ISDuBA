@@ -202,9 +202,10 @@
     const encodedUrl = encodeURI(`/api/ssvc/${documentID}?vector=${vector}`);
     const response = await request(encodedUrl, "PUT");
     if (response.ok) {
-      dispatch("updateSSVC");
       isEditing = false;
       startedCalculation = false;
+      currentStep = 0;
+      dispatch("updateSSVC");
     } else if (response.error) {
       if (response.error === "400") {
         saveSSVCError = `An error occured: ${response.content}.`;
@@ -262,7 +263,7 @@
           class="h-6"
           title="Calculate"
           {disabled}
-          on:click={() => (startedCalculation = true)}><i class="bx bx-calculator"></i></button
+          on:click={() => (startedCalculation = true)}><i class="bx bx-cog"></i></button
         >
         <button class="h-6" title="Save" color="light" on:click={() => saveSSVC(vectorInput)}
           ><i class="bx bx-save me-2 text-xl"></i></button
