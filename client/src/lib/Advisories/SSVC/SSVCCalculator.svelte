@@ -25,6 +25,7 @@
 
   export let disabled = false;
   export let documentID: string;
+  export let allowEditing: any;
   let startedCalculation = false;
   let isEditing = false;
   let isComplex = false;
@@ -202,6 +203,7 @@
   }
 
   async function saveSSVC(vector: string) {
+    await allowEditing();
     resetError();
     const encodedUrl = encodeURI(`/api/ssvc/${documentID}?vector=${vector}`);
     const response = await request(encodedUrl, "PUT");
