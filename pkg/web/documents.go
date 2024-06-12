@@ -11,6 +11,7 @@ package web
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -32,7 +33,7 @@ import (
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
 	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
+	docID, err := strconv.ParseInt(idS, 10, 64)
 	// Error handling for id acquisition
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
@@ -42,7 +43,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// FieldEqInt is a shortcut mainly for building expressions
 	// accessing an integer column like 'id's.
 	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
-	expr := database.FieldEqInt("id", id)
+	expr := database.FieldEqInt("id", docID)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
@@ -57,32 +58,57 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		// And concats two expressions and-wise.
 		expr = expr.And(tlpExpr)
 	}
-	// expr at this point := ID matches AND TLP-level allowed; TODO: Publisher also checked?
 
-	// fields := array of strings, initially just ["original"]
-	fields := []string{"original"}
-	// whereclause, needs to be understood
-	where, replacements, aliases := expr.Where()
-	// sql= Query as described below
-	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1, false)
+	where, replacements, _ := expr.Where()
 
-	// array of bytes, initially empty
-	var original []byte
+	fmt.Println(where)
+	fmt.Println(replacements)
 
-	// run command, alter for deletion
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, replacements...).Scan(&original)
+			tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
+			if err != nil {
+				return err
+			}
+			defer tx.Rollback(rctx)
+
+			logEvent := func() error {
+				var actor sql.NullString
+				if !c.cfg.General.AnonymousEventLogging {
+					actor.String = ctx.GetString("uid")
+					actor.Valid = true
+				}
+				const eventSQL = `INSERT INTO events_log ` +
+					`(event, actor, documents_id) ` +
+					`VALUES('delete_document'::events, $1, $2)`
+				_, err := tx.Exec(rctx, eventSQL, actor, docID)
+				return err
+			}
+			if err := logEvent(); err != nil {
+				return fmt.Errorf("event logging failed: %w", err)
+			}
+
+			const deletePrefix = `DELETE FROM documents WHERE `
+			deleteSQL := deletePrefix + where
+			slog.Debug("delete document", "SQL", qndSQLReplace(deleteSQL, replacements))
+
+			if _, err := tx.Exec(rctx, deleteSQL, replacements...); err != nil {
+				return fmt.Errorf("delete failed: %w", err)
+			}
+
+			return tx.Commit(rctx)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
 		} else {
+			slog.Error("database error", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		}
 		return
 	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "document deleted"})
 }
 
 // importDocument is an end point to import a document.
