@@ -72,6 +72,13 @@ export function parseDecisionTree() {
   };
 }
 
+export function getDecision(
+  decisionPoints: SSVCDecision[],
+  label: string
+): SSVCDecision | undefined {
+  return decisionPoints.find((element) => element.label === label);
+}
+
 export function getOptionWithKey(decision: SSVCDecision, key: string): SSVCOption | undefined {
   return decision.options.find((element: SSVCOption) => element.key === key);
 }

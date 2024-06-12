@@ -9,9 +9,10 @@
 -->
 
 <script lang="ts">
-  import { Button, Label, Input, Radio } from "flowbite-svelte";
+  import { Button, Label, Input } from "flowbite-svelte";
   import {
     createIsoTimeStringForSSVC,
+    getDecision,
     parseDecisionTree,
     type SSVCDecision,
     type SSVCOption
@@ -20,6 +21,7 @@
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import ComplexDecision from "./ComplexDecision.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -31,7 +33,7 @@
   let isComplex = false;
   let currentStep = 0;
   let steps: string[] = [];
-  let mainDecisions: any[] = [];
+  let mainDecisions: SSVCDecision[] = [];
   let decisionPoints: any[] = [];
   let decisionsTable: any[] = [];
   let userDecisions: any = {};
@@ -64,10 +66,6 @@
     currentStep = 0;
     vector = vectorBeginning;
     isComplex = false;
-  }
-
-  function getDecision(label: string): SSVCDecision {
-    return decisionPoints.find((element) => element.label === label);
   }
 
   function getOption(decision: SSVCDecision, label: string): SSVCOption | undefined {
@@ -106,7 +104,7 @@
 
   function calculateComplexOption() {
     const selectedChildOptions: any = {};
-    mainDecisions[currentStep].children.forEach((child: any) => {
+    mainDecisions[currentStep].children?.forEach((child: any) => {
       const checkedRadioButton: any = document.querySelector(
         `input[name="${child.label}"]:checked`
       );
@@ -123,9 +121,11 @@
       }
     });
     Object.keys(selectedChildOptions).forEach((decisionLabel) => {
-      const decision = getDecision(decisionLabel);
-      const option = getOption(decision, selectedChildOptions[decisionLabel]);
-      extendVector(`${decision.key}:${option?.key}/`);
+      const decision = getDecision(decisionPoints, decisionLabel);
+      if (decision) {
+        const option = getOption(decision, selectedChildOptions[decisionLabel]);
+        extendVector(`${decision.key}:${option?.key}/`);
+      }
     });
     if (selectedOption) {
       selectOption(selectedOption);
@@ -174,25 +174,27 @@
       // Cut-off parent
       tmpVector = tmpVector.slice(0, -4);
       const keyPairs: string[] = [];
-      children.forEach(() => {
-        const splittedVector = tmpVector.split("/");
-        keyPairs.push(splittedVector[splittedVector.length - 2]);
-        tmpVector = tmpVector.slice(0, -4);
-      });
-      let didUserChooseChildren = true;
-      keyPairs.forEach((pair) => {
-        const splittedPair = pair.split(":");
-        let isChild = false;
-        children.forEach((child: any) => {
-          const childDecision = getDecision(child.label);
-          if (childDecision.key !== splittedPair[0]) return;
-          const optionsKeys = childDecision.options.map((option) => option.key);
-          if (optionsKeys.includes(splittedPair[1])) isChild = true;
+      if (children) {
+        children.forEach(() => {
+          const splittedVector = tmpVector.split("/");
+          keyPairs.push(splittedVector[splittedVector.length - 2]);
+          tmpVector = tmpVector.slice(0, -4);
         });
-        if (!isChild) didUserChooseChildren = false;
-      });
-      if (didUserChooseChildren) {
-        vector = vector.slice(0, -(4 * children.length));
+        let didUserChooseChildren = true;
+        keyPairs.forEach((pair) => {
+          const splittedPair = pair.split(":");
+          let isChild = false;
+          children.forEach((child: any) => {
+            const childDecision = getDecision(decisionPoints, child.label);
+            if (childDecision && childDecision.key !== splittedPair[0]) return;
+            const optionsKeys = childDecision?.options.map((option) => option.key);
+            if (optionsKeys?.includes(splittedPair[1])) isChild = true;
+          });
+          if (!isChild) didUserChooseChildren = false;
+        });
+        if (didUserChooseChildren) {
+          vector = vector.slice(0, -(4 * children.length));
+        }
       }
     }
     // Delete (parent) key pair
@@ -326,39 +328,11 @@
               }}>Custom</Button
             >
           {:else}
-            <div class="flex flex-row gap-x-5">
-              {#each mainDecisions[currentStep].children as child}
-                {@const childOptions = getDecision(child.label).options}
-                <div class="flex flex-col">
-                  <span
-                    class="text-gary-400 text-xs font-bold tracking-tight text-gray-900 dark:text-white"
-                  >
-                    {child.label}
-                  </span>
-                  <div class="flex flex-row gap-x-3">
-                    {#each childOptions as option}
-                      <div title={option.description} class="mb-2 cursor-pointer">
-                        <Radio
-                          name={child.label}
-                          value={option.label}
-                          class="flex h-6 flex-col text-xs tracking-tight">{option.label}</Radio
-                        >
-                      </div>
-                    {/each}
-                  </div>
-                </div>
-              {/each}
-            </div>
-            <div class="flex flex-row items-center gap-x-3">
-              <button
-                on:click={() => {
-                  calculateComplexOption();
-                }}
-                class="h-6"
-                title="Calculate"
-                type="submit"><i class="bx bx-calculator"></i></button
-              >
-            </div>
+            <ComplexDecision
+              on:calculateComplexOption={calculateComplexOption}
+              children={mainDecisions[currentStep].children}
+              {decisionPoints}
+            ></ComplexDecision>
           {/if}
         {/if}
       {:else if result}
