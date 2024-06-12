@@ -393,7 +393,11 @@
                       {/if}</TableBodyCell
                     >
                   {:else if column === "critical"}
-                    <TableBodyCell {tdClass}>{item[column] || ""}</TableBodyCell>
+                    <TableBodyCell {tdClass}
+                      ><span class:text-red-500={Number(item[column]) > 5.0}
+                        >{item[column] == null ? "" : item[column]}</span
+                      ></TableBodyCell
+                    >
                   {:else}
                     <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
                   {/if}
