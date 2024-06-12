@@ -19,15 +19,20 @@ The setup should be performed via the [installation scripts.](./scripts/README.m
 
 An example-configuration for isdubad can be found in [example_isdubad.toml](./example_isdubad.toml). Please edit to your needs.
 
-Initially there is a migration needed to configure the database via [a migration script.](./scripts/migrate.sh). This could be used subsequently when future migrations are necessary.
+Initially there is a migration needed to configure the database by starting isdubad with the ISDUBA_DB_MIGRATE environment variable set to true or by
+adjusting the toml-configuration file, e.g.
+
+``` ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isduba.toml```
 
 Create additional users via [createUsers script.](./scripts/keycloak/createUsers.sh) A list of users created by the setup scripts can be found in [the users.txt.](./developer/users.txt)
 
 Create groups via [createGroup script.](./scripts/keycloak/createGroup.sh)
 The restrictions set with the script are explained in [keycloak_values.md](./keycloak_values.md)
 
-The keycloak admin user created via the scripts will have the username and password ```keycloak```, unless otherwise specified via the environment variables KEYCLOAK_ADMIN (username) and 
-KEYCLOAK_ADMIN_PASSWORD (password).
+The keycloak admin user created via the scripts will have the username password ```keycloak```, unless otherwise specified via the environment variable KEYCLOAK_ADMIN.
+The password can be specified via the environment variable KEYCLOAK_ADMIN_PASSWORD, a file (-f option) or directly (using the -p option). 
+If neither is set, then the script will try to see if docs/scripts/password.txt contains a password.
+If this is not set either, then a random password will be generated and stored in docs/scripts/password.txt.
 
 ### Import advisories
 Import the previously downloaded advisories into the database via the bulk importer. There are two options:

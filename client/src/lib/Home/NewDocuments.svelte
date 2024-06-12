@@ -63,31 +63,35 @@
           for now as we are not able to fetch recently imported documents.
         </div>
         <div class="flex flex-row flex-wrap gap-6">
-          {#each documents as doc}
-            <Card padding="md">
-              <div class="mb-3 flex flex-row text-xs">
-                {#if doc.cvss_v2_score}
-                  <div>
-                    <span>CVSS v2:</span>
-                    <span class:text-red-500={Number(doc.cvss_v2_score) > 5.0}>
-                      {doc.cvss_v2_score}
-                    </span>
-                  </div>
-                {/if}
-                {#if doc.cvss_v3_score}
-                  <div>
-                    <span>CVSS v3:</span>
-                    <span class:text-red-500={Number(doc.cvss_v3_score) > 5.0}>
-                      {doc.cvss_v3_score}
-                    </span>
-                  </div>
-                {/if}
-                <span class="ml-auto" title={doc.publisher}>{getPublisherAbbr(doc.publisher)}</span>
-              </div>
-              <hr class="mb-3" />
-              <div class="text-black">{doc.title}</div>
-            </Card>
-          {/each}
+          {#if documents?.length && documents.length > 0}
+            {#each documents as doc}
+              <Card padding="md">
+                <div class="mb-3 flex flex-row text-xs">
+                  {#if doc.cvss_v2_score}
+                    <div>
+                      <span>CVSS v2:</span>
+                      <span class:text-red-500={Number(doc.cvss_v2_score) > 5.0}>
+                        {doc.cvss_v2_score}
+                      </span>
+                    </div>
+                  {/if}
+                  {#if doc.cvss_v3_score}
+                    <div>
+                      <span>CVSS v3:</span>
+                      <span class:text-red-500={Number(doc.cvss_v3_score) > 5.0}>
+                        {doc.cvss_v3_score}
+                      </span>
+                    </div>
+                  {/if}
+                  <span class="ml-auto" title={doc.publisher}
+                    >{getPublisherAbbr(doc.publisher)}</span
+                  >
+                </div>
+                <hr class="mb-3" />
+                <div class="text-black">{doc.title}</div>
+              </Card>
+            {/each}
+          {/if}
         </div>
       </div>
       <ErrorMessage message={newDocumentsError}></ErrorMessage>

@@ -11,12 +11,31 @@
 set -e # to exit if a command in the script fails
 
 keycloak_running=false
+file="./../password.txt"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -k|--keycloakRunning)
       echo "Assuming keycloak is running..."
       keycloak_running=true
+      ;;
+    -f|--file)
+      if [[ -n "$2" ]]; then
+        file="$2"
+        shift
+      else
+        echo "Error: Options -f and --file require an argument."
+        exit 1
+      fi
+      ;;
+    -p|--password)
+      if [[ -n "$2" ]]; then
+        export KEYCLOAK_ADMIN_PASSWORD="$2"
+        shift
+      else
+        echo "Error: Options -p and --pw require an argument."
+        exit 1
+      fi
       ;;
     *)
       echo "Unknown option: $1"
@@ -29,14 +48,22 @@ done
 # Create keycloak admin user
 if [[ -z "${KEYCLOAK_ADMIN}" ]]; then
   export KEYCLOAK_ADMIN="keycloak"
-  echo "No Keycloak admin set. Creating admin with name \"keycloak\""
+  echo "No Keycloak admin set. Trying to create admin with name \"keycloak\"."
+  echo "Note that if a keycloak user has been previously set to something other than \"keycloak\", you need to change the environment variable \"KEYCLOAK_ADMIN\" for this script to work."
 else
   export KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN}"
 fi
 
 if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
-  export KEYCLOAK_ADMIN_PASSWORD="keycloak"
-  echo "No Keycloak admin password set. Creating admin with password \"keycloak\""
+  if [ -f $file ]; then
+    export KEYCLOAK_ADMIN_PASSWORD=$(<./../password.txt)
+  else
+    password=$(pwgen -1)
+    echo $password > ./../password.txt
+    export KEYCLOAK_ADMIN_PASSWORD="$password"
+    echo "No Keycloak admin password set. Trying to create new password. (See password.txt)"
+    echo "Note that if a keycloak password has been previously set, this script won't work."
+  fi
 else
   export KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
 fi

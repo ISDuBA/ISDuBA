@@ -75,6 +75,9 @@
                     {#if event.event_type === "change_comment"}
                       Edit comment ( {event.actor} )
                     {/if}
+                    {#if event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
+                      SSVC changed ( {event.actor} )
+                    {/if}
                   </small>
                   {#if /state_change|import_document/.test(event.event_type)}
                     <div class="border-1 border p-1 text-xs text-gray-800">
