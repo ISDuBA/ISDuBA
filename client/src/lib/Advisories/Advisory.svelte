@@ -54,7 +54,7 @@
     isCalculatingAllowed = false;
   }
 
-  const timeoutIDs: number[] = [];
+  const setAsReadTimeout: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
 
@@ -212,6 +212,11 @@
   }
 
   async function updateState(newState: string) {
+    // Cancel automatic state transitions
+    setAsReadTimeout.forEach((id: number) => {
+      clearTimeout(id);
+    });
+
     const response = await request(
       `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
       "PUT"
@@ -246,19 +251,19 @@
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
       await buildHistory();
     }
-    const state = await loadAdvisoryState();
+    await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
     if (
-      state === "new" &&
-      appStore.isEditor() &&
+      advisoryState === "new" &&
+      canSetStateRead(advisoryState) &&
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
       const id: any = setTimeout(async () => {
-        if (canSetStateRead(advisoryState)) {
+        if (advisoryState === "new" && canSetStateRead(advisoryState)) {
           await updateState(READ);
         }
       }, 20000);
-      timeoutIDs.push(id);
+      setAsReadTimeout.push(id);
     }
   };
 
@@ -277,7 +282,7 @@
   };
 
   onDestroy(() => {
-    timeoutIDs.forEach((id: number) => {
+    setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
     });
   });
