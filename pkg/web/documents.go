@@ -41,6 +41,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 
 	// FieldEqInt is a shortcut mainly for building expressions
 	// accessing an integer column like 'id's.
+	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
 	expr := database.FieldEqInt("id", id)
 
 	// Filter the allowed
@@ -56,7 +57,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		// And concats two expressions and-wise.
 		expr = expr.And(tlpExpr)
 	}
-	// expr := ID matches AND TLP-level allowed; TODO: Publisher also checked?
+	// expr at this point := ID matches AND TLP-level allowed; TODO: Publisher also checked?
 
 	// fields := array of strings, initially just ["original"]
 	fields := []string{"original"}
