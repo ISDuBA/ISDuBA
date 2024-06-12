@@ -277,7 +277,9 @@
       {/if}
     </div>
   {:else}
-    <span class="text-gray-400" color="gray">Step {currentStep + 1}/{steps.length}</span>
+    <span class="pt-[0.3rem] font-mono text-gray-400" color="gray"
+      >{currentStep + 1}/{steps.length}</span
+    >
     {#if steps[currentStep]}
       <span>{steps[currentStep]}</span>
     {/if}
