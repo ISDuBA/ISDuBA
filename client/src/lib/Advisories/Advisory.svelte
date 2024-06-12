@@ -252,15 +252,15 @@
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
       await buildHistory();
     }
-    const state = await loadAdvisoryState();
+    await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
     if (
-      state === "new" &&
-      appStore.isEditor() &&
+      advisoryState === "new" &&
+      canSetStateRead(advisoryState) &&
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
       const id: any = setTimeout(async () => {
-        if (canSetStateRead(advisoryState)) {
+        if (advisoryState === "new" && canSetStateRead(advisoryState)) {
           await updateState(READ);
         }
       }, 20000);
