@@ -54,7 +54,7 @@
     isCalculatingAllowed = false;
   }
 
-  const timeoutIDs: number[] = [];
+  const setAsReadTimeout: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
 
@@ -213,6 +213,11 @@
   }
 
   async function updateState(newState: string) {
+    // Cancel automatic state transitions
+    setAsReadTimeout.forEach((id: number) => {
+      clearTimeout(id);
+    });
+
     const response = await request(
       `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
       "PUT"
@@ -259,7 +264,7 @@
           await updateState(READ);
         }
       }, 20000);
-      timeoutIDs.push(id);
+      setAsReadTimeout.push(id);
     }
   };
 
@@ -278,7 +283,7 @@
   };
 
   onDestroy(() => {
-    timeoutIDs.forEach((id: number) => {
+    setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
     });
   });
