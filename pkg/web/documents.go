@@ -61,8 +61,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 
 	where, replacements, _ := expr.Where()
 
-	fmt.Println(where)
-	fmt.Println(replacements)
+	deleted := false
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -73,42 +72,41 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			}
 			defer tx.Rollback(rctx)
 
-			logEvent := func() error {
+			const deletePrefix = `DELETE FROM documents WHERE `
+			deleteSQL := deletePrefix + where
+			slog.Debug("delete document", "SQL", qndSQLReplace(deleteSQL, replacements))
+
+			tags, err := tx.Exec(rctx, deleteSQL, replacements...)
+			if err != nil {
+				return fmt.Errorf("delete failed: %w", err)
+			}
+
+			if deleted = tags.RowsAffected() > 0; deleted {
 				var actor sql.NullString
 				if !c.cfg.General.AnonymousEventLogging {
 					actor.String = ctx.GetString("uid")
 					actor.Valid = true
 				}
 				const eventSQL = `INSERT INTO events_log ` +
-					`(event, actor, documents_id) ` +
-					`VALUES('delete_document'::events, $1, $2)`
-				_, err := tx.Exec(rctx, eventSQL, actor, docID)
-				return err
-			}
-			if err := logEvent(); err != nil {
-				return fmt.Errorf("event logging failed: %w", err)
-			}
-
-			const deletePrefix = `DELETE FROM documents WHERE `
-			deleteSQL := deletePrefix + where
-			slog.Debug("delete document", "SQL", qndSQLReplace(deleteSQL, replacements))
-
-			if _, err := tx.Exec(rctx, deleteSQL, replacements...); err != nil {
-				return fmt.Errorf("delete failed: %w", err)
+					`(event, actor) ` +
+					`VALUES('delete_document'::events, $1)`
+				if _, err := tx.Exec(rctx, eventSQL, actor); err != nil {
+					return fmt.Errorf("event logging failed: %w", err)
+				}
 			}
 
 			return tx.Commit(rctx)
 		}, 0,
 	); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
-		} else {
-			slog.Error("database error", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-		}
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "document deleted"})
+	if deleted {
+		ctx.JSON(http.StatusOK, gin.H{"message": "document deleted"})
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+	}
 }
 
 // importDocument is an end point to import a document.
