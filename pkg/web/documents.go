@@ -39,8 +39,8 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		return
 	}
 
-    // FieldEqInt is a shortcut mainly for building expressions
-    // accessing an integer column like 'id's.
+	// FieldEqInt is a shortcut mainly for building expressions
+	// accessing an integer column like 'id's.
 	expr := database.FieldEqInt("id", id)
 
 	// Filter the allowed
@@ -58,7 +58,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	}
 	// expr := ID matches AND TLP-level allowed; TODO: Publisher also checked?
 
-    // fields := array of strings, initially just ["original"]
+	// fields := array of strings, initially just ["original"]
 	fields := []string{"original"}
 	// whereclause, needs to be understood
 	where, replacements, aliases := expr.Where()
