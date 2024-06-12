@@ -123,8 +123,10 @@
     });
     let selectedOption: SSVCOption | null = null;
     mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
-      if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
-        selectedOption = option;
+      if (option.child_combinations) {
+        if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
+          selectedOption = option;
+        }
       }
     });
     Object.keys(selectedChildOptions).forEach((decisionLabel) => {
