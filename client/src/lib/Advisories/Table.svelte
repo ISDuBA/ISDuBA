@@ -392,6 +392,8 @@
                         {/if}
                       {/if}</TableBodyCell
                     >
+                  {:else if column === "critical"}
+                    <TableBodyCell {tdClass}>{item[column] || ""}</TableBodyCell>
                   {:else}
                     <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
                   {/if}

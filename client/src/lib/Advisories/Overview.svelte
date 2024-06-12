@@ -20,6 +20,7 @@
 
   $: columns = advisoriesOnly
     ? [
+        "critical",
         "cvss_v3_score",
         "cvss_v2_score",
         "ssvc",
@@ -33,6 +34,7 @@
         "version"
       ]
     : [
+        "critical",
         "cvss_v3_score",
         "cvss_v2_score",
         "ssvc",
