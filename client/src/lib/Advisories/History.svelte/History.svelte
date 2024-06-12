@@ -50,7 +50,7 @@
   >
 </ButtonGroup>
 
-<div class="max-h-[34rem] overflow-auto p-1">
+<div class="flex max-h-[34rem] flex-col overflow-auto p-1">
   <Table>
     <TableBody>
       {#each historyEntries as event}
@@ -101,4 +101,7 @@
       {/each}
     </TableBody>
   </Table>
+  {#if historyEntries.length === 0}
+    <span class="ml-auto mr-auto text-gray-400">{fullHistory ? "No entries" : "No comments"}</span>
+  {/if}
 </div>
