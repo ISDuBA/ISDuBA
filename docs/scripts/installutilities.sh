@@ -22,7 +22,7 @@ sudo apt install -y openjdk-17-jre-headless
 go_version="$(curl https://go.dev/VERSION\?m=text| head -1)"
 
 if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
-    sudo apt install pwgen
+    sudo apt install xkcdpass
 fi
 
 # if go exists and is the newest version

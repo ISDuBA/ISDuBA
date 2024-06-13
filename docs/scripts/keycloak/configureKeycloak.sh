@@ -58,7 +58,7 @@ if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
   if [ -f $file ]; then
     export KEYCLOAK_ADMIN_PASSWORD=$(<./../password.txt)
   else
-    password=$(pwgen -1)
+    password=$(xkcdpass --min 8 -d .)
     echo $password > ./../password.txt
     export KEYCLOAK_ADMIN_PASSWORD="$password"
     echo "No Keycloak admin password set. Trying to create new password. (See password.txt)"
