@@ -176,7 +176,7 @@ func (c *Controller) deleteAdvisory(ctx *gin.Context) {
 		tlpSQL = `SELECT tlp ` +
 			`FROM advisories ads ` +
 			`JOIN documents docs ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.Publisher) ` +
-			`WHERE docs.publisher = $1 AND docs.tracking_id = $2` +
+			`WHERE docs.publisher = $1 AND docs.tracking_id = $2 ` +
 			`AND latest`
 		deleteSQL = `DELETE FROM documents WHERE publisher = $1 AND tracking_id = $2`
 	)
