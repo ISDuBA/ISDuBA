@@ -11,7 +11,6 @@ package web
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -82,11 +81,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			}
 
 			if deleted = tags.RowsAffected() > 0; deleted {
-				var actor sql.NullString
-				if !c.cfg.General.AnonymousEventLogging {
-					actor.String = ctx.GetString("uid")
-					actor.Valid = true
-				}
+				actor := c.currentUser(ctx)
 				const eventSQL = `INSERT INTO events_log ` +
 					`(event, actor) ` +
 					`VALUES('delete_document'::events, $1)`
@@ -113,9 +108,8 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var actor *string
-	if !c.cfg.General.AnonymousEventLogging {
-		uid := ctx.GetString("uid")
-		actor = &uid
+	if user := c.currentUser(ctx); user.Valid {
+		actor = &user.String
 	}
 
 	file, err := ctx.FormFile("file")

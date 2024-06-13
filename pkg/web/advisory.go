@@ -41,12 +41,7 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 			`VALUES ('state_change', $1::workflow, $2, $3)`
 	)
 
-	var actor *string
-	if !c.cfg.General.AnonymousEventLogging {
-		uid := ctx.GetString("uid")
-		actor = &uid
-	}
-
+	actor := c.currentUser(ctx)
 	tlps := c.tlps(ctx)
 
 	var forbidden, noTransition, bad bool
@@ -154,4 +149,9 @@ func (c *Controller) changeStatusBulk(ctx *gin.Context) {
 		return
 	}
 	c.changeStatusAll(ctx, inputs)
+}
+
+func (c *Controller) deleteAdvisory(_ *gin.Context) {
+	// TODO: Implement me!
+	panic("Not implemented, yet!")
 }
