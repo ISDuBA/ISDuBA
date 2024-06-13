@@ -21,14 +21,14 @@ Value: ```{"$PUBLISHER": $TLPS}```
 
 where
 
- - $PUBLISHER: the publisher this group can access. The default value ```*``` allows access to all publishers.
+ - $PUBLISHER: the publisher this group can access. The value ```*``` allows access to all publishers. The respective value in advisories can be found under document\publisher\name\value. 
  - $TLPS: An array containing any combination of ```"WHITE"```, ```"GREEN"```, ```"AMBER"``` and ```"RED"```. The array-elements grant access to advisories of their respective TLP-level.
 
 The current default is:
 
 ```{"*": ["WHITE"]}```
 
-which allows access to all TLP:WHITE advisories of all publishers.
+which allows access to all TLP:WHITE advisories of all publishers. Anyone without a group will have these priviledges.
 
 The creation of new groups can be done via the graphical keycloak interface or via the [createGroup script.](./scripts/keycloak/createGroups.sh)
 

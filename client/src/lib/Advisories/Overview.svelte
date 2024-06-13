@@ -20,6 +20,7 @@
 
   $: columns = advisoriesOnly
     ? [
+        "critical",
         "cvss_v3_score",
         "cvss_v2_score",
         "ssvc",
@@ -33,6 +34,7 @@
         "version"
       ]
     : [
+        "critical",
         "cvss_v3_score",
         "cvss_v2_score",
         "ssvc",
@@ -57,7 +59,38 @@
 
 <div class="flex flex-row">
   <SectionHeader title="Advisories"></SectionHeader>
-  <ButtonGroup class="h-7">
+</div>
+<hr class="mb-6" />
+
+<div class="mb-3 flex">
+  <div class="w-2/3">
+    <Search
+      size="sm"
+      bind:value={searchTerm}
+      on:keyup={(e) => {
+        sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
+        if (e.key === "Enter") advisoryTable.fetchData();
+      }}
+    >
+      {#if searchTerm}
+        <button
+          class="mr-3"
+          on:click={() => {
+            searchTerm = "";
+            advisoryTable.fetchData();
+          }}>x</button
+        >
+      {/if}
+      <Button
+        size="xs"
+        class="h-7 py-3.5"
+        on:click={() => {
+          advisoryTable.fetchData();
+        }}>Search</Button
+      >
+    </Search>
+  </div>
+  <ButtonGroup class="ml-auto h-7">
     <Button
       size="xs"
       color="light"
@@ -75,33 +108,6 @@
       }}>Documents</Button
     >
   </ButtonGroup>
-</div>
-<div class="mb-3 flex w-2/3">
-  <Search
-    size="sm"
-    bind:value={searchTerm}
-    on:keyup={(e) => {
-      sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
-      if (e.key === "Enter") advisoryTable.fetchData();
-    }}
-  >
-    {#if searchTerm}
-      <button
-        class="mr-3"
-        on:click={() => {
-          searchTerm = "";
-          advisoryTable.fetchData();
-        }}>x</button
-      >
-    {/if}
-    <Button
-      size="xs"
-      class="h-7 py-3.5"
-      on:click={() => {
-        advisoryTable.fetchData();
-      }}>Search</Button
-    >
-  </Search>
 </div>
 {#if searchTerm !== null}
   <AdvisoryTable {searchTerm} bind:this={advisoryTable} loadAdvisories={advisoriesOnly} {columns}

@@ -9,19 +9,10 @@
 -->
 
 <script lang="ts">
-  import {
-    Button,
-    Card,
-    Heading,
-    Label,
-    Radio,
-    StepIndicator,
-    P,
-    Tooltip,
-    Input
-  } from "flowbite-svelte";
+  import { Button, Label, Input } from "flowbite-svelte";
   import {
     createIsoTimeStringForSSVC,
+    getDecision,
     parseDecisionTree,
     type SSVCDecision,
     type SSVCOption
@@ -30,16 +21,19 @@
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import ComplexDecision from "./ComplexDecision.svelte";
 
   const dispatch = createEventDispatcher();
 
   export let disabled = false;
   export let documentID: string;
+  export let allowEditing: any;
   let startedCalculation = false;
   let isEditing = false;
+  let isComplex = false;
   let currentStep = 0;
   let steps: string[] = [];
-  let mainDecisions: any[] = [];
+  let mainDecisions: SSVCDecision[] = [];
   let decisionPoints: any[] = [];
   let decisionsTable: any[] = [];
   let userDecisions: any = {};
@@ -71,10 +65,7 @@
     userDecisions = {};
     currentStep = 0;
     vector = vectorBeginning;
-  }
-
-  function getDecision(label: string): SSVCDecision {
-    return decisionPoints.find((element) => element.label === label);
+    isComplex = false;
   }
 
   function getOption(decision: SSVCDecision, label: string): SSVCOption | undefined {
@@ -113,7 +104,7 @@
 
   function calculateComplexOption() {
     const selectedChildOptions: any = {};
-    mainDecisions[currentStep].children.forEach((child: any) => {
+    mainDecisions[currentStep].children?.forEach((child: any) => {
       const checkedRadioButton: any = document.querySelector(
         `input[name="${child.label}"]:checked`
       );
@@ -123,14 +114,18 @@
     });
     let selectedOption: SSVCOption | null = null;
     mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
-      if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
-        selectedOption = option;
+      if (option.child_combinations) {
+        if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
+          selectedOption = option;
+        }
       }
     });
     Object.keys(selectedChildOptions).forEach((decisionLabel) => {
-      const decision = getDecision(decisionLabel);
-      const option = getOption(decision, selectedChildOptions[decisionLabel]);
-      extendVector(`${decision.key}:${option?.key}/`);
+      const decision = getDecision(decisionPoints, decisionLabel);
+      if (decision) {
+        const option = getOption(decision, selectedChildOptions[decisionLabel]);
+        extendVector(`${decision.key}:${option?.key}/`);
+      }
     });
     if (selectedOption) {
       selectOption(selectedOption);
@@ -179,25 +174,27 @@
       // Cut-off parent
       tmpVector = tmpVector.slice(0, -4);
       const keyPairs: string[] = [];
-      children.forEach(() => {
-        const splittedVector = tmpVector.split("/");
-        keyPairs.push(splittedVector[splittedVector.length - 2]);
-        tmpVector = tmpVector.slice(0, -4);
-      });
-      let didUserChooseChildren = true;
-      keyPairs.forEach((pair) => {
-        const splittedPair = pair.split(":");
-        let isChild = false;
-        children.forEach((child: any) => {
-          const childDecision = getDecision(child.label);
-          if (childDecision.key !== splittedPair[0]) return;
-          const optionsKeys = childDecision.options.map((option) => option.key);
-          if (optionsKeys.includes(splittedPair[1])) isChild = true;
+      if (children) {
+        children.forEach(() => {
+          const splittedVector = tmpVector.split("/");
+          keyPairs.push(splittedVector[splittedVector.length - 2]);
+          tmpVector = tmpVector.slice(0, -4);
         });
-        if (!isChild) didUserChooseChildren = false;
-      });
-      if (didUserChooseChildren) {
-        vector = vector.slice(0, -(4 * children.length));
+        let didUserChooseChildren = true;
+        keyPairs.forEach((pair) => {
+          const splittedPair = pair.split(":");
+          let isChild = false;
+          children.forEach((child: any) => {
+            const childDecision = getDecision(decisionPoints, child.label);
+            if (childDecision && childDecision.key !== splittedPair[0]) return;
+            const optionsKeys = childDecision?.options.map((option) => option.key);
+            if (optionsKeys?.includes(splittedPair[1])) isChild = true;
+          });
+          if (!isChild) didUserChooseChildren = false;
+        });
+        if (didUserChooseChildren) {
+          vector = vector.slice(0, -(4 * children.length));
+        }
       }
     }
     // Delete (parent) key pair
@@ -208,10 +205,14 @@
   }
 
   async function saveSSVC(vector: string) {
+    await allowEditing();
     resetError();
     const encodedUrl = encodeURI(`/api/ssvc/${documentID}?vector=${vector}`);
     const response = await request(encodedUrl, "PUT");
     if (response.ok) {
+      isEditing = false;
+      startedCalculation = false;
+      resetUserDecisions();
       dispatch("updateSSVC");
     } else if (response.error) {
       if (response.error === "400") {
@@ -236,140 +237,139 @@
   };
 </script>
 
-<div id="ssvc-calc">
+<div id="ssvc-calc" class="flex flex-row items-center gap-x-3">
   {#if !startedCalculation}
-    <div class="flex gap-x-1">
-      <Input
-        disabled={disabled || !isEditing}
-        on:keyup={(e) => {
-          if (e.key === "Enter") saveSSVC(vectorInput);
-        }}
-        on:input={resetError}
-        type="text"
-        bind:value={vectorInput}
-      />
+    <div class="flex items-center gap-x-3">
+      <div>
+        {#if isEditing}
+          <Input
+            autofocus
+            class="h-6 w-96"
+            disabled={disabled || !isEditing}
+            on:keyup={(e) => {
+              if (e.key === "Enter") saveSSVC(vectorInput);
+            }}
+            on:input={resetError}
+            type="text"
+            bind:value={vectorInput}
+          />
+        {:else if vectorInput}
+          <span class="h-6 text-nowrap text-sm text-gray-400">{vectorInput}</span>
+        {:else}
+          <span class="h-6 text-lg text-yellow-400">Please enter a SSVC</span>
+        {/if}
+      </div>
       {#if isEditing}
-        <Button size="xs" on:click={() => saveSSVC(vectorInput)}>Save</Button>
-        <Button size="xs" on:click={toggleEditing} class="!p-2" color="red" outline>Cancel</Button>
+        <button
+          class="h-6"
+          title="Undo"
+          on:click={() => {
+            isEditing = false;
+          }}><i class="bx bx-undo"></i></button
+        >
+        <button
+          class="h-6"
+          title="Calculate"
+          {disabled}
+          on:click={() => (startedCalculation = true)}><i class="bx bx-cog"></i></button
+        >
+        <button class="h-6" title="Save" color="light" on:click={() => saveSSVC(vectorInput)}
+          ><i class="bx bx-save me-2 text-xl"></i></button
+        >
       {:else}
-        <Button {disabled} on:click={toggleEditing}>Edit</Button>
+        <button class="h-6" {disabled} on:click={toggleEditing}
+          ><i class="bx bx-edit-alt ml-1"></i></button
+        >
       {/if}
     </div>
-    <Button size="xs" {disabled} on:click={() => (startedCalculation = true)} class="my-4"
-      >Calculate</Button
-    >
   {:else}
-    <div class="mb-4 flex gap-4">
-      <Button
-        size="xs"
-        color="light"
-        on:click={() => {
-          resetUserDecisions();
-          startedCalculation = false;
-        }}><i class="bx bx-arrow-back me-2 text-xl"></i>Back</Button
-      >
-
-      <Button size="xs" color="light" on:click={resetUserDecisions}>
-        <i class="bx bx-reset me-2 text-xl"></i>
-        Restart</Button
-      >
-      {#if currentStep > 0}
-        <Button size="xs" class="h-10" color="light" on:click={stepBack}>
-          <i class="bx bx-undo me-2 text-xl"></i>
-          Undo
-        </Button>
-      {/if}
-    </div>
-    <StepIndicator
-      class="mb-4 w-3/6"
-      color="gray"
-      hideLabel={true}
-      currentStep={currentStep + 1}
-      {steps}
-    ></StepIndicator>
+    <span class="pt-[0.3rem] font-mono text-gray-400" color="gray"
+      >{currentStep + 1}/{steps.length}</span
+    >
     {#if steps[currentStep]}
-      <Heading class="mb-6 max-w-fit text-xl">{steps[currentStep]}</Heading>
+      <span class="text-nowrap">{steps[currentStep]}</span>
     {/if}
     {#if mainDecisions[currentStep]}
       {#if currentStep < mainDecisions.length - 1}
         {#if mainDecisions[currentStep].decision_type === "simple"}
-          <div class="flex flex-wrap gap-3">
+          <div class="flex flex-row items-baseline gap-3">
             {#each mainDecisions[currentStep].options as option}
-              <Card class="flex w-80 justify-between">
-                <div class="flex flex-col">
-                  <Button size="xs" on:click={() => selectOption(option)} class="mb-2"
-                    >{option.label}</Button
-                  >
-                  <p class="mb-4">{option.description}</p>
-                </div>
-              </Card>
+              <Button
+                outline
+                size="xs"
+                title={option.description}
+                on:click={() => selectOption(option)}
+                class="h-6"
+                >{option.label}
+              </Button>
             {/each}
           </div>
         {:else if mainDecisions[currentStep].decision_type === "complex"}
-          <div class="flex flex-wrap gap-3">
-            {#each mainDecisions[currentStep].options as option}
-              <Card class="flex justify-between">
-                <div class="flex flex-col">
-                  <Button size="xs" on:click={() => selectOption(option)} class="mb-2"
-                    >{option.label}</Button
-                  >
-                  <p class="mb-4">{option.description}</p>
-                </div>
-              </Card>
-            {/each}
-          </div>
-          <div class="my-2 flex">
-            <div class="flex flex-col justify-between">
-              <i class="bx bx-up-arrow-alt text-xl"></i>
-              <i class="bx bx-down-arrow-alt text-xl"></i>
+          {#if !isComplex}
+            <div class="flex flex-row gap-x-3">
+              {#each mainDecisions[currentStep].options as option}
+                <Button
+                  class="h-6"
+                  outline
+                  title={option.description}
+                  size="xs"
+                  on:click={() => selectOption(option)}>{option.label}</Button
+                >
+              {/each}
             </div>
-            <div class="flex flex-col">
-              <P>Choose</P>
-              <P class="ml-2">- or -</P>
-              <P>Calculate</P>
-            </div>
-          </div>
-          <Card class="flex min-w-fit justify-between">
-            <form on:submit={calculateComplexOption}>
-              <div class="flex flex-row flex-wrap gap-x-6 gap-y-4">
-                {#each mainDecisions[currentStep].children as child}
-                  {@const childOptions = getDecision(child.label).options}
-                  <div class="min-w-60">
-                    <h5
-                      class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
-                    >
-                      {child.label}
-                    </h5>
-                    <div class="mb-4">
-                      {#each childOptions as option}
-                        <div
-                          class="mb-2 cursor-pointer rounded border border-gray-200 dark:border-gray-700"
-                        >
-                          <Radio name={child.label} value={option.label} class="w-full p-4"
-                            >{option.label}</Radio
-                          >
-                        </div>
-                        <Tooltip class="max-w-96">{option.description}</Tooltip>
-                      {/each}
-                    </div>
-                  </div>
-                {/each}
-              </div>
-              <Button size="xs" type="submit">Calculate</Button>
-            </form>
-          </Card>
+            or
+            <Button
+              class="h-6"
+              outline
+              title="Custom"
+              size="xs"
+              on:click={() => {
+                isComplex = true;
+              }}>Custom</Button
+            >
+          {:else}
+            <ComplexDecision
+              on:calculateComplexOption={calculateComplexOption}
+              children={mainDecisions[currentStep].children}
+              {decisionPoints}
+            ></ComplexDecision>
+          {/if}
         {/if}
       {:else if result}
-        <Label class="me-1 text-lg"
+        <Label
           >Result:
           <span style={resultStyle}>{result.text}</span>
         </Label>
-        <Label class="text-lg">Vector: {vector}</Label>
-        <Button size="xs" on:click={() => saveSSVC(vector)}>
-          <i class="bx bx-save me-2 text-xl"></i>Save</Button
+        <Label class="text-gray-400">Vector: {vector}</Label>
+        <button title="Save" on:click={() => saveSSVC(vector)}>
+          <i class="bx bx-save me-2 text-xl"></i></button
         >
       {/if}
     {/if}
+    <div class="flex flex-row items-baseline gap-x-1">
+      {#if currentStep > 0}
+        <button title="Undo" class="h-6" color="light" on:click={stepBack}>
+          <i class="bx bx-undo me-2 text-xl"></i>
+        </button>
+      {/if}
+      <button
+        title="Start over"
+        class="h-6 text-nowrap"
+        color="light"
+        on:click={resetUserDecisions}
+      >
+        <i class="bx bx-reset me-2 text-xl"></i>
+      </button>
+      <button
+        class="h-6"
+        color="light"
+        title="Back"
+        on:click={() => {
+          resetUserDecisions();
+          startedCalculation = false;
+        }}><i class="bx bx-arrow-back me-2 text-xl"></i></button
+      >
+    </div>
   {/if}
   <ErrorMessage message={saveSSVCError}></ErrorMessage>
 </div>

@@ -31,7 +31,7 @@
       });
 </script>
 
-<ButtonGroup class="mb-9 ml-auto mt-2 h-7">
+<ButtonGroup class="mb-9 ml-auto h-7">
   <Button
     size="xs"
     color="light"
@@ -50,7 +50,7 @@
   >
 </ButtonGroup>
 
-<div class="max-h-96 overflow-auto p-1">
+<div class="flex max-h-[34rem] flex-col overflow-auto p-1">
   <Table>
     <TableBody>
       {#each historyEntries as event}
@@ -75,6 +75,9 @@
                     {#if event.event_type === "change_comment"}
                       Edit comment ( {event.actor} )
                     {/if}
+                    {#if event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
+                      SSVC changed ( {event.actor} )
+                    {/if}
                   </small>
                   {#if /state_change|import_document/.test(event.event_type)}
                     <div class="border-1 border p-1 text-xs text-gray-800">
@@ -98,4 +101,7 @@
       {/each}
     </TableBody>
   </Table>
+  {#if historyEntries.length === 0}
+    <span class="ml-auto mr-auto text-gray-400">{fullHistory ? "No entries" : "No comments"}</span>
+  {/if}
 </div>

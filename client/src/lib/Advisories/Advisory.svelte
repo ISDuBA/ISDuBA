@@ -17,7 +17,7 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import { ASSESSING, READ, REVIEW } from "$lib/workflow";
+  import { ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -42,19 +42,20 @@
   let advisoryState = "";
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
-  $: if ([READ, ASSESSING].includes(advisoryState)) {
-    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+  $: if ([NEW, READ, ASSESSING, REVIEW].includes(advisoryState)) {
+    isCommentingAllowed =
+      (appStore.isEditor() && advisoryState !== REVIEW) || appStore.isReviewer();
   } else {
     isCommentingAllowed = false;
   }
   let isCalculatingAllowed: boolean;
-  $: if ([READ, ASSESSING].includes(advisoryState)) {
+  $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
     isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
   } else {
     isCalculatingAllowed = false;
   }
 
-  const timeoutIDs: number[] = [];
+  const setAsReadTimeout: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
 
@@ -188,11 +189,11 @@
       }
       return e;
     });
-    console.log(events);
     historyEntries = events;
   };
 
   async function createComment() {
+    await allowEditing();
     const formData = new FormData();
     formData.append("message", comment);
     const response = await request(`/api/comments/${params.id}`, "POST", formData);
@@ -213,6 +214,11 @@
   }
 
   async function updateState(newState: string) {
+    // Cancel automatic state transitions
+    setAsReadTimeout.forEach((id: number) => {
+      clearTimeout(id);
+    });
+
     const response = await request(
       `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
       "PUT"
@@ -247,19 +253,19 @@
     if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
       await buildHistory();
     }
-    const state = await loadAdvisoryState();
+    await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
     if (
-      state === "new" &&
-      appStore.isEditor() &&
+      advisoryState === NEW &&
+      canSetStateRead(advisoryState) &&
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
       const id: any = setTimeout(async () => {
-        if (canSetStateRead(advisoryState)) {
+        if (advisoryState === "new" && canSetStateRead(advisoryState)) {
           await updateState(READ);
         }
       }, 20000);
-      timeoutIDs.push(id);
+      setAsReadTimeout.push(id);
     }
   };
 
@@ -267,6 +273,12 @@
     await loadAdvisoryState();
     await loadDocumentSSVC();
     await buildHistory();
+  }
+
+  async function allowEditing() {
+    if (advisoryState === NEW && canSetStateRead(advisoryState)) {
+      await updateState(READ);
+    }
   }
 
   const onSelectedDiffDocuments = async (event: any) => {
@@ -278,7 +290,7 @@
   };
 
   onDestroy(() => {
-    timeoutIDs.forEach((id: number) => {
+    setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
     });
   });
@@ -286,9 +298,7 @@
   $: if (params) {
     loadData();
   }
-  $: ssvcStyle = ssvc
-    ? `color: ${ssvc.color}; border: 1pt solid ${ssvc.color}; background-color: white;`
-    : "";
+  $: ssvcStyle = ssvc ? `color: white; background-color: ${ssvc.color};` : "";
 </script>
 
 <svelte:head>
@@ -305,9 +315,6 @@
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
         <div class="flex h-fit flex-row gap-2">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
-          {#if ssvc}
-            <Badge title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
-          {/if}
         </div>
       </div>
       <hr class="mb-4 mt-2" />
@@ -330,10 +337,23 @@
             ></Version>
           {/if}
         </div>
-        <div class="flex flex-row">
+        <div class="flex flex-col">
           {#if isDiffOpen}
             <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
           {:else}
+            <div class="mb-4 flex flex-row items-center gap-x-3">
+              {#if ssvc}
+                <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
+              {/if}
+              <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+              <SsvcCalculator
+                vectorInput={ssvc?.vector}
+                disabled={!isCalculatingAllowed}
+                documentID={params.id}
+                on:updateSSVC={loadMetaData}
+                {allowEditing}
+              ></SsvcCalculator>
+            </div>
             <Webview></Webview>
           {/if}
         </div>
@@ -362,16 +382,6 @@
           {/if}
           <ErrorMessage message={loadEventsError}></ErrorMessage>
           <ErrorMessage message={loadCommentsError}></ErrorMessage>
-          <div class="mt-4">
-            <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-            <Label class="mb-2" for="ssvc-calculator">SSVC:</Label>
-            <SsvcCalculator
-              vectorInput={ssvc?.vector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-            ></SsvcCalculator>
-          </div>
         {/if}
       </div>
     </div>

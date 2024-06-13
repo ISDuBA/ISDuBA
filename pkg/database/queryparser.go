@@ -233,6 +233,7 @@ var columns = []documentColumn{
 	{"ssvc", stringType, false, false},
 	{"cvss_v2_score", floatType, false, false},
 	{"cvss_v3_score", floatType, false, false},
+	{"critical", floatType, false, false},
 	{"four_cves", stringType, false, true},
 }
 
@@ -265,7 +266,7 @@ func CreateOrder(
 		case "tracking_id", "publisher":
 			b.WriteString("documents.")
 			b.WriteString(field)
-		case "cvss_v2_score", "cvss_v3_score":
+		case "cvss_v2_score", "cvss_v3_score", "critical":
 			b.WriteString("COALESCE(")
 			b.WriteString(field)
 			b.WriteString(",0)")
