@@ -11,6 +11,7 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -20,6 +21,11 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
+
+type advisoryKey struct {
+	Publisher  string `uri:"publisher" binding:"required" json:"publisher"`
+	TrackingID string `uri:"trackingid" binding:"required" json:"tracking_id"`
+}
 
 type advisoryState struct {
 	Publisher  string          `uri:"publisher" binding:"required" json:"publisher"`
@@ -35,7 +41,8 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 		findAdvisory = `SELECT id, state::text, tlp ` +
 			`FROM advisories ads ` +
 			`JOIN documents docs ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.Publisher) ` +
-			`WHERE docs.publisher = $1 AND docs.tracking_id = $2`
+			`WHERE docs.publisher = $1 AND docs.tracking_id = $2 ` +
+			`and latest`
 		updateState = `UPDATE advisories SET state = $1::workflow WHERE (tracking_id, publisher) = ($2, $3)`
 		insertLog   = `INSERT INTO events_log (event, state, actor, documents_id) ` +
 			`VALUES ('state_change', $1::workflow, $2, $3)`
@@ -67,6 +74,7 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 					bad = true
 					return nil
 				}
+
 				slog.Debug("state change",
 					"publisher", input.Publisher,
 					"tracking_id", input.TrackingID,
@@ -151,7 +159,80 @@ func (c *Controller) changeStatusBulk(ctx *gin.Context) {
 	c.changeStatusAll(ctx, inputs)
 }
 
-func (c *Controller) deleteAdvisory(_ *gin.Context) {
-	// TODO: Implement me!
-	panic("Not implemented, yet!")
+// deleteAdvisory deletes a given advisory.
+func (c *Controller) deleteAdvisory(ctx *gin.Context) {
+	var key advisoryKey
+	if err := ctx.ShouldBindUri(&key); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if key.Publisher == "" || key.TrackingID == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing publisher or tracking_id"})
+		return
+	}
+
+	const (
+		tlpSQL = `SELECT tlp ` +
+			`FROM advisories ads ` +
+			`JOIN documents docs ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.Publisher) ` +
+			`WHERE docs.publisher = $1 AND docs.tracking_id = $2` +
+			`AND latest`
+		deleteSQL = `DELETE FROM documents WHERE publisher = $1 AND tracking_id = $2`
+	)
+
+	var forbidden, deleted bool
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
+			if err != nil {
+				return err
+			}
+			defer tx.Rollback(rctx)
+
+			var tlp string
+			if err := tx.QueryRow(rctx, tlpSQL, key.Publisher, key.TrackingID).Scan(&tlp); err != nil {
+				return fmt.Errorf("finding latest tlp failed: %w", err)
+			}
+			if tlps := c.tlps(ctx); !tlps.Allowed(key.Publisher, models.TLP(tlp)) {
+				forbidden = true
+				return nil
+			}
+
+			tags, err := tx.Exec(rctx, deleteSQL, key.Publisher, key.TrackingID)
+			if err != nil {
+				return fmt.Errorf("deleting advisory documents failed: %w", err)
+			}
+			// Log if there were documents deleted.
+			if deleted = tags.RowsAffected() > 0; deleted {
+				actor := c.currentUser(ctx)
+				const eventSQL = `INSERT INTO events_log ` +
+					`(event, actor) ` +
+					`VALUES('delete_document'::events, $1)`
+				if _, err := tx.Exec(rctx, eventSQL, actor); err != nil {
+					return fmt.Errorf("event logging failed: %w", err)
+				}
+			}
+
+			return tx.Commit(rctx)
+		}, 0,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
+		} else {
+			slog.Error("deleting adviory failed", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	switch {
+	case forbidden:
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "not allowed to delete adviory"})
+	case !deleted:
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
+	default:
+		ctx.JSON(http.StatusOK, gin.H{"message": "advisory deleted"})
+	}
 }
