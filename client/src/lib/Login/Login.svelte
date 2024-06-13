@@ -30,7 +30,8 @@
     await $appStore.app.userManager?.signinRedirect();
   }
 
-  let profileUrl = PUBLIC_KEYCLOAK_URL + "/realms/" + PUBLIC_KEYCLOAK_REALM + "/account/#/";
+  let profileUrl = (PUBLIC_KEYCLOAK_URL
+                   + "/realms/" + PUBLIC_KEYCLOAK_REALM + "/account/#/");
 
   async function getVersion() {
     const response = await request("api/about", "GET");
@@ -101,7 +102,7 @@
           >
         {/if}
         {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
-          <Button href={profileUrl} target="_blank">Profile</Button>
+          <Button href={profileUrl}>Profile</Button>
           <Button on:click={logout}>Logout</Button>
         {/if}
       </div>
