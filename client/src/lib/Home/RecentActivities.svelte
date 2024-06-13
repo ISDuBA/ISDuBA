@@ -14,6 +14,7 @@
   import { Badge } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import CustomCard from "./CustomCard.svelte";
 
   let error = "";
   let recentActivities = [
@@ -51,7 +52,7 @@
     const now = Date.now();
     const passedTime = now - date.getTime();
     if (passedTime < 60000) {
-      return "Less than one minute ago";
+      return "<1 min ago";
     } else if (passedTime < 3600000) {
       return `${Math.floor(passedTime / 60000)} min ago`;
     } else if (passedTime < 86400000) {
@@ -65,50 +66,74 @@
 {#if $appStore.app.isUserLoggedIn}
   <div class="flex w-1/2 max-w-[50%] flex-col gap-4">
     <SectionHeader title="Recent activities"></SectionHeader>
+    <div class="text-red-600">
+      Attention: These are only
+      <span class="font-bold">examples</span>
+      for now as we are not able to fetch recent activities yet.
+    </div>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if recentActivities?.length && recentActivities.length > 0}
         {#each recentActivities as activity}
-          <div class="rounded-md border border-solid border-gray-300 p-4 shadow-md">
-            <div class="mb-3 flex flex-row justify-between text-xs">
-              {#if activity.date}
-                <span title={activity.date.toISOString()}>{getRelativeTime(activity.date)}</span>
-                {#if activity.name}
-                  {#if activity.name === "comment"}
-                    <i class="bx bx-comment text-xl"></i>
-                  {:else if activity.name === "mention"}
-                    <i class="bx bx-at text-xl"></i>
-                  {:else if activity.name === "state"}
-                    <i class="bx bx-book-open text-xl"></i>
-                  {:else if activity.name === "import"}
-                    <i class="bx bx-import text-xl"></i>
-                  {/if}
-                {/if}
-              {/if}
-            </div>
-            <hr class="mb-3" />
-            {#if ["comment", "mention"].includes(activity.name)}
-              <div class="text-black">{activity.content}</div>
-            {:else if activity.name === "state"}
-              <div class="text-black">
-                {`${activity.publisher}: ${activity.documentTitle}`}
-              </div>
-              <div class="flex justify-between">
+          <CustomCard>
+            <div slot="top-right">
+              {#if activity.cvss}
+                <span>CVSS v3:</span>
+                <span class="text-red-500">
+                  {activity.cvss?.toFixed(1)}
+                </span>
+              {:else if activity.ssvc}
                 <Badge
-                  class="h-6 w-fit"
                   title={activity.ssvc.vector}
-                  style={`color: white; background-color: ${activity.ssvc.color}`}
+                  style={`background-color: white; color: black; border: 1pt solid ${activity.ssvc.color};`}
                 >
                   {activity.ssvc.label}
                 </Badge>
-                <div>{`New state: ${activity.newState}`}</div>
+              {/if}
+            </div>
+            <div slot="top-left" class="text-sm text-gray-700">
+              {#if activity.name}
+                {#if activity.name === "comment"}
+                  <div class="flex items-center gap-1">
+                    <i class="bx bx-comment"></i>
+                    <span>New comment</span>
+                  </div>
+                {:else if activity.name === "mention"}
+                  <div class="flex items-center gap-1">
+                    <i class="bx bx-at"></i>
+                    <span>{`${activity.user} mentioned you`}</span>
+                  </div>
+                {:else if activity.name === "state"}
+                  <div class="flex items-center gap-1">
+                    <i class="bx bx-book-open"></i>
+                    <span>{`Now in state ${activity.newState}`}</span>
+                  </div>
+                {:else if activity.name === "import"}
+                  <div class="flex items-center gap-1">
+                    <i class="bx bx-import"></i>
+                    <span>New import</span>
+                  </div>
+                {/if}
+              {/if}
+            </div>
+            {#if ["comment", "mention"].includes(activity.name)}
+              <div class="text-black">{`${activity.user}: ${activity.content}`}</div>
+            {:else if activity.name === "state"}
+              <div class="text-black">
+                {`${activity.publisher}: ${activity.documentTitle}`}
               </div>
             {:else if activity.name === "import"}
               <div class="text-black">
                 {`${activity.publisher}: ${activity.documentTitle}`}
               </div>
-              <div class="font-bold text-red-700">CVSS: {activity.cvss?.toFixed(1)}</div>
             {/if}
-          </div>
+            <div slot="bottom-right">
+              {#if activity.date}
+                <span title={activity.date.toISOString()} class="text-gray-500"
+                  >{getRelativeTime(activity.date)}</span
+                >
+              {/if}
+            </div>
+          </CustomCard>
         {/each}
       {/if}
     </div>

@@ -15,6 +15,7 @@
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import CustomCard from "./CustomCard.svelte";
 
   let documents: any[] = [];
   let newDocumentsError = "";
@@ -56,13 +57,13 @@
     <div class="text-red-600">
       Attention: These are
       <span class="font-bold">advisories</span>
-      for now as we are not able to fetch recently imported documents.
+      for now as we are not able to fetch recently imported documents yet.
     </div>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if documents?.length && documents.length > 0}
         {#each documents as doc}
-          <div class="rounded-md border border-solid border-gray-300 p-4 shadow-md">
-            <div class="mb-3 flex flex-row text-xs">
+          <CustomCard>
+            <div slot="top-left">
               {#if doc.cvss_v2_score}
                 <div>
                   <span>CVSS v2:</span>
@@ -79,11 +80,12 @@
                   </span>
                 </div>
               {/if}
-              <span class="ml-auto" title={doc.publisher}>{getPublisherAbbr(doc.publisher)}</span>
             </div>
-            <hr class="mb-3" />
+            <span slot="top-right" class="ml-auto" title={doc.publisher}
+              >{getPublisherAbbr(doc.publisher)}</span
+            >
             <div class="text-black">{doc.title}</div>
-          </div>
+          </CustomCard>
         {/each}
       {/if}
     </div>
