@@ -87,3 +87,9 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .collapsible-body {
+    margin-left: 0.5rem;
+  }
+</style>

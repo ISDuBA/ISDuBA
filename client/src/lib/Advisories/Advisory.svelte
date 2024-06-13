@@ -17,7 +17,7 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import { ASSESSING, READ, REVIEW } from "$lib/workflow";
+  import { ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -42,13 +42,13 @@
   let advisoryState = "";
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
-  $: if ([READ, ASSESSING].includes(advisoryState)) {
+  $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
     isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
   } else {
     isCommentingAllowed = false;
   }
   let isCalculatingAllowed: boolean;
-  $: if ([READ, ASSESSING].includes(advisoryState)) {
+  $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
     isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
   } else {
     isCalculatingAllowed = false;
@@ -192,6 +192,7 @@
   };
 
   async function createComment() {
+    await allowEditing();
     const formData = new FormData();
     formData.append("message", comment);
     const response = await request(`/api/comments/${params.id}`, "POST", formData);
@@ -254,7 +255,7 @@
     await loadAdvisoryState();
     // Only set state to 'read' if editor opens the current version.
     if (
-      advisoryState === "new" &&
+      advisoryState === NEW &&
       canSetStateRead(advisoryState) &&
       (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
     ) {
@@ -271,6 +272,12 @@
     await loadAdvisoryState();
     await loadDocumentSSVC();
     await buildHistory();
+  }
+
+  async function allowEditing() {
+    if (advisoryState === NEW && canSetStateRead(advisoryState)) {
+      await updateState(READ);
+    }
   }
 
   const onSelectedDiffDocuments = async (event: any) => {
@@ -343,6 +350,7 @@
                 disabled={!isCalculatingAllowed}
                 documentID={params.id}
                 on:updateSSVC={loadMetaData}
+                {allowEditing}
               ></SsvcCalculator>
             </div>
             <Webview></Webview>
