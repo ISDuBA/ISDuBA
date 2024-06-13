@@ -104,3 +104,19 @@ const getAccessToken = async () => {
     }
   });
 };
+
+export const getPublisher = (publisher: string, width?: number) => {
+  if (width && width > 1280) return publisher;
+  switch (publisher) {
+    case "Red Hat Product Security":
+      return "RH";
+    case "Siemens ProductCERT":
+      return "SI";
+    case "Bundesamt für Sicherheit in der Informationstechnik":
+      return "BSI";
+    case "SICK PSIRT":
+      return "SCK";
+    default:
+      return publisher;
+  }
+};

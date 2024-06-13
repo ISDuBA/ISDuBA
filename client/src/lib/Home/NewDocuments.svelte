@@ -16,6 +16,7 @@
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import CustomCard from "./CustomCard.svelte";
+  import { getPublisher } from "$lib/utils";
 
   let documents: any[] = [];
   let newDocumentsError = "";
@@ -30,19 +31,6 @@
       documents = await response.content.documents;
     } else if (response.error) {
       newDocumentsError = `Could not load new documents. ${getErrorMessage(response.error)}`;
-    }
-  };
-
-  const getPublisherAbbr = (publisher: string) => {
-    switch (publisher) {
-      case "Red Hat Product Security":
-        return "RH";
-      case "Siemens ProductCERT":
-        return "SI";
-      case "Bundesamt für Sicherheit in der Informationstechnik":
-        return "BSI";
-      case "SICK PSIRT":
-        return "SCK";
     }
   };
 
@@ -82,7 +70,7 @@
               {/if}
             </div>
             <span slot="top-right" class="ml-auto" title={doc.publisher}
-              >{getPublisherAbbr(doc.publisher)}</span
+              >{getPublisher(doc.publisher)}</span
             >
             <div class="text-black">{doc.title}</div>
           </CustomCard>

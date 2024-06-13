@@ -32,6 +32,7 @@
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
+  import { getPublisher } from "$lib/utils";
 
   let openRow: number | null;
 
@@ -54,6 +55,8 @@
   let anchorLink: string | null;
   let deleteModalOpen = false;
   let documentToDelete: any = {};
+
+  let innerWidth = 0;
 
   const getColumnDisplayName = (column: string): string => {
     let names: { [key: string]: string } = {
@@ -199,6 +202,8 @@
     await fetchData();
   });
 </script>
+
+<svelte:window bind:innerWidth />
 
 <Modal size="xs" title={documentToDelete.title} bind:open={deleteModalOpen} autoclose outsideclose>
   <div class="text-center">
@@ -364,7 +369,8 @@
                     >
                   {:else if column === "publisher"}
                     <TableBodyCell tdClass={publisher}
-                      ><span title={item[column]}>{item[column]}</span></TableBodyCell
+                      ><span title={item[column]}>{getPublisher(item[column], innerWidth)}</span
+                      ></TableBodyCell
                     >
                   {:else if column === "four_cves"}
                     <TableBodyCell {tdClass}
