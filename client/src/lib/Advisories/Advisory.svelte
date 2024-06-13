@@ -42,8 +42,9 @@
   let advisoryState = "";
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
-  $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
-    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+  $: if ([NEW, READ, ASSESSING, REVIEW].includes(advisoryState)) {
+    isCommentingAllowed =
+      (appStore.isEditor() && advisoryState !== REVIEW) || appStore.isReviewer();
   } else {
     isCommentingAllowed = false;
   }

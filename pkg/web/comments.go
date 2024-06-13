@@ -91,7 +91,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			// Check if we are in a state in which commenting is allowed.
 			state := models.Workflow(stateS)
 			commentingAllowed = state == models.ReadWorkflow ||
-				state == models.AssessingWorkflow
+				state == models.AssessingWorkflow ||
+				(state == models.ReviewWorkflow && c.hasAnyRole(ctx, models.Reviewer))
 			if !commentingAllowed {
 				return nil
 			}
