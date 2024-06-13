@@ -54,7 +54,7 @@ The configuration consists of the following sections:
 - `host`: Interface the web server listens on. Defaults to `"localhost"`.
 - `port`: Port the web server listens on. Defaults to `8081`.
 - `gin_mode`: Mode the Gin middleware is running in. Defaults to `"release"`.
-- `static`: Folder to be served under **http://host:port/web**. Defaults to `"web"`.
+- `static`: Folder to be served under **http://host:port/**. Defaults to `"web"`.
 
 ### <a name="section_database"></a> Section `[database]` Database credentials
 - `host`: Host of the database server. Defaults to `"localhost"`.
