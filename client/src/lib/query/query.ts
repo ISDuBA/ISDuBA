@@ -8,6 +8,7 @@
 
 const COLUMNS = {
   ADVISORY: [
+    "critical",
     "id",
     "tracking_id",
     "version",
@@ -23,6 +24,7 @@ const COLUMNS = {
     "state"
   ],
   DOCUMENT: [
+    "critical",
     "id",
     "tracking_id",
     "version",

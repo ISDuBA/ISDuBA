@@ -76,6 +76,9 @@ CREATE TABLE documents (
                 GENERATED ALWAYS AS (max_cvss2_score(document)) STORED,
     cvss_v3_score float
                 GENERATED ALWAYS AS (max_cvss3_score(document)) STORED,
+    critical    float
+                GENERATED ALWAYS AS (
+                    coalesce(max_cvss3_score(document), max_cvss2_score(document))) STORED,
     four_cves   jsonb
                 GENERATED ALWAYS AS (first_four_cves(document)) STORED,
     ssvc        text,
@@ -163,6 +166,7 @@ CREATE INDEX initial_release_date_idx ON documents (initial_release_date);
 
 CREATE INDEX documents_cvss2_idx ON documents(coalesce(cvss_v2_score, '0'::double precision) DESC);
 CREATE INDEX documents_cvss3_idx ON documents(coalesce(cvss_v3_score, '0'::double precision) DESC);
+CREATE INDEX documents_critical_idx ON documents(coalesce(critical, '0'::double precision) DESC);
 
 CREATE FUNCTION to_tsvector_multilang(text) RETURNS tsvector AS $$
     SELECT {{ range $idx, $lang := .TextSearch -}}
