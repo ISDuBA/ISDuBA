@@ -313,7 +313,7 @@
           <TableBody>
             {#each documents as item, i}
               <tr
-                class="cursor-pointer bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
+                class="cursor-pointer odd:bg-white even:bg-gray-100 hover:bg-gray-200"
                 on:click={() => {
                   push(`/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`);
                 }}
