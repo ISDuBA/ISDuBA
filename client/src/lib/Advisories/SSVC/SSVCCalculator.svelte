@@ -250,7 +250,7 @@
             bind:value={vectorInput}
           />
         {:else if vectorInput}
-          <span class="h-6 text-sm text-gray-400">{vectorInput}</span>
+          <span class="h-6 text-nowrap text-sm text-gray-400">{vectorInput}</span>
         {:else}
           <span class="h-6 text-lg text-yellow-400">Please enter a SSVC</span>
         {/if}
@@ -283,7 +283,7 @@
       >{currentStep + 1}/{steps.length}</span
     >
     {#if steps[currentStep]}
-      <span>{steps[currentStep]}</span>
+      <span class="text-nowrap">{steps[currentStep]}</span>
     {/if}
     {#if mainDecisions[currentStep]}
       {#if currentStep < mainDecisions.length - 1}
