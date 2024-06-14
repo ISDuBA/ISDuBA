@@ -10,6 +10,7 @@
 package web
 
 import (
+	"database/sql"
 	"log/slog"
 	"net/http"
 
@@ -34,6 +35,16 @@ func NewController(cfg *config.Config, db *database.DB) *Controller {
 	return &Controller{cfg: cfg, db: db}
 }
 
+// currentUser returns the current user to be used in database queries.
+func (c *Controller) currentUser(ctx *gin.Context) sql.NullString {
+	var user sql.NullString
+	if !c.cfg.General.AnonymousEventLogging {
+		user.String = ctx.GetString("uid")
+		user.Valid = true
+	}
+	return user
+}
+
 // Bind return a http handler to be used in a web server.
 func (c *Controller) Bind() http.Handler {
 	r := gin.New()
@@ -51,6 +62,7 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
+		authAdm    = authRoles(models.Admin)
 		authIm     = authRoles(models.Importer)
 		authEdRe   = authRoles(models.Editor, models.Reviewer)
 		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
@@ -62,9 +74,16 @@ func (c *Controller) Bind() http.Handler {
 	api := r.Group("/api")
 
 	// Documents
+	// Importer can import (POST) documents
 	api.POST("/documents", authIm, c.importDocument)
+	// Everyone can view (GET) overviewDocuments and viewDocuments?
 	api.GET("/documents", authAll /* authEdReAu */, c.overviewDocuments)
 	api.GET("/documents/:id", authAll /* authEdReAu */, c.viewDocument)
+	// Admin can delete documents
+	api.DELETE("/documents/:id", authAdm, c.deleteDocument)
+
+	// Advisories
+	api.DELETE("/advisory/:publisher/:trackingid", authAdm, c.deleteAdvisory)
 
 	// Comments
 	api.POST("/comments/:document", authEdRe, c.createComment)

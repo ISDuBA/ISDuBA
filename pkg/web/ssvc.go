@@ -91,11 +91,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 				return nil
 			}
 
-			var actor *string
-			if !c.cfg.General.AnonymousEventLogging {
-				uid := ctx.GetString("uid")
-				actor = &uid
-			}
+			actor := c.currentUser(ctx)
 			logEvent := func(event models.Event, state models.Workflow) error {
 				_, err := tx.Exec(rctx, insertLog, string(event), string(state), actor, documentID)
 				return err

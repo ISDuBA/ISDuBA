@@ -191,8 +191,21 @@
     fetchData();
   };
 
-  const deleteDocument = () => {
-    console.log(`Document ${documentToDelete.id} will be deleted`);
+  const deleteDocument = async () => {
+    let url = "";
+    if (loadAdvisories) {
+      url = encodeURI(
+        `/api/advisory/${documentToDelete.publisher}/${documentToDelete.tracking_id}`
+      );
+    } else {
+      url = encodeURI(`/api/documents/${documentToDelete.id}`);
+    }
+    const response = await request(url, "DELETE");
+    if (response.error) {
+      error = `Could not delete ${loadAdvisories ? "advisory" : "document"} ${getErrorMessage(response.error)}`;
+    }
+    await fetchData();
+    first();
   };
 
   $: numberOfPages = Math.ceil(count / limit);
@@ -208,7 +221,7 @@
 <Modal size="xs" title={documentToDelete.title} bind:open={deleteModalOpen} autoclose outsideclose>
   <div class="text-center">
     <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-      Are you sure you want to delete this document?
+      Are you sure you want to delete this {loadAdvisories ? "advisory" : "document"}?
     </h3>
     <Button
       on:click={() => {
@@ -412,10 +425,7 @@
                   <TableBodyCell {tdClass}>
                     <button
                       on:click|stopPropagation={(e) => {
-                        documentToDelete = {
-                          title: item.title,
-                          id: item.id
-                        };
+                        documentToDelete = item;
                         deleteModalOpen = true;
                         e.preventDefault();
                       }}

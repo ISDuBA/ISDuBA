@@ -10,7 +10,6 @@ package web
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -53,7 +52,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		exists                 bool
 		commentingAllowed      bool
 		forbidden              bool
-		commentator            = ctx.GetString("uid")
+		commentator            = c.currentUser(ctx)
 		message, _             = ctx.GetPostForm("message")
 		now                    = time.Now().UTC()
 		commentID              *int64
@@ -97,18 +96,12 @@ func (c *Controller) createComment(ctx *gin.Context) {
 				return nil
 			}
 
-			var actor sql.NullString
-			if !c.cfg.General.AnonymousEventLogging {
-				actor.String = commentator
-				actor.Valid = true
-			}
-
 			logEvent := func(event models.Event, state models.Workflow) error {
 				const eventSQL = `INSERT INTO events_log ` +
 					`(event, state, time, actor, documents_id, comments_id) ` +
 					`VALUES($1::events, $2::workflow, $3, $4, $5, $6)`
 				_, err := tx.Exec(
-					rctx, eventSQL, string(event), string(state), now, actor, docID, commentID)
+					rctx, eventSQL, string(event), string(state), now, commentator, docID, commentID)
 				return err
 			}
 
@@ -222,11 +215,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 				`WHERE docs.id = $3), ` +
 				`$1, $2, $3, $4)`
 
-			var actor sql.NullString
-			if !c.cfg.General.AnonymousEventLogging {
-				actor.String = commentator
-				actor.Valid = true
-			}
+			actor := c.currentUser(ctx)
 			if _, err := tx.Exec(rctx, eventSQL, now, actor, docID, commentID); err != nil {
 				return err
 			}

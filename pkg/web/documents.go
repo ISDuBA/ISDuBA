@@ -28,13 +28,88 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
+// deleteDocument is an end point for deleting a document.
+func (c *Controller) deleteDocument(ctx *gin.Context) {
+	// Get an ID from context
+	idS := ctx.Param("id")
+	docID, err := strconv.ParseInt(idS, 10, 64)
+	// Error handling for id acquisition
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	// FieldEqInt is a shortcut mainly for building expressions
+	// accessing an integer column like 'id's.
+	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
+	expr := database.FieldEqInt("id", docID)
+
+	// Filter the allowed
+	if tlps := c.tlps(ctx); len(tlps) > 0 {
+		conditions := tlps.AsConditions()
+		parser := database.Parser{}
+		tlpExpr, err := parser.Parse(conditions)
+		if err != nil {
+			slog.Warn("TLP filter failed", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+		// And concats two expressions and-wise.
+		expr = expr.And(tlpExpr)
+	}
+
+	where, replacements, _ := expr.Where()
+
+	deleted := false
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			tx, err := conn.BeginTx(rctx, pgx.TxOptions{})
+			if err != nil {
+				return err
+			}
+			defer tx.Rollback(rctx)
+
+			const deletePrefix = `DELETE FROM documents WHERE `
+			deleteSQL := deletePrefix + where
+			slog.Debug("delete document", "SQL", qndSQLReplace(deleteSQL, replacements))
+
+			tags, err := tx.Exec(rctx, deleteSQL, replacements...)
+			if err != nil {
+				return fmt.Errorf("delete failed: %w", err)
+			}
+
+			if deleted = tags.RowsAffected() > 0; deleted {
+				actor := c.currentUser(ctx)
+				const eventSQL = `INSERT INTO events_log ` +
+					`(event, actor) ` +
+					`VALUES('delete_document'::events, $1)`
+				if _, err := tx.Exec(rctx, eventSQL, actor); err != nil {
+					return fmt.Errorf("event logging failed: %w", err)
+				}
+			}
+
+			return tx.Commit(rctx)
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if deleted {
+		ctx.JSON(http.StatusOK, gin.H{"message": "document deleted"})
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+	}
+}
+
 // importDocument is an end point to import a document.
 func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var actor *string
-	if !c.cfg.General.AnonymousEventLogging {
-		uid := ctx.GetString("uid")
-		actor = &uid
+	if user := c.currentUser(ctx); user.Valid {
+		actor = &user.String
 	}
 
 	file, err := ctx.FormFile("file")
