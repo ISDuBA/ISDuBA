@@ -30,8 +30,7 @@
     await $appStore.app.userManager?.signinRedirect();
   }
 
-  let profileUrl = (PUBLIC_KEYCLOAK_URL
-                   + "/realms/" + PUBLIC_KEYCLOAK_REALM + "/account/#/");
+  let profileUrl = PUBLIC_KEYCLOAK_URL + "/realms/" + PUBLIC_KEYCLOAK_REALM + "/account/#/";
 
   async function getVersion() {
     const response = await request("api/about", "GET");
