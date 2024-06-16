@@ -221,7 +221,6 @@ func (pe parseError) Error() string {
 var columns = []documentColumn{
 	{"id", intType, false, false},
 	{"latest", boolType, false, false},
-	{"state", workflowType, true, false},
 	{"tracking_id", stringType, false, false},
 	{"version", stringType, false, false},
 	{"publisher", stringType, false, false},
@@ -235,6 +234,10 @@ var columns = []documentColumn{
 	{"cvss_v3_score", floatType, false, false},
 	{"critical", floatType, false, false},
 	{"four_cves", stringType, false, true},
+	// Advisories only
+	{"state", workflowType, true, false},
+	{"comments", intType, true, false},
+	{"recent", timeType, true, false},
 }
 
 // supportedLangs are the default languages.
