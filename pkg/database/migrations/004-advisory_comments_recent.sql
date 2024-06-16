@@ -79,7 +79,7 @@ CREATE FUNCTION upd_recent() RETURNS trigger AS $$
             WHERE id = NEW.documents_id;
         IF FOUND THEN
             UPDATE advisories
-                SET recent = greatest(recent, NEW.recent)
+                SET recent = greatest(recent, NEW.time)
                 WHERE publisher = p AND tracking_id = t;
         END IF;
         RETURN NULL;
