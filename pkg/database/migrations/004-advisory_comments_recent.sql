@@ -21,3 +21,72 @@ UPDATE advisories a SET comments = (
 UPDATE advisories a SET recent = (
     SELECT max(time) from events_log el JOIN documents d ON el.documents_id = d.id
     WHERE d.publisher = a.publisher AND d.tracking_id = a.tracking_id);
+
+CREATE FUNCTION incr_comments() RETURNS trigger AS $$
+    DECLARE
+        p text;
+        t text;
+    BEGIN
+        SELECT publisher, tracking_id
+            INTO p, t
+            FROM documents
+            WHERE id = NEW.documents_id;
+        IF FOUND THEN
+            UPDATE advisories
+                SET comments = comments + 1
+                WHERE publisher = p AND tracking_id = t;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION decr_comments() RETURNS trigger AS $$
+    DECLARE
+        p text;
+        t text;
+    BEGIN
+        SELECT publisher, tracking_id
+            INTO p, t
+            FROM documents
+            WHERE id = OLD.documents_id;
+        IF FOUND THEN
+            UPDATE advisories
+                SET comments = greatest(0, comments - 1)
+                WHERE publisher = p AND tracking_id = t;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER increment_comments
+    AFTER INSERT
+    ON comments
+    FOR EACH ROW EXECUTE FUNCTION incr_comments();
+
+CREATE TRIGGER decrement_comments
+    AFTER DELETE
+    ON comments
+    FOR EACH ROW EXECUTE FUNCTION decr_comments();
+
+CREATE FUNCTION upd_recent() RETURNS trigger AS $$
+    DECLARE
+        p text;
+        t text;
+    BEGIN
+        SELECT publisher, tracking_id
+            INTO p, t
+            FROM documents
+            WHERE id = NEW.documents_id;
+        IF FOUND THEN
+            UPDATE advisories
+                SET recent = greatest(recent, NEW.recent)
+                WHERE publisher = p AND tracking_id = t;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_recent
+    AFTER INSERT OR UPDATE
+    ON comments
+    FOR EACH ROW EXECUTE FUNCTION upd_recent();
