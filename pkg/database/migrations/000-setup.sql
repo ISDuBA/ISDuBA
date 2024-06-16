@@ -20,8 +20,14 @@ CREATE TABLE advisories (
     tracking_id  text NOT NULL,
     publisher    text NOT NULL,
     state        workflow NOT NULL DEFAULT 'new',
-    PRIMARY KEY(tracking_id, publisher)
+    -- comments and recent are cached here for performance.
+    comments     int NOT NULL DEFAULT 0,
+    recent       timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(tracking_id, publisher),
+    CHECK(comments >= 0)
 );
+
+CREATE INDEX advisories_recent_idx ON advisories(recent);
 
 CREATE FUNCTION utc_timestamp(text) RETURNS timestamp with time zone AS $$
     SELECT $1::timestamp with time zone AT time zone 'utc'
@@ -214,6 +220,8 @@ CREATE TABLE events_log (
     documents_id int REFERENCES documents(id) ON DELETE SET NULL,
     comments_id  int REFERENCES comments(id) ON DELETE SET NULL
 );
+
+CREATE INDEX events_log_time_idx ON events_log(time);
 
 --
 -- user defined stored queries
