@@ -25,6 +25,8 @@
   let updatedComment = comment.message;
   let isEditing = false;
   let updateCommentError: string;
+  let lastEdited = "";
+
   const tdClass = "py-2 px-2";
 
   const dispatch = createEventDispatcher();
@@ -53,6 +55,11 @@
   };
 
   $: iscommentingAllowed = !(state === "archived" || state === "deleted");
+  $: if (comment.times) {
+    let latest = comment.times.sort().reverse()[0];
+    latest = latest.replace("T", " ").split(".")[0];
+    lastEdited = `(edited ${latest})`;
+  }
 </script>
 
 <TableBodyCell {tdClass}>
@@ -90,6 +97,9 @@
         bind:value={updatedComment}
       ></CommentTextArea>
     {/if}
+    <div class="mt-1">
+      <small class="text-gray-400">{lastEdited}</small>
+    </div>
   </div>
 </TableBodyCell>
 

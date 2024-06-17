@@ -180,12 +180,30 @@
       };
       return o;
     }, {});
+    const commentsEdited = events
+      .filter((e: any) => {
+        return e.event_type === "change_comment";
+      })
+      .map((e: any) => {
+        return {
+          id: e.comment_id,
+          time: e.time
+        };
+      })
+      .reduce((o: any, n: any) => {
+        if (!o[n.id]) o[n.id] = [];
+        o[n.id].push(n.time);
+        return o;
+      }, {});
     events.map((e: any) => {
       if (e.event_type === "add_comment") {
         const comment = commentsByTime[`${e.time}:${e.actor}`];
         e["message"] = comment.message;
         e["comment_id"] = comment.id;
         e["documentVersion"] = comment.documentVersion;
+        if (commentsEdited[comment.id]) {
+          e["times"] = commentsEdited[comment.id];
+        }
       }
       return e;
     });
