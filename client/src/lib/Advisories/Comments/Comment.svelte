@@ -52,7 +52,7 @@
     return DOMPurify.sanitize(html);
   };
 
-  $: iscommentingAllowed = state !== "archived";
+  $: iscommentingAllowed = !(state === "archived" || state === "deleted");
 </script>
 
 <TableBodyCell {tdClass}>
