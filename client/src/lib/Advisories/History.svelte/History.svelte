@@ -64,19 +64,19 @@
                   >
                   <small class="ml-1 flex-grow">
                     {#if event.event_type === "state_change"}
-                      Statechange ( {event.actor} )
+                      Statechange ({event.actor})
                     {/if}
                     {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv"}
-                      SSVC added ( {event.actor} )
+                      SSVC added ({event.actor})
                     {/if}
                     {#if event.event_type === "import_document"}
-                      Import ( {event.actor} )
+                      Import ({event.actor})
                     {/if}
                     {#if event.event_type === "change_comment"}
-                      Edit comment ( {event.actor} )
+                      Edit comment ({event.actor})
                     {/if}
                     {#if event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
-                      SSVC changed ( {event.actor} )
+                      SSVC changed ({event.actor})
                     {/if}
                   </small>
                   {#if /state_change|import_document/.test(event.event_type)}
