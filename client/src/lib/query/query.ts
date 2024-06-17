@@ -23,7 +23,8 @@ const COLUMNS = {
     "four_cves",
     "state",
     "comments",
-    "recent"
+    "recent",
+    "versions"
   ],
   DOCUMENT: [
     "critical",

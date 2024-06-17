@@ -33,7 +33,8 @@
         "current_release_date",
         "version",
         "comments",
-        "recent"
+        "recent",
+        "versions"
       ]
     : [
         "critical",
