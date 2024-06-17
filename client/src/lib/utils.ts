@@ -72,7 +72,7 @@ export const request = async (
     }
     switch (response.status) {
       case 400:
-      case 402:
+      case 403:
       case 500:
         return { error: `${response.status}`, content: response.statusText, ok: false };
       default:
