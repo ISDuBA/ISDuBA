@@ -11,7 +11,12 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import { Button, Heading, Card } from "flowbite-svelte";
-  import { PUBLIC_KEYCLOAK_URL, PUBLIC_KEYCLOAK_REALM } from "$env/static/public";
+  import {
+    PUBLIC_KEYCLOAK_URL,
+    PUBLIC_KEYCLOAK_REALM,
+    PUBLIC_KEYCLOAK_CLIENTID,
+    PUBLIC_APPLICATION_URI
+  } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
@@ -31,7 +36,7 @@
     await $appStore.app.userManager?.signinRedirect();
   }
 
-  let profileUrl = PUBLIC_KEYCLOAK_URL + "/realms/" + PUBLIC_KEYCLOAK_REALM + "/account/#/";
+  let profileUrl = `${PUBLIC_KEYCLOAK_URL}/realms/${PUBLIC_KEYCLOAK_REALM}/account/?referrer=${PUBLIC_KEYCLOAK_CLIENTID}&referrer_uri=${PUBLIC_APPLICATION_URI}`;
 
   async function getVersion() {
     const response = await request("api/about", "GET");
