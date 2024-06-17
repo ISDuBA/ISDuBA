@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  /* eslint-disable svelte/no-at-html-tags */
   import { push } from "svelte-spa-router";
   import {
     Label,
@@ -16,6 +17,7 @@
     Select,
     TableBody,
     TableBodyCell,
+    TableBodyRow,
     TableHead,
     TableHeadCell,
     Table,
@@ -77,6 +79,22 @@
 
     return names[column] ?? column;
   };
+
+  const getSearchPadding = (columns: any): any => {
+    for (let i = 0; i < columns.length; i++) {
+      if (columns[i] === "title") {
+        return [Array(i).fill(0), Array(columns.length - i - 1).fill(0)];
+      }
+    }
+    return [[], Array(columns.length).fill(0)];
+  };
+
+  let searchPadding: any[] = [];
+  let searchPaddingRight: any[] = [];
+
+  $: if (columns !== undefined) {
+    [searchPadding, searchPaddingRight] = getSearchPadding(columns);
+  }
 
   const calcSSVC = (documents: any) => {
     if (!documents) return [];
@@ -435,6 +453,19 @@
                   </TableBodyCell>
                 {/if}
               </tr>
+              {#if item.msg}
+                <TableBodyRow class="border border-y-indigo-500/100 bg-white">
+                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
+                  {#each searchPadding as _}
+                    <TableBodyCell {tdClass}></TableBodyCell>
+                  {/each}
+                  <TableBodyCell {tdClass}>{@html item.msg}</TableBodyCell>
+                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
+                  {#each searchPaddingRight as _}
+                    <TableBodyCell {tdClass}></TableBodyCell>
+                  {/each}
+                </TableBodyRow>
+              {/if}
             {/each}
           </TableBody>
         </Table>
