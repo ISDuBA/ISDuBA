@@ -19,6 +19,7 @@
   export let cancelable = false;
   export let errorMessage: string;
   export let state: string = "";
+  export let old = "";
   $: count = value.length;
 
   const dispatch = createEventDispatcher();
@@ -45,7 +46,7 @@
         <Button
           size="xs"
           on:click={() => dispatch("saveComment")}
-          disabled={count > 10000 || count === 0}
+          disabled={count > 10000 || count === 0 || value === old}
         >
           <span>{buttonText}</span>
         </Button>

@@ -95,6 +95,7 @@
         buttonText="Save"
         errorMessage={updateCommentError}
         bind:value={updatedComment}
+        old={comment.message}
       ></CommentTextArea>
     {/if}
     <div class="mt-1">
