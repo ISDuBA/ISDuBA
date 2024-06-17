@@ -50,6 +50,8 @@
     let html = marked.parse(markdown) as string;
     return DOMPurify.sanitize(html);
   };
+
+  let iscommentingAllowed = true;
 </script>
 
 <TableBodyCell {tdClass}>
@@ -69,7 +71,7 @@
           {@html parseMarkdown(comment.message)}
         </div>
         <div class="ml-auto">
-          {#if $appStore.app.tokenParsed?.preferred_username === comment.actor}
+          {#if $appStore.app.tokenParsed?.preferred_username === comment.actor && iscommentingAllowed}
             <button class="h-7 !p-2" on:click={toggleEditing}>
               <i class="bx bx-edit text-lg"></i>
             </button>
