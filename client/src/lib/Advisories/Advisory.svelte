@@ -338,22 +338,22 @@
           {/if}
         </div>
         <div class="flex flex-col">
+          <div class="mb-4 flex flex-row items-center gap-x-3">
+            {#if ssvc}
+              <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
+            {/if}
+            <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+            <SsvcCalculator
+              vectorInput={ssvc?.vector}
+              disabled={!isCalculatingAllowed}
+              documentID={params.id}
+              on:updateSSVC={loadMetaData}
+              {allowEditing}
+            ></SsvcCalculator>
+          </div>
           {#if isDiffOpen}
             <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
           {:else}
-            <div class="mb-4 flex flex-row items-center gap-x-3">
-              {#if ssvc}
-                <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
-              {/if}
-              <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-              <SsvcCalculator
-                vectorInput={ssvc?.vector}
-                disabled={!isCalculatingAllowed}
-                documentID={params.id}
-                on:updateSSVC={loadMetaData}
-                {allowEditing}
-              ></SsvcCalculator>
-            </div>
             <Webview></Webview>
           {/if}
         </div>
