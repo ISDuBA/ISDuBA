@@ -17,7 +17,8 @@
   import { request } from "$lib/utils";
   import { getErrorMessage } from "$lib/Errors/error";
 
-  let error = "";
+  let viewError = "";
+  let versionError = "";
 
   async function logout() {
     appStore.setSessionExpired(true);
@@ -38,7 +39,7 @@
       const backendInfo = response.content;
       return backendInfo.version;
     } else if (response.error) {
-      error = getErrorMessage(response.error);
+      versionError = `Couldn't load version. ${getErrorMessage(response.error)}`;
     }
   }
 
@@ -47,7 +48,7 @@
     if (response.ok) {
       return new Map<string, [string]>(Object.entries(response.content));
     } else if (response.error) {
-      error = getErrorMessage(response.error);
+      viewError = `Couldn't determine your role.`;
     }
     return new Map<string, [string]>();
   }
@@ -107,12 +108,12 @@
       </div>
     </Card>
     {#if $appStore.app.isUserLoggedIn}
-      {#if error === ""}
-        <div class="mt-4 flex w-full flex-row gap-4">
-          <div class="flex flex-grow flex-col">
-            <span class="text-xl">User:</span>
-            <span class="ml-3">{$appStore.app.tokenParsed?.preferred_username}</span>
-          </div>
+      <div class="mt-4 flex w-full flex-row gap-4">
+        <div class="flex flex-grow flex-col">
+          <span class="text-xl">User:</span>
+          <span class="ml-3">{$appStore.app.tokenParsed?.preferred_username}</span>
+        </div>
+        {#if !viewError}
           <div class="flex flex-grow flex-col">
             <span class="text-xl">View: </span>
             <List tag="ul" class="space-y-1" list="none">
@@ -153,18 +154,21 @@
               {/if}
             </List>
           </div>
-        </div>
-        <P>
-          {#await getVersion() then version}
+        {/if}
+      </div>
+      <P>
+        {#await getVersion() then version}
+          {#if !versionError}
             <span class="text-xl">Versions:</span>
             <List tag="ul" class="space-y-1" list="none">
               <Li liClass="ml-3">ISDuBA: {version}</Li>
             </List>
-          {/await}
-        </P>
-      {/if}
+          {/if}
+        {/await}
+      </P>
     {/if}
-    <ErrorMessage message={error}></ErrorMessage>
+    <ErrorMessage message={viewError}></ErrorMessage>
+    <ErrorMessage message={versionError}></ErrorMessage>
   </div>
 </div>
 
