@@ -361,6 +361,7 @@
       <div class="mr-3 flex w-96 flex-col min-[800px]:ml-auto">
         {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
           <History
+            state={advisoryState}
             on:commentUpdate={() => {
               buildHistory();
             }}

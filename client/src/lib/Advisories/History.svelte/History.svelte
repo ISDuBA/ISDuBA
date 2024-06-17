@@ -21,6 +21,7 @@
 
   const dispatch = createEventDispatcher();
   export let entries;
+  export let state = "";
   let fullHistory = true;
   const tdClass = "py-2 px-2";
 
@@ -90,6 +91,7 @@
           {/if}
           {#if event.event_type === "add_comment"}
             <Comment
+              {state}
               on:commentUpdate={() => {
                 dispatch("commentUpdate");
               }}

@@ -21,6 +21,7 @@
 
   export let comment: any;
   export let fullHistory: boolean;
+  export let state = "";
   let updatedComment = comment.message;
   let isEditing = false;
   let updateCommentError: string;
@@ -51,7 +52,7 @@
     return DOMPurify.sanitize(html);
   };
 
-  let iscommentingAllowed = true;
+  $: iscommentingAllowed = state !== "archived";
 </script>
 
 <TableBodyCell {tdClass}>
