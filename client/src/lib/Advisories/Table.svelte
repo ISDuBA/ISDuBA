@@ -440,5 +440,7 @@
         </Table>
       </a>
     </div>
+  {:else if searchTerm}
+    No results were found.
   {/if}
 </div>
