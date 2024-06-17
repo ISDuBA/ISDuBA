@@ -56,7 +56,12 @@
           appStore.setSessionExpired(false);
           appStore.setTokenParsed(jwtDecode(user.access_token));
           push("/");
-          checkRoles();
+          const hasAnyRole = checkUserForRoles();
+          if (!hasAnyRole) {
+            appStore.setSessionExpired(true);
+            appStore.setSessionExpiredMessage("User has no role");
+            push("/login");
+          }
         })
         .catch(function () {
           push("/login");
@@ -65,23 +70,24 @@
       appStore.setIsUserLoggedIn(true);
       appStore.setSessionExpired(false);
       appStore.setTokenParsed(jwtDecode(user.access_token));
-      checkRoles();
+      const hasAnyRole = checkUserForRoles();
+      if (!hasAnyRole) {
+        appStore.setSessionExpired(true);
+        appStore.setSessionExpiredMessage("User has no role");
+        push("/login");
+      }
     }
     appStore.setUserManager(userManager);
   });
 
-  const checkRoles = () => {
+  const checkUserForRoles = () => {
     let hasRole =
       appStore.isAdmin() ||
       appStore.isEditor() ||
       appStore.isAuditor() ||
       appStore.isReviewer() ||
       appStore.isImporter();
-    if (!hasRole) {
-      appStore.setSessionExpired(true);
-      appStore.setSessionExpiredMessage("User has no role");
-      push("/login");
-    }
+    return hasRole;
   };
 
   const loginRequired = {
@@ -90,6 +96,7 @@
 
   const loginCondition = () => {
     if (!appStore.getUserManager()) return false;
+    if (!checkUserForRoles()) return false;
     return appStore.getIsUserLoggedIn();
   };
 
