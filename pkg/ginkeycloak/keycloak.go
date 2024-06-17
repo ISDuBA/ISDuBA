@@ -127,7 +127,6 @@ func Auth(acfn AccessCheckFunction, cfg *Config) gin.HandlerFunc {
 }
 
 func getTokenContainer(ctx *gin.Context, cfg *Config) (*TokenContainer, bool) {
-
 	var (
 		oauthToken *oauth2.Token
 		tc         *TokenContainer
@@ -135,25 +134,22 @@ func getTokenContainer(ctx *gin.Context, cfg *Config) (*TokenContainer, bool) {
 	)
 
 	if oauthToken, err = extractToken(ctx.Request); err != nil {
-		// TODO: logging
-		log.Printf("[Gin-OAuth] Can not extract oauth2.Token, caused by: %v\n", err)
+		slog.Error("[Gin-OAuth] Can not extract oauth2.Token", "err", err)
 		return nil, false
 	}
 
 	if !oauthToken.Valid() {
-		// TODO: logging
-		log.Println("[Gin-OAuth] Invalid Token - nil or expired")
+		slog.Error("[Gin-OAuth] Invalid Token - nil or expired")
 		return nil, false
 	}
 
 	if tc, err = buildTokenContainer(oauthToken, cfg); err != nil {
-		// TODO: logging
-		log.Printf("[Gin-OAuth] Can not extract TokenContainer, caused by: %v\n", err)
+		slog.Error("[Gin-OAuth] Can not extract TokenContainer", "err", err)
 		return nil, false
 	}
 
 	if tc.KeycloakToken.isExpired() {
-		log.Println("expired")
+		slog.Error("Token expired")
 		return nil, false
 	}
 
@@ -221,7 +217,6 @@ func decodeToken(token *oauth2.Token, cfg *Config) (*KeycloakToken, error) {
 }
 
 func getPublicKey(keyID string, cfg *Config) (any, error) {
-
 	ke, err := fetchPublicKey(keyID, cfg)
 	if err != nil {
 		return nil, err
@@ -282,7 +277,6 @@ func getPublicKey(keyID string, cfg *Config) (any, error) {
 }
 
 func fetchPublicKey(keyID string, cfg *Config) (*keyEntry, error) {
-
 	if cfg.cache != nil {
 		if entry, exists := cfg.cache.get(keyID); exists {
 			return entry, nil
