@@ -385,6 +385,12 @@
                       ><span title={item[column]}>{getPublisher(item[column], innerWidth)}</span
                       ></TableBodyCell
                     >
+                  {:else if column === "recent"}
+                    <TableBodyCell {tdClass}
+                      ><span title={item[column]}
+                        >{item[column] ? item[column].split("T")[0] : ""}</span
+                      ></TableBodyCell
+                    >
                   {:else if column === "four_cves"}
                     <TableBodyCell {tdClass}
                       >{#if item[column] && item[column][0]}

@@ -21,7 +21,9 @@ const COLUMNS = {
     "cvss_v3_score",
     "ssvc",
     "four_cves",
-    "state"
+    "state",
+    "comments",
+    "recent"
   ],
   DOCUMENT: [
     "critical",
