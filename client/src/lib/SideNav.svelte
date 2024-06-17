@@ -56,35 +56,49 @@
       activateClickOutside={false}
       width="w-45"
       backdrop={false}
-      class="static bg-primary-700 p-2"
+      class="static bg-primary-700 p-0"
       id="sidebar"
     >
       <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
-        <SidebarWrapper class="bg-primary-700">
-          <Heading class="mb-6 text-white">ISDuBA</Heading>
-          <SidebarGroup class="bg-primary-700">
+        <SidebarWrapper class="bg-primary-700 px-0">
+          <div class="flex flex-row gap-4">
+            <img
+              alt="ISDuBA logo"
+              class="ml-2 flex-none"
+              style="height: 50px; width: 50px"
+              src="favicon.png"
+            />
+            <Heading class="mb-6 font-normal text-white">ISDuBA</Heading>
+          </div>
+          <SidebarGroup class="space-y-0 bg-primary-700">
             <!-- Entries which are available after login should go here-->
-            <SidebarItem label="Home" href="/#/">
+            <SidebarItem class="px-6 py-2.5" label="Home" href="/#/">
               <svelte:fragment slot="icon">
                 <i class="bx bxs-dashboard"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Advisories" href="/#/advisories">
+            <SidebarItem class="px-6 py-2.5" label="Advisories" href="/#/advisories">
               <svelte:fragment slot="icon">
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Compare" href="/#/diff">
+            <SidebarItem class="px-6 py-2.5" label="Compare" href="/#/diff">
               <svelte:fragment slot="icon">
                 <i class="bx bx-transfer"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem label="Sources" href="javascript: void(0)" nonActiveClass={notactivated}>
+            <SidebarItem
+              class="px-6 py-2.5"
+              label="Sources"
+              href="javascript: void(0)"
+              nonActiveClass={notactivated}
+            >
               <svelte:fragment slot="icon">
                 <i class="bx bx-git-repo-forked"></i>
               </svelte:fragment>
             </SidebarItem>
             <SidebarItem
+              class="px-6 py-2.5"
               label="Statistics"
               href="javascript: void(0)"
               nonActiveClass={notactivated}
@@ -94,6 +108,7 @@
               </svelte:fragment>
             </SidebarItem>
             <SidebarItem
+              class="px-6 py-2.5"
               label="Configuration"
               href="javascript: void(0)"
               nonActiveClass={notactivated}
@@ -103,7 +118,11 @@
               </svelte:fragment>
             </SidebarItem>
             {#if !$appStore.app.sessionExpired}
-              <SidebarItem label={$appStore.app.tokenParsed?.preferred_username} href="/#/login">
+              <SidebarItem
+                class="px-6 py-2.5"
+                label={$appStore.app.tokenParsed?.preferred_username}
+                href="/#/login"
+              >
                 <svelte:fragment slot="icon">
                   <i class="bx bx-user"></i>
                 </svelte:fragment>
