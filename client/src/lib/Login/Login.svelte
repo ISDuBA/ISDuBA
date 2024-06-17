@@ -94,7 +94,7 @@
                 .sessionExpiredMessage || "Please login"}
             </div>
           {/if}
-          <Button on:click={login}>Login</Button>
+          <Button on:click={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
           <P>
             <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
               >Visit the ISDuBA project on Github</A
@@ -102,8 +102,8 @@
           >
         {/if}
         {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
-          <Button href={profileUrl}>Profile</Button>
-          <Button on:click={logout}>Logout</Button>
+          <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
+          <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
       </div>
     </Card>
