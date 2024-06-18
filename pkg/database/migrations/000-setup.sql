@@ -291,7 +291,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_recent
     AFTER INSERT OR UPDATE
-    ON comments
+    ON events_log
     FOR EACH ROW EXECUTE FUNCTION upd_recent();
 
 --
