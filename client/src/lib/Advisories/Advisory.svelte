@@ -25,6 +25,7 @@
   import { getErrorMessage } from "$lib/Errors/error";
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./History.svelte/History.svelte";
+  import Tlp from "./TLP.svelte";
   export let params: any = null;
 
   let document: any = {};
@@ -327,7 +328,10 @@
   <div class="flex max-h-full w-full grow flex-col gap-y-2 px-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
-        <Label class="text-lg">{params.trackingID}</Label>
+        <Label class="text-lg">
+          <span class="mr-2">{params.trackingID}</span>
+          <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+        </Label>
       </div>
       <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
         <Label class="text-gray-600">{params.publisherNamespace}</Label>

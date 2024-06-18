@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { appStore } from "$lib/store";
-  import { Status, TLP } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import Acknowledgements from "$lib/Advisories/CSAFWebview/acknowledgements/Acknowledgements.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
@@ -17,7 +17,6 @@
   import References from "$lib/Advisories/CSAFWebview/references/References.svelte";
   import RevisionHistory from "./RevisionHistory.svelte";
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
-  let tlpStyle = "";
   $: aliases = $appStore.webview.doc?.aliases;
   $: trackingVersion = $appStore.webview.doc?.trackingVersion;
   $: generator = $appStore.webview.doc?.generator;
@@ -31,17 +30,6 @@
   $: lang = $appStore.webview.doc?.lang;
   $: sourceLang = $appStore.webview.doc?.sourceLang;
   $: csafVersion = $appStore.webview.doc?.csafVersion;
-  $: tlp = $appStore.webview.doc?.tlp;
-  $: tlpurl = $appStore.webview.doc?.tlp.url;
-  $: if (tlp?.label === TLP.WHITE) {
-    tlpStyle = "tlpclear";
-  } else if (tlp?.label === TLP.RED) {
-    tlpStyle = "tlpred";
-  } else if (tlp?.label === TLP.AMBER) {
-    tlpStyle = "tlpamber";
-  } else if (tlp?.label === TLP.GREEN) {
-    tlpStyle = "tlpgreen";
-  }
   $: id = $appStore.webview.doc?.id;
   $: published = $appStore.webview.doc?.published;
   $: lastUpdate = $appStore.webview.doc?.lastUpdate;
@@ -85,19 +73,6 @@
           >
         </TableBodyRow>
       {/if}
-    {/if}
-    {#if tlp?.label}
-      <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>TLP</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}><span class={tlpStyle}>{tlp?.label}</span></TableBodyCell
-        >
-      </TableBodyRow>
-    {/if}
-    {#if tlp?.url}
-      <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>TLP URL</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}><a href={tlpurl}>{tlp?.url}</a></TableBodyCell>
-      </TableBodyRow>
     {/if}
     <TableBodyRow>
       <TableBodyCell tdClass={cellStyle}>Category</TableBodyCell>
@@ -225,22 +200,3 @@
     </Collapsible>
   </div>
 {/if}
-
-<style>
-  .tlpclear {
-    background: #000;
-    color: #fff;
-  }
-  .tlpred {
-    background: #000;
-    color: #ff2b2b;
-  }
-  .tlpamber {
-    background: #000;
-    color: #ffc000;
-  }
-  .tlpgreen {
-    background: #000;
-    color: #33ff00;
-  }
-</style>
