@@ -80,9 +80,9 @@
     return names[column] ?? column;
   };
 
-  const getSearchPadding = (columns: any): any => {
+  const getTablePadding = (columns: any, match: string): any => {
     for (let i = 0; i < columns.length; i++) {
-      if (columns[i] === "title") {
+      if (columns[i] === match) {
         return [Array(i).fill(0), Array(columns.length - i - 1).fill(0)];
       }
     }
@@ -92,8 +92,12 @@
   let searchPadding: any[] = [];
   let searchPaddingRight: any[] = [];
 
+  let cvePadding: any[] = [];
+  let cvePaddingRight: any[] = [];
+
   $: if (columns !== undefined) {
-    [searchPadding, searchPaddingRight] = getSearchPadding(columns);
+    [searchPadding, searchPaddingRight] = getTablePadding(columns, "title");
+    [cvePadding, cvePaddingRight] = getTablePadding(columns, "four_cves");
   }
 
   const calcSSVC = (documents: any) => {
@@ -408,7 +412,7 @@
                       >{#if item[column] && item[column][0]}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
-                        {#if item[column] > 1}
+                        {#if item[column].length > 1}
                           <div class="mr-2 flex">
                             <div class="flex-grow">
                               {item[column][0]}
@@ -453,6 +457,27 @@
                   </TableBodyCell>
                 {/if}
               </tr>
+              {#if openRow === i}
+                <TableBodyRow>
+                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
+                  {#each cvePadding as _}
+                    <TableBodyCell {tdClass}></TableBodyCell>
+                  {/each}
+                  <TableBodyCell {tdClass}>
+                    <div>
+                      {#each item.four_cves as cve, i}
+                        {#if i !== 0}
+                          <div>{cve}</div>
+                        {/if}
+                      {/each}
+                    </div>
+                  </TableBodyCell>
+                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
+                  {#each cvePaddingRight as _}
+                    <TableBodyCell {tdClass}></TableBodyCell>
+                  {/each}
+                </TableBodyRow>
+              {/if}
               {#if item.msg}
                 <TableBodyRow class="border border-y-indigo-500/100 bg-white">
                   <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
