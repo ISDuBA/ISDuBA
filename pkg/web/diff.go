@@ -167,16 +167,14 @@ type wordDiffCommand struct {
 
 func doWordDiff(diffs []diffmatchpatch.Diff) []wordDiffCommand {
 	cmds := make([]wordDiffCommand, 0, len(diffs))
-	for i := range diffs {
-		diff := &diffs[i]
-		text := diff.Text
-		switch diff.Type {
+	for _, d := range diffs {
+		switch d.Type {
 		case diffmatchpatch.DiffInsert:
-			cmds = append(cmds, wordDiffCommand{"i", text})
+			cmds = append(cmds, wordDiffCommand{"i", d.Text})
 		case diffmatchpatch.DiffDelete:
-			cmds = append(cmds, wordDiffCommand{"d", text})
+			cmds = append(cmds, wordDiffCommand{"d", d.Text})
 		case diffmatchpatch.DiffEqual:
-			cmds = append(cmds, wordDiffCommand{"o", text})
+			cmds = append(cmds, wordDiffCommand{"o", d.Text})
 		}
 	}
 	return cmds
