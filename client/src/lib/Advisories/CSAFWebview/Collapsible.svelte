@@ -12,7 +12,7 @@
   export let header: string;
   export let open = false;
   export let level = "2";
-  export let class_ = "";
+  export let class_ = "pl-4";
   export let highlight = false;
   const uuid = crypto.randomUUID();
   export let onOpen = () => {
@@ -56,29 +56,33 @@
   {#if level == "2"}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div title={header} id={header} on:click={toggle} class={class_}>
-      <h2><i class="bx {icon}" />{header}</h2>
+    <div title={header} id={header} on:click={toggle}>
+      <i class="bx text-xl {icon}" />
+      <span class="text-xl">{header}</span>
     </div>
   {/if}
   {#if level == "3"}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div title={header} id={header} on:click={toggle} class={class_}>
-      <h3><i class="bx {icon}" />{header}</h3>
+      <i class="bx text-lg {icon}" />
+      <span class="text-lg">{header}</span>
     </div>
   {/if}
   {#if level == "4"}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div title={header} id={header} on:click={toggle} class={class_}>
-      <h4><i class="bx {icon}" />{header}</h4>
+      <i class="bx {icon}" />
+      <span class="">{header}</span>
     </div>
   {/if}
   {#if level == "5"}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div title={header} id={header} on:click={toggle} class={class_}>
-      <h5><i class="bx {icon}" />{header}</h5>
+      <i class="bx text-xs {icon}" />
+      <span class="text-xs">{header}</span>
     </div>
   {/if}
   {#if visibility === "block"}
