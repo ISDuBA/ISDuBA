@@ -11,11 +11,12 @@
   export let tlp = "";
 </script>
 
-<span
+<a
+  href="https://www.first.org/tlp/"
   class:tlpred={tlp === "RED"}
   class:tlpamber={tlp === "AMBER"}
   class:tlpclear={tlp === "WHITE"}
-  class:tlpgreen={tlp === "GREEN"}>{tlp}</span
+  class:tlpgreen={tlp === "GREEN"}>{tlp}</a
 >
 
 <style>
