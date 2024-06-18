@@ -1,0 +1,60 @@
+# This file is Free Software under the Apache-2.0 License
+# without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+# Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
+name: Publish application to github release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  release:
+    name: Release application
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_KEYCLOAK_URL: "http://localhost:8080"
+      PUBLIC_KEYCLOAK_REALM: "isduba"
+      PUBLIC_KEYCLOAK_CLIENTID: "auth"
+      SYFT_GOLANG_SEARCH_LOCAL_MOD_CACHE_LICENSES: true
+      SYFT_GOLANG_SEARCH_REMOTE_LICENSES: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+
+      - name: "Install Node"
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: "Install Deps"
+        run: cd client; npm install
+
+      - name: Build
+        run: make dist
+
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/isduba-*.zip
+            dist/isduba-*.tar.gz
