@@ -221,7 +221,6 @@ func (pe parseError) Error() string {
 var columns = []documentColumn{
 	{"id", intType, false, false},
 	{"latest", boolType, false, false},
-	{"state", workflowType, true, false},
 	{"tracking_id", stringType, false, false},
 	{"version", stringType, false, false},
 	{"publisher", stringType, false, false},
@@ -235,6 +234,11 @@ var columns = []documentColumn{
 	{"cvss_v3_score", floatType, false, false},
 	{"critical", floatType, false, false},
 	{"four_cves", stringType, false, true},
+	// Advisories only
+	{"state", workflowType, true, false},
+	{"comments", intType, true, false},
+	{"recent", timeType, true, false},
+	{"versions", intType, true, false},
 }
 
 // supportedLangs are the default languages.
@@ -357,6 +361,10 @@ func CreateQuerySQL(
 	return sql
 }
 
+const versionsCount = `(SELECT count(*) FROM documents WHERE ` +
+	`documents.publisher = advisories.publisher AND ` +
+	`documents.tracking_id = advisories.tracking_id)`
+
 // projectionsWithCasts joins given projection adding casts if needed.
 func projectionsWithCasts(proj []string, aliases map[string]string) string {
 	var b strings.Builder
@@ -373,8 +381,9 @@ func projectionsWithCasts(proj []string, aliases map[string]string) string {
 			b.WriteString("documents.")
 			b.WriteString(p)
 		case "state":
-			b.WriteString(p)
-			b.WriteString("::text")
+			b.WriteString("state::text")
+		case "versions":
+			b.WriteString(versionsCount + `AS versions`)
 		default:
 			b.WriteString(p)
 		}
@@ -533,11 +542,15 @@ func (e *Expr) Where() (string, []any, map[string]string) {
 	}
 
 	writeAccess := func(e *Expr) {
-		column := e.stringValue
-		if column == "tracking_id" || column == "publisher" {
+		switch column := e.stringValue; column {
+		case "tracking_id", "publisher":
 			b.WriteString("documents.")
+			b.WriteString(column)
+		case "versions":
+			b.WriteString(versionsCount)
+		default:
+			b.WriteString(column)
 		}
-		b.WriteString(column)
 	}
 
 	writeNow := func(_ *Expr) {

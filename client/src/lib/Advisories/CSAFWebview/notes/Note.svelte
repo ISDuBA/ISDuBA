@@ -36,11 +36,11 @@
 </script>
 
 <KeyValue {keys} {values} />
-<div class="ml-6">
+<div class="ml-7">
   <h5>Text</h5>
 </div>
 
-<div class="markdown-text">
+<div class="markdown-text ml-7">
   <div class="display-markdown max-w-2/3">
     {@html DOMPurify.sanitize(getMarkdown())}
   </div>

@@ -24,6 +24,6 @@
   values.push(reference.url);
 </script>
 
-<div>
+<div class="">
   <KeyValue {keys} {values} />
 </div>

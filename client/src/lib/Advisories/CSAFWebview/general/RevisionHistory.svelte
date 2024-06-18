@@ -18,23 +18,25 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
+  import { tablePadding } from "$lib/table/defaults";
+  const cellStyle = "whitespace-nowrap py-0 px-2";
 </script>
 
 {#if $appStore.webview.doc?.isRevisionHistoryPresent}
-  <div class="w-max">
+  <div class="mt-1 w-fit pl-5">
     <Table noborder>
       <TableHead>
-        <TableHeadCell>Date</TableHeadCell>
-        <TableHeadCell>Number</TableHeadCell>
-        <TableHeadCell>Summary</TableHeadCell>
-        <TableHeadCell>Legacy_version</TableHeadCell>
+        <TableHeadCell padding={tablePadding}>Date</TableHeadCell>
+        <TableHeadCell padding={tablePadding}>Number</TableHeadCell>
+        <TableHeadCell padding={tablePadding}>Summary</TableHeadCell>
+        <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
       </TableHead>
       <TableBody>
         {#each $appStore.webview.doc?.revisionHistory as entry}
           <TableBodyRow>
-            <TableBodyCell>{entry.date}</TableBodyCell>
-            <TableBodyCell>{entry.number}</TableBodyCell>
-            <TableBodyCell>{entry.summary}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}>{entry.date}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}>{entry.number}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}>{entry.summary}</TableBodyCell>
             <TableBodyCell
               >{#if entry.legacyVersion}{entry.legacyVersion}{/if}</TableBodyCell
             >
