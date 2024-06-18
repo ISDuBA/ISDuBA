@@ -160,25 +160,26 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, patch)
 }
 
-func doWordDiff(diffs []diffmatchpatch.Diff) string {
-	var b strings.Builder
+type wordDiffCommand struct {
+	Mode string `json:"m"`
+	Text string `json:"t"`
+}
+
+func doWordDiff(diffs []diffmatchpatch.Diff) []wordDiffCommand {
+	cmds := make([]wordDiffCommand, 0, len(diffs))
 	for i := range diffs {
 		diff := &diffs[i]
 		text := diff.Text
 		switch diff.Type {
 		case diffmatchpatch.DiffInsert:
-			b.WriteString("{+")
-			b.WriteString(text)
-			b.WriteString("+}")
+			cmds = append(cmds, wordDiffCommand{"i", text})
 		case diffmatchpatch.DiffDelete:
-			b.WriteString("[-")
-			b.WriteString(text)
-			b.WriteString("-]")
+			cmds = append(cmds, wordDiffCommand{"d", text})
 		case diffmatchpatch.DiffEqual:
-			b.WriteString(text)
+			cmds = append(cmds, wordDiffCommand{"o", text})
 		}
 	}
-	return b.String()
+	return cmds
 }
 
 func locate(doc any, path string) (any, bool) {
