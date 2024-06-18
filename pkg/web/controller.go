@@ -115,5 +115,8 @@ func (c *Controller) Bind() http.Handler {
 
 	// Visibility information
 	api.GET("/view", authAll, c.view)
+
+	// Download advisories
+	api.GET("/download", authIm, c.download)
 	return r
 }
