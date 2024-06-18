@@ -20,12 +20,14 @@
 </script>
 
 <div style={containerStyle}>
-  {#if Array.isArray(content)}
+  {#if Array.isArray(content) && !content[0]["m"]}
     {#each content as val, index}
       <div class="mb-4 flex">
-        {index + 1}.&ensp;<svelte:self content={val} depth={depth + 1}></svelte:self>
+        {index + 1}.&ensp;<svelte:self content={val} depth={depth + 1} {operation}></svelte:self>
       </div>
     {/each}
+  {:else if Array.isArray(content) && operation === "replace"}
+    <ReplaceOperation {content} {isSideBySideViewActivated}></ReplaceOperation>
   {:else if typeof content === "object"}
     {#each Object.keys(content) as key}
       <div>
@@ -33,12 +35,10 @@
         {#if typeof content[key] === "string"}
           {content[key]}
         {:else}
-          <svelte:self content={content[key]} depth={depth + 1}></svelte:self>
+          <svelte:self content={content[key]} depth={depth + 1} {operation}></svelte:self>
         {/if}
       </div>
     {/each}
-  {:else if operation === "replace"}
-    <ReplaceOperation {content} {isSideBySideViewActivated}></ReplaceOperation>
   {:else}
     <span>{content}</span>
   {/if}
