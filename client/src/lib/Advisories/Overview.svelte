@@ -31,7 +31,10 @@
         "tracking_id",
         "initial_release_date",
         "current_release_date",
-        "version"
+        "version",
+        "comments",
+        "recent",
+        "versions"
       ]
     : [
         "critical",

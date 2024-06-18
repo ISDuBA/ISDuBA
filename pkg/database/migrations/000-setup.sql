@@ -20,8 +20,14 @@ CREATE TABLE advisories (
     tracking_id  text NOT NULL,
     publisher    text NOT NULL,
     state        workflow NOT NULL DEFAULT 'new',
-    PRIMARY KEY(tracking_id, publisher)
+    -- comments and recent are cached here for performance.
+    comments     int NOT NULL DEFAULT 0,
+    recent       timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(tracking_id, publisher),
+    CHECK(comments >= 0)
 );
+
+CREATE INDEX advisories_recent_idx ON advisories(recent);
 
 CREATE FUNCTION utc_timestamp(text) RETURNS timestamp with time zone AS $$
     SELECT $1::timestamp with time zone AT time zone 'utc'
@@ -199,6 +205,53 @@ CREATE TABLE comments (
     message      varchar(10000)
 );
 
+-- Trigger functions to update cached comment count per advisory.
+CREATE FUNCTION incr_comments() RETURNS trigger AS $$
+    DECLARE
+        p text;
+        t text;
+    BEGIN
+        SELECT publisher, tracking_id
+            INTO p, t
+            FROM documents
+            WHERE id = NEW.documents_id;
+        IF FOUND THEN
+            UPDATE advisories
+                SET comments = comments + 1
+                WHERE publisher = p AND tracking_id = t;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION decr_comments() RETURNS trigger AS $$
+    DECLARE
+        p text;
+        t text;
+    BEGIN
+        SELECT publisher, tracking_id
+            INTO p, t
+            FROM documents
+            WHERE id = OLD.documents_id;
+        IF FOUND THEN
+            UPDATE advisories
+                SET comments = greatest(0, comments - 1)
+                WHERE publisher = p AND tracking_id = t;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER increment_comments
+    AFTER INSERT
+    ON comments
+    FOR EACH ROW EXECUTE FUNCTION incr_comments();
+
+CREATE TRIGGER decrement_comments
+    AFTER DELETE
+    ON comments
+    FOR EACH ROW EXECUTE FUNCTION decr_comments();
+
 CREATE TYPE events AS ENUM (
     'import_document', 'delete_document',
     'state_change',
@@ -214,6 +267,32 @@ CREATE TABLE events_log (
     documents_id int REFERENCES documents(id) ON DELETE SET NULL,
     comments_id  int REFERENCES comments(id) ON DELETE SET NULL
 );
+
+CREATE INDEX events_log_time_idx ON events_log(time);
+
+-- Trigger to update cached recent value of advisory.
+CREATE FUNCTION upd_recent() RETURNS trigger AS $$
+    DECLARE
+        p text;
+        t text;
+    BEGIN
+        SELECT publisher, tracking_id
+            INTO p, t
+            FROM documents
+            WHERE id = NEW.documents_id;
+        IF FOUND THEN
+            UPDATE advisories
+                SET recent = greatest(recent, NEW.time)
+                WHERE publisher = p AND tracking_id = t;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_recent
+    AFTER INSERT OR UPDATE
+    ON events_log
+    FOR EACH ROW EXECUTE FUNCTION upd_recent();
 
 --
 -- user defined stored queries
