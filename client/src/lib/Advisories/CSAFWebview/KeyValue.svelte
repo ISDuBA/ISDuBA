@@ -26,7 +26,7 @@
   };
 </script>
 
-<div class="w-fit">
+<div class="ml-2 w-fit">
   <Table noborder>
     <TableBody>
       {#each keys as key, index}
