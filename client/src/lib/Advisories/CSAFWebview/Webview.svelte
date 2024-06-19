@@ -13,6 +13,13 @@
   import General from "$lib/Advisories/CSAFWebview/general/General.svelte";
   import ProductTree from "$lib/Advisories/CSAFWebview/producttree/ProductTree.svelte";
   import Vulnerabilities from "$lib/Advisories/CSAFWebview/vulnerabilities/Vulnerabilities.svelte";
+  import ValueList from "./ValueList.svelte";
+  import RevisionHistory from "./general/RevisionHistory.svelte";
+  import Notes from "./notes/Notes.svelte";
+  import Acknowledgements from "./acknowledgements/Acknowledgements.svelte";
+  import References from "./references/References.svelte";
+  $: aliases = $appStore.webview.doc?.aliases;
+
   $: isCSAF = !(
     !$appStore.webview.doc?.isRevisionHistoryPresent &&
     !$appStore.webview.doc?.isDocPresent &&
@@ -27,9 +34,9 @@
 <div class="flex flex-col">
   {#if isCSAF}
     {#if $appStore.webview.doc}
-      <Collapsible header="General" open={$appStore.webview.ui.isGeneralSectionVisible}>
+      <div class="mb-4">
         <General />
-      </Collapsible>
+      </div>
     {/if}
 
     {#if $appStore.webview.doc && $appStore.webview.doc["isProductTreePresent"]}
@@ -59,5 +66,44 @@
         <Vulnerabilities />
       </Collapsible>
     {/if}
+  {/if}
+
+  {#if aliases}
+    <ValueList label="Aliases" values={aliases} />
+  {/if}
+  {#if $appStore.webview.doc?.notes}
+    <div>
+      <Collapsible header="Notes" level="2">
+        <Notes notes={$appStore.webview.doc?.notes} />
+      </Collapsible>
+    </div>
+  {/if}
+
+  {#if $appStore.webview.doc?.acknowledgements}
+    <div>
+      <Collapsible header="Acknowledgements" level="2">
+        <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+      </Collapsible>
+    </div>
+  {/if}
+
+  {#if $appStore.webview.doc && $appStore.webview.doc.references.length > 0}
+    <div>
+      <Collapsible header="References" level="2">
+        <References references={$appStore.webview.doc?.references} />
+      </Collapsible>
+    </div>
+  {/if}
+
+  {#if $appStore.webview.doc?.isRevisionHistoryPresent}
+    <div>
+      <Collapsible
+        header="Revision history"
+        level="2"
+        open={$appStore.webview.ui.isRevisionHistoryVisible}
+      >
+        <RevisionHistory />
+      </Collapsible>
+    </div>
   {/if}
 </div>
