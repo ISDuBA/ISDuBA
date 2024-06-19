@@ -256,7 +256,7 @@
         {:else if vectorInput}
           <span class="h-6 text-nowrap text-sm text-gray-400">{vectorInput}</span>
         {:else}
-          <span class="h-6 text-lg text-yellow-400">Please enter a SSVC</span>
+          <span class="h-6 text-lg">Please enter a SSVC</span>
         {/if}
       </div>
       {#if isEditing}
