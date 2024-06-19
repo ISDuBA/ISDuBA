@@ -22,7 +22,7 @@
   const dispatch = createEventDispatcher();
   export let entries;
   export let state = "";
-  let fullHistory = true;
+  let fullHistory = false;
   const tdClass = "py-2 px-2";
 
   $: historyEntries = fullHistory
@@ -36,18 +36,18 @@
   <Button
     size="xs"
     color="light"
-    class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+    class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
     on:click={() => {
-      fullHistory = true;
-    }}>Full history</Button
+      fullHistory = false;
+    }}>Comments</Button
   >
   <Button
     size="xs"
     color="light"
-    class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+    class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
     on:click={() => {
-      fullHistory = false;
-    }}>Comments only</Button
+      fullHistory = true;
+    }}>History</Button
   >
 </ButtonGroup>
 
