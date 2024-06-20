@@ -47,7 +47,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where()
+	where, replacements, _ := expr.Where(false)
 
 	type event struct {
 		Event      models.Event    `json:"event_type"`

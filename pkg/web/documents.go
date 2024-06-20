@@ -58,7 +58,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where()
+	where, replacements, _ := expr.Where(false)
 
 	deleted := false
 
@@ -175,7 +175,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 	}
 
 	fields := []string{"original"}
-	where, replacements, aliases := expr.Where()
+	where, replacements, aliases := expr.Where(false)
 	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1, false)
 
 	var original []byte
@@ -246,7 +246,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(database.BoolField("latest"))
 	}
 
-	where, replacements, aliases := expr.Where()
+	where, replacements, aliases := expr.Where(advisory)
 
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))

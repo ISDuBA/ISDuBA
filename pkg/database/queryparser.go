@@ -36,6 +36,7 @@ const (
 	le
 	access
 	search
+	csearch
 	ilike
 	ilikePID
 	now
@@ -195,6 +196,8 @@ func (et exprType) String() string {
 		return "access"
 	case search:
 		return "search"
+	case csearch:
+		return "csearch"
 	case ilike:
 		return "ilike"
 	case ilikePID:
@@ -434,221 +437,11 @@ func (e *Expr) And(o *Expr) *Expr {
 
 // Where returns an SQL WHERE clause and a list of string replacements
 // to be fed as separate args to the SQL statement to prevent injections.
-func (e *Expr) Where() (string, []any, map[string]string) {
-	var b strings.Builder
-	var replacements []any
-	stringToReplacement := map[string]int{}
-	var aliases map[string]string
-
-	replacementIndex := func(s string) int {
-		if idx, ok := stringToReplacement[s]; ok {
-			return idx
-		}
-		idx := len(replacements)
-		stringToReplacement[s] = idx
-		replacements = append(replacements, s)
-		return idx
-	}
-
-	var recurse func(*Expr)
-
-	writeSearch := func(e *Expr) {
-		const tsquery = `websearch_to_tsquery`
-
-		b.WriteString(`ts @@ ` + tsquery + `('`)
-		b.WriteString(e.langValue)
-		b.WriteString("',$")
-		idx := replacementIndex(e.stringValue)
-		b.WriteString(strconv.Itoa(idx + 1))
-		b.WriteByte(')')
-		// Handle alias
-		if e.alias == "" {
-			return
-		}
-		repl := fmt.Sprintf(
-			"ts_headline('%[1]s',txt,"+tsquery+"('%[1]s', $%[2]d))",
-			e.langValue, idx+1)
-		if aliases == nil {
-			aliases = map[string]string{}
-		}
-		aliases[e.alias] = repl
-	}
-
-	writeCast := func(e *Expr) {
-		b.WriteString("CAST(")
-		recurse(e.children[0])
-		b.WriteString(" AS ")
-		switch e.valueType {
-		case stringType:
-			b.WriteString("text")
-		case intType:
-			b.WriteString("int")
-		case floatType:
-			b.WriteString("float")
-		case timeType:
-			b.WriteString("timestamptz")
-		case boolType:
-			b.WriteString("boolean")
-		case workflowType:
-			b.WriteString("workflow")
-		case durationType:
-			b.WriteString("interval")
-		}
-		b.WriteByte(')')
-	}
-
-	writeCnst := func(e *Expr) {
-		switch e.valueType {
-		case stringType:
-			b.WriteByte('$')
-			idx := replacementIndex(e.stringValue)
-			b.WriteString(strconv.Itoa(idx + 1))
-		case intType:
-			b.WriteString(strconv.FormatInt(e.intValue, 10))
-		case floatType:
-			b.WriteString(strconv.FormatFloat(e.floatValue, 'f', -1, 64))
-		case timeType:
-			b.WriteByte('\'')
-			utc := e.timeValue.UTC()
-			b.WriteString(utc.Format("2006-01-02T15:04:05-0700"))
-			b.WriteString("'::timestamptz")
-		case boolType:
-			if e.boolValue {
-				b.WriteString("TRUE")
-			} else {
-				b.WriteString("FALSE")
-			}
-		case workflowType:
-			b.WriteByte('\'')
-			b.WriteString(e.stringValue)
-			b.WriteString("'::workflow")
-		case durationType:
-			fmt.Fprintf(&b, "'%.2f seconds'::interval", e.durationValue.Seconds())
-		}
-	}
-
-	writeBinary := func(e *Expr, op string) {
-		b.WriteByte('(')
-		recurse(e.children[0])
-		b.WriteString(op)
-		recurse(e.children[1])
-		b.WriteByte(')')
-	}
-
-	writeNot := func(e *Expr) {
-		b.WriteString("(NOT ")
-		recurse(e.children[0])
-		b.WriteByte(')')
-	}
-
-	writeAccess := func(e *Expr) {
-		switch column := e.stringValue; column {
-		case "tracking_id", "publisher":
-			b.WriteString("documents.")
-			b.WriteString(column)
-		case "versions":
-			b.WriteString(versionsCount)
-		default:
-			b.WriteString(column)
-		}
-	}
-
-	writeNow := func(_ *Expr) {
-		b.WriteString("current_timestamp")
-	}
-
-	writeILike := func(e *Expr) {
-		b.WriteByte('(')
-		recurse(e.children[0])
-		b.WriteString(" ILIKE ")
-		recurse(e.children[1])
-		b.WriteByte(')')
-	}
-
-	writeILikePID := func(e *Expr) {
-		b.WriteString(`EXISTS (` +
-			`WITH product_ids AS (SELECT jsonb_path_query(` +
-			`document, '$.product_tree.**.product.product_id')::int num ` +
-			`FROM documents ds WHERE ds.id = documents.id)` +
-			`SELECT * FROM documents_texts dts JOIN product_ids ` +
-			`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
-			`WHERE dts.documents_id = documents.id AND ` +
-			`unique_texts.txt ILIKE `)
-		recurse(e.children[0])
-		b.WriteByte(')')
-		/*
-			b.WriteString(`EXISTS (` +
-				`SELECT jsonb_path_query(` +
-				`document, '$.product_tree.**.product.product_id')::int ` +
-				`FROM documents ds WHERE ds.id = documents.id ` +
-				`INTERSECT ` +
-				`SELECT num FROM documents_texts ` +
-				`WHERE documents_id = documents.id AND ` +
-				`txt ILIKE `)
-			recurse(e.children[0])
-			b.WriteByte(')')
-		*/
-		/*
-			b.WriteString(`EXISTS (` +
-				`SELECT num FROM documents_texts ` +
-				`WHERE documents_id = documents.id AND ` +
-				`txt ILIKE `)
-			recurse(e.children[0])
-			b.WriteString(` INTERSECT ` +
-				`SELECT jsonb_path_query(` +
-				`document, '$.product_tree.**.product.product_id')::int ` +
-				`FROM documents ds WHERE ds.id = documents.id)`)
-		*/
-	}
-
-	recurse = func(e *Expr) {
-		b.WriteByte('(')
-		switch e.exprType {
-		case access:
-			writeAccess(e)
-		case cnst:
-			writeCnst(e)
-		case cast:
-			writeCast(e)
-		case eq:
-			writeBinary(e, "=")
-		case ne:
-			writeBinary(e, "<>")
-		case lt:
-			writeBinary(e, "<")
-		case gt:
-			writeBinary(e, ">")
-		case le:
-			writeBinary(e, "<=")
-		case ge:
-			writeBinary(e, ">=")
-		case not:
-			writeNot(e)
-		case and:
-			writeBinary(e, "AND")
-		case or:
-			writeBinary(e, "OR")
-		case search:
-			writeSearch(e)
-		case ilike:
-			writeILike(e)
-		case ilikePID:
-			writeILikePID(e)
-		case now:
-			writeNow(e)
-		case add:
-			writeBinary(e, "+")
-		case sub:
-			writeBinary(e, "-")
-		case mul:
-			writeBinary(e, "*")
-		case div:
-			writeBinary(e, "/")
-		}
-		b.WriteByte(')')
-	}
-	recurse(e)
-	return b.String(), replacements, aliases
+func (e *Expr) Where(advisory bool) (string, []any, map[string]string) {
+	// XXX: This is interim code as a refactoring step.
+	sb := SQLBuilder{Advisory: advisory}
+	clause := sb.ConstructWhere(e)
+	return clause, sb.Replacements, sb.Aliases
 }
 
 type stack []*Expr
@@ -708,11 +501,14 @@ func (e *Expr) checkValueType(vt valueType) {
 	}
 }
 
-func (e *Expr) checkExprType(et exprType) {
-	if e.exprType != et {
-		panic(parseError(
-			fmt.Sprintf("expression type mismatch: %q %q", e.exprType, et)))
+func (e *Expr) checkExprType(eTypes ...exprType) {
+	for _, et := range eTypes {
+		if e.exprType == et {
+			return
+		}
 	}
+	panic(parseError(
+		fmt.Sprintf("expression type mismatch: %q %v", e.exprType, eTypes)))
 }
 
 func (st *stack) not() {
@@ -975,6 +771,20 @@ func (st *stack) search(p *Parser) {
 	})
 }
 
+func (st *stack) csearch(p *Parser) {
+	lang := st.pop()
+	term := st.pop()
+	lang.checkValueType(stringType)
+	term.checkValueType(stringType)
+	p.checkLanguage(lang.stringValue)
+	st.push(&Expr{
+		exprType:    csearch,
+		valueType:   boolType,
+		langValue:   lang.stringValue,
+		stringValue: term.stringValue,
+	})
+}
+
 func (st *stack) ilike() {
 	needle := st.pop()
 	haystack := st.pop()
@@ -1040,7 +850,7 @@ func (st *stack) as(aliases map[string]struct{}) {
 	alias := st.pop()
 	srch := st.top()
 	alias.checkValueType(stringType)
-	srch.checkExprType(search)
+	srch.checkExprType(search, csearch)
 	validAlias(alias.stringValue)
 	if _, already := aliases[alias.stringValue]; already {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
@@ -1147,6 +957,8 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.cmp(ge)
 		case "search":
 			st.search(p)
+		case "csearch":
+			st.csearch(p)
 		case "as":
 			st.as(aliases)
 		case "ilike":

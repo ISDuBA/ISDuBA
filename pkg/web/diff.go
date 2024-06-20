@@ -56,8 +56,8 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		expr2 = expr2.And(tlpExpr)
 	}
 	var (
-		where1, replacements1, _ = expr1.Where()
-		where2, replacements2, _ = expr2.Where()
+		where1, replacements1, _ = expr1.Where(false)
+		where2, replacements2, _ = expr2.Where(false)
 		doc1, doc2               []byte
 	)
 	if err := c.db.Run(

@@ -97,7 +97,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	_, _, aliases := expr.Where()
+	_, _, aliases := expr.Where(query.Advisories)
 	if err := database.CheckProjections(query.Columns, aliases, query.Advisories); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "bad 'columns' value: " + err.Error(),
@@ -426,7 +426,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			if query.Advisories {
 				expr = expr.And(database.BoolField("latest"))
 			}
-			_, _, aliases := expr.Where()
+			_, _, aliases := expr.Where(query.Advisories)
 
 			// Check columns
 			if cols, ok := ctx.GetPostForm("columns"); ok {

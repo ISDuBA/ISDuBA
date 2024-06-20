@@ -48,7 +48,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	}
 
 	var (
-		where, replacements, _ = expr.Where()
+		where, replacements, _ = expr.Where(false)
 		exists                 bool
 		commentingAllowed      bool
 		forbidden              bool
@@ -257,7 +257,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where()
+	where, replacements, _ := expr.Where(false)
 
 	type comment struct {
 		DocumentID  int64     `json:"document_id"`
