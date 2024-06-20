@@ -9,7 +9,11 @@
 package web
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"
 	"net/http"
 	"os"
@@ -25,9 +29,37 @@ const (
 	defaultPreset         = "mandatory"
 	defaultForwardQueue   = 5
 	defaultValidationMode = downloader.ValidationStrict
-	defaultLogFile        = "downloader.log"
-	defaultLogLevel       = slog.LevelInfo
 )
+
+func downloadHandler(c *Controller, ctx *gin.Context) func(d downloader.DownloadedDocument) error {
+	return func(d downloader.DownloadedDocument) error {
+
+		if d.ValStatus != downloader.ValidValidationStatus {
+			slog.Info("Got invalid document")
+			return nil
+		}
+
+		r := bytes.NewReader(d.Data.Bytes())
+		actor := models.Importer
+
+		var id int64
+		if err := c.db.Run(ctx.Request.Context(), func(ctx context.Context, conn *pgxpool.Conn) error {
+			var err error
+			id, err = models.ImportDocument(ctx, conn, r, &actor, nil, false)
+			return err
+		}, 0); err != nil {
+			if errors.Is(err, models.ErrAlreadyInDatabase) {
+				slog.Warn("advisory already in database", "file", d.InitialReleaseDate)
+				err = nil
+			}
+			return err
+		}
+		slog.Info("inserted", "id", id)
+
+		slog.Info("Imported advisory", "release-date", d.InitialReleaseDate)
+		return nil
+	}
+}
 
 // download downloads the advisories from the specified source
 func (c *Controller) download(ctx *gin.Context) {
@@ -43,17 +75,13 @@ func (c *Controller) download(ctx *gin.Context) {
 		return nil
 	}
 
-	downloadHandler := func(d downloader.DownloadedDocument) error {
-		slog.Info("Got document", "release-date", d.InitialReleaseDate)
-		return nil
-	}
-
 	cfg := &downloader.Config{
 		Worker:                 defaultWorker,
 		RemoteValidatorPresets: []string{defaultPreset},
 		ForwardQueue:           defaultForwardQueue,
 		FailedForwardHandler:   failedForward,
-		DownloadHandler:        downloadHandler,
+		DownloadHandler:        downloadHandler(c, ctx),
+		ValidationMode:         defaultValidationMode,
 		Logger:                 slog.Default(),
 	}
 
