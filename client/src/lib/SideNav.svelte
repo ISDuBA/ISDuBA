@@ -62,7 +62,13 @@
       <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
         <SidebarWrapper class="bg-primary-700 px-0">
           <div class="flex flex-row gap-4">
-            <Heading class="mb-6 ml-6 font-normal text-white">ISDuBA</Heading>
+            <img
+              alt="ISDuBA logo"
+              class="ml-2 flex-none"
+              style="height: 50px; width: 50px"
+              src="favicon.png"
+            />
+            <Heading class="mb-6 font-normal text-white">ISDuBA</Heading>
           </div>
           <SidebarGroup class="space-y-0 bg-primary-700">
             <!-- Entries which are available after login should go here-->
