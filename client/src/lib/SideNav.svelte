@@ -66,7 +66,7 @@
               alt="ISDuBA logo"
               class="ml-2 flex-none"
               style="height: 50px; width: 50px"
-              src="favicon.png"
+              src="favicon.svg"
             />
             <Heading class="mb-6 font-normal text-white">ISDuBA</Heading>
           </div>
