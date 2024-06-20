@@ -12,22 +12,29 @@ set -e # to exit if a command in the script fails
 
 sudo apt install -y unzip # needed to unzip the keycloak archive
 
+version="25.0.0"
 
-if [ -d /opt/keycloak ] && sudo /opt/keycloak/bin/kc.sh --version | grep -q -F "Keycloak 24.0.1"; then
+if [ ! -z "$1" ]; then
+    version="$1"
+fi
+
+full="keycloak-$version.zip"
+
+if [ -d /opt/keycloak ] && sudo /opt/keycloak/bin/kc.sh --version | grep -q -F "Keycloak $version"; then
   echo "A Keycloak installation already exists. Skipping installation."
 else
   # Make sure no potentially broken zip file exists
-  rm --force keycloak-24.0.1.zip
+  rm --force $full
   # download and extract keycloak
-  wget https://github.com/keycloak/keycloak/releases/download/24.0.1/keycloak-24.0.1.zip
+  wget https://github.com/keycloak/keycloak/releases/download/$version/$full
 
   echo "Extracting Keycloak..."
-  unzip -q keycloak-24.0.1.zip
+  unzip -q $full
 
   sudo mkdir -p /opt/
 
-  sudo mv keycloak-24.0.1 /opt/keycloak
-  rm --force keycloak-24.0.1.zip
+  sudo mv keycloak-$version /opt/keycloak
+  rm --force $full
   echo "Successfully installed Keycloak at /opt/keycloak."
 fi
 
