@@ -33,6 +33,27 @@
 </script>
 
 <div class="flex max-h-[34rem] flex-col overflow-auto p-1">
+  <div class="mb-9 mt-3 flex flex-row">
+    <ButtonGroup class="ml-auto h-7">
+      <Button
+        size="xs"
+        color="light"
+        class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        on:click={() => {
+          fullHistory = false;
+        }}>Comments</Button
+      >
+      <Button
+        size="xs"
+        color="light"
+        class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        on:click={() => {
+          fullHistory = true;
+        }}>History</Button
+      >
+    </ButtonGroup>
+  </div>
+
   <Table>
     <TableBody>
       {#each historyEntries as event}
@@ -87,25 +108,4 @@
   {#if historyEntries.length === 0}
     <span class="ml-auto mr-auto text-gray-400">{fullHistory ? "No entries" : "No comments"}</span>
   {/if}
-</div>
-
-<div class="mb-9 mt-3 flex flex-row">
-  <ButtonGroup class="ml-auto h-7">
-    <Button
-      size="xs"
-      color="light"
-      class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-      on:click={() => {
-        fullHistory = false;
-      }}>Comments</Button
-    >
-    <Button
-      size="xs"
-      color="light"
-      class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-      on:click={() => {
-        fullHistory = true;
-      }}>History</Button
-    >
-  </ButtonGroup>
 </div>

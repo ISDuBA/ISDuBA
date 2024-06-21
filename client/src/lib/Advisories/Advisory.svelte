@@ -335,9 +335,9 @@
       </div>
       <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
-      </div>
-      <div class="mt-4 flex h-fit flex-row gap-2">
-        <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
+        <div class="absolute right-6 mt-4 flex h-fit flex-row gap-2">
+          <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
+        </div>
       </div>
       <div class="mb-4 mt-2" />
     </div>
@@ -367,29 +367,22 @@
           {/if}
         </div>
       </div>
-      <div class="mr-3 flex flex-col min-[800px]:ml-auto">
-        {#if ssvc}
-          <div class="mb-4 flex flex-row items-center gap-x-3">
+      <div class="absolute right-3 mr-3 flex flex-col min-[800px]:ml-auto">
+        <div class="mb-4 flex flex-row items-center gap-x-3">
+          {#if ssvc}
             <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
-            <SsvcCalculator
-              vectorInput={ssvc?.vector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-              {allowEditing}
-            ></SsvcCalculator>
-          </div>
-        {/if}
+          {/if}
+          <SsvcCalculator
+            vectorInput={ssvc?.vector}
+            disabled={!isCalculatingAllowed}
+            documentID={params.id}
+            on:updateSSVC={loadMetaData}
+            {allowEditing}
+          ></SsvcCalculator>
+        </div>
         <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
         <div class="ml-auto w-96">
           {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-            <History
-              state={advisoryState}
-              on:commentUpdate={() => {
-                buildHistory();
-              }}
-              entries={historyEntries}
-            ></History>
             {#if isCommentingAllowed}
               <div class="mt-6">
                 <Label class="mb-2" for="comment-textarea">New Comment:</Label>
@@ -404,21 +397,17 @@
                 ></CommentTextArea>
               </div>
             {/if}
+            <History
+              state={advisoryState}
+              on:commentUpdate={() => {
+                buildHistory();
+              }}
+              entries={historyEntries}
+            ></History>
             <ErrorMessage message={loadEventsError}></ErrorMessage>
             <ErrorMessage message={loadCommentsError}></ErrorMessage>
           {/if}
         </div>
-        {#if !ssvc}
-          <div class="mt-4 flex flex-row items-center gap-x-3">
-            <SsvcCalculator
-              vectorInput={ssvc?.vector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-              {allowEditing}
-            ></SsvcCalculator>
-          </div>
-        {/if}
       </div>
     </div>
   </div>
