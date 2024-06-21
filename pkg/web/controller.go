@@ -22,17 +22,19 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/ISDuBA/ISDuBA/pkg/worker"
 )
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
-	cfg *config.Config
-	db  *database.DB
+	cfg          *config.Config
+	db           *database.DB
+	downloadJobs chan worker.DownloadJob
 }
 
 // NewController returns a new Controller.
-func NewController(cfg *config.Config, db *database.DB) *Controller {
-	return &Controller{cfg: cfg, db: db}
+func NewController(cfg *config.Config, db *database.DB, downloadJobs chan worker.DownloadJob) *Controller {
+	return &Controller{cfg: cfg, db: db, downloadJobs: downloadJobs}
 }
 
 // currentUser returns the current user to be used in database queries.
@@ -117,6 +119,6 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/view", authAll, c.view)
 
 	// Download advisories
-	api.GET("/download", authIm, c.download)
+	api.GET("/import", authIm, c.importProvider)
 	return r
 }

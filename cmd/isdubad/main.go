@@ -23,6 +23,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
+	"github.com/ISDuBA/ISDuBA/pkg/worker"
 )
 
 func check(err error) {
@@ -51,9 +52,13 @@ func run(cfg *config.Config) error {
 	}
 	defer db.Close(ctx)
 
+	downloadWorkerChan := make(chan worker.DownloadJob)
+	go worker.DownloadWorker(ctx, downloadWorkerChan)
+	defer close(downloadWorkerChan)
+
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db)
+	ctrl := web.NewController(cfg, db, downloadWorkerChan)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)

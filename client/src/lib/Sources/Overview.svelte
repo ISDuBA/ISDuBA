@@ -16,7 +16,7 @@
   let domains = "";
 
   async function importDocuments() {
-    const response = await request(`/api/download/?domains=${domains}`, "GET");
+    const response = await request(`/api/import/?domains=${domains}`, "GET");
     if (response.ok) {
       console.log("Success");
     } else if (response.error) {
