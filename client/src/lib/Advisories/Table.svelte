@@ -132,6 +132,10 @@
     }, 500);
   }
 
+  $: if (columns) {
+    orderBy = "";
+  }
+
   $: if (columns || query || loadAdvisories || !loadAdvisories) {
     fetchData();
   }
