@@ -54,6 +54,7 @@
   export let searchTerm: string = "";
   export let loadAdvisories: boolean;
   export let orderBy = "title";
+  export let defaultOrderBy = "";
 
   let anchorLink: string | null;
   let deleteModalOpen = false;
@@ -134,7 +135,7 @@
   }
 
   $: if (columns) {
-    orderBy = "";
+    orderBy = defaultOrderBy;
   }
 
   $: if (columns || query || loadAdvisories || !loadAdvisories) {

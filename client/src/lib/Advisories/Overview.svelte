@@ -18,6 +18,8 @@
   let advisoryTable: any;
   let advisoriesOnly = true;
 
+  let defaultOrderBy = "cvss_v3_score";
+
   $: columns = advisoriesOnly
     ? [
         "critical",
@@ -114,6 +116,11 @@
   </ButtonGroup>
 </div>
 {#if searchTerm !== null}
-  <AdvisoryTable {searchTerm} bind:this={advisoryTable} loadAdvisories={advisoriesOnly} {columns}
+  <AdvisoryTable
+    {defaultOrderBy}
+    {searchTerm}
+    bind:this={advisoryTable}
+    loadAdvisories={advisoriesOnly}
+    {columns}
   ></AdvisoryTable>
 {/if}
