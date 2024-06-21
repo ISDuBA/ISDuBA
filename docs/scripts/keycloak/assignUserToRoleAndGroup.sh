@@ -93,14 +93,18 @@ USRID=$(sudo /opt/keycloak/bin/kcadm.sh get "http://localhost:8080/admin/realms/
 IDU=(${USRID//,/ })
 declare -i COUNTERU=0
 declare -i RESULTU=-1
+declare -i UIDCHECK=-1
 for i in "${IDU[@]}"
 do
+  if [ "$i" = "\"id\"" ]; then
+    UIDCHECK=$COUNTERU+2
+  fi
   if [ "$i" = "\"$name\"" ]; then
     if [[ "${IDU[$COUNTERU-2]}" = "\"username\"" ]]; then
-      RESULTU=$COUNTERU-3
+      RESULTU=$UIDCHECK
     fi
   fi
-COUNTERU=$COUNTERU+1
+  COUNTERU=$COUNTERU+1
 done
 
 if [ $RESULTU = -1 ]; then
@@ -117,11 +121,15 @@ if [ ! -z "$group" ]; then
   IDG=(${GRPID//,/ })
   declare -i COUNTERG=0
   declare -i RESULTG=-1
+  declare -i GIDCHECK=-1
   for j in "${IDG[@]}"
   do
-    if [ "$j" = \"$group\" ]; then
+    if [ "$j" = "\"id\"" ]; then
+      GIDCHECK=$COUNTERG+2
+    fi
+    if [ "$j" = "\"$group\"" ]; then
       if [[ "${IDG[$COUNTERG-2]}" = "\"name\"" ]]; then
-        RESULTG=$COUNTERG-3
+        RESULTG=$GIDCHECK
       fi
     fi
   COUNTERG=$COUNTERG+1
