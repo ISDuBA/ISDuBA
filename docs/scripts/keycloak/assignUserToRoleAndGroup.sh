@@ -134,7 +134,7 @@ if [ ! -z "$group" ]; then
     IDGRP=${IDG[$RESULTG]:1:-1}
   fi
 
-  if [[ -z "$IDUSR" || -z "IDGRP" ]]; then
+  if [[ -z "$IDUSR" || -z "$IDGRP" ]]; then
       echo "Failed to add user $name to group $group"
   else
     sudo /opt/keycloak/bin/kcadm.sh update users/$IDUSR/groups/$IDGRP -r isduba -s realm=isduba -s userId=$IDUSR -s groupId=$IDGRP -n
