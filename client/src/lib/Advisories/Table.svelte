@@ -37,7 +37,8 @@
   import { getPublisher } from "$lib/utils";
 
   let openRow: number | null;
-
+  let abortController: AbortController;
+  let requestOngoing = false;
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
   };
@@ -171,6 +172,12 @@
     );
     error = "";
     loading = true;
+    if (!requestOngoing) {
+      requestOngoing = true;
+      abortController = new AbortController();
+    } else {
+      abortController.abort();
+    }
     const response = await request(documentURL, "GET");
     if (response.ok) {
       ({ count, documents } = response.content);
@@ -179,6 +186,7 @@
       error = getErrorMessage(response.error);
     }
     loading = false;
+    requestOngoing = false;
   }
 
   const previous = () => {
