@@ -34,15 +34,14 @@ func (c *Controller) importProvider(ctx *gin.Context) {
 	}
 	domains := strings.Split(domainsQuery, ",")
 
-	c.downloadJobs <- worker.DownloadJob{
+	c.downloadWorker.Enqueue(worker.DownloadJob{
 		Domains:        domains,
 		Worker:         defaultWorker,
 		ForwardQueue:   defaultForwardQueue,
 		Preset:         defaultPreset,
 		ValidationMode: defaultValidationMode,
 		Db:             c.db,
-	}
-
+	})
 	slog.Info("Queued download for domains", "domains", domains)
 
 	ctx.JSON(http.StatusOK, gin.H{"msg": "queued import job"})

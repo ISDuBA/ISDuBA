@@ -21,13 +21,29 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type DownloadWorker struct {
+	ctx  context.Context
+	jobs chan DownloadJob
+}
+
 type DownloadJob struct {
-	Domains        []string
-	Worker         int
-	ForwardQueue   int
 	Preset         string
 	ValidationMode downloader.ValidationMode
 	Db             *database.DB
+	Domains        []string
+	Worker         int
+	ForwardQueue   int
+}
+
+func NewDownloadWorker(ctx context.Context) *DownloadWorker {
+	return &DownloadWorker{
+		ctx:  ctx,
+		jobs: make(chan DownloadJob),
+	}
+}
+
+func (w *DownloadWorker) Enqueue(job DownloadJob) {
+	w.jobs <- job
 }
 
 func downloadHandler(db *database.DB, ctx context.Context) func(d downloader.DownloadedDocument) error {
@@ -65,19 +81,19 @@ func FailedForwardHandler() func(filename, doc, sha256, sha512 string) error {
 	}
 }
 
-func DownloadWorker(ctx context.Context, downloadJobChan <-chan DownloadJob) {
+func (w *DownloadWorker) Run() {
 	for {
 		select {
-		case <-ctx.Done():
+		case <-w.ctx.Done():
 			return
-		case job := <-downloadJobChan:
+		case job := <-w.jobs:
 			func() {
 				cfg := &downloader.Config{
 					Worker:                 job.Worker,
 					RemoteValidatorPresets: []string{job.Preset},
 					ForwardQueue:           job.ForwardQueue,
 					FailedForwardHandler:   FailedForwardHandler(),
-					DownloadHandler:        downloadHandler(job.Db, ctx),
+					DownloadHandler:        downloadHandler(job.Db, w.ctx),
 					ValidationMode:         job.ValidationMode,
 					Logger:                 slog.Default(),
 				}
@@ -88,11 +104,15 @@ func DownloadWorker(ctx context.Context, downloadJobChan <-chan DownloadJob) {
 				}
 				defer d.Close()
 
-				err = d.Run(ctx, job.Domains)
+				err = d.Run(w.ctx, job.Domains)
 				if err != nil {
 					slog.Warn("Download failed", "err", err)
 				}
 			}()
 		}
 	}
+}
+
+func (w *DownloadWorker) Close() {
+	close(w.jobs)
 }

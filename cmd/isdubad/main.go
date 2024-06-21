@@ -52,13 +52,13 @@ func run(cfg *config.Config) error {
 	}
 	defer db.Close(ctx)
 
-	downloadWorkerChan := make(chan worker.DownloadJob)
-	go worker.DownloadWorker(ctx, downloadWorkerChan)
-	defer close(downloadWorkerChan)
+	downloadWorker := worker.NewDownloadWorker(ctx)
+	go downloadWorker.Run()
+	defer downloadWorker.Close()
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, downloadWorkerChan)
+	ctrl := web.NewController(cfg, db, downloadWorker)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)
