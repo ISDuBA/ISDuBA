@@ -81,6 +81,7 @@
           on:click={() => {
             searchTerm = "";
             advisoryTable.fetchData();
+            sessionStorage.setItem("documentSearchTerm", "");
           }}>x</button
         >
       {/if}
