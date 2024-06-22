@@ -55,10 +55,13 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		expr1 = expr1.And(tlpExpr)
 		expr2 = expr2.And(tlpExpr)
 	}
+	var b1, b2 database.SQLBuilder
+	b1.ConstructWhere(expr1)
+	b2.ConstructWhere(expr2)
 	var (
-		where1, replacements1, _ = expr1.Where(false)
-		where2, replacements2, _ = expr2.Where(false)
-		doc1, doc2               []byte
+		where1, replacements1 = b1.WhereClause, b1.Replacements
+		where2, replacements2 = b2.WhereClause, b2.Replacements
+		doc1, doc2            []byte
 	)
 	if err := c.db.Run(
 		ctx.Request.Context(),

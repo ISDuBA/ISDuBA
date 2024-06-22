@@ -47,7 +47,10 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where(false)
+	builder := database.SQLBuilder{}
+	builder.ConstructWhere(expr)
+
+	where, replacements := builder.WhereClause, builder.Replacements
 
 	type event struct {
 		Event      models.Event    `json:"event_type"`

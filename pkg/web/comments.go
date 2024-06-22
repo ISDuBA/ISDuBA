@@ -46,16 +46,19 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		}
 		expr = expr.And(tlpExpr)
 	}
+	builder := database.SQLBuilder{}
+	builder.ConstructWhere(expr)
 
 	var (
-		where, replacements, _ = expr.Where(false)
-		exists                 bool
-		commentingAllowed      bool
-		forbidden              bool
-		commentator            = c.currentUser(ctx)
-		message, _             = ctx.GetPostForm("message")
-		now                    = time.Now().UTC()
-		commentID              *int64
+		where             = builder.WhereClause
+		replacements      = builder.Replacements
+		exists            bool
+		commentingAllowed bool
+		forbidden         bool
+		commentator       = c.currentUser(ctx)
+		message, _        = ctx.GetPostForm("message")
+		now               = time.Now().UTC()
+		commentID         *int64
 	)
 
 	if err := c.db.Run(
@@ -257,7 +260,10 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where(false)
+	builder := database.SQLBuilder{}
+	builder.ConstructWhere(expr)
+
+	where, replacements := builder.WhereClause, builder.Replacements
 
 	type comment struct {
 		DocumentID  int64     `json:"document_id"`

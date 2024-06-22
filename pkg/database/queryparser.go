@@ -435,15 +435,6 @@ func (e *Expr) And(o *Expr) *Expr {
 	}
 }
 
-// Where returns an SQL WHERE clause and a list of string replacements
-// to be fed as separate args to the SQL statement to prevent injections.
-func (e *Expr) Where(advisory bool) (string, []any, map[string]string) {
-	// XXX: This is interim code as a refactoring step.
-	sb := SQLBuilder{Advisory: advisory}
-	clause := sb.ConstructWhere(e)
-	return clause, sb.Replacements, sb.Aliases
-}
-
 type stack []*Expr
 
 func (st *stack) push(v *Expr) {
