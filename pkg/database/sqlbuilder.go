@@ -251,6 +251,7 @@ func (sb *SQLBuilder) replacementIndex(s string) int {
 	if sb.replToIdx == nil {
 		sb.replToIdx = map[string]int{}
 	}
+	sb.Replacements = append(sb.Replacements, s)
 	idx := len(sb.replToIdx)
 	sb.replToIdx[s] = idx
 	return idx
