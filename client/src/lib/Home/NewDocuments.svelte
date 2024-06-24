@@ -40,17 +40,26 @@
     }
   };
 
+  const compareCrit = (a: any, b: any) => {
+    if (!b.critical || a.critical > b.critical) {
+      return -1;
+    } else if (!a.critical || a.critical < b.critical) {
+      return 1;
+    }
+    return 0;
+  };
+
   const loadDocuments = async () => {
     const columns =
-      "cvss_v3_score cvss_v2_score comments id recent title publisher ssvc state tracking_id";
+      "cvss_v3_score cvss_v2_score comments critical id recent title publisher ssvc state tracking_id";
     const query = "$state new workflow =";
-    const sort = "-cvss_v3_score -cvss_v2_score";
+    const sort = "-recent";
     const response = await request(
       `/api/documents?columns=${columns}&advisories=true&query=${query}&limit=6&order=${sort}`,
       "GET"
     );
     if (response.ok) {
-      documents = await response.content.documents;
+      documents = (await response.content.documents).sort(compareCrit);
     } else if (response.error) {
       newDocumentsError = `Could not load new documents. ${getErrorMessage(response.error)}`;
     }
