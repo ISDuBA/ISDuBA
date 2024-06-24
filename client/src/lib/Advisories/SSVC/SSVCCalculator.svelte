@@ -239,9 +239,12 @@
 
 <div id="ssvc-calc" class="flex flex-row items-center gap-x-3">
   {#if !startedCalculation}
-    <div class="flex items-center gap-x-3">
+    <div class="flex flex-col gap-x-3">
       <div>
         {#if isEditing}
+          <Label class="mb-4">
+            <span>Enter a SSVC directly</span>
+          </Label>
           <Input
             autofocus
             class="h-6 w-96"
@@ -258,27 +261,36 @@
           <span class="h-6 text-lg">Please enter a SSVC</span>
         {/if}
       </div>
-      {#if isEditing}
-        <button
-          class="h-6"
-          title="Undo"
-          on:click={() => {
-            isEditing = false;
-          }}><i class="bx bx-undo"></i></button
-        >
-        <button
-          class="h-6"
-          title="Calculate"
-          {disabled}
-          on:click={() => (startedCalculation = true)}><i class="bx bx-cog"></i></button
-        >
-        <button class="h-6" title="Save" color="light" on:click={() => saveSSVC(vectorInput)}
-          ><i class="bx bx-save me-2 text-xl"></i></button
-        >
-      {:else}
+      {#if !isEditing}
         <button class="h-6" {disabled} on:click={toggleEditing}
           ><i class="bx bx-edit-alt ml-1"></i></button
         >
+      {/if}
+      {#if isEditing}
+        <div class="ml-auto mt-4 flex flex-row gap-x-3">
+          <Button
+            outline
+            size="xs"
+            class="h-8"
+            title="Undo"
+            on:click={() => {
+              isEditing = false;
+            }}
+          >
+            Undo
+          </Button>
+          <Button
+            outline
+            size="xs"
+            class="h-8"
+            title="Evaluate"
+            {disabled}
+            on:click={() => (startedCalculation = true)}>Evaluate</Button
+          >
+          <Button size="xs" class="h-8" title="Save" on:click={() => saveSSVC(vectorInput)}
+            >Save</Button
+          >
+        </div>
       {/if}
     </div>
   {:else}
