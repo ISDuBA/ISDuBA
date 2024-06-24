@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import { push } from "svelte-spa-router";
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { request } from "$lib/utils";
@@ -17,14 +18,35 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import CustomCard from "./CustomCard.svelte";
   import { getPublisher } from "$lib/utils";
+  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
   let documents: any[] = [];
   let newDocumentsError = "";
+  let loadAdvisoryVersionsError = "";
+
+  const loadAdvisoryVersions = async () => {
+    for (let i = 0; i < documents.length; i++) {
+      const doc = documents[i];
+      const response = await request(
+        `/api/documents?&columns=id version tracking_id&query=$tracking_id ${doc.tracking_id} = $publisher "${doc.publisher}" = and`,
+        "GET"
+      );
+      if (response.ok) {
+        const result = (await response.content).documents;
+        documents[i].isNewAdvisory = result.length === 1;
+      } else if (response.error) {
+        loadAdvisoryVersionsError = `Could not all details. ${getErrorMessage(response.error)}`;
+      }
+    }
+  };
 
   const loadDocuments = async () => {
-    const columns = "cvss_v3_score cvss_v2_score title publisher state";
+    const columns =
+      "cvss_v3_score cvss_v2_score comments id recent title publisher ssvc state tracking_id";
+    const query = "$state new workflow =";
+    const sort = "-cvss_v3_score -cvss_v2_score";
     const response = await request(
-      `/api/documents?columns=${columns}&advisories=true&query=$state new workflow =&limit=10`,
+      `/api/documents?columns=${columns}&advisories=true&query=${query}&limit=6&order=${sort}`,
       "GET"
     );
     if (response.ok) {
@@ -34,23 +56,23 @@
     }
   };
 
-  onMount(() => {
-    loadDocuments();
+  onMount(async () => {
+    await loadDocuments();
+    loadAdvisoryVersions();
   });
+
+  const openDocument = (doc: any) => {
+    push(`/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`);
+  };
 </script>
 
 {#if $appStore.app.isUserLoggedIn}
   <div class="flex w-1/2 max-w-[50%] flex-col gap-4">
     <SectionHeader title="New documents"></SectionHeader>
-    <div class="text-red-600">
-      Attention: These are
-      <span class="font-bold">advisories</span>
-      for now as we are not able to fetch recently imported documents yet.
-    </div>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if documents?.length && documents.length > 0}
         {#each documents as doc}
-          <CustomCard>
+          <CustomCard on:click={() => openDocument(doc)}>
             <div slot="top-left">
               {#if doc.cvss_v2_score}
                 <div>
@@ -73,10 +95,34 @@
               >{getPublisher(doc.publisher)}</span
             >
             <div class="text-black">{doc.title}</div>
+            <div
+              slot="bottom-left"
+              title={`Number of comments`}
+              class="flex items-center gap-4 text-gray-500"
+            >
+              <div class="flex items-center gap-1">
+                <i class="bx bx-comment"></i>
+                <span>{doc.comments}</span>
+              </div>
+              {#if doc.ssvc}
+                <span title="SSVC" class="rounded border border-solid border-gray-400 px-1"
+                  >{convertVectorToLabel(doc.ssvc).label}</span
+                >
+              {/if}
+              <div></div>
+            </div>
+            <div slot="bottom-right" class="text-gray-500">
+              {#if doc.isNewAdvisory === true}
+                <span>New advisory</span>
+              {:else if doc.isNewAdvisory === false}
+                <span>Updated advisory</span>
+              {/if}
+            </div>
           </CustomCard>
         {/each}
       {/if}
     </div>
     <ErrorMessage message={newDocumentsError}></ErrorMessage>
+    <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
   </div>
 {/if}
