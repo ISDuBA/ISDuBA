@@ -61,8 +61,6 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	builder := database.SQLBuilder{}
 	builder.CreateWhere(expr)
 
-	where, replacements := builder.WhereClause, builder.Replacements
-
 	deleted := false
 
 	if err := c.db.Run(
@@ -75,10 +73,11 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			defer tx.Rollback(rctx)
 
 			const deletePrefix = `DELETE FROM documents WHERE `
-			deleteSQL := deletePrefix + where
-			slog.Debug("delete document", "SQL", qndSQLReplace(deleteSQL, replacements))
+			deleteSQL := deletePrefix + builder.WhereClause
+			slog.Debug("delete document", "SQL",
+				qndSQLReplace(deleteSQL, builder.Replacements))
 
-			tags, err := tx.Exec(rctx, deleteSQL, replacements...)
+			tags, err := tx.Exec(rctx, deleteSQL, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("delete failed: %w", err)
 			}

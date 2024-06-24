@@ -50,8 +50,6 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	builder.CreateWhere(expr)
 
 	var (
-		where             = builder.WhereClause
-		replacements      = builder.Replacements
 		exists            bool
 		commentingAllowed bool
 		forbidden         bool
@@ -73,14 +71,14 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			stateSQL := `SELECT state, docs.tracking_id, docs.publisher ` +
 				`FROM documents docs JOIN advisories ads ` +
 				`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
-				` WHERE ` + where
+				` WHERE ` + builder.WhereClause
 
 			var (
 				stateS     string
 				trackingID string
 				publisher  string
 			)
-			if err := tx.QueryRow(rctx, stateSQL, replacements...).Scan(
+			if err := tx.QueryRow(rctx, stateSQL, builder.Replacements...).Scan(
 				&stateS, &trackingID, &publisher,
 			); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
@@ -263,8 +261,6 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	builder := database.SQLBuilder{}
 	builder.CreateWhere(expr)
 
-	where, replacements := builder.WhereClause, builder.Replacements
-
 	type comment struct {
 		DocumentID  int64     `json:"document_id"`
 		ID          int64     `json:"id"`
@@ -279,9 +275,10 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
+			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` +
+				builder.WhereClause + `)`
 			if err := conn.QueryRow(
-				rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
 			}
 			if !exists {
