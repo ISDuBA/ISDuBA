@@ -33,7 +33,7 @@
 </script>
 
 <div class="flex max-h-[34rem] flex-col overflow-auto p-1">
-  <div class="mb-9 mt-3 flex flex-row">
+  <div class="mb-9 mt-6 flex flex-row">
     <ButtonGroup class="ml-auto h-7">
       <Button
         size="xs"

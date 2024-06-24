@@ -369,7 +369,7 @@
         </div>
       </div>
       <div class="absolute right-3 mr-3 flex flex-col min-[800px]:ml-auto">
-        <div class="h-52">
+        <div class="h-52 w-full">
           <div class="mb-4 flex flex-row items-center">
             {#if ssvc}
               {#if !isSSVCediting}
