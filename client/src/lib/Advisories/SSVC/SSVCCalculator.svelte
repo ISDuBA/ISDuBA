@@ -29,7 +29,7 @@
   export let documentID: string;
   export let allowEditing: any;
   let startedCalculation = false;
-  let isEditing = false;
+  export let isEditing = false;
   let isComplex = false;
   let currentStep = 0;
   let steps: string[] = [];
@@ -248,14 +248,13 @@
             disabled={disabled || !isEditing}
             on:keyup={(e) => {
               if (e.key === "Enter") saveSSVC(vectorInput);
+              if (e.key === "Escape") toggleEditing();
             }}
             on:input={resetError}
             type="text"
             bind:value={vectorInput}
           />
-        {:else if vectorInput}
-          <span class="h-6 text-nowrap text-sm text-gray-400">{vectorInput}</span>
-        {:else}
+        {:else if !vectorInput}
           <span class="h-6 text-lg">Please enter a SSVC</span>
         {/if}
       </div>

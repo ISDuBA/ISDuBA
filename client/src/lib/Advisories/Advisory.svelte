@@ -43,6 +43,7 @@
   let advisoryState = "";
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
+  let isSSVCediting = false;
   $: if ([NEW, READ, ASSESSING, REVIEW].includes(advisoryState)) {
     isCommentingAllowed =
       (appStore.isEditor() && advisoryState !== REVIEW) || appStore.isReviewer();
@@ -368,35 +369,40 @@
         </div>
       </div>
       <div class="absolute right-3 mr-3 flex flex-col min-[800px]:ml-auto">
-        <div class="mb-4 flex flex-row items-center gap-x-3">
-          {#if ssvc}
-            <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
+        <div class="h-52">
+          <div class="mb-4 flex flex-row items-center">
+            {#if ssvc}
+              {#if !isSSVCediting}
+                <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
+              {/if}
+            {/if}
+            <SsvcCalculator
+              bind:isEditing={isSSVCediting}
+              vectorInput={ssvc?.vector}
+              disabled={!isCalculatingAllowed}
+              documentID={params.id}
+              on:updateSSVC={loadMetaData}
+              {allowEditing}
+            ></SsvcCalculator>
+          </div>
+          {#if isCommentingAllowed && !isSSVCediting}
+            <div class="mt-6">
+              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+              <CommentTextArea
+                on:input={() => (createCommentError = "")}
+                on:saveComment={createComment}
+                on:saveForReview={sendForReview}
+                bind:value={comment}
+                errorMessage={createCommentError}
+                buttonText="Send"
+                state={advisoryState}
+              ></CommentTextArea>
+            </div>
           {/if}
-          <SsvcCalculator
-            vectorInput={ssvc?.vector}
-            disabled={!isCalculatingAllowed}
-            documentID={params.id}
-            on:updateSSVC={loadMetaData}
-            {allowEditing}
-          ></SsvcCalculator>
         </div>
         <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
         <div class="ml-auto w-96">
           {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-            {#if isCommentingAllowed}
-              <div class="mt-6">
-                <Label class="mb-2" for="comment-textarea">New Comment:</Label>
-                <CommentTextArea
-                  on:input={() => (createCommentError = "")}
-                  on:saveComment={createComment}
-                  on:saveForReview={sendForReview}
-                  bind:value={comment}
-                  errorMessage={createCommentError}
-                  buttonText="Send"
-                  state={advisoryState}
-                ></CommentTextArea>
-              </div>
-            {/if}
             <History
               state={advisoryState}
               on:commentUpdate={() => {
