@@ -53,7 +53,7 @@ func downloadHandler(db *database.DB, ctx context.Context) func(d downloader.Dow
 			return nil
 		}
 
-		r := bytes.NewReader(d.Data.Bytes())
+		r := bytes.NewReader(d.Data)
 		actor := models.Importer
 
 		var id int64
@@ -63,14 +63,13 @@ func downloadHandler(db *database.DB, ctx context.Context) func(d downloader.Dow
 			return err
 		}, 0); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {
-				slog.Warn("advisory already in database", "file", d.InitialReleaseDate)
+				slog.Warn("advisory already in database")
 				err = nil
 			}
 			return err
 		}
-		slog.Info("inserted", "id", id)
 
-		slog.Info("Imported advisory", "release-date", d.InitialReleaseDate)
+		slog.Info("Imported advisory", "id", id)
 		return nil
 	}
 }
