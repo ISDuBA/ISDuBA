@@ -59,7 +59,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	}
 
 	builder := database.SQLBuilder{}
-	builder.ConstructWhere(expr)
+	builder.CreateWhere(expr)
 
 	where, replacements := builder.WhereClause, builder.Replacements
 
@@ -179,16 +179,15 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 
 	fields := []string{"original"}
 	builder := database.SQLBuilder{}
-	builder.ConstructWhere(expr)
-	where, replacements, aliases := builder.WhereClause, builder.Replacements, builder.Aliases
-	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1, false)
+	builder.CreateWhere(expr)
+	sql := builder.CreateQuery(fields, "", -1, -1)
 
 	var original []byte
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, replacements...).Scan(&original)
+			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -252,21 +251,21 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	builder := database.SQLBuilder{Advisory: advisory}
-	builder.ConstructWhere(expr)
+	builder.CreateWhere(expr)
 
-	where, replacements, aliases := builder.WhereClause, builder.Replacements, builder.Aliases
+	replacements := builder.Replacements
 
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
-	if err := database.CheckProjections(fields, aliases, advisory); err != nil {
+	if err := builder.CheckProjections(fields); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	orderFields := strings.Fields(
 		ctx.DefaultQuery("order", "publisher tracking_id -current_release_date -rev_history_length"))
-	order, err := database.CreateOrder(orderFields, aliases, advisory)
+	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -305,8 +304,8 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			if calcCount {
 				if err := conn.QueryRow(
 					rctx,
-					database.CreateCountSQL(where, len(aliases) > 0, advisory),
-					replacements...,
+					builder.CreateCountSQL(),
+					builder.Replacements...,
 				).Scan(&count); err != nil {
 					return fmt.Errorf("cannot calculate count %w", err)
 				}
@@ -316,8 +315,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 				return nil
 			}
 
-			sql := database.CreateQuerySQL(
-				fields, aliases, where, order, limit, offset, advisory)
+			sql := builder.CreateQuery(fields, order, limit, offset)
 
 			values := make([]any, len(fields))
 			ptrs := make([]any, len(fields))
@@ -326,7 +324,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			}
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
-				slog.Debug("documents", "SQL", qndSQLReplace(sql, replacements))
+				slog.Debug("documents", "SQL", qndSQLReplace(sql, builder.Replacements))
 			}
 			rows, err := conn.Query(rctx, sql, replacements...)
 			if err != nil {

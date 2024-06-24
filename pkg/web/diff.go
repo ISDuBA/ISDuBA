@@ -56,8 +56,8 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		expr2 = expr2.And(tlpExpr)
 	}
 	var b1, b2 database.SQLBuilder
-	b1.ConstructWhere(expr1)
-	b2.ConstructWhere(expr2)
+	b1.CreateWhere(expr1)
+	b2.CreateWhere(expr2)
 	var (
 		where1, replacements1 = b1.WhereClause, b1.Replacements
 		where2, replacements2 = b2.WhereClause, b2.Replacements

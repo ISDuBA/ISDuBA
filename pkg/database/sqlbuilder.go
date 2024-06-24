@@ -25,8 +25,8 @@ type SQLBuilder struct {
 	TextTables   bool
 }
 
-// ConstructWhere construct a WHERE clause for a given expression.
-func (sb *SQLBuilder) ConstructWhere(e *Expr) string {
+// CreateWhere construct a WHERE clause for a given expression.
+func (sb *SQLBuilder) CreateWhere(e *Expr) string {
 	var b strings.Builder
 	sb.whereRecurse(e, &b)
 	sb.WhereClause = b.String()
@@ -129,6 +129,10 @@ func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
 	sb.whereRecurse(e.children[0], b)
 	b.WriteByte(')')
 }
+
+const versionsCount = `(SELECT count(*) FROM documents WHERE ` +
+	`documents.publisher = advisories.publisher AND ` +
+	`documents.tracking_id = advisories.tracking_id)`
 
 func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	switch column := e.stringValue; column {
@@ -250,4 +254,136 @@ func (sb *SQLBuilder) replacementIndex(s string) int {
 	idx := len(sb.replToIdx)
 	sb.replToIdx[s] = idx
 	return idx
+}
+
+func (sb *SQLBuilder) createFrom() string {
+	var from string
+	if sb.Advisory {
+		from = `documents ` +
+			`JOIN advisories ON ` +
+			`advisories.tracking_id = documents.tracking_id AND ` +
+			`advisories.publisher = documents.publisher`
+	} else {
+		from = `documents`
+	}
+
+	if len(sb.Aliases) > 0 { // XXX: This is wrong
+		from += ` JOIN documents_texts ON id = documents_texts.documents_id ` +
+			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`
+	}
+	return from
+}
+
+// CreateCountSQL returns an SQL count statement to count
+// the number of rows which are possible to fetch by the
+// given filter.
+func (sb *SQLBuilder) CreateCountSQL() string {
+	from := sb.createFrom()
+	return "SELECT count(*) FROM " + from + " WHERE " + sb.WhereClause
+}
+
+// CreateOrder returns a ORDER BY clause for given columns.
+func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
+	var b strings.Builder
+	for _, field := range fields {
+		desc := strings.HasPrefix(field, "-")
+		if desc {
+			field = field[1:]
+		}
+		if _, found := sb.Aliases[field]; !found && !ExistsDocumentColumn(field, sb.Advisory) {
+			return "", fmt.Errorf("order field %q does not exists", field)
+		}
+		if b.Len() > 0 {
+			b.WriteByte(',')
+		}
+		switch field {
+		case "tracking_id", "publisher":
+			b.WriteString("documents.")
+			b.WriteString(field)
+		case "cvss_v2_score", "cvss_v3_score", "critical":
+			b.WriteString("COALESCE(")
+			b.WriteString(field)
+			b.WriteString(",0)")
+		case "version":
+			// TODO: This is not optimal (SemVer).
+			b.WriteString(
+				`CASE WHEN pg_input_is_valid(version, 'integer') THEN version::int END`)
+		default:
+			b.WriteString(field)
+		}
+
+		if desc {
+			b.WriteString(" DESC")
+		} else {
+			b.WriteString(" ASC")
+		}
+	}
+	return b.String(), nil
+}
+
+// CreateQuery creates an SQL statement to query the documents
+// table and the associated texts if needed.
+// WARN: Make sure that the iput is vetted against injections.
+func (sb *SQLBuilder) CreateQuery(
+	fields []string,
+	order string,
+	limit, offset int64,
+) string {
+	projs := sb.projectionsWithCasts(fields)
+
+	from := sb.createFrom()
+
+	sql := "SELECT " + projs + " FROM " + from + " WHERE " + sb.WhereClause
+
+	if order != "" {
+		sql += " ORDER BY " + order
+	}
+
+	if limit >= 0 {
+		sql += " LIMIT " + strconv.FormatInt(limit, 10)
+	}
+	if offset > 0 {
+		sql += " OFFSET " + strconv.FormatInt(offset, 10)
+	}
+
+	return sql
+}
+
+// projectionsWithCasts joins given projection adding casts if needed.
+func (sb *SQLBuilder) projectionsWithCasts(proj []string) string {
+	var b strings.Builder
+	for i, p := range proj {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		if alias, found := sb.Aliases[p]; found {
+			b.WriteString(alias)
+			continue
+		}
+		switch p {
+		case "id", "tracking_id", "publisher":
+			b.WriteString("documents.")
+			b.WriteString(p)
+		case "state":
+			b.WriteString("state::text")
+		case "versions":
+			b.WriteString(versionsCount + `AS versions`)
+		default:
+			b.WriteString(p)
+		}
+	}
+	return b.String()
+}
+
+// CheckProjections checks if the requested projections are valid.
+func (sb *SQLBuilder) CheckProjections(proj []string) error {
+	for _, p := range proj {
+		if _, found := sb.Aliases[p]; found {
+			continue
+		}
+		if !ExistsDocumentColumn(p, sb.Advisory) {
+			return fmt.Errorf("column %q does not exists", p)
+		}
+	}
+	return nil
 }

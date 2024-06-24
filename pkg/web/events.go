@@ -48,7 +48,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	}
 
 	builder := database.SQLBuilder{}
-	builder.ConstructWhere(expr)
+	builder.CreateWhere(expr)
 
 	where, replacements := builder.WhereClause, builder.Replacements
 

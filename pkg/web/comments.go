@@ -47,7 +47,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 	builder := database.SQLBuilder{}
-	builder.ConstructWhere(expr)
+	builder.CreateWhere(expr)
 
 	var (
 		where             = builder.WhereClause
@@ -261,7 +261,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	}
 
 	builder := database.SQLBuilder{}
-	builder.ConstructWhere(expr)
+	builder.CreateWhere(expr)
 
 	where, replacements := builder.WhereClause, builder.Replacements
 
