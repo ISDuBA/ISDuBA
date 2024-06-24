@@ -253,8 +253,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	builder := database.SQLBuilder{Advisory: advisory}
 	builder.CreateWhere(expr)
 
-	replacements := builder.Replacements
-
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
@@ -326,7 +324,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
 				slog.Debug("documents", "SQL", qndSQLReplace(sql, builder.Replacements))
 			}
-			rows, err := conn.Query(rctx, sql, replacements...)
+			rows, err := conn.Query(rctx, sql, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
