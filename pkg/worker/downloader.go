@@ -13,6 +13,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"os"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -27,9 +28,11 @@ type DownloadWorker struct {
 }
 
 type DownloadJob struct {
-	Preset         string
+	Presets        []string
 	ValidationMode downloader.ValidationMode
 	Db             *database.DB
+	LogFile        string
+	LogLevel       slog.Level
 	Domains        []string
 	Worker         int
 	ForwardQueue   int
@@ -87,14 +90,26 @@ func (w *DownloadWorker) Run() {
 			return
 		case job := <-w.jobs:
 			func() {
+
+				logFile, err := os.OpenFile(job.LogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+				if err != nil {
+					slog.Error("Couldn't open log file", "file", job.LogFile, "err", err)
+				}
+				defer logFile.Close()
+
+				slogOptions := slog.HandlerOptions{
+					Level: job.LogLevel,
+				}
+				logger := slog.New(slog.NewJSONHandler(logFile, &slogOptions))
+
 				cfg := &downloader.Config{
 					Worker:                 job.Worker,
-					RemoteValidatorPresets: []string{job.Preset},
+					RemoteValidatorPresets: job.Presets,
 					ForwardQueue:           job.ForwardQueue,
 					FailedForwardHandler:   FailedForwardHandler(),
 					DownloadHandler:        downloadHandler(job.Db, w.ctx),
 					ValidationMode:         job.ValidationMode,
-					Logger:                 slog.Default(),
+					Logger:                 logger,
 				}
 				d, err := downloader.NewDownloader(cfg)
 				if err != nil {

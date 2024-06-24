@@ -120,5 +120,7 @@ func (c *Controller) Bind() http.Handler {
 
 	// Download advisories
 	api.GET("/import", authIm, c.importProvider)
+	api.GET("/jobs", authIm, c.viewJobs)
+	api.POST("/jobs", authIm, c.addJob)
 	return r
 }

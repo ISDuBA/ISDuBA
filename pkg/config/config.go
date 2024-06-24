@@ -20,6 +20,8 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+
+	"github.com/csaf-poc/csaf_distribution/v3/lib/downloader"
 )
 
 // DefaultConfigFile is the name of the default config file.
@@ -64,6 +66,14 @@ const (
 	defaultDatabaseMigrate                 = false
 	defaultDatabaseTerminateAfterMigration = true
 	defaultMaxQueryDuration                = 30 * time.Second
+)
+
+const (
+	defaultRemoteValidator  = ""
+	defaultValidationPreset = "mandatory"
+	defaultValidationMode   = downloader.ValidationStrict
+	defaultImportLogLevel   = slog.LevelDebug
+	defaultImportLogPath    = "download"
 )
 
 var defaultPublishersTLPs = models.PublishersTLPs{
@@ -122,6 +132,14 @@ type Database struct {
 	MaxQueryDuration        time.Duration `toml:"max_query_time"`
 }
 
+type Importer struct {
+	RemoteValidator        string                    `toml:"remote_validator"`
+	RemoteValidatorPresets []string                  `toml:"remote_validator_presets"`
+	ValidationMode         downloader.ValidationMode `toml:"validation_mode"`
+	LogPath                string                    `toml:"log_path"`
+	LogLevel               slog.Level                `toml:"log_level"`
+}
+
 var defaultTextSearch = []string{"german", "english"}
 
 // Config are all the configuration options.
@@ -131,6 +149,7 @@ type Config struct {
 	Keycloak       Keycloak              `toml:"keycloak"`
 	Web            Web                   `toml:"web"`
 	Database       Database              `toml:"database"`
+	Importer       Importer              `toml:"importer"`
 	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
 }
 
@@ -226,6 +245,13 @@ func Load(file string) (*Config, error) {
 			TextSearch:              defaultTextSearch,
 			MaxQueryDuration:        defaultMaxQueryDuration,
 		},
+		Importer: Importer{
+			RemoteValidator:        defaultRemoteValidator,
+			RemoteValidatorPresets: []string{defaultValidationPreset},
+			ValidationMode:         defaultValidationMode,
+			LogPath:                defaultImportLogPath,
+			LogLevel:               defaultImportLogLevel,
+		},
 		PublishersTLPs: defaultPublishersTLPs,
 	}
 	if file != "" {
@@ -280,6 +306,10 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_DB_MIGRATE", storeBool(&cfg.Database.Migrate)},
 		envStore{"ISDUBA_DB_TERMINATE_AFTER_MIGRATION", storeBool(&cfg.Database.TerminateAfterMigration)},
 		envStore{"ISDUBA_DB_MAX_QUERY_DURATION", storeDuration(&cfg.Database.MaxQueryDuration)},
+
+		envStore{"ISDUBA_IMPORT_REMOTE_VALIDATOR", storeString(&cfg.Importer.RemoteValidator)},
+		envStore{"ISDUBA_IMPORT_LOG_PATH", storeString(&cfg.Importer.LogPath)},
+		envStore{"ISDUBA_IMPORT_LOG_LEVEL", storeLevel(&cfg.Importer.LogLevel)},
 	)
 }
 
