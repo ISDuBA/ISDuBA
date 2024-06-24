@@ -42,6 +42,7 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	idx := sb.replacementIndex(e.stringValue)
 	b.WriteString(strconv.Itoa(idx + 1))
 	b.WriteByte(')')
+	sb.TextTables = true
 	// Handle alias
 	if e.alias == "" {
 		return
@@ -53,7 +54,6 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 		sb.Aliases = map[string]string{}
 	}
 	// We need the text tables to be joined.
-	sb.TextTables = true
 	sb.Aliases[e.alias] = repl
 }
 
@@ -268,7 +268,7 @@ func (sb *SQLBuilder) createFrom() string {
 		from = `documents`
 	}
 
-	if len(sb.Aliases) > 0 { // XXX: This is wrong
+	if sb.TextTables {
 		from += ` JOIN documents_texts ON id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`
 	}
