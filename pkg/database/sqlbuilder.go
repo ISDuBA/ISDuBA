@@ -30,7 +30,7 @@ func (sb *SQLBuilder) CreateWhere(e *Expr) string {
 	var b strings.Builder
 	sb.whereRecurse(e, &b)
 	sb.WhereClause = b.String()
-	return b.String()
+	return sb.WhereClause
 }
 
 func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
