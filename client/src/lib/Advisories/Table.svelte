@@ -135,7 +135,7 @@
   }
 
   $: if (columns) {
-    orderBy = defaultOrderBy;
+    if (!columns.includes(orderBy.split("-")[0])) orderBy = defaultOrderBy;
   }
 
   $: if (columns || query || loadAdvisories || !loadAdvisories) {
