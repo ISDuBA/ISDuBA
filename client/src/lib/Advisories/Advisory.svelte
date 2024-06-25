@@ -336,7 +336,7 @@
       </div>
       <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
-        <div class="absolute right-6 mt-4 flex h-fit flex-row gap-2">
+        <div class="right-6 mt-4 flex h-fit flex-row gap-2 min-[1080px]:absolute">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
         </div>
       </div>
@@ -368,7 +368,7 @@
           {/if}
         </div>
       </div>
-      <div class="absolute right-3 mr-3 flex flex-col min-[800px]:ml-auto">
+      <div class="right-3 mr-3 flex flex-col min-[800px]:ml-auto min-[1080px]:absolute">
         <div class="h-52 w-full">
           <div class="mb-4 flex flex-row items-center">
             {#if ssvc}
