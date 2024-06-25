@@ -28,14 +28,13 @@ type DownloadWorker struct {
 }
 
 type DownloadJob struct {
-	Presets        []string
+	Config         models.JobConfig
+	ForwardQueue   int
 	ValidationMode downloader.ValidationMode
+	Presets        []string
 	Db             *database.DB
 	LogFile        string
 	LogLevel       slog.Level
-	Domains        []string
-	Worker         int
-	ForwardQueue   int
 }
 
 func NewDownloadWorker(ctx context.Context) *DownloadWorker {
@@ -90,7 +89,6 @@ func (w *DownloadWorker) Run() {
 			return
 		case job := <-w.jobs:
 			func() {
-
 				logFile, err := os.OpenFile(job.LogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 				if err != nil {
 					slog.Error("Couldn't open log file", "file", job.LogFile, "err", err)
@@ -103,7 +101,16 @@ func (w *DownloadWorker) Run() {
 				logger := slog.New(slog.NewJSONHandler(logFile, &slogOptions))
 
 				cfg := &downloader.Config{
-					Worker:                 job.Worker,
+					Insecure:             job.Config.Insecure,
+					IgnoreSignatureCheck: job.Config.IgnoreSignatureCheck,
+					ClientKey:            job.Config.ClientKey,
+					ClientPassphrase:     job.Config.ClientPassphrase,
+					Rate:                 job.Config.Rate,
+					Worker:               job.Config.Worker,
+					// TODO: Allow to configure time range
+					// Range: [2]time.Time{job.Config.StartRange, job.Config.EndRange},
+					// TODO: Allow to configure ignore pattern
+					// IgnorePattern: job.Config.IgnorePattern,
 					RemoteValidatorPresets: job.Presets,
 					ForwardQueue:           job.ForwardQueue,
 					FailedForwardHandler:   FailedForwardHandler(),
@@ -118,7 +125,7 @@ func (w *DownloadWorker) Run() {
 				}
 				defer d.Close()
 
-				err = d.Run(w.ctx, job.Domains)
+				err = d.Run(w.ctx, job.Config.Domains)
 				if err != nil {
 					slog.Warn("Download failed", "err", err)
 				}

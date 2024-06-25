@@ -12,15 +12,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log/slog"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"log/slog"
-	"net/http"
-	"strings"
-	"time"
 
+	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/worker"
 	"github.com/gin-gonic/gin"
 )
@@ -49,15 +51,24 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		return
 	}
 
+	for _, domain := range jobConfig.Domains {
+		if domain == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "don;t specify empty domains",
+			})
+			return
+		}
+	}
+
 	const insertSQL = `INSERT INTO job_config (` +
 		`name,` +
-		`insecure` +
-		`ignore_signature_check` +
-		`rate` +
-		`worker` +
-		`start_range` +
-		`end_range` +
-		`ignore_pattern` +
+		`insecure,` +
+		`ignore_signature_check,` +
+		`rate,` +
+		`worker,` +
+		`start_range,` +
+		`end_range,` +
+		`ignore_pattern,` +
 		`domains` +
 		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)` +
 		`RETURNING id`
@@ -102,10 +113,62 @@ func (c *Controller) viewJobs(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			const fetchSQL = `SELECT name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains FROM job_config`
+			const fetchSQL = `SELECT id, name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains FROM job_config`
 			rows, _ := conn.Query(rctx, fetchSQL)
 			var err error
 			jobs, err = pgx.CollectRows(
+				rows,
+				func(row pgx.CollectableRow) (models.JobConfig, error) {
+					var j models.JobConfig
+					var ignorePattern sql.NullString
+					var startRange sql.NullTime
+					var endRange sql.NullTime
+					err := row.Scan(&j.ID, &j.Name, &j.Insecure, &j.IgnoreSignatureCheck, &j.Rate, &j.Worker, &startRange, &endRange, &ignorePattern, &j.Domains)
+					if ignorePattern.Valid {
+						j.IgnorePattern = &ignorePattern.String
+					}
+					if startRange.Valid {
+						j.StartRange = &startRange.Time
+					}
+					if endRange.Valid {
+						j.EndRange = &endRange.Time
+					}
+					return j, err
+				})
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, jobs)
+}
+
+// runJob runs a configured job
+func (c *Controller) runJob(ctx *gin.Context) {
+	jobIDs := ctx.Param("id")
+	jobID, err := strconv.ParseInt(jobIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	expr := database.FieldEqInt("id", jobID)
+	builder := database.SQLBuilder{}
+	builder.CreateWhere(expr)
+
+	var jobConf models.JobConfig
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			fetchSQL := `SELECT name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains FROM job_config WHERE ` +
+				builder.WhereClause
+			rows, _ := conn.Query(rctx, fetchSQL)
+			var err error
+			jobConf, err = pgx.CollectOneRow(
 				rows,
 				func(row pgx.CollectableRow) (models.JobConfig, error) {
 					var j models.JobConfig
@@ -132,23 +195,10 @@ func (c *Controller) viewJobs(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, jobs)
-}
-
-// importProvider downloads the advisories from the specified source
-func (c *Controller) importProvider(ctx *gin.Context) {
-	domainsQuery, ok := ctx.GetQuery("domains")
-	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing domains query parameter"})
-		return
-	}
-	domains := strings.Split(domainsQuery, ",")
-
 	t := time.Now().UTC()
 
 	c.downloadWorker.Enqueue(worker.DownloadJob{
-		Domains:        domains,
-		Worker:         2,
+		Config:         jobConf,
 		ForwardQueue:   defaultForwardQueue,
 		Presets:        c.cfg.Importer.RemoteValidatorPresets,
 		ValidationMode: c.cfg.Importer.ValidationMode,
@@ -156,7 +206,7 @@ func (c *Controller) importProvider(ctx *gin.Context) {
 		LogFile:        c.cfg.Importer.LogPath + t.Format(time.RFC3339),
 		LogLevel:       c.cfg.Importer.LogLevel,
 	})
-	slog.Info("Queued download for domains", "domains", domains)
+	slog.Info("Queued download for domains", "domains", jobConf.Domains)
 
 	ctx.JSON(http.StatusOK, gin.H{"msg": "queued import job"})
 }

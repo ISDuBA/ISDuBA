@@ -118,9 +118,9 @@ func (c *Controller) Bind() http.Handler {
 	// Visibility information
 	api.GET("/view", authAll, c.view)
 
-	// Download advisories
-	api.GET("/import", authIm, c.importProvider)
-	api.GET("/jobs", authIm, c.viewJobs)
-	api.POST("/jobs", authIm, c.addJob)
+	// Manage advisories download
+	api.POST("/job/:id", authIm, c.runJob)
+	api.GET("/job", authIm, c.viewJobs)
+	api.POST("/job", authIm, c.addJob)
 	return r
 }

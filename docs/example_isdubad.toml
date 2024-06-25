@@ -43,5 +43,12 @@
 # text_search = ["german", "english"]
 # max_query_time = "30s"
 
+# [importer]
+# remote_validator = ""
+# remote_validator_presets = ["mandatory"]
+# validation_mode = "strict"
+# log_path = "download"
+# log_level = "debug"
+
 # [publishers_tlps]
 # '*' = ["WHITE"]
