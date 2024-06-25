@@ -36,14 +36,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := query.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
 	builder := query.SQLBuilder{}
@@ -247,14 +240,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := query.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
 

@@ -152,8 +152,21 @@ func FieldEqInt(field string, value int64) *Expr {
 		valueType: boolType,
 		exprType:  eq,
 		children: []*Expr{
-			{valueType: intType, exprType: cnst, intValue: value},
 			{valueType: intType, exprType: access, stringValue: field},
+			{valueType: intType, exprType: cnst, intValue: value},
+		},
+	}
+}
+
+// FieldEqString is a shortcut mainly for building expressions
+// accessing a string column.
+func FieldEqString(field, value string) *Expr {
+	return &Expr{
+		valueType: boolType,
+		exprType:  eq,
+		children: []*Expr{
+			{valueType: stringType, exprType: access, stringValue: field},
+			{valueType: stringType, exprType: cnst, stringValue: value},
 		},
 	}
 }
@@ -271,17 +284,17 @@ func findDocumentColumn(name string, advisory bool) *documentColumn {
 // And concats two expressions and-wise.
 func (e *Expr) And(o *Expr) *Expr {
 	if e.valueType != boolType || o.valueType != boolType {
-		return falseExpr()
+		return False()
 	}
 	if e.exprType == cnst {
 		if !e.boolValue {
-			return falseExpr()
+			return False()
 		}
 		return o
 	}
 	if o.exprType == cnst {
 		if !o.boolValue {
-			return falseExpr()
+			return False()
 		}
 		return e
 	}
@@ -289,6 +302,48 @@ func (e *Expr) And(o *Expr) *Expr {
 		exprType:  and,
 		valueType: boolType,
 		children:  []*Expr{e, o},
+	}
+}
+
+// Or concats two expressions or-wise.
+func (e *Expr) Or(o *Expr) *Expr {
+	if e.valueType != boolType || o.valueType != boolType {
+		return False()
+	}
+	if e.exprType == cnst {
+		if e.boolValue {
+			return True()
+		}
+		return o
+	}
+	if o.exprType == cnst {
+		if o.boolValue {
+			return True()
+		}
+		return e
+	}
+	return &Expr{
+		exprType:  or,
+		valueType: boolType,
+		children:  []*Expr{e, o},
+	}
+}
+
+// Not negates an expresssion.
+func (e *Expr) Not() *Expr {
+	if e.valueType != boolType {
+		return False()
+	}
+	if e.exprType == cnst {
+		if e.boolValue {
+			return False()
+		}
+		return True()
+	}
+	return &Expr{
+		exprType:  not,
+		valueType: boolType,
+		children:  []*Expr{e},
 	}
 }
 
@@ -315,7 +370,8 @@ func (st stack) top() *Expr {
 	panic(parseError("stack empty"))
 }
 
-func falseExpr() *Expr {
+// False returns a false expression.
+func False() *Expr {
 	return &Expr{
 		exprType:  cnst,
 		valueType: boolType,
@@ -323,7 +379,8 @@ func falseExpr() *Expr {
 	}
 }
 
-func trueExpr() *Expr {
+// True returns a true expression.
+func True() *Expr {
 	return &Expr{
 		exprType:  cnst,
 		valueType: boolType,
@@ -331,8 +388,8 @@ func trueExpr() *Expr {
 	}
 }
 
-func (st *stack) pushTrue()  { st.push(trueExpr()) }
-func (st *stack) pushFalse() { st.push(falseExpr()) }
+func (st *stack) pushTrue()  { st.push(True()) }
+func (st *stack) pushFalse() { st.push(False()) }
 
 func (st *stack) pushString(s string) {
 	st.push(&Expr{
