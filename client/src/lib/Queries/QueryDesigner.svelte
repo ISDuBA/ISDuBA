@@ -136,13 +136,10 @@
 
   const toggleSearchType = () => {
     if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
-      currentSearch.columns = currentSearch.columns.filter((c) => {
-        if (c.name !== "ssvc" && c.name !== "state") return c;
-      });
+      currentSearch.columns = columnsFromNames(COLUMNS.DOCUMENT);
     }
     if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
-      const newCols = columnsFromNames(["ssvc", "state"]);
-      currentSearch.columns = [...currentSearch.columns, ...newCols];
+      currentSearch.columns = columnsFromNames(COLUMNS.ADVISORY);
     }
   };
 
