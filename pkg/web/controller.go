@@ -122,5 +122,8 @@ func (c *Controller) Bind() http.Handler {
 	api.POST("/job/:id", authIm, c.runJob)
 	api.GET("/job", authIm, c.viewJobs)
 	api.POST("/job", authIm, c.addJob)
+	api.GET("/cron", authIm, c.viewCrons)
+	api.POST("/cron", authIm, c.addCron)
+	api.GET("/task", authIm, c.viewTasks)
 	return r
 }

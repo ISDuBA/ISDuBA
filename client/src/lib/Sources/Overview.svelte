@@ -10,12 +10,13 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Button, Label, Input } from "flowbite-svelte";
+  import { Button, Label, Input, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
 
   let domains = "";
   let name = "";
   let jobId: number | null;
+  let insecure: boolean = false;
 
   let jobLoadError = "";
 
@@ -23,6 +24,7 @@
     const formData = new FormData();
     formData.append("domains", domains);
     formData.append("name", name);
+    formData.append("insecure", insecure.toString());
     const response = await request(`/api/job`, "POST", formData);
     if (response.ok) {
       console.log("Success");
@@ -57,6 +59,11 @@
 <Input id="domain" bind:value={domains} placeholder="example.com" />
 <Label for="name" class="mb-2 block">Job Name</Label>
 <Input id="name" bind:value={name} placeholder="Job #1" />
+<Checkbox
+  on:change={() => {
+    insecure = !insecure;
+  }}>Insecure</Checkbox
+>
 <br />
 <Button
   on:click={() => {

@@ -10,6 +10,29 @@ package models
 
 import "time"
 
+type Status string
+
+const (
+	QUEUED    Status = "QUEUED"
+	RUNNING   Status = "RUNNING"
+	FAILED    Status = "FAILED"
+	COMPLETED Status = "COMPLETED"
+)
+
+type Task struct {
+	Id      int64     `json:"task_id"`
+	Created time.Time `json:"created"`
+	JobId   int64     `json:"job_id"`
+	Status  Status    `json:"status"`
+}
+
+type Cron struct {
+	Id         int64  `json:"cron_id"`
+	Name       string `json:"name"`
+	JobId      int64  `json:"job_id"`
+	CronTiming string `json:"cron_timing"`
+}
+
 // JobConfig represents a job configuration.
 type JobConfig struct {
 	ID                   int64  `json:"id"`
