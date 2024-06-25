@@ -267,12 +267,12 @@
             outline
             size="xs"
             class="h-8"
-            title="Undo"
+            title="Cancel"
             on:click={() => {
               isEditing = false;
             }}
           >
-            Undo
+            Cancel
           </Button>
           <Button
             outline
@@ -365,18 +365,18 @@
       <div class="mt-4 flex flex-col">
         <div class="ml-auto flex flex-row gap-x-3">
           {#if currentStep > 0}
-            <Button color="light" size="xs" title="Undo" class="h-6 p-3" on:click={stepBack}
-              >Undo</Button
+            <Button color="light" size="xs" title="Step back" class="h-6 p-3" on:click={stepBack}
+              >Back</Button
             >
           {/if}
           <Button
             size="xs"
             color="light"
-            title="Start over"
+            title="Restart process"
             class="h-6 text-nowrap p-3"
             on:click={resetUserDecisions}
           >
-            Start Over
+            Restart
           </Button>
           {#if isComplex || result}
             <Button
@@ -395,11 +395,12 @@
           <Button
             size="xs"
             class="h-6 p-3"
-            title="Back"
+            title="Cancel SSVC input"
             on:click={() => {
               resetUserDecisions();
               startedCalculation = false;
-            }}>Back</Button
+              isEditing = false;
+            }}>Cancel</Button
           >
         </div>
       </div>
