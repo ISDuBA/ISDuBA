@@ -369,7 +369,7 @@
           {/if}
         </div>
       </div>
-      <div class="right-3 mr-3 flex flex-col min-[800px]:ml-auto min-[1080px]:absolute">
+      <div class=" right-3 mr-3 flex w-[29rem] flex-col min-[800px]:ml-auto min-[1080px]:absolute">
         <div
           class={isSSVCediting || commentFocus ? "h-60 w-full p-3 shadow-md" : "h-60 w-full p-3"}
         >
@@ -410,7 +410,7 @@
           {/if}
         </div>
         <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-        <div class="ml-auto w-96">
+        <div class="ml-auto">
           {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
             <div class="mt-6">
               <History
