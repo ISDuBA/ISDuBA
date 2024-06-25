@@ -49,7 +49,8 @@
         "tracking_id",
         "initial_release_date",
         "current_release_date",
-        "version"
+        "version",
+        "comments"
       ];
 
   onMount(async () => {
