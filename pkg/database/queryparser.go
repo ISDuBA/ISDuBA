@@ -237,9 +237,9 @@ var columns = []documentColumn{
 	{"cvss_v3_score", floatType, false, false},
 	{"critical", floatType, false, false},
 	{"four_cves", stringType, false, true},
+	{"comments", intType, false, false},
 	// Advisories only
 	{"state", workflowType, true, false},
-	{"comments", intType, true, false},
 	{"recent", timeType, true, false},
 	{"versions", intType, true, false},
 }

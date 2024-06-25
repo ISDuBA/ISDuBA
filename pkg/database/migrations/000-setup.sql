@@ -205,6 +205,8 @@ CREATE TABLE comments (
     message      varchar(10000)
 );
 
+CREATE INDEX ON comments(documents_id);
+
 -- Trigger functions to update cached comment count per advisory.
 CREATE FUNCTION incr_comments() RETURNS trigger AS $$
     DECLARE
