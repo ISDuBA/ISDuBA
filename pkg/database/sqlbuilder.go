@@ -30,7 +30,7 @@ func (sb *SQLBuilder) CreateWhere(e *Expr) string {
 	var b strings.Builder
 	sb.whereRecurse(e, &b)
 	sb.WhereClause = b.String()
-	return b.String()
+	return sb.WhereClause
 }
 
 func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
@@ -130,9 +130,13 @@ func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
 	b.WriteByte(')')
 }
 
-const versionsCount = `(SELECT count(*) FROM documents WHERE ` +
-	`documents.publisher = advisories.publisher AND ` +
-	`documents.tracking_id = advisories.tracking_id)`
+const (
+	versionsCount = `(SELECT count(*) FROM documents WHERE ` +
+		`documents.publisher = advisories.publisher AND ` +
+		`documents.tracking_id = advisories.tracking_id)`
+	commentsCount = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = documents.id)`
+)
 
 func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	switch column := e.stringValue; column {
@@ -141,6 +145,12 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 		b.WriteString(column)
 	case "versions":
 		b.WriteString(versionsCount)
+	case "comments":
+		if sb.Advisory {
+			b.WriteString(column)
+		} else {
+			b.WriteString(commentsCount)
+		}
 	default:
 		b.WriteString(column)
 	}
@@ -369,6 +379,12 @@ func (sb *SQLBuilder) projectionsWithCasts(proj []string) string {
 			b.WriteString("state::text")
 		case "versions":
 			b.WriteString(versionsCount + `AS versions`)
+		case "comments":
+			if sb.Advisory {
+				b.WriteString(p)
+			} else {
+				b.WriteString(commentsCount + `AS comments`)
+			}
 		default:
 			b.WriteString(p)
 		}
