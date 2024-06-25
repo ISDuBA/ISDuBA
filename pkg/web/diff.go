@@ -24,7 +24,7 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"gomodules.xyz/jsonpatch/v2"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 )
 
 func (c *Controller) viewDiff(ctx *gin.Context) {
@@ -39,13 +39,13 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		return
 	}
 
-	expr1 := database.FieldEqInt("id", docID1)
-	expr2 := database.FieldEqInt("id", docID2)
+	expr1 := query.FieldEqInt("id", docID1)
+	expr2 := query.FieldEqInt("id", docID2)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		parser := database.Parser{}
+		parser := query.Parser{}
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
@@ -55,7 +55,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		expr1 = expr1.And(tlpExpr)
 		expr2 = expr2.And(tlpExpr)
 	}
-	var b1, b2 database.SQLBuilder
+	var b1, b2 query.SQLBuilder
 	b1.CreateWhere(expr1)
 	b2.CreateWhere(expr2)
 

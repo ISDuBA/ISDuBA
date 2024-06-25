@@ -20,7 +20,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
@@ -32,12 +32,12 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		return
 	}
 
-	expr := database.FieldEqInt("id", id)
+	expr := query.FieldEqInt("id", id)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
 		conditions := tlps.AsConditions()
-		parser := database.Parser{}
+		parser := query.Parser{}
 		tlpExpr, err := parser.Parse(conditions)
 		if err != nil {
 			slog.Warn("TLP filter failed", "err", err)
@@ -47,7 +47,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
-	builder := database.SQLBuilder{}
+	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
 	type event struct {
