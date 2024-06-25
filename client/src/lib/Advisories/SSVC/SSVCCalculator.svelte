@@ -360,9 +360,6 @@
             <span style={resultStyle}>{result.text}</span>
           </Label>
           <Label class="text-xs text-gray-400">{vector}</Label>
-          <button title="Save" on:click={() => saveSSVC(vector)}>
-            <i class="bx bx-save me-2 text-xl"></i></button
-          >
         {/if}
       {/if}
       <div class="mt-4 flex flex-col">
@@ -381,6 +378,20 @@
           >
             Start Over
           </Button>
+          {#if isComplex || result}
+            <Button
+              color="light"
+              on:click={() => {
+                if (currentStep === steps.length - 1) {
+                  saveSSVC(vector);
+                } else {
+                  calculateComplexOption();
+                }
+              }}
+              class="h-6 p-3"
+              title="Calculate">Save</Button
+            >
+          {/if}
           <Button
             size="xs"
             class="h-6 p-3"

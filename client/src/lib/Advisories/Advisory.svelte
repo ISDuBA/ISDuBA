@@ -403,13 +403,15 @@
         <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
         <div class="ml-auto w-96">
           {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-            <History
-              state={advisoryState}
-              on:commentUpdate={() => {
-                buildHistory();
-              }}
-              entries={historyEntries}
-            ></History>
+            <div class="mt-6">
+              <History
+                state={advisoryState}
+                on:commentUpdate={() => {
+                  buildHistory();
+                }}
+                entries={historyEntries}
+              ></History>
+            </div>
             <ErrorMessage message={loadEventsError}></ErrorMessage>
             <ErrorMessage message={loadCommentsError}></ErrorMessage>
           {/if}

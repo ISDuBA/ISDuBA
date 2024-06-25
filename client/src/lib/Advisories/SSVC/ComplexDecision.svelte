@@ -10,14 +10,12 @@
 
 <script lang="ts">
   import { Radio } from "flowbite-svelte";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { onMount } from "svelte";
   import type { SSVCDecision, SSVCDecisionChild } from "./SSVCCalculator";
   import { getDecision } from "./SSVCCalculator";
 
   export let children: SSVCDecisionChild[] | undefined;
   export let decisionPoints: SSVCDecision[] | undefined;
-
-  const dispatch = createEventDispatcher();
 
   onMount(() => {
     children?.forEach((child) => {
@@ -53,14 +51,4 @@
       {/if}
     {/each}
   {/if}
-</div>
-<div class="flex flex-row items-center gap-x-3">
-  <button
-    on:click={() => {
-      dispatch("calculateComplexOption");
-    }}
-    class="h-6"
-    title="Calculate"
-    type="submit"><i class="bx bx-calculator"></i></button
-  >
 </div>
