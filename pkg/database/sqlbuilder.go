@@ -147,9 +147,9 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 		b.WriteString(versionsCount)
 	case "comments":
 		if sb.Advisory {
-			b.WriteString(commentsCount)
-		} else {
 			b.WriteString(column)
+		} else {
+			b.WriteString(commentsCount)
 		}
 	default:
 		b.WriteString(column)
@@ -381,9 +381,9 @@ func (sb *SQLBuilder) projectionsWithCasts(proj []string) string {
 			b.WriteString(versionsCount + `AS versions`)
 		case "comments":
 			if sb.Advisory {
-				b.WriteString(commentsCount + `AS comments`)
-			} else {
 				b.WriteString(p)
+			} else {
+				b.WriteString(commentsCount + `AS comments`)
 			}
 		default:
 			b.WriteString(p)
