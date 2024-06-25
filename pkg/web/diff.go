@@ -55,21 +55,22 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		expr1 = expr1.And(tlpExpr)
 		expr2 = expr2.And(tlpExpr)
 	}
-	var (
-		where1, replacements1, _ = expr1.Where()
-		where2, replacements2, _ = expr2.Where()
-		doc1, doc2               []byte
-	)
+	var b1, b2 database.SQLBuilder
+	b1.CreateWhere(expr1)
+	b2.CreateWhere(expr2)
+
+	var doc1, doc2 []byte
+
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			const fetchSQL = `SELECT original FROM documents WHERE `
-			fetch1SQL := fetchSQL + where1
-			fetch2SQL := fetchSQL + where2
-			if err := conn.QueryRow(rctx, fetch1SQL, replacements1...).Scan(&doc1); err != nil {
+			fetch1SQL := fetchSQL + b1.WhereClause
+			fetch2SQL := fetchSQL + b2.WhereClause
+			if err := conn.QueryRow(rctx, fetch1SQL, b1.Replacements...).Scan(&doc1); err != nil {
 				return err
 			}
-			return conn.QueryRow(rctx, fetch2SQL, replacements2...).Scan(&doc2)
+			return conn.QueryRow(rctx, fetch2SQL, b2.Replacements...).Scan(&doc2)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

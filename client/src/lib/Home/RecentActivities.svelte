@@ -95,7 +95,7 @@
                 {#if activity.name === "comment"}
                   <div class="flex items-center gap-1">
                     <i class="bx bx-comment"></i>
-                    <span>New comment</span>
+                    <span>{`New comment from ${activity.user}`}</span>
                   </div>
                 {:else if activity.name === "mention"}
                   <div class="flex items-center gap-1">
@@ -116,7 +116,7 @@
               {/if}
             </div>
             {#if ["comment", "mention"].includes(activity.name)}
-              <div class="text-black">{`${activity.user}: ${activity.content}`}</div>
+              <div class="italic">{`${activity.content}`}</div>
             {:else if activity.name === "state"}
               <div class="text-black">
                 {`${activity.publisher}: ${activity.documentTitle}`}

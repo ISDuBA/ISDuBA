@@ -97,8 +97,9 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	_, _, aliases := expr.Where()
-	if err := database.CheckProjections(query.Columns, aliases, query.Advisories); err != nil {
+	builder := database.SQLBuilder{Advisory: query.Advisories}
+	builder.CreateWhere(expr)
+	if err := builder.CheckProjections(query.Columns); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "bad 'columns' value: " + err.Error(),
 		})
@@ -108,7 +109,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	// Check if we have orders given.
 	if orders, ok := ctx.GetPostForm("order"); ok {
 		os := strings.Fields(orders)
-		if _, err := database.CreateOrder(os, aliases, query.Advisories); err != nil {
+		if _, err := builder.CreateOrder(os); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"error": "bad 'order' value: " + err.Error(),
 			})
@@ -426,12 +427,14 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			if query.Advisories {
 				expr = expr.And(database.BoolField("latest"))
 			}
-			_, _, aliases := expr.Where()
+
+			builder := database.SQLBuilder{Advisory: query.Advisories}
+			builder.CreateWhere(expr)
 
 			// Check columns
 			if cols, ok := ctx.GetPostForm("columns"); ok {
 				columns := strings.Fields(cols)
-				if err := database.CheckProjections(columns, aliases, query.Advisories); err != nil {
+				if err := builder.CheckProjections(columns); err != nil {
 					bad = "bad 'columns' value: " + err.Error()
 					return nil
 				}
@@ -489,7 +492,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					var s *[]string
 					add(query.Orders != nil, "orders", s)
 				} else {
-					if _, err := database.CreateOrder(orders, aliases, query.Advisories); err != nil {
+					if _, err := builder.CreateOrder(orders); err != nil {
 						bad = "invalid 'orders' value: " + err.Error()
 						return nil
 					}

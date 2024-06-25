@@ -40,7 +40,6 @@ if ! sudo -u postgres grep -q -F "# ISDuBA configuration" /etc/postgresql/16/mai
 then
 sudo -u postgres tee -a /etc/postgresql/16/main/pg_hba.conf <<block_to_insert > /dev/null
 # ISDuBA configuration
-host    all             all             192.168.56.1/32         scram-sha-256
 host    all             all             127.0.0.1/32            scram-sha-256
 block_to_insert
 fi

@@ -47,7 +47,8 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where()
+	builder := database.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	type event struct {
 		Event      models.Event    `json:"event_type"`
@@ -64,9 +65,10 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
+			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` +
+				builder.WhereClause + `)`
 			if err := conn.QueryRow(
-				rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
 			}
 			if !exists {
