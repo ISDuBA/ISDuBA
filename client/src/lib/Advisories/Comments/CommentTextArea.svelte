@@ -25,7 +25,14 @@
   const dispatch = createEventDispatcher();
 </script>
 
-<Textarea bind:value on:input={() => dispatch("input")} class="mb-2" id="comment-textarea">
+<Textarea
+  bind:value
+  on:focus={() => dispatch("focus")}
+  on:blur={() => dispatch("blur")}
+  on:input={() => dispatch("input")}
+  class="mb-2"
+  id="comment-textarea"
+>
   <div slot="footer" class="flex flex-col">
     <div class="flex items-start justify-between">
       <div>

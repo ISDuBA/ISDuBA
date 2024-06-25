@@ -60,6 +60,7 @@
   const setAsReadTimeout: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
+  let commentFocus = false;
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
@@ -369,7 +370,9 @@
         </div>
       </div>
       <div class="right-3 mr-3 flex flex-col min-[800px]:ml-auto min-[1080px]:absolute">
-        <div class={isSSVCediting ? "h-60 w-full p-3 shadow-md" : "h-60 w-full p-3"}>
+        <div
+          class={isSSVCediting || commentFocus ? "h-60 w-full p-3 shadow-md" : "h-60 w-full p-3"}
+        >
           <div class="mb-4 flex flex-row items-center">
             {#if ssvc}
               {#if !isSSVCediting}
@@ -389,6 +392,12 @@
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
               <CommentTextArea
+                on:focus={() => {
+                  commentFocus = true;
+                }}
+                on:blur={() => {
+                  commentFocus = false;
+                }}
                 on:input={() => (createCommentError = "")}
                 on:saveComment={createComment}
                 on:saveForReview={sendForReview}
