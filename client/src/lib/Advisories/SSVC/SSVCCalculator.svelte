@@ -289,7 +289,7 @@
           </Button>
         </div>
       {:else}
-        <button class="h-6" {disabled} on:click={toggleEditing}
+        <button class="mr-auto h-6" {disabled} on:click={toggleEditing}
           ><i class="bx bx-edit-alt ml-1"></i></button
         >
       {/if}
@@ -305,7 +305,7 @@
       <StepIndicator currentStep={currentStep + 1} {steps} hideLabel />
       {#if steps[currentStep]}
         <div class="mb-4 mt-4">
-          <span class="text-nowrap text-2xl">{steps[currentStep]}</span>
+          <span class="text-nowrap text-xl">{steps[currentStep]}</span>
         </div>
       {/if}
       {#if mainDecisions[currentStep]}
@@ -359,7 +359,7 @@
             >Result:
             <span style={resultStyle}>{result.text}</span>
           </Label>
-          <Label class="text-gray-400">Vector: {vector}</Label>
+          <Label class="text-xs text-gray-400">{vector}</Label>
           <button title="Save" on:click={() => saveSSVC(vector)}>
             <i class="bx bx-save me-2 text-xl"></i></button
           >
