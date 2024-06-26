@@ -12,6 +12,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -22,10 +23,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	defaultForwardQueue = 0
 )
 
 // addJob creates a new job configuration.
@@ -109,6 +106,143 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, gin.H{
+		"id": jobID,
+	})
+}
+
+// updateJob updates a job configuration.
+func (c *Controller) updateJob(ctx *gin.Context) {
+	jobConfig := models.JobConfig{}
+
+	var jobIDs string
+	if jobIDs := ctx.PostForm("job_id"); jobIDs == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing 'job_id'",
+		})
+		return
+	}
+
+	var err error
+	jobConfig.ID, err = strconv.ParseInt(jobIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// We need the name.
+	if jobConfig.Name = ctx.PostForm("name"); jobConfig.Name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing 'name'",
+		})
+		return
+	}
+
+	// Domains to download from.
+	if jobConfig.Domains = ctx.PostFormArray("domains"); len(jobConfig.Domains) == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing 'domains'",
+		})
+		return
+	}
+
+	// Allow insecure download.
+	if insecure, err := strconv.ParseBool(ctx.PostForm("insecure")); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "please specify 'insecure' boolean parameter",
+		})
+		return
+	} else {
+		jobConfig.Insecure = insecure
+	}
+
+	for _, domain := range jobConfig.Domains {
+		if domain == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "don't specify empty domains",
+			})
+			return
+		}
+	}
+
+	expr := database.FieldEqInt("id", jobConfig.ID)
+	builder := database.SQLBuilder{}
+	builder.CreateWhere(expr)
+
+	updateSql := `UPDATE jobs SET ` +
+		`name = $1,` +
+		`insecure = $2,` +
+		`ignore_signature_check = $3,` +
+		`rate = $4,` +
+		`worker = $5,` +
+		`start_range = $6,` +
+		`end_range = $7,` +
+		`ignore_pattern = $8,` +
+		`domains = $9` +
+		`WHERE ` +
+		builder.WhereClause +
+		`RETURNING id`
+
+	var jobID int64
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, updateSql,
+				jobConfig.Name,
+				jobConfig.Insecure,
+				jobConfig.IgnoreSignatureCheck,
+				jobConfig.Rate,
+				jobConfig.Worker,
+				jobConfig.StartRange,
+				jobConfig.EndRange,
+				jobConfig.IgnorePattern,
+				jobConfig.Domains,
+			).Scan(&jobID)
+		}, 0,
+	); err != nil {
+		var pgErr *pgconn.PgError
+		// Unique constraint violation
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+			return
+		}
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"id": jobID,
+	})
+}
+
+// deleteJob deletes a job configuration.
+func (c *Controller) deleteJob(ctx *gin.Context) {
+
+	jobIDs := ctx.Param("id")
+	jobID, err := strconv.ParseInt(jobIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	expr := database.FieldEqInt("id", jobID)
+	builder := database.SQLBuilder{}
+	builder.CreateWhere(expr)
+
+	updateSql := `DELETE jobs WHERE ` +
+		builder.WhereClause
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, updateSql, jobID).Scan()
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
 		"id": jobID,
 	})
 }
@@ -206,7 +340,7 @@ func (c *Controller) viewCrons(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			const fetchSQL = `SELECT id, name, job_id, cron_timing FROM jobs`
+			const fetchSQL = `SELECT id, name, job_id, cron_timing FROM cron`
 			rows, _ := conn.Query(rctx, fetchSQL)
 			var err error
 			crons, err = pgx.CollectRows(
