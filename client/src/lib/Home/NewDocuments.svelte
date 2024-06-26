@@ -77,7 +77,7 @@
 
 {#if $appStore.app.isUserLoggedIn}
   <div class="flex w-1/2 max-w-[50%] flex-col gap-4">
-    <SectionHeader title="New documents"></SectionHeader>
+    <SectionHeader title="New advisories"></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if documents?.length && documents.length > 0}
         {#each documents as doc}
@@ -121,10 +121,8 @@
               <div></div>
             </div>
             <div slot="bottom-right" class="text-gray-500">
-              {#if doc.isNewAdvisory === true}
-                <span>New advisory</span>
-              {:else if doc.isNewAdvisory === false}
-                <span>Updated advisory</span>
+              {#if doc.isNewAdvisory === false}
+                <span>New version</span>
               {/if}
             </div>
           </CustomCard>
