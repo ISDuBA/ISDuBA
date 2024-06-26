@@ -238,61 +238,58 @@
 </script>
 
 <div id="ssvc-calc" class="flex w-full flex-col">
-  {#if !startedCalculation}
-    <div class="flex flex-col gap-x-3">
-      <div>
-        {#if isEditing}
-          <Label class="mb-4">
-            <span>Enter a SSVC directly</span>
-          </Label>
-          <Input
-            autofocus
-            class="h-6 w-96"
-            disabled={disabled || !isEditing}
-            on:keyup={(e) => {
-              if (e.key === "Enter") saveSSVC(vectorInput);
-              if (e.key === "Escape") toggleEditing();
-            }}
-            on:input={resetError}
-            type="text"
-            bind:value={vectorInput}
-          />
-        {:else if !vectorInput}
-          <span class="h-6 text-lg">Please enter a SSVC</span>
-        {/if}
-      </div>
-      {#if isEditing}
-        <div class="ml-auto mt-4 flex flex-row gap-x-3">
-          <Button
-            outline
-            size="xs"
-            class="h-8"
-            title="Cancel"
-            on:click={() => {
-              isEditing = false;
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            outline
-            size="xs"
-            class="h-8"
-            title="Evaluate"
-            {disabled}
-            on:click={() => (startedCalculation = true)}
-          >
-            Evaluate
-          </Button>
-          <Button size="xs" class="h-8" title="Save" on:click={() => saveSSVC(vectorInput)}>
-            Save
-          </Button>
-        </div>
-      {:else}
-        <button class="mr-auto h-6" {disabled} on:click={toggleEditing}
-          ><i class="bx bx-edit-alt ml-1"></i></button
-        >
+  {#if !isEditing}
+    <div class="flex flex-row">
+      {#if !vectorInput}
+        <span class="h-6 text-lg">Please enter a SSVC</span>
       {/if}
+      <button class="mr-auto h-6" {disabled} on:click={toggleEditing}
+        ><i class="bx bx-edit-alt ml-1"></i></button
+      >
+    </div>
+  {:else if !startedCalculation}
+    <div class="flex flex-col">
+      <Label class="mb-4">
+        <span>Enter a SSVC directly</span>
+      </Label>
+      <Input
+        autofocus
+        class="h-6 w-96"
+        disabled={disabled || !isEditing}
+        on:keyup={(e) => {
+          if (e.key === "Enter") saveSSVC(vectorInput);
+          if (e.key === "Escape") toggleEditing();
+        }}
+        on:input={resetError}
+        type="text"
+        bind:value={vectorInput}
+      />
+      <div class="ml-auto mt-28 flex flex-row gap-x-3">
+        <Button
+          outline
+          size="xs"
+          class="h-8"
+          title="Cancel"
+          on:click={() => {
+            isEditing = false;
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          outline
+          size="xs"
+          class="h-8"
+          title="Evaluate"
+          {disabled}
+          on:click={() => (startedCalculation = true)}
+        >
+          Evaluate
+        </Button>
+        <Button size="xs" class="h-8" title="Save" on:click={() => saveSSVC(vectorInput)}>
+          Save
+        </Button>
+      </div>
     </div>
   {:else}
     <div class="flex flex-row">
