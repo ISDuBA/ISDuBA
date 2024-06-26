@@ -52,13 +52,13 @@ func run(cfg *config.Config) error {
 	}
 	defer db.Close(ctx)
 
-	downloadWorker := worker.NewDownloadWorker(ctx)
-	go downloadWorker.Run()
-	defer downloadWorker.Close()
+	scheduler := worker.NewScheduler(ctx, db, cfg)
+	go scheduler.Run()
+	defer scheduler.Close()
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, downloadWorker)
+	ctrl := web.NewController(cfg, db, scheduler)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)

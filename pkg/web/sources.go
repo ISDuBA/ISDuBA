@@ -15,15 +15,12 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
-	"github.com/ISDuBA/ISDuBA/pkg/worker"
 	"github.com/gin-gonic/gin"
 )
 
@@ -191,37 +188,14 @@ func (c *Controller) addCron(ctx *gin.Context) {
 		return
 	}
 
-	const insertSQL = `INSERT INTO cron (` +
-		`name,` +
-		`job_id,` +
-		`cront_timing` +
-		`) VALUES ($1, $2, $3)` +
-		`RETURNING id`
-
-	var jobID int64
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, insertSQL,
-				cron.Name,
-				cron.JobId,
-				cron.CronTiming,
-			).Scan(&jobID)
-		}, 0,
-	); err != nil {
-		var pgErr *pgconn.PgError
-		// Unique constraint violation
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
-			return
-		}
-		slog.Error("database error", "err", err)
+	cronID, err := c.scheduler.AddCron(cron)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	ctx.JSON(http.StatusCreated, gin.H{
-		"id": jobID,
+		"cron_id": cronID,
 	})
 }
 
@@ -290,58 +264,11 @@ func (c *Controller) runJob(ctx *gin.Context) {
 		return
 	}
 
-	expr := database.FieldEqInt("id", jobID)
-	builder := database.SQLBuilder{}
-	builder.CreateWhere(expr)
-
-	var jobConf models.JobConfig
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			fetchSQL := `SELECT name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains FROM jobs WHERE ` +
-				builder.WhereClause
-			rows, _ := conn.Query(rctx, fetchSQL)
-			var err error
-			jobConf, err = pgx.CollectOneRow(
-				rows,
-				func(row pgx.CollectableRow) (models.JobConfig, error) {
-					var j models.JobConfig
-					var ignorePattern sql.NullString
-					var startRange sql.NullTime
-					var endRange sql.NullTime
-					err := row.Scan(&j.Name, &j.Insecure, &j.IgnoreSignatureCheck, &j.Rate, &j.Worker, &startRange, &endRange, &ignorePattern, &j.Domains)
-					if ignorePattern.Valid {
-						j.IgnorePattern = &ignorePattern.String
-					}
-					if startRange.Valid {
-						j.StartRange = &startRange.Time
-					}
-					if endRange.Valid {
-						j.EndRange = &endRange.Time
-					}
-					return j, err
-				})
-			return err
-		}, 0,
-	); err != nil {
-		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	task, err := c.scheduler.AddTask(jobID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	t := time.Now().UTC()
-
-	c.downloadWorker.Enqueue(worker.DownloadJob{
-		Config:         jobConf,
-		ForwardQueue:   defaultForwardQueue,
-		Presets:        c.cfg.Importer.RemoteValidatorPresets,
-		ValidationMode: c.cfg.Importer.ValidationMode,
-		Db:             c.db,
-		LogFile:        c.cfg.Importer.LogPath + t.Format(time.RFC3339) + ".log",
-		LogLevel:       c.cfg.Importer.LogLevel,
-	})
-	slog.Info("Queued download for domains", "domains", jobConf.Domains)
-
-	ctx.JSON(http.StatusOK, gin.H{"msg": "queued import job"})
+	ctx.JSON(http.StatusOK, gin.H{"task_id": task})
 }

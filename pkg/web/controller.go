@@ -27,14 +27,14 @@ import (
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
-	cfg            *config.Config
-	db             *database.DB
-	downloadWorker *worker.DownloadWorker
+	cfg       *config.Config
+	db        *database.DB
+	scheduler *worker.Scheduler
 }
 
 // NewController returns a new Controller.
-func NewController(cfg *config.Config, db *database.DB, downloadWorker *worker.DownloadWorker) *Controller {
-	return &Controller{cfg: cfg, db: db, downloadWorker: downloadWorker}
+func NewController(cfg *config.Config, db *database.DB, scheduler *worker.Scheduler) *Controller {
+	return &Controller{cfg: cfg, db: db, scheduler: scheduler}
 }
 
 // currentUser returns the current user to be used in database queries.
