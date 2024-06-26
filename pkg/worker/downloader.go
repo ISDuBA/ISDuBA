@@ -37,6 +37,7 @@ type DownloadJob struct {
 	Db             *database.DB
 	LogFile        string
 	LogLevel       slog.Level
+	FinishCallback func(error)
 }
 
 func NewDownloadWorker(ctx context.Context) *DownloadWorker {
@@ -145,6 +146,7 @@ func (w *DownloadWorker) Run() {
 				if err != nil {
 					slog.Warn("Download failed", "err", err)
 				}
+				job.FinishCallback(err)
 			}()
 		}
 	}

@@ -114,7 +114,7 @@ func (s *Scheduler) runCron() {
 	if err := s.db.Run(
 		s.ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			const fetchSQL = `SELECT id, name, job_id, cron_timing FROM jobs`
+			const fetchSQL = `SELECT id, name, job_id, cron_timing FROM cron`
 			rows, _ := conn.Query(rctx, fetchSQL)
 			var err error
 			crons, err = pgx.CollectRows(
@@ -214,6 +214,8 @@ func (s *Scheduler) runTasks() {
 		}
 
 		// TODO: Mark jobs as completed
+		finishCallback := func(error) {}
+
 		t := time.Now().UTC()
 
 		s.downloader.Enqueue(DownloadJob{
@@ -222,8 +224,9 @@ func (s *Scheduler) runTasks() {
 			Presets:        s.cfg.Importer.RemoteValidatorPresets,
 			ValidationMode: s.cfg.Importer.ValidationMode,
 			Db:             s.db,
-			LogFile:        s.cfg.Importer.LogPath + t.Format(time.RFC3339) + ".log",
+			LogFile:        s.cfg.Importer.LogPath + "-" + jobConf.Name + "-" + t.Format(time.RFC3339) + ".log",
 			LogLevel:       s.cfg.Importer.LogLevel,
+			FinishCallback: finishCallback,
 		})
 	}
 }
