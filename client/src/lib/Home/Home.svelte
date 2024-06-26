@@ -21,11 +21,11 @@
 </svelte:head>
 
 {#if $appStore.app.isUserLoggedIn}
-  <SectionHeader title="Overview"></SectionHeader>
-  <hr class="mb-6" />
-  <Queries></Queries>
-  <div class="mt-8 flex gap-x-10 gap-y-4">
+  <div class="mb-8 mt-8 flex gap-x-10 gap-y-4">
     <New></New>
     <RecentActivities></RecentActivities>
   </div>
+  <SectionHeader title="Queries"></SectionHeader>
+  <hr class="mb-6" />
+  <Queries></Queries>
 {/if}
