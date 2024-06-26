@@ -14,6 +14,8 @@ import (
 	"errors"
 	"log/slog"
 	"os"
+	"regexp"
+	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -100,17 +102,31 @@ func (w *DownloadWorker) Run() {
 				}
 				logger := slog.New(slog.NewJSONHandler(logFile, &slogOptions))
 
+				var ignorePatterns []*regexp.Regexp
+				if job.Config.IgnorePattern != nil {
+					ignorePattern, err := regexp.Compile(*job.Config.IgnorePattern)
+					if err != nil {
+						slog.Error("Couldn't compile ignore pattern", "pattern", job.Config.IgnorePattern, "err", err)
+						return
+					}
+					ignorePatterns = append(ignorePatterns, ignorePattern)
+				}
+
+				// TODO: Allow to set only part of the time range
+				var timeRange *[2]time.Time
+				if job.Config.StartRange != nil && job.Config.EndRange != nil {
+					timeRange = &[2]time.Time{*job.Config.StartRange, *job.Config.EndRange}
+				}
+
 				cfg := &downloader.Config{
-					Insecure:             job.Config.Insecure,
-					IgnoreSignatureCheck: job.Config.IgnoreSignatureCheck,
-					ClientKey:            job.Config.ClientKey,
-					ClientPassphrase:     job.Config.ClientPassphrase,
-					Rate:                 job.Config.Rate,
-					Worker:               job.Config.Worker,
-					// TODO: Allow to configure time range
-					// Range: [2]time.Time{job.Config.StartRange, job.Config.EndRange},
-					// TODO: Allow to configure ignore pattern
-					// IgnorePattern: job.Config.IgnorePattern,
+					Insecure:               job.Config.Insecure,
+					IgnoreSignatureCheck:   job.Config.IgnoreSignatureCheck,
+					ClientKey:              job.Config.ClientKey,
+					ClientPassphrase:       job.Config.ClientPassphrase,
+					Rate:                   job.Config.Rate,
+					Worker:                 job.Config.Worker,
+					Range:                  timeRange,
+					IgnorePattern:          ignorePatterns,
 					RemoteValidatorPresets: job.Presets,
 					ForwardQueue:           job.ForwardQueue,
 					FailedForwardHandler:   FailedForwardHandler(),
