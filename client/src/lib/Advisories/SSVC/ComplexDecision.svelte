@@ -32,7 +32,7 @@
       {#if childOptions}
         <div class="flex flex-col">
           <span
-            class="text-gary-400 text-xs font-bold tracking-tight text-gray-900 dark:text-white"
+            class="text-gary-400 mb-2 text-xs font-bold tracking-tight text-gray-900 dark:text-white"
           >
             {child.label}
           </span>
@@ -42,7 +42,8 @@
                 <Radio
                   name={child.label}
                   value={option.label}
-                  class="flex h-6 flex-col text-xs tracking-tight">{option.label}</Radio
+                  class="flex h-6 flex-col text-xs tracking-tight"
+                  ><span class="mt-2">{option.label}</span></Radio
                 >
               </div>
             {/each}

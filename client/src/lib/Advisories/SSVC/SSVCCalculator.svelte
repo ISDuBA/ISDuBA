@@ -304,7 +304,7 @@
       >
       <StepIndicator currentStep={currentStep + 1} {steps} hideLabel />
       {#if steps[currentStep]}
-        <div class="mb-4 mt-4">
+        <div class="mb-2 mt-2">
           <span class="text-nowrap text-xl">{steps[currentStep]}</span>
         </div>
       {/if}
