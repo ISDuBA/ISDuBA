@@ -12,37 +12,18 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import {
     Button,
-    Label,
-    Input,
-    Checkbox,
     Table,
     TableBody,
     TableBodyCell,
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
+  import { push } from "svelte-spa-router";
   import { request } from "$lib/utils";
   import { tablePadding, tdClass } from "$lib/table/defaults";
 
-  let domains = "";
-  let name = "";
-  let insecure: boolean = false;
   let orderBy = "";
-
   let jobLoadError = "";
-
-  async function addJob() {
-    const formData = new FormData();
-    formData.append("domains", domains);
-    formData.append("name", name);
-    formData.append("insecure", insecure.toString());
-    const response = await request(`/api/job`, "POST", formData);
-    if (response.ok) {
-      console.log("Success");
-    } else if (response.error) {
-      console.log(response.error);
-    }
-  }
 
   async function runJob(id: number) {
     const response = await request(`/api/job/${id}`, "POST");
@@ -65,25 +46,10 @@
 </script>
 
 <SectionHeader title="Sources"></SectionHeader>
-
-<Label for="domain" class="mb-2 block">Domain</Label>
-<Input id="domain" bind:value={domains} placeholder="example.com" />
-<Label for="name" class="mb-2 block">Job Name</Label>
-<Input id="name" bind:value={name} placeholder="Job #1" />
-<Checkbox
-  on:change={() => {
-    insecure = !insecure;
-  }}>Insecure</Checkbox
->
-<br />
-<Button
-  on:click={() => {
-    addJob();
-  }}
-  class="ml-auto mt-auto"
-  color="primary">Add job</Button
->
-<br />
+<Button href="/#/sources/new" class="mb-10" color="primary">
+  <i class="bx bx-plus"></i>
+  <span>Add job</span>
+</Button>
 <SectionHeader title="Jobs"></SectionHeader>
 {#if !jobLoadError}
   {#await getJobs() then jobs}
@@ -138,10 +104,17 @@
       </TableHead>
       <TableBody>
         {#each jobs as job, index (index)}
-          <tr on:click={() => {}} on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
+          <tr
+            on:click={() => {
+              push(`/sources/${job.id}`);
+            }}
+            on:blur={() => {}}
+            on:focus={() => {}}
+            class="cursor-pointer"
+          >
             <TableBodyCell {tdClass}>{job.id}</TableBodyCell>
             <TableBodyCell {tdClass}>{job.name}</TableBodyCell>
-            <TableBodyCell {tdClass}>{job.domains.join(", ")}</TableBodyCell>
+            <TableBodyCell {tdClass}>{JSON.parse(job.domains).join(", ")}</TableBodyCell>
             <TableBodyCell {tdClass}>{job.insecure}</TableBodyCell>
             <TableBodyCell {tdClass}>{job.ignore_signature_check}</TableBodyCell>
             <TableBodyCell {tdClass}>{job.worker}</TableBodyCell>
