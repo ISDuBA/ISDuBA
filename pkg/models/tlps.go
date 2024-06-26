@@ -11,7 +11,8 @@ package models
 import (
 	"fmt"
 	"slices"
-	"strings"
+
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 )
 
 type (
@@ -52,67 +53,66 @@ func (ptlps PublishersTLPs) Allowed(publisher string, tlp TLP) bool {
 	return ok && slices.Contains(wildcard, tlp)
 }
 
-// AsConditions returns the list of TLP rules as a postfix expression.
-func (ptlps PublishersTLPs) AsConditions() string {
-
-	// As map iteration order is random we sort to simplify test
-	publisherOrder := make([]Publisher, 0, len(ptlps))
-	for publisher := range ptlps {
-		if publisher != "*" {
-			publisherOrder = append(publisherOrder, publisher)
+// or transforms a slice of string kinds into list of or-ed string field accesses.
+func or[T ~string](field string, tlps []T) *query.Expr {
+	var ts *query.Expr
+	for _, t := range tlps {
+		if tlp := query.FieldEqString(field, string(t)); ts == nil {
+			ts = tlp
+		} else {
+			ts = ts.Or(tlp)
 		}
 	}
-	slices.Sort(publisherOrder)
+	return ts
+}
 
-	var b strings.Builder
-	var noneWildcards int
-	for _, publisher := range publisherOrder {
-		noneWildcards++
-		tlps := ptlps[publisher]
-		for j, t := range tlps {
-			b.WriteString(" $tlp ")
-			b.WriteString(string(t))
-			b.WriteString(" =")
-			if j > 0 {
-				b.WriteString(" or")
-			}
+// AsExpr returns the list of TLP rules as an expression tree.
+func (ptlps PublishersTLPs) AsExpr() *query.Expr {
+
+	// Make build process deterministic.
+	pubs := make([]Publisher, 0, len(ptlps))
+	for pub := range ptlps {
+		if pub != "*" {
+			pubs = append(pubs, pub)
 		}
-		b.WriteString(` $publisher "`)
-		publisher := strings.ReplaceAll(string(publisher), `"`, `\"`)
-		b.WriteString(publisher)
-		b.WriteString(`" =`)
-		if len(tlps) > 0 {
-			b.WriteString(" and")
+	}
+	slices.Sort(pubs)
+
+	var root *query.Expr
+	for _, pub := range pubs {
+		ts := or("tlp", ptlps[pub])
+		if ts == nil {
+			// List is empty.
+			continue
 		}
-		if noneWildcards > 1 {
-			b.WriteString(" or")
+		curr := query.FieldEqString("publisher", string(pub)).
+			And(ts)
+
+		if root == nil {
+			root = curr
+		} else {
+			root = root.Or(curr)
 		}
 	}
 
-	if wildcard, ok := ptlps["*"]; ok {
-		for j, t := range wildcard {
-			b.WriteString(" $tlp ")
-			b.WriteString(string(t))
-			b.WriteString(" =")
-			if j > 0 {
-				b.WriteString(" or")
+	// Do we have a wildcard?
+	if tlps, ok := ptlps["*"]; ok {
+		if ts := or("tlp", tlps); ts != nil {
+			// If we have other publishers,
+			// don't apply wildcard in these cases.
+			if len(pubs) > 0 {
+				ts = ts.And(or("publisher", pubs).Not())
 			}
-		}
-		first := true
-		for _, publisher := range publisherOrder {
-			b.WriteString(` $publisher "`)
-			publisher := strings.ReplaceAll(string(publisher), `"`, `\"`)
-			b.WriteString(publisher)
-			b.WriteString(`" !=`)
-			if !first {
-				b.WriteString(" and")
+			if root == nil {
+				root = ts
 			} else {
-				first = false
+				root = root.Or(ts)
 			}
 		}
-		if noneWildcards > 0 {
-			b.WriteString(" and or")
-		}
 	}
-	return b.String()
+
+	if root == nil {
+		return query.False()
+	}
+	return root
 }
