@@ -83,19 +83,17 @@
         {#each documents as doc}
           <CustomCard on:click={() => openDocument(doc)}>
             <div slot="top-left">
-              {#if doc.cvss_v2_score}
+              {#if doc.critical}
                 <div>
-                  <span>CVSS v2:</span>
-                  <span class:text-red-500={Number(doc.cvss_v2_score) > 5.0}>
-                    {doc.cvss_v2_score}
-                  </span>
-                </div>
-              {/if}
-              {#if doc.cvss_v3_score}
-                <div>
-                  <span>CVSS v3:</span>
-                  <span class:text-red-500={Number(doc.cvss_v3_score) > 5.0}>
-                    {doc.cvss_v3_score}
+                  {#if doc.cvss_v3_score && doc.cvss_v3_score === doc.critical}
+                    <span>CVSS v3:</span>
+                  {:else if doc.cvss_v2_score && doc.cvss_v2_score === doc.critical}
+                    <span>CVSS v2:</span>
+                  {:else}
+                    <span>Critical:</span>
+                  {/if}
+                  <span class:text-red-500={Number(doc.critical) > 5.0}>
+                    {doc.critical}
                   </span>
                 </div>
               {/if}
