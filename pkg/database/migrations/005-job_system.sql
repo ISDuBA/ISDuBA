@@ -44,3 +44,10 @@ CREATE TABLE IF NOT EXISTS cron (
 
     UNIQUE (name)
 );
+
+--
+-- permissions
+--
+GRANT INSERT, DELETE, SELECT, UPDATE ON jobs TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON tasks TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON cron TO {{ .User | sanitize }};

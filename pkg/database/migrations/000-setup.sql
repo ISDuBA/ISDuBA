@@ -366,3 +366,6 @@ GRANT INSERT, DELETE, SELECT, UPDATE ON unique_texts    TO {{ .User | sanitize }
 GRANT INSERT, DELETE, SELECT, UPDATE ON comments        TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON events_log      TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON stored_queries  TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON jobs            TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON tasks           TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON cron            TO {{ .User | sanitize }};
