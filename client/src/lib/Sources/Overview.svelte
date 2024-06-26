@@ -10,13 +10,24 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Button, Label, Input, Checkbox } from "flowbite-svelte";
+  import {
+    Button,
+    Label,
+    Input,
+    Checkbox,
+    Table,
+    TableBody,
+    TableBodyCell,
+    TableHead,
+    TableHeadCell
+  } from "flowbite-svelte";
   import { request } from "$lib/utils";
+  import { tablePadding, tdClass } from "$lib/table/defaults";
 
   let domains = "";
   let name = "";
-  let jobId: number | null;
   let insecure: boolean = false;
+  let orderBy = "";
 
   let jobLoadError = "";
 
@@ -33,8 +44,8 @@
     }
   }
 
-  async function runJob() {
-    const response = await request(`/api/job/` + jobId, "POST");
+  async function runJob(id: number) {
+    const response = await request(`/api/job/${id}`, "POST");
     if (response.ok) {
       console.log("Success");
     } else if (response.error) {
@@ -73,24 +84,80 @@
   color="primary">Add job</Button
 >
 <br />
-Jobs:
+<SectionHeader title="Jobs"></SectionHeader>
 {#if !jobLoadError}
   {#await getJobs() then jobs}
-    <ul>
-      {#each jobs.entries() as job}
-        <li>{JSON.stringify(job, null, 4)}</li>
-      {/each}
-    </ul>
+    <Table hoverable={true} noborder={true}>
+      <TableHead>
+        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+          <span>ID</span>
+          <i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "name"}
+            class:bx-caret-down={orderBy == "-name"}
+          ></i>
+        </TableHeadCell>
+        <TableHeadCell padding={tablePadding} on:click={() => {}}
+          >Name<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "name"}
+            class:bx-caret-down={orderBy == "-name"}
+          ></i></TableHeadCell
+        >
+        <TableHeadCell padding={tablePadding} on:click={() => {}}
+          >Domains<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "description"}
+            class:bx-caret-down={orderBy == "-description"}
+          ></i>
+        </TableHeadCell>
+        <TableHeadCell padding={tablePadding} on:click={() => {}}
+          >Insecure<i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "description"}
+            class:bx-caret-down={orderBy == "-description"}
+          ></i>
+        </TableHeadCell>
+        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+          <span>Ignore signature Checkbox</span>
+          <i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "description"}
+            class:bx-caret-down={orderBy == "-description"}
+          ></i>
+        </TableHeadCell>
+        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+          <span>Worker</span>
+          <i
+            class:bx={true}
+            class:bx-caret-up={orderBy == "description"}
+            class:bx-caret-down={orderBy == "-description"}
+          ></i>
+        </TableHeadCell>
+        <TableHeadCell></TableHeadCell>
+      </TableHead>
+      <TableBody>
+        {#each jobs as job, index (index)}
+          <tr on:click={() => {}} on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
+            <TableBodyCell {tdClass}>{job.id}</TableBodyCell>
+            <TableBodyCell {tdClass}>{job.name}</TableBodyCell>
+            <TableBodyCell {tdClass}>{job.domains.join(", ")}</TableBodyCell>
+            <TableBodyCell {tdClass}>{job.insecure}</TableBodyCell>
+            <TableBodyCell {tdClass}>{job.ignore_signature_check}</TableBodyCell>
+            <TableBodyCell {tdClass}>{job.worker}</TableBodyCell>
+            <td>
+              <button
+                title={`Run Job "${job.name}"`}
+                on:click|stopPropagation={() => {
+                  runJob(job.id);
+                }}
+              >
+                <i class="bx bx-play-circle"></i>
+              </button>
+            </td>
+          </tr>
+        {/each}
+      </TableBody>
+    </Table>
   {/await}
 {/if}
-
-<Label for="id" class="mb-2 block">Job ID</Label>
-<Input id="id" bind:value={jobId} placeholder="42" />
-<br />
-<Button
-  on:click={() => {
-    runJob();
-  }}
-  class="ml-auto mt-auto"
-  color="primary">Start job</Button
->
