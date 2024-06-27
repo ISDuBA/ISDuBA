@@ -90,6 +90,20 @@ func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
+func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
+	if sb.Advisory {
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
+			"ON events_log.documents_id = docs.id "+
+			"WHERE actor = $%d "+
+			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
+			sb.replacementIndex(e.stringValue)+1)
+	} else {
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
+			"AND comments.documents_id = documents.id)",
+			sb.replacementIndex(e.stringValue)+1)
+	}
+}
+
 func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 	b.WriteString("CAST(")
 	sb.whereRecurse(e.children[0], b)
@@ -266,6 +280,8 @@ func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
 		sb.csearchWhere(e, b)
 	case mentioned:
 		sb.mentionedWhere(e, b)
+	case involved:
+		sb.involvedWhere(e, b)
 	case ilike:
 		sb.ilikeWhere(e, b)
 	case ilikePID:

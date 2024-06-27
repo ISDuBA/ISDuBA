@@ -274,6 +274,7 @@ CREATE TABLE events_log (
 );
 
 CREATE INDEX events_log_time_idx ON events_log(time);
+CREATE INDEX ON events_log(documents_id);
 
 -- Trigger to update cached recent value of advisory.
 CREATE FUNCTION upd_recent() RETURNS trigger AS $$
