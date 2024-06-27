@@ -10,7 +10,6 @@ package query
 
 import (
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 )
@@ -57,9 +56,22 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	sb.Aliases[e.alias] = repl
 }
 
-func (sb *SQLBuilder) csearchWhere(_ *Expr, _ *strings.Builder) {
-	// TODO: Implement me!
-	slog.Debug("csearch is not implemented, yet!")
+func (sb *SQLBuilder) csearchWhere(e *Expr, b *strings.Builder) {
+	const tsquery = `websearch_to_tsquery`
+
+	if sb.Advisory {
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments JOIN documents docs "+
+			"ON comments.documents_id = docs.id "+
+			"WHERE ts @@ "+tsquery+"('%s', $%d) "+
+			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
+			e.langValue,
+			sb.replacementIndex(e.stringValue)+1)
+	} else {
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"('%s', $%d) "+
+			"AND comments.documents_id = documents.id)",
+			e.langValue,
+			sb.replacementIndex(e.stringValue)+1)
+	}
 }
 
 func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
