@@ -372,6 +372,24 @@ func (c *Controller) addCron(ctx *gin.Context) {
 	})
 }
 
+// deleteCron returns all cron jobs.
+func (c *Controller) deleteCron(ctx *gin.Context) {
+	cronIDs := ctx.Param("id")
+	var cronID int64
+	cronID, err := strconv.ParseInt(cronIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if _, err := c.scheduler.DeleteCron(cronID); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"cron_id": cronID,
+	})
+}
+
 // viewCrons returns all cron jobs.
 func (c *Controller) viewCrons(ctx *gin.Context) {
 	var crons []models.Cron

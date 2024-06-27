@@ -146,6 +146,32 @@ func (s *Scheduler) AddCron(cron models.Cron) (*int64, error) {
 	return &cronID, nil
 }
 
+// DeleteCron deletes a cron job.
+func (s *Scheduler) DeleteCron(cronID int64) (*int64, error) {
+
+	expr := query.FieldEqInt("id", cronID)
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
+
+	deleteSql := `DELETE FROM cron WHERE ` +
+		builder.WhereClause
+
+	if err := s.db.Run(
+		s.ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			if _, err := conn.Exec(rctx, deleteSql); err != nil {
+				return err
+			}
+			return nil
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		return nil, err
+	}
+	s.notify <- true
+	return &cronID, nil
+}
+
 func (s *Scheduler) AbortTask(taskID int64) error {
 	s.runningTaskLock.Lock()
 	cancel := s.runningTasks[taskID]
