@@ -202,10 +202,13 @@ CREATE TABLE comments (
     documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     time         timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     commentator  varchar NOT NULL,
-    message      varchar(10000)
+    message      varchar(10000),
+    ts           tsvector
+                 GENERATED ALWAYS AS (to_tsvector_multilang(message)) STORED
 );
 
 CREATE INDEX ON comments(documents_id);
+CREATE INDEX comments_ts_idx ON comments USING GIN (ts);
 
 -- Trigger functions to update cached comment count per advisory.
 CREATE FUNCTION incr_comments() RETURNS trigger AS $$
@@ -271,6 +274,7 @@ CREATE TABLE events_log (
 );
 
 CREATE INDEX events_log_time_idx ON events_log(time);
+CREATE INDEX ON events_log(documents_id);
 
 -- Trigger to update cached recent value of advisory.
 CREATE FUNCTION upd_recent() RETURNS trigger AS $$
