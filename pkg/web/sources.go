@@ -12,7 +12,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -164,8 +164,8 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 		}
 	}
 
-	expr := database.FieldEqInt("id", jobConfig.ID)
-	builder := database.SQLBuilder{}
+	expr := query.FieldEqInt("id", jobConfig.ID)
+	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
 	updateSql := `UPDATE jobs SET ` +
@@ -225,8 +225,8 @@ func (c *Controller) deleteJob(ctx *gin.Context) {
 		return
 	}
 
-	expr := database.FieldEqInt("id", jobID)
-	builder := database.SQLBuilder{}
+	expr := query.FieldEqInt("id", jobID)
+	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
 	deleteSql := `DELETE FROM jobs WHERE ` +

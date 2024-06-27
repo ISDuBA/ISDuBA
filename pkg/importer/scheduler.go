@@ -12,6 +12,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"log/slog"
 	"time"
 
@@ -177,8 +178,8 @@ func (s *Scheduler) runTasks() {
 	}
 
 	for _, task := range tasks {
-		expr := database.FieldEqInt("id", task.JobId)
-		builder := database.SQLBuilder{}
+		expr := query.FieldEqInt("id", task.JobId)
+		builder := query.SQLBuilder{}
 		builder.CreateWhere(expr)
 
 		var jobConf models.JobConfig
@@ -244,8 +245,8 @@ func (s *Scheduler) runTasks() {
 }
 
 func (s *Scheduler) setTaskState(taskID int64, status models.Status) (*int64, error) {
-	expr := database.FieldEqInt("id", taskID)
-	builder := database.SQLBuilder{}
+	expr := query.FieldEqInt("id", taskID)
+	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
 	var updateTaskId int64
