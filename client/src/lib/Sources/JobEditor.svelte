@@ -103,7 +103,7 @@
 </script>
 
 <SectionHeader title={params?.id ? "Edit Job" : "New Job"}></SectionHeader>
-<form on:submit={saveJob}>
+<form on:submit={saveJob} class="max-w-[800pt]">
   <div class="mb-4 flex flex-col gap-4">
     <CustomInput label="Job name" id="name" placeholder="Job #1" required bind:value={job.name}
     ></CustomInput>

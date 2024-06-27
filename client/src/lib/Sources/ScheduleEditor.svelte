@@ -81,7 +81,7 @@
 </script>
 
 <SectionHeader title={params?.id ? "Edit Schedule" : "New Schedule"}></SectionHeader>
-<form on:submit={saveSchedule}>
+<form on:submit={saveSchedule} class="max-w-[800pt]">
   <div class="mb-4 flex flex-col gap-4">
     <CustomInput
       required
