@@ -235,7 +235,10 @@ func (c *Controller) deleteJob(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, deleteSql, jobID).Scan()
+			if _, err := conn.Exec(rctx, deleteSql); err != nil {
+				return err
+			}
+			return nil
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
