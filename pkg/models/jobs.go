@@ -10,8 +10,10 @@ package models
 
 import "time"
 
+// Status of the task.
 type Status string
 
+// Task states.
 const (
 	QUEUED    Status = "QUEUED"
 	RUNNING   Status = "RUNNING"
@@ -20,17 +22,19 @@ const (
 	COMPLETED Status = "COMPLETED"
 )
 
+// Task represents a job that can be run.
 type Task struct {
-	Id      int64     `json:"task_id"`
+	ID      int64     `json:"task_id"`
 	Created time.Time `json:"created"`
 	JobId   int64     `json:"job_id"`
 	Status  Status    `json:"status"`
 }
 
+// Cron represents a cron job.
 type Cron struct {
-	Id         int64  `json:"cron_id"`
+	ID         int64  `json:"cron_id"`
 	Name       string `json:"name"`
-	JobId      int64  `json:"job_id"`
+	JobID      int64  `json:"job_id"`
 	CronTiming string `json:"cron_timing"`
 }
 

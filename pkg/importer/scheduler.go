@@ -6,6 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+// Package importer implements the import of documents.
 package importer
 
 import (
@@ -71,7 +72,7 @@ func (s *Scheduler) init() {
 				rows,
 				func(row pgx.CollectableRow) (models.Task, error) {
 					var task models.Task
-					err := row.Scan(&task.Id, &task.Created, &task.JobId, &task.Status)
+					err := row.Scan(&task.ID, &task.Created, &task.JobId, &task.Status)
 					return task, err
 				})
 			return err
@@ -82,7 +83,7 @@ func (s *Scheduler) init() {
 	}
 
 	for _, task := range tasks {
-		slog.Info("aborted task", "id", task.Id)
+		slog.Info("aborted task", "id", task.ID)
 	}
 }
 
@@ -129,7 +130,7 @@ func (s *Scheduler) AddCron(cron models.Cron) (*int64, error) {
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			return conn.QueryRow(rctx, insertSQL,
 				cron.Name,
-				cron.JobId,
+				cron.JobID,
 				cron.CronTiming,
 			).Scan(&cronID)
 		}, 0,
@@ -172,6 +173,7 @@ func (s *Scheduler) DeleteCron(cronID int64) (*int64, error) {
 	return &cronID, nil
 }
 
+// AbortTask aborts the specified task.
 func (s *Scheduler) AbortTask(taskID int64) error {
 	s.runningTaskLock.Lock()
 	cancel := s.runningTasks[taskID]
@@ -198,7 +200,7 @@ func (s *Scheduler) runCron() {
 				rows,
 				func(row pgx.CollectableRow) (models.Cron, error) {
 					var c models.Cron
-					err := row.Scan(&c.Id, &c.Name, &c.JobId, &c.CronTiming)
+					err := row.Scan(&c.ID, &c.Name, &c.JobID, &c.CronTiming)
 					return c, err
 				})
 			return err
@@ -213,7 +215,7 @@ func (s *Scheduler) runCron() {
 	s.cron = cron.New()
 	for _, c := range crons {
 		cronJob := func() {
-			_, err := s.AddTask(c.JobId)
+			_, err := s.AddTask(c.JobID)
 			if err != nil {
 				slog.Error("could not add task", "err", err)
 				return
@@ -240,7 +242,7 @@ func (s *Scheduler) runTasks() {
 				rows,
 				func(row pgx.CollectableRow) (models.Task, error) {
 					var task models.Task
-					err := row.Scan(&task.Id, &task.Created, &task.JobId, &task.Status)
+					err := row.Scan(&task.ID, &task.Created, &task.JobId, &task.Status)
 					return task, err
 				})
 			return err
@@ -258,7 +260,7 @@ func (s *Scheduler) runTasks() {
 		var jobConf models.JobConfig
 		downloadCtx, cancel := context.WithCancel(context.Background())
 		s.runningTaskLock.Lock()
-		s.runningTasks[task.Id] = cancel
+		s.runningTasks[task.ID] = cancel
 		s.runningTaskLock.Unlock()
 
 		if err := s.db.Run(
@@ -317,7 +319,7 @@ func (s *Scheduler) runTasks() {
 				status = models.COMPLETED
 			}
 
-			_, err := s.setTaskState(task.Id, status)
+			_, err := s.setTaskState(task.ID, status)
 			if err != nil {
 				slog.Error("setTaskState error", "err", err)
 			}

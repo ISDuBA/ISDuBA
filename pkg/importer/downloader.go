@@ -42,7 +42,7 @@ func newDownloadWorker() *downloadWorker {
 	return &downloadWorker{}
 }
 
-func downloadHandler(db *database.DB, ctx context.Context) func(d downloader.DownloadedDocument) error {
+func downloadHandler(ctx context.Context, db *database.DB) func(d downloader.DownloadedDocument) error {
 	return func(d downloader.DownloadedDocument) error {
 		if d.ValStatus != downloader.ValidValidationStatus {
 			slog.Info("Got invalid document")
@@ -116,7 +116,7 @@ func (w *downloadWorker) run(ctx context.Context, job DownloadJob) error {
 		RemoteValidatorPresets: job.Presets,
 		ForwardQueue:           job.ForwardQueue,
 		FailedForwardHandler:   failedForwardHandler(),
-		DownloadHandler:        downloadHandler(job.Db, ctx),
+		DownloadHandler:        downloadHandler(ctx, job.Db),
 		ValidationMode:         job.ValidationMode,
 		Logger:                 logger,
 	}

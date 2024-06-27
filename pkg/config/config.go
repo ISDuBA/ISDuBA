@@ -132,6 +132,7 @@ type Database struct {
 	MaxQueryDuration        time.Duration `toml:"max_query_time"`
 }
 
+// Importer are the config options for the importer.
 type Importer struct {
 	RemoteValidator        string                    `toml:"remote_validator"`
 	RemoteValidatorPresets []string                  `toml:"remote_validator_presets"`

@@ -48,22 +48,19 @@ func (c *Controller) addJob(ctx *gin.Context) {
 	}
 
 	// Allow insecure download.
-	if insecure, err := strconv.ParseBool(ctx.PostForm("insecure")); err != nil {
+	var err error
+	if jobConfig.Insecure, err = strconv.ParseBool(ctx.PostForm("insecure")); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "please specify 'insecure' boolean parameter",
 		})
 		return
-	} else {
-		jobConfig.Insecure = insecure
 	}
 
-	if ignoreSignature, err := strconv.ParseBool(ctx.PostForm("ignore_signature_check")); err != nil {
+	if jobConfig.IgnoreSignatureCheck, err = strconv.ParseBool(ctx.PostForm("ignore_signature_check")); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "please specify 'ignore_signature_check' boolean parameter",
 		})
 		return
-	} else {
-		jobConfig.IgnoreSignatureCheck = ignoreSignature
 	}
 
 	for _, domain := range jobConfig.Domains {
@@ -182,13 +179,18 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 	}
 
 	// Allow insecure download.
-	if insecure, err := strconv.ParseBool(ctx.PostForm("insecure")); err != nil {
+	if jobConfig.Insecure, err = strconv.ParseBool(ctx.PostForm("insecure")); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "please specify 'insecure' boolean parameter",
 		})
 		return
-	} else {
-		jobConfig.Insecure = insecure
+	}
+
+	if jobConfig.IgnoreSignatureCheck, err = strconv.ParseBool(ctx.PostForm("ignore_signature_check")); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "please specify 'ignore_signature_check' boolean parameter",
+		})
+		return
 	}
 
 	for _, domain := range jobConfig.Domains {
@@ -200,11 +202,32 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 		}
 	}
 
+	if clientKey := ctx.PostForm("client_key"); clientKey != "" {
+		jobConfig.ClientKey = &clientKey
+	}
+
+	if clientPassphrase := ctx.PostForm("client_passphrase"); clientPassphrase != "" {
+		jobConfig.ClientPassphrase = &clientPassphrase
+	}
+
+	if ignorePattern := ctx.PostForm("ignore_pattern"); ignorePattern != "" {
+		jobConfig.IgnorePattern = &ignorePattern
+	}
+
+	if rate, ok := ctx.GetPostForm("rate"); ok {
+		rateFloat, err := strconv.ParseFloat(rate, 32)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.Rate = &rateFloat
+		}
+	}
+
 	expr := query.FieldEqInt("id", jobConfig.ID)
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
-	updateSql := `UPDATE jobs SET ` +
+	updateSQL := `UPDATE jobs SET ` +
 		`name = $1,` +
 		`insecure = $2,` +
 		`ignore_signature_check = $3,` +
@@ -223,7 +246,7 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, updateSql,
+			return conn.QueryRow(rctx, updateSQL,
 				jobConfig.Name,
 				jobConfig.Insecure,
 				jobConfig.IgnoreSignatureCheck,
@@ -265,13 +288,13 @@ func (c *Controller) deleteJob(ctx *gin.Context) {
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
-	deleteSql := `DELETE FROM jobs WHERE ` +
+	deleteSQL := `DELETE FROM jobs WHERE ` +
 		builder.WhereClause
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			if _, err := conn.Exec(rctx, deleteSql); err != nil {
+			if _, err := conn.Exec(rctx, deleteSQL); err != nil {
 				return err
 			}
 			return nil
@@ -355,7 +378,7 @@ func (c *Controller) addCron(ctx *gin.Context) {
 	}
 
 	var err error
-	cron.JobId, err = strconv.ParseInt(jobIDs, 10, 64)
+	cron.JobID, err = strconv.ParseInt(jobIDs, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -404,7 +427,7 @@ func (c *Controller) viewCrons(ctx *gin.Context) {
 				rows,
 				func(row pgx.CollectableRow) (models.Cron, error) {
 					var cron models.Cron
-					err := row.Scan(&cron.Id, &cron.Name, &cron.JobId, &cron.CronTiming)
+					err := row.Scan(&cron.ID, &cron.Name, &cron.JobID, &cron.CronTiming)
 					return cron, err
 				})
 			return err
@@ -432,7 +455,7 @@ func (c *Controller) viewTasks(ctx *gin.Context) {
 				rows,
 				func(row pgx.CollectableRow) (models.Task, error) {
 					var task models.Task
-					err := row.Scan(&task.Id, &task.Created, &task.JobId, &task.Status)
+					err := row.Scan(&task.ID, &task.Created, &task.JobId, &task.Status)
 					return task, err
 				})
 			return err
