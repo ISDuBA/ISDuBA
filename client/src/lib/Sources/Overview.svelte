@@ -128,7 +128,7 @@
   {#each jobs as job, index (index)}
     <tr
       on:click={() => {
-        push(`/sources/${job.id}`);
+        push(`/sources/job/${job.id}`);
       }}
       on:blur={() => {}}
       on:focus={() => {}}
@@ -165,7 +165,7 @@
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
-    <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+    <Button href="/#/sources/job/new" class="mb-2" color="primary" size="xs">
       <i class="bx bx-plus"></i>
       <span>Add job</span>
     </Button>
@@ -224,7 +224,7 @@
 </CustomTable>
 
 <CustomTable
-  title="Crons"
+  title="Schedules"
   headers={[
     {
       label: "ID",
@@ -239,7 +239,7 @@
       attribute: "name"
     },
     {
-      label: "Cron timing",
+      label: "Cron expression",
       attribute: "cron_timing"
     }
   ]}
@@ -258,6 +258,10 @@
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
+    <Button href="/#/sources/schedule/new" class="mb-2" color="primary" size="xs">
+      <i class="bx bx-plus"></i>
+      <span>Add schedule</span>
+    </Button>
     <ErrorMessage message={cronLoadError}></ErrorMessage>
   </div>
 </CustomTable>
