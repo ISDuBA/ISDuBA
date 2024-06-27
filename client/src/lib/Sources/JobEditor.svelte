@@ -27,28 +27,28 @@
     name: string;
     domains: string[];
     insecure: boolean;
-    ignoreSignatureCheck: boolean;
+    ignore_signature_check: boolean;
     worker: number;
-    clientKey: string | undefined;
-    clientPassphrase: string | undefined;
+    client_key: string | undefined;
+    client_passphrase: string | undefined;
     rate: number | undefined;
-    startRange: Date | undefined;
-    endRange: Date | undefined;
-    ignorePattern: string | undefined;
+    start_range: Date | undefined;
+    end_range: Date | undefined;
+    ignore_pattern: string | undefined;
     temporary: boolean;
   };
   let job: Job = {
     name: "",
     domains: [],
     insecure: false,
-    ignoreSignatureCheck: false,
+    ignore_signature_check: false,
     worker: 1,
-    clientKey: undefined,
-    clientPassphrase: undefined,
+    client_key: undefined,
+    client_passphrase: undefined,
     rate: undefined,
-    startRange: undefined,
-    endRange: undefined,
-    ignorePattern: undefined,
+    start_range: undefined,
+    end_range: undefined,
+    ignore_pattern: undefined,
     temporary: false
   };
 
@@ -63,9 +63,12 @@
           return j.id == id;
         });
         if (params && params.id) {
-          job = thisJob;
+          const newJob: any = structuredClone(job);
+          for (const property in thisJob) {
+            newJob[property] = thisJob[property];
+          }
+          job = newJob;
         }
-        job.domains = JSON.parse(job.domains[0]);
       } else if (response.error) {
         loadError = `Could not load query. ${getErrorMessage(response.error)}`;
       }
@@ -78,15 +81,16 @@
     job.domains.forEach((domain) => {
       formData.append("domains", domain);
     });
-    if (job.clientKey) formData.append("client_key", job.clientKey);
-    if (job.clientPassphrase) formData.append("client_passphrase", job.clientPassphrase);
-    if (job.startRange) formData.append("start_range", job.startRange.toString());
-    if (job.endRange) formData.append("end_range", job.endRange.toString());
+    if (job.client_key) formData.append("client_key", job.client_key);
+    if (job.client_passphrase) formData.append("client_passphrase", job.client_passphrase);
+    if (job.start_range) formData.append("start_range", job.start_range.toString());
+    if (job.end_range) formData.append("end_range", job.end_range.toString());
     if (job.rate) formData.append("rate", `${job.rate}`);
-    if (job.ignorePattern) formData.append("ignore_pattern", job.ignorePattern);
+    if (job.ignore_pattern) formData.append("ignore_pattern", job.ignore_pattern);
     formData.append("name", job.name);
+    formData.append("worker", job.worker.toString());
     formData.append("insecure", job.insecure.toString());
-    formData.append("ignore_signature_check", job.ignoreSignatureCheck.toString());
+    formData.append("ignore_signature_check", job.ignore_signature_check.toString());
     formData.append("temporary", job.temporary.toString());
     const method = params?.id ? "PUT" : "POST";
     const response = await request(`/api/job`, method, formData);
@@ -116,22 +120,23 @@
       ></BadgeInput>
     </div>
     <div class="grid gap-x-2 gap-y-4 md:grid-cols-2">
-      <CustomInput id="client-key" label="Client key" bind:value={job.clientKey}></CustomInput>
+      <CustomInput id="client-key" label="Client key" bind:value={job.client_key}></CustomInput>
       <CustomInput
         id="client-passphrase"
         type="password"
         label="Client passphrase"
-        bind:value={job.clientPassphrase}
+        bind:value={job.client_passphrase}
       ></CustomInput>
     </div>
     <div class="grid gap-x-2 gap-y-4 md:grid-cols-2">
-      <CustomInput id="start-range" type="date" label="Start range" bind:value={job.startRange}
+      <CustomInput id="start-range" type="date" label="Start range" bind:value={job.start_range}
       ></CustomInput>
-      <CustomInput id="end-range" type="date" label="End range" bind:value={job.endRange}
+      <CustomInput id="end-range" type="date" label="End range" bind:value={job.end_range}
       ></CustomInput>
     </div>
+    <CustomInput id="worker" label="Worker" type="number" bind:value={job.worker}></CustomInput>
     <CustomInput id="rate" label="Rate" placeholder="1.4" bind:value={job.rate}></CustomInput>
-    <CustomInput id="ignore-pattern" label="Ignore pattern" bind:value={job.ignorePattern}
+    <CustomInput id="ignore-pattern" label="Ignore pattern" bind:value={job.ignore_pattern}
     ></CustomInput>
     <Checkbox
       on:change={() => {
@@ -142,7 +147,7 @@
     </Checkbox>
     <Checkbox
       on:change={() => {
-        job.ignoreSignatureCheck = !job.ignoreSignatureCheck;
+        job.ignore_signature_check = !job.ignore_signature_check;
       }}
     >
       <span>Ignore signature check</span>
