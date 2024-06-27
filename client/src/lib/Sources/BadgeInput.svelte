@@ -30,12 +30,19 @@
   }
 
   const onKeypress = (event: any) => {
-    if (["Enter", ","].includes(event.key) && input.length > 0) {
+    if ([" ", ","].includes(event.key)) {
+      event.preventDefault();
+      addEntry();
+    } else if (event.key === "Backspace" && input === "" && entries.length > 0) {
+      entries = entries.toSpliced(entries.length - 1, 1);
+    }
+  };
+
+  const addEntry = () => {
+    if (input.trim().length > 0) {
       entries = entries.concat([input]);
       input = "";
       dispatch("edited", entries);
-    } else if (event.key === "Backspace" && input === "" && entries.length > 0) {
-      entries = entries.toSpliced(entries.length - 1, 1);
     }
   };
 
@@ -62,6 +69,7 @@
     {/each}
 
     <Input
+      on:blur={addEntry}
       on:keydown={onKeypress}
       size="sm"
       class="border-0"
