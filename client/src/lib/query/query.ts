@@ -38,7 +38,8 @@ const COLUMNS = {
     "tlp",
     "cvss_v2_score",
     "cvss_v3_score",
-    "four_cves"
+    "four_cves",
+    "comments"
   ]
 };
 

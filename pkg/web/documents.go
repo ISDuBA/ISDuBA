@@ -24,7 +24,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
@@ -42,23 +42,16 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// FieldEqInt is a shortcut mainly for building expressions
 	// accessing an integer column like 'id's.
 	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
-	expr := database.FieldEqInt("id", docID)
+	expr := query.FieldEqInt("id", docID)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
-		// And concats two expressions and-wise.
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where()
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	deleted := false
 
@@ -72,10 +65,11 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			defer tx.Rollback(rctx)
 
 			const deletePrefix = `DELETE FROM documents WHERE `
-			deleteSQL := deletePrefix + where
-			slog.Debug("delete document", "SQL", qndSQLReplace(deleteSQL, replacements))
+			deleteSQL := deletePrefix + builder.WhereClause
+			slog.Debug("delete document", "SQL",
+				qndSQLReplace(deleteSQL, builder.Replacements))
 
-			tags, err := tx.Exec(rctx, deleteSQL, replacements...)
+			tags, err := tx.Exec(rctx, deleteSQL, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("delete failed: %w", err)
 			}
@@ -159,31 +153,25 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		return
 	}
 
-	expr := database.FieldEqInt("id", id)
+	expr := query.FieldEqInt("id", id)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
 
 	fields := []string{"original"}
-	where, replacements, aliases := expr.Where()
-	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1, false)
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
+	sql := builder.CreateQuery(fields, "", -1, -1)
 
 	var original []byte
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, replacements...).Scan(&original)
+			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -216,14 +204,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
-	parser := database.Parser{
+	parser := query.Parser{
 		Advisory:  advisory,
 		Languages: c.cfg.Database.TextSearch,
 	}
 
 	// The query to filter the documents.
-	query := ctx.DefaultQuery("query", "true")
-	expr, err := parser.Parse(query)
+	expr, err := parser.Parse(ctx.DefaultQuery("query", "true"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -231,34 +218,29 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
 
 	// In advisory mode we only show the latest.
 	if advisory {
-		expr = expr.And(database.BoolField("latest"))
+		expr = expr.And(query.BoolField("latest"))
 	}
 
-	where, replacements, aliases := expr.Where()
+	builder := query.SQLBuilder{Advisory: advisory}
+	builder.CreateWhere(expr)
 
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
-	if err := database.CheckProjections(fields, aliases, advisory); err != nil {
+	if err := builder.CheckProjections(fields); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	orderFields := strings.Fields(
 		ctx.DefaultQuery("order", "publisher tracking_id -current_release_date -rev_history_length"))
-	order, err := database.CreateOrder(orderFields, aliases, advisory)
+	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -297,8 +279,8 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			if calcCount {
 				if err := conn.QueryRow(
 					rctx,
-					database.CreateCountSQL(where, len(aliases) > 0, advisory),
-					replacements...,
+					builder.CreateCountSQL(),
+					builder.Replacements...,
 				).Scan(&count); err != nil {
 					return fmt.Errorf("cannot calculate count %w", err)
 				}
@@ -308,8 +290,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 				return nil
 			}
 
-			sql := database.CreateQuerySQL(
-				fields, aliases, where, order, limit, offset, advisory)
+			sql := builder.CreateQuery(fields, order, limit, offset)
 
 			values := make([]any, len(fields))
 			ptrs := make([]any, len(fields))
@@ -318,9 +299,9 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			}
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
-				slog.Debug("documents", "SQL", qndSQLReplace(sql, replacements))
+				slog.Debug("documents", "SQL", qndSQLReplace(sql, builder.Replacements))
 			}
-			rows, err := conn.Query(rctx, sql, replacements...)
+			rows, err := conn.Query(rctx, sql, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}

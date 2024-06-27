@@ -20,7 +20,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
@@ -32,30 +32,24 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		return
 	}
 
-	expr := database.FieldEqInt("id", docID)
+	expr := query.FieldEqInt("id", docID)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	var (
-		where, replacements, _ = expr.Where()
-		exists                 bool
-		commentingAllowed      bool
-		forbidden              bool
-		commentator            = c.currentUser(ctx)
-		message, _             = ctx.GetPostForm("message")
-		now                    = time.Now().UTC()
-		commentID              *int64
+		exists            bool
+		commentingAllowed bool
+		forbidden         bool
+		commentator       = c.currentUser(ctx)
+		message, _        = ctx.GetPostForm("message")
+		now               = time.Now().UTC()
+		commentID         *int64
 	)
 
 	if err := c.db.Run(
@@ -70,14 +64,14 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			stateSQL := `SELECT state, docs.tracking_id, docs.publisher ` +
 				`FROM documents docs JOIN advisories ads ` +
 				`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
-				` WHERE ` + where
+				` WHERE ` + builder.WhereClause
 
 			var (
 				stateS     string
 				trackingID string
 				publisher  string
 			)
-			if err := tx.QueryRow(rctx, stateSQL, replacements...).Scan(
+			if err := tx.QueryRow(rctx, stateSQL, builder.Replacements...).Scan(
 				&stateS, &trackingID, &publisher,
 			); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
@@ -242,22 +236,16 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		return
 	}
 
-	expr := database.FieldEqInt("id", id)
+	expr := query.FieldEqInt("id", id)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where()
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	type comment struct {
 		DocumentID  int64     `json:"document_id"`
@@ -273,9 +261,10 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
+			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` +
+				builder.WhereClause + `)`
 			if err := conn.QueryRow(
-				rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
 			}
 			if !exists {

@@ -24,7 +24,7 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"gomodules.xyz/jsonpatch/v2"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 )
 
 func (c *Controller) viewDiff(ctx *gin.Context) {
@@ -39,37 +39,31 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 		return
 	}
 
-	expr1 := database.FieldEqInt("id", docID1)
-	expr2 := database.FieldEqInt("id", docID2)
+	expr1 := query.FieldEqInt("id", docID1)
+	expr2 := query.FieldEqInt("id", docID2)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr1 = expr1.And(tlpExpr)
 		expr2 = expr2.And(tlpExpr)
 	}
-	var (
-		where1, replacements1, _ = expr1.Where()
-		where2, replacements2, _ = expr2.Where()
-		doc1, doc2               []byte
-	)
+	var b1, b2 query.SQLBuilder
+	b1.CreateWhere(expr1)
+	b2.CreateWhere(expr2)
+
+	var doc1, doc2 []byte
+
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			const fetchSQL = `SELECT original FROM documents WHERE `
-			fetch1SQL := fetchSQL + where1
-			fetch2SQL := fetchSQL + where2
-			if err := conn.QueryRow(rctx, fetch1SQL, replacements1...).Scan(&doc1); err != nil {
+			fetch1SQL := fetchSQL + b1.WhereClause
+			fetch2SQL := fetchSQL + b2.WhereClause
+			if err := conn.QueryRow(rctx, fetch1SQL, b1.Replacements...).Scan(&doc1); err != nil {
 				return err
 			}
-			return conn.QueryRow(rctx, fetch2SQL, replacements2...).Scan(&doc2)
+			return conn.QueryRow(rctx, fetch2SQL, b2.Replacements...).Scan(&doc2)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

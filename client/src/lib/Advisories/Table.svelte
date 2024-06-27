@@ -37,7 +37,8 @@
   import { getPublisher } from "$lib/utils";
 
   let openRow: number | null;
-
+  let abortController: AbortController;
+  let requestOngoing = false;
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
   };
@@ -53,6 +54,7 @@
   export let searchTerm: string = "";
   export let loadAdvisories: boolean;
   export let orderBy = "title";
+  export let defaultOrderBy = "";
 
   let anchorLink: string | null;
   let deleteModalOpen = false;
@@ -132,6 +134,10 @@
     }, 500);
   }
 
+  $: if (columns) {
+    if (!columns.includes(orderBy.split("-")[0])) orderBy = defaultOrderBy;
+  }
+
   $: if (columns || query || loadAdvisories || !loadAdvisories) {
     fetchData();
   }
@@ -167,6 +173,12 @@
     );
     error = "";
     loading = true;
+    if (!requestOngoing) {
+      requestOngoing = true;
+      abortController = new AbortController();
+    } else {
+      abortController.abort();
+    }
     const response = await request(documentURL, "GET");
     if (response.ok) {
       ({ count, documents } = response.content);
@@ -175,6 +187,7 @@
       error = getErrorMessage(response.error);
     }
     loading = false;
+    requestOngoing = false;
   }
 
   const previous = () => {

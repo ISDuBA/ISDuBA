@@ -12,7 +12,7 @@
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import Queries from "./Queries.svelte";
-  import NewDocuments from "./NewDocuments.svelte";
+  import New from "./New.svelte";
   import RecentActivities from "./RecentActivities.svelte";
 </script>
 
@@ -21,11 +21,11 @@
 </svelte:head>
 
 {#if $appStore.app.isUserLoggedIn}
-  <SectionHeader title="Overview"></SectionHeader>
-  <hr class="mb-6" />
-  <Queries></Queries>
-  <div class="mt-8 flex gap-x-10 gap-y-4">
-    <NewDocuments></NewDocuments>
+  <div class="mb-8 mt-8 flex gap-x-10 gap-y-4">
+    <New></New>
     <RecentActivities></RecentActivities>
   </div>
+  <SectionHeader title="Queries"></SectionHeader>
+  <hr class="mb-6" />
+  <Queries></Queries>
 {/if}

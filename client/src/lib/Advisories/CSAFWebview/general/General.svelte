@@ -11,13 +11,7 @@
   import { appStore } from "$lib/store";
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  import Acknowledgements from "$lib/Advisories/CSAFWebview/acknowledgements/Acknowledgements.svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  import Notes from "$lib/Advisories/CSAFWebview/notes/Notes.svelte";
-  import References from "$lib/Advisories/CSAFWebview/references/References.svelte";
-  import RevisionHistory from "./RevisionHistory.svelte";
-  import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
-  $: aliases = $appStore.webview.doc?.aliases;
+
   $: trackingVersion = $appStore.webview.doc?.trackingVersion;
   $: generator = $appStore.webview.doc?.generator;
   $: publisherName = $appStore.webview.doc?.publisher.name;
@@ -45,158 +39,119 @@
   ) {
     appStore.setSingleErrorMsg("Are you sure the URL refers to a CSAF document?");
   }
-  const cellStyle = "px-6 py-0";
+  const cellStyleValue = "px-6 py-0";
+  const cellStyleKey = "py-0";
 </script>
 
 <div class="2xl:w-max">
   <Table noborder>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>ID</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{id}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>ID</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{id}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>CSAF-Version</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{csafVersion}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>CSAF-Version</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{csafVersion}</TableBodyCell>
     </TableBodyRow>
     {#if $appStore.webview.doc?.aggregateSeverity}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Aggregate severity text</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}>
+        <TableBodyCell tdClass={cellStyleKey}>Aggregate severity text</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}>
           <span>{$appStore.webview.doc?.aggregateSeverity.text}</span></TableBodyCell
         >
       </TableBodyRow>
       {#if $appStore.webview.doc?.aggregateSeverity.namespace}
         <TableBodyRow>
-          <TableBodyCell tdClass={cellStyle}>Aggregate severity namespace</TableBodyCell>
-          <TableBodyCell tdClass={cellStyle}
+          <TableBodyCell tdClass={cellStyleKey}>Aggregate severity namespace</TableBodyCell>
+          <TableBodyCell tdClass={cellStyleValue}
             ><span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span></TableBodyCell
           >
         </TableBodyRow>
       {/if}
     {/if}
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Category</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{category}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Category</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{category}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Title</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{title}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Title</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{title}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Publisher name</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{publisherName}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Publisher name</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{publisherName}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Publisher category</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{publisherCategory}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Publisher category</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{publisherCategory}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Publisher namespace</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{publisherNamespace}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Publisher namespace</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{publisherNamespace}</TableBodyCell>
     </TableBodyRow>
     {#if publisherIssuingAuthority}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Publisher issuing authority</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}>{publisherIssuingAuthority}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleKey}>Publisher issuing authority</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}>{publisherIssuingAuthority}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if publisherContactDetails}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Publisher contact details</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}>{publisherContactDetails}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleKey}>Publisher contact details</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}>{publisherContactDetails}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if lang}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Language</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}>{lang}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleKey}>Language</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}>{lang}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if sourceLang}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Source lang</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}>{sourceLang}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleKey}>Source lang</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}>{sourceLang}</TableBodyCell>
       </TableBodyRow>
     {/if}
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Published</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{published}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Published</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{published}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Last update</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{lastUpdate}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Last update</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{lastUpdate}</TableBodyCell>
     </TableBodyRow>
     <TableBodyRow>
-      <TableBodyCell tdClass={cellStyle}>Tracking Version</TableBodyCell>
-      <TableBodyCell tdClass={cellStyle}>{trackingVersion}</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleKey}>Tracking Version</TableBodyCell>
+      <TableBodyCell tdClass={cellStyleValue}>{trackingVersion}</TableBodyCell>
     </TableBodyRow>
     {#if $appStore.webview.doc?.status !== Status.final}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Status</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}>{status}</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleKey}>Status</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}>{status}</TableBodyCell>
       </TableBodyRow>
     {/if}
     {#if generator}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Generator engine</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}
+        <TableBodyCell tdClass={cellStyleKey}>Generator engine</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}
           ><span>{$appStore.webview.doc?.generator?.engine.name}</span></TableBodyCell
         >
       </TableBodyRow>
     {/if}
     {#if generator?.engine?.version}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Generator engine version</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}
+        <TableBodyCell tdClass={cellStyleKey}>Generator engine version</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}
           ><span>{$appStore.webview.doc?.generator?.engine.version}</span></TableBodyCell
         >
       </TableBodyRow>
     {/if}
     {#if generator?.date}
       <TableBodyRow>
-        <TableBodyCell tdClass={cellStyle}>Generator date</TableBodyCell>
-        <TableBodyCell tdClass={cellStyle}><span>{generator?.date}</span></TableBodyCell>
+        <TableBodyCell tdClass={cellStyleKey}>Generator date</TableBodyCell>
+        <TableBodyCell tdClass={cellStyleValue}><span>{generator?.date}</span></TableBodyCell>
       </TableBodyRow>
     {/if}
   </Table>
 </div>
-
-{#if aliases}
-  <ValueList label="Aliases" values={aliases} />
-{/if}
-
-{#if $appStore.webview.doc?.isRevisionHistoryPresent}
-  <div>
-    <Collapsible
-      header="Revision history"
-      level="3"
-      open={$appStore.webview.ui.isRevisionHistoryVisible}
-    >
-      <RevisionHistory />
-    </Collapsible>
-  </div>
-{/if}
-
-{#if $appStore.webview.doc?.notes}
-  <div>
-    <Collapsible header="Notes" level="3">
-      <Notes notes={$appStore.webview.doc?.notes} />
-    </Collapsible>
-  </div>
-{/if}
-
-{#if $appStore.webview.doc?.acknowledgements}
-  <div>
-    <Collapsible header="Acknowledgements" level="3">
-      <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
-    </Collapsible>
-  </div>
-{/if}
-
-{#if $appStore.webview.doc && $appStore.webview.doc.references.length > 0}
-  <div>
-    <Collapsible header="References" level="3">
-      <References references={$appStore.webview.doc?.references} />
-    </Collapsible>
-  </div>
-{/if}

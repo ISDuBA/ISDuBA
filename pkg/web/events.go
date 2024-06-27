@@ -20,7 +20,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
@@ -32,22 +32,16 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		return
 	}
 
-	expr := database.FieldEqInt("id", id)
+	expr := query.FieldEqInt("id", id)
 
 	// Filter the allowed
 	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
+		tlpExpr := tlps.AsExpr()
 		expr = expr.And(tlpExpr)
 	}
 
-	where, replacements, _ := expr.Where()
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	type event struct {
 		Event      models.Event    `json:"event_type"`
@@ -64,9 +58,10 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
+			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` +
+				builder.WhereClause + `)`
 			if err := conn.QueryRow(
-				rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
 			}
 			if !exists {
