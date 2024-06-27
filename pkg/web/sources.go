@@ -27,7 +27,9 @@ import (
 
 // addJob creates a new job configuration.
 func (c *Controller) addJob(ctx *gin.Context) {
-	jobConfig := models.JobConfig{}
+	jobConfig := models.JobConfig{
+		Worker: 1,
+	}
 
 	// We need the name.
 	if jobConfig.Name = ctx.PostForm("name"); jobConfig.Name == "" {
@@ -55,6 +57,15 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		jobConfig.Insecure = insecure
 	}
 
+	if ignoreSignature, err := strconv.ParseBool(ctx.PostForm("ignore_signature_check")); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "please specify 'ignore_signature_check' boolean parameter",
+		})
+		return
+	} else {
+		jobConfig.IgnoreSignatureCheck = ignoreSignature
+	}
+
 	for _, domain := range jobConfig.Domains {
 		if domain == "" {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -64,17 +75,40 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		}
 	}
 
+	if clientKey := ctx.PostForm("client_key"); clientKey != "" {
+		jobConfig.ClientKey = &clientKey
+	}
+
+	if clientPassphrase := ctx.PostForm("client_passphrase"); clientPassphrase != "" {
+		jobConfig.ClientPassphrase = &clientPassphrase
+	}
+
+	if ignorePattern := ctx.PostForm("ignore_pattern"); ignorePattern != "" {
+		jobConfig.IgnorePattern = &ignorePattern
+	}
+
+	if rate, ok := ctx.GetPostForm("rate"); ok {
+		rateFloat, err := strconv.ParseFloat(rate, 32)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.Rate = &rateFloat
+		}
+	}
+
 	const insertSQL = `INSERT INTO jobs (` +
 		`name,` +
 		`insecure,` +
 		`ignore_signature_check,` +
+		`client_key,` +
+		`client_passphrase,` +
 		`rate,` +
 		`worker,` +
 		`start_range,` +
 		`end_range,` +
 		`ignore_pattern,` +
 		`domains` +
-		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)` +
+		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)` +
 		`RETURNING id`
 
 	var jobID int64
@@ -86,6 +120,8 @@ func (c *Controller) addJob(ctx *gin.Context) {
 				jobConfig.Name,
 				jobConfig.Insecure,
 				jobConfig.IgnoreSignatureCheck,
+				jobConfig.ClientKey,
+				jobConfig.ClientPassphrase,
 				jobConfig.Rate,
 				jobConfig.Worker,
 				jobConfig.StartRange,
