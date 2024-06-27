@@ -313,30 +313,32 @@ func (sb *SQLBuilder) replacementIndex(s string) int {
 	return idx
 }
 
-func (sb *SQLBuilder) createFrom() string {
-	var from string
+func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 	if sb.Advisory {
-		from = `documents ` +
+		b.WriteString(`documents ` +
 			`JOIN advisories ON ` +
 			`advisories.tracking_id = documents.tracking_id AND ` +
-			`advisories.publisher = documents.publisher`
+			`advisories.publisher = documents.publisher`)
 	} else {
-		from = `documents`
+		b.WriteString(`documents`)
 	}
 
 	if sb.TextTables {
-		from += ` JOIN documents_texts ON id = documents_texts.documents_id ` +
-			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`
+		b.WriteString(` JOIN documents_texts ON id = documents_texts.documents_id ` +
+			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
-	return from
 }
 
 // CreateCountSQL returns an SQL count statement to count
 // the number of rows which are possible to fetch by the
 // given filter.
 func (sb *SQLBuilder) CreateCountSQL() string {
-	from := sb.createFrom()
-	return "SELECT count(*) FROM " + from + " WHERE " + sb.WhereClause
+	var b strings.Builder
+	b.WriteString("SELECT count(*) FROM ")
+	sb.createFrom(&b)
+	b.WriteString(" WHERE ")
+	b.WriteString(sb.WhereClause)
+	return b.String()
 }
 
 // CreateOrder returns a ORDER BY clause for given columns.
@@ -386,29 +388,34 @@ func (sb *SQLBuilder) CreateQuery(
 	order string,
 	limit, offset int64,
 ) string {
-	projs := sb.projectionsWithCasts(fields)
+	var b strings.Builder
 
-	from := sb.createFrom()
-
-	sql := "SELECT " + projs + " FROM " + from + " WHERE " + sb.WhereClause
+	b.WriteString("SELECT ")
+	sb.projectionsWithCasts(&b, fields)
+	b.WriteString(" FROM ")
+	sb.createFrom(&b)
+	b.WriteString(" WHERE ")
+	b.WriteString(sb.WhereClause)
 
 	if order != "" {
-		sql += " ORDER BY " + order
+		b.WriteString(" ORDER BY ")
+		b.WriteString(order)
 	}
 
 	if limit >= 0 {
-		sql += " LIMIT " + strconv.FormatInt(limit, 10)
+		b.WriteString(" LIMIT ")
+		b.WriteString(strconv.FormatInt(limit, 10))
 	}
 	if offset > 0 {
-		sql += " OFFSET " + strconv.FormatInt(offset, 10)
+		b.WriteString(" OFFSET ")
+		b.WriteString(strconv.FormatInt(offset, 10))
 	}
 
-	return sql
+	return b.String()
 }
 
 // projectionsWithCasts joins given projection adding casts if needed.
-func (sb *SQLBuilder) projectionsWithCasts(proj []string) string {
-	var b strings.Builder
+func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 	for i, p := range proj {
 		if i > 0 {
 			b.WriteByte(',')
@@ -435,7 +442,6 @@ func (sb *SQLBuilder) projectionsWithCasts(proj []string) string {
 			b.WriteString(p)
 		}
 	}
-	return b.String()
 }
 
 // CheckProjections checks if the requested projections are valid.
