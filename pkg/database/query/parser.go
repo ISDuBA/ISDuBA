@@ -38,6 +38,7 @@ const (
 	search
 	csearch
 	mentioned
+	involved
 	ilike
 	ilikePID
 	now
@@ -216,6 +217,8 @@ func (et exprType) String() string {
 		return "csearch"
 	case mentioned:
 		return "mentioned"
+	case involved:
+		return "involved"
 	case ilike:
 		return "ilike"
 	case ilikePID:
@@ -705,6 +708,16 @@ func (st *stack) mentioned() {
 	})
 }
 
+func (st *stack) involved() {
+	term := st.pop()
+	term.checkValueType(stringType)
+	st.push(&Expr{
+		exprType:    involved,
+		valueType:   boolType,
+		stringValue: term.stringValue,
+	})
+}
+
 func (st *stack) ilike() {
 	needle := st.pop()
 	haystack := st.pop()
@@ -881,6 +894,8 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.csearch(p)
 		case "mentioned":
 			st.mentioned()
+		case "involved":
+			st.involved()
 		case "as":
 			st.as(aliases)
 		case "ilike":
