@@ -20,7 +20,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
   let cronLoadError = "";
-  let jobLoadError = "";
+  let jobError = "";
   let taskLoadError = "";
   let loadingCrons = false;
   let loadingJobs = false;
@@ -51,9 +51,21 @@
     if (response.ok) {
       jobs = response.content;
     } else if (response.error) {
-      jobLoadError = getErrorMessage(response.error);
+      jobError = getErrorMessage(response.error);
     }
     loadingJobs = false;
+  }
+
+  async function deleteJob(id: number) {
+    const response = await request(`/api/job/${id}`, "DELETE");
+    if (response.ok) {
+      const index = jobs.findIndex((job) => job.id === id);
+      jobs = jobs.toSpliced(index, 1);
+    } else if (response.error) {
+      const index = jobs.findIndex((job) => job.id === id);
+      jobs = jobs.toSpliced(index, 1);
+      jobError = getErrorMessage(response.error);
+    }
   }
 
   async function getTasks() {
@@ -130,6 +142,14 @@
       <TableBodyCell {tdClass}>{job.worker}</TableBodyCell>
       <td>
         <button
+          title={`Remove Job "${job.name}"`}
+          on:click|stopPropagation={() => {
+            deleteJob(job.id);
+          }}
+        >
+          <i class="bx bx-trash text-xl text-red-500"></i>
+        </button>
+        <button
           title={`Run Job "${job.name}"`}
           on:click|stopPropagation={() => {
             runJob(job.id);
@@ -149,7 +169,7 @@
       <i class="bx bx-plus"></i>
       <span>Add job</span>
     </Button>
-    <ErrorMessage message={jobLoadError}></ErrorMessage>
+    <ErrorMessage message={jobError}></ErrorMessage>
   </div>
 </CustomTable>
 
