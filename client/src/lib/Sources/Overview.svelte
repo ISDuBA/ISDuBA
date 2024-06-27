@@ -268,7 +268,14 @@
   ]}
 >
   {#each crons as cron, index (index)}
-    <tr on:click={() => {}} on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
+    <tr
+      on:click={() => {
+        push(`/sources/schedule/${cron.cron_id}`);
+      }}
+      on:blur={() => {}}
+      on:focus={() => {}}
+      class="cursor-pointer"
+    >
       <TableBodyCell {tdClass}>{cron.cron_id}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.job_id}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.name}</TableBodyCell>

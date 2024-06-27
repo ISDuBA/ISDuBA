@@ -19,20 +19,24 @@
   import CustomInput from "./CustomInput.svelte";
   export let params: any = null;
   $: disableSave =
-    !schedule.name || schedule.name === "" || !schedule.jobID || schedule.cronTiming === "";
+    !schedule ||
+    !schedule.name ||
+    schedule.name === "" ||
+    !schedule.job_id ||
+    schedule.cron_timing === "";
   let loadError = "";
   let saveError = "";
   let jobs: any[] = [];
 
   type Schedule = {
     name: string;
-    jobID: number | undefined;
-    cronTiming: string;
+    job_id: number | undefined;
+    cron_timing: string;
   };
   let schedule: Schedule = {
     name: "",
-    jobID: undefined,
-    cronTiming: ""
+    job_id: undefined,
+    cron_timing: ""
   };
 
   onMount(async () => {
@@ -43,7 +47,7 @@
       if (response.ok) {
         const result = await response.content;
         const thisSchedule = result.find((s: any) => {
-          return s.id == id;
+          return s.cron_id == id;
         });
         if (params && params.id) {
           schedule = thisSchedule;
@@ -64,8 +68,8 @@
     const formData = new FormData();
     if (params?.id) formData.append("cron_id", params.id);
     formData.append("name", schedule.name);
-    if (schedule.cronTiming) formData.append("cron_timing", schedule.cronTiming);
-    if (schedule.jobID) formData.append("job_id", schedule.jobID.toString());
+    if (schedule.cron_timing) formData.append("cron_timing", schedule.cron_timing);
+    if (schedule.job_id) formData.append("job_id", schedule.job_id.toString());
     const method = params?.id ? "PUT" : "POST";
     const response = await request(`/api/cron`, method, formData);
     if (response.ok) {
@@ -91,7 +95,7 @@
         <span>Job</span>
         <span class="text-red-500">*</span>
       </Label>
-      <Select id="job-id" bind:value={schedule.jobID} placeholder="Choose job ...">
+      <Select id="job-id" bind:value={schedule.job_id} placeholder="Choose job ...">
         {#each jobs as { id, name }}
           <option value={id}>{name}</option>
         {/each}
@@ -102,7 +106,7 @@
       id="cron-timing"
       placeholder="0 0 1 * *"
       required
-      bind:value={schedule.cronTiming}
+      bind:value={schedule.cron_timing}
     ></CustomInput>
   </div>
   <div class="mb-4 text-sm text-red-500">* Required fields</div>
