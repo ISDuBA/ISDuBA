@@ -25,7 +25,6 @@
     Button
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher } from "$lib/Table/defaults";
-  import { onMount } from "svelte";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -155,7 +154,6 @@
   export async function fetchData(): Promise<void> {
     const searchSuffix = searchTerm ? `"${searchTerm}" german search msg as ` : "";
     const searchColumn = searchTerm ? " msg" : "";
-
     let queryParam = "";
     if (query || searchSuffix) {
       queryParam = `query=${query}${searchSuffix}`;
@@ -244,11 +242,6 @@
   };
 
   $: numberOfPages = Math.ceil(count / limit);
-  $: onMount(async () => {
-    restorePosition();
-    postitionRestored = true;
-    await fetchData();
-  });
 </script>
 
 <svelte:window bind:innerWidth />

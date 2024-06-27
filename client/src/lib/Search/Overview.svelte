@@ -36,10 +36,21 @@
     query = resetQuery();
   }
 
-  onMount(async () => {
-    let savedSearch = sessionStorage.getItem("documentSearchTerm");
-    searchTerm = savedSearch ?? "";
-  });
+  const triggerSearch = () => {
+    if (!advancedSearch) {
+      query.query = searchTerm ? `"${searchTerm}" german search msg as` : "";
+      if (
+        searchTerm &&
+        !query.columns.find((c) => {
+          return c === "msg";
+        })
+      )
+        query.columns.push("msg");
+    }
+    advisoryTable.fetchData();
+  };
+
+  onMount(async () => {});
 </script>
 
 <svelte:head>
@@ -59,7 +70,7 @@
       bind:value={searchTerm}
       on:keyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
-        if (e.key === "Enter") advisoryTable.fetchData();
+        if (e.key === "Enter") triggerSearch();
       }}
     >
       {#if searchTerm}
@@ -77,7 +88,7 @@
         size="xs"
         class="h-7 py-3.5"
         on:click={() => {
-          advisoryTable.fetchData();
+          // triggerSearch();
         }}>{advancedSearch ? "Apply" : "Search"}</Button
       >
     </Search>
@@ -108,7 +119,6 @@
 </div>
 {#if searchTerm !== null}
   <AdvisoryTable
-    searchTerm={advancedSearch ? "" : searchTerm}
     defaultOrderBy={query.orders[0]}
     columns={query.columns}
     loadAdvisories={query.advisories}
