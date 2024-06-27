@@ -79,8 +79,8 @@
     });
     if (job.clientKey) formData.append("client_key", job.clientKey);
     if (job.clientPassphrase) formData.append("client_passphrase", job.clientPassphrase);
-    if (job.startRange) formData.append("start_range", job.startRange.toDateString());
-    if (job.endRange) formData.append("end_range", job.endRange.toDateString());
+    if (job.startRange) formData.append("start_range", job.startRange.toString());
+    if (job.endRange) formData.append("end_range", job.endRange.toString());
     if (job.rate) formData.append("rate", `${job.rate}`);
     if (job.ignorePattern) formData.append("ignore_pattern", job.ignorePattern);
     formData.append("name", job.name);
