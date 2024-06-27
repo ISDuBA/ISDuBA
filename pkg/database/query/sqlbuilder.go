@@ -74,6 +74,22 @@ func (sb *SQLBuilder) csearchWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
+func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
+	const tsquery = `phraseto_tsquery`
+
+	if sb.Advisory {
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments JOIN documents docs "+
+			"ON comments.documents_id = docs.id "+
+			"WHERE ts @@ "+tsquery+"($%d) "+
+			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
+			sb.replacementIndex(e.stringValue)+1)
+	} else {
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"($%d) "+
+			"AND comments.documents_id = documents.id)",
+			sb.replacementIndex(e.stringValue)+1)
+	}
+}
+
 func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 	b.WriteString("CAST(")
 	sb.whereRecurse(e.children[0], b)
@@ -248,6 +264,8 @@ func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
 		sb.searchWhere(e, b)
 	case csearch:
 		sb.csearchWhere(e, b)
+	case mentioned:
+		sb.mentionedWhere(e, b)
 	case ilike:
 		sb.ilikeWhere(e, b)
 	case ilikePID:

@@ -37,6 +37,7 @@ const (
 	access
 	search
 	csearch
+	mentioned
 	ilike
 	ilikePID
 	now
@@ -211,6 +212,8 @@ func (et exprType) String() string {
 		return "search"
 	case csearch:
 		return "csearch"
+	case mentioned:
+		return "mentioned"
 	case ilike:
 		return "ilike"
 	case ilikePID:
@@ -690,6 +693,16 @@ func (st *stack) csearch(p *Parser) {
 	})
 }
 
+func (st *stack) mentioned() {
+	term := st.pop()
+	term.checkValueType(stringType)
+	st.push(&Expr{
+		exprType:    mentioned,
+		valueType:   boolType,
+		stringValue: term.stringValue,
+	})
+}
+
 func (st *stack) ilike() {
 	needle := st.pop()
 	haystack := st.pop()
@@ -755,7 +768,7 @@ func (st *stack) as(aliases map[string]struct{}) {
 	alias := st.pop()
 	srch := st.top()
 	alias.checkValueType(stringType)
-	srch.checkExprType(search, csearch)
+	srch.checkExprType(search) // TODO: Add csearch?
 	validAlias(alias.stringValue)
 	if _, already := aliases[alias.stringValue]; already {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
@@ -864,6 +877,8 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.search(p)
 		case "csearch":
 			st.csearch(p)
+		case "mentioned":
+			st.mentioned()
 		case "as":
 			st.as(aliases)
 		case "ilike":
