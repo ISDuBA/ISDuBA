@@ -10,48 +10,19 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, ButtonGroup, Search } from "flowbite-svelte";
+  import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/table/Table.svelte";
+  import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
 
   let searchTerm: string | null;
   let advisoryTable: any;
   let advisoriesOnly = true;
+  let advancedSearch = false;
 
   let defaultOrderBy = "cvss_v3_score";
 
-  $: columns = advisoriesOnly
-    ? [
-        "critical",
-        "cvss_v3_score",
-        "cvss_v2_score",
-        "ssvc",
-        "state",
-        "four_cves",
-        "publisher",
-        "title",
-        "tracking_id",
-        "initial_release_date",
-        "current_release_date",
-        "version",
-        "comments",
-        "recent",
-        "versions"
-      ]
-    : [
-        "critical",
-        "cvss_v3_score",
-        "cvss_v2_score",
-        "ssvc",
-        "four_cves",
-        "publisher",
-        "title",
-        "tracking_id",
-        "initial_release_date",
-        "current_release_date",
-        "version",
-        "comments"
-      ];
+  $: columns = advisoriesOnly ? SEARCHPAGECOLUMNS.ADVISORY : SEARCHPAGECOLUMNS.DOCUMENT;
 
   onMount(async () => {
     let savedSearch = sessionStorage.getItem("documentSearchTerm");
@@ -60,18 +31,19 @@
 </script>
 
 <svelte:head>
-  <title>Advisories</title>
+  <title>Search</title>
 </svelte:head>
 
 <div class="flex flex-row">
-  <SectionHeader title="Advisories"></SectionHeader>
+  <SectionHeader title="Search"></SectionHeader>
 </div>
 <hr class="mb-6" />
 
 <div class="mb-3 flex">
-  <div class="w-2/3">
+  <div class="flex w-2/3 flex-row">
     <Search
       size="sm"
+      placeholder={advancedSearch ? "Enter a query" : "Enter a searchterm"}
       bind:value={searchTerm}
       on:keyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
@@ -93,9 +65,10 @@
         class="h-7 py-3.5"
         on:click={() => {
           advisoryTable.fetchData();
-        }}>Search</Button
+        }}>{advancedSearch ? "Apply" : "Search"}</Button
       >
     </Search>
+    <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
   </div>
   <ButtonGroup class="ml-auto h-7">
     <Button
