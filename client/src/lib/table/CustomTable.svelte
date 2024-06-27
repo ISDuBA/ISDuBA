@@ -23,7 +23,7 @@
   let orderBy = "";
 </script>
 
-<div class="mb-8">
+<div class="mb-6">
   {#if title}
     <SectionHeader {title}></SectionHeader>
   {/if}
@@ -43,4 +43,7 @@
       <slot></slot>
     </TableBody>
   </Table>
+  <div class="mt-2">
+    <slot name="bottom"></slot>
+  </div>
 </div>
