@@ -368,7 +368,7 @@ func (c *Controller) viewTasks(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			const fetchSQL = `SELECT id, created, job_id, status FROM jobs`
+			const fetchSQL = `SELECT id, created, job_id, status FROM tasks`
 			rows, _ := conn.Query(rctx, fetchSQL)
 			var err error
 			tasks, err = pgx.CollectRows(

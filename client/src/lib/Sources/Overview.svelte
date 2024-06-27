@@ -10,25 +10,27 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import {
-    Button,
-    Table,
-    TableBody,
-    TableBodyCell,
-    TableHead,
-    TableHeadCell
-  } from "flowbite-svelte";
+  import { Button, TableBodyCell } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { request } from "$lib/utils";
-  import { tablePadding, tdClass } from "$lib/table/defaults";
+  import { tdClass } from "$lib/table/defaults";
+  import { getErrorMessage } from "$lib/Errors/error";
+  import { onMount } from "svelte";
+  import CustomTable from "$lib/table/CustomTable.svelte";
+  import { TASK_STATE_RUNNING } from "./sources";
 
-  let orderBy = "";
   let jobLoadError = "";
+  let tasks: any[] = [];
+
+  onMount(() => {
+    getTasks();
+  });
 
   async function runJob(id: number) {
     const response = await request(`/api/job/${id}`, "POST");
     if (response.ok) {
       console.log("Success");
+      getTasks();
     } else if (response.error) {
       console.log(response.error);
     }
@@ -39,9 +41,23 @@
     if (response.ok) {
       return response.content;
     } else if (response.error) {
-      jobLoadError = response.error;
+      jobLoadError = getErrorMessage(response.error);
     }
     return [];
+  }
+
+  async function getTasks() {
+    const response = await request(`/api/task`, "GET");
+    if (response.ok) {
+      tasks = response.content;
+    } else if (response.error) {
+      jobLoadError = getErrorMessage(response.error);
+    }
+  }
+
+  async function cancelTask(id: number) {
+    console.log("cancelTask", id);
+    // TODO
   }
 </script>
 
@@ -50,87 +66,107 @@
   <i class="bx bx-plus"></i>
   <span>Add job</span>
 </Button>
-<SectionHeader title="Jobs"></SectionHeader>
 {#if !jobLoadError}
   {#await getJobs() then jobs}
-    <Table hoverable={true} noborder={true}>
-      <TableHead>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}>
-          <span>ID</span>
-          <i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "name"}
-            class:bx-caret-down={orderBy == "-name"}
-          ></i>
-        </TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}
-          >Name<i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "name"}
-            class:bx-caret-down={orderBy == "-name"}
-          ></i></TableHeadCell
+    <CustomTable
+      title="Jobs"
+      headers={[
+        {
+          label: "ID",
+          attribute: "id"
+        },
+        {
+          label: "Name",
+          attribute: "name"
+        },
+        {
+          label: "Domains",
+          attribute: "domains"
+        },
+        {
+          label: "Insecure",
+          attribute: "insecure"
+        },
+        {
+          label: "Ignore signature Checkbox",
+          attribute: "ignore_signature_checkbox"
+        },
+        {
+          label: "Worker",
+          attribute: "worker"
+        }
+      ]}
+    >
+      {#each jobs as job, index (index)}
+        <tr
+          on:click={() => {
+            push(`/sources/${job.id}`);
+          }}
+          on:blur={() => {}}
+          on:focus={() => {}}
+          class="cursor-pointer"
         >
-        <TableHeadCell padding={tablePadding} on:click={() => {}}
-          >Domains<i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "description"}
-            class:bx-caret-down={orderBy == "-description"}
-          ></i>
-        </TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}
-          >Insecure<i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "description"}
-            class:bx-caret-down={orderBy == "-description"}
-          ></i>
-        </TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}>
-          <span>Ignore signature Checkbox</span>
-          <i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "description"}
-            class:bx-caret-down={orderBy == "-description"}
-          ></i>
-        </TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}>
-          <span>Worker</span>
-          <i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "description"}
-            class:bx-caret-down={orderBy == "-description"}
-          ></i>
-        </TableHeadCell>
-        <TableHeadCell></TableHeadCell>
-      </TableHead>
-      <TableBody>
-        {#each jobs as job, index (index)}
-          <tr
-            on:click={() => {
-              push(`/sources/${job.id}`);
-            }}
-            on:blur={() => {}}
-            on:focus={() => {}}
-            class="cursor-pointer"
-          >
-            <TableBodyCell {tdClass}>{job.id}</TableBodyCell>
-            <TableBodyCell {tdClass}>{job.name}</TableBodyCell>
-            <TableBodyCell {tdClass}>{JSON.parse(job.domains).join(", ")}</TableBodyCell>
-            <TableBodyCell {tdClass}>{job.insecure}</TableBodyCell>
-            <TableBodyCell {tdClass}>{job.ignore_signature_check}</TableBodyCell>
-            <TableBodyCell {tdClass}>{job.worker}</TableBodyCell>
-            <td>
-              <button
-                title={`Run Job "${job.name}"`}
-                on:click|stopPropagation={() => {
-                  runJob(job.id);
-                }}
-              >
-                <i class="bx bx-play-circle"></i>
-              </button>
-            </td>
-          </tr>
-        {/each}
-      </TableBody>
-    </Table>
+          <TableBodyCell {tdClass}>{job.id}</TableBodyCell>
+          <TableBodyCell {tdClass}>{job.name}</TableBodyCell>
+          <TableBodyCell {tdClass}>{JSON.parse(job.domains).join(", ")}</TableBodyCell>
+          <TableBodyCell {tdClass}>{job.insecure}</TableBodyCell>
+          <TableBodyCell {tdClass}>{job.ignore_signature_check}</TableBodyCell>
+          <TableBodyCell {tdClass}>{job.worker}</TableBodyCell>
+          <td>
+            <button
+              title={`Run Job "${job.name}"`}
+              on:click|stopPropagation={() => {
+                runJob(job.id);
+              }}
+            >
+              <i class="bx bx-play-circle text-xl"></i>
+            </button>
+          </td>
+        </tr>
+      {/each}
+    </CustomTable>
   {/await}
 {/if}
+
+<CustomTable
+  title="Tasks"
+  headers={[
+    {
+      label: "ID",
+      attribute: "id"
+    },
+    {
+      label: "Job ID",
+      attribute: "job_id"
+    },
+    {
+      label: "Created",
+      attribute: "created"
+    },
+    {
+      label: "Status",
+      attribute: "status"
+    }
+  ]}
+>
+  {#each tasks as task, index (index)}
+    <tr on:click={() => {}} on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
+      <TableBodyCell {tdClass}>{task.task_id}</TableBodyCell>
+      <TableBodyCell {tdClass}>{task.job_id}</TableBodyCell>
+      <TableBodyCell {tdClass}>{task.created}</TableBodyCell>
+      <TableBodyCell {tdClass}>{task.status}</TableBodyCell>
+      <td>
+        {#if task.status === TASK_STATE_RUNNING}
+          <button
+            title={`Cancel task "${task.task_id}"`}
+            on:click|stopPropagation={() => {
+              cancelTask(task.task_id);
+            }}
+          >
+            <i class="bx bx-stop-circle text-xl"></i>
+          </button>
+        {/if}
+      </td>
+    </tr>
+  {/each}
+</CustomTable>
