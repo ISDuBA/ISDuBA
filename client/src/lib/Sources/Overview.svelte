@@ -253,7 +253,7 @@
 >
   {#each crons as cron, index (index)}
     <tr on:click={() => {}} on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
-      <TableBodyCell {tdClass}>{cron.id}</TableBodyCell>
+      <TableBodyCell {tdClass}>{cron.cron_id}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.job_id}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.name}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.cron_timing}</TableBodyCell>

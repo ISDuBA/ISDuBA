@@ -10,14 +10,16 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Button, Input, Label, Select } from "flowbite-svelte";
+  import { Button, Label, Select } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import { getErrorMessage } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { push } from "svelte-spa-router";
   import { onMount } from "svelte";
+  import CustomInput from "./CustomInput.svelte";
   export let params: any = null;
-  let disableSave = false;
+  $: disableSave =
+    !schedule.name || schedule.name === "" || !schedule.jobID || schedule.cronTiming === "";
   let loadError = "";
   let saveError = "";
   let jobs: any[] = [];
@@ -75,27 +77,39 @@
 </script>
 
 <SectionHeader title={params?.id ? "Edit Schedule" : "New Schedule"}></SectionHeader>
-<div class="mb-8 flex flex-col gap-4">
-  <div>
-    <Label for="name" class="mb-2 block">Schedule name</Label>
-    <Input id="name" bind:value={schedule.name} placeholder="Schedule #1" />
+<form on:submit={saveSchedule}>
+  <div class="mb-4 flex flex-col gap-4">
+    <CustomInput
+      required
+      label="Schedule name"
+      id="name"
+      placeholder="Schedule #1"
+      bind:value={schedule.name}
+    ></CustomInput>
+    <div>
+      <Label for="job-id" class="mb-2 block">
+        <span>Job</span>
+        <span class="text-red-500">*</span>
+      </Label>
+      <Select id="job-id" bind:value={schedule.jobID} placeholder="Choose job ...">
+        {#each jobs as { id, name }}
+          <option value={id}>{name}</option>
+        {/each}
+      </Select>
+    </div>
+    <CustomInput
+      label="Cron expression"
+      id="cron-timing"
+      placeholder="0 0 1 * *"
+      required
+      bind:value={schedule.cronTiming}
+    ></CustomInput>
   </div>
-  <div>
-    <Label for="job-id" class="mb-2 block">Job</Label>
-    <Select id="job-id" bind:value={schedule.jobID} placeholder="Choose job ...">
-      {#each jobs as { id, name }}
-        <option value={id}>{name}</option>
-      {/each}
-    </Select>
-  </div>
-  <div>
-    <Label for="cron-timing" class="mb-2 block">Cron expression</Label>
-    <Input id="cron-timing" bind:value={schedule.cronTiming} placeholder="0 0 1 * *" />
-  </div>
-</div>
-<Button disabled={disableSave} on:click={saveSchedule} color="light">
-  <i class="bx bxs-save me-2"></i>
-  <span>Save</span>
-</Button>
+  <div class="mb-4 text-sm text-red-500">* Required fields</div>
+  <Button disabled={disableSave} type="submit" color="light">
+    <i class="bx bxs-save me-2"></i>
+    <span>Save</span>
+  </Button>
+</form>
 <ErrorMessage message={saveError}></ErrorMessage>
 <ErrorMessage message={loadError}></ErrorMessage>

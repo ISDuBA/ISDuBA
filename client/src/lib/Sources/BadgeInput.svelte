@@ -15,6 +15,7 @@
   export let initialEntries: string[];
   export let label = "";
   export let placeholder = "";
+  export let required = false;
 
   const dispatch = createEventDispatcher();
   let input = "";
@@ -30,9 +31,10 @@
   }
 
   const onKeypress = (event: any) => {
-    if ([" ", ","].includes(event.key)) {
+    if ([" ", ",", "Enter"].includes(event.key)) {
       event.preventDefault();
       addEntry();
+      if (event.key === "Enter") dispatch("submit");
     } else if (event.key === "Backspace" && input === "" && entries.length > 0) {
       entries = entries.toSpliced(entries.length - 1, 1);
     }
@@ -53,7 +55,12 @@
 </script>
 
 <div>
-  <Label for={label} class="mb-2 block">{label}</Label>
+  <Label for={label} class="mb-2 block">
+    <span>{label}</span>
+    {#if required}
+      <span class="text-red-500">*</span>
+    {/if}
+  </Label>
   <div class={containerClass}>
     {#each entries as entry, index (index)}
       <Badge border dismissable>

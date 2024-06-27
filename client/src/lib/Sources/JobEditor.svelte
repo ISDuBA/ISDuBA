@@ -10,15 +10,16 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Button, Checkbox, Input, Label } from "flowbite-svelte";
+  import { Button, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import { getErrorMessage } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { push } from "svelte-spa-router";
   import { onMount } from "svelte";
   import BadgeInput from "./BadgeInput.svelte";
+  import CustomInput from "./CustomInput.svelte";
   export let params: any = null;
-  let disableSave = false;
+  $: disableSave = !job.name || job.name === "" || job.domains.length === 0;
   let loadError = "";
   let saveError = "";
 
@@ -98,74 +99,67 @@
 </script>
 
 <SectionHeader title={params?.id ? "Edit Job" : "New Job"}></SectionHeader>
-<div class="mb-8 flex flex-col gap-4">
-  <div>
-    <BadgeInput
-      on:edited={(event) => {
-        job.domains = event.detail;
+<form on:submit={saveJob}>
+  <div class="mb-4 flex flex-col gap-4">
+    <CustomInput label="Job name" id="name" placeholder="Job #1" required bind:value={job.name}
+    ></CustomInput>
+    <div>
+      <BadgeInput
+        on:edited={(event) => {
+          job.domains = event.detail;
+        }}
+        on:submit={saveJob}
+        initialEntries={job.domains}
+        label="Domains"
+        placeholder="example.com"
+        required
+      ></BadgeInput>
+    </div>
+    <div class="grid gap-x-2 gap-y-4 md:grid-cols-2">
+      <CustomInput id="client-key" label="Client key" bind:value={job.clientKey}></CustomInput>
+      <CustomInput
+        id="client-passphrase"
+        type="password"
+        label="Client passphrase"
+        bind:value={job.clientPassphrase}
+      ></CustomInput>
+    </div>
+    <div class="grid gap-x-2 gap-y-4 md:grid-cols-2">
+      <CustomInput id="start-range" type="date" label="Start range" bind:value={job.startRange}
+      ></CustomInput>
+      <CustomInput id="end-range" type="date" label="End range" bind:value={job.endRange}
+      ></CustomInput>
+    </div>
+    <CustomInput id="rate" label="Rate" placeholder="1.4" bind:value={job.rate}></CustomInput>
+    <CustomInput id="ignore-pattern" label="Ignore pattern" bind:value={job.ignorePattern}
+    ></CustomInput>
+    <Checkbox
+      on:change={() => {
+        job.insecure = !job.insecure;
       }}
-      initialEntries={job.domains}
-      label="Domains"
-      placeholder="example.com"
-    ></BadgeInput>
+    >
+      <span>Insecure</span>
+    </Checkbox>
+    <Checkbox
+      on:change={() => {
+        job.ignoreSignatureCheck = !job.ignoreSignatureCheck;
+      }}
+    >
+      <span>Ignore signature check</span>
+    </Checkbox>
+    <Checkbox
+      on:change={() => {
+        job.temporary = !job.temporary;
+      }}
+    >
+      <span>Temporary</span>
+    </Checkbox>
   </div>
-  <div>
-    <Label for="name" class="mb-2 block">Job Name</Label>
-    <Input id="name" bind:value={job.name} placeholder="Job #1" />
-  </div>
-  <div class="grid gap-x-2 gap-y-4 md:grid-cols-2">
-    <div>
-      <Label for="client-key" class="mb-2 block">Client Key</Label>
-      <Input id="client-key" bind:value={job.clientKey} />
-    </div>
-    <div>
-      <Label for="client-passphrase" class="mb-2 block">Client Passphrase</Label>
-      <Input id="client-passphrase" type="password" bind:value={job.clientPassphrase} />
-    </div>
-  </div>
-  <div class="grid gap-x-2 gap-y-4 md:grid-cols-2">
-    <div>
-      <Label for="start-range" class="mb-2 block">Start Range</Label>
-      <Input id="start-range" type="date" bind:value={job.startRange} />
-    </div>
-    <div>
-      <Label for="end-range" class="mb-2 block">End Range</Label>
-      <Input id="end-range" type="date" bind:value={job.endRange} />
-    </div>
-  </div>
-  <div>
-    <Label for="rate" class="mb-2 block">Rate</Label>
-    <Input id="rate" bind:value={job.rate} placeholder="1.4" />
-  </div>
-  <div>
-    <Label for="ignore-pattern" class="mb-2 block">Ignore Pattern</Label>
-    <Input id="ignore-pattern" bind:value={job.ignorePattern} />
-  </div>
-  <Checkbox
-    on:change={() => {
-      job.insecure = !job.insecure;
-    }}
-  >
-    <span>Insecure</span>
-  </Checkbox>
-  <Checkbox
-    on:change={() => {
-      job.ignoreSignatureCheck = !job.ignoreSignatureCheck;
-    }}
-  >
-    <span>Ignore signature check</span>
-  </Checkbox>
-  <Checkbox
-    on:change={() => {
-      job.temporary = !job.temporary;
-    }}
-  >
-    <span>Temporary</span>
-  </Checkbox>
-</div>
-<Button disabled={disableSave} on:click={saveJob} color="light">
-  <i class="bx bxs-save me-2"></i>
-  <span>Save</span>
-</Button>
+  <div class="mb-4 text-sm text-red-500">* Required fields</div>
+  <Button disabled={disableSave} type="submit" color="light">
+    <i class="bx bxs-save me-2"></i>
+    <span>Save</span>
+  </Button>
+</form>
 <ErrorMessage message={saveError}></ErrorMessage>
 <ErrorMessage message={loadError}></ErrorMessage>
