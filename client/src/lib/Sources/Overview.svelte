@@ -80,8 +80,15 @@
   }
 
   async function cancelTask(id: number) {
-    console.log("cancelTask", id);
-    // TODO
+    const response = await request(`/api/task/${id}`, "DELETE");
+    if (response.ok) {
+      const index = tasks.findIndex((tasks) => tasks.id === id);
+      jobs = jobs.toSpliced(index, 1);
+    } else if (response.error) {
+      const index = jobs.findIndex((tasks) => tasks.id === id);
+      tasks = tasks.toSpliced(index, 1);
+      taskLoadError = getErrorMessage(response.error);
+    }
   }
 
   async function getCrons() {

@@ -11,6 +11,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -53,7 +54,7 @@ func run(cfg *config.Config) error {
 	defer db.Close(ctx)
 
 	scheduler := importer.NewScheduler(ctx, db, cfg)
-	go scheduler.Run()
+	scheduler.Start()
 	defer scheduler.Close()
 
 	cfg.Web.Configure()
@@ -72,7 +73,7 @@ func run(cfg *config.Config) error {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			srvErrors <- err
 		}
 	}()

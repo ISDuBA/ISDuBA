@@ -445,3 +445,21 @@ func (c *Controller) runJob(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"task_id": task})
 }
+
+// abortTask runs a configured job
+func (c *Controller) abortTask(ctx *gin.Context) {
+	jobIDs := ctx.Param("id")
+	jobID, err := strconv.ParseInt(jobIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = c.scheduler.AbortTask(jobID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{})
+}

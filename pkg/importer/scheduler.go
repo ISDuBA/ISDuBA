@@ -14,6 +14,7 @@ import (
 	"errors"
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -27,12 +28,14 @@ import (
 
 // Scheduler schedules download jobs.
 type Scheduler struct {
-	ctx        context.Context
-	db         *database.DB
-	cfg        *config.Config
-	downloader *downloadWorker
-	cron       *cron.Cron
-	notify     chan bool
+	ctx             context.Context
+	db              *database.DB
+	cfg             *config.Config
+	downloader      *downloadWorker
+	cron            *cron.Cron
+	runningTasks    map[int64]context.CancelFunc
+	runningTaskLock sync.Mutex
+	notify          chan bool
 }
 
 // NewScheduler returns a new scheduler.
@@ -43,12 +46,13 @@ func NewScheduler(ctx context.Context, db *database.DB, cfg *config.Config) *Sch
 	downloadWorker := newDownloadWorker()
 
 	s := &Scheduler{
-		ctx:        ctx,
-		db:         db,
-		cfg:        cfg,
-		downloader: downloadWorker,
-		cron:       c,
-		notify:     make(chan bool),
+		ctx:          ctx,
+		db:           db,
+		cfg:          cfg,
+		downloader:   downloadWorker,
+		cron:         c,
+		runningTasks: make(map[int64]context.CancelFunc),
+		notify:       make(chan bool),
 	}
 	s.init()
 	return s
@@ -142,6 +146,19 @@ func (s *Scheduler) AddCron(cron models.Cron) (*int64, error) {
 	return &cronID, nil
 }
 
+func (s *Scheduler) AbortTask(taskID int64) error {
+	s.runningTaskLock.Lock()
+	cancel := s.runningTasks[taskID]
+	if cancel == nil {
+		return errors.New("task not found")
+	}
+	delete(s.runningTasks, taskID)
+	s.runningTaskLock.Unlock()
+	cancel()
+
+	return nil
+}
+
 func (s *Scheduler) runCron() {
 	var crons []models.Cron
 
@@ -213,6 +230,10 @@ func (s *Scheduler) runTasks() {
 		builder.CreateWhere(expr)
 
 		var jobConf models.JobConfig
+		downloadCtx, cancel := context.WithCancel(context.Background())
+		s.runningTaskLock.Lock()
+		s.runningTasks[task.Id] = cancel
+		s.runningTaskLock.Unlock()
 
 		if err := s.db.Run(
 			s.ctx,
@@ -251,7 +272,7 @@ func (s *Scheduler) runTasks() {
 
 		go func() {
 			var status models.Status
-			if err := s.downloader.run(s.ctx, DownloadJob{
+			if err := s.downloader.run(downloadCtx, DownloadJob{
 				Config:         jobConf,
 				ForwardQueue:   0,
 				Presets:        s.cfg.Importer.RemoteValidatorPresets,
@@ -261,7 +282,11 @@ func (s *Scheduler) runTasks() {
 				LogLevel:       s.cfg.Importer.LogLevel,
 			}); err != nil {
 				slog.Error("download error", "err", err)
-				status = models.FAILED
+				if errors.Is(err, context.Canceled) {
+					status = models.ABORTED
+				} else {
+					status = models.FAILED
+				}
 			} else {
 				status = models.COMPLETED
 			}
@@ -298,22 +323,39 @@ func (s *Scheduler) setTaskState(taskID int64, status models.Status) (*int64, er
 	return &updateTaskId, nil
 }
 
-func (s *Scheduler) Run() {
-	for {
-		select {
-		case <-s.ctx.Done():
-			return
-		case <-s.notify:
-			func() {
-				s.runTasks()
-				s.runCron()
-			}()
+func (s *Scheduler) Start() {
+	go func() {
+		for {
+			select {
+			case <-s.ctx.Done():
+				return
+			case <-s.notify:
+				func() {
+					s.runTasks()
+					s.runCron()
+				}()
+			}
 		}
-	}
+	}()
 }
 
 // Close closes the scheduler
 func (s *Scheduler) Close() {
 	s.cron.Stop()
 	close(s.notify)
+
+	// Stop all running tasks
+	s.runningTaskLock.Lock()
+	tasks := make([]int64, len(s.runningTasks))
+	i := 0
+	for t := range s.runningTasks {
+		tasks[i] = t
+		i++
+	}
+	s.runningTaskLock.Unlock()
+	for _, t := range tasks {
+		if err := s.AbortTask(t); err != nil {
+			slog.Error("could not abort task", "err", err)
+		}
+	}
 }

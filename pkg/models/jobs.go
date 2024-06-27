@@ -15,6 +15,7 @@ type Status string
 const (
 	QUEUED    Status = "QUEUED"
 	RUNNING   Status = "RUNNING"
+	ABORTED   Status = "ABORTED"
 	FAILED    Status = "FAILED"
 	COMPLETED Status = "COMPLETED"
 )
