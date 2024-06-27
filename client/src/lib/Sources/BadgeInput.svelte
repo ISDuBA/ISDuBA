@@ -18,14 +18,16 @@
   export let required = false;
 
   const dispatch = createEventDispatcher();
+  let active = false;
   let input = "";
   let entries: any[] = [];
-  let containerBorder =
-    "border focus:border-primary-500 dark:border-gray-600 dark:focus:border-primary-500 border-gray-300 rounded-lg";
+  let borderActive = "border-[2px] dark:border-gray-600 border-primary-500 p-[4px]";
+  let borderInactive = "border-[1px] dark:border-gray-600 border-gray-300 p-[5px]";
+  $: containerBorder = `border rounded-lg ${active ? borderActive : borderInactive}`;
   let containerText =
     "dark:text-white dark:placeholder-gray-400 rtl:text-right text-sm text-gray-900";
-  let containerCustom = "flex gap-x-2 gap-y-1 p-1 flex-wrap";
-  let containerClass = `${containerBorder} ${containerText} ${containerCustom} focus:ring-primary-500 dark:focus:ring-primary-500 w-full bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700`;
+  let containerCustom = "flex gap-x-2 gap-y-1 flex-wrap items-center";
+  $: containerClass = `${containerBorder} ${containerText} ${containerCustom} focus:ring-primary-500 dark:focus:ring-primary-500 w-full bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700`;
   $: if (initialEntries.length > 0) {
     entries = initialEntries;
   }
@@ -76,10 +78,14 @@
     {/each}
 
     <Input
-      on:blur={addEntry}
+      on:blur={() => {
+        active = false;
+        addEntry();
+      }}
+      on:focus={() => (active = true)}
       on:keydown={onKeypress}
       size="sm"
-      class="border-0"
+      class="w-[unset] flex-grow border-0 p-1 focus:border-0 focus:ring-0"
       id={label}
       bind:value={input}
       {placeholder}
