@@ -24,6 +24,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+// Scheduler schedules download jobs.
 type Scheduler struct {
 	ctx        context.Context
 	db         *database.DB
@@ -33,6 +34,7 @@ type Scheduler struct {
 	notify     chan bool
 }
 
+// NewScheduler returns a new scheduler.
 func NewScheduler(ctx context.Context, db *database.DB, cfg *config.Config) *Scheduler {
 	c := cron.New()
 	c.Start()
@@ -49,6 +51,7 @@ func NewScheduler(ctx context.Context, db *database.DB, cfg *config.Config) *Sch
 	}
 }
 
+// AddTask adds a task into the task queue.
 func (s *Scheduler) AddTask(jobID int64) (*int64, error) {
 	const insertSQL = `INSERT INTO tasks (` +
 		`job_id,` +
@@ -75,6 +78,7 @@ func (s *Scheduler) AddTask(jobID int64) (*int64, error) {
 	return &taskID, nil
 }
 
+// AddCron creates a new cron job.
 func (s *Scheduler) AddCron(cron models.Cron) (*int64, error) {
 	const insertSQL = `INSERT INTO cron (` +
 		`name,` +
@@ -246,14 +250,14 @@ func (s *Scheduler) setTaskState(taskID int64, status models.Status) (*int64, er
 
 	var updateTaskId int64
 
-	updateSql := `UPDATE tasks SET status = $1  WHERE ` +
+	updateSQL := `UPDATE tasks SET status = $1  WHERE ` +
 		builder.WhereClause +
 		`RETURNING id`
 
 	if err := s.db.Run(
 		s.ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, updateSql, status).Scan(&updateTaskId)
+			return conn.QueryRow(rctx, updateSQL, status).Scan(&updateTaskId)
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
@@ -277,6 +281,7 @@ func (s *Scheduler) Run() {
 	}
 }
 
+// Close closes the scheduler
 func (s *Scheduler) Close() {
 	s.cron.Stop()
 	close(s.notify)

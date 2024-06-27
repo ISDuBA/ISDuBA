@@ -24,8 +24,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// DownloadWorker downloads and imports csaf documents.
 type DownloadWorker struct{}
 
+// DownloadJob describes the download configuration.
 type DownloadJob struct {
 	Config         models.JobConfig
 	ForwardQueue   int
@@ -34,7 +36,6 @@ type DownloadJob struct {
 	Db             *database.DB
 	LogFile        string
 	LogLevel       slog.Level
-	FinishCallback func(error)
 }
 
 func NewDownloadWorker() *DownloadWorker {

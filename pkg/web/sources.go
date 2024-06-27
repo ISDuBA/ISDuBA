@@ -229,13 +229,13 @@ func (c *Controller) deleteJob(ctx *gin.Context) {
 	builder := database.SQLBuilder{}
 	builder.CreateWhere(expr)
 
-	updateSql := `DELETE jobs WHERE ` +
+	deleteSql := `DELETE FROM jobs WHERE ` +
 		builder.WhereClause
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, updateSql, jobID).Scan()
+			return conn.QueryRow(rctx, deleteSql, jobID).Scan()
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
