@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-package worker
+package importer
 
 import (
 	"bytes"
@@ -24,8 +24,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DownloadWorker downloads and imports csaf documents.
-type DownloadWorker struct{}
+// downloadWorker downloads and imports csaf documents.
+type downloadWorker struct{}
 
 // DownloadJob describes the download configuration.
 type DownloadJob struct {
@@ -38,8 +38,8 @@ type DownloadJob struct {
 	LogLevel       slog.Level
 }
 
-func NewDownloadWorker() *DownloadWorker {
-	return &DownloadWorker{}
+func newDownloadWorker() *downloadWorker {
+	return &downloadWorker{}
 }
 
 func downloadHandler(db *database.DB, ctx context.Context) func(d downloader.DownloadedDocument) error {
@@ -76,7 +76,7 @@ func failedForwardHandler() func(filename, doc, sha256, sha512 string) error {
 	}
 }
 
-func (w *DownloadWorker) Run(ctx context.Context, job DownloadJob) error {
+func (w *downloadWorker) run(ctx context.Context, job DownloadJob) error {
 	logFile, err := os.OpenFile(job.LogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		slog.Error("Couldn't open log file", "file", job.LogFile, "err", err)

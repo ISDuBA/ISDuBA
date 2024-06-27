@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-package worker
+package importer
 
 import (
 	"context"
@@ -29,7 +29,7 @@ type Scheduler struct {
 	ctx        context.Context
 	db         *database.DB
 	cfg        *config.Config
-	downloader *DownloadWorker
+	downloader *downloadWorker
 	cron       *cron.Cron
 	notify     chan bool
 }
@@ -39,7 +39,7 @@ func NewScheduler(ctx context.Context, db *database.DB, cfg *config.Config) *Sch
 	c := cron.New()
 	c.Start()
 
-	downloadWorker := NewDownloadWorker()
+	downloadWorker := newDownloadWorker()
 
 	return &Scheduler{
 		ctx:        ctx,
@@ -220,7 +220,7 @@ func (s *Scheduler) runTasks() {
 
 		go func() {
 			var status models.Status
-			if err := s.downloader.Run(s.ctx, DownloadJob{
+			if err := s.downloader.run(s.ctx, DownloadJob{
 				Config:         jobConf,
 				ForwardQueue:   0,
 				Presets:        s.cfg.Importer.RemoteValidatorPresets,

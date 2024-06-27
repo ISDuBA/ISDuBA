@@ -21,19 +21,19 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
+	"github.com/ISDuBA/ISDuBA/pkg/importer"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
-	"github.com/ISDuBA/ISDuBA/pkg/worker"
 )
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
 	cfg       *config.Config
 	db        *database.DB
-	scheduler *worker.Scheduler
+	scheduler *importer.Scheduler
 }
 
 // NewController returns a new Controller.
-func NewController(cfg *config.Config, db *database.DB, scheduler *worker.Scheduler) *Controller {
+func NewController(cfg *config.Config, db *database.DB, scheduler *importer.Scheduler) *Controller {
 	return &Controller{cfg: cfg, db: db, scheduler: scheduler}
 }
 

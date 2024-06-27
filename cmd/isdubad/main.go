@@ -21,9 +21,9 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/importer"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
-	"github.com/ISDuBA/ISDuBA/pkg/worker"
 )
 
 func check(err error) {
@@ -52,7 +52,7 @@ func run(cfg *config.Config) error {
 	}
 	defer db.Close(ctx)
 
-	scheduler := worker.NewScheduler(ctx, db, cfg)
+	scheduler := importer.NewScheduler(ctx, db, cfg)
 	go scheduler.Run()
 	defer scheduler.Close()
 
