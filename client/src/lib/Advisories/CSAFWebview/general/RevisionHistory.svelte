@@ -18,7 +18,7 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
-  import { tablePadding } from "$lib/table/defaults";
+  import { tablePadding } from "$lib/Table/defaults";
   const cellStyle = "whitespace-nowrap py-0 px-2";
 </script>
 

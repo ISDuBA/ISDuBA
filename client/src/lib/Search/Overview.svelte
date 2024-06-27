@@ -12,7 +12,7 @@
   import { onMount } from "svelte";
   import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import AdvisoryTable from "$lib/table/Table.svelte";
+  import AdvisoryTable from "$lib/Table/Table.svelte";
   import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
 
@@ -20,12 +20,21 @@
   let advisoryTable: any;
   let advancedSearch = false;
   let selectedCustomQuery: any;
-  let query = {
-    columns: SEARCHPAGECOLUMNS.ADVISORY,
-    advisories: true,
-    orders: ["cvss_v3_score"],
-    query: ""
+
+  const resetQuery = () => {
+    return {
+      columns: SEARCHPAGECOLUMNS.ADVISORY,
+      advisories: true,
+      orders: ["cvss_v3_score"],
+      query: ""
+    };
   };
+
+  let query = resetQuery();
+
+  $: if (selectedCustomQuery === -1) {
+    query = resetQuery();
+  }
 
   onMount(async () => {
     let savedSearch = sessionStorage.getItem("documentSearchTerm");
@@ -58,6 +67,7 @@
           class="mr-3"
           on:click={() => {
             searchTerm = "";
+            query.query = "";
             advisoryTable.fetchData();
             sessionStorage.setItem("documentSearchTerm", "");
           }}>x</button
@@ -98,6 +108,7 @@
 </div>
 {#if searchTerm !== null}
   <AdvisoryTable
+    searchTerm={advancedSearch ? "" : searchTerm}
     defaultOrderBy={query.orders[0]}
     columns={query.columns}
     loadAdvisories={query.advisories}

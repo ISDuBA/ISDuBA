@@ -24,7 +24,7 @@
     Modal,
     Button
   } from "flowbite-svelte";
-  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
+  import { tdClass, tablePadding, title, publisher } from "$lib/Table/defaults";
   import { onMount } from "svelte";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/utils";
