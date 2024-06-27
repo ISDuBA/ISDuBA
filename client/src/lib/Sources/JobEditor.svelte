@@ -74,7 +74,9 @@
   async function saveJob() {
     const formData = new FormData();
     if (params?.id) formData.append("job_id", params.id);
-    formData.append("domains", JSON.stringify(job.domains));
+    job.domains.forEach((domain) => {
+      formData.append("domains", domain);
+    });
     if (job.clientKey) formData.append("client_key", job.clientKey);
     if (job.clientPassphrase) formData.append("client_passphrase", job.clientPassphrase);
     if (job.startRange) formData.append("start_range", job.startRange.toDateString());
