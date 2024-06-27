@@ -43,6 +43,7 @@
   let advisoryState = "";
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
+  let isSSVCediting = false;
   $: if ([NEW, READ, ASSESSING, REVIEW].includes(advisoryState)) {
     isCommentingAllowed =
       (appStore.isEditor() && advisoryState !== REVIEW) || appStore.isReviewer();
@@ -59,6 +60,7 @@
   const setAsReadTimeout: number[] = [];
   let diffDocuments: any;
   let isDiffOpen = false;
+  let commentFocus = false;
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
@@ -335,11 +337,11 @@
       </div>
       <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
         <Label class="text-gray-600">{params.publisherNamespace}</Label>
-        <div class="flex h-fit flex-row gap-2">
+        <div class="right-6 mt-4 flex h-fit flex-row gap-2 min-[1080px]:absolute">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
         </div>
       </div>
-      <hr class="mb-4 mt-2" />
+      <div class="mb-4 mt-2" />
     </div>
     <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
@@ -360,19 +362,6 @@
           {/if}
         </div>
         <div class="flex flex-col">
-          <div class="mb-4 flex flex-row items-center gap-x-3">
-            {#if ssvc}
-              <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
-            {/if}
-            <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-            <SsvcCalculator
-              vectorInput={ssvc?.vector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-              {allowEditing}
-            ></SsvcCalculator>
-          </div>
           {#if isDiffOpen}
             <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
           {:else}
@@ -380,19 +369,35 @@
           {/if}
         </div>
       </div>
-      <div class="mr-3 flex w-96 flex-col min-[800px]:ml-auto">
-        {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-          <History
-            state={advisoryState}
-            on:commentUpdate={() => {
-              buildHistory();
-            }}
-            entries={historyEntries}
-          ></History>
-          {#if isCommentingAllowed}
+      <div class=" right-3 mr-3 flex w-[29rem] flex-col min-[800px]:ml-auto min-[1080px]:absolute">
+        <div
+          class={isSSVCediting || commentFocus ? "h-60 w-full p-3 shadow-md" : "h-60 w-full p-3"}
+        >
+          <div class="mb-4 flex flex-row items-center">
+            {#if ssvc}
+              {#if !isSSVCediting}
+                <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
+              {/if}
+            {/if}
+            <SsvcCalculator
+              bind:isEditing={isSSVCediting}
+              vectorInput={ssvc?.vector}
+              disabled={!isCalculatingAllowed}
+              documentID={params.id}
+              on:updateSSVC={loadMetaData}
+              {allowEditing}
+            ></SsvcCalculator>
+          </div>
+          {#if isCommentingAllowed && !isSSVCediting}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea">New Comment:</Label>
               <CommentTextArea
+                on:focus={() => {
+                  commentFocus = true;
+                }}
+                on:blur={() => {
+                  commentFocus = false;
+                }}
                 on:input={() => (createCommentError = "")}
                 on:saveComment={createComment}
                 on:saveForReview={sendForReview}
@@ -403,9 +408,23 @@
               ></CommentTextArea>
             </div>
           {/if}
-          <ErrorMessage message={loadEventsError}></ErrorMessage>
-          <ErrorMessage message={loadCommentsError}></ErrorMessage>
-        {/if}
+        </div>
+        <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+        <div class="ml-auto">
+          {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+            <div class="mt-6">
+              <History
+                state={advisoryState}
+                on:commentUpdate={() => {
+                  buildHistory();
+                }}
+                entries={historyEntries}
+              ></History>
+            </div>
+            <ErrorMessage message={loadEventsError}></ErrorMessage>
+            <ErrorMessage message={loadCommentsError}></ErrorMessage>
+          {/if}
+        </div>
       </div>
     </div>
   </div>
