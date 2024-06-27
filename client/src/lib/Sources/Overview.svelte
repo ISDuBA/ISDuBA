@@ -124,7 +124,7 @@
     >
       <TableBodyCell {tdClass}>{job.id}</TableBodyCell>
       <TableBodyCell {tdClass}>{job.name}</TableBodyCell>
-      <TableBodyCell {tdClass}>{JSON.parse(job.domains).join(", ")}</TableBodyCell>
+      <TableBodyCell {tdClass}>{job.domains.join(", ")}</TableBodyCell>
       <TableBodyCell {tdClass}>{job.insecure}</TableBodyCell>
       <TableBodyCell {tdClass}>{job.ignore_signature_check}</TableBodyCell>
       <TableBodyCell {tdClass}>{job.worker}</TableBodyCell>
