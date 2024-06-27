@@ -24,10 +24,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type DownloadWorker struct {
-	ctx  context.Context
-	jobs chan DownloadJob
-}
+type DownloadWorker struct{}
 
 type DownloadJob struct {
 	Config         models.JobConfig
@@ -40,15 +37,8 @@ type DownloadJob struct {
 	FinishCallback func(error)
 }
 
-func NewDownloadWorker(ctx context.Context) *DownloadWorker {
-	return &DownloadWorker{
-		ctx:  ctx,
-		jobs: make(chan DownloadJob),
-	}
-}
-
-func (w *DownloadWorker) Enqueue(job DownloadJob) {
-	w.jobs <- job
+func NewDownloadWorker() *DownloadWorker {
+	return &DownloadWorker{}
 }
 
 func downloadHandler(db *database.DB, ctx context.Context) func(d downloader.DownloadedDocument) error {
@@ -79,79 +69,67 @@ func downloadHandler(db *database.DB, ctx context.Context) func(d downloader.Dow
 	}
 }
 
-func FailedForwardHandler() func(filename, doc, sha256, sha512 string) error {
+func failedForwardHandler() func(filename, doc, sha256, sha512 string) error {
 	return func(filename, doc, sha256, sha512 string) error {
 		return nil
 	}
 }
 
-func (w *DownloadWorker) Run() {
-	for {
-		select {
-		case <-w.ctx.Done():
-			return
-		case job := <-w.jobs:
-			func() {
-				logFile, err := os.OpenFile(job.LogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-				if err != nil {
-					slog.Error("Couldn't open log file", "file", job.LogFile, "err", err)
-				}
-				defer logFile.Close()
-
-				slogOptions := slog.HandlerOptions{
-					Level: job.LogLevel,
-				}
-				logger := slog.New(slog.NewJSONHandler(logFile, &slogOptions))
-
-				var ignorePatterns []*regexp.Regexp
-				if job.Config.IgnorePattern != nil {
-					ignorePattern, err := regexp.Compile(*job.Config.IgnorePattern)
-					if err != nil {
-						slog.Error("Couldn't compile ignore pattern", "pattern", job.Config.IgnorePattern, "err", err)
-						return
-					}
-					ignorePatterns = append(ignorePatterns, ignorePattern)
-				}
-
-				// TODO: Allow to set only part of the time range
-				var timeRange *[2]time.Time
-				if job.Config.StartRange != nil && job.Config.EndRange != nil {
-					timeRange = &[2]time.Time{*job.Config.StartRange, *job.Config.EndRange}
-				}
-
-				cfg := &downloader.Config{
-					Insecure:               job.Config.Insecure,
-					IgnoreSignatureCheck:   job.Config.IgnoreSignatureCheck,
-					ClientKey:              job.Config.ClientKey,
-					ClientPassphrase:       job.Config.ClientPassphrase,
-					Rate:                   job.Config.Rate,
-					Worker:                 job.Config.Worker,
-					Range:                  timeRange,
-					IgnorePattern:          ignorePatterns,
-					RemoteValidatorPresets: job.Presets,
-					ForwardQueue:           job.ForwardQueue,
-					FailedForwardHandler:   FailedForwardHandler(),
-					DownloadHandler:        downloadHandler(job.Db, w.ctx),
-					ValidationMode:         job.ValidationMode,
-					Logger:                 logger,
-				}
-				d, err := downloader.NewDownloader(cfg)
-				if err != nil {
-					slog.Warn("Creating new downloader failed", "err", err)
-					return
-				}
-				defer d.Close()
-
-				err = d.Run(w.ctx, job.Config.Domains)
-				if err != nil {
-					slog.Warn("Download failed", "err", err)
-				}
-				job.FinishCallback(err)
-			}()
-		}
+func (w *DownloadWorker) Run(ctx context.Context, job DownloadJob) error {
+	logFile, err := os.OpenFile(job.LogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		slog.Error("Couldn't open log file", "file", job.LogFile, "err", err)
 	}
-}
+	defer logFile.Close()
 
-func (w *DownloadWorker) Close() {
-	close(w.jobs)
+	slogOptions := slog.HandlerOptions{
+		Level: job.LogLevel,
+	}
+	logger := slog.New(slog.NewJSONHandler(logFile, &slogOptions))
+
+	var ignorePatterns []*regexp.Regexp
+	if job.Config.IgnorePattern != nil {
+		ignorePattern, err := regexp.Compile(*job.Config.IgnorePattern)
+		if err != nil {
+			slog.Error("Couldn't compile ignore pattern", "pattern", job.Config.IgnorePattern, "err", err)
+			return err
+		}
+		ignorePatterns = append(ignorePatterns, ignorePattern)
+	}
+
+	// TODO: Allow to set only part of the time range
+	var timeRange *[2]time.Time
+	if job.Config.StartRange != nil && job.Config.EndRange != nil {
+		timeRange = &[2]time.Time{*job.Config.StartRange, *job.Config.EndRange}
+	}
+
+	cfg := &downloader.Config{
+		Insecure:               job.Config.Insecure,
+		IgnoreSignatureCheck:   job.Config.IgnoreSignatureCheck,
+		ClientKey:              job.Config.ClientKey,
+		ClientPassphrase:       job.Config.ClientPassphrase,
+		Rate:                   job.Config.Rate,
+		Worker:                 job.Config.Worker,
+		Range:                  timeRange,
+		IgnorePattern:          ignorePatterns,
+		RemoteValidatorPresets: job.Presets,
+		ForwardQueue:           job.ForwardQueue,
+		FailedForwardHandler:   failedForwardHandler(),
+		DownloadHandler:        downloadHandler(job.Db, ctx),
+		ValidationMode:         job.ValidationMode,
+		Logger:                 logger,
+	}
+	d, err := downloader.NewDownloader(cfg)
+	if err != nil {
+		slog.Warn("Creating new downloader failed", "err", err)
+		return err
+	}
+	defer d.Close()
+
+	err = d.Run(ctx, job.Config.Domains)
+	if err != nil {
+		slog.Warn("Download failed", "err", err)
+		return err
+	}
+	return nil
 }

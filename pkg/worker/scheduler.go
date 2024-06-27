@@ -37,8 +37,7 @@ func NewScheduler(ctx context.Context, db *database.DB, cfg *config.Config) *Sch
 	c := cron.New()
 	c.Start()
 
-	downloadWorker := NewDownloadWorker(ctx)
-	go downloadWorker.Run()
+	downloadWorker := NewDownloadWorker()
 
 	return &Scheduler{
 		ctx:        ctx,
@@ -120,9 +119,9 @@ func (s *Scheduler) runCron() {
 			crons, err = pgx.CollectRows(
 				rows,
 				func(row pgx.CollectableRow) (models.Cron, error) {
-					var cron models.Cron
-					err := row.Scan(&cron.Id, &cron.Name, &cron.JobId, &cron.CronTiming)
-					return cron, err
+					var c models.Cron
+					err := row.Scan(&c.Id, &c.Name, &c.JobId, &c.CronTiming)
+					return c, err
 				})
 			return err
 		}, 0,
@@ -213,22 +212,55 @@ func (s *Scheduler) runTasks() {
 			return
 		}
 
-		// TODO: Mark jobs as completed
-		finishCallback := func(error) {}
-
 		t := time.Now().UTC()
 
-		s.downloader.Enqueue(DownloadJob{
-			Config:         jobConf,
-			ForwardQueue:   0,
-			Presets:        s.cfg.Importer.RemoteValidatorPresets,
-			ValidationMode: s.cfg.Importer.ValidationMode,
-			Db:             s.db,
-			LogFile:        s.cfg.Importer.LogPath + "-" + jobConf.Name + "-" + t.Format(time.RFC3339) + ".log",
-			LogLevel:       s.cfg.Importer.LogLevel,
-			FinishCallback: finishCallback,
-		})
+		go func() {
+			var status models.Status
+			if err := s.downloader.Run(s.ctx, DownloadJob{
+				Config:         jobConf,
+				ForwardQueue:   0,
+				Presets:        s.cfg.Importer.RemoteValidatorPresets,
+				ValidationMode: s.cfg.Importer.ValidationMode,
+				Db:             s.db,
+				LogFile:        s.cfg.Importer.LogPath + "-" + jobConf.Name + "-" + t.Format(time.RFC3339) + ".log",
+				LogLevel:       s.cfg.Importer.LogLevel,
+			}); err != nil {
+				slog.Error("download error", "err", err)
+				status = models.FAILED
+			} else {
+				status = models.COMPLETED
+
+				_, err := s.setTaskState(task.Id, status)
+				if err != nil {
+					slog.Error("setTaskState error", "err", err)
+				}
+			}
+		}()
 	}
+}
+
+func (s *Scheduler) setTaskState(taskID int64, status models.Status) (*int64, error) {
+	expr := database.FieldEqInt("id", taskID)
+	builder := database.SQLBuilder{}
+	builder.CreateWhere(expr)
+
+	var updateTaskId int64
+
+	updateSql := `UPDATE tasks SET status = $1  WHERE ` +
+		builder.WhereClause +
+		`RETURNING id`
+
+	if err := s.db.Run(
+		s.ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, updateSql, status).Scan(&updateTaskId)
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		return nil, err
+	}
+
+	return &updateTaskId, nil
 }
 
 func (s *Scheduler) Run() {
@@ -247,6 +279,5 @@ func (s *Scheduler) Run() {
 
 func (s *Scheduler) Close() {
 	s.cron.Stop()
-	s.downloader.Close()
 	close(s.notify)
 }
