@@ -85,8 +85,6 @@
       const index = tasks.findIndex((tasks) => tasks.id === id);
       jobs = jobs.toSpliced(index, 1);
     } else if (response.error) {
-      const index = jobs.findIndex((tasks) => tasks.id === id);
-      tasks = tasks.toSpliced(index, 1);
       taskLoadError = getErrorMessage(response.error);
     }
   }
@@ -100,6 +98,16 @@
       cronLoadError = getErrorMessage(response.error);
     }
     loadingCrons = false;
+  }
+
+  async function deleteCron(id: number) {
+    const response = await request(`/api/cron/${id}`, "DELETE");
+    if (response.ok) {
+      const index = crons.findIndex((cron) => cron.id === id);
+      crons = crons.toSpliced(index, 1);
+    } else if (response.error) {
+      jobError = getErrorMessage(response.error);
+    }
   }
 </script>
 
@@ -265,7 +273,16 @@
       <TableBodyCell {tdClass}>{cron.job_id}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.name}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.cron_timing}</TableBodyCell>
-      <td> </td>
+      <td>
+        <button
+          title={`Remove Schedule "${cron.name}"`}
+          on:click|stopPropagation={() => {
+            deleteCron(cron.cron_id);
+          }}
+        >
+          <i class="bx bx-trash text-xl text-red-500"></i>
+        </button>
+      </td>
     </tr>
   {/each}
   <div slot="bottom">
