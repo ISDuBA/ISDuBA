@@ -42,13 +42,43 @@ func NewScheduler(ctx context.Context, db *database.DB, cfg *config.Config) *Sch
 
 	downloadWorker := newDownloadWorker()
 
-	return &Scheduler{
+	s := &Scheduler{
 		ctx:        ctx,
 		db:         db,
 		cfg:        cfg,
 		downloader: downloadWorker,
 		cron:       c,
 		notify:     make(chan bool),
+	}
+	s.init()
+	return s
+}
+
+func (s *Scheduler) init() {
+	// Mark all running tasks as aborted
+	var tasks []models.Task
+	if err := s.db.Run(
+		s.ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			const fetchSQL = `UPDATE tasks SET status = 'ABORTED' WHERE status = 'RUNNING' RETURNING id, created, job_id, status`
+			rows, _ := conn.Query(rctx, fetchSQL)
+			var err error
+			tasks, err = pgx.CollectRows(
+				rows,
+				func(row pgx.CollectableRow) (models.Task, error) {
+					var task models.Task
+					err := row.Scan(&task.Id, &task.Created, &task.JobId, &task.Status)
+					return task, err
+				})
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		return
+	}
+
+	for _, task := range tasks {
+		slog.Info("aborted task", "id", task.Id)
 	}
 }
 
