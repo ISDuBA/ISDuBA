@@ -229,11 +229,11 @@ func (s *Scheduler) runTasks() {
 				status = models.FAILED
 			} else {
 				status = models.COMPLETED
+			}
 
-				_, err := s.setTaskState(task.Id, status)
-				if err != nil {
-					slog.Error("setTaskState error", "err", err)
-				}
+			_, err := s.setTaskState(task.Id, status)
+			if err != nil {
+				slog.Error("setTaskState error", "err", err)
 			}
 		}()
 	}
