@@ -347,7 +347,7 @@ func (c *Controller) addCron(ctx *gin.Context) {
 	}
 
 	var jobIDs string
-	if jobIDs := ctx.PostForm("job_id"); jobIDs == "" {
+	if jobIDs = ctx.PostForm("job_id"); jobIDs == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing 'job_id'",
 		})

@@ -114,7 +114,7 @@ func (s *Scheduler) AddCron(cron models.Cron) (*int64, error) {
 	const insertSQL = `INSERT INTO cron (` +
 		`name,` +
 		`job_id,` +
-		`cront_timing` +
+		`cron_timing` +
 		`) VALUES ($1, $2, $3)` +
 		`RETURNING id`
 
