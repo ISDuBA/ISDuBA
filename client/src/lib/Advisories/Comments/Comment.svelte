@@ -71,7 +71,7 @@
       <small class="ml-1 flex-grow"
         >{fullHistory ? `Comment (${comment.actor})` : `${comment.actor}`}
       </small>
-      <small class="text-xs text-slate-400">on version: {comment.documentVersion}</small>
+      <small class="ml-1 text-xs text-slate-400">on version: {comment.documentVersion}</small>
     </div>
     {#if !isEditing}
       <div class="mt-1 flex flex-row items-center">
