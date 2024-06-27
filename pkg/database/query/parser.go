@@ -65,6 +65,8 @@ type Parser struct {
 	Advisory bool
 	// Languages are the languages supported by full-text search.
 	Languages []string
+	// Me is a replacement text for the "me" keyword.
+	Me string
 }
 
 // Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
@@ -897,6 +899,8 @@ func (p *Parser) parse(input string) (*Expr, error) {
 			st.binary(div)
 		case "*":
 			st.binary(mul)
+		case "me":
+			st.pushString(p.Me)
 		default:
 			if strings.HasPrefix(field, "$") {
 				st.access(field[1:], p.Advisory)

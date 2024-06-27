@@ -207,6 +207,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	parser := query.Parser{
 		Advisory:  advisory,
 		Languages: c.cfg.Database.TextSearch,
+		Me:        ctx.GetString("uid"),
 	}
 
 	// The query to filter the documents.
