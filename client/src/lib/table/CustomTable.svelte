@@ -25,7 +25,11 @@
 
 <div class="mb-6">
   {#if title}
-    <SectionHeader {title}></SectionHeader>
+    <SectionHeader {title}>
+      <div slot="right">
+        <slot name="header-right"></slot>
+      </div>
+    </SectionHeader>
   {/if}
   <Table hoverable={true} noborder={true}>
     <TableHead>

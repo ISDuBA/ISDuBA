@@ -201,6 +201,18 @@
     }
   ]}
 >
+  <div slot="header-right">
+    <Button
+      on:click={getTasks}
+      disabled={loadingTasks}
+      title="Refresh tasks"
+      class="!p-1"
+      color="light"
+      size="xs"
+    >
+      <i class={`bx bx-sync scale-x-[-1] text-lg ${loadingTasks ? "animate-spin" : ""}`}></i>
+    </Button>
+  </div>
   {#each tasks as task, index (index)}
     <tr on:click={() => {}} on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
       <TableBodyCell {tdClass}>{task.task_id}</TableBodyCell>
@@ -222,10 +234,6 @@
     </tr>
   {/each}
   <div slot="bottom">
-    <div class:hidden={!loadingTasks} class:mb-4={true}>
-      Loading ...
-      <Spinner color="gray" size="4"></Spinner>
-    </div>
     <ErrorMessage message={taskLoadError}></ErrorMessage>
   </div>
 </CustomTable>
