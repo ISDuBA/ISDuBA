@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
@@ -36,7 +36,7 @@
     query = resetQuery();
   }
 
-  const triggerSearch = () => {
+  const triggerSearch = async () => {
     if (!advancedSearch) {
       query.query = searchTerm ? `"${searchTerm}" german search msg as` : "";
       if (
@@ -47,6 +47,7 @@
       )
         query.columns.push("msg");
     }
+    await tick();
     advisoryTable.fetchData();
   };
 
@@ -76,9 +77,13 @@
       {#if searchTerm}
         <button
           class="mr-3"
-          on:click={() => {
+          on:click={async () => {
             searchTerm = "";
             query.query = "";
+            query.columns = query.columns.filter((c) => {
+              return c !== "msg";
+            });
+            await tick();
             advisoryTable.fetchData();
             sessionStorage.setItem("documentSearchTerm", "");
           }}>x</button
@@ -88,7 +93,7 @@
         size="xs"
         class="h-7 py-3.5"
         on:click={() => {
-          // triggerSearch();
+          triggerSearch();
         }}>{advancedSearch ? "Apply" : "Search"}</Button
       >
     </Search>

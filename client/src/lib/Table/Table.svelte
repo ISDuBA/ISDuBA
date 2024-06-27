@@ -137,10 +137,6 @@
     if (!columns.includes(orderBy.split("-")[0])) orderBy = defaultOrderBy;
   }
 
-  $: if (columns || query || loadAdvisories || !loadAdvisories) {
-    fetchData();
-  }
-
   $: if (offset || currentPage || limit || orderBy) {
     if (!postitionRestored) {
       restorePosition();
@@ -340,17 +336,19 @@
         <Table style="w-auto" hoverable={true} noborder={true}>
           <TableHead class="cursor-pointer">
             {#each columns as column}
-              <TableHeadCell
-                padding={tablePadding}
-                on:click={() => {
-                  switchSort(column);
-                }}
-                >{getColumnDisplayName(column)}<i
-                  class:bx={true}
-                  class:bx-caret-up={orderBy === column}
-                  class:bx-caret-down={orderBy === "-" + column}
-                ></i></TableHeadCell
-              >
+              {#if column !== "msg"}
+                <TableHeadCell
+                  padding={tablePadding}
+                  on:click={() => {
+                    switchSort(column);
+                  }}
+                  >{getColumnDisplayName(column)}<i
+                    class:bx={true}
+                    class:bx-caret-up={orderBy === column}
+                    class:bx-caret-down={orderBy === "-" + column}
+                  ></i></TableHeadCell
+                >
+              {/if}
             {/each}
             {#if isAdmin}
               <TableHeadCell padding={tablePadding}></TableHeadCell>
@@ -371,88 +369,90 @@
                 }}
               >
                 {#each columns as column}
-                  {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
-                    <TableBodyCell {tdClass}
-                      ><span class:text-red-500={Number(item[column]) > 5.0}
-                        >{item[column] == null ? "" : item[column]}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "ssvc"}
-                    <TableBodyCell {tdClass}
-                      ><span style={item[column] ? `color:${item[column].color}` : ""}
-                        >{item[column]?.label || ""}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "state"}
-                    <TableBodyCell {tdClass}
-                      ><i
-                        title={item[column]}
-                        class:bx={true}
-                        class:bxs-star={item[column] === "new"}
-                        class:bx-show={item[column] === "read"}
-                        class:bxs-analyse={item[column] === "assessing"}
-                        class:bx-book-open={item[column] === "review"}
-                        class:bx-archive={item[column] === "archived"}
-                        class:bx-trash={item[column] === "delete"}
-                      ></i>
-                    </TableBodyCell>
-                  {:else if column === "initial_release_date"}
-                    <TableBodyCell {tdClass}
-                      >{item.initial_release_date?.split("T")[0]}</TableBodyCell
-                    >
-                  {:else if column === "current_release_date"}
-                    <TableBodyCell {tdClass}
-                      >{item.current_release_date?.split("T")[0]}</TableBodyCell
-                    >
-                  {:else if column === "title"}
-                    <TableBodyCell tdClass={title}
-                      ><span title={item[column]}>{item[column]}</span></TableBodyCell
-                    >
-                  {:else if column === "publisher"}
-                    <TableBodyCell tdClass={publisher}
-                      ><span title={item[column]}>{getPublisher(item[column], innerWidth)}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "recent"}
-                    <TableBodyCell {tdClass}
-                      ><span title={item[column]}
-                        >{item[column] ? item[column].split("T")[0] : ""}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "four_cves"}
-                    <TableBodyCell {tdClass}
-                      >{#if item[column] && item[column][0]}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
-                        {#if item[column].length > 1}
-                          <div class="mr-2 flex">
-                            <div class="flex-grow">
-                              {item[column][0]}
+                  {#if column !== "msg"}
+                    {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
+                      <TableBodyCell {tdClass}
+                        ><span class:text-red-500={Number(item[column]) > 5.0}
+                          >{item[column] == null ? "" : item[column]}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "ssvc"}
+                      <TableBodyCell {tdClass}
+                        ><span style={item[column] ? `color:${item[column].color}` : ""}
+                          >{item[column]?.label || ""}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "state"}
+                      <TableBodyCell {tdClass}
+                        ><i
+                          title={item[column]}
+                          class:bx={true}
+                          class:bxs-star={item[column] === "new"}
+                          class:bx-show={item[column] === "read"}
+                          class:bxs-analyse={item[column] === "assessing"}
+                          class:bx-book-open={item[column] === "review"}
+                          class:bx-archive={item[column] === "archived"}
+                          class:bx-trash={item[column] === "delete"}
+                        ></i>
+                      </TableBodyCell>
+                    {:else if column === "initial_release_date"}
+                      <TableBodyCell {tdClass}
+                        >{item.initial_release_date?.split("T")[0]}</TableBodyCell
+                      >
+                    {:else if column === "current_release_date"}
+                      <TableBodyCell {tdClass}
+                        >{item.current_release_date?.split("T")[0]}</TableBodyCell
+                      >
+                    {:else if column === "title"}
+                      <TableBodyCell tdClass={title}
+                        ><span title={item[column]}>{item[column]}</span></TableBodyCell
+                      >
+                    {:else if column === "publisher"}
+                      <TableBodyCell tdClass={publisher}
+                        ><span title={item[column]}>{getPublisher(item[column], innerWidth)}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "recent"}
+                      <TableBodyCell {tdClass}
+                        ><span title={item[column]}
+                          >{item[column] ? item[column].split("T")[0] : ""}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "four_cves"}
+                      <TableBodyCell {tdClass}
+                        >{#if item[column] && item[column][0]}
+                          <!-- svelte-ignore a11y-click-events-have-key-events -->
+                          <!-- svelte-ignore a11y-no-static-element-interactions -->
+                          {#if item[column].length > 1}
+                            <div class="mr-2 flex">
+                              <div class="flex-grow">
+                                {item[column][0]}
+                              </div>
+                              <span
+                                on:mouseenter={() => (anchorLink = null)}
+                                on:click|stopPropagation={() => toggleRow(i)}
+                              >
+                                {#if openRow === i}
+                                  <i class="bx bx-minus"></i>
+                                {:else}
+                                  <i class="bx bx-plus"></i>
+                                {/if}
+                              </span>
                             </div>
-                            <span
-                              on:mouseenter={() => (anchorLink = null)}
-                              on:click|stopPropagation={() => toggleRow(i)}
-                            >
-                              {#if openRow === i}
-                                <i class="bx bx-minus"></i>
-                              {:else}
-                                <i class="bx bx-plus"></i>
-                              {/if}
-                            </span>
-                          </div>
-                        {:else}
-                          <span>{item[column][0]}</span>
-                        {/if}
-                      {/if}</TableBodyCell
-                    >
-                  {:else if column === "critical"}
-                    <TableBodyCell {tdClass}
-                      ><span class:text-red-500={Number(item[column]) > 5.0}
-                        >{item[column] == null ? "" : item[column]}</span
-                      ></TableBodyCell
-                    >
-                  {:else}
-                    <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
+                          {:else}
+                            <span>{item[column][0]}</span>
+                          {/if}
+                        {/if}</TableBodyCell
+                      >
+                    {:else if column === "critical"}
+                      <TableBodyCell {tdClass}
+                        ><span class:text-red-500={Number(item[column]) > 5.0}
+                          >{item[column] == null ? "" : item[column]}</span
+                        ></TableBodyCell
+                      >
+                    {:else}
+                      <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
+                    {/if}
                   {/if}
                 {/each}
                 {#if isAdmin}
