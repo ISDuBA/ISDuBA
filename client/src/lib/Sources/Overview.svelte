@@ -270,11 +270,12 @@
   {#each crons as cron, index (index)}
     <tr
       on:click={() => {
-        push(`/sources/schedule/${cron.cron_id}`);
+        // TODO: Un-comment following line and add 'class="cursor-pointer"'
+        // when editing is implemented in backend
+        // push(`/sources/schedule/${cron.cron_id}`);
       }}
       on:blur={() => {}}
       on:focus={() => {}}
-      class="cursor-pointer"
     >
       <TableBodyCell {tdClass}>{cron.cron_id}</TableBodyCell>
       <TableBodyCell {tdClass}>{cron.job_id}</TableBodyCell>
