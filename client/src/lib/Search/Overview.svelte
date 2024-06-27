@@ -12,7 +12,7 @@
   import { onMount } from "svelte";
   import { Button, ButtonGroup, Search } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import AdvisoryTable from "$lib/Advisories/Table.svelte";
+  import AdvisoryTable from "$lib/table/Table.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;

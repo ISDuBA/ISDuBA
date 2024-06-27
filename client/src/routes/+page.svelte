@@ -18,7 +18,7 @@
   import Diff from "$lib/Diff/DiffPage.svelte";
   import { wrap } from "svelte-spa-router/wrap";
   import Configuration from "$lib/Configuration/Overview.svelte";
-  import Advisories from "$lib/Advisories/Overview.svelte";
+  import Search from "$lib/Search/Overview.svelte";
   import Advisory from "$lib/Advisories/Advisory.svelte";
   import NotFound from "$lib/NotFound.svelte";
   import { appStore } from "$lib/store";
@@ -114,8 +114,8 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/advisories": wrap({
-      component: Advisories,
+    "/search": wrap({
+      component: Search,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
