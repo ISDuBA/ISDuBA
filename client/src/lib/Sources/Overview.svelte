@@ -16,7 +16,7 @@
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
   import CustomTable from "$lib/table/CustomTable.svelte";
-  import { TASK_STATE_RUNNING } from "./sources";
+  import { TASK_STATE_ABORTED, TASK_STATE_RUNNING } from "./sources";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
   let cronLoadError = "";
@@ -82,8 +82,8 @@
   async function cancelTask(id: number) {
     const response = await request(`/api/task/${id}`, "DELETE");
     if (response.ok) {
-      const index = tasks.findIndex((tasks) => tasks.id === id);
-      jobs = jobs.toSpliced(index, 1);
+      const index = tasks.findIndex((tasks) => tasks.task_id === id);
+      tasks[index].status = TASK_STATE_ABORTED;
     } else if (response.error) {
       taskLoadError = getErrorMessage(response.error);
     }

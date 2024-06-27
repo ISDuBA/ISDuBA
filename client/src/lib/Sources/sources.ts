@@ -12,3 +12,4 @@ export const TASK_STATE_QUEUED = "QUEUED";
 export const TASK_STATE_RUNNING = "RUNNING";
 export const TASK_STATE_FAILED = "FAILED";
 export const TASK_STATE_COMPLETED = "COMPLETED";
+export const TASK_STATE_ABORTED = "ABORTED";
