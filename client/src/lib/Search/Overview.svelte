@@ -14,15 +14,18 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/table/Table.svelte";
   import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
+  import Queries from "./Queries.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
-  let advisoriesOnly = true;
   let advancedSearch = false;
-
-  let defaultOrderBy = "cvss_v3_score";
-
-  $: columns = advisoriesOnly ? SEARCHPAGECOLUMNS.ADVISORY : SEARCHPAGECOLUMNS.DOCUMENT;
+  let selectedCustomQuery: any;
+  let query = {
+    columns: SEARCHPAGECOLUMNS.ADVISORY,
+    advisories: true,
+    orders: ["cvss_v3_score"],
+    query: ""
+  };
 
   onMount(async () => {
     let savedSearch = sessionStorage.getItem("documentSearchTerm");
@@ -38,7 +41,7 @@
   <SectionHeader title="Search"></SectionHeader>
 </div>
 <hr class="mb-6" />
-
+<Queries bind:selectedIndex={selectedCustomQuery}></Queries>
 <div class="mb-3 flex">
   <div class="flex w-2/3 flex-row">
     <Search
@@ -70,31 +73,36 @@
     </Search>
     <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
   </div>
-  <ButtonGroup class="ml-auto h-7">
-    <Button
-      size="xs"
-      color="light"
-      class={`h-7 py-1 text-xs ${advisoriesOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-      on:click={() => {
-        advisoriesOnly = true;
-      }}>Advisories</Button
-    >
-    <Button
-      size="xs"
-      color="light"
-      class={`h-7 py-1 text-xs ${!advisoriesOnly ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-      on:click={() => {
-        advisoriesOnly = false;
-      }}>Documents</Button
-    >
-  </ButtonGroup>
+  {#if selectedCustomQuery === -1}
+    <ButtonGroup class="ml-auto h-7">
+      <Button
+        size="xs"
+        color="light"
+        class={`h-7 py-1 text-xs ${query.advisories ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        on:click={() => {
+          query.advisories = true;
+          query.columns = SEARCHPAGECOLUMNS.ADVISORY;
+        }}>Advisories</Button
+      >
+      <Button
+        size="xs"
+        color="light"
+        class={`h-7 py-1 text-xs ${!query.advisories ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        on:click={() => {
+          query.advisories = false;
+          query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
+        }}>Documents</Button
+      >
+    </ButtonGroup>
+  {/if}
 </div>
 {#if searchTerm !== null}
   <AdvisoryTable
-    {defaultOrderBy}
-    {searchTerm}
+    defaultOrderBy={query.orders[0]}
+    columns={query.columns}
+    loadAdvisories={query.advisories}
+    query={`${query.query}`}
+    orderBy={query.orders?.join(" ") ?? ""}
     bind:this={advisoryTable}
-    loadAdvisories={advisoriesOnly}
-    {columns}
   ></AdvisoryTable>
 {/if}
