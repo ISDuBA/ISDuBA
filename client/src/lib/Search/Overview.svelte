@@ -62,7 +62,19 @@
   <SectionHeader title="Search"></SectionHeader>
 </div>
 <hr class="mb-6" />
-<Queries bind:selectedIndex={selectedCustomQuery}></Queries>
+<Queries
+  on:querySelected={(e) => {
+    let { detail } = e;
+    query = {
+      query: detail.query,
+      columns: detail.columns,
+      advisories: detail.advisories,
+      orders: detail.orders || []
+    };
+    searchTerm = "";
+  }}
+  bind:selectedIndex={selectedCustomQuery}
+></Queries>
 <div class="mb-3 flex">
   <div class="flex w-2/3 flex-row">
     <Search

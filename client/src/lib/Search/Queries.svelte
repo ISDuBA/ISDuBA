@@ -15,6 +15,9 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import { push } from "svelte-spa-router";
+  import { createEventDispatcher } from "svelte";
+
+  const dispatch = createEventDispatcher();
 
   let queries: any[] = [];
   $: sortedQueries = queries.sort((a: any, b: any) => {
@@ -60,6 +63,7 @@
       selectedIndex = -1;
     } else {
       selectedIndex = index;
+      dispatch("querySelected", sortedQueries[selectedIndex]);
     }
   };
 </script>
