@@ -93,6 +93,15 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		}
 	}
 
+	if worker, ok := ctx.GetPostForm("worker"); ok {
+		workerInt, err := strconv.ParseInt(worker, 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.Worker = int(workerInt)
+		}
+	}
+
 	const insertSQL = `INSERT INTO jobs (` +
 		`name,` +
 		`insecure,` +
@@ -148,7 +157,7 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 	jobConfig := models.JobConfig{}
 
 	var jobIDs string
-	if jobIDs := ctx.PostForm("job_id"); jobIDs == "" {
+	if jobIDs = ctx.PostForm("job_id"); jobIDs == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing 'job_id'",
 		})
@@ -223,6 +232,15 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 		}
 	}
 
+	if worker, ok := ctx.GetPostForm("worker"); ok {
+		workerInt, err := strconv.ParseInt(worker, 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.Worker = int(workerInt)
+		}
+	}
+
 	expr := query.FieldEqInt("id", jobConfig.ID)
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -236,7 +254,7 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 		`start_range = $6,` +
 		`end_range = $7,` +
 		`ignore_pattern = $8,` +
-		`domains = $9` +
+		`domains = $9 ` +
 		`WHERE ` +
 		builder.WhereClause +
 		`RETURNING id`
