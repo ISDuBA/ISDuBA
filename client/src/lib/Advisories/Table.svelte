@@ -123,17 +123,6 @@
     }
   };
 
-  let searchTimeout: any = null;
-
-  $: if (searchTerm !== undefined) {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-    searchTimeout = setTimeout(() => {
-      if (searchTerm === "" || searchTerm.length > 3) fetchData();
-    }, 500);
-  }
-
   $: if (columns) {
     if (!columns.includes(orderBy.split("-")[0])) orderBy = defaultOrderBy;
   }

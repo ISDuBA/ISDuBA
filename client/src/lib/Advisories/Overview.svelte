@@ -13,6 +13,7 @@
   import { Button, ButtonGroup, Search } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/Advisories/Table.svelte";
+  import { tick } from "svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
@@ -81,9 +82,11 @@
       {#if searchTerm}
         <button
           class="mr-3"
-          on:click={() => {
+          on:click={async () => {
             searchTerm = "";
             sessionStorage.setItem("documentSearchTerm", "");
+            await tick();
+            advisoryTable.fetchData();
           }}>x</button
         >
       {/if}
