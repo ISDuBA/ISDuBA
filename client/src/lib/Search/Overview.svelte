@@ -66,6 +66,9 @@
           return c !== searchColumnName;
         });
     } else {
+      query.columns = query.columns.filter((c) => {
+        return c !== searchColumnName;
+      });
       if (selectedCustomQuery === -1) {
         query.query = searchTerm || "";
       } else {
