@@ -79,6 +79,23 @@
     loadingTasks = false;
   }
 
+  async function downloadTaskLog(taskID: number) {
+    const response = await request(`/api/task/` + taskID, "GET");
+    if (response.ok) {
+      let blob = new Blob([response.content]);
+      let url = URL.createObjectURL(blob);
+      let link = document.createElement("a");
+      link.setAttribute("download", "task" + taskID + ".log");
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else if (response.error) {
+      taskLoadError = getErrorMessage(response.error);
+    }
+  }
+
   async function cancelTask(id: number) {
     const response = await request(`/api/task/${id}`, "DELETE");
     if (response.ok) {
@@ -110,6 +127,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>Sources</title>
+</svelte:head>
 
 <CustomTable
   title="Jobs"
@@ -227,6 +248,15 @@
       <TableBodyCell {tdClass}>{task.job_id}</TableBodyCell>
       <TableBodyCell {tdClass}>{task.created}</TableBodyCell>
       <TableBodyCell {tdClass}>{task.status}</TableBodyCell>
+      <TableBodyCell {tdClass}>
+        <a
+          href={"#"}
+          on:click={() => {
+            downloadTaskLog(task.task_id);
+          }}
+          download>Download</a
+        ></TableBodyCell
+      >
       <td>
         {#if task.status === TASK_STATE_RUNNING}
           <button

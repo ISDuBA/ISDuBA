@@ -303,13 +303,11 @@ func (s *Scheduler) runTasks() {
 			if err := s.db.Run(
 				s.ctx,
 				func(rctx context.Context, conn *pgxpool.Conn) error {
-					const fetchSQL = `UPDATE tasks SET log_file = $2 WHERE id = $1`
-					err := conn.QueryRow(rctx, fetchSQL, task.ID, logFileLocation).Scan()
-					return err
+					const fetchSQL = `UPDATE tasks SET log_file = $2 WHERE id = $1 RETURNING id`
+					return conn.QueryRow(rctx, fetchSQL, task.ID, logFileLocation).Scan(&task.ID)
 				}, 0,
 			); err != nil {
 				slog.Error("database error", "err", err)
-				return
 			}
 			var status models.Status
 			if err := s.downloader.run(downloadCtx, DownloadJob{

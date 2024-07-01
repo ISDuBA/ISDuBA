@@ -459,6 +459,39 @@ func (c *Controller) viewCrons(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, crons)
 }
 
+// getTaskLog returns the log file of the task.
+func (c *Controller) getTaskLog(ctx *gin.Context) {
+
+	taskIDs := ctx.Param("id")
+	var taskID int64
+	taskID, err := strconv.ParseInt(taskIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var logFileLocation string
+
+	expr := query.FieldEqInt("id", taskID)
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			fetchSQL := `SELECT log_file FROM tasks WHERE ` +
+				builder.WhereClause
+			err := conn.QueryRow(rctx, fetchSQL).Scan(&logFileLocation)
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.File(logFileLocation)
+}
+
 // viewTasks returns all tasks.
 func (c *Controller) viewTasks(ctx *gin.Context) {
 	var tasks []models.Task

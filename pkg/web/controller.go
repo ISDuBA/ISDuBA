@@ -128,6 +128,7 @@ func (c *Controller) Bind() http.Handler {
 	api.POST("/cron", authIm, c.addCron)
 	api.DELETE("/cron/:id", authIm, c.deleteCron)
 	api.GET("/task", authIm, c.viewTasks)
+	api.GET("/task/:id", authIm, c.getTaskLog)
 	api.DELETE("/task/:id", authIm, c.abortTask)
 	return r
 }
