@@ -29,7 +29,7 @@ import (
 )
 
 // MinSearchLength enforces a minimal length of search phrases.
-const MinSearchLength = 3
+const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 
 // deleteDocument is an end point for deleting a document.
 func (c *Controller) deleteDocument(ctx *gin.Context) {
