@@ -318,6 +318,7 @@
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
+
   <ErrorMessage message={error}></ErrorMessage>
   {#if documents?.length > 0}
     <div class="w-auto">
@@ -497,7 +498,7 @@
         </Table>
       </a>
     </div>
-  {:else if searchTerm}
+  {:else if query}
     No results were found.
   {/if}
 </div>
