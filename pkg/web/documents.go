@@ -28,6 +28,9 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
+// MinSearchLength enforces a minimal length of search phrases.
+const MinSearchLength = 3
+
 // deleteDocument is an end point for deleting a document.
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
@@ -205,9 +208,10 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	parser := query.Parser{
-		Advisory:  advisory,
-		Languages: c.cfg.Database.TextSearch,
-		Me:        ctx.GetString("uid"),
+		Advisory:        advisory,
+		Languages:       c.cfg.Database.TextSearch,
+		MinSearchLength: MinSearchLength,
+		Me:              ctx.GetString("uid"),
 	}
 
 	// The query to filter the documents.

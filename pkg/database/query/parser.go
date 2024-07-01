@@ -66,6 +66,8 @@ type Parser struct {
 	Advisory bool
 	// Languages are the languages supported by full-text search.
 	Languages []string
+	// MinSearchLength enforces a minimal lengths of search phrases.
+	MinSearchLength int
 	// Me is a replacement text for the "me" keyword.
 	Me string
 }
@@ -670,12 +672,20 @@ func (p *Parser) checkLanguage(lang string) {
 	}
 }
 
+func (p *Parser) checkSearchLength(term string) {
+	if p.MinSearchLength > 0 && len(term) < p.MinSearchLength {
+		panic(parseError(
+			fmt.Sprintf("search term too short (must be at least %d chars long", p.MinSearchLength)))
+	}
+}
+
 func (st *stack) search(p *Parser) {
 	lang := st.pop()
 	term := st.pop()
 	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
 	p.checkLanguage(lang.stringValue)
+	p.checkSearchLength(term.stringValue)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
@@ -690,6 +700,7 @@ func (st *stack) csearch(p *Parser) {
 	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
 	p.checkLanguage(lang.stringValue)
+	p.checkSearchLength(term.stringValue)
 	st.push(&Expr{
 		exprType:    csearch,
 		valueType:   boolType,
@@ -698,9 +709,10 @@ func (st *stack) csearch(p *Parser) {
 	})
 }
 
-func (st *stack) mentioned() {
+func (st *stack) mentioned(p *Parser) {
 	term := st.pop()
 	term.checkValueType(stringType)
+	p.checkSearchLength(term.stringValue)
 	st.push(&Expr{
 		exprType:    mentioned,
 		valueType:   boolType,
@@ -893,7 +905,7 @@ func (p *Parser) parse(input string) (*Expr, error) {
 		case "csearch":
 			st.csearch(p)
 		case "mentioned":
-			st.mentioned()
+			st.mentioned(p)
 		case "involved":
 			st.involved()
 		case "as":
