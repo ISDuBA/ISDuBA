@@ -57,8 +57,13 @@
         !query.columns.find((c) => {
           return c === "msg";
         })
-      )
+      ) {
         query.columns.push("msg");
+      }
+      if (!searchTerm)
+        query.columns = query.columns.filter((c) => {
+          return c !== "msg";
+        });
     } else {
       if (selectedCustomQuery === -1) {
         query.query = searchTerm || "";
@@ -87,7 +92,7 @@
     query = {
       query: detail.query,
       queryReset: detail.query,
-      columns: detail.columns,
+      columns: [...detail.columns],
       advisories: detail.advisories,
       orders: detail.orders || []
     };
