@@ -46,7 +46,11 @@
 
   const triggerSearch = async () => {
     if (!advancedSearch) {
-      query.query = searchTerm ? `"${searchTerm}" german search msg as` : "";
+      if (selectedCustomQuery === -1) {
+        query.query = searchTerm ? `"${searchTerm}" german search msg as` : "";
+      } else {
+        query.query = `${query.query} ${searchTerm ? `"${searchTerm}" german search msg as` : ""} and`;
+      }
       if (
         searchTerm &&
         !query.columns.find((c) => {
