@@ -32,8 +32,14 @@
 
   let query = resetQuery();
 
-  $: if (selectedCustomQuery === -1) {
+  const setQueryBack = async () => {
     query = resetQuery();
+    await tick();
+    advisoryTable.fetchData();
+  };
+
+  $: if (selectedCustomQuery === -1) {
+    setQueryBack();
   }
 
   const triggerSearch = async () => {
@@ -63,7 +69,7 @@
 </div>
 <hr class="mb-6" />
 <Queries
-  on:querySelected={(e) => {
+  on:querySelected={async (e) => {
     let { detail } = e;
     query = {
       query: detail.query,
@@ -72,6 +78,8 @@
       orders: detail.orders || []
     };
     searchTerm = "";
+    await tick();
+    advisoryTable.fetchData();
   }}
   bind:selectedIndex={selectedCustomQuery}
 ></Queries>

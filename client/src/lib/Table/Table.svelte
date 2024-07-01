@@ -10,6 +10,7 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
+  import { tick } from "svelte";
   import { push } from "svelte-spa-router";
   import {
     Label,
@@ -122,8 +123,13 @@
     }
   };
 
-  $: if (columns) {
+  const setOrderBy = async () => {
+    await tick();
     if (!columns.includes(orderBy.split("-")[0])) orderBy = defaultOrderBy;
+  };
+
+  $: if (columns) {
+    setOrderBy;
   }
 
   $: if (offset || currentPage || limit || orderBy) {
