@@ -13,6 +13,7 @@
   import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
+  import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
 
@@ -48,21 +49,21 @@
   const triggerSearch = async () => {
     if (!advancedSearch) {
       if (selectedCustomQuery === -1) {
-        query.query = searchTerm ? `"${searchTerm}" german search msg as` : "";
+        query.query = searchTerm ? `"${searchTerm}" german search ${searchColumnName} as` : "";
       } else {
-        query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" german search msg as and` : ""}`;
+        query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" german search ${searchColumnName} as and` : ""}`;
       }
       if (
         searchTerm &&
         !query.columns.find((c) => {
-          return c === "msg";
+          return c === searchColumnName;
         })
       ) {
-        query.columns.push("msg");
+        query.columns.push(searchColumnName);
       }
       if (!searchTerm)
         query.columns = query.columns.filter((c) => {
-          return c !== "msg";
+          return c !== searchColumnName;
         });
     } else {
       if (selectedCustomQuery === -1) {
@@ -120,7 +121,7 @@
             searchTerm = "";
             query.query = query.queryReset;
             query.columns = query.columns.filter((c) => {
-              return c !== "msg";
+              return c !== searchColumnName;
             });
             await tick();
             advisoryTable.fetchData();

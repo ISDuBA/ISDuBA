@@ -25,7 +25,7 @@
     Modal,
     Button
   } from "flowbite-svelte";
-  import { tdClass, tablePadding, title, publisher } from "$lib/Table/defaults";
+  import { tdClass, tablePadding, title, publisher, searchColumnName } from "$lib/Table/defaults";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -143,8 +143,8 @@
   $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
   export async function fetchData(): Promise<void> {
-    const searchSuffix = searchTerm ? `"${searchTerm}" german search msg as ` : "";
-    const searchColumn = searchTerm ? " msg" : "";
+    const searchSuffix = searchTerm ? `"${searchTerm}" german search ${searchColumnName} as ` : "";
+    const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";
     if (query || searchSuffix) {
       queryParam = `query=${query}${searchSuffix}`;
@@ -332,7 +332,7 @@
         <Table style="w-auto" hoverable={true} noborder={true}>
           <TableHead class="cursor-pointer">
             {#each columns as column}
-              {#if column !== "msg"}
+              {#if column !== searchColumnName}
                 <TableHeadCell
                   padding={tablePadding}
                   on:click={() => {
@@ -365,7 +365,7 @@
                 }}
               >
                 {#each columns as column}
-                  {#if column !== "msg"}
+                  {#if column !== searchColumnName}
                     {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
                       <TableBodyCell {tdClass}
                         ><span class:text-red-500={Number(item[column]) > 5.0}
@@ -486,13 +486,13 @@
                   {/each}
                 </TableBodyRow>
               {/if}
-              {#if item.msg}
+              {#if item[searchColumnName]}
                 <TableBodyRow class="border border-y-indigo-500/100 bg-white">
                   <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
                   {#each searchPadding as _}
                     <TableBodyCell {tdClass}></TableBodyCell>
                   {/each}
-                  <TableBodyCell {tdClass}>{@html item.msg}</TableBodyCell>
+                  <TableBodyCell {tdClass}>{@html item[searchColumnName]}</TableBodyCell>
                   <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
                   {#each searchPaddingRight as _}
                     <TableBodyCell {tdClass}></TableBodyCell>
