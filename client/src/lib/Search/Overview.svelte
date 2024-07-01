@@ -50,7 +50,7 @@
       if (selectedCustomQuery === -1) {
         query.query = searchTerm ? `"${searchTerm}" german search msg as` : "";
       } else {
-        query.query = `${query.query} ${searchTerm ? `"${searchTerm}" german search msg as and` : ""}`;
+        query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" german search msg as and` : ""}`;
       }
       if (
         searchTerm &&
