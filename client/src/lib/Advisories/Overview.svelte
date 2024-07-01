@@ -83,7 +83,6 @@
           class="mr-3"
           on:click={() => {
             searchTerm = "";
-            advisoryTable.fetchData();
             sessionStorage.setItem("documentSearchTerm", "");
           }}>x</button
         >
