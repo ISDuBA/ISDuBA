@@ -40,18 +40,18 @@ type Cron struct {
 
 // JobConfig represents a job configuration.
 type JobConfig struct {
-	ID                   int64  `json:"id"`
-	Name                 string `json:"name"`
-	Insecure             bool   `json:"insecure"`
-	IgnoreSignatureCheck bool   `json:"ignore_signature_check"`
-	// TODO: Implement client certs
-	// ClientCerts []string `json:"client_certs"`
-	ClientKey        *string    `json:"client_key,omitempty"`
-	ClientPassphrase *string    `json:"client_passphrase,omitempty"`
-	Rate             *float64   `json:"rate,omitempty"`
-	Worker           int        `json:"worker"`
-	StartRange       *time.Time `json:"start_range,omitempty"`
-	EndRange         *time.Time `json:"end_range,omitempty"`
-	IgnorePattern    *string    `json:"ignore_pattern,omitempty"`
-	Domains          []string   `json:"domains"`
+	ID                   int64             `json:"id"`
+	Name                 string            `json:"name"`
+	Insecure             bool              `json:"insecure"`
+	IgnoreSignatureCheck bool              `json:"ignore_signature_check"`
+	ClientCerts          []byte            `json:"client_certs,omitempty"`
+	ClientKey            *string           `json:"client_key,omitempty"`
+	ClientPassphrase     *string           `json:"client_passphrase,omitempty"`
+	Rate                 *float64          `json:"rate,omitempty"`
+	Worker               int               `json:"worker"`
+	StartRange           *time.Time        `json:"start_range,omitempty"`
+	EndRange             *time.Time        `json:"end_range,omitempty"`
+	IgnorePattern        *string           `json:"ignore_pattern,omitempty"`
+	Domains              []string          `json:"domains"`
+	Headers              map[string]string `json:"headers,omitempty"`
 }

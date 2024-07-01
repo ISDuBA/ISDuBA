@@ -15,6 +15,7 @@ import (
 	"errors"
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -266,7 +267,7 @@ func (s *Scheduler) runTasks() {
 		if err := s.db.Run(
 			s.ctx,
 			func(rctx context.Context, conn *pgxpool.Conn) error {
-				fetchSQL := `SELECT name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains FROM jobs WHERE ` +
+				fetchSQL := `SELECT name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains, http_headers FROM jobs WHERE ` +
 					builder.WhereClause
 				rows, _ := conn.Query(rctx, fetchSQL)
 				var err error
@@ -277,7 +278,9 @@ func (s *Scheduler) runTasks() {
 						var ignorePattern sql.NullString
 						var startRange sql.NullTime
 						var endRange sql.NullTime
-						err := row.Scan(&j.Name, &j.Insecure, &j.IgnoreSignatureCheck, &j.Rate, &j.Worker, &startRange, &endRange, &ignorePattern, &j.Domains)
+
+						var headers []string
+						err := row.Scan(&j.Name, &j.Insecure, &j.IgnoreSignatureCheck, &j.Rate, &j.Worker, &startRange, &endRange, &ignorePattern, &j.Domains, &headers)
 						if ignorePattern.Valid {
 							j.IgnorePattern = &ignorePattern.String
 						}
@@ -286,6 +289,13 @@ func (s *Scheduler) runTasks() {
 						}
 						if endRange.Valid {
 							j.EndRange = &endRange.Time
+						}
+						for _, h := range headers {
+							s := strings.Split(h, ":")
+							if len(s) < 2 {
+								continue
+							}
+							jobConf.Headers[s[0]] = s[1]
 						}
 						return j, err
 					})
@@ -379,6 +389,7 @@ func (s *Scheduler) Start() {
 
 // Close closes the scheduler
 func (s *Scheduler) Close() {
+	// TODO: Fix race condition with cron
 	s.cron.Stop()
 	close(s.notify)
 

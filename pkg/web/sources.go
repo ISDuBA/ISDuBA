@@ -9,13 +9,18 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"io"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/jackc/pgx/v5"
@@ -84,6 +89,46 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		jobConfig.IgnorePattern = &ignorePattern
 	}
 
+	header := ctx.PostFormArray("header")
+	if header == nil {
+		header = []string{}
+	}
+
+	var file *multipart.FileHeader
+	if file, err = ctx.FormFile("client_cert"); err == nil {
+		open, err := file.Open()
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		defer open.Close()
+
+		certFile := bytes.NewBuffer(nil)
+		if _, err := io.Copy(certFile, open); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		jobConfig.ClientCerts = certFile.Bytes()
+	}
+
+	if startRange, ok := ctx.GetPostForm("start_range"); ok {
+		startRangeTime, err := time.Parse("2006-01-02", startRange)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.StartRange = &startRangeTime
+		}
+	}
+
+	if endRange, ok := ctx.GetPostForm("start_range"); ok {
+		endRangeTime, err := time.Parse("2006-01-02", endRange)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.EndRange = &endRangeTime
+		}
+	}
+
 	if rate, ok := ctx.GetPostForm("rate"); ok {
 		rateFloat, err := strconv.ParseFloat(rate, 32)
 		if err != nil {
@@ -113,8 +158,10 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		`start_range,` +
 		`end_range,` +
 		`ignore_pattern,` +
-		`domains` +
-		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)` +
+		`domains,` +
+		`http_headers,` +
+		`client_certs,` +
+		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)` +
 		`RETURNING id`
 
 	var jobID int64
@@ -134,6 +181,8 @@ func (c *Controller) addJob(ctx *gin.Context) {
 				jobConfig.EndRange,
 				jobConfig.IgnorePattern,
 				jobConfig.Domains,
+				header,
+				jobConfig.ClientCerts,
 			).Scan(&jobID)
 		}, 0,
 	); err != nil {
@@ -241,6 +290,46 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 		}
 	}
 
+	header := ctx.PostFormArray("header")
+	if header == nil {
+		header = []string{}
+	}
+
+	var file *multipart.FileHeader
+	if file, err = ctx.FormFile("client_cert"); err == nil {
+		open, err := file.Open()
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		defer open.Close()
+
+		certFile := bytes.NewBuffer(nil)
+		if _, err := io.Copy(certFile, open); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		jobConfig.ClientCerts = certFile.Bytes()
+	}
+
+	if startRange, ok := ctx.GetPostForm("start_range"); ok {
+		startRangeTime, err := time.Parse("2006-01-02", startRange)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.StartRange = &startRangeTime
+		}
+	}
+
+	if endRange, ok := ctx.GetPostForm("start_range"); ok {
+		endRangeTime, err := time.Parse("2006-01-02", endRange)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			jobConfig.EndRange = &endRangeTime
+		}
+	}
+
 	expr := query.FieldEqInt("id", jobConfig.ID)
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -254,7 +343,9 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 		`start_range = $6,` +
 		`end_range = $7,` +
 		`ignore_pattern = $8,` +
-		`domains = $9 ` +
+		`domains = $9, ` +
+		`http_headers = $10,` +
+		`client_certs = $11 ` +
 		`WHERE ` +
 		builder.WhereClause +
 		`RETURNING id`
@@ -274,6 +365,8 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 				jobConfig.EndRange,
 				jobConfig.IgnorePattern,
 				jobConfig.Domains,
+				header,
+				jobConfig.ClientCerts,
 			).Scan(&jobID)
 		}, 0,
 	); err != nil {
@@ -334,7 +427,7 @@ func (c *Controller) viewJobs(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			const fetchSQL = `SELECT id, name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains FROM jobs`
+			const fetchSQL = `SELECT id, name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains, http_headers FROM jobs`
 			rows, _ := conn.Query(rctx, fetchSQL)
 			var err error
 			jobs, err = pgx.CollectRows(
@@ -344,7 +437,9 @@ func (c *Controller) viewJobs(ctx *gin.Context) {
 					var ignorePattern sql.NullString
 					var startRange sql.NullTime
 					var endRange sql.NullTime
-					err := row.Scan(&j.ID, &j.Name, &j.Insecure, &j.IgnoreSignatureCheck, &j.Rate, &j.Worker, &startRange, &endRange, &ignorePattern, &j.Domains)
+
+					var headers []string
+					err := row.Scan(&j.ID, &j.Name, &j.Insecure, &j.IgnoreSignatureCheck, &j.Rate, &j.Worker, &startRange, &endRange, &ignorePattern, &j.Domains, &headers)
 					if ignorePattern.Valid {
 						j.IgnorePattern = &ignorePattern.String
 					}
@@ -353,6 +448,14 @@ func (c *Controller) viewJobs(ctx *gin.Context) {
 					}
 					if endRange.Valid {
 						j.EndRange = &endRange.Time
+					}
+
+					for _, h := range headers {
+						s := strings.Split(h, ":")
+						if len(s) < 2 {
+							continue
+						}
+						j.Headers[s[0]] = s[1]
 					}
 					return j, err
 				})
