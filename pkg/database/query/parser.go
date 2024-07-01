@@ -675,7 +675,7 @@ func (p *Parser) checkLanguage(lang string) {
 func (p *Parser) checkSearchLength(term string) {
 	if p.MinSearchLength > 0 && len(term) < p.MinSearchLength {
 		panic(parseError(
-			fmt.Sprintf("search term too short (must be at least %d chars long", p.MinSearchLength)))
+			fmt.Sprintf("search term too short (must be at least %d chars long)", p.MinSearchLength)))
 	}
 }
 
