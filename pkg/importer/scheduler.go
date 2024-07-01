@@ -299,6 +299,18 @@ func (s *Scheduler) runTasks() {
 		t := time.Now().UTC()
 
 		go func() {
+			logFileLocation := s.cfg.Importer.LogPath + "-" + jobConf.Name + "-" + t.Format(time.RFC3339) + ".log"
+			if err := s.db.Run(
+				s.ctx,
+				func(rctx context.Context, conn *pgxpool.Conn) error {
+					const fetchSQL = `UPDATE tasks SET log_file = $2 WHERE id = $1`
+					err := conn.QueryRow(rctx, fetchSQL, task.ID, logFileLocation).Scan()
+					return err
+				}, 0,
+			); err != nil {
+				slog.Error("database error", "err", err)
+				return
+			}
 			var status models.Status
 			if err := s.downloader.run(downloadCtx, DownloadJob{
 				Config:         jobConf,
@@ -306,7 +318,7 @@ func (s *Scheduler) runTasks() {
 				Presets:        s.cfg.Importer.RemoteValidatorPresets,
 				ValidationMode: s.cfg.Importer.ValidationMode,
 				Db:             s.db,
-				LogFile:        s.cfg.Importer.LogPath + "-" + jobConf.Name + "-" + t.Format(time.RFC3339) + ".log",
+				LogFile:        logFileLocation,
 				LogLevel:       s.cfg.Importer.LogLevel,
 			}); err != nil {
 				slog.Error("download error", "err", err)
