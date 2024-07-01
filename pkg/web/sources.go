@@ -160,7 +160,7 @@ func (c *Controller) addJob(ctx *gin.Context) {
 		`ignore_pattern,` +
 		`domains,` +
 		`http_headers,` +
-		`client_certs,` +
+		`client_certs` +
 		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)` +
 		`RETURNING id`
 

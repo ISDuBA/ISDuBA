@@ -35,9 +35,11 @@ type Scheduler struct {
 	cfg             *config.Config
 	downloader      *downloadWorker
 	cron            *cron.Cron
+	cronLock        sync.Mutex
 	runningTasks    map[int64]context.CancelFunc
 	runningTaskLock sync.Mutex
 	notify          chan bool
+	wg              sync.WaitGroup
 }
 
 // NewScheduler returns a new scheduler.
@@ -211,9 +213,11 @@ func (s *Scheduler) runCron() {
 		return
 	}
 
+	s.cronLock.Lock()
 	s.cron.Stop()
 	// TODO: use cron.Remove(id EntryID) to delete cron job
 	s.cron = cron.New()
+	s.cronLock.Unlock()
 	for _, c := range crons {
 		cronJob := func() {
 			_, err := s.AddTask(c.JobID)
@@ -222,7 +226,9 @@ func (s *Scheduler) runCron() {
 				return
 			}
 		}
+		s.cronLock.Lock()
 		_, err := s.cron.AddFunc(c.CronTiming, cronJob)
+		s.cronLock.Unlock()
 		if err != nil {
 			slog.Error("could not add cron job", "err", err)
 			return
@@ -310,6 +316,7 @@ func (s *Scheduler) runTasks() {
 
 		go func() {
 			logFileLocation := s.cfg.Importer.LogPath + "-" + jobConf.Name + "-" + t.Format(time.RFC3339) + ".log"
+			s.wg.Add(1)
 			if err := s.db.Run(
 				s.ctx,
 				func(rctx context.Context, conn *pgxpool.Conn) error {
@@ -319,6 +326,7 @@ func (s *Scheduler) runTasks() {
 			); err != nil {
 				slog.Error("database error", "err", err)
 			}
+			s.wg.Done()
 			var status models.Status
 			if err := s.downloader.run(downloadCtx, DownloadJob{
 				Config:         jobConf,
@@ -339,10 +347,12 @@ func (s *Scheduler) runTasks() {
 				status = models.COMPLETED
 			}
 
+			s.wg.Add(1)
 			_, err := s.setTaskState(task.ID, status)
 			if err != nil {
 				slog.Error("setTaskState error", "err", err)
 			}
+			s.wg.Done()
 		}()
 	}
 }
@@ -372,7 +382,9 @@ func (s *Scheduler) setTaskState(taskID int64, status models.Status) (*int64, er
 }
 
 func (s *Scheduler) Start() {
+	s.wg.Add(1)
 	go func() {
+		defer s.wg.Done()
 		for {
 			select {
 			case <-s.ctx.Done():
@@ -389,9 +401,11 @@ func (s *Scheduler) Start() {
 
 // Close closes the scheduler
 func (s *Scheduler) Close() {
-	// TODO: Fix race condition with cron
-	s.cron.Stop()
+	s.wg.Wait()
 	close(s.notify)
+	s.cronLock.Lock()
+	s.cron.Stop()
+	s.cronLock.Unlock()
 
 	// Stop all running tasks
 	s.runningTaskLock.Lock()
