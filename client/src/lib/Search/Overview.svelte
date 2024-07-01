@@ -26,7 +26,8 @@
       columns: [...SEARCHPAGECOLUMNS.ADVISORY],
       advisories: true,
       orders: ["cvss_v3_score"],
-      query: ""
+      query: "",
+      queryReset: ""
     };
   };
 
@@ -49,7 +50,7 @@
       if (selectedCustomQuery === -1) {
         query.query = searchTerm ? `"${searchTerm}" german search msg as` : "";
       } else {
-        query.query = `${query.query} ${searchTerm ? `"${searchTerm}" german search msg as` : ""} and`;
+        query.query = `${query.query} ${searchTerm ? `"${searchTerm}" german search msg as and` : ""}`;
       }
       if (
         searchTerm &&
@@ -58,6 +59,12 @@
         })
       )
         query.columns.push("msg");
+    } else {
+      if (selectedCustomQuery === -1) {
+        query.query = searchTerm || "";
+      } else {
+        query.query = `${query.query} ${searchTerm ? searchTerm + " and" : ""}`;
+      }
     }
     await tick();
     advisoryTable.fetchData();
@@ -79,6 +86,7 @@
     let { detail } = e;
     query = {
       query: detail.query,
+      queryReset: detail.query,
       columns: detail.columns,
       advisories: detail.advisories,
       orders: detail.orders || []
@@ -105,7 +113,7 @@
           class="mr-3"
           on:click={async () => {
             searchTerm = "";
-            query.query = "";
+            query.query = query.queryReset;
             query.columns = query.columns.filter((c) => {
               return c !== "msg";
             });
