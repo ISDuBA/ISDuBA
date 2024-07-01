@@ -173,7 +173,7 @@
       ({ count, documents } = response.content);
       documents = calcSSVC(documents) || [];
     } else if (response.error) {
-      error = getErrorMessage(response.error);
+      error = `${getErrorMessage(response.error)} ${response.content}`;
     }
     loading = false;
     requestOngoing = false;
