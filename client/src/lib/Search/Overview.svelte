@@ -23,7 +23,7 @@
 
   const resetQuery = () => {
     return {
-      columns: SEARCHPAGECOLUMNS.ADVISORY,
+      columns: [...SEARCHPAGECOLUMNS.ADVISORY],
       advisories: true,
       orders: ["cvss_v3_score"],
       query: ""
@@ -34,6 +34,8 @@
 
   const setQueryBack = async () => {
     query = resetQuery();
+    searchTerm = "";
+    sessionStorage.setItem("documentSearchTerm", "");
     await tick();
     advisoryTable.fetchData();
   };
