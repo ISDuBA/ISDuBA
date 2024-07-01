@@ -63,7 +63,7 @@
       if (selectedCustomQuery === -1) {
         query.query = searchTerm || "";
       } else {
-        query.query = `${query.query} ${searchTerm ? searchTerm + " and" : ""}`;
+        query.query = `${query.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
       }
     }
     await tick();
