@@ -129,7 +129,7 @@
       clearTimeout(searchTimeout);
     }
     searchTimeout = setTimeout(() => {
-      fetchData();
+      if (searchTerm === "" || searchTerm.length > 3) fetchData();
     }, 500);
   }
 
