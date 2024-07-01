@@ -195,6 +195,7 @@ CREATE TABLE documents_texts (
     UNIQUE(documents_id, num)
 );
 
+CREATE INDEX ON documents_texts(documents_id);
 CREATE INDEX documents_texts_ts_idx ON unique_texts USING GIN (ts);
 
 CREATE TABLE comments (

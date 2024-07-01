@@ -141,19 +141,30 @@ func doMigrations(
 		}
 		const insertVersion = `INSERT INTO versions (version, description) VALUES ($1, $2)`
 		if err := func() error {
+			slog.InfoContext(ctx, "running migration", "name", mig.description)
+			ver := mig.version
+			if ver == 0 { // Version 0 is special as it is intented to setup directly to lastest.
+				ver = migs[len(migs)-1].version
+				version = ver
+			}
+			// Should this script run without a transaction?
+			if strings.HasSuffix(mig.description, "_notx") {
+				if _, err := conn.Exec(ctx, script.String()); err != nil {
+					return fmt.Errorf("executing no tx migration %q failed: %w", mig.path, err)
+				}
+				if _, err := conn.Exec(ctx, insertVersion, ver, mig.description); err != nil {
+					return fmt.Errorf("inserting version of migration %q failed: %w", mig.path, err)
+				}
+				return nil
+			}
+			// Run inside a transaction.
 			tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 			if err != nil {
 				return err
 			}
 			defer tx.Rollback(ctx)
-			slog.InfoContext(ctx, "running migration", "name", mig.description)
 			if _, err := tx.Exec(ctx, script.String()); err != nil {
 				return fmt.Errorf("executing migration %q failed: %w", mig.path, err)
-			}
-			ver := mig.version
-			if ver == 0 { // Version 0 is special as it is intented to setup directly to lastest.
-				ver = migs[len(migs)-1].version
-				version = ver
 			}
 			if _, err := tx.Exec(ctx, insertVersion, ver, mig.description); err != nil {
 				return fmt.Errorf("inserting version of migration %q failed: %w", mig.path, err)
