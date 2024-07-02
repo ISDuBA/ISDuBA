@@ -12,9 +12,11 @@
   import { onMount } from "svelte";
   import Diff from "$lib/Diff/Diff.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { request } from "$lib/utils";
   import { Button, Label, Select, TabItem, Tabs } from "flowbite-svelte";
   import JsonDiff from "./JsonDiff.svelte";
+  import { appStore } from "$lib/store";
+  $: $appStore.app.diff.docA, compare();
+  $: $appStore.app.diff.docB, compare();
 
   let documents: any[] = [];
   $: selectionOfDocuments = documents.map((doc) => {
@@ -29,21 +31,17 @@
   let title: string;
 
   const compare = () => {
-    if (docA && docB) {
+    if ($appStore.app.diff.docA && $appStore.app.diff.docB) {
       diffDocuments = {
-        docA: docB,
-        docB: docA
+        docA: $appStore.app.diff.docB,
+        docB: $appStore.app.diff.docA
       };
       title = `Changes from ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docB.version}) to ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docA.version})`;
     }
   };
 
   onMount(async () => {
-    const documentURL = encodeURI(`/api/documents?limit=20&columns=id version tracking_id`);
-    const response = await request(documentURL, "GET");
-    if (response.ok && response.content.documents != undefined) {
-      documents = response.content.documents;
-    }
+    compare();
   });
 </script>
 

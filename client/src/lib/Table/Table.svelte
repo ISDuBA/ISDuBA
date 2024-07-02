@@ -23,7 +23,8 @@
     TableHeadCell,
     Table,
     Modal,
-    Button
+    Button,
+    Img
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher, searchColumnName } from "$lib/Table/defaults";
   import { Spinner } from "flowbite-svelte";
@@ -55,6 +56,8 @@
   export let loadAdvisories: boolean;
   export let orderBy = "title";
   export let defaultOrderBy = "";
+
+  $: disableDiffButtons = $appStore.app.diff.docA !== null && $appStore.app.diff.docB !== null;
 
   let anchorLink: string | null;
   let deleteModalOpen = false;
@@ -478,8 +481,8 @@
                     {/if}
                   {/if}
                 {/each}
-                {#if isAdmin}
-                  <TableBodyCell {tdClass}>
+                <TableBodyCell {tdClass}>
+                  {#if isAdmin}
                     <button
                       on:click|stopPropagation={(e) => {
                         documentToDelete = item;
@@ -489,8 +492,31 @@
                       title={`delete ${item.tracking_id}`}
                       ><i class="bx bx-trash text-red-500"></i></button
                     >
-                  </TableBodyCell>
-                {/if}
+                  {/if}
+                  <button
+                    on:click|stopPropagation={(e) => {
+                      $appStore.app.diff.docA
+                        ? appStore.setDiffDocB(item)
+                        : appStore.setDiffDocA(item);
+                      e.preventDefault();
+                    }}
+                    disabled={$appStore.app.diff.docA?.id === item.id ||
+                      $appStore.app.diff.docB?.id === item.id ||
+                      disableDiffButtons}
+                    title={`compare ${item.tracking_id}`}
+                  >
+                    <Img
+                      src="plus-minus.svg"
+                      class={`${
+                        $appStore.app.diff.docA?.id === item.id ||
+                        $appStore.app.diff.docB?.id === item.id ||
+                        disableDiffButtons
+                          ? "invert-[70%]"
+                          : ""
+                      } min-h-4 min-w-4`}
+                    />
+                  </button>
+                </TableBodyCell>
               </tr>
               {#if openRow === i}
                 <TableBodyRow>

@@ -37,6 +37,10 @@ type AppStore = {
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
     errors: ErrorMessage[];
+    diff: {
+      docA: any | null;
+      docB: any | null;
+    };
   };
   webview: {
     doc: DocModel | null;
@@ -76,6 +80,10 @@ const generateInitialState = (): AppStore => {
       userProfile: {
         firstName: "",
         lastName: ""
+      },
+      diff: {
+        docA: null,
+        docB: null
       },
       sessionExpired: false,
       sessionExpiredMessage: null,
@@ -314,6 +322,18 @@ function createStore() {
         const { firstName, lastName } = userProfile;
         settings.app.userProfile.firstName = firstName;
         settings.app.userProfile.lastName = lastName;
+        return settings;
+      });
+    },
+    setDiffDocA: (doc: any | null) => {
+      update((settings) => {
+        settings.app.diff.docA = doc;
+        return settings;
+      });
+    },
+    setDiffDocB: (doc: any | null) => {
+      update((settings) => {
+        settings.app.diff.docB = doc;
         return settings;
       });
     },
