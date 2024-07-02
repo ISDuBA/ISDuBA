@@ -14,6 +14,7 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/Advisories/Table.svelte";
   import { tick } from "svelte";
+  import DiffSelection from "$lib/Diff/DiffSelection.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
@@ -127,3 +128,4 @@
     {columns}
   ></AdvisoryTable>
 {/if}
+<DiffSelection></DiffSelection>
