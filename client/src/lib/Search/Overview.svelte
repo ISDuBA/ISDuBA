@@ -21,7 +21,7 @@
   let advisoryTable: any;
   let advancedSearch = false;
   let selectedCustomQuery: any;
-  let searchqueryTimer: any = null;
+  // let searchqueryTimer: any = null;
 
   const resetQuery = () => {
     return {
@@ -127,12 +127,12 @@
       on:keyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
         if (e.key === "Enter") triggerSearch();
-        if (searchTerm && searchTerm.length > 2) {
-          if (searchqueryTimer) clearTimeout(searchqueryTimer);
-          searchqueryTimer = setTimeout(() => {
-            triggerSearch();
-          }, 500);
-        }
+        // if (searchTerm && searchTerm.length > 2) {
+        //   if (searchqueryTimer) clearTimeout(searchqueryTimer);
+        //   searchqueryTimer = setTimeout(() => {
+        //     triggerSearch();
+        //   }, 500);
+        // }
         if (searchTerm === "") clearSearch();
       }}
     >
