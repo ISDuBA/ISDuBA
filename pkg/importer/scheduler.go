@@ -13,11 +13,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"log/slog"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
@@ -75,7 +76,7 @@ func (s *Scheduler) init() {
 				rows,
 				func(row pgx.CollectableRow) (models.Task, error) {
 					var task models.Task
-					err := row.Scan(&task.ID, &task.Created, &task.JobId, &task.Status)
+					err := row.Scan(&task.ID, &task.Created, &task.JobID, &task.Status)
 					return task, err
 				})
 			return err
@@ -152,18 +153,17 @@ func (s *Scheduler) AddCron(cron models.Cron) (*int64, error) {
 
 // DeleteCron deletes a cron job.
 func (s *Scheduler) DeleteCron(cronID int64) (*int64, error) {
-
 	expr := query.FieldEqInt("id", cronID)
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
-	deleteSql := `DELETE FROM cron WHERE ` +
+	deleteSQL := `DELETE FROM cron WHERE ` +
 		builder.WhereClause
 
 	if err := s.db.Run(
 		s.ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			if _, err := conn.Exec(rctx, deleteSql); err != nil {
+			if _, err := conn.Exec(rctx, deleteSQL); err != nil {
 				return err
 			}
 			return nil
@@ -249,7 +249,7 @@ func (s *Scheduler) runTasks() {
 				rows,
 				func(row pgx.CollectableRow) (models.Task, error) {
 					var task models.Task
-					err := row.Scan(&task.ID, &task.Created, &task.JobId, &task.Status)
+					err := row.Scan(&task.ID, &task.Created, &task.JobID, &task.Status)
 					return task, err
 				})
 			return err
@@ -260,7 +260,7 @@ func (s *Scheduler) runTasks() {
 	}
 
 	for _, task := range tasks {
-		expr := query.FieldEqInt("id", task.JobId)
+		expr := query.FieldEqInt("id", task.JobID)
 		builder := query.SQLBuilder{}
 		builder.CreateWhere(expr)
 
@@ -362,7 +362,7 @@ func (s *Scheduler) setTaskState(taskID int64, status models.Status) (*int64, er
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
-	var updateTaskId int64
+	var updateTaskID int64
 
 	updateSQL := `UPDATE tasks SET status = $1  WHERE ` +
 		builder.WhereClause +
@@ -371,16 +371,17 @@ func (s *Scheduler) setTaskState(taskID int64, status models.Status) (*int64, er
 	if err := s.db.Run(
 		s.ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, updateSQL, status).Scan(&updateTaskId)
+			return conn.QueryRow(rctx, updateSQL, status).Scan(&updateTaskID)
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
 		return nil, err
 	}
 
-	return &updateTaskId, nil
+	return &updateTaskID, nil
 }
 
+// Start starts the scheduler.
 func (s *Scheduler) Start() {
 	s.wg.Add(1)
 	go func() {

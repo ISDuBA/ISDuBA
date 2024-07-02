@@ -26,7 +26,7 @@ const (
 type Task struct {
 	ID      int64     `json:"task_id"`
 	Created time.Time `json:"created"`
-	JobId   int64     `json:"job_id"`
+	JobID   int64     `json:"job_id"`
 	Status  Status    `json:"status"`
 }
 

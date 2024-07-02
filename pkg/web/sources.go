@@ -13,7 +13,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"io"
 	"log/slog"
 	"mime/multipart"
@@ -21,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/jackc/pgx/v5"
@@ -387,7 +388,6 @@ func (c *Controller) updateJob(ctx *gin.Context) {
 
 // deleteJob deletes a job configuration.
 func (c *Controller) deleteJob(ctx *gin.Context) {
-
 	jobIDs := ctx.Param("id")
 	jobID, err := strconv.ParseInt(jobIDs, 10, 64)
 	if err != nil {
@@ -564,7 +564,6 @@ func (c *Controller) viewCrons(ctx *gin.Context) {
 
 // getTaskLog returns the log file of the task.
 func (c *Controller) getTaskLog(ctx *gin.Context) {
-
 	taskIDs := ctx.Param("id")
 	var taskID int64
 	taskID, err := strconv.ParseInt(taskIDs, 10, 64)
@@ -609,7 +608,7 @@ func (c *Controller) viewTasks(ctx *gin.Context) {
 				rows,
 				func(row pgx.CollectableRow) (models.Task, error) {
 					var task models.Task
-					err := row.Scan(&task.ID, &task.Created, &task.JobId, &task.Status)
+					err := row.Scan(&task.ID, &task.Created, &task.JobID, &task.Status)
 					return task, err
 				})
 			return err
