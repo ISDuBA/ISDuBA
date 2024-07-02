@@ -123,15 +123,17 @@
     }
   };
 
-  $: orderByColumns = orderBy.split(" ").map((c) => {
-    return c.replace("-", "");
-  });
+  $: orderByColumns = orderBy.split(" ");
 
   const setOrderBy = async () => {
     await tick();
-    orderByColumns.forEach((c) => {
-      if (!orderBy.includes(c)) orderBy = defaultOrderBy;
-    });
+    orderByColumns
+      .map((c) => {
+        return c.replace("-", "");
+      })
+      .forEach((c) => {
+        if (!orderBy.includes(c)) orderBy = defaultOrderBy;
+      });
   };
 
   $: if (columns) {
@@ -212,12 +214,24 @@
     fetchData();
   };
 
-  const switchSort = (column: string) => {
-    if (column === orderBy) {
-      orderBy[0] === "-" ? (orderBy = column) : (orderBy = `-${column}`);
+  const switchSort = async (column: string) => {
+    let orderByCols = orderBy.split(" ");
+    if (
+      orderByCols.find((c: string) => {
+        return c === column;
+      })
+    ) {
+      orderBy = `-${column}`;
+    } else if (
+      orderByCols.find((c: string) => {
+        return c === `-${column}`;
+      })
+    ) {
+      orderBy = `${column}`;
     } else {
       orderBy = column;
     }
+    await tick();
     fetchData();
   };
 
