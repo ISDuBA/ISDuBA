@@ -11,6 +11,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/importer"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
 )
@@ -51,9 +53,13 @@ func run(cfg *config.Config) error {
 	}
 	defer db.Close(ctx)
 
+	scheduler := importer.NewScheduler(ctx, db, cfg)
+	scheduler.Start()
+	defer scheduler.Close()
+
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db)
+	ctrl := web.NewController(cfg, db, scheduler)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)
@@ -67,7 +73,7 @@ func run(cfg *config.Config) error {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			srvErrors <- err
 		}
 	}()
