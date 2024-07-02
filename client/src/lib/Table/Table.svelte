@@ -181,7 +181,10 @@
       ({ count, documents } = response.content);
       documents = calcSSVC(documents) || [];
     } else if (response.error) {
-      error = `${getErrorMessage(response.error)} ${response.content}`;
+      error =
+        response.error === "400"
+          ? `${getErrorMessage(response.error)} (reason: "${response.content}"). Please check your search syntax.`
+          : `${getErrorMessage(response.error)} ${response.content}`;
     }
     loading = false;
     requestOngoing = false;
