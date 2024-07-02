@@ -10,9 +10,8 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import Diff from "$lib/Diff/Diff.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Button, Label, Select, TabItem, Tabs } from "flowbite-svelte";
+  import { Button, Label, Select } from "flowbite-svelte";
   import JsonDiff from "./JsonDiff.svelte";
   import { appStore } from "$lib/store";
   $: $appStore.app.diff.docA, compare();
@@ -51,22 +50,15 @@
 
 <SectionHeader title="Comparison"></SectionHeader>
 <hr class="mb-6" />
-<Tabs>
-  <TabItem open title="JSON diff">
-    <Label class="mb-6">
-      Document 1:
-      <Select id="firstDoc" bind:value={docA} items={selectionOfDocuments}></Select>
-    </Label>
-    <Label>
-      Document 2:
-      <Select id="secondDoc" bind:value={docB} items={selectionOfDocuments}></Select>
-    </Label>
-    <Button on:click={compare} class="my-2">Compare</Button>
-    {#if diffDocuments}
-      <JsonDiff {diffDocuments} {title}></JsonDiff>
-    {/if}
-  </TabItem>
-  <TabItem title="Git diff">
-    <Diff></Diff>
-  </TabItem>
-</Tabs>
+<Label class="mb-6">
+  Document 1:
+  <Select id="firstDoc" bind:value={docA} items={selectionOfDocuments}></Select>
+</Label>
+<Label>
+  Document 2:
+  <Select id="secondDoc" bind:value={docB} items={selectionOfDocuments}></Select>
+</Label>
+<Button on:click={compare} class="my-2">Compare</Button>
+{#if diffDocuments}
+  <JsonDiff {diffDocuments} {title}></JsonDiff>
+{/if}
