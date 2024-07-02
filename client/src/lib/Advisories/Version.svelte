@@ -13,6 +13,8 @@
   import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
+  import { appStore } from "$lib/store";
+
   export let advisoryVersions: any;
   $: reversedAdvisoryVersions = advisoryVersions.toReversed();
   export let publisherNamespace: string;
@@ -66,10 +68,9 @@
       secondDocumentIndex !== undefined &&
       nextColor === "red"
     ) {
-      dispatch("selectedDiffDocuments", {
-        docA: reversedAdvisoryVersions[secondDocumentIndex],
-        docB: reversedAdvisoryVersions[firstDocumentIndex]
-      });
+      appStore.setDiffDocA(reversedAdvisoryVersions[secondDocumentIndex]);
+      appStore.setDiffDocB(reversedAdvisoryVersions[firstDocumentIndex]);
+      dispatch("selectedDiffDocuments");
     }
   };
   const selectDiffDocument = (index: number) => {

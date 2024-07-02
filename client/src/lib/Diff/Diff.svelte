@@ -11,14 +11,17 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, ButtonGroup, Label } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
-  import type { JsonDiffResult } from "./JsonDiff";
-  import LazyDiffEntry from "./LazyDiffEntry.svelte";
+  import type { JsonDiffResult } from "./Diff";
+  import LazyEntry from "./LazyEntry.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import { appStore } from "$lib/store";
+  import { onMount } from "svelte";
 
-  export let diffDocuments: any;
-  export let title: string | undefined;
+  export let showTitle = true;
+  let title = "";
+  let diffDocuments: any;
   let error: string;
   let diff: any;
   let urlPath: string;
@@ -31,8 +34,25 @@
   $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
   $: diffDocuments, getDiff();
+  $: $appStore.app.diff.docA, compare();
+  $: $appStore.app.diff.docB, compare();
+
+  const compare = () => {
+    if ($appStore.app.diff.docA && $appStore.app.diff.docB) {
+      diffDocuments = {
+        docA: $appStore.app.diff.docB,
+        docB: $appStore.app.diff.docA
+      };
+      title = `Changes from ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docB.version}) to ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docA.version})`;
+    }
+  };
+
+  onMount(async () => {
+    compare();
+  });
 
   const getDiff = async () => {
+    if (!diffDocuments) return;
     urlPath = `/api/diff/${diffDocuments.docB.id}/${diffDocuments.docA.id}?word-diff=true`;
     error = "";
     const response = await request(urlPath, "GET");
@@ -55,10 +75,14 @@
   };
 </script>
 
+<svelte:head>
+  <title>Compare</title>
+</svelte:head>
+
 <div>
   <ErrorMessage message={error}></ErrorMessage>
   {#if diff}
-    {#if title}
+    {#if showTitle}
       <Label class="text-lg">{title}</Label>
     {/if}
     <span class={`${title ? "text-gray-700" : "text-sm text-gray-500"}`}>{diff.length} changes</span
@@ -109,7 +133,7 @@
               <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
               ></DiffEntry>
             {:else}
-              <LazyDiffEntry operation={change.op} {urlPath} path={change.path}></LazyDiffEntry>
+              <LazyEntry operation={change.op} {urlPath} path={change.path}></LazyEntry>
             {/if}
           </div>
         {/each}
@@ -157,7 +181,7 @@
               <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
               ></DiffEntry>
             {:else}
-              <LazyDiffEntry operation={change.op} {urlPath} path={change.path}></LazyDiffEntry>
+              <LazyEntry operation={change.op} {urlPath} path={change.path}></LazyEntry>
             {/if}
           </div>
         {/each}
