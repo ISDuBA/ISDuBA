@@ -123,13 +123,19 @@
     }
   };
 
+  $: orderByColumns = orderBy.split(" ").map((c) => {
+    return c.replace("-", "");
+  });
+
   const setOrderBy = async () => {
     await tick();
-    if (!columns.includes(orderBy.split("-")[0])) orderBy = defaultOrderBy;
+    orderByColumns.forEach((c) => {
+      if (!orderBy.includes(c)) orderBy = defaultOrderBy;
+    });
   };
 
   $: if (columns) {
-    setOrderBy;
+    setOrderBy();
   }
 
   $: if (offset || currentPage || limit || orderBy) {
