@@ -10,6 +10,7 @@ package query
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strconv"
@@ -70,6 +71,9 @@ type Parser struct {
 	MinSearchLength int
 	// Me is a replacement text for the "me" keyword.
 	Me string
+
+	// aliases defined by 'as'.
+	aliases map[string]struct{}
 }
 
 // Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
@@ -244,6 +248,7 @@ func (pe parseError) Error() string {
 	return string(pe)
 }
 
+// columns are the columns which can be accessed.
 var columns = []documentColumn{
 	{"id", intType, false, false},
 	{"latest", boolType, false, false},
@@ -398,8 +403,8 @@ func True() *Expr {
 	}
 }
 
-func (st *stack) pushTrue()  { st.push(True()) }
-func (st *stack) pushFalse() { st.push(False()) }
+func (*Parser) pushTrue(st *stack)  { st.push(True()) }
+func (*Parser) pushFalse(st *stack) { st.push(False()) }
 
 func (st *stack) pushString(s string) {
 	st.push(&Expr{
@@ -426,7 +431,7 @@ func (e *Expr) checkExprType(eTypes ...exprType) {
 		fmt.Sprintf("expression type mismatch: %q %v", e.exprType, eTypes)))
 }
 
-func (st *stack) not() {
+func (*Parser) pushNot(st *stack) {
 	e := st.pop()
 	e.checkValueType(boolType)
 	st.push(&Expr{
@@ -436,7 +441,7 @@ func (st *stack) not() {
 	})
 }
 
-func (st *stack) binary(et exprType) {
+func (*Parser) pushBinary(st *stack, et exprType) {
 	right := st.pop()
 	left := st.pop()
 	resultValueType, ok := binaryCompatMatrix[binaryCompat{
@@ -456,18 +461,11 @@ func (st *stack) binary(et exprType) {
 	})
 }
 
-func (st *stack) access(field string, advisory bool) {
-	col := findDocumentColumn(field, advisory)
-	if col == nil {
-		panic(parseError(fmt.Sprintf("unknown column %q", field)))
-	}
-	if col.projectionOnly {
-		panic(parseError(fmt.Sprintf("column %q is for projection only", field)))
-	}
+func (*Parser) pushAccess(st *stack, column *documentColumn) {
 	st.push(&Expr{
 		exprType:    access,
-		valueType:   col.valueType,
-		stringValue: field,
+		valueType:   column.valueType,
+		stringValue: column.name,
 	})
 }
 
@@ -495,7 +493,7 @@ func parseDuration(s string) time.Duration {
 	return duration
 }
 
-func (st *stack) float() {
+func (*Parser) pushFloat(st *stack) {
 	if st.top().valueType == floatType {
 		return
 	}
@@ -529,7 +527,7 @@ func (st *stack) float() {
 	}
 }
 
-func (st *stack) integer() {
+func (*Parser) pushInteger(st *stack) {
 	if st.top().valueType == intType {
 		return
 	}
@@ -578,7 +576,7 @@ func parseTime(s string) time.Time {
 	panic(parseError(fmt.Sprintf("cannot parse %q as time", s)))
 }
 
-func (st *stack) time() {
+func (*Parser) pushTime(st *stack) {
 	if st.top().valueType == timeType {
 		return
 	}
@@ -606,11 +604,13 @@ func (st *stack) time() {
 	}
 }
 
-func (st *stack) cmp(et exprType) {
+func (*Parser) pushCmp(st *stack, et exprType) {
 	right := st.pop()
 	left := st.pop()
 	if right.valueType != left.valueType {
-		panic(parseError("incompatible types"))
+		panic(parseError(
+			fmt.Sprintf("incompatible types: left %q right %q",
+				left.valueType, right.valueType)))
 	}
 	st.push(&Expr{
 		exprType:  et,
@@ -631,7 +631,7 @@ func parseWorkflow(s string) string {
 	return s
 }
 
-func (st *stack) workflow() {
+func (*Parser) pushWorkflow(st *stack) {
 	if st.top().valueType == workflowType {
 		return
 	}
@@ -679,7 +679,7 @@ func (p *Parser) checkSearchLength(term string) {
 	}
 }
 
-func (st *stack) search(p *Parser) {
+func (p *Parser) pushSearch(st *stack) {
 	lang := st.pop()
 	term := st.pop()
 	lang.checkValueType(stringType)
@@ -694,7 +694,7 @@ func (st *stack) search(p *Parser) {
 	})
 }
 
-func (st *stack) csearch(p *Parser) {
+func (p *Parser) pushCSearch(st *stack) {
 	lang := st.pop()
 	term := st.pop()
 	lang.checkValueType(stringType)
@@ -709,7 +709,7 @@ func (st *stack) csearch(p *Parser) {
 	})
 }
 
-func (st *stack) mentioned(p *Parser) {
+func (p *Parser) pushMentioned(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
@@ -720,7 +720,7 @@ func (st *stack) mentioned(p *Parser) {
 	})
 }
 
-func (st *stack) involved() {
+func (*Parser) pushInvolved(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	st.push(&Expr{
@@ -730,7 +730,7 @@ func (st *stack) involved() {
 	})
 }
 
-func (st *stack) ilike() {
+func (*Parser) pushILike(st *stack) {
 	needle := st.pop()
 	haystack := st.pop()
 	needle.checkValueType(stringType)
@@ -742,7 +742,7 @@ func (st *stack) ilike() {
 	})
 }
 
-func (st *stack) ilikePID() {
+func (*Parser) pushILikePID(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
 	st.push(&Expr{
@@ -752,14 +752,18 @@ func (st *stack) ilikePID() {
 	})
 }
 
-func (st *stack) now() {
+func (*Parser) pushNow(st *stack) {
 	st.push(&Expr{
 		exprType:  now,
 		valueType: timeType,
 	})
 }
 
-func (st *stack) duration() {
+func (p *Parser) pushMe(st *stack) {
+	st.pushString(p.Me)
+}
+
+func (*Parser) pushDuration(st *stack) {
 	if st.top().valueType == durationType {
 		return
 	}
@@ -791,16 +795,19 @@ func validAlias(s string) {
 	}
 }
 
-func (st *stack) as(aliases map[string]struct{}) {
+func (p *Parser) pushAs(st *stack) {
 	alias := st.pop()
 	srch := st.top()
 	alias.checkValueType(stringType)
 	srch.checkExprType(search) // TODO: Add csearch?
 	validAlias(alias.stringValue)
-	if _, already := aliases[alias.stringValue]; already {
+	if p.aliases == nil {
+		p.aliases = map[string]struct{}{}
+	}
+	if _, already := p.aliases[alias.stringValue]; already {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
 	}
-	aliases[alias.stringValue] = struct{}{}
+	p.aliases[alias.stringValue] = struct{}{}
 	srch.alias = alias.stringValue
 }
 
@@ -858,93 +865,94 @@ func split(input string, fn func(string, bool)) {
 	}
 }
 
+var (
+	baseActions = map[string]func(*Parser, *stack){
+		"true":      (*Parser).pushTrue,
+		"false":     (*Parser).pushFalse,
+		"not":       (*Parser).pushNot,
+		"and":       curry3((*Parser).pushBinary, and),
+		"or":        curry3((*Parser).pushBinary, or),
+		"float":     (*Parser).pushFloat,
+		"integer":   (*Parser).pushInteger,
+		"time":      (*Parser).pushTime,
+		"workflow":  (*Parser).pushWorkflow,
+		"=":         curry3((*Parser).pushCmp, eq),
+		"!=":        curry3((*Parser).pushCmp, ne),
+		"<":         curry3((*Parser).pushCmp, lt),
+		"<=":        curry3((*Parser).pushCmp, le),
+		">":         curry3((*Parser).pushCmp, gt),
+		">=":        curry3((*Parser).pushCmp, ge),
+		"search":    (*Parser).pushSearch,
+		"csearch":   (*Parser).pushCSearch,
+		"mentioned": (*Parser).pushMentioned,
+		"involved":  (*Parser).pushInvolved,
+		"as":        (*Parser).pushAs,
+		"ilike":     (*Parser).pushILike,
+		"ilikepid":  (*Parser).pushILikePID,
+		"now":       (*Parser).pushNow,
+		"duration":  (*Parser).pushDuration,
+		"+":         curry3((*Parser).pushBinary, add),
+		"-":         curry3((*Parser).pushBinary, sub),
+		"/":         curry3((*Parser).pushBinary, div),
+		"*":         curry3((*Parser).pushBinary, mul),
+		"me":        (*Parser).pushMe,
+	}
+	documentActions = buildActions(false)
+	advisoryActions = buildActions(true)
+)
+
+func buildActions(advisory bool) map[string]func(*Parser, *stack) {
+	actions := maps.Clone(baseActions)
+	for i := range columns {
+		column := &columns[i]
+		if column.projectionOnly {
+			continue
+		}
+		var fn func(*Parser, *stack)
+		if !advisory && column.advisoryOnly {
+			fn = func(*Parser, *stack) {
+				panic(parseError(
+					fmt.Sprintf("column %q only accessible in advisory mode",
+						column.name)))
+			}
+		} else {
+			fn = func(p *Parser, st *stack) { p.pushAccess(st, column) }
+		}
+		actions["$"+column.name] = fn
+	}
+	return actions
+}
+
+func curry3[A, B, C any](fn func(A, B, C), c C) func(A, B) {
+	return func(a A, b B) { fn(a, b, c) }
+}
+
 func (p *Parser) parse(input string) (*Expr, error) {
+
+	actions := documentActions
+	if p.Advisory {
+		actions = advisoryActions
+	}
+
+	p.aliases = nil
 	st := stack{}
-	aliases := map[string]struct{}{}
 
 	split(input, func(field string, isString bool) {
-
-		if isString {
-			st.pushString(field)
-			return
-		}
-
-		switch field {
-		case "true":
-			st.pushTrue()
-		case "false":
-			st.pushFalse()
-		case "not":
-			st.not()
-		case "and":
-			st.binary(and)
-		case "or":
-			st.binary(or)
-		case "float":
-			st.float()
-		case "int":
-			st.integer()
-		case "time":
-			st.time()
-		case "workflow":
-			st.workflow()
-		case "=":
-			st.cmp(eq)
-		case "!=":
-			st.cmp(ne)
-		case "<":
-			st.cmp(lt)
-		case "<=":
-			st.cmp(le)
-		case ">":
-			st.cmp(gt)
-		case ">=":
-			st.cmp(ge)
-		case "search":
-			st.search(p)
-		case "csearch":
-			st.csearch(p)
-		case "mentioned":
-			st.mentioned(p)
-		case "involved":
-			st.involved()
-		case "as":
-			st.as(aliases)
-		case "ilike":
-			st.ilike()
-		case "ilikepid":
-			st.ilikePID()
-		case "now":
-			st.now()
-		case "duration":
-			st.duration()
-		case "+":
-			st.binary(add)
-		case "-":
-			st.binary(sub)
-		case "/":
-			st.binary(div)
-		case "*":
-			st.binary(mul)
-		case "me":
-			st.pushString(p.Me)
-		default:
-			if strings.HasPrefix(field, "$") {
-				st.access(field[1:], p.Advisory)
-			} else {
-				st.pushString(field)
+		if !isString {
+			if action := actions[field]; action != nil {
+				action(p, &st)
+				return
 			}
 		}
+		st.pushString(field)
 	})
 
 	if len(st) != 1 {
 		return nil, parseError(fmt.Sprintf(
-			"invalid number of expression roots: expected 1 have %d", len(st)))
+			"invalid number of expression roots: expected 1 have %d: %+v", len(st), st))
 	}
-	e := st[len(st)-1]
-	if e.valueType != boolType {
-		return nil, parseError("not a boolean expression")
-	}
+	e := st.top()
+	e.checkValueType(boolType)
 	return e, nil
 }
 
