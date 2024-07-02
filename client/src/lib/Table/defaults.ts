@@ -12,4 +12,6 @@ const title =
   "whitespace-normal overflow-hidden leading-6 h-12 py-2 px-2 title-column overflow-clip text-ellipsis w-full";
 const publisher = "whitespace-nowrap w-48 max-w-48 overflow-clip text-ellipsis";
 
-export { tdClass, tablePadding, title, publisher };
+const searchColumnName = "_clientSearch";
+
+export { tdClass, tablePadding, title, publisher, searchColumnName };

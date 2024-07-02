@@ -10,8 +10,6 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store";
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import Queries from "./Queries.svelte";
   import New from "./New.svelte";
   import RecentActivities from "./RecentActivities.svelte";
 </script>
@@ -25,7 +23,4 @@
     <New></New>
     <RecentActivities></RecentActivities>
   </div>
-  <SectionHeader title="Queries"></SectionHeader>
-  <hr class="mb-6" />
-  <Queries></Queries>
 {/if}

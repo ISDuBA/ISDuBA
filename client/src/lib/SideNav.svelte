@@ -71,7 +71,7 @@
                 <i class="bx bxs-dashboard"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem class="px-6 py-2.5" label="Advisories" href="/#/advisories">
+            <SidebarItem class="px-6 py-2.5" label="Search" href="/#/search">
               <svelte:fragment slot="icon">
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>

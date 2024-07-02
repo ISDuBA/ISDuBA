@@ -10,6 +10,7 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
+  import { tick } from "svelte";
   import { push } from "svelte-spa-router";
   import {
     Label,
@@ -24,8 +25,7 @@
     Modal,
     Button
   } from "flowbite-svelte";
-  import { tdClass, tablePadding, title, publisher } from "$lib/table/defaults";
-  import { onMount } from "svelte";
+  import { tdClass, tablePadding, title, publisher, searchColumnName } from "$lib/Table/defaults";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -123,12 +123,21 @@
     }
   };
 
-  $: if (columns) {
-    if (!columns.includes(orderBy.split("-")[0])) orderBy = defaultOrderBy;
-  }
+  $: orderByColumns = orderBy.split(" ");
 
-  $: if (columns || query || loadAdvisories || !loadAdvisories) {
-    fetchData();
+  const setOrderBy = async () => {
+    await tick();
+    orderByColumns
+      .map((c) => {
+        return c.replace("-", "");
+      })
+      .forEach((c) => {
+        if (!orderBy.includes(c)) orderBy = defaultOrderBy;
+      });
+  };
+
+  $: if (columns) {
+    setOrderBy();
   }
 
   $: if (offset || currentPage || limit || orderBy) {
@@ -142,9 +151,8 @@
   $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
   export async function fetchData(): Promise<void> {
-    const searchSuffix = searchTerm ? `"${searchTerm}" german search msg as ` : "";
-    const searchColumn = searchTerm ? " msg" : "";
-
+    const searchSuffix = searchTerm ? `"${searchTerm}" german search ${searchColumnName} as ` : "";
+    const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";
     if (query || searchSuffix) {
       queryParam = `query=${query}${searchSuffix}`;
@@ -173,7 +181,10 @@
       ({ count, documents } = response.content);
       documents = calcSSVC(documents) || [];
     } else if (response.error) {
-      error = `${getErrorMessage(response.error)} ${response.content}`;
+      error =
+        response.error === "400"
+          ? `${getErrorMessage(response.error)} (reason: "${response.content}"). Please check your search syntax.`
+          : `${getErrorMessage(response.error)} ${response.content}`;
     }
     loading = false;
     requestOngoing = false;
@@ -206,12 +217,24 @@
     fetchData();
   };
 
-  const switchSort = (column: string) => {
-    if (column === orderBy) {
-      orderBy[0] === "-" ? (orderBy = column) : (orderBy = `-${column}`);
+  const switchSort = async (column: string) => {
+    let orderByCols = orderBy.split(" ");
+    if (
+      orderByCols.find((c: string) => {
+        return c === column;
+      })
+    ) {
+      orderBy = `-${column}`;
+    } else if (
+      orderByCols.find((c: string) => {
+        return c === `-${column}`;
+      })
+    ) {
+      orderBy = `${column}`;
     } else {
       orderBy = column;
     }
+    await tick();
     fetchData();
   };
 
@@ -233,11 +256,6 @@
   };
 
   $: numberOfPages = Math.ceil(count / limit);
-  $: onMount(async () => {
-    restorePosition();
-    postitionRestored = true;
-    await fetchData();
-  });
 </script>
 
 <svelte:window bind:innerWidth />
@@ -329,6 +347,7 @@
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
+
   <ErrorMessage message={error}></ErrorMessage>
   {#if documents?.length > 0}
     <div class="w-auto">
@@ -336,17 +355,23 @@
         <Table style="w-auto" hoverable={true} noborder={true}>
           <TableHead class="cursor-pointer">
             {#each columns as column}
-              <TableHeadCell
-                padding={tablePadding}
-                on:click={() => {
-                  switchSort(column);
-                }}
-                >{getColumnDisplayName(column)}<i
-                  class:bx={true}
-                  class:bx-caret-up={orderBy === column}
-                  class:bx-caret-down={orderBy === "-" + column}
-                ></i></TableHeadCell
-              >
+              {#if column !== searchColumnName}
+                <TableHeadCell
+                  padding={tablePadding}
+                  on:click={() => {
+                    switchSort(column);
+                  }}
+                  >{getColumnDisplayName(column)}<i
+                    class:bx={true}
+                    class:bx-caret-up={orderBy.split(" ").find((c) => {
+                      return c === column;
+                    })}
+                    class:bx-caret-down={orderBy.split(" ").find((c) => {
+                      return c === `-${column}`;
+                    })}
+                  ></i></TableHeadCell
+                >
+              {/if}
             {/each}
             {#if isAdmin}
               <TableHeadCell padding={tablePadding}></TableHeadCell>
@@ -367,88 +392,90 @@
                 }}
               >
                 {#each columns as column}
-                  {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
-                    <TableBodyCell {tdClass}
-                      ><span class:text-red-500={Number(item[column]) > 5.0}
-                        >{item[column] == null ? "" : item[column]}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "ssvc"}
-                    <TableBodyCell {tdClass}
-                      ><span style={item[column] ? `color:${item[column].color}` : ""}
-                        >{item[column]?.label || ""}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "state"}
-                    <TableBodyCell {tdClass}
-                      ><i
-                        title={item[column]}
-                        class:bx={true}
-                        class:bxs-star={item[column] === "new"}
-                        class:bx-show={item[column] === "read"}
-                        class:bxs-analyse={item[column] === "assessing"}
-                        class:bx-book-open={item[column] === "review"}
-                        class:bx-archive={item[column] === "archived"}
-                        class:bx-trash={item[column] === "delete"}
-                      ></i>
-                    </TableBodyCell>
-                  {:else if column === "initial_release_date"}
-                    <TableBodyCell {tdClass}
-                      >{item.initial_release_date?.split("T")[0]}</TableBodyCell
-                    >
-                  {:else if column === "current_release_date"}
-                    <TableBodyCell {tdClass}
-                      >{item.current_release_date?.split("T")[0]}</TableBodyCell
-                    >
-                  {:else if column === "title"}
-                    <TableBodyCell tdClass={title}
-                      ><span title={item[column]}>{item[column]}</span></TableBodyCell
-                    >
-                  {:else if column === "publisher"}
-                    <TableBodyCell tdClass={publisher}
-                      ><span title={item[column]}>{getPublisher(item[column], innerWidth)}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "recent"}
-                    <TableBodyCell {tdClass}
-                      ><span title={item[column]}
-                        >{item[column] ? item[column].split("T")[0] : ""}</span
-                      ></TableBodyCell
-                    >
-                  {:else if column === "four_cves"}
-                    <TableBodyCell {tdClass}
-                      >{#if item[column] && item[column][0]}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
-                        {#if item[column].length > 1}
-                          <div class="mr-2 flex">
-                            <div class="flex-grow">
-                              {item[column][0]}
+                  {#if column !== searchColumnName}
+                    {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
+                      <TableBodyCell {tdClass}
+                        ><span class:text-red-500={Number(item[column]) > 5.0}
+                          >{item[column] == null ? "" : item[column]}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "ssvc"}
+                      <TableBodyCell {tdClass}
+                        ><span style={item[column] ? `color:${item[column].color}` : ""}
+                          >{item[column]?.label || ""}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "state"}
+                      <TableBodyCell {tdClass}
+                        ><i
+                          title={item[column]}
+                          class:bx={true}
+                          class:bxs-star={item[column] === "new"}
+                          class:bx-show={item[column] === "read"}
+                          class:bxs-analyse={item[column] === "assessing"}
+                          class:bx-book-open={item[column] === "review"}
+                          class:bx-archive={item[column] === "archived"}
+                          class:bx-trash={item[column] === "delete"}
+                        ></i>
+                      </TableBodyCell>
+                    {:else if column === "initial_release_date"}
+                      <TableBodyCell {tdClass}
+                        >{item.initial_release_date?.split("T")[0]}</TableBodyCell
+                      >
+                    {:else if column === "current_release_date"}
+                      <TableBodyCell {tdClass}
+                        >{item.current_release_date?.split("T")[0]}</TableBodyCell
+                      >
+                    {:else if column === "title"}
+                      <TableBodyCell tdClass={title}
+                        ><span title={item[column]}>{item[column]}</span></TableBodyCell
+                      >
+                    {:else if column === "publisher"}
+                      <TableBodyCell tdClass={publisher}
+                        ><span title={item[column]}>{getPublisher(item[column], innerWidth)}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "recent"}
+                      <TableBodyCell {tdClass}
+                        ><span title={item[column]}
+                          >{item[column] ? item[column].split("T")[0] : ""}</span
+                        ></TableBodyCell
+                      >
+                    {:else if column === "four_cves"}
+                      <TableBodyCell {tdClass}
+                        >{#if item[column] && item[column][0]}
+                          <!-- svelte-ignore a11y-click-events-have-key-events -->
+                          <!-- svelte-ignore a11y-no-static-element-interactions -->
+                          {#if item[column].length > 1}
+                            <div class="mr-2 flex">
+                              <div class="flex-grow">
+                                {item[column][0]}
+                              </div>
+                              <span
+                                on:mouseenter={() => (anchorLink = null)}
+                                on:click|stopPropagation={() => toggleRow(i)}
+                              >
+                                {#if openRow === i}
+                                  <i class="bx bx-minus"></i>
+                                {:else}
+                                  <i class="bx bx-plus"></i>
+                                {/if}
+                              </span>
                             </div>
-                            <span
-                              on:mouseenter={() => (anchorLink = null)}
-                              on:click|stopPropagation={() => toggleRow(i)}
-                            >
-                              {#if openRow === i}
-                                <i class="bx bx-minus"></i>
-                              {:else}
-                                <i class="bx bx-plus"></i>
-                              {/if}
-                            </span>
-                          </div>
-                        {:else}
-                          <span>{item[column][0]}</span>
-                        {/if}
-                      {/if}</TableBodyCell
-                    >
-                  {:else if column === "critical"}
-                    <TableBodyCell {tdClass}
-                      ><span class:text-red-500={Number(item[column]) > 5.0}
-                        >{item[column] == null ? "" : item[column]}</span
-                      ></TableBodyCell
-                    >
-                  {:else}
-                    <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
+                          {:else}
+                            <span>{item[column][0]}</span>
+                          {/if}
+                        {/if}</TableBodyCell
+                      >
+                    {:else if column === "critical"}
+                      <TableBodyCell {tdClass}
+                        ><span class:text-red-500={Number(item[column]) > 5.0}
+                          >{item[column] == null ? "" : item[column]}</span
+                        ></TableBodyCell
+                      >
+                    {:else}
+                      <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
+                    {/if}
                   {/if}
                 {/each}
                 {#if isAdmin}
@@ -486,13 +513,13 @@
                   {/each}
                 </TableBodyRow>
               {/if}
-              {#if item.msg}
+              {#if item[searchColumnName]}
                 <TableBodyRow class="border border-y-indigo-500/100 bg-white">
                   <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
                   {#each searchPadding as _}
                     <TableBodyCell {tdClass}></TableBodyCell>
                   {/each}
-                  <TableBodyCell {tdClass}>{@html item.msg}</TableBodyCell>
+                  <TableBodyCell {tdClass}>{@html item[searchColumnName]}</TableBodyCell>
                   <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
                   {#each searchPaddingRight as _}
                     <TableBodyCell {tdClass}></TableBodyCell>
@@ -504,7 +531,7 @@
         </Table>
       </a>
     </div>
-  {:else if searchTerm}
+  {:else if query}
     No results were found.
   {/if}
 </div>
