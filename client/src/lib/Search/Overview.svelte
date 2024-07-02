@@ -21,6 +21,7 @@
   let advisoryTable: any;
   let advancedSearch = false;
   let selectedCustomQuery: any;
+  let searchqueryTimer: any = null;
 
   const resetQuery = () => {
     return {
@@ -79,6 +80,17 @@
     advisoryTable.fetchData();
   };
 
+  const clearSearch = async () => {
+    searchTerm = "";
+    query.query = query.queryReset;
+    query.columns = query.columns.filter((c) => {
+      return c !== searchColumnName;
+    });
+    await tick();
+    advisoryTable.fetchData();
+    sessionStorage.setItem("documentSearchTerm", "");
+  };
+
   onMount(async () => {});
 </script>
 
@@ -115,20 +127,20 @@
       on:keyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
         if (e.key === "Enter") triggerSearch();
+        if (searchTerm && searchTerm.length > 2) {
+          if (searchqueryTimer) clearTimeout(searchqueryTimer);
+          searchqueryTimer = setTimeout(() => {
+            triggerSearch();
+          }, 500);
+        }
+        if (searchTerm === "") clearSearch();
       }}
     >
       {#if searchTerm}
         <button
           class="mr-3"
-          on:click={async () => {
-            searchTerm = "";
-            query.query = query.queryReset;
-            query.columns = query.columns.filter((c) => {
-              return c !== searchColumnName;
-            });
-            await tick();
-            advisoryTable.fetchData();
-            sessionStorage.setItem("documentSearchTerm", "");
+          on:click={() => {
+            clearSearch();
           }}>x</button
         >
       {/if}
