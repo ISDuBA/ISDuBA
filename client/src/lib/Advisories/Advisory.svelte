@@ -16,7 +16,7 @@
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
-  import JsonDiff from "$lib/Diff/JsonDiff.svelte";
+  import Diff from "$lib/Diff/Diff.svelte";
   import { ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
@@ -58,7 +58,6 @@
   }
 
   const setAsReadTimeout: number[] = [];
-  let diffDocuments: any;
   let isDiffOpen = false;
   let commentFocus = false;
 
@@ -302,14 +301,6 @@
     }
   }
 
-  const onSelectedDiffDocuments = async (event: any) => {
-    diffDocuments = {
-      docA: event.detail.docA,
-      docB: event.detail.docB
-    };
-    isDiffOpen = true;
-  };
-
   onDestroy(() => {
     setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
@@ -356,14 +347,14 @@
               trackingID={params.trackingID}
               {advisoryVersions}
               selectedDocumentVersion={document.tracking?.version}
-              on:selectedDiffDocuments={onSelectedDiffDocuments}
+              on:selectedDiffDocuments={() => (isDiffOpen = true)}
               on:disableDiff={() => (isDiffOpen = false)}
             ></Version>
           {/if}
         </div>
         <div class="flex flex-col">
           {#if isDiffOpen}
-            <JsonDiff title={undefined} {diffDocuments}></JsonDiff>
+            <Diff showTitle={false}></Diff>
           {:else}
             <Webview></Webview>
           {/if}
