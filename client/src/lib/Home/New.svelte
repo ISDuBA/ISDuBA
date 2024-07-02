@@ -59,7 +59,7 @@
       "GET"
     );
     if (response.ok) {
-      documents = (await response.content.documents).sort(compareCrit);
+      documents = (await response.content.documents)?.sort(compareCrit) ?? [];
     } else if (response.error) {
       newDocumentsError = `Could not load new documents. ${getErrorMessage(response.error)}`;
     }
