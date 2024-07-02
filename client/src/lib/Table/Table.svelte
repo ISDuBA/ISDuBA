@@ -360,8 +360,12 @@
                   }}
                   >{getColumnDisplayName(column)}<i
                     class:bx={true}
-                    class:bx-caret-up={orderBy === column}
-                    class:bx-caret-down={orderBy === "-" + column}
+                    class:bx-caret-up={orderBy.split(" ").find((c) => {
+                      return c === column;
+                    })}
+                    class:bx-caret-down={orderBy.split(" ").find((c) => {
+                      return c === `-${column}`;
+                    })}
                   ></i></TableHeadCell
                 >
               {/if}
