@@ -239,8 +239,9 @@ func ImportDocument(
 	dry bool,
 ) (int64, error) {
 	var (
-		tlp, tlpOk             = "", false
-		publisher, publisherOK = "", false
+		tlp, tlpOk               = "", false
+		publisher, publisherOK   = "", false
+		trackingID, trackingIDOK = "", false
 	)
 
 	var buf bytes.Buffer
@@ -270,6 +271,7 @@ func ImportDocument(
 	transformJSON(document, chainReplacers(
 		append(reps,
 			storer(&publisher, &publisherOK, "document", "publisher", "name"),
+			storer(&trackingID, &trackingIDOK, "document", "tracking", "id"),
 			keepAndIndex(idxer.index, "document", "publisher", "name"),
 			keepAndIndex(idxer.index, "document", "title"),
 			keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
@@ -280,6 +282,10 @@ func ImportDocument(
 
 	if !publisherOK {
 		return 0, errors.New("missing /document/publisher/name")
+	}
+
+	if !trackingIDOK {
+		return 0, errors.New("missing /document/tracking/id")
 	}
 
 	slog.Debug("document publisher", "publisher", publisher)
@@ -304,6 +310,10 @@ func ImportDocument(
 		queryText     = `SELECT id FROM unique_texts WHERE txt = $1`
 		insertText    = `INSERT INTO unique_texts (txt) VALUES ($1) RETURNING id`
 		insertDocText = `INSERT INTO documents_texts (documents_id, num, txt_id) VALUES ($1, $2, $3)`
+		loadTexts     = `SELECT u.id, txt FROM documents d JOIN documents_texts t ` +
+			`ON d.id = t.documents_id JOIN unique_texts u ` +
+			`ON t.txt_id = u.id ` +
+			`WHERE d.publisher = $1 AND d.tracking_id = $2`
 	)
 
 	var id int64
@@ -323,6 +333,32 @@ func ImportDocument(
 	}
 
 	txtIDs := make([]int64, len(idxer.elements))
+	for i := range txtIDs {
+		txtIDs[i] = -1
+	}
+
+	// If we already have a document with the given publisher/tracking_id pair
+	// it is very likely that they share a lot of the same strings.
+	if err := func() error {
+		rows, err := tx.Query(ctx, loadTexts, publisher, trackingID)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var textID int64
+			var text string
+			if err := rows.Scan(&textID, &text); err != nil {
+				return err
+			}
+			if idx, ok := idxer.indexToElements[text]; ok {
+				txtIDs[idx] = textID
+			}
+		}
+		return rows.Err()
+	}(); err != nil {
+		return 0, fmt.Errorf("loading old texts failed: %w", err)
+	}
 
 	insertTextBatch := &pgx.Batch{}
 
@@ -340,7 +376,10 @@ func ImportDocument(
 	}
 	textIDsBatch := &pgx.Batch{}
 	for i, txt := range idxer.elements {
-		textIDsBatch.Queue(queryText, txt).QueryRow(scanText(i))
+		if txtIDs[i] == -1 {
+			// Only ask for strings we have not found already.
+			textIDsBatch.Queue(queryText, txt).QueryRow(scanText(i))
+		}
 	}
 
 	if err := tx.SendBatch(ctx, textIDsBatch).Close(); err != nil {
