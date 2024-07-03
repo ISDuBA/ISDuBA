@@ -27,7 +27,7 @@
     return {
       columns: [...SEARCHPAGECOLUMNS.ADVISORY],
       advisories: true,
-      orders: ["cvss_v3_score"],
+      orders: ["-recent"],
       query: "",
       queryReset: ""
     };
