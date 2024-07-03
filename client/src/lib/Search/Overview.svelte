@@ -122,7 +122,7 @@
   <div class="flex w-2/3 flex-row">
     <Search
       size="sm"
-      placeholder={advancedSearch ? "Enter a query" : "Enter a searchterm"}
+      placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
       bind:value={searchTerm}
       on:keyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
@@ -152,7 +152,9 @@
         }}>{advancedSearch ? "Apply" : "Search"}</Button
       >
     </Search>
-    <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
+    <div class="mt-1" title="Define finer grained search queries">
+      <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
+    </div>
   </div>
   {#if selectedCustomQuery === -1}
     <ButtonGroup class="ml-auto h-7">

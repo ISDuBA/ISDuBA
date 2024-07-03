@@ -280,7 +280,7 @@
   <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
       <div class="flex flex-row items-baseline">
-        <Label class="mr-3 text-nowrap">Items per page</Label>
+        <Label class="mr-3 text-nowrap">{query ? "Matches per page" : "Documents per page"}</Label>
         <Select
           size="sm"
           id="pagecount"
@@ -322,7 +322,7 @@
               }}
               bind:value={currentPage}
             />
-            <span class="ml-2 mr-3 text-nowrap">of {numberOfPages} Pages</span>
+            <span class="ml-2 mr-3 text-nowrap">of {numberOfPages} pages</span>
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
             <PaginationItem on:click={next}>
@@ -335,10 +335,10 @@
         </div>
       </div>
       <div class="mr-3 text-nowrap">
-        {#if searchTerm}
-          {count} entries found
+        {#if query}
+          {count} matches found
         {:else}
-          {count} entries in total
+          {count} documents in total
         {/if}
       </div>
     {/if}

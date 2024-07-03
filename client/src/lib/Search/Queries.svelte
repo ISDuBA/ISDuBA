@@ -69,7 +69,7 @@
 </script>
 
 <div class="mb-8 flex flex-col flex-wrap gap-4">
-  <div class="flex gap-x-4">
+  <div class="flex items-center gap-x-4">
     <ButtonGroup class="flex-wrap">
       {#each sortedQueries as query, index}
         <Button
@@ -90,6 +90,9 @@
         <i class="bx bx-cog"></i>
       </Button>
     </ButtonGroup>
+    {#if sortedQueries.length === 0}
+      <span class="text-xs text-gray-400">No queries defined yet</span>
+    {/if}
   </div>
   <ErrorMessage message={advancedQueryErrorMessage}></ErrorMessage>
 </div>
