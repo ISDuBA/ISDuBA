@@ -124,8 +124,8 @@ func (c *Controller) Bind() http.Handler {
 	// Manage temporary documents
 	api.POST("/tempdocuments", authEdReAu, c.importTempDocument)
 	api.GET("/tempdocuments", authEdReAu, c.overviewTempDocuments)
-	api.GET("/tempdocuments/:handle", authEdReAu, c.viewTempDocument)
-	api.DELETE("/tempdocuments/:handle", authEdReAu, c.deleteTempDocument)
+	api.GET("/tempdocuments/:id", authEdReAu, c.viewTempDocument)
+	api.DELETE("/tempdocuments/:id", authEdReAu, c.deleteTempDocument)
 
 	// Backend information
 	api.GET("/about", authAll, c.about)

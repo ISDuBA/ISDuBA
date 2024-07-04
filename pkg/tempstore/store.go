@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
+	"github.com/csaf-poc/csaf_distribution/v3/util"
 )
 
 const cleanupDuration = 5 * time.Minute
@@ -38,7 +39,8 @@ type Entry struct {
 	Inserted time.Time `json:"inserted"`
 	Accessed time.Time `json:"accessed"`
 	Filename string    `json:"filename"`
-	Handle   int64     `json:"handle"`
+	Length   int64     `json:"length"`
+	ID       int64     `json:"id"`
 }
 
 type entry struct {
@@ -91,7 +93,7 @@ func (st *Store) List(user string) (entries []Entry) {
 
 // Delete deletes a given file for a given user.
 // Returns true is file was really deleted.
-func (st *Store) Delete(user string, handle int64) (deleted bool) {
+func (st *Store) Delete(user string, id int64) (deleted bool) {
 	done := make(chan struct{})
 	st.fns <- func(st *Store) {
 		defer close(done)
@@ -100,7 +102,7 @@ func (st *Store) Delete(user string, handle int64) (deleted bool) {
 			return
 		}
 		entries := slices.DeleteFunc(userEntries, func(e entry) bool {
-			return e.Handle == handle
+			return e.ID == id
 		})
 		switch {
 		case len(entries) == 0:
@@ -115,8 +117,8 @@ func (st *Store) Delete(user string, handle int64) (deleted bool) {
 	return
 }
 
-// Fetch fetches a stored file for a given user and handle.
-func (st *Store) Fetch(user string, handle int64) (r io.Reader, err error) {
+// Fetch fetches a stored file for a given user and id.
+func (st *Store) Fetch(user string, id int64) (r io.Reader, result Entry, err error) {
 	done := make(chan struct{})
 	st.fns <- func(st *Store) {
 		defer close(done)
@@ -128,11 +130,12 @@ func (st *Store) Fetch(user string, handle int64) (r io.Reader, err error) {
 		now := time.Now()
 		best := now.Add(-st.cfg.StorageDuration)
 		for i := range userEntries {
-			if entry := &userEntries[i]; entry.Handle == handle {
+			if entry := &userEntries[i]; entry.ID == id {
 				if entry.Accessed.Before(best) {
 					err = errors.New("expired")
 				} else {
 					entry.Accessed = now
+					result = entry.Entry
 					r, err = gzip.NewReader(bytes.NewReader(entry.data))
 				}
 				return
@@ -144,15 +147,16 @@ func (st *Store) Fetch(user string, handle int64) (r io.Reader, err error) {
 }
 
 // Store stores a file with a filename for a given user.
-// Returns a unique handle to fetch it afterwards.
-func (st *Store) Store(user, filename string, r io.Reader) (handle int64, err error) {
+// Returns a unique id to fetch it afterwards.
+func (st *Store) Store(user, filename string, store func(io.Writer) error) (id int64, err error) {
 	var buf bytes.Buffer
 	var w *gzip.Writer
 	if w, err = gzip.NewWriterLevel(&buf, gzip.BestSpeed); err != nil {
 		err = fmt.Errorf("init compression failed: %w", err)
 		return
 	}
-	if _, err = io.Copy(w, r); err != nil {
+	nw := util.NWriter{Writer: w, N: 0}
+	if err = store(&nw); err != nil {
 		err = fmt.Errorf("compression failed: %w", err)
 		return
 	}
@@ -174,18 +178,19 @@ func (st *Store) Store(user, filename string, r io.Reader) (handle int64, err er
 			err = errors.New("too many files per user")
 			return
 		}
-		handle = -1
+		id = -1
 		for i := range userEntries {
-			handle = max(handle, userEntries[i].Handle)
+			id = max(id, userEntries[i].ID)
 		}
-		handle++
+		id++
 		now := time.Now()
 		st.entries[user] = append(userEntries, entry{
 			Entry: Entry{
 				Inserted: now,
 				Accessed: now,
 				Filename: filename,
-				Handle:   handle,
+				Length:   nw.N,
+				ID:       id,
 			},
 			data: data,
 		})

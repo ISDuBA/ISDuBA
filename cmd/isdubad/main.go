@@ -52,7 +52,7 @@ func run(cfg *config.Config) error {
 	}
 	defer db.Close(ctx)
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
-	tmpStore.Run(ctx)
+	go tmpStore.Run(ctx)
 
 	cfg.Web.Configure()
 
