@@ -262,7 +262,6 @@ func (pe parseError) Error() string {
 
 var (
 	docAdvEvtModes = []ParserMode{DocumentMode, AdvisoryMode, EventMode}
-	docAdvModes    = []ParserMode{DocumentMode, AdvisoryMode}
 	advModes       = []ParserMode{AdvisoryMode}
 	evtsModes      = []ParserMode{EventMode}
 )
