@@ -21,6 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
 )
@@ -50,6 +51,8 @@ func run(cfg *config.Config) error {
 		return err
 	}
 	defer db.Close(ctx)
+	ts := tempstore.NewStore(&cfg.TempStore)
+	ts.Run(ctx)
 
 	cfg.Web.Configure()
 
