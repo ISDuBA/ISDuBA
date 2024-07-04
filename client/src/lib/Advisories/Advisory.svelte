@@ -17,7 +17,7 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
+  import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -385,18 +385,22 @@
                 <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
               {/if}
             {/if}
-            <SsvcCalculator
-              bind:isEditing={isSSVCediting}
-              vectorInput={ssvc?.vector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-              {allowEditing}
-            ></SsvcCalculator>
+            {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
+              <SsvcCalculator
+                bind:isEditing={isSSVCediting}
+                vectorInput={ssvc?.vector}
+                disabled={!isCalculatingAllowed}
+                documentID={params.id}
+                on:updateSSVC={loadMetaData}
+                {allowEditing}
+              ></SsvcCalculator>
+            {/if}
           </div>
           {#if isCommentingAllowed && !isSSVCediting}
             <div class="mt-6">
-              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+              <Label class="mb-2" for="comment-textarea"
+                >{advisoryState === ARCHIVED ? "Reactivate with comment" : "New Comment:"}</Label
+              >
               <CommentTextArea
                 on:focus={() => {
                   commentFocus = true;

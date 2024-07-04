@@ -43,12 +43,24 @@
     >
   </a>
   {#if isRoleIncluded(appStore.getRoles(), [EDITOR, REVIEWER]) && advisoryState === REVIEW}
-    <a href={"javascript:void(0);"} class="inline-flex">
-      <Badge title="Mark as assesing" class="w-fit" color="none">{ASSESSING}</Badge>
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => {
+        document.getElementById("comment-textarea")?.focus();
+      }}
+    >
+      <Badge title="Mark as assesing" class="w-fit" color="dark">{ASSESSING}</Badge>
     </a>
   {:else if isRoleIncluded(appStore.getRoles(), [EDITOR]) && advisoryState === ARCHIVED}
-    <a href={"javascript:void(0);"} class="inline-flex">
-      <Badge title="Mark as assesing" class="w-fit" color="none">{ASSESSING}</Badge>
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => {
+        document.getElementById("comment-textarea")?.focus();
+      }}
+    >
+      <Badge title="Mark as assesing" class="w-fit" color="dark">{ASSESSING}</Badge>
     </a>
   {:else}
     <a
@@ -62,8 +74,14 @@
     </a>
   {/if}
   {#if advisoryState === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
-    <a href={"javascript:void(0);"} class="inline-flex">
-      <Badge title="Release for review" class="w-fit" color="none">{REVIEW}</Badge>
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => {
+        document.getElementById("comment-textarea")?.focus();
+      }}
+    >
+      <Badge title="Release for review" class="w-fit" color="dark">{REVIEW}</Badge>
     </a>
   {:else}
     <a
