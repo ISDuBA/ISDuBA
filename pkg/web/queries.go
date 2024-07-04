@@ -70,8 +70,12 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
+	mode := query.DocumentMode
+	if sq.Advisories {
+		mode = query.AdvisoryMode
+	}
 	parser := query.Parser{
-		Advisory:  sq.Advisories,
+		Mode:      mode,
 		Languages: c.cfg.Database.TextSearch,
 	}
 
@@ -97,7 +101,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	builder := query.SQLBuilder{Advisory: sq.Advisories}
+	builder := query.SQLBuilder{Mode: mode}
 	builder.CreateWhere(expr)
 	if err := builder.CheckProjections(sq.Columns); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -406,8 +410,12 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				sq.Advisories = advisories
 			}
 
+			mode := query.DocumentMode
+			if sq.Advisories {
+				mode = query.AdvisoryMode
+			}
 			parser := query.Parser{
-				Advisory:  sq.Advisories,
+				Mode:      mode,
 				Languages: c.cfg.Database.TextSearch,
 			}
 
@@ -428,7 +436,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				expr = expr.And(query.BoolField("latest"))
 			}
 
-			builder := query.SQLBuilder{Advisory: sq.Advisories}
+			builder := query.SQLBuilder{Mode: mode}
 			builder.CreateWhere(expr)
 
 			// Check columns

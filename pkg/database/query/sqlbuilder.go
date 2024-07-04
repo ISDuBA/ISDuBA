@@ -20,7 +20,7 @@ type SQLBuilder struct {
 	Replacements []any
 	replToIdx    map[string]int
 	Aliases      map[string]string
-	Advisory     bool
+	Mode         ParserMode
 	TextTables   bool
 }
 
@@ -59,14 +59,15 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 func (sb *SQLBuilder) csearchWhere(e *Expr, b *strings.Builder) {
 	const tsquery = `websearch_to_tsquery`
 
-	if sb.Advisory {
+	switch sb.Mode {
+	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments JOIN documents docs "+
 			"ON comments.documents_id = docs.id "+
 			"WHERE ts @@ "+tsquery+"('%s', $%d) "+
 			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
 			e.langValue,
 			sb.replacementIndex(e.stringValue)+1)
-	} else {
+	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"('%s', $%d) "+
 			"AND comments.documents_id = documents.id)",
 			e.langValue,
@@ -77,29 +78,35 @@ func (sb *SQLBuilder) csearchWhere(e *Expr, b *strings.Builder) {
 func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 	const tsquery = `phraseto_tsquery`
 
-	if sb.Advisory {
+	switch sb.Mode {
+	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments JOIN documents docs "+
 			"ON comments.documents_id = docs.id "+
 			"WHERE ts @@ "+tsquery+"($%d) "+
 			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
 			sb.replacementIndex(e.stringValue)+1)
-	} else {
+	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"($%d) "+
 			"AND comments.documents_id = documents.id)",
+			sb.replacementIndex(e.stringValue)+1)
+	case EventMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"($%d) "+
+			"AND comments.id = events_log.comments_id)",
 			sb.replacementIndex(e.stringValue)+1)
 	}
 }
 
 func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
-	if sb.Advisory {
+	switch sb.Mode {
+	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
 			"ON events_log.documents_id = docs.id "+
 			"WHERE actor = $%d "+
 			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
 			sb.replacementIndex(e.stringValue)+1)
-	} else {
+	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
-			"AND comments.documents_id = documents.id)",
+			"AND events_log.documents_id = documents.id)",
 			sb.replacementIndex(e.stringValue)+1)
 	}
 }
@@ -121,6 +128,8 @@ func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 		b.WriteString("boolean")
 	case workflowType:
 		b.WriteString("workflow")
+	case eventsType:
+		b.WriteString("events")
 	case durationType:
 		b.WriteString("interval")
 	}
@@ -153,6 +162,10 @@ func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 		b.WriteByte('\'')
 		b.WriteString(e.stringValue)
 		b.WriteString("'::workflow")
+	case eventsType:
+		b.WriteByte('\'')
+		b.WriteString(e.stringValue)
+		b.WriteString("'::events")
 	case durationType:
 		fmt.Fprintf(b, "'%.2f seconds'::interval", e.durationValue.Seconds())
 	}
@@ -176,8 +189,10 @@ const (
 	versionsCount = `(SELECT count(*) FROM documents WHERE ` +
 		`documents.publisher = advisories.publisher AND ` +
 		`documents.tracking_id = advisories.tracking_id)`
-	commentsCount = `(SELECT count(*) FROM comments WHERE ` +
+	commentsCountDocuments = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents.id)`
+	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = documents_id)`
 )
 
 func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
@@ -188,10 +203,13 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	case "versions":
 		b.WriteString(versionsCount)
 	case "comments":
-		if sb.Advisory {
+		switch sb.Mode {
+		case AdvisoryMode:
 			b.WriteString(column)
-		} else {
-			b.WriteString(commentsCount)
+		case DocumentMode:
+			b.WriteString(commentsCountDocuments)
+		case EventMode:
+			b.WriteString(commentsCountEvents)
 		}
 	default:
 		b.WriteString(column)
@@ -314,13 +332,17 @@ func (sb *SQLBuilder) replacementIndex(s string) int {
 }
 
 func (sb *SQLBuilder) createFrom(b *strings.Builder) {
-	if sb.Advisory {
+	switch sb.Mode {
+	case AdvisoryMode:
 		b.WriteString(`documents ` +
 			`JOIN advisories ON ` +
 			`advisories.tracking_id = documents.tracking_id AND ` +
 			`advisories.publisher = documents.publisher`)
-	} else {
+	case DocumentMode:
 		b.WriteString(`documents`)
+	case EventMode:
+		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id`)
+		return
 	}
 
 	if sb.TextTables {
@@ -343,13 +365,14 @@ func (sb *SQLBuilder) CreateCountSQL() string {
 
 // CreateOrder returns a ORDER BY clause for given columns.
 func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
+
 	var b strings.Builder
 	for _, field := range fields {
 		desc := strings.HasPrefix(field, "-")
 		if desc {
 			field = field[1:]
 		}
-		if _, found := sb.Aliases[field]; !found && !ExistsDocumentColumn(field, sb.Advisory) {
+		if _, found := sb.Aliases[field]; !found && !ExistsDocumentColumn(field, sb.Mode) {
 			return "", fmt.Errorf("order field %q does not exists", field)
 		}
 		if b.Len() > 0 {
@@ -428,15 +451,21 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 		case "id", "tracking_id", "publisher":
 			b.WriteString("documents.")
 			b.WriteString(p)
-		case "state":
-			b.WriteString("state::text")
+		case "state", "event":
+			b.WriteString(p)
+			b.WriteString("::text")
+		case "event_state":
+			b.WriteString("events_log.state::text")
 		case "versions":
 			b.WriteString(versionsCount + `AS versions`)
 		case "comments":
-			if sb.Advisory {
+			switch sb.Mode {
+			case AdvisoryMode:
 				b.WriteString(p)
-			} else {
-				b.WriteString(commentsCount + `AS comments`)
+			case DocumentMode:
+				b.WriteString(commentsCountDocuments + `AS comments`)
+			case EventMode:
+				b.WriteString(commentsCountEvents + `AS comments`)
 			}
 		default:
 			b.WriteString(p)
@@ -450,7 +479,7 @@ func (sb *SQLBuilder) CheckProjections(proj []string) error {
 		if _, found := sb.Aliases[p]; found {
 			continue
 		}
-		if !ExistsDocumentColumn(p, sb.Advisory) {
+		if !ExistsDocumentColumn(p, sb.Mode) {
 			return fmt.Errorf("column %q does not exists", p)
 		}
 	}
