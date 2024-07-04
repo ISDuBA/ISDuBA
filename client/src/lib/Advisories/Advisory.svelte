@@ -17,7 +17,7 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import { ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
+  import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -44,9 +44,8 @@
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
   let isSSVCediting = false;
-  $: if ([NEW, READ, ASSESSING, REVIEW].includes(advisoryState)) {
-    isCommentingAllowed =
-      (appStore.isEditor() && advisoryState !== REVIEW) || appStore.isReviewer();
+  $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
+    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
   } else {
     isCommentingAllowed = false;
   }
@@ -234,6 +233,13 @@
     await updateState(REVIEW);
   }
 
+  async function sendForAssessing() {
+    if (comment.length !== 0) {
+      await createComment();
+    }
+    await updateState(ASSESSING);
+  }
+
   async function updateState(newState: string) {
     // Cancel automatic state transitions
     setAsReadTimeout.forEach((id: number) => {
@@ -401,6 +407,7 @@
                 on:input={() => (createCommentError = "")}
                 on:saveComment={createComment}
                 on:saveForReview={sendForReview}
+                on:saveForAssessing={sendForAssessing}
                 bind:value={comment}
                 errorMessage={createCommentError}
                 buttonText="Send"

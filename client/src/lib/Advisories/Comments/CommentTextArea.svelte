@@ -12,7 +12,9 @@
   import { Button, Label, Textarea } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { canSetStateReview } from "$lib/permissions";
+  import { canSetStateReview, isRoleIncluded } from "$lib/permissions";
+  import { ARCHIVED, EDITOR, REVIEW, REVIEWER } from "$lib/workflow";
+  import { appStore } from "$lib/store";
 
   export let value: string;
   export let buttonText: string;
@@ -37,26 +39,60 @@
     <div class="flex items-start justify-between">
       <div>
         {#if !cancelable}
+          {#if canSetStateReview(state) && state !== ARCHIVED}
+            <Button
+              size="xs"
+              on:click={() => dispatch("saveForReview")}
+              disabled={count === 0}
+              color="light"
+            >
+              {#if count > 0}
+                <span>Release for review with comment</span>
+              {:else}
+                <span>Release for review</span>
+              {/if}
+            </Button>
+          {/if}
+          {#if state === REVIEW && isRoleIncluded(appStore.getRoles(), [REVIEWER])}
+            <Button
+              size="xs"
+              on:click={() => dispatch("saveForAssessing")}
+              disabled={count === 0}
+              color="light"
+            >
+              <span>Send back to assessing</span>
+            </Button>
+          {/if}
+          {#if (state === REVIEW || state === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] )}
+            <Button
+              size="xs"
+              on:click={() => dispatch("saveForAssessing")}
+              disabled={count === 0}
+              color="light"
+            >
+              <span>Send back to assessing</span>
+            </Button>
+          {/if}
+          {#if state === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
+            <Button
+              size="xs"
+              on:click={() => dispatch("saveForReview")}
+              disabled={count === 0}
+              color="light"
+            >
+              <span>Send back to review</span>
+            </Button>
+          {/if}
+        {/if}
+        {#if !((state === REVIEW || state === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
           <Button
             size="xs"
-            on:click={() => dispatch("saveForReview")}
-            disabled={!canSetStateReview(state) && count === 0}
-            color="light"
+            on:click={() => dispatch("saveComment")}
+            disabled={count > 10000 || count === 0 || value === old}
           >
-            {#if count > 0}
-              <span>Release for review with comment</span>
-            {:else}
-              <span>Release for review</span>
-            {/if}
+            <span>{buttonText}</span>
           </Button>
         {/if}
-        <Button
-          size="xs"
-          on:click={() => dispatch("saveComment")}
-          disabled={count > 10000 || count === 0 || value === old}
-        >
-          <span>{buttonText}</span>
-        </Button>
         {#if cancelable}
           <Button size="xs" on:click={() => dispatch("cancel")} outline color="red">
             <span>Cancel</span>
