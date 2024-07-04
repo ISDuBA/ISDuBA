@@ -189,8 +189,10 @@ const (
 	versionsCount = `(SELECT count(*) FROM documents WHERE ` +
 		`documents.publisher = advisories.publisher AND ` +
 		`documents.tracking_id = advisories.tracking_id)`
-	commentsCount = `(SELECT count(*) FROM comments WHERE ` +
+	commentsCountDocuments = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents.id)`
+	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = documents_id)`
 )
 
 func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
@@ -205,7 +207,9 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 		case AdvisoryMode:
 			b.WriteString(column)
 		case DocumentMode:
-			b.WriteString(commentsCount)
+			b.WriteString(commentsCountDocuments)
+		case EventMode:
+			b.WriteString(commentsCountEvents)
 		}
 	default:
 		b.WriteString(column)
@@ -459,7 +463,9 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			case AdvisoryMode:
 				b.WriteString(p)
 			case DocumentMode:
-				b.WriteString(commentsCount + `AS comments`)
+				b.WriteString(commentsCountDocuments + `AS comments`)
+			case EventMode:
+				b.WriteString(commentsCountEvents + `AS comments`)
 			}
 		default:
 			b.WriteString(p)
