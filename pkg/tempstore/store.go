@@ -81,6 +81,7 @@ func (st *Store) List(user string) (entries []Entry) {
 		now := time.Now()
 		best := now.Add(-st.cfg.StorageDuration)
 		userEntries := st.entries[user]
+		entries = make([]Entry, 0, len(userEntries))
 		for i := range userEntries {
 			if entry := &userEntries[i]; !entry.Accessed.Before(best) {
 				entries = append(entries, entry.Entry)
