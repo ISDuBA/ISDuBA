@@ -200,8 +200,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	// Use the advisories.
-	advisoryS := ctx.DefaultQuery("advisories", "false")
-	advisory, err := strconv.ParseBool(advisoryS)
+	advisory, err := strconv.ParseBool(ctx.DefaultQuery("advisories", "false"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -255,7 +254,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		calcCount     bool
 		count         int64
 		limit, offset int64 = -1, -1
-		results       []map[string]any
 	)
 
 	if count := ctx.Query("count"); count != "" {
@@ -278,6 +276,8 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		}
 	}
 
+	var results []map[string]any
+
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
@@ -297,12 +297,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 			sql := builder.CreateQuery(fields, order, limit, offset)
 
-			values := make([]any, len(fields))
-			ptrs := make([]any, len(fields))
-			for i := range ptrs {
-				ptrs[i] = &values[i]
-			}
-
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
 				slog.Debug("documents", "SQL", qndSQLReplace(sql, builder.Replacements))
 			}
@@ -311,17 +305,10 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			for rows.Next() {
-				if err := rows.Scan(ptrs...); err != nil {
-					return fmt.Errorf("scan failed: %w", err)
-				}
-				result := make(map[string]any, len(fields))
-				for i, p := range fields {
-					result[p] = values[i]
-				}
-				results = append(results, result)
+			if results, err = scanRows(rows, fields); err != nil {
+				return fmt.Errorf("loading data failed: %w", err)
 			}
-			return rows.Err()
+			return nil
 		},
 		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
 	); err != nil {
@@ -338,6 +325,30 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		h["documents"] = results
 	}
 	ctx.JSON(http.StatusOK, h)
+}
+
+// scanRows turns a result set into a slice of maps.
+func scanRows(rows pgx.Rows, fields []string) ([]map[string]any, error) {
+	values := make([]any, len(fields))
+	ptrs := make([]any, len(fields))
+	for i := range ptrs {
+		ptrs[i] = &values[i]
+	}
+	var results []map[string]any
+	for rows.Next() {
+		if err := rows.Scan(ptrs...); err != nil {
+			return nil, fmt.Errorf("scanning row failed: %w", err)
+		}
+		result := make(map[string]any, len(fields))
+		for i, p := range fields {
+			result[p] = values[i]
+		}
+		results = append(results, result)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("scannig failed: %w", err)
+	}
+	return results, nil
 }
 
 var (
