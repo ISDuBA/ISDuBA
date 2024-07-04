@@ -13,8 +13,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -27,56 +29,95 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 )
 
+var tempdocumentIDRe = regexp.MustCompile(`^tempdocument(\d+)$`)
+
+func parseDiffID(s string) (int64, bool, error) {
+	if m := tempdocumentIDRe.FindStringSubmatch(s); m != nil {
+		id, err := strconv.ParseInt(m[1], 10, 64)
+		return id, false, err
+	}
+	id, err := strconv.ParseInt(s, 10, 64)
+	return id, true, err
+}
+
 func (c *Controller) viewDiff(ctx *gin.Context) {
-	docID1, err := strconv.ParseInt(ctx.Param("document1"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	type idDoc struct {
+		id  int64
+		doc *[]byte
 	}
-	docID2, err := strconv.ParseInt(ctx.Param("document2"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	expr1 := query.FieldEqInt("id", docID1)
-	expr2 := query.FieldEqInt("id", docID2)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr1 = expr1.And(tlpExpr)
-		expr2 = expr2.And(tlpExpr)
-	}
-	var b1, b2 query.SQLBuilder
-	b1.CreateWhere(expr1)
-	b2.CreateWhere(expr2)
-
-	var doc1, doc2 []byte
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			const fetchSQL = `SELECT original FROM documents WHERE `
-			fetch1SQL := fetchSQL + b1.WhereClause
-			fetch2SQL := fetchSQL + b2.WhereClause
-			if err := conn.QueryRow(rctx, fetch1SQL, b1.Replacements...).Scan(&doc1); err != nil {
-				return err
-			}
-			return conn.QueryRow(rctx, fetch2SQL, b2.Replacements...).Scan(&doc2)
-		}, 0,
-	); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
-		} else {
-			slog.Error("database error", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var (
+		doc                   [2][]byte
+		fromDB, fromTempStore []idDoc
+	)
+	for i := range doc {
+		id, inDB, err := parseDiffID(ctx.Param("document" + strconv.Itoa(i+1)))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
-		return
+		var from *[]idDoc
+		if inDB {
+			from = &fromDB
+		} else {
+			from = &fromTempStore
+		}
+		*from = append(*from, idDoc{id: id, doc: &doc[i]})
+	}
+
+	// Do we need to load docs from database?
+	if len(fromDB) > 0 {
+		if err := c.db.Run(
+			ctx.Request.Context(),
+			func(rctx context.Context, conn *pgxpool.Conn) error {
+				var tlpExpr *query.Expr
+				if tlps := c.tlps(ctx); len(tlps) > 0 {
+					tlpExpr = tlps.AsExpr()
+				}
+				for _, f := range fromDB {
+					expr := query.FieldEqInt("id", f.id)
+					if tlpExpr != nil {
+						expr = expr.And(tlpExpr)
+					}
+					var b query.SQLBuilder
+					b.CreateWhere(expr)
+					fetchSQL := `SELECT original FROM documents WHERE ` + b.WhereClause
+					if err := conn.QueryRow(rctx, fetchSQL, b.Replacements...).Scan(f.doc); err != nil {
+						return fmt.Errorf("fetching data from database failed: %w", err)
+					}
+				}
+				return nil
+			}, 0,
+		); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			} else {
+				slog.Error("database error", "err", err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+	}
+
+	// Do we need to load documents from the temp store?
+	for _, f := range fromTempStore {
+		user := ctx.GetString("uid")
+		r, entry, err := c.tmpStore.Fetch(user, f.id)
+		if err != nil {
+			slog.Error("temp store fetch error", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		data := make([]byte, int(entry.Length))
+		if _, err := io.ReadFull(r, data); err != nil {
+			slog.Error("temp store read error", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		*f.doc = data
 	}
 
 	// Create the patch.
-	patch, err := jsonpatch.CreatePatch(doc1, doc2)
+	patch, err := jsonpatch.CreatePatch(doc[0], doc[1])
 	if err != nil {
 		slog.Error("creating patch failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -91,7 +132,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 				continue
 			}
 			var d1 any
-			if err := json.Unmarshal(doc1, &d1); err != nil {
+			if err := json.Unmarshal(doc[0], &d1); err != nil {
 				slog.Error("unmarshaling failed", "err", err)
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -122,7 +163,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 
 	// Calculate word diff for "replace" operations.
 	var d1 any
-	if err := json.Unmarshal(doc1, &d1); err != nil {
+	if err := json.Unmarshal(doc[0], &d1); err != nil {
 		slog.Error("unmarshaling failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
