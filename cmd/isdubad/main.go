@@ -51,12 +51,12 @@ func run(cfg *config.Config) error {
 		return err
 	}
 	defer db.Close(ctx)
-	ts := tempstore.NewStore(&cfg.TempStore)
-	ts.Run(ctx)
+	tmpStore := tempstore.NewStore(&cfg.TempStore)
+	tmpStore.Run(ctx)
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db)
+	ctrl := web.NewController(cfg, db, tmpStore)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)

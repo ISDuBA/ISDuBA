@@ -22,17 +22,27 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 )
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
-	cfg *config.Config
-	db  *database.DB
+	cfg      *config.Config
+	db       *database.DB
+	tmpStore *tempstore.Store
 }
 
 // NewController returns a new Controller.
-func NewController(cfg *config.Config, db *database.DB) *Controller {
-	return &Controller{cfg: cfg, db: db}
+func NewController(
+	cfg *config.Config,
+	db *database.DB,
+	tmpStore *tempstore.Store,
+) *Controller {
+	return &Controller{
+		cfg:      cfg,
+		db:       db,
+		tmpStore: tmpStore,
+	}
 }
 
 // currentUser returns the current user to be used in database queries.
@@ -110,6 +120,12 @@ func (c *Controller) Bind() http.Handler {
 
 	// Calculate diff
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)
+
+	// Manage temporary documents
+	api.POST("/tempdocuments", authEdReAu, c.importTempDocument)
+	api.GET("/tempdocuments", authEdReAu, c.overviewTempDocuments)
+	api.GET("/tempdocuments/:handle", authEdReAu, c.viewTempDocument)
+	api.DELETE("/tempdocuments/:handle", authEdReAu, c.deleteTempDocument)
 
 	// Backend information
 	api.GET("/about", authAll, c.about)
