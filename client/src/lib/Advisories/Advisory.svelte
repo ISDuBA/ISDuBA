@@ -399,7 +399,7 @@
           {#if isCommentingAllowed && !isSSVCediting}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea"
-                >{advisoryState === ARCHIVED ? "Reactivate with comment" : "New Comment:"}</Label
+                >{advisoryState === ARCHIVED ? "Reactivate with comment" : "New Comment"}</Label
               >
               <CommentTextArea
                 on:focus={() => {
