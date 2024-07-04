@@ -89,12 +89,16 @@ func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"($%d) "+
 			"AND comments.documents_id = documents.id)",
 			sb.replacementIndex(e.stringValue)+1)
+	case EventMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"($%d) "+
+			"AND comments.id = events_log.comments_id)",
+			sb.replacementIndex(e.stringValue)+1)
 	}
 }
 
 func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
 	switch sb.Mode {
-	case AdvisoryMode:
+	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
 			"ON events_log.documents_id = docs.id "+
 			"WHERE actor = $%d "+
@@ -102,7 +106,7 @@ func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
 			sb.replacementIndex(e.stringValue)+1)
 	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
-			"AND comments.documents_id = documents.id)",
+			"AND events_log.documents_id = documents.id)",
 			sb.replacementIndex(e.stringValue)+1)
 	}
 }

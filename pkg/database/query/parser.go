@@ -333,14 +333,14 @@ var (
 		"/":         curry3((*Parser).pushBinary, div),
 		"*":         curry3((*Parser).pushBinary, mul),
 		"me":        (*Parser).pushMe,
+		"mentioned": (*Parser).pushMentioned,
+		"involved":  (*Parser).pushInvolved,
 	}
 	// advancedActions are action only available is documents and advisories.
 	advancedActions = map[string]func(*Parser, *stack){
-		"search":    (*Parser).pushSearch,
-		"csearch":   (*Parser).pushCSearch,
-		"mentioned": (*Parser).pushMentioned,
-		"involved":  (*Parser).pushInvolved,
-		"as":        (*Parser).pushAs,
+		"search":  (*Parser).pushSearch,
+		"csearch": (*Parser).pushCSearch,
+		"as":      (*Parser).pushAs,
 	}
 	// actions is for fast looking up actions along the parser mode.
 	actions = map[ParserMode]map[string]func(*Parser, *stack){
