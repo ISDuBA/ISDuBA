@@ -449,9 +449,11 @@ func (st *stack) pop() *Expr {
 	panic(parseError("stack empty"))
 }
 
-func (st stack) top() *Expr {
-	if l := len(st); l > 0 {
-		return st[l-1]
+func (st stack) top() *Expr { return st.topN(0) }
+
+func (st stack) topN(n int) *Expr {
+	if l := len(st); l > n {
+		return st[l-n-1]
 	}
 	panic(parseError("stack empty"))
 }
@@ -788,7 +790,8 @@ func (p *Parser) checkLanguage(lang string) {
 func (p *Parser) checkSearchLength(term string) {
 	if p.MinSearchLength > 0 && len(term) < p.MinSearchLength {
 		panic(parseError(
-			fmt.Sprintf("search term too short (must be at least %d chars long)", p.MinSearchLength)))
+			fmt.Sprintf("search term too short (must be at least %d chars long)",
+				p.MinSearchLength)))
 	}
 }
 
@@ -998,6 +1001,18 @@ func curry3[A, B, C any](fn func(A, B, C), c C) func(A, B) {
 	return func(a A, b B) { fn(a, b, c) }
 }
 
+func (st *stack) andReduce() {
+	for len(*st) > 1 {
+		a, b := st.topN(0), st.topN(1)
+		if a.valueType != boolType || b.valueType != boolType {
+			return
+		}
+		st.pop()
+		st.pop()
+		st.push(a.And(b))
+	}
+}
+
 func (p *Parser) parse(input string) (*Expr, error) {
 
 	p.aliases = nil
@@ -1014,6 +1029,10 @@ func (p *Parser) parse(input string) (*Expr, error) {
 		}
 		st.pushString(field)
 	})
+
+	// If there are more than 2 open bool valued expressions on
+	// the stack automatically and them together.
+	st.andReduce()
 
 	if len(st) != 1 {
 		return nil, parseError(fmt.Sprintf(
