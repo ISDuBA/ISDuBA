@@ -40,7 +40,7 @@ export const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
   { from: ARCHIVED, to: DELETE, roles: [EDITOR, REVIEWER] },
   { from: ARCHIVED, to: NEW, roles: [IMPORTER] },
   { from: ARCHIVED, to: READ, roles: [ADMIN] },
-  { from: ARCHIVED, to: REVIEW, roles: [ADMIN, EDITOR] },
+  { from: ARCHIVED, to: REVIEW, roles: [ADMIN, EDITOR, REVIEWER] },
   { from: ASSESSING, to: DELETE, roles: [EDITOR, REVIEWER] },
   { from: ASSESSING, to: NEW, roles: [IMPORTER] },
   { from: ASSESSING, to: READ, roles: [EDITOR] },

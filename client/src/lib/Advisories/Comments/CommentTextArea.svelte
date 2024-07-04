@@ -88,7 +88,7 @@
           <Button
             size="xs"
             on:click={() => dispatch("saveComment")}
-            disabled={count > 10000 || count === 0 || value === old}
+            disabled={count > 10000 || count === 0 || value === old || state === ARCHIVED}
           >
             <span>{buttonText}</span>
           </Button>

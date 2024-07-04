@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR } from "$lib/workflow";
+  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR, REVIEWER } from "$lib/workflow";
   import { allowedToChangeWorkflow, isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { Badge } from "flowbite-svelte";
@@ -42,7 +42,11 @@
       >{READ}</Badge
     >
   </a>
-  {#if isRoleIncluded( appStore.getRoles(), [EDITOR] ) && (advisoryState === ARCHIVED || advisoryState === REVIEW)}
+  {#if isRoleIncluded(appStore.getRoles(), [EDITOR, REVIEWER]) && advisoryState === REVIEW}
+    <a href={"javascript:void(0);"} class="inline-flex">
+      <Badge title="Mark as assesing" class="w-fit" color="none">{ASSESSING}</Badge>
+    </a>
+  {:else if isRoleIncluded(appStore.getRoles(), [EDITOR]) && advisoryState === ARCHIVED}
     <a href={"javascript:void(0);"} class="inline-flex">
       <Badge title="Mark as assesing" class="w-fit" color="none">{ASSESSING}</Badge>
     </a>
