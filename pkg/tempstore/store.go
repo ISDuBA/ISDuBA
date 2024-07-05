@@ -81,22 +81,29 @@ func (st *Store) Total() int {
 }
 
 // List lists the entries for a given user.
-func (st *Store) List(user string) (entries []Entry) {
-	done := make(chan struct{})
+func (st *Store) List(user string) []Entry {
+	result := make(chan []Entry)
 	st.fns <- func(st *Store) {
-		defer close(done)
-		now := time.Now()
-		best := now.Add(-st.cfg.StorageDuration)
+		best := time.Now().Add(-st.cfg.StorageDuration)
 		userEntries := st.entries[user]
-		entries = make([]Entry, 0, len(userEntries))
-		for i := range userEntries {
-			if entry := &userEntries[i]; !entry.Accessed.Before(best) {
-				entries = append(entries, entry.Entry)
+		entries := slices.DeleteFunc(userEntries, func(e entry) bool {
+			return e.Accessed.Before(best)
+		})
+		if diff := len(userEntries) - len(entries); diff > 0 {
+			st.total -= diff
+			if len(entries) > 0 {
+				st.entries[user] = entries
+			} else {
+				delete(st.entries, user)
 			}
 		}
+		list := make([]Entry, len(entries))
+		for i := range entries {
+			list[i] = entries[i].Entry
+		}
+		result <- list
 	}
-	<-done
-	return
+	return <-result
 }
 
 // Delete deletes a given file for a given user.
