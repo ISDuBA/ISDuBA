@@ -183,26 +183,41 @@ func (st *Store) Store(user, filename string, store func(io.Writer) error) (id i
 		err = fmt.Errorf("finish compression failed: %w", err)
 		return
 	}
-	data := buf.Bytes()
+	data := bytes.Clone(buf.Bytes())
 
 	done := make(chan struct{})
 	st.fns <- func(st *Store) {
 		defer close(done)
+		now := time.Now()
+
 		if st.total >= st.cfg.FilesTotal {
-			err = errors.New("too many files total")
-			return
+			// Try to make some room.
+			st.cleanup(now)
+			if st.total >= st.cfg.FilesTotal {
+				err = errors.New("too many files total")
+				return
+			}
 		}
 		userEntries := st.entries[user]
 		if len(userEntries) >= st.cfg.FilesUser {
-			err = errors.New("too many files per user")
-			return
+			// Try to make some room.
+			best := now.Add(-st.cfg.StorageDuration)
+			entries := slices.DeleteFunc(userEntries, func(e entry) bool {
+				return e.Accessed.Before(best)
+			})
+			if diff := len(userEntries) - len(entries); diff > 0 {
+				st.total -= diff
+				userEntries = entries
+			} else {
+				err = errors.New("too many files per user")
+				return
+			}
 		}
 		id = -1
 		for i := range userEntries {
 			id = max(id, userEntries[i].ID)
 		}
 		id++
-		now := time.Now()
 		st.entries[user] = append(userEntries, entry{
 			Entry: Entry{
 				Inserted: now,
