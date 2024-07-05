@@ -140,7 +140,6 @@ var binaryCompatMatrix = map[binaryCompat]valueType{
 	{durationType, mul, intType}:      durationType,
 	{durationType, div, intType}:      durationType,
 	{intType, mul, durationType}:      durationType,
-	{intType, add, durationType}:      durationType,
 	{durationType, mul, floatType}:    durationType,
 	{durationType, div, floatType}:    durationType,
 }
