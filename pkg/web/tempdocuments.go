@@ -63,9 +63,12 @@ func (c *Controller) importTempDocument(ctx *gin.Context) {
 func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 	user := ctx.GetString("uid")
 	files := c.tmpStore.List(user)
+	freeSlots := max(0, min(
+		c.cfg.TempStore.FilesTotal-c.tmpStore.Total(),
+		c.cfg.TempStore.FilesUser-len(files)))
 	ctx.JSON(http.StatusCreated, gin.H{
 		"files":      files,
-		"files_user": c.cfg.TempStore.FilesUser,
+		"free_slots": freeSlots,
 	})
 }
 
