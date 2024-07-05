@@ -98,6 +98,7 @@ func (c *Controller) Bind() http.Handler {
 	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
 
 	// Events
+	api.GET("/events", authEdReAu, c.overviewEvents)
 	api.GET("/events/:document", authEdReAu, c.viewEvents)
 
 	// State change

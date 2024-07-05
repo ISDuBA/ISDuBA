@@ -206,8 +206,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
+	mode := query.DocumentMode
+	if advisory {
+		mode = query.AdvisoryMode
+	}
+
 	parser := query.Parser{
-		Advisory:        advisory,
+		Mode:            mode,
 		Languages:       c.cfg.Database.TextSearch,
 		MinSearchLength: MinSearchLength,
 		Me:              ctx.GetString("uid"),
@@ -231,7 +236,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(query.BoolField("latest"))
 	}
 
-	builder := query.SQLBuilder{Advisory: advisory}
+	builder := query.SQLBuilder{Mode: mode}
 	builder.CreateWhere(expr)
 
 	fields := strings.Fields(

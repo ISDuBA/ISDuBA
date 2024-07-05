@@ -59,12 +59,22 @@ const (
 	timeType
 	workflowType
 	durationType
+	eventsType
+)
+
+// ParserMode represents the operation mode of the parser.
+type ParserMode int
+
+const (
+	DocumentMode ParserMode = iota // DocumentMode operates on documents.
+	AdvisoryMode                   // AdvisoryMode operates on advisories.
+	EventMode                      // EventMode operates on events.
 )
 
 // Parser helps parsing database queries,
 type Parser struct {
-	// Advisory indicates that only advisories should be considered.
-	Advisory bool
+	// Mode indicates that only advisories should be considered.
+	Mode ParserMode
 	// Languages are the languages supported by full-text search.
 	Languages []string
 	// MinSearchLength enforces a minimal lengths of search phrases.
@@ -96,7 +106,7 @@ type Expr struct {
 type documentColumn struct {
 	name           string
 	valueType      valueType
-	advisoryOnly   bool
+	modes          []ParserMode
 	projectionOnly bool
 }
 
@@ -150,6 +160,8 @@ func (vt valueType) String() string {
 		return "workflow"
 	case durationType:
 		return "duration"
+	case eventsType:
+		return "events"
 	default:
 		return fmt.Sprintf("unknown value type %d", vt)
 	}
@@ -248,28 +260,40 @@ func (pe parseError) Error() string {
 	return string(pe)
 }
 
-// columns are the columns which can be accessed.
-var columns = []documentColumn{
-	{"id", intType, false, false},
-	{"latest", boolType, false, false},
-	{"tracking_id", stringType, false, false},
-	{"version", stringType, false, false},
-	{"publisher", stringType, false, false},
-	{"current_release_date", timeType, false, false},
-	{"initial_release_date", timeType, false, false},
-	{"rev_history_length", intType, false, false},
-	{"title", stringType, false, false},
-	{"tlp", stringType, false, false},
-	{"ssvc", stringType, false, false},
-	{"cvss_v2_score", floatType, false, false},
-	{"cvss_v3_score", floatType, false, false},
-	{"critical", floatType, false, false},
-	{"four_cves", stringType, false, true},
-	{"comments", intType, false, false},
+var (
+	docAdvEvtModes = []ParserMode{DocumentMode, AdvisoryMode, EventMode}
+	advModes       = []ParserMode{AdvisoryMode}
+	evtsModes      = []ParserMode{EventMode}
+)
+
+// documentColumns are the documentColumns which can be accessed.
+var documentColumns = []documentColumn{
+	{"id", intType, docAdvEvtModes, false},
+	{"latest", boolType, docAdvEvtModes, false},
+	{"tracking_id", stringType, docAdvEvtModes, false},
+	{"version", stringType, docAdvEvtModes, false},
+	{"publisher", stringType, docAdvEvtModes, false},
+	{"current_release_date", timeType, docAdvEvtModes, false},
+	{"initial_release_date", timeType, docAdvEvtModes, false},
+	{"rev_history_length", intType, docAdvEvtModes, false},
+	{"title", stringType, docAdvEvtModes, false},
+	{"tlp", stringType, docAdvEvtModes, false},
+	{"ssvc", stringType, docAdvEvtModes, false},
+	{"cvss_v2_score", floatType, docAdvEvtModes, false},
+	{"cvss_v3_score", floatType, docAdvEvtModes, false},
+	{"critical", floatType, docAdvEvtModes, false},
+	{"four_cves", stringType, docAdvEvtModes, true},
+	{"comments", intType, docAdvEvtModes, false},
 	// Advisories only
-	{"state", workflowType, true, false},
-	{"recent", timeType, true, false},
-	{"versions", intType, true, false},
+	{"state", workflowType, advModes, false},
+	{"recent", timeType, advModes, false},
+	{"versions", intType, advModes, false},
+	// Events only
+	{"event", eventsType, evtsModes, false},
+	{"event_state", workflowType, evtsModes, false},
+	{"time", timeType, evtsModes, false},
+	{"actor", stringType, evtsModes, false},
+	{"comments_id", intType, evtsModes, false},
 }
 
 // supportedLangs are the default languages.
@@ -279,15 +303,60 @@ var supportedLangs = []string{
 	"german",
 }
 
+var (
+	// baseActions are the action available in every parser.
+	baseActions = map[string]func(*Parser, *stack){
+		"true":      (*Parser).pushTrue,
+		"false":     (*Parser).pushFalse,
+		"not":       (*Parser).pushNot,
+		"and":       curry3((*Parser).pushBinary, and),
+		"or":        curry3((*Parser).pushBinary, or),
+		"float":     (*Parser).pushFloat,
+		"integer":   (*Parser).pushInteger,
+		"timestamp": (*Parser).pushTimestamp,
+		"workflow":  (*Parser).pushWorkflow,
+		"events":    (*Parser).pushEvents,
+		"=":         curry3((*Parser).pushCmp, eq),
+		"!=":        curry3((*Parser).pushCmp, ne),
+		"<":         curry3((*Parser).pushCmp, lt),
+		"<=":        curry3((*Parser).pushCmp, le),
+		">":         curry3((*Parser).pushCmp, gt),
+		">=":        curry3((*Parser).pushCmp, ge),
+		"ilike":     (*Parser).pushILike,
+		"ilikepid":  (*Parser).pushILikePID,
+		"now":       (*Parser).pushNow,
+		"duration":  (*Parser).pushDuration,
+		"+":         curry3((*Parser).pushBinary, add),
+		"-":         curry3((*Parser).pushBinary, sub),
+		"/":         curry3((*Parser).pushBinary, div),
+		"*":         curry3((*Parser).pushBinary, mul),
+		"me":        (*Parser).pushMe,
+		"mentioned": (*Parser).pushMentioned,
+		"involved":  (*Parser).pushInvolved,
+	}
+	// advancedActions are action only available is documents and advisories.
+	advancedActions = map[string]func(*Parser, *stack){
+		"search":  (*Parser).pushSearch,
+		"csearch": (*Parser).pushCSearch,
+		"as":      (*Parser).pushAs,
+	}
+	// actions is for fast looking up actions along the parser mode.
+	actions = map[ParserMode]map[string]func(*Parser, *stack){
+		DocumentMode: buildActions(DocumentMode),
+		AdvisoryMode: buildActions(AdvisoryMode),
+		EventMode:    buildActions(EventMode),
+	}
+)
+
 // ExistsDocumentColumn returns true if a column in document exists.
-func ExistsDocumentColumn(name string, advisory bool) bool {
-	return findDocumentColumn(name, advisory) != nil
+func ExistsDocumentColumn(name string, mode ParserMode) bool {
+	return findDocumentColumn(name, mode) != nil
 }
 
-func findDocumentColumn(name string, advisory bool) *documentColumn {
-	for i := range columns {
-		if col := &columns[i]; col.name == name {
-			if col.advisoryOnly && !advisory {
+func findDocumentColumn(name string, mode ParserMode) *documentColumn {
+	for i := range documentColumns {
+		if col := &documentColumns[i]; col.name == name {
+			if !slices.Contains(col.modes, mode) {
 				return nil
 			}
 			return col
@@ -378,9 +447,11 @@ func (st *stack) pop() *Expr {
 	panic(parseError("stack empty"))
 }
 
-func (st stack) top() *Expr {
-	if l := len(st); l > 0 {
-		return st[l-1]
+func (st stack) top() *Expr { return st.topN(0) }
+
+func (st stack) topN(n int) *Expr {
+	if l := len(st); l > n {
+		return st[l-n-1]
 	}
 	panic(parseError("stack empty"))
 }
@@ -576,7 +647,7 @@ func parseTime(s string) time.Time {
 	panic(parseError(fmt.Sprintf("cannot parse %q as time", s)))
 }
 
-func (*Parser) pushTime(st *stack) {
+func (*Parser) pushTimestamp(st *stack) {
 	if st.top().valueType == timeType {
 		return
 	}
@@ -631,6 +702,20 @@ func parseWorkflow(s string) string {
 	return s
 }
 
+var validEvents = []string{
+	"import_document", "delete_document",
+	"state_change",
+	"add_sscv", "change_sscv", "delete_sscv",
+	"add_comment", "change_comment", "delete_comment",
+}
+
+func parseEvents(s string) string {
+	if !slices.Contains(validEvents, s) {
+		panic(parseError(fmt.Sprintf("%q is not a valid event", s)))
+	}
+	return s
+}
+
 func (*Parser) pushWorkflow(st *stack) {
 	if st.top().valueType == workflowType {
 		return
@@ -659,6 +744,34 @@ func (*Parser) pushWorkflow(st *stack) {
 	}
 }
 
+func (*Parser) pushEvents(st *stack) {
+	if st.top().valueType == eventsType {
+		return
+	}
+	switch e := st.pop(); e.exprType {
+	case cnst:
+		switch e.valueType {
+		case stringType:
+			st.push(&Expr{
+				exprType:    cnst,
+				valueType:   eventsType,
+				stringValue: parseEvents(e.stringValue),
+			})
+		}
+	default:
+		switch e.valueType {
+		case stringType:
+			st.push(&Expr{
+				exprType:  cast,
+				valueType: eventsType,
+				children:  []*Expr{e},
+			})
+		default:
+			panic(parseError("unsupported cast"))
+		}
+	}
+}
+
 func (p *Parser) checkLanguage(lang string) {
 	var langs []string
 	if p.Languages != nil {
@@ -675,7 +788,8 @@ func (p *Parser) checkLanguage(lang string) {
 func (p *Parser) checkSearchLength(term string) {
 	if p.MinSearchLength > 0 && len(term) < p.MinSearchLength {
 		panic(parseError(
-			fmt.Sprintf("search term too short (must be at least %d chars long)", p.MinSearchLength)))
+			fmt.Sprintf("search term too short (must be at least %d chars long)",
+				p.MinSearchLength)))
 	}
 }
 
@@ -865,60 +979,18 @@ func split(input string, fn func(string, bool)) {
 	}
 }
 
-var (
-	baseActions = map[string]func(*Parser, *stack){
-		"true":      (*Parser).pushTrue,
-		"false":     (*Parser).pushFalse,
-		"not":       (*Parser).pushNot,
-		"and":       curry3((*Parser).pushBinary, and),
-		"or":        curry3((*Parser).pushBinary, or),
-		"float":     (*Parser).pushFloat,
-		"integer":   (*Parser).pushInteger,
-		"time":      (*Parser).pushTime,
-		"workflow":  (*Parser).pushWorkflow,
-		"=":         curry3((*Parser).pushCmp, eq),
-		"!=":        curry3((*Parser).pushCmp, ne),
-		"<":         curry3((*Parser).pushCmp, lt),
-		"<=":        curry3((*Parser).pushCmp, le),
-		">":         curry3((*Parser).pushCmp, gt),
-		">=":        curry3((*Parser).pushCmp, ge),
-		"search":    (*Parser).pushSearch,
-		"csearch":   (*Parser).pushCSearch,
-		"mentioned": (*Parser).pushMentioned,
-		"involved":  (*Parser).pushInvolved,
-		"as":        (*Parser).pushAs,
-		"ilike":     (*Parser).pushILike,
-		"ilikepid":  (*Parser).pushILikePID,
-		"now":       (*Parser).pushNow,
-		"duration":  (*Parser).pushDuration,
-		"+":         curry3((*Parser).pushBinary, add),
-		"-":         curry3((*Parser).pushBinary, sub),
-		"/":         curry3((*Parser).pushBinary, div),
-		"*":         curry3((*Parser).pushBinary, mul),
-		"me":        (*Parser).pushMe,
-	}
-	documentActions = buildActions(false)
-	advisoryActions = buildActions(true)
-)
-
-func buildActions(advisory bool) map[string]func(*Parser, *stack) {
+func buildActions(mode ParserMode) map[string]func(*Parser, *stack) {
 	actions := maps.Clone(baseActions)
-	for i := range columns {
-		column := &columns[i]
-		if column.projectionOnly {
-			continue
+	for i := range documentColumns {
+		col := &documentColumns[i]
+		if !col.projectionOnly && slices.Contains(col.modes, mode) {
+			actions["$"+col.name] = func(p *Parser, st *stack) { p.pushAccess(st, col) }
 		}
-		var fn func(*Parser, *stack)
-		if !advisory && column.advisoryOnly {
-			fn = func(*Parser, *stack) {
-				panic(parseError(
-					fmt.Sprintf("column %q only accessible in advisory mode",
-						column.name)))
-			}
-		} else {
-			fn = func(p *Parser, st *stack) { p.pushAccess(st, column) }
-		}
-		actions["$"+column.name] = fn
+	}
+	// Fill in extra actions
+	switch mode {
+	case DocumentMode, AdvisoryMode:
+		maps.Copy(actions, advancedActions)
 	}
 	return actions
 }
@@ -927,29 +999,42 @@ func curry3[A, B, C any](fn func(A, B, C), c C) func(A, B) {
 	return func(a A, b B) { fn(a, b, c) }
 }
 
+func (st *stack) andReduce() {
+	for len(*st) > 1 {
+		a, b := st.topN(0), st.topN(1)
+		if a.valueType != boolType || b.valueType != boolType {
+			return
+		}
+		st.pop()
+		st.pop()
+		st.push(a.And(b))
+	}
+}
+
 func (p *Parser) parse(input string) (*Expr, error) {
 
-	actions := documentActions
-	if p.Advisory {
-		actions = advisoryActions
-	}
-
 	p.aliases = nil
+
 	st := stack{}
+	acts := actions[p.Mode]
 
 	split(input, func(field string, isString bool) {
 		if !isString {
-			if action := actions[field]; action != nil {
-				action(p, &st)
+			if act := acts[field]; act != nil {
+				act(p, &st)
 				return
 			}
 		}
 		st.pushString(field)
 	})
 
+	// If there are more than 2 open bool valued expressions on
+	// the stack automatically and them together.
+	st.andReduce()
+
 	if len(st) != 1 {
 		return nil, parseError(fmt.Sprintf(
-			"invalid number of expression roots: expected 1 have %d: %+v", len(st), st))
+			"invalid number of expression roots: expected 1 have %d", len(st)))
 	}
 	e := st.top()
 	e.checkValueType(boolType)
