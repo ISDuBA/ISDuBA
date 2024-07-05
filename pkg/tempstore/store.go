@@ -37,7 +37,7 @@ type Store struct {
 // Entry represents a file hold in the store.
 type Entry struct {
 	Inserted time.Time `json:"inserted"`
-	Accessed time.Time `json:"accessed"`
+	Expired  time.Time `json:"expired"`
 	Filename string    `json:"filename"`
 	Length   int64     `json:"length"`
 	ID       int64     `json:"id"`
@@ -84,10 +84,10 @@ func (st *Store) Total() int {
 func (st *Store) List(user string) []Entry {
 	result := make(chan []Entry)
 	st.fns <- func(st *Store) {
-		best := time.Now().Add(-st.cfg.StorageDuration)
+		now := time.Now()
 		userEntries := st.entries[user]
 		entries := slices.DeleteFunc(userEntries, func(e entry) bool {
-			return e.Accessed.Before(best)
+			return e.Expired.Before(now)
 		})
 		if diff := len(userEntries) - len(entries); diff > 0 {
 			st.total -= diff
@@ -117,11 +117,11 @@ func (st *Store) Delete(user string, id int64) bool {
 			return
 		}
 		deleted := false
-		best := time.Now().Add(-st.cfg.StorageDuration)
+		now := time.Now()
 		entries := slices.DeleteFunc(userEntries, func(e entry) bool {
 			found := e.ID == id
 			deleted = deleted || found
-			return found || e.Accessed.Before(best)
+			return found || e.Expired.Before(now)
 		})
 		if diff := len(userEntries) - len(entries); diff > 0 {
 			st.total -= diff
@@ -147,13 +147,12 @@ func (st *Store) Fetch(user string, id int64) (r io.Reader, result Entry, err er
 			return
 		}
 		now := time.Now()
-		best := now.Add(-st.cfg.StorageDuration)
 		for i := range userEntries {
 			if entry := &userEntries[i]; entry.ID == id {
-				if entry.Accessed.Before(best) {
+				if entry.Expired.Before(now) {
 					err = errors.New("expired")
 				} else {
-					entry.Accessed = now
+					entry.Expired = now.Add(st.cfg.StorageDuration)
 					result = entry.Entry
 					r, err = gzip.NewReader(bytes.NewReader(entry.data))
 				}
@@ -201,9 +200,8 @@ func (st *Store) Store(user, filename string, store func(io.Writer) error) (id i
 		userEntries := st.entries[user]
 		if len(userEntries) >= st.cfg.FilesUser {
 			// Try to make some room.
-			best := now.Add(-st.cfg.StorageDuration)
 			entries := slices.DeleteFunc(userEntries, func(e entry) bool {
-				return e.Accessed.Before(best)
+				return e.Expired.Before(now)
 			})
 			if diff := len(userEntries) - len(entries); diff > 0 {
 				st.total -= diff
@@ -221,7 +219,7 @@ func (st *Store) Store(user, filename string, store func(io.Writer) error) (id i
 		st.entries[user] = append(userEntries, entry{
 			Entry: Entry{
 				Inserted: now,
-				Accessed: now,
+				Expired:  now.Add(st.cfg.StorageDuration),
 				Filename: filename,
 				Length:   nw.N,
 				ID:       id,
@@ -236,10 +234,9 @@ func (st *Store) Store(user, filename string, store func(io.Writer) error) (id i
 
 // cleanup removes files from store which were idle for too long.
 func (st *Store) cleanup(now time.Time) {
-	best := now.Add(-st.cfg.StorageDuration)
 	for user, userEntries := range st.entries {
 		entries := slices.DeleteFunc(userEntries, func(e entry) bool {
-			return e.Accessed.Before(best)
+			return e.Expired.Before(now)
 		})
 		if diff := len(userEntries) - len(entries); diff > 0 {
 			st.total -= diff
