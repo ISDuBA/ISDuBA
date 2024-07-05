@@ -45,7 +45,11 @@
   let isCommentingAllowed: boolean;
   let isSSVCediting = false;
   $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
-    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+    if (advisoryState === ARCHIVED && appStore.isReviewer()) {
+      isCommentingAllowed = false;
+    } else {
+      isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+    }
   } else {
     isCommentingAllowed = false;
   }
