@@ -101,16 +101,20 @@ func (st *Store) List(user string) (entries []Entry) {
 
 // Delete deletes a given file for a given user.
 // Returns true is file was really deleted.
-func (st *Store) Delete(user string, id int64) (deleted bool) {
-	done := make(chan struct{})
+func (st *Store) Delete(user string, id int64) bool {
+	result := make(chan bool)
 	st.fns <- func(st *Store) {
-		defer close(done)
 		userEntries := st.entries[user]
 		if len(userEntries) == 0 {
+			result <- false
 			return
 		}
+		deleted := false
+		best := time.Now().Add(-st.cfg.StorageDuration)
 		entries := slices.DeleteFunc(userEntries, func(e entry) bool {
-			return e.ID == id
+			found := e.ID == id
+			deleted = deleted || found
+			return found || e.Accessed.Before(best)
 		})
 		if diff := len(userEntries) - len(entries); diff > 0 {
 			st.total -= diff
@@ -119,11 +123,10 @@ func (st *Store) Delete(user string, id int64) (deleted bool) {
 			} else {
 				delete(st.entries, user)
 			}
-			deleted = true
 		}
+		result <- deleted
 	}
-	<-done
-	return
+	return <-result
 }
 
 // Fetch fetches a stored file for a given user and id.
