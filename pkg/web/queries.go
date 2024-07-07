@@ -74,10 +74,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	if sq.Advisories {
 		mode = query.AdvisoryMode
 	}
-	parser := query.Parser{
-		Mode:      mode,
-		Languages: c.cfg.Database.TextSearch,
-	}
+	parser := query.Parser{Mode: mode}
 
 	// The query to filter the documents.
 	sq.Query = ctx.DefaultPostForm("query", "true")
@@ -414,10 +411,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			if sq.Advisories {
 				mode = query.AdvisoryMode
 			}
-			parser := query.Parser{
-				Mode:      mode,
-				Languages: c.cfg.Database.TextSearch,
-			}
+			parser := query.Parser{Mode: mode}
 
 			// Check query
 			var expr *query.Expr

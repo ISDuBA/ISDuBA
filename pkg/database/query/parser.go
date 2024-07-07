@@ -75,8 +75,6 @@ const (
 type Parser struct {
 	// Mode indicates that only advisories should be considered.
 	Mode ParserMode
-	// Languages are the languages supported by full-text search.
-	Languages []string
 	// MinSearchLength enforces a minimal lengths of search phrases.
 	MinSearchLength int
 	// Me is a replacement text for the "me" keyword.
@@ -96,7 +94,6 @@ type Expr struct {
 	floatValue    float64
 	timeValue     time.Time
 	boolValue     bool
-	langValue     string
 	durationValue time.Duration
 	alias         string
 
@@ -295,13 +292,6 @@ var documentColumns = []documentColumn{
 	{"time", timeType, evtsModes, false},
 	{"actor", stringType, evtsModes, false},
 	{"comments_id", intType, evtsModes, false},
-}
-
-// supportedLangs are the default languages.
-// Can be overwritten in Parser.
-var supportedLangs = []string{
-	"english",
-	"german",
 }
 
 var (
@@ -773,19 +763,6 @@ func (*Parser) pushEvents(st *stack) {
 	}
 }
 
-func (p *Parser) checkLanguage(lang string) {
-	var langs []string
-	if p.Languages != nil {
-		langs = p.Languages
-	} else {
-		langs = supportedLangs
-	}
-	if !slices.Contains(langs, lang) {
-		panic(parseError(
-			fmt.Sprintf("unsupported search language %q", lang)))
-	}
-}
-
 func (p *Parser) checkSearchLength(term string) {
 	if p.MinSearchLength > 0 && len(term) < p.MinSearchLength {
 		panic(parseError(
@@ -799,12 +776,10 @@ func (p *Parser) pushSearch(st *stack) {
 	term := st.pop()
 	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
-	p.checkLanguage(lang.stringValue)
 	p.checkSearchLength(term.stringValue)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
-		langValue:   lang.stringValue,
 		stringValue: term.stringValue,
 	})
 }
@@ -814,12 +789,10 @@ func (p *Parser) pushCSearch(st *stack) {
 	term := st.pop()
 	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
-	p.checkLanguage(lang.stringValue)
 	p.checkSearchLength(term.stringValue)
 	st.push(&Expr{
 		exprType:    csearch,
 		valueType:   boolType,
-		langValue:   lang.stringValue,
 		stringValue: term.stringValue,
 	})
 }

@@ -213,7 +213,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	parser := query.Parser{
 		Mode:            mode,
-		Languages:       c.cfg.Database.TextSearch,
 		MinSearchLength: MinSearchLength,
 		Me:              ctx.GetString("uid"),
 	}

@@ -36,7 +36,7 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	const tsquery = `websearch_to_tsquery`
 
 	b.WriteString(`ts @@ ` + tsquery + `('`)
-	b.WriteString(e.langValue)
+	b.WriteString("english") // TODO: Replace it all!
 	b.WriteString("',$")
 	idx := sb.replacementIndex(e.stringValue)
 	b.WriteString(strconv.Itoa(idx + 1))
@@ -48,7 +48,7 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	}
 	repl := fmt.Sprintf(
 		"ts_headline('%[1]s',txt,"+tsquery+"('%[1]s', $%[2]d))",
-		e.langValue, idx+1)
+		"english", idx+1) // TODO: Replace it all!
 	if sb.Aliases == nil {
 		sb.Aliases = map[string]string{}
 	}
@@ -65,12 +65,12 @@ func (sb *SQLBuilder) csearchWhere(e *Expr, b *strings.Builder) {
 			"ON comments.documents_id = docs.id "+
 			"WHERE ts @@ "+tsquery+"('%s', $%d) "+
 			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
-			e.langValue,
+			"english", // TODO: Replace it all!
 			sb.replacementIndex(e.stringValue)+1)
 	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"('%s', $%d) "+
 			"AND comments.documents_id = documents.id)",
-			e.langValue,
+			"english", // TODO: Replace it all!
 			sb.replacementIndex(e.stringValue)+1)
 	}
 }

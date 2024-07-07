@@ -30,7 +30,6 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 
 	parser := query.Parser{
 		Mode:            query.EventMode,
-		Languages:       c.cfg.Database.TextSearch,
 		MinSearchLength: MinSearchLength,
 		Me:              ctx.GetString("uid"),
 	}
