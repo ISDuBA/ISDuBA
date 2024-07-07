@@ -50,9 +50,9 @@
   const triggerSearch = async () => {
     if (!advancedSearch) {
       if (selectedCustomQuery === -1) {
-        query.query = searchTerm ? `"${searchTerm}" german search ${searchColumnName} as` : "";
+        query.query = searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
       } else {
-        query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" german search ${searchColumnName} as and` : ""}`;
+        query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
       }
       if (
         searchTerm &&

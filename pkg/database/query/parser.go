@@ -768,9 +768,7 @@ func (p *Parser) checkSearchLength(term string) {
 }
 
 func (p *Parser) pushSearch(st *stack) {
-	lang := st.pop()
 	term := st.pop()
-	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
 	st.push(&Expr{
