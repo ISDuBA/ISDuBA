@@ -27,7 +27,7 @@
     return {
       columns: [...SEARCHPAGECOLUMNS.ADVISORY],
       advisories: true,
-      orders: ["-recent"],
+      orders: ["-critical"],
       query: "",
       queryReset: ""
     };

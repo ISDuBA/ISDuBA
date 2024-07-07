@@ -164,6 +164,20 @@ func (vt valueType) String() string {
 	}
 }
 
+// String implements [fmt.Stringer].
+func (pm ParserMode) String() string {
+	switch pm {
+	case DocumentMode:
+		return "document"
+	case AdvisoryMode:
+		return "advisory"
+	case EventMode:
+		return "event"
+	default:
+		return fmt.Sprintf("Unknown parser mode: %d", pm)
+	}
+}
+
 // FieldEqInt is a shortcut mainly for building expressions
 // accessing an integer column like 'id's.
 func FieldEqInt(field string, value int64) *Expr {
