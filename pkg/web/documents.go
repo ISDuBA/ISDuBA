@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -309,7 +310,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if results, err = scanRows(rows, fields); err != nil {
+			if results, err = scanRows(rows, fields, builder.Aliases); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -332,7 +333,11 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 }
 
 // scanRows turns a result set into a slice of maps.
-func scanRows(rows pgx.Rows, fields []string) ([]map[string]any, error) {
+func scanRows(
+	rows pgx.Rows,
+	fields []string,
+	aliases map[string]string,
+) ([]map[string]any, error) {
 	values := make([]any, len(fields))
 	ptrs := make([]any, len(fields))
 	for i := range ptrs {
@@ -345,7 +350,14 @@ func scanRows(rows pgx.Rows, fields []string) ([]map[string]any, error) {
 		}
 		result := make(map[string]any, len(fields))
 		for i, p := range fields {
-			result[p] = values[i]
+			var v = values[i]
+			// XXX: A little bit hacky to support client.
+			if _, ok := aliases[p]; ok {
+				if s, ok := v.(string); ok {
+					v = template.HTMLEscapeString(s)
+				}
+			}
+			result[p] = v
 		}
 		results = append(results, result)
 	}

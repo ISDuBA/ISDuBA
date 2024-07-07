@@ -37,7 +37,6 @@ const (
 	le
 	access
 	search
-	csearch
 	mentioned
 	involved
 	ilike
@@ -229,8 +228,6 @@ func (et exprType) String() string {
 		return "access"
 	case search:
 		return "search"
-	case csearch:
-		return "csearch"
 	case mentioned:
 		return "mentioned"
 	case involved:
@@ -327,9 +324,8 @@ var (
 	}
 	// advancedActions are action only available is documents and advisories.
 	advancedActions = map[string]func(*Parser, *stack){
-		"search":  (*Parser).pushSearch,
-		"csearch": (*Parser).pushCSearch,
-		"as":      (*Parser).pushAs,
+		"search": (*Parser).pushSearch,
+		"as":     (*Parser).pushAs,
 	}
 	// actions is for fast looking up actions along the parser mode.
 	actions = map[ParserMode]map[string]func(*Parser, *stack){
@@ -784,19 +780,6 @@ func (p *Parser) pushSearch(st *stack) {
 	})
 }
 
-func (p *Parser) pushCSearch(st *stack) {
-	lang := st.pop()
-	term := st.pop()
-	lang.checkValueType(stringType)
-	term.checkValueType(stringType)
-	p.checkSearchLength(term.stringValue)
-	st.push(&Expr{
-		exprType:    csearch,
-		valueType:   boolType,
-		stringValue: term.stringValue,
-	})
-}
-
 func (p *Parser) pushMentioned(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
@@ -875,7 +858,7 @@ func (*Parser) pushDuration(st *stack) {
 	}
 }
 
-var aliasRe = regexp.MustCompile(`[a-zA-Z][a-zA-Z_0-9]*`)
+var aliasRe = regexp.MustCompile(`[a-zA-Z_0-9]+`)
 
 func validAlias(s string) {
 	if !aliasRe.MatchString(s) {

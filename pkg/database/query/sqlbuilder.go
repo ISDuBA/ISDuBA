@@ -10,6 +10,7 @@ package query
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -32,67 +33,53 @@ func (sb *SQLBuilder) CreateWhere(e *Expr) string {
 	return sb.WhereClause
 }
 
-func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
-	const tsquery = `websearch_to_tsquery`
+var (
+	escapeLike = strings.NewReplacer(
+		`%`, `\%`,
+		`_`, `\_`).Replace
+	whiteSpaces = regexp.MustCompile(`\s+`)
+)
 
-	b.WriteString(`ts @@ ` + tsquery + `('`)
-	b.WriteString("english") // TODO: Replace it all!
-	b.WriteString("',$")
-	idx := sb.replacementIndex(e.stringValue)
-	b.WriteString(strconv.Itoa(idx + 1))
-	b.WriteByte(')')
+func likeQuery(query string) string {
+	query = strings.TrimSpace(query)
+	query = escapeLike(query)
+	query = whiteSpaces.ReplaceAllString(query, `%`)
+	return `%` + query + `%`
+}
+
+func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
+	fmt.Fprintf(b, "txt ILIKE $%d",
+		sb.replacementIndex(likeQuery(e.stringValue))+1)
+
+	// We need the text tables to be joined.
 	sb.TextTables = true
+
 	// Handle alias
 	if e.alias == "" {
 		return
 	}
-	repl := fmt.Sprintf(
-		"ts_headline('%[1]s',txt,"+tsquery+"('%[1]s', $%[2]d))",
-		"english", idx+1) // TODO: Replace it all!
 	if sb.Aliases == nil {
 		sb.Aliases = map[string]string{}
 	}
-	// We need the text tables to be joined.
-	sb.Aliases[e.alias] = repl
-}
-
-func (sb *SQLBuilder) csearchWhere(e *Expr, b *strings.Builder) {
-	const tsquery = `websearch_to_tsquery`
-
-	switch sb.Mode {
-	case AdvisoryMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments JOIN documents docs "+
-			"ON comments.documents_id = docs.id "+
-			"WHERE ts @@ "+tsquery+"('%s', $%d) "+
-			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
-			"english", // TODO: Replace it all!
-			sb.replacementIndex(e.stringValue)+1)
-	case DocumentMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"('%s', $%d) "+
-			"AND comments.documents_id = documents.id)",
-			"english", // TODO: Replace it all!
-			sb.replacementIndex(e.stringValue)+1)
-	}
+	sb.Aliases[e.alias] = `txt`
 }
 
 func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
-	const tsquery = `phraseto_tsquery`
-
 	switch sb.Mode {
 	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments JOIN documents docs "+
 			"ON comments.documents_id = docs.id "+
-			"WHERE ts @@ "+tsquery+"($%d) "+
+			"WHERE message ILIKE $%d "+
 			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
-			sb.replacementIndex(e.stringValue)+1)
+			sb.replacementIndex(likeQuery(e.stringValue))+1)
 	case DocumentMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"($%d) "+
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
 			"AND comments.documents_id = documents.id)",
-			sb.replacementIndex(e.stringValue)+1)
+			sb.replacementIndex(likeQuery(e.stringValue))+1)
 	case EventMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE ts @@ "+tsquery+"($%d) "+
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
 			"AND comments.id = events_log.comments_id)",
-			sb.replacementIndex(e.stringValue)+1)
+			sb.replacementIndex(likeQuery(e.stringValue))+1)
 	}
 }
 
@@ -294,8 +281,6 @@ func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
 		sb.binaryWhere(e, b, "OR")
 	case search:
 		sb.searchWhere(e, b)
-	case csearch:
-		sb.csearchWhere(e, b)
 	case mentioned:
 		sb.mentionedWhere(e, b)
 	case involved:
@@ -444,18 +429,27 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			b.WriteByte(',')
 		}
 		if alias, found := sb.Aliases[p]; found {
+			b.WriteString(`CASE WHEN length(`)
 			b.WriteString(alias)
+			b.WriteString(`)<= 200 THEN `)
+			b.WriteString(alias)
+			b.WriteString(` ELSE substring(`)
+			b.WriteString(alias)
+			b.WriteString(`, 0, 197)END||'...'AS `)
+			b.WriteString(p)
 			continue
 		}
 		switch p {
 		case "id", "tracking_id", "publisher":
 			b.WriteString("documents.")
 			b.WriteString(p)
+			b.WriteString(` AS `)
+			b.WriteString(p)
 		case "state", "event":
 			b.WriteString(p)
 			b.WriteString("::text")
 		case "event_state":
-			b.WriteString("events_log.state::text")
+			b.WriteString("events_log.state::text AS event_state")
 		case "versions":
 			b.WriteString(versionsCount + `AS versions`)
 		case "comments":
