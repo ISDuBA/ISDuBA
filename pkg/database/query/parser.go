@@ -144,7 +144,7 @@ var binaryCompatMatrix = map[binaryCompat]valueType{
 func (vt valueType) String() string {
 	switch vt {
 	case intType:
-		return "int"
+		return "integer"
 	case floatType:
 		return "float"
 	case boolType:
@@ -152,7 +152,7 @@ func (vt valueType) String() string {
 	case stringType:
 		return "string"
 	case timeType:
-		return "time"
+		return "timestamp"
 	case workflowType:
 		return "workflow"
 	case durationType:
