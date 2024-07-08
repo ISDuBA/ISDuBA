@@ -28,10 +28,10 @@ If you want another condition like the document should have a current release da
 the date 2023-12-31 you can extend this expression with
 
 ```
-$cvss_v3_score 5 float >= $current_release_date 2023-12-31 time > and
+$cvss_v3_score 5 float >= $current_release_date 2023-12-31 timestamp > and
 ```
 
-`$current_release_date` results in a timestamp. `2023-12-31 time` too.
+`$current_release_date` results in a timestamp. `2023-12-31 timestamp` too.
 `>` checks for the order. `and` chains the CVSSv3 condition to the second one.
 The `and` can be omitted in this case as all remainig conditions which are
 not explicity connected are `and`ed together.
@@ -48,36 +48,33 @@ See the [Data types](#section_datatypes) section for the available data types.
 
 ## <a name="section_columns"></a> Columns
 
-| Column                 | Data type | Document | Advisory | Event | Description |
-| ---------------------- | --------- | -------- | -------- | ----- | ----------- |
-| `id`                   | integer   | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Database ID of a document |
-| `latest`               | bool      | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Latest document of an advisory |
-| `tracking_id`          | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/id` |
-| `version`              | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/version` |
-| `publisher`            | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/publisher/name` |
-| `current_release_date` | time      | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/current_release_date` |
-| `initial_release_date` | time      | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/initial_release_date` |
-| `rev_history_length`   | int       | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Length of the revision history |
-| `title`                | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/title` |
-| `tlp`                  | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/distribution/tlp/label` |
-| `ssvc`                 | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | SSVC score of this document |
-| `cvss_v2_score`        | float     | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `max(/document/vulnerabilities[*]/scores[*]/cvss_v2/baseScore)` |
-| `cvss_v3_score`        | float     | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `max(/document/vulnerabilities[*]/scores[*]/cvss_v3_scorecore)` |
-| `critical`             | float     | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `coalesce(cvss_v3_score, cvss_v2_score)` |
-| `comments`             | int       | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Number of comments of document/advisory |
-| `state`                | workflow  | :x:        | :white_check_mark:        | :x:     | State of advisory |
-| `recent`               | time      | :x:        | :white_check_mark:        | :x:     | Timestamp of recent event of advisory |
-| `versions`             | int       | :x:        | :white_check_mark:        | :x:     | Number of documents per advisory |
-| `event`                | events    | :x:        | :x:        | :white_check_mark:     | Type of event |
-| `event_state`          | workflow  | :x:        | :x:        | :white_check_mark:     | State of advisory associated with event |
-| `time`                 | time      | :x:        | :x:        | :white_check_mark:     | Timestamp of the event |
-| `actor`                | string    | :x:        | :x:        | :white_check_mark:     | User who triggered the event |
-| `comments_id`          | int       | :x:        | :x:        | :white_check_mark:     | If event was comment related, ID of the affected comment |
+| Column                 | Data type | Document           | Advisory           | Event              | Description |
+| ---------------------- | --------- | ------------------ | ------------------ | ------------------ | ----------- |
+| `id`                   | integer   | :white_check_mark: | :white_check_mark: | :white_check_mark: | Database ID of a document |
+| `latest`               | bool      | :white_check_mark: | :white_check_mark: | :white_check_mark: | Latest document of an advisory |
+| `tracking_id`          | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/id` |
+| `version`              | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/version` |
+| `publisher`            | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/publisher/name` |
+| `current_release_date` | time      | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/current_release_date` |
+| `initial_release_date` | time      | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/initial_release_date` |
+| `rev_history_length`   | int       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Length of the revision history |
+| `title`                | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/title` |
+| `tlp`                  | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/distribution/tlp/label` |
+| `ssvc`                 | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | SSVC score of this document |
+| `cvss_v2_score`        | float     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v2/baseScore)` |
+| `cvss_v3_score`        | float     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v3_scorecore)` |
+| `critical`             | float     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `coalesce(cvss_v3_score, cvss_v2_score)` |
+| `comments`             | int       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Number of comments of document/advisory |
+| `state`                | workflow  | :x:                | :white_check_mark: | :x:                | State of advisory |
+| `recent`               | time      | :x:                | :white_check_mark: | :x:                | Timestamp of recent event of advisory |
+| `versions`             | int       | :x:                | :white_check_mark: | :x:                | Number of documents per advisory |
+| `event`                | events    | :x:                | :x:                | :white_check_mark: | Type of event |
+| `event_state`          | workflow  | :x:                | :x:                | :white_check_mark: | State of advisory associated with event |
+| `time`                 | time      | :x:                | :x:                | :white_check_mark: | Timestamp of the event |
+| `actor`                | string    | :x:                | :x:                | :white_check_mark: | User who triggered the event |
+| `comments_id`          | int       | :x:                | :x:                | :white_check_mark: | If event was comment related, ID of the affected comment |
 
 ## <a name="section_examples"></a> Examples
-
-**TBD**
-
 
 **TBD**
 
@@ -87,12 +84,13 @@ See the [Data types](#section_datatypes) section for the available data types.
 
 ## <a name="section_datatypes"></a>Data types
 
-- `float`: Floating point numbers
-- `integer`: Integer numbers
-- `bool`: Boolean values
-- `string`: String/Text values.
-- `time`: Timestamps
-- `duration`: Length of time intervals.
-- `workflow`: States of workflow.
-- `events`: States of events.
-
+| Type        | Description | Valid values |
+| ----------- | ----------- | ------------ |
+| `float`     | Floating point numbers |   |
+| `integer`   | Integer numbers        |   |
+| `bool`      | Boolean values | `true` `false` |
+| `string`    | String/Text values | `foo` `"bar "` `"bar baz" `bar\ baz` |
+| `timestamp` | Timestamps | `2006-01-02` `2006-01-02T15:04:05-0700` `2006-01-02 15:04:05-0700` |
+| `duration`  | Length of time intervals | See Go's [Duration.ParseDuration](https://pkg.go.dev/time@go1.22.5#ParseDuration) |
+| `workflow`  | States of workflow | `new` `read` `assessing` `review` `archived` `delete` |
+| `events`    | States of events | `import_document` `delete_document` `state_change` `add_sscv` `change_sscv` `delete_sscv` `add_comment` `change_comment` `delete_comment` |
