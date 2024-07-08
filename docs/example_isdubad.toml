@@ -40,7 +40,6 @@
 # admin_password = "postgres"
 # migrate = false
 # terminate_after_migration = true
-# text_search = ["german", "english"]
 # max_query_time = "30s"
 
 # [publishers_tlps]

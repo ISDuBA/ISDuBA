@@ -30,7 +30,6 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 
 	parser := query.Parser{
 		Mode:            query.EventMode,
-		Languages:       c.cfg.Database.TextSearch,
 		MinSearchLength: MinSearchLength,
 		Me:              ctx.GetString("uid"),
 	}
@@ -121,7 +120,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if results, err = scanRows(rows, fields); err != nil {
+			if results, err = scanRows(rows, fields, builder.Aliases); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil

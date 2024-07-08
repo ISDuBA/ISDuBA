@@ -67,7 +67,6 @@ The configuration consists of the following sections:
 - `admin_password`: Password of the admin user. For migrations only. Defaults to `"postgres"`.
 - `migrate`: Should a migration be performed if needed? Better triggered by the **ISDUBA_DB_MIGRATE** env variable. Defaults to `false`.
 - `terminate_after_migration` When a migration is started the program terminates by default.
-- `text_search`: When a database is first setup which languages should to used for full-text searches. Defaults to `["german", "english"]`.
 - `max_query_duration`: How long a user provided database may last at max. Defaults to `"30s"`.
 
 ### <a name="section_publishers_tlps"></a> Section `[publishers_tlps]` publishers/TLP filters

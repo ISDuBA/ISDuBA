@@ -151,7 +151,7 @@
   $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
   export async function fetchData(): Promise<void> {
-    const searchSuffix = searchTerm ? `"${searchTerm}" german search ${searchColumnName} as ` : "";
+    const searchSuffix = searchTerm ? `"${searchTerm}" search ${searchColumnName} as ` : "";
     const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";
     if (query || searchSuffix) {
