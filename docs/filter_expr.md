@@ -3,9 +3,10 @@
 ISDuBA supports filter expressions to narrow down on the advisories,
 documents or events you are really looking for.
 
-To do this you have to chain **conditions** in a [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) form. A **condition** is an boolean expression evaluating to `true` or `false`.
+To do this you have to chain **conditions** in a [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) form.  
+A **condition** is an boolean expression evaluating to `true` or `false`.
 
-To select e.g. documents with an CVSSv3 greater or equal 5 you can write the following
+To select e.g. documents with an CVSSv3 score greater or equal 5 you can write the following:
 
 ```
 $cvss_v3_score 5 float >=
@@ -18,11 +19,12 @@ Each column from the database has a **data type**.
 The data type of the `$cvss_v3_score` is `float`.
 
 To compare another value to this value the other value has to be of a compatible data type.
-Writing simply `5` would be treated as string. To make it a float we have to **cast** it with
-appending the required tyoe to it: `5 float`.  
+Writing simply `5` would be treated as a `string`.  
+To make it a `float` we have to **cast** it by appending the required type to it: `5 float`.  
 
 Now `>=` as an **operator** can be applied to `$cvss_v3_score` as
-both operands are type `float`. `>=` is a condition evaluating to `true` or `false`.
+both operands are of type `float`. `>=` is a condition evaluating to `true` or `false`
+an therefore suited as a filter expression.
 
 If you want another condition like the document should have a current release date after
 the date 2023-12-31 you can extend this expression with
@@ -33,8 +35,9 @@ $cvss_v3_score 5 float >= $current_release_date 2023-12-31 timestamp > and
 
 `$current_release_date` results in a timestamp. `2023-12-31 timestamp` too.
 `>` checks for the order. `and` chains the CVSSv3 condition to the second one.
-The `and` can be omitted in this case as all remainig conditions which are
-not explicity connected are `and`ed together.
+The `and`  logically and the two conditions to a new condition.  
+(The `and` at the end could be omitted as all remainig conditions which are
+not explicity connected are `and`ed together.)
 
 
 See the [Examples](#section_examples) section for more examples.  
@@ -44,7 +47,12 @@ See the [Data types](#section_datatypes) section for the available data types.
 
 ## <a name="section_examples"></a> Examples
 
-**TBD**
+More Examples:
+
+- `$state review workflow =` Useful for reviewers to find the advisories which are in the review state.
+- `now 24h duration 31 integer * - $recent <= me mentioned me involved or and`
+Useful in advisory mode to figure out the advisories which had an event (importing, commenting, SSVCing, etc.)
+in the last 31 days and where I was metioned in the comments or I triggered an event by myself.
 
 ## <a name="section_columns"></a> Columns
 
@@ -78,7 +86,7 @@ See the [Data types](#section_datatypes) section for the available data types.
 
 | Operator    | Arguments | Result |
 | ----------- | --------- | ------ |
-| `true`      | | `true` |
+| `true`      | | `true`  |
 | `false`     | | `false` |
 | `not`       | `bool`    | `bool` negates argument |
 | `and`       | `bool` `bool` | `bool` logical `and`s the two argments |
