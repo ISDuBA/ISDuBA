@@ -88,8 +88,8 @@ See the [Data types](#section_datatypes) section for the available data types.
 | ----------- | ----------- | ------------ |
 | `float`     | Floating point numbers |   |
 | `integer`   | Integer numbers        |   |
-| `bool`      | Boolean values | `true` `false` |
-| `string`    | String/Text values | `foo` `"bar "` `"bar baz" `bar\ baz` |
+| `bool`      | Boolean values | `true` `false` (Don't need casts!) |
+| `string`    | String/Text values | `foo` `"bar"` `"bar baz"` `bar\ baz` |
 | `timestamp` | Timestamps | `2006-01-02` `2006-01-02T15:04:05-0700` `2006-01-02 15:04:05-0700` |
 | `duration`  | Length of time intervals | See Go's [Duration.ParseDuration](https://pkg.go.dev/time@go1.22.5#ParseDuration) |
 | `workflow`  | States of workflow | `new` `read` `assessing` `review` `archived` `delete` |
