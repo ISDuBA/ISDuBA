@@ -50,29 +50,29 @@ See the [Data types](#section_datatypes) section for the available data types.
 
 | Column                 | Data type | Document | Advisory | Event | Description |
 | ---------------------- | --------- | -------- | -------- | ----- | ----------- |
-| `id`                   | integer   |         |         |      | Database ID of a document |
-| `latest`               | bool      |         |         |      | Latest document of an advisory |
-| `tracking_id`          | string    |         |         |      | `/document/tracking/id` |
-| `version`              | string    |         |         |      | `/document/tracking/version` |
-| `publisher`            | string    |         |         |      | `/document/publisher/name` |
-| `current_release_date` | time      |         |         |      | `/document/tracking/current_release_date` |
-| `initial_release_date` | time      |         |         |      | `/document/tracking/initial_release_date` |
-| `rev_history_length`   | int       |         |         |      | Length of the revision history |
-| `title`                | string    |         |         |      | `/document/title` |
-| `tlp`                  | string    |         |         |      | `/document/distribution/tlp/label` |
-| `ssvc`                 | string    |         |         |      | SSVC score of this document |
-| `cvss_v2_score`        | float     |         |         |      | `max(/document/vulnerabilities[*]/scores[*]/cvss_v2/baseScore)` |
-| `cvss_v3_score`        | float     |         |         |      | `max(/document/vulnerabilities[*]/scores[*]/cvss_v3_scorecore)` |
-| `critical`             | float     |         |         |      | `coalesce(cvss_v3_score, cvss_v2_score)` |
-| `comments`             | int       |         |         |      | Number of comments of document/advisory |
-| `state`                | workflow  |         |         |      | State of advisory |
-| `recent`               | time      |         |         |      | Timestamp of recent event of advisory |
-| `versions`             | int       |         |         |      | Number of documents per advisory |
-| `event`                | events    |         |         |      | Type of event |
-| `event_state`          | workflow  |         |         |      | State of advisory associated with event |
-| `time`                 | time      |         |         |      | Timestamp of the event |
-| `actor`                | string    |         |         |      | User who triggered the event |
-| `comments_id`          | int       |         |         |      | If event was comment related, ID of the affected comment |
+| `id`                   | integer   | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Database ID of a document |
+| `latest`               | bool      | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Latest document of an advisory |
+| `tracking_id`          | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/id` |
+| `version`              | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/version` |
+| `publisher`            | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/publisher/name` |
+| `current_release_date` | time      | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/current_release_date` |
+| `initial_release_date` | time      | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/tracking/initial_release_date` |
+| `rev_history_length`   | int       | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Length of the revision history |
+| `title`                | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/title` |
+| `tlp`                  | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `/document/distribution/tlp/label` |
+| `ssvc`                 | string    | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | SSVC score of this document |
+| `cvss_v2_score`        | float     | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `max(/document/vulnerabilities[*]/scores[*]/cvss_v2/baseScore)` |
+| `cvss_v3_score`        | float     | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `max(/document/vulnerabilities[*]/scores[*]/cvss_v3_scorecore)` |
+| `critical`             | float     | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | `coalesce(cvss_v3_score, cvss_v2_score)` |
+| `comments`             | int       | :white_check_mark:        | :white_check_mark:        | :white_check_mark:     | Number of comments of document/advisory |
+| `state`                | workflow  | :x:        | :white_check_mark:        | :x:     | State of advisory |
+| `recent`               | time      | :x:        | :white_check_mark:        | :x:     | Timestamp of recent event of advisory |
+| `versions`             | int       | :x:        | :white_check_mark:        | :x:     | Number of documents per advisory |
+| `event`                | events    | :x:        | :x:        | :white_check_mark:     | Type of event |
+| `event_state`          | workflow  | :x:        | :x:        | :white_check_mark:     | State of advisory associated with event |
+| `time`                 | time      | :x:        | :x:        | :white_check_mark:     | Timestamp of the event |
+| `actor`                | string    | :x:        | :x:        | :white_check_mark:     | User who triggered the event |
+| `comments_id`          | int       | :x:        | :x:        | :white_check_mark:     | If event was comment related, ID of the affected comment |
 
 ## <a name="section_examples"></a> Examples
 
