@@ -48,35 +48,31 @@ See the [Data types](#section_datatypes) section for the available data types.
 
 ## <a name="section_columns"></a> Columns
 
-| Column                 | Data type | Document           | Advisory           | Event              | Description |
-| ---------------------- | --------- | ------------------ | ------------------ | ------------------ | ----------- |
-| `id`                   | integer   | :white_check_mark: | :white_check_mark: | :white_check_mark: | Database ID of a document |
-| `latest`               | bool      | :white_check_mark: | :white_check_mark: | :white_check_mark: | Latest document of an advisory |
-| `tracking_id`          | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/id` |
-| `version`              | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/version` |
-| `publisher`            | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/publisher/name` |
-| `current_release_date` | time      | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/current_release_date` |
-| `initial_release_date` | time      | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/initial_release_date` |
-| `rev_history_length`   | int       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Length of the revision history |
-| `title`                | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/title` |
-| `tlp`                  | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/distribution/tlp/label` |
-| `ssvc`                 | string    | :white_check_mark: | :white_check_mark: | :white_check_mark: | SSVC score of this document |
-| `cvss_v2_score`        | float     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v2/baseScore)` |
-| `cvss_v3_score`        | float     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v3_scorecore)` |
-| `critical`             | float     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `coalesce(cvss_v3_score, cvss_v2_score)` |
-| `comments`             | int       | :white_check_mark: | :white_check_mark: | :white_check_mark: | Number of comments of document/advisory |
-| `state`                | workflow  | :x:                | :white_check_mark: | :x:                | State of advisory |
-| `recent`               | time      | :x:                | :white_check_mark: | :x:                | Timestamp of recent event of advisory |
-| `versions`             | int       | :x:                | :white_check_mark: | :x:                | Number of documents per advisory |
-| `event`                | events    | :x:                | :x:                | :white_check_mark: | Type of event |
-| `event_state`          | workflow  | :x:                | :x:                | :white_check_mark: | State of advisory associated with event |
-| `time`                 | time      | :x:                | :x:                | :white_check_mark: | Timestamp of the event |
-| `actor`                | string    | :x:                | :x:                | :white_check_mark: | User who triggered the event |
-| `comments_id`          | int       | :x:                | :x:                | :white_check_mark: | If event was comment related, ID of the affected comment |
-
-## <a name="section_examples"></a> Examples
-
-**TBD**
+| Column                 | Data type   | Document           | Advisory           | Event              | Description |
+| ---------------------- | ----------- | ------------------ | ------------------ | ------------------ | ----------- |
+| `id`                   | `integer`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | Database ID of a document |
+| `latest`               | `bool`      | :white_check_mark: | :white_check_mark: | :white_check_mark: | Latest document of an advisory |
+| `tracking_id`          | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/id` |
+| `version`              | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/version` |
+| `publisher`            | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/publisher/name` |
+| `current_release_date` | `timestamp` | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/current_release_date` |
+| `initial_release_date` | `timestamp` | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/initial_release_date` |
+| `rev_history_length`   | `integer`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | Length of the revision history |
+| `title`                | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/title` |
+| `tlp`                  | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/distribution/tlp/label` |
+| `ssvc`                 | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | SSVC score of this document |
+| `cvss_v2_score`        | `float`     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v2/baseScore)` |
+| `cvss_v3_score`        | `float`     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v3_scorecore)` |
+| `critical`             | `float`     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `coalesce(cvss_v3_score, cvss_v2_score)` |
+| `comments`             | `integer`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | Number of comments of document/advisory |
+| `state`                | `workflow`  | :x:                | :white_check_mark: | :x:                | State of advisory |
+| `recent`               | `timestamp` | :x:                | :white_check_mark: | :x:                | Timestamp of recent event of advisory |
+| `versions`             | `integer`   | :x:                | :white_check_mark: | :x:                | Number of documents per advisory |
+| `event`                | `events`    | :x:                | :x:                | :white_check_mark: | Type of event |
+| `event_state`          | `workflow`  | :x:                | :x:                | :white_check_mark: | State of advisory associated with event |
+| `time`                 | `timestamp` | :x:                | :x:                | :white_check_mark: | Timestamp of the event |
+| `actor`                | `string`    | :x:                | :x:                | :white_check_mark: | User who triggered the event |
+| `comments_id`          | `integer`   | :x:                | :x:                | :white_check_mark: | If event was comment related, ID of the affected comment |
 
 ## <a name="section_operators"></a> Operators
 
