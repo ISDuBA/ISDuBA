@@ -80,7 +80,65 @@ See the [Data types](#section_datatypes) section for the available data types.
 
 ## <a name="section_operators"></a> Operators
 
-**TBD**
+| Operator    | Arguments | Result |
+| ----------- | --------- | ------ |
+| `true`      | | `true` |
+| `false`     | | `false` |
+| `not`       | `bool`    | `bool` negates argument |
+| `and`       | `bool` `bool` | `bool` logical `and`s the two argments |
+| `or`        | `bool` `bool` | `bool` logical `or`s the two arguments |
+| `float`     | `string` or `integer` | `float` Converts argument tp float |
+| `integer`   | `string` or `float` | `integer` Converts argument to integer |
+| `timestamp` | `string` | `timestamp` Converts argument to timestamp |
+| `workflow`  | `string` | `workflow` Converts argument to workflow |
+| `events`    | `string` | `events` Converts argument to events |
+| `=`         | **A** **B** | `bool` **A** equals **B** |
+| `!=`        | **A** **B** | `bool` **A** not equals **B** |
+| `<`         | **A** **B** | `bool` **A** lesser than **B*** |
+| `<=`        | **A** **B** | `bool` **A** lesser or equal than **B** |
+| `>`         | **A** **B** | `bool` **A** greater than **B** |,
+| `>=`        | **A** **B** | `bool` **A** greater or equal than **B** |
+| `ilike`     | `string` `string` | `bool` First argument is case insensitive like second argument |
+| `ilikepid`  | `string` | `bool` Is there a product in the product tree with a name like the argument? |
+| `now`       | | `timestamp` Current timestamp.`
+| `duration`  | `string` | `duration` Converts argument to `duration` |
+| `+`         | **A** **B** | **C**: **A** plus **B** |
+| `-`         | **A** **B** | **C**: **A** minus **B** |
+| `/`         | **A** **B** | **C**: **A** divided by **B** |
+| `*`         | **A** **B** | **C**: **A** multiplied by **B** |
+| `me`        | | `string` Name of the current user |
+| `mentioned` | `string` | `bool` Comments of advisory/document contains string like argument |
+| `involved`  | `string` | `bool` Checks if argument as actor has triggered an event on document/advisory |
+| `search`    | `string` | `bool` Full text search argument in all text of the document |
+| `as`        | `search` `string` | `bool` Executes search `search` and stores the result in a new virtual column named after second argument |
+
+For operators with **A** **B** arguments there is following type compatibilty matrix:
+
+| **A**       | Operator | **B**       | **C** |
+| ----------- | -------- | ----------- | ----- |
+| `integer`   | `+`      | `integer`   | `integer`|
+| `integer`   | `-`      | `integer`   | `integer`|
+| `integer`   | `*`      | `integer`   | `integer`|
+| `integer`   | `/`      | `integer`   | `integer`|
+| `integer`   | `+`      | `float`     | `float`|
+| `integer`   | `-`      | `float`     | `float`|
+| `integer`   | `*`      | `float`     | `float`|
+| `integer`   | `/`      | `float`     | `float`|
+| `float`     | `+`      | `integer`   | `float`|
+| `float`     | `-`      | `integer`   | `float`|
+| `float`     | `*`      | `integer`   | `float`|
+| `float`     | `/`      | `integer`   | `float`|
+| `timestamp` | `+`      | `duration`  | `timestamp`|
+| `timestamp` | `-`      | `duration`  | `timestamp`|
+| `duration`  | `+`      | `timestamp` | `timestamp`|
+| `duration`  | `-`      | `timestamp` | `timestamp`|
+| `duration`  | `+`      | `duration`  | `duration`|
+| `duration`  | `-`      | `duration`  | `duration`|
+| `duration`  | `*`      | `integer`   | `duration`|
+| `duration`  | `/`      | `integer`   | `duration`|
+| `integer`   | `*`      | `duration`  | `duration`|
+| `duration`  | `*`      | `float`     | `duration`|
+| `duration`  | `/`      | `float`     | `duration`|
 
 ## <a name="section_datatypes"></a>Data types
 
