@@ -66,7 +66,7 @@ func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 	free := max(0, min(
 		c.cfg.TempStore.FilesTotal-c.tmpStore.Total(),
 		c.cfg.TempStore.FilesUser-len(files)))
-	ctx.JSON(http.StatusCreated, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"files": files,
 		"free":  free,
 	})
