@@ -124,7 +124,6 @@ type Database struct {
 	AdminPassword           string        `toml:"admin_password"`
 	Migrate                 bool          `toml:"migrate"`
 	TerminateAfterMigration bool          `toml:"terminate_after_migration"`
-	TextSearch              []string      `toml:"text_search"`
 	MaxQueryDuration        time.Duration `toml:"max_query_time"`
 }
 
@@ -134,8 +133,6 @@ type TempStore struct {
 	FilesUser       int           `toml:"files_user"`
 	StorageDuration time.Duration `toml:"storage_duration"`
 }
-
-var defaultTextSearch = []string{"german", "english"}
 
 // Config are all the configuration options.
 type Config struct {
@@ -237,7 +234,6 @@ func Load(file string) (*Config, error) {
 			AdminPassword:           defaultDatabaseAdminPassword,
 			Migrate:                 defaultDatabaseMigrate,
 			TerminateAfterMigration: defaultDatabaseTerminateAfterMigration,
-			TextSearch:              defaultTextSearch,
 			MaxQueryDuration:        defaultMaxQueryDuration,
 		},
 		PublishersTLPs: defaultPublishersTLPs,

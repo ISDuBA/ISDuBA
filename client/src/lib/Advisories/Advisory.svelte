@@ -17,7 +17,7 @@
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import JsonDiff from "$lib/Diff/JsonDiff.svelte";
-  import { ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
+  import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
@@ -44,9 +44,12 @@
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
   let isSSVCediting = false;
-  $: if ([NEW, READ, ASSESSING, REVIEW].includes(advisoryState)) {
-    isCommentingAllowed =
-      (appStore.isEditor() && advisoryState !== REVIEW) || appStore.isReviewer();
+  $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
+    if (advisoryState === ARCHIVED && appStore.isReviewer()) {
+      isCommentingAllowed = false;
+    } else {
+      isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+    }
   } else {
     isCommentingAllowed = false;
   }
@@ -234,6 +237,13 @@
     await updateState(REVIEW);
   }
 
+  async function sendForAssessing() {
+    if (comment.length !== 0) {
+      await createComment();
+    }
+    await updateState(ASSESSING);
+  }
+
   async function updateState(newState: string) {
     // Cancel automatic state transitions
     setAsReadTimeout.forEach((id: number) => {
@@ -379,18 +389,22 @@
                 <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
               {/if}
             {/if}
-            <SsvcCalculator
-              bind:isEditing={isSSVCediting}
-              vectorInput={ssvc?.vector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-              {allowEditing}
-            ></SsvcCalculator>
+            {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
+              <SsvcCalculator
+                bind:isEditing={isSSVCediting}
+                vectorInput={ssvc?.vector}
+                disabled={!isCalculatingAllowed}
+                documentID={params.id}
+                on:updateSSVC={loadMetaData}
+                {allowEditing}
+              ></SsvcCalculator>
+            {/if}
           </div>
           {#if isCommentingAllowed && !isSSVCediting}
             <div class="mt-6">
-              <Label class="mb-2" for="comment-textarea">New Comment:</Label>
+              <Label class="mb-2" for="comment-textarea"
+                >{advisoryState === ARCHIVED ? "Reactivate with comment" : "New Comment"}</Label
+              >
               <CommentTextArea
                 on:focus={() => {
                   commentFocus = true;
@@ -401,6 +415,7 @@
                 on:input={() => (createCommentError = "")}
                 on:saveComment={createComment}
                 on:saveForReview={sendForReview}
+                on:saveForAssessing={sendForAssessing}
                 bind:value={comment}
                 errorMessage={createCommentError}
                 buttonText="Send"

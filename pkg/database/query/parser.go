@@ -37,7 +37,6 @@ const (
 	le
 	access
 	search
-	csearch
 	mentioned
 	involved
 	ilike
@@ -75,8 +74,6 @@ const (
 type Parser struct {
 	// Mode indicates that only advisories should be considered.
 	Mode ParserMode
-	// Languages are the languages supported by full-text search.
-	Languages []string
 	// MinSearchLength enforces a minimal lengths of search phrases.
 	MinSearchLength int
 	// Me is a replacement text for the "me" keyword.
@@ -96,7 +93,6 @@ type Expr struct {
 	floatValue    float64
 	timeValue     time.Time
 	boolValue     bool
-	langValue     string
 	durationValue time.Duration
 	alias         string
 
@@ -139,6 +135,7 @@ var binaryCompatMatrix = map[binaryCompat]valueType{
 	{durationType, sub, durationType}: durationType,
 	{durationType, mul, intType}:      durationType,
 	{durationType, div, intType}:      durationType,
+	{intType, mul, durationType}:      durationType,
 	{durationType, mul, floatType}:    durationType,
 	{durationType, div, floatType}:    durationType,
 }
@@ -164,6 +161,20 @@ func (vt valueType) String() string {
 		return "events"
 	default:
 		return fmt.Sprintf("unknown value type %d", vt)
+	}
+}
+
+// String implements [fmt.Stringer].
+func (pm ParserMode) String() string {
+	switch pm {
+	case DocumentMode:
+		return "document"
+	case AdvisoryMode:
+		return "advisory"
+	case EventMode:
+		return "event"
+	default:
+		return fmt.Sprintf("Unknown parser mode: %d", pm)
 	}
 }
 
@@ -231,8 +242,6 @@ func (et exprType) String() string {
 		return "access"
 	case search:
 		return "search"
-	case csearch:
-		return "csearch"
 	case mentioned:
 		return "mentioned"
 	case involved:
@@ -296,13 +305,6 @@ var documentColumns = []documentColumn{
 	{"comments_id", intType, evtsModes, false},
 }
 
-// supportedLangs are the default languages.
-// Can be overwritten in Parser.
-var supportedLangs = []string{
-	"english",
-	"german",
-}
-
 var (
 	// baseActions are the action available in every parser.
 	baseActions = map[string]func(*Parser, *stack){
@@ -336,9 +338,8 @@ var (
 	}
 	// advancedActions are action only available is documents and advisories.
 	advancedActions = map[string]func(*Parser, *stack){
-		"search":  (*Parser).pushSearch,
-		"csearch": (*Parser).pushCSearch,
-		"as":      (*Parser).pushAs,
+		"search": (*Parser).pushSearch,
+		"as":     (*Parser).pushAs,
 	}
 	// actions is for fast looking up actions along the parser mode.
 	actions = map[ParserMode]map[string]func(*Parser, *stack){
@@ -772,19 +773,6 @@ func (*Parser) pushEvents(st *stack) {
 	}
 }
 
-func (p *Parser) checkLanguage(lang string) {
-	var langs []string
-	if p.Languages != nil {
-		langs = p.Languages
-	} else {
-		langs = supportedLangs
-	}
-	if !slices.Contains(langs, lang) {
-		panic(parseError(
-			fmt.Sprintf("unsupported search language %q", lang)))
-	}
-}
-
 func (p *Parser) checkSearchLength(term string) {
 	if p.MinSearchLength > 0 && len(term) < p.MinSearchLength {
 		panic(parseError(
@@ -794,31 +782,12 @@ func (p *Parser) checkSearchLength(term string) {
 }
 
 func (p *Parser) pushSearch(st *stack) {
-	lang := st.pop()
 	term := st.pop()
-	lang.checkValueType(stringType)
 	term.checkValueType(stringType)
-	p.checkLanguage(lang.stringValue)
 	p.checkSearchLength(term.stringValue)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
-		langValue:   lang.stringValue,
-		stringValue: term.stringValue,
-	})
-}
-
-func (p *Parser) pushCSearch(st *stack) {
-	lang := st.pop()
-	term := st.pop()
-	lang.checkValueType(stringType)
-	term.checkValueType(stringType)
-	p.checkLanguage(lang.stringValue)
-	p.checkSearchLength(term.stringValue)
-	st.push(&Expr{
-		exprType:    csearch,
-		valueType:   boolType,
-		langValue:   lang.stringValue,
 		stringValue: term.stringValue,
 	})
 }
@@ -901,7 +870,7 @@ func (*Parser) pushDuration(st *stack) {
 	}
 }
 
-var aliasRe = regexp.MustCompile(`[a-zA-Z][a-zA-Z_0-9]*`)
+var aliasRe = regexp.MustCompile(`[a-zA-Z_0-9]+`)
 
 func validAlias(s string) {
 	if !aliasRe.MatchString(s) {

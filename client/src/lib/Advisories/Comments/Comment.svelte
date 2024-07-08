@@ -54,7 +54,7 @@
     return DOMPurify.sanitize(html);
   };
 
-  $: iscommentingAllowed = !(state === "archived" || state === "deleted");
+  $: iscommentingAllowed = state !== "deleted";
   $: if (comment.times) {
     let latest = comment.times.sort().reverse()[0];
     latest = latest.replace("T", " ").split(".")[0];
