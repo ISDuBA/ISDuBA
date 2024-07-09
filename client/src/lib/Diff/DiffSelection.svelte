@@ -18,25 +18,34 @@
   $: docB = $appStore.app.diff.docB;
 </script>
 
-{#if docA || docB}
-  <div class="left-50 fixed bottom-0 flex justify-center border border-solid border-gray-300">
-    <div class="flex items-stretch gap-6 bg-gray-100 px-4 py-2 pb-8 shadow-md shadow-gray-800">
-      <div class="flex items-center gap-1">
-        <div class="flex min-h-28 justify-between gap-2 rounded-md px-3 py-2">
+<div class="left-50 fixed bottom-0 flex w-full flex-col items-center justify-center">
+  <Button on:click={appStore.toggleDiffMode} class="max-w-32 rounded-none border-b-0" color="light">
+    <Img src="plus-minus.svg" class="min-h-4 min-w-4" />
+  </Button>
+  {#if $appStore.app.diff.isDiffModeEnabled}
+    <div
+      class="flex items-stretch gap-6 border border-solid border-gray-300 bg-white px-2 py-4 shadow-gray-800"
+    >
+      <div class="flex items-start gap-1">
+        <div class="flex min-h-28 justify-between gap-1 rounded-md px-3 py-2">
           {#if docA}
             <div>
-              <Button on:click={() => appStore.setDiffDocA(null)} color="light" class="p-1">
+              <Button
+                on:click={() => appStore.setDiffDocA(null)}
+                color="light"
+                class="border-0 p-1"
+              >
                 <i class="bx bx-x text-lg"></i>
               </Button>
             </div>
             <div class="flex flex-col">
-              <div title={docA.title}>{docA.title}</div>
+              <div class="mb-1 max-w-96" title={docA.title}>{docA.title}</div>
               <div class="text-gray-600">{getPublisher(docA.publisher)}</div>
               <div class="text-gray-600">Version: {docA.version}</div>
             </div>
           {:else}
             <div class="flex flex-col gap-2">
-              <P italic>Select another document or upload a local one.</P>
+              <P italic>Select a document or upload a local one.</P>
               <!-- TODO: When upload is implemented remove the background color and the "cursor-not-allowed" -->
               <Dropzone class="h-16 cursor-not-allowed border-dashed bg-gray-200 hover:bg-gray-200">
                 <i class="bx bx-upload text-xl text-gray-500"></i>
@@ -49,10 +58,14 @@
         </div>
       </div>
       <div class="flex items-center gap-1">
-        <div class="flex min-h-28 justify-between gap-2 rounded-md px-3 py-2">
+        <div class="flex min-h-28 justify-between gap-1 rounded-md px-3 py-2">
           {#if docB}
             <div>
-              <Button on:click={() => appStore.setDiffDocB(null)} color="light" class="p-1">
+              <Button
+                on:click={() => appStore.setDiffDocB(null)}
+                color="light"
+                class="border-0 p-1"
+              >
                 <i class="bx bx-x text-lg"></i>
               </Button>
             </div>
@@ -63,7 +76,7 @@
             </div>
           {:else}
             <div class="flex flex-col gap-2">
-              <P italic>Select another document or upload a local one.</P>
+              <P italic>Select a document or upload a local one.</P>
               <!-- TODO: When upload is implemented remove the background color and the "cursor-not-allowed" -->
               <Dropzone class="h-16 cursor-not-allowed border-dashed bg-gray-200 hover:bg-gray-200">
                 <i class="bx bx-upload text-xl text-gray-500"></i>
@@ -87,5 +100,5 @@
         </Button>
       </div>
     </div>
-  </div>
-{/if}
+  {/if}
+</div>

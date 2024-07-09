@@ -500,6 +500,7 @@
                         : appStore.setDiffDocA(item);
                       e.preventDefault();
                     }}
+                    class:invisible={!$appStore.app.diff.isDiffModeEnabled}
                     disabled={$appStore.app.diff.docA?.id === item.id ||
                       $appStore.app.diff.docB?.id === item.id ||
                       disableDiffButtons}

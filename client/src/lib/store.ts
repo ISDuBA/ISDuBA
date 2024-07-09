@@ -38,6 +38,7 @@ type AppStore = {
     userManager: UserManager | null;
     errors: ErrorMessage[];
     diff: {
+      isDiffModeEnabled: boolean;
       docA: any | null;
       docB: any | null;
     };
@@ -82,6 +83,7 @@ const generateInitialState = (): AppStore => {
         lastName: ""
       },
       diff: {
+        isDiffModeEnabled: false,
         docA: null,
         docB: null
       },
@@ -322,6 +324,12 @@ function createStore() {
         const { firstName, lastName } = userProfile;
         settings.app.userProfile.firstName = firstName;
         settings.app.userProfile.lastName = lastName;
+        return settings;
+      });
+    },
+    toggleDiffMode: () => {
+      update((settings) => {
+        settings.app.diff.isDiffModeEnabled = !settings.app.diff.isDiffModeEnabled;
         return settings;
       });
     },
