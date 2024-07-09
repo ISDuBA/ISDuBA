@@ -32,13 +32,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		return
 	}
 
-	expr := query.FieldEqInt("id", docID)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
@@ -245,13 +239,8 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 		return
 	}
 
-	expr := query.FieldEqInt("comments.id", id)
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("comments.id", id))
 
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
 	builder := query.SQLBuilder{}
 
 	fetchSQL := `SELECT documents_id, time, commentator, message ` +
@@ -286,13 +275,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		return
 	}
 
-	expr := query.FieldEqInt("id", id)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)

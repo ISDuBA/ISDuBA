@@ -42,10 +42,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	}
 
 	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr = c.andTLPExpr(ctx, expr)
 
 	builder := query.SQLBuilder{Mode: query.EventMode}
 	builder.CreateWhere(expr)
@@ -150,13 +147,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		return
 	}
 
-	expr := query.FieldEqInt("id", id)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)

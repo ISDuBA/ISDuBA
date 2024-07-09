@@ -46,13 +46,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// FieldEqInt is a shortcut mainly for building expressions
 	// accessing an integer column like 'id's.
 	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
-	expr := query.FieldEqInt("id", docID)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -157,13 +151,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		return
 	}
 
-	expr := query.FieldEqInt("id", id)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	fields := []string{"original"}
 	builder := query.SQLBuilder{}
@@ -226,10 +214,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr = c.andTLPExpr(ctx, expr)
 
 	// In advisory mode we only show the latest.
 	if advisory {
