@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -63,27 +62,21 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	}
 
 	var (
-		calcCount     bool
+		calcCount, ok bool
 		count         int64
 		limit, offset int64 = -1, -1
 	)
 
-	if count := ctx.Query("count"); count != "" {
-		calcCount = true
-	}
+	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
-		limit, err = strconv.ParseInt(lim, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if limit, ok = parseInt(ctx, lim); !ok {
 			return
 		}
 	}
 
 	if ofs := ctx.Query("offset"); ofs != "" {
-		offset, err = strconv.ParseInt(ofs, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if offset, ok = parseInt(ctx, ofs); !ok {
 			return
 		}
 	}
@@ -140,10 +133,8 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 }
 
 func (c *Controller) viewEvents(ctx *gin.Context) {
-	idS := ctx.Param("document")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parseInt(ctx, ctx.Param("document"))
+	if !ok {
 		return
 	}
 

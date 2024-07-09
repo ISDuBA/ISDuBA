@@ -16,7 +16,6 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -35,11 +34,8 @@ const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 // deleteDocument is an end point for deleting a document.
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
-	idS := ctx.Param("id")
-	docID, err := strconv.ParseInt(idS, 10, 64)
-	// Error handling for id acquisition
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	docID, ok := parseInt(ctx, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
@@ -144,10 +140,8 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 // viewDocument is an end point to export a document.
 func (c *Controller) viewDocument(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parseInt(ctx, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
@@ -189,9 +183,8 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	// Use the advisories.
-	advisory, err := strconv.ParseBool(ctx.DefaultQuery("advisories", "false"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	advisory, ok := parseBool(ctx, ctx.DefaultQuery("advisories", "false"))
+	if !ok {
 		return
 	}
 
@@ -246,22 +239,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		limit, offset int64 = -1, -1
 	)
 
-	if count := ctx.Query("count"); count != "" {
-		calcCount = true
-	}
+	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
-		limit, err = strconv.ParseInt(lim, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if limit, ok = parseInt(ctx, lim); !ok {
 			return
 		}
 	}
 
 	if ofs := ctx.Query("offset"); ofs != "" {
-		offset, err = strconv.ParseInt(ofs, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if offset, ok = parseInt(ctx, ofs); !ok {
 			return
 		}
 	}

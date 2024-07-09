@@ -13,7 +13,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,10 +24,8 @@ import (
 )
 
 func (c *Controller) createComment(ctx *gin.Context) {
-	docIDs := ctx.Param("document")
-	docID, err := strconv.ParseInt(docIDs, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	docID, ok := parseInt(ctx, ctx.Param("document"))
+	if !ok {
 		return
 	}
 
@@ -158,10 +155,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 }
 
 func (c *Controller) updateComment(ctx *gin.Context) {
-	commentIDs := ctx.Param("id")
-	commentID, err := strconv.ParseInt(commentIDs, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	commentID, ok := parseInt(ctx, ctx.Param("id"))
+	if !ok {
 		return
 	}
 	var (
@@ -232,10 +227,8 @@ type comment struct {
 }
 
 func (c *Controller) viewComment(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parseInt(ctx, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
@@ -268,10 +261,8 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 }
 
 func (c *Controller) viewComments(ctx *gin.Context) {
-	idS := ctx.Param("document")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parseInt(ctx, ctx.Param("document"))
+	if !ok {
 		return
 	}
 

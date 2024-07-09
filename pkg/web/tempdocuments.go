@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
@@ -73,10 +72,8 @@ func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 }
 
 func (c *Controller) viewTempDocument(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parseInt(ctx, ctx.Param("id"))
+	if !ok {
 		return
 	}
 	user := ctx.GetString("uid")
@@ -97,10 +94,8 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteTempDocument(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parseInt(ctx, ctx.Param("id"))
+	if !ok {
 		return
 	}
 	user := ctx.GetString("uid")
