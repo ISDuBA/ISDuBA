@@ -12,14 +12,13 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"log/slog"
-	"os"
-	"regexp"
-	"time"
-
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/csaf-poc/csaf_distribution/v3/csaf/filter"
+	"log/slog"
+	"os"
 
+	csafmodel "github.com/csaf-poc/csaf_distribution/v3/csaf/models"
 	"github.com/csaf-poc/csaf_distribution/v3/lib/downloader"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -88,20 +87,18 @@ func (w *downloadWorker) run(ctx context.Context, job DownloadJob) error {
 	}
 	logger := slog.New(slog.NewJSONHandler(logFile, &slogOptions))
 
-	var ignorePatterns []*regexp.Regexp
+	var ignorePatterns filter.PatternMatcher
 	if job.Config.IgnorePattern != nil {
-		ignorePattern, err := regexp.Compile(*job.Config.IgnorePattern)
+		ignorePatterns, err = filter.NewPatternMatcher([]string{*job.Config.IgnorePattern})
 		if err != nil {
-			slog.Error("Couldn't compile ignore pattern", "pattern", job.Config.IgnorePattern, "err", err)
 			return err
 		}
-		ignorePatterns = append(ignorePatterns, ignorePattern)
 	}
 
 	// TODO: Allow to set only part of the time range
-	var timeRange *[2]time.Time
+	var timeRange csafmodel.TimeRange
 	if job.Config.StartRange != nil && job.Config.EndRange != nil {
-		timeRange = &[2]time.Time{*job.Config.StartRange, *job.Config.EndRange}
+		timeRange = csafmodel.TimeRange{*job.Config.StartRange, *job.Config.EndRange}
 	}
 
 	cfg := &downloader.Config{
@@ -111,7 +108,7 @@ func (w *downloadWorker) run(ctx context.Context, job DownloadJob) error {
 		ClientPassphrase:       job.Config.ClientPassphrase,
 		Rate:                   job.Config.Rate,
 		Worker:                 job.Config.Worker,
-		Range:                  timeRange,
+		Range:                  &timeRange,
 		IgnorePattern:          ignorePatterns,
 		RemoteValidatorPresets: job.Presets,
 		ForwardQueue:           job.ForwardQueue,
