@@ -112,12 +112,12 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	limited := http.MaxBytesReader(
@@ -140,7 +140,7 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		case errors.Is(err, models.ErrNotAllowed):
 			ctx.JSON(http.StatusForbidden, gin.H{"error": "wrong publisher/tlp"})
 		default:
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 		return
 	}
@@ -153,7 +153,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 	idS := ctx.Param("id")
 	id, err := strconv.ParseInt(idS, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
