@@ -73,6 +73,11 @@ func (st *Store) Run(ctx context.Context) {
 	}
 }
 
+func (st *Store) kill() { st.done = true }
+
+// Kill shuts down the store.
+func (st *Store) Kill() { st.fns <- (*Store).kill }
+
 // Total returns the total number of entries in the store.
 func (st *Store) Total() int {
 	result := make(chan int)
