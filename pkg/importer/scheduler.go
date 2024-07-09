@@ -180,8 +180,8 @@ func (s *Scheduler) DeleteCron(ctx context.Context, cronID int64) (*int64, error
 	return &cronID, nil
 }
 
-// AbortTask aborts the specified task.
-func (s *Scheduler) AbortTask(taskID int64) error {
+// abortTask aborts the specified task.
+func (s *Scheduler) abortTask(taskID int64) error {
 	cancel := s.runningTasks[taskID]
 	if cancel == nil {
 		return errors.New("task not found")
@@ -189,6 +189,16 @@ func (s *Scheduler) AbortTask(taskID int64) error {
 	delete(s.runningTasks, taskID)
 	cancel()
 
+	return nil
+}
+
+func (s *Scheduler) AbortTask(taskID int64) error {
+	s.fns <- func(s *Scheduler, ctx context.Context) {
+		err := (*Scheduler).abortTask(s, taskID)
+		if err != nil {
+			slog.Error("could not abort task", "id", taskID, "err", err)
+		}
+	}
 	return nil
 }
 
@@ -386,7 +396,7 @@ func (s *Scheduler) Run(ctx context.Context) {
 	}
 	s.cron.Stop()
 	for t := range s.runningTasks {
-		if err := s.AbortTask(t); err != nil {
+		if err := s.abortTask(t); err != nil {
 			slog.Error("could not abort task", "err", err)
 		}
 	}
