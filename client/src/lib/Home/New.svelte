@@ -16,7 +16,7 @@
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import CustomCard from "./CustomCard.svelte";
+  import Activity from "./Activity.svelte";
   import { getPublisher } from "$lib/utils";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
@@ -81,7 +81,7 @@
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if documents?.length && documents.length > 0}
         {#each documents as doc}
-          <CustomCard on:click={() => openDocument(doc)}>
+          <Activity on:click={() => openDocument(doc)}>
             <div slot="top-left">
               {#if doc.critical}
                 <div>
@@ -123,7 +123,7 @@
                 <span>New version</span>
               {/if}
             </div>
-          </CustomCard>
+          </Activity>
         {/each}
       {/if}
     </div>

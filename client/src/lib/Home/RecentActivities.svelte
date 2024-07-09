@@ -10,13 +10,17 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store";
+  import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Badge } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
-  import CustomCard from "./CustomCard.svelte";
+  import Activity from "./Activity.svelte";
+  import { request } from "$lib/utils";
+  import { getErrorMessage } from "$lib/Errors/error";
 
-  let error = "";
+  let recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me mentioned me involved or and`;
+  let loadActivityError = "";
   let recentActivities = [
     {
       name: "mention",
@@ -61,20 +65,32 @@
       return `${Math.floor(passedTime / 86400000)} days ago`;
     }
   };
+
+  // const transformActivities = (result: any) => {
+  //   let { actor, comments_id, event, event_state, id, time } = result;
+  // };
+
+  const fetchData = async () => {
+    const response = await request(recentActivityQuery, "GET");
+    if (response.ok) {
+      //const result = await response.content;
+      // transformActivities(result);
+    } else if (response.error) {
+      loadActivityError = `Could not load Activities. ${getErrorMessage(response.error)}. ${getErrorMessage(response.content)}`;
+    }
+  };
+  onMount(() => {
+    fetchData();
+  });
 </script>
 
 {#if $appStore.app.isUserLoggedIn}
   <div class="flex w-1/2 max-w-[50%] flex-col gap-4">
     <SectionHeader title="Recent activities"></SectionHeader>
-    <div class="text-red-600">
-      Attention: These are only
-      <span class="font-bold">examples</span>
-      for now as we are not able to fetch recent activities yet.
-    </div>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if recentActivities?.length && recentActivities.length > 0}
         {#each recentActivities as activity}
-          <CustomCard>
+          <Activity>
             <div slot="top-right">
               {#if activity.cvss}
                 <span>CVSS v3:</span>
@@ -133,10 +149,10 @@
                 >
               {/if}
             </div>
-          </CustomCard>
+          </Activity>
         {/each}
       {/if}
     </div>
-    <ErrorMessage message={error}></ErrorMessage>
+    <ErrorMessage message={loadActivityError}></ErrorMessage>
   </div>
 {/if}
