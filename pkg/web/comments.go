@@ -269,7 +269,7 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 				&post.Message)
 		}, 0); {
 	case errors.Is(err, pgx.ErrNoRows):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "comment post not found"})
 	case err != nil:
 		slog.Error("database error while fetching comment post", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
