@@ -57,7 +57,8 @@
   export let orderBy = "title";
   export let defaultOrderBy = "";
 
-  $: disableDiffButtons = $appStore.app.diff.docA !== null && $appStore.app.diff.docB !== null;
+  $: disableDiffButtons =
+    $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
 
   let anchorLink: string | null;
   let deleteModalOpen = false;
@@ -495,22 +496,22 @@
                   {/if}
                   <button
                     on:click|stopPropagation={(e) => {
-                      $appStore.app.diff.docA
-                        ? appStore.setDiffDocB(item)
-                        : appStore.setDiffDocA(item);
+                      $appStore.app.diff.docA_ID
+                        ? appStore.setDiffDocB_ID(item.id)
+                        : appStore.setDiffDocA_ID(item.id);
                       e.preventDefault();
                     }}
                     class:invisible={!$appStore.app.diff.isDiffModeEnabled}
-                    disabled={$appStore.app.diff.docA?.id === item.id ||
-                      $appStore.app.diff.docB?.id === item.id ||
+                    disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
+                      $appStore.app.diff.docB_ID === item.id.toString() ||
                       disableDiffButtons}
                     title={`compare ${item.tracking_id}`}
                   >
                     <Img
                       src="plus-minus.svg"
                       class={`${
-                        $appStore.app.diff.docA?.id === item.id ||
-                        $appStore.app.diff.docB?.id === item.id ||
+                        $appStore.app.diff.docA_ID === item.id.toString() ||
+                        $appStore.app.diff.docB_ID === item.id.toString() ||
                         disableDiffButtons
                           ? "invert-[70%]"
                           : ""

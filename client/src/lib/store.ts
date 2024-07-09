@@ -39,8 +39,8 @@ type AppStore = {
     errors: ErrorMessage[];
     diff: {
       isDiffModeEnabled: boolean;
-      docA: any | null;
-      docB: any | null;
+      docA_ID: string | undefined;
+      docB_ID: string | undefined;
     };
   };
   webview: {
@@ -84,8 +84,8 @@ const generateInitialState = (): AppStore => {
       },
       diff: {
         isDiffModeEnabled: false,
-        docA: null,
-        docB: null
+        docA_ID: undefined,
+        docB_ID: undefined
       },
       sessionExpired: false,
       sessionExpiredMessage: null,
@@ -333,15 +333,15 @@ function createStore() {
         return settings;
       });
     },
-    setDiffDocA: (doc: any | null) => {
+    setDiffDocA_ID: (id: string | number | undefined) => {
       update((settings) => {
-        settings.app.diff.docA = doc;
+        settings.app.diff.docA_ID = id?.toString();
         return settings;
       });
     },
-    setDiffDocB: (doc: any | null) => {
+    setDiffDocB_ID: (id: string | number | undefined) => {
       update((settings) => {
-        settings.app.diff.docB = doc;
+        settings.app.diff.docB_ID = id?.toString();
         return settings;
       });
     },

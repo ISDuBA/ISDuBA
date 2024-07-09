@@ -68,8 +68,8 @@
       secondDocumentIndex !== undefined &&
       nextColor === "red"
     ) {
-      appStore.setDiffDocA(reversedAdvisoryVersions[secondDocumentIndex]);
-      appStore.setDiffDocB(reversedAdvisoryVersions[firstDocumentIndex]);
+      appStore.setDiffDocA_ID(reversedAdvisoryVersions[secondDocumentIndex].id);
+      appStore.setDiffDocB_ID(reversedAdvisoryVersions[firstDocumentIndex].id);
       dispatch("selectedDiffDocuments");
     }
   };

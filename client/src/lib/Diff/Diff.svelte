@@ -34,17 +34,32 @@
   $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
   $: diffDocuments, getDiff();
-  $: $appStore.app.diff.docA, compare();
-  $: $appStore.app.diff.docB, compare();
+  $: $appStore.app.diff.docA_ID, compare();
+  $: $appStore.app.diff.docB_ID, compare();
 
-  const compare = () => {
-    if ($appStore.app.diff.docA && $appStore.app.diff.docB) {
-      diffDocuments = {
-        docA: $appStore.app.diff.docB,
-        docB: $appStore.app.diff.docA
-      };
-      title = `Changes from ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docB.version}) to ${diffDocuments.docB.tracking_id} (Version ${diffDocuments.docA.version})`;
+  const compare = async () => {
+    if ($appStore.app.diff.docA_ID && $appStore.app.diff.docB_ID) {
+      const responseDocA = await getDocument("A");
+      const responseDocB = await getDocument("B");
+      if (responseDocA.ok && responseDocB.ok) {
+        const documentA = await responseDocA.content;
+        const documentB = await responseDocB.content;
+        diffDocuments = {
+          docA: documentB,
+          docB: documentA
+        };
+        const from = `${diffDocuments.docB.document.tracking.id} (Version ${diffDocuments.docB.document.tracking.version})`;
+        const to = `${diffDocuments.docA.document.tracking.id} (Version ${diffDocuments.docA.document.tracking.version})`;
+        title = `Changes from ${from} to ${to}`;
+      }
     }
+  };
+
+  const getDocument = async (letter: string) => {
+    const docID = letter === "A" ? $appStore.app.diff.docA_ID : $appStore.app.diff.docB_ID;
+    const endpoint = docID?.startsWith("tempdocument") ? "tempdocuments" : "documents";
+    const id = docID?.startsWith("tempdocument") ? docID.replace("tempdocument", "") : docID;
+    return request(`/api/${endpoint}/${id}`, "GET");
   };
 
   onMount(async () => {
@@ -53,7 +68,7 @@
 
   const getDiff = async () => {
     if (!diffDocuments) return;
-    urlPath = `/api/diff/${diffDocuments.docB.id}/${diffDocuments.docA.id}?word-diff=true`;
+    urlPath = `/api/diff/${$appStore.app.diff.docB_ID}/${$appStore.app.diff.docA_ID}?word-diff=true`;
     error = "";
     const response = await request(urlPath, "GET");
     if (response.ok) {
