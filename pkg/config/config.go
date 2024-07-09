@@ -20,6 +20,8 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+
+	"github.com/csaf-poc/csaf_distribution/v3/lib/downloader"
 )
 
 // DefaultConfigFile is the name of the default config file.
@@ -64,6 +66,14 @@ const (
 	defaultDatabaseMigrate                 = false
 	defaultDatabaseTerminateAfterMigration = true
 	defaultMaxQueryDuration                = 30 * time.Second
+)
+
+const (
+	defaultRemoteValidator  = ""
+	defaultValidationPreset = "mandatory"
+	defaultValidationMode   = downloader.ValidationStrict
+	defaultImportLogLevel   = slog.LevelDebug
+	defaultImportLogPath    = "download"
 )
 
 var defaultPublishersTLPs = models.PublishersTLPs{
@@ -127,6 +137,15 @@ type Database struct {
 	MaxQueryDuration        time.Duration `toml:"max_query_duration"`
 }
 
+// Importer are the config options for the importer.
+type Importer struct {
+	RemoteValidator        string                    `toml:"remote_validator"`
+	RemoteValidatorPresets []string                  `toml:"remote_validator_presets"`
+	ValidationMode         downloader.ValidationMode `toml:"validation_mode"`
+	LogPath                string                    `toml:"log_path"`
+	LogLevel               slog.Level                `toml:"log_level"`
+}
+
 // TempStore are the config options for the temporary document storage.
 type TempStore struct {
 	FilesTotal      int           `toml:"files_total"`
@@ -141,6 +160,7 @@ type Config struct {
 	Keycloak       Keycloak              `toml:"keycloak"`
 	Web            Web                   `toml:"web"`
 	Database       Database              `toml:"database"`
+	Importer       Importer              `toml:"importer"`
 	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
 	TempStore      TempStore             `toml:"temp_storage"`
 }
@@ -236,6 +256,13 @@ func Load(file string) (*Config, error) {
 			TerminateAfterMigration: defaultDatabaseTerminateAfterMigration,
 			MaxQueryDuration:        defaultMaxQueryDuration,
 		},
+		Importer: Importer{
+			RemoteValidator:        defaultRemoteValidator,
+			RemoteValidatorPresets: []string{defaultValidationPreset},
+			ValidationMode:         defaultValidationMode,
+			LogPath:                defaultImportLogPath,
+			LogLevel:               defaultImportLogLevel,
+		},
 		PublishersTLPs: defaultPublishersTLPs,
 		TempStore: TempStore{
 			FilesTotal:      defaultTempStorageFilesTotal,
@@ -298,6 +325,9 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_TOTAL", storeInt(&cfg.TempStore.FilesTotal)},
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
+		envStore{"ISDUBA_IMPORT_REMOTE_VALIDATOR", storeString(&cfg.Importer.RemoteValidator)},
+		envStore{"ISDUBA_IMPORT_LOG_PATH", storeString(&cfg.Importer.LogPath)},
+		envStore{"ISDUBA_IMPORT_LOG_LEVEL", storeLevel(&cfg.Importer.LogLevel)},
 	)
 }
 

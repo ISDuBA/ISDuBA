@@ -1,0 +1,4 @@
+[submodule "csaf_distribution"]
+	path = csaf_distribution
+	url = git@github.com:csaf-poc/csaf_distribution.git
+	branch = refactor-downloader

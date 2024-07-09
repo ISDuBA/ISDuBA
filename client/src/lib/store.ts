@@ -8,7 +8,7 @@
 
 import { writable } from "svelte/store";
 import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
-import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER } from "./workflow";
+import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./workflow";
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 
@@ -396,6 +396,7 @@ function createStore() {
     isReviewer: () => appStore.getRoles().includes(REVIEWER),
     isAdmin: () => appStore.getRoles().includes(ADMIN),
     isAuditor: () => appStore.getRoles().includes(AUDITOR),
+    isSourceManager: () => appStore.getRoles().includes(SOURCE_MANAGER),
     getUserManager: () => state.app.userManager,
     getIsUserLoggedIn: () => state.app.isUserLoggedIn
   };

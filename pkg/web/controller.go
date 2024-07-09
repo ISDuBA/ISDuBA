@@ -21,15 +21,17 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
+	"github.com/ISDuBA/ISDuBA/pkg/importer"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 )
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
-	cfg      *config.Config
-	db       *database.DB
-	tmpStore *tempstore.Store
+	cfg       *config.Config
+	db        *database.DB
+	tmpStore  *tempstore.Store
+	scheduler *importer.Scheduler
 }
 
 // NewController returns a new Controller.
@@ -37,11 +39,13 @@ func NewController(
 	cfg *config.Config,
 	db *database.DB,
 	tmpStore *tempstore.Store,
+	scheduler *importer.Scheduler,
 ) *Controller {
 	return &Controller{
-		cfg:      cfg,
-		db:       db,
-		tmpStore: tmpStore,
+		cfg:       cfg,
+		db:        db,
+		tmpStore:  tmpStore,
+		scheduler: scheduler,
 	}
 }
 
@@ -133,5 +137,18 @@ func (c *Controller) Bind() http.Handler {
 
 	// Visibility information
 	api.GET("/view", authAll, c.view)
+
+	// Manage advisories download
+	api.POST("/job/:id", authIm, c.runJob)
+	api.GET("/job", authIm, c.viewJobs)
+	api.POST("/job", authIm, c.addJob)
+	api.PUT("/job", authIm, c.updateJob)
+	api.DELETE("/job/:id", authIm, c.deleteJob)
+	api.GET("/cron", authIm, c.viewCrons)
+	api.POST("/cron", authIm, c.addCron)
+	api.DELETE("/cron/:id", authIm, c.deleteCron)
+	api.GET("/task", authIm, c.viewTasks)
+	api.GET("/task/:id", authIm, c.getTaskLog)
+	api.DELETE("/task/:id", authIm, c.abortTask)
 	return r
 }
