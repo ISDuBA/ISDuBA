@@ -97,8 +97,9 @@ func (c *Controller) Bind() http.Handler {
 
 	// Comments
 	api.POST("/comments/:document", authEdRe, c.createComment)
-	api.PUT("/comments/:id", authEdRe, c.updateComment)
 	api.GET("/comments/:document", authEdReAu, c.viewComments)
+	api.PUT("/comments/post/:id", authEdRe, c.updateComment)
+	api.GET("/comments/post/:id", authEdRe, c.viewComment)
 
 	// Stored queries
 	api.POST("/queries", authAll, c.createStoredQuery)

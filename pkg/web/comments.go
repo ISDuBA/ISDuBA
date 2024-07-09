@@ -229,6 +229,55 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{})
 }
 
+type comment struct {
+	DocumentID  int64     `json:"document_id"`
+	ID          int64     `json:"id"`
+	Time        time.Time `json:"time"`
+	Commentator string    `json:"commentator"`
+	Message     string    `json:"message"`
+}
+
+func (c *Controller) viewComment(ctx *gin.Context) {
+	idS := ctx.Param("id")
+	id, err := strconv.ParseInt(idS, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	expr := query.FieldEqInt("comments.id", id)
+
+	// Filter the allowed
+	if tlps := c.tlps(ctx); len(tlps) > 0 {
+		tlpExpr := tlps.AsExpr()
+		expr = expr.And(tlpExpr)
+	}
+	builder := query.SQLBuilder{}
+
+	fetchSQL := `SELECT documents_id, time, commentator, message ` +
+		`FROM comments JOIN documents ON comments.documents_id = documents.id ` +
+		`WHERE ` + builder.CreateWhere(expr)
+
+	post := comment{ID: id}
+	switch err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, fetchSQL, builder.Replacements...).Scan(
+				&post.DocumentID,
+				&post.Time,
+				&post.Commentator,
+				&post.Message)
+		}, 0); {
+	case errors.Is(err, pgx.ErrNoRows):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+	case err != nil:
+		slog.Error("database error while fetching comment post", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	default:
+		ctx.JSON(http.StatusOK, &post)
+	}
+}
+
 func (c *Controller) viewComments(ctx *gin.Context) {
 	idS := ctx.Param("document")
 	id, err := strconv.ParseInt(idS, 10, 64)
@@ -247,14 +296,6 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
-
-	type comment struct {
-		DocumentID  int64     `json:"document_id"`
-		ID          int64     `json:"id"`
-		Time        time.Time `json:"time"`
-		Commentator string    `json:"commentator"`
-		Message     string    `json:"message"`
-	}
 
 	var comments []comment
 	var exists bool

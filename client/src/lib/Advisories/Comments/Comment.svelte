@@ -39,7 +39,7 @@
     updateCommentError = "";
     const formData = new FormData();
     formData.append("message", updatedComment);
-    const response = await request(`/api/comments/${comment.comment_id}`, "PUT", formData);
+    const response = await request(`/api/comments/post/${comment.comment_id}`, "PUT", formData);
     if (response.ok) {
       comment.message = updatedComment;
       toggleEditing();
