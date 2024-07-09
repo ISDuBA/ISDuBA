@@ -70,13 +70,13 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
-		if limit, ok = parseInt(ctx, lim); !ok {
+		if limit, ok = parse(ctx, toInt64, lim); !ok {
 			return
 		}
 	}
 
 	if ofs := ctx.Query("offset"); ofs != "" {
-		if offset, ok = parseInt(ctx, ofs); !ok {
+		if offset, ok = parse(ctx, toInt64, ofs); !ok {
 			return
 		}
 	}
@@ -133,7 +133,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 }
 
 func (c *Controller) viewEvents(ctx *gin.Context) {
-	id, ok := parseInt(ctx, ctx.Param("document"))
+	id, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
 		return
 	}

@@ -34,7 +34,7 @@ const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 // deleteDocument is an end point for deleting a document.
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
-	docID, ok := parseInt(ctx, ctx.Param("id"))
+	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
@@ -140,7 +140,7 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 // viewDocument is an end point to export a document.
 func (c *Controller) viewDocument(ctx *gin.Context) {
-	id, ok := parseInt(ctx, ctx.Param("id"))
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
@@ -183,7 +183,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	// Use the advisories.
-	advisory, ok := parseBool(ctx, ctx.DefaultQuery("advisories", "false"))
+	advisory, ok := parse(ctx, toBool, ctx.DefaultQuery("advisories", "false"))
 	if !ok {
 		return
 	}
@@ -242,13 +242,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
-		if limit, ok = parseInt(ctx, lim); !ok {
+		if limit, ok = parse(ctx, toInt64, lim); !ok {
 			return
 		}
 	}
 
 	if ofs := ctx.Query("offset"); ofs != "" {
-		if offset, ok = parseInt(ctx, ofs); !ok {
+		if offset, ok = parse(ctx, toInt64, ofs); !ok {
 			return
 		}
 	}

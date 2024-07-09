@@ -24,7 +24,7 @@ import (
 )
 
 func (c *Controller) createComment(ctx *gin.Context) {
-	docID, ok := parseInt(ctx, ctx.Param("document"))
+	docID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
 		return
 	}
@@ -155,7 +155,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 }
 
 func (c *Controller) updateComment(ctx *gin.Context) {
-	commentID, ok := parseInt(ctx, ctx.Param("id"))
+	commentID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
@@ -227,7 +227,7 @@ type comment struct {
 }
 
 func (c *Controller) viewComment(ctx *gin.Context) {
-	id, ok := parseInt(ctx, ctx.Param("id"))
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
@@ -261,7 +261,7 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 }
 
 func (c *Controller) viewComments(ctx *gin.Context) {
-	id, ok := parseInt(ctx, ctx.Param("document"))
+	id, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
 		return
 	}

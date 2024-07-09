@@ -24,7 +24,7 @@ import (
 
 func (c *Controller) changeSSVC(ctx *gin.Context) {
 
-	documentID, ok := parseInt(ctx, ctx.Param("document"))
+	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
 		return
 	}

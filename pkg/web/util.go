@@ -15,24 +15,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// parseInt parses a given string to a 64bit integer.
-// If that fails a bad request status code is set in the gin context.
-func parseInt(ctx *gin.Context, s string) (int64, bool) {
-	v, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return 0, false
-	}
-	return v, true
-}
+// toInt64 parses a given string to a 64bit integer.
+func toInt64(s string) (int64, error) { return strconv.ParseInt(s, 10, 64) }
 
-// parseBool parses a given string to a bool.
+// toBool parses a given string to a bool.
+var toBool = strconv.ParseBool
+
+// parse parses a string with a given function to a value.
 // If that fails a bad request status code is set in the gin context.
-func parseBool(ctx *gin.Context, s string) (bool, bool) {
-	v, err := strconv.ParseBool(s)
+func parse[T any](ctx *gin.Context, conv func(string) (T, error), s string) (T, bool) {
+	v, err := conv(s)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return false, false
+		return v, false
 	}
 	return v, true
 }
