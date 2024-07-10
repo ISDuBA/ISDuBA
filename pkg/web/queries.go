@@ -70,11 +70,8 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
 	// The query to filter the documents.
 	sq.Query = ctx.DefaultPostForm("query", "true")
-	expr, err := parser.Parse(sq.Query)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "bad 'query' value: " + err.Error(),
-		})
+	expr, ok := parse(ctx, parser.Parse, sq.Query)
+	if !ok {
 		return
 	}
 	// In advisory mode we only show the latest.

@@ -200,9 +200,8 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	// The query to filter the documents.
-	expr, err := parser.Parse(ctx.DefaultQuery("query", "true"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
 		return
 	}
 

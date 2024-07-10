@@ -34,9 +34,8 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	}
 
 	// The query to filter the documents.
-	expr, err := parser.Parse(ctx.DefaultQuery("query", "true"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
 		return
 	}
 
@@ -62,7 +61,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	}
 
 	var (
-		calcCount, ok bool
+		calcCount     bool
 		count         int64
 		limit, offset int64 = -1, -1
 	)
