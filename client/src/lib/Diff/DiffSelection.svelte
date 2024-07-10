@@ -24,6 +24,8 @@
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { getPublisher, request } from "$lib/utils";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { getErrorMessage } from "$lib/Errors/error";
 
   $: $appStore.app.diff.docA_ID, getDocuments();
   $: $appStore.app.diff.docB_ID, getDocuments();
@@ -34,24 +36,58 @@
   $: disableDiffButtons =
     $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
 
-  let freeTempDocuments: number | undefined;
+  let freeTempDocuments = 0;
   let tempDocuments: any[] = [];
   let docA: any;
   let docB: any;
+  let tempDocErrorMessage = "";
+
+  const tdClass = "px-6 py-0 whitespace-nowrap font-medium";
 
   const dropHandle = (event: any) => {
     event.preventDefault();
     if (event.dataTransfer.items) {
-      [...event.dataTransfer.items].forEach((item) => {
+      [...event.dataTransfer.items].forEach(async (item) => {
+        if (freeTempDocuments === 0) {
+          tempDocErrorMessage = "You reached the maximal number of temporary documents.";
+          return;
+        }
         if (item.kind === "file") {
           const file = item.getAsFile();
-          const formData = new FormData();
-          formData.append("file", file);
-          request("/api/tempdocuments", "POST", formData);
+          await uploadFile(file);
         }
       });
       getTempDocuments();
     }
+  };
+
+  const handleChange = async (event: any) => {
+    const files = event.target.files;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (freeTempDocuments === 0) {
+        tempDocErrorMessage = "You reached the maximal number of temporary documents.";
+        break;
+      }
+      await uploadFile(file);
+    }
+    getTempDocuments();
+  };
+
+  const uploadFile = (file: File): Promise<void> => {
+    return new Promise((resolve) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      request("/api/tempdocuments", "POST", formData).then((response) => {
+        if (response.ok) {
+          freeTempDocuments = freeTempDocuments - 1;
+          resolve();
+        } else if (response.error) {
+          tempDocErrorMessage = getErrorMessage(response.error);
+          resolve();
+        }
+      });
+    });
   };
 
   const getDocuments = async () => {
@@ -102,9 +138,17 @@
   };
 
   const deleteTempDocument = async (id: number) => {
+    tempDocErrorMessage = "";
     const response = await request(`/api/tempdocuments/${id}`, "DELETE");
     if (response.ok) {
+      if ($appStore.app.diff.docA_ID === `tempdocument${id}`) {
+        appStore.setDiffDocA_ID(undefined);
+      } else if ($appStore.app.diff.docB_ID === `tempdocument${id}`) {
+        appStore.setDiffDocB_ID(undefined);
+      }
       getTempDocuments();
+    } else if (response.error) {
+      tempDocErrorMessage = getErrorMessage(response.error);
     }
   };
 </script>
@@ -138,7 +182,7 @@
                 </div>
               {:else}
                 <div class="flex flex-col gap-2">
-                  <P italic>Select a document or upload a local one.</P>
+                  <P italic>Select a document or upload local ones.</P>
                 </div>
               {/if}
             </div>
@@ -167,21 +211,33 @@
                   class:gap-2={true}
                   class:invisible={!docA}
                 >
-                  <P italic>Select a document or upload a local one.</P>
+                  <P italic>Select a document or upload local ones.</P>
                 </div>
               {/if}
             </div>
           </div>
+          <div class="flex h-full items-center">
+            <Button
+              on:click={() => push("/diff")}
+              disabled={!docA || !docB}
+              size="sm"
+              class="flex gap-x-2"
+            >
+              <Img src="plus-minus.svg" class="w-5 invert" />
+              <span>Compare</span>
+            </Button>
+          </div>
         </div>
         <div class="flex flex-col">
           {#if tempDocuments?.length > 0}
-            <span class="mb-1">Temporarily uploaded documents:</span>
+            <span class="mb-1">Temporary documents:</span>
             <Table>
               <TableHead>
+                <TableHeadCell padding="px-6 pt-2">Tracking ID</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2">Publisher</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2">Title</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2">Expires</TableHeadCell>
-                <TableHeadCell padding="px-6 pt-2">Uploaded</TableHeadCell>
+                <TableHeadCell padding="px-6 pt-2">File name</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2"></TableHeadCell>
               </TableHead>
               <TableBody>
@@ -189,14 +245,14 @@
                   {@const doc = document.document}
                   {@const tempDocID = `tempdocument${document.file.id}`}
                   <TableBodyRow>
-                    <TableBodyCell>{doc.publisher.name}</TableBodyCell>
-                    <TableBodyCell>{doc.title.substring(0, 40)}</TableBodyCell>
-                    <TableBodyCell>{new Date(document.file.expired).toLocaleString()}</TableBodyCell
+                    <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.title.substring(0, 40)}</TableBodyCell>
+                    <TableBodyCell {tdClass}
+                      >{new Date(document.file.expired).toLocaleString()}</TableBodyCell
                     >
-                    <TableBodyCell
-                      >{new Date(document.file.inserted).toLocaleString()}</TableBodyCell
-                    >
-                    <TableBodyCell>
+                    <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
+                    <TableBodyCell {tdClass}>
                       <div class="flex items-center">
                         <Button
                           on:click={(e) => {
@@ -247,26 +303,18 @@
               on:dragover={(event) => {
                 event.preventDefault();
               }}
+              on:change={handleChange}
+              multiple
               class="ms-1 h-16"
             >
               <i class="bx bx-upload text-xl text-gray-500"></i>
               <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                <span class="font-semibold">Click</span> or drag and drop to upload a temporary document
+                Upload a temporary document
               </p>
             </Dropzone>
           {/if}
+          <ErrorMessage message={tempDocErrorMessage}></ErrorMessage>
         </div>
-      </div>
-      <div class="flex h-full items-center">
-        <Button
-          on:click={() => push("/diff")}
-          disabled={docA === null || docB === null}
-          size="sm"
-          class="flex gap-x-2"
-        >
-          <Img src="plus-minus.svg" class="w-5 invert" />
-          <span>Compare</span>
-        </Button>
       </div>
     </div>
   {/if}
