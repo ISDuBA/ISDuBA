@@ -12,45 +12,30 @@
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Badge } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
-  import Activity from "./Activity.svelte";
   import { request } from "$lib/utils";
   import { getErrorMessage } from "$lib/Errors/error";
+  import Activity from "./Activity.svelte";
+  import { Badge } from "flowbite-svelte";
+  import { push } from "svelte-spa-router";
 
-  let recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me mentioned me involved or and`;
+  const recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me involved`;
+  const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
+  const documentQueryBase = `/api/documents?columns=id title publisher tracking_id`;
+  const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
+  let activities = { events: [] };
+  let mentions = { events: [] };
+  let documentsById: any;
+  let documentIDs: any;
+  let commentIDs: any;
+  let comments: any;
+  let recentActivities: any;
+  let recentMentions: any;
+  let resultingActivities: any;
   let loadActivityError = "";
-  let recentActivities = [
-    {
-      name: "mention",
-      user: "Max",
-      content: "@beate, thank you for the hint. It looks really promising!",
-      date: new Date(Date.now() - 3000)
-    },
-    {
-      name: "comment",
-      user: "Beate",
-      content: "Here is another page where you can find more details about the vulnerabilities...",
-      date: new Date(Date.now() - 180000)
-    },
-    {
-      name: "state",
-      newState: "review",
-      publisher: "BSI",
-      documentTitle: "CVRF-CSAF-Converter: XML External Entities Vulnerability",
-      ssvc: convertVectorToLabel("SSVCv2/E:P/A:Y/T:T/P:E/B:A/M:H/D:A/2024-06-12T12:42:25Z/"),
-      date: new Date(Date.now() - 22000000)
-    },
-    {
-      name: "import",
-      publisher: "BSI",
-      documentTitle:
-        "Stack Buffer Overflow vulnerability in FastStone Image Viewer 7.5 and earlier",
-      cvss: 10.0,
-      date: new Date(Date.now() - 780000000)
-    }
-  ];
+  let loadMentionsError = "";
+  let loadDocumentsError = "";
+  let loadCommentsError = "";
 
   const getRelativeTime = (date: Date) => {
     const now = Date.now();
@@ -66,21 +51,196 @@
     }
   };
 
-  // const transformActivities = (result: any) => {
-  //   let { actor, comments_id, event, event_state, id, time } = result;
-  // };
-
-  const fetchData = async () => {
-    const response = await request(recentActivityQuery, "GET");
-    if (response.ok) {
-      //const result = await response.content;
-      // transformActivities(result);
-    } else if (response.error) {
-      loadActivityError = `Could not load Activities. ${getErrorMessage(response.error)}. ${getErrorMessage(response.content)}`;
+  const fetchActivities = async () => {
+    const activitiesResponse = await request(recentActivityQuery, "GET");
+    if (activitiesResponse.ok) {
+      activities = await activitiesResponse.content;
+    } else if (activitiesResponse.error) {
+      loadActivityError = `Could not load Activities. ${getErrorMessage(activitiesResponse.error)}. ${getErrorMessage(activitiesResponse.content)}`;
     }
   };
-  onMount(() => {
-    fetchData();
+
+  const fetchMentions = async () => {
+    const mentionsResponse = await request(mentionedQuery, "GET");
+    if (mentionsResponse.ok) {
+      mentions = await mentionsResponse.content;
+    } else if (mentionsResponse.error) {
+      loadMentionsError = `Could not load Activities. ${getErrorMessage(mentionsResponse.error)}. ${getErrorMessage(mentionsResponse.content)}`;
+    }
+  };
+
+  const fetchDocuments = async () => {
+    const query = documentIDs.map((id: number) => {
+      return `$id ${id} integer = `;
+    });
+    const ors = documentIDs.map(() => {
+      return "or ";
+    });
+    ors.shift(); // we need one less or than ids
+    const documentQuery = `${documentQueryBase}&query=${query.join("")}${ors.join("")}`;
+    const result = await request(documentQuery, "GET");
+    if (result.ok) {
+      const content = result.content;
+      documentsById = content.documents.reduce((o: any, n: any) => {
+        o[n.id] = n;
+        return o;
+      }, {});
+    } else if (result.error) {
+      loadDocumentsError = `Could not load Documents. ${getErrorMessage(result.error)}. ${getErrorMessage(result.content)}`;
+    }
+  };
+
+  const fetchComments = async () => {
+    if (commentIDs.length > 0) {
+      const promises = await Promise.allSettled(
+        commentIDs.map(async (v: any) => {
+          return request(`/api/comments/post/${v}`, "GET");
+        })
+      );
+      const result = promises
+        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
+        .map((p: any) => {
+          return p.value;
+        });
+      if (promises.length != result.length) {
+        loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
+      }
+      comments = result.map((r) => {
+        return r.content;
+      });
+    } else {
+      loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
+      return [];
+    }
+  };
+
+  const fetchData = async () => {
+    await fetchActivities();
+    await fetchMentions();
+    const idsActivities = pluck(activities.events, ["id", "comments_id"]);
+    const idsMentions = pluck(mentions.events, ["id", "comments_id"]);
+    documentIDs = [
+      ...new Set(
+        idsActivities
+          .map((a: any) => {
+            return a[0];
+          })
+          .concat(
+            idsMentions.map((a: any) => {
+              return a[0];
+            })
+          )
+      )
+    ];
+    commentIDs = [
+      ...new Set(
+        idsActivities
+          .map((a: any) => {
+            return a[1];
+          })
+          .concat(
+            idsMentions.map((a: any) => {
+              return a[1];
+            })
+          )
+          .filter((id: any) => {
+            return id !== null;
+          })
+      )
+    ];
+    await fetchDocuments();
+    await fetchComments();
+  };
+
+  const aggregateNewest = (events: any) => {
+    return events.reduce((o: any, n: any) => {
+      const key = `${n.actor}|${n.comments_id}|${n.event}|${n.id}`; // create natural key (actor, comment, event, document) to identify event
+      if (!o[key]) o[key] = n; // if not already aggregated add event
+      if (o[key].time < n.time) o[key] = n; // replace older events of the same type with the newest one
+      return o;
+    }, {});
+  };
+
+  const sortByTime = (events: any) => {
+    return events.sort((a: any, b: any) => {
+      return a.time < b.time;
+    });
+  };
+
+  const aggregateByMentions = (events: any) => {
+    return Object.values(
+      events.reduce((o: any, n: any) => {
+        const key = `${n.actor}|${n.comments_id}|${n.event}|${n.id}`; // create natural key (actor, comment, event, document) to identify event
+        if (!o[key]) o[key] = n; // if not already aggregated add event
+        if (!o[key].mention) o[key] = n; // aggregate nonmentions with mentioned one
+        return o;
+      }, {})
+    );
+  };
+
+  const aggregateByChange = (events: any) => {
+    return Object.values(
+      events.reduce((o: any, n: any) => {
+        const key = `${n.actor}|${n.comments_id}|${n.event}|${n.id}`; // create natural key (actor, comment, event, document) to identify event
+        const ADD_COMMENT = "add_comment";
+        const CHANGE_COMMENT = "change_comment";
+        const add_key = `${n.actor}|${n.comments_id}|${ADD_COMMENT}|${n.id}`;
+        const change_key = `${n.actor}|${n.comments_id}|${CHANGE_COMMENT}|${n.id}`;
+        if (n.event === ADD_COMMENT && o[change_key]) return o;
+        if (n.event === ADD_COMMENT) {
+          o[key] = n;
+          return o;
+        }
+        if (n.event === CHANGE_COMMENT && !o[add_key]) {
+          o[key] = n;
+          return o;
+        }
+        if (n.event === CHANGE_COMMENT && o[add_key]) {
+          delete o[add_key];
+        }
+        o[key] = n;
+        return o;
+      }, {})
+    );
+  };
+
+  const transformDataToActivities = () => {
+    const commentsByID = comments.reduce((o: any, n: any) => {
+      o[n.id] = n.message;
+      return o;
+    }, {});
+    const activitiesAggregated = aggregateNewest(activities.events);
+    recentActivities = Object.values(activitiesAggregated);
+    recentActivities = recentActivities.map((a: any) => {
+      a.mention = false;
+      a.documentTitle = documentsById[a.id]["title"];
+      a.documentURL = `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`;
+      if (a.event === "change_comment" || a.event === "add_comment")
+        a.message = commentsByID[a.comments_id];
+
+      return a;
+    });
+    const mentionsAggregated = aggregateNewest(mentions.events);
+    recentMentions = Object.values(mentionsAggregated);
+    recentMentions = recentMentions.map((a: any) => {
+      a.mention = true;
+      a.documentTitle = documentsById[a.id]["title"];
+      a.documentURL = `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`;
+      if (a.event === "change_comment" || a.event === "add_comment")
+        a.message = commentsByID[a.comments_id];
+
+      return a;
+    });
+    const activitiesAggregatedByMentions = aggregateByMentions([
+      ...recentActivities,
+      ...recentMentions
+    ]);
+    resultingActivities = sortByTime(aggregateByChange(activitiesAggregatedByMentions));
+  };
+
+  onMount(async () => {
+    await fetchData();
+    transformDataToActivities();
   });
 </script>
 
@@ -88,71 +248,54 @@
   <div class="flex w-1/2 max-w-[50%] flex-col gap-4">
     <SectionHeader title="Recent activities"></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
-      {#if recentActivities?.length && recentActivities.length > 0}
-        {#each recentActivities as activity}
-          <Activity>
-            <div slot="top-right">
-              {#if activity.cvss}
-                <span>CVSS v3:</span>
-                <span class="text-red-500">
-                  {activity.cvss?.toFixed(1)}
-                </span>
-              {:else if activity.ssvc}
-                <Badge
-                  title={activity.ssvc.vector}
-                  style={`background-color: white; color: black; border: 1pt solid ${activity.ssvc.color};`}
+      {#if resultingActivities}
+        {#each resultingActivities as activity}
+          <Activity
+            on:click={() => {
+              push(activity.documentURL);
+            }}
+          >
+            <span slot="top-right">{getRelativeTime(new Date(activity.time))}</span>
+            <span slot="top-left">
+              {#if activity.mention}
+                {activity.actor} mentioned you
+              {:else if activity.event === "add_comment"}
+                {activity.actor} commented on {activity.documentTitle}
+              {:else if activity.event === "add_ssvc"}
+                {activity.actor} added a SSVC
+              {:else if activity.event === "import_document"}
+                {activity.actor} added imported a document
+              {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
+                {activity.actor} changed a SSVC
+              {:else if activity.event === "change_comment"}
+                {activity.actor} changed a comment
+              {:else if activity.event === "state_change"}
+                {activity.actor} changed the state to <Badge color="dark"
+                  >{activity.event_state}</Badge
                 >
-                  {activity.ssvc.label}
-                </Badge>
               {/if}
-            </div>
-            <div slot="top-left" class="text-sm text-gray-700">
-              {#if activity.name}
-                {#if activity.name === "comment"}
-                  <div class="flex items-center gap-1">
-                    <i class="bx bx-comment"></i>
-                    <span>{`New comment from ${activity.user}`}</span>
-                  </div>
-                {:else if activity.name === "mention"}
-                  <div class="flex items-center gap-1">
-                    <i class="bx bx-at"></i>
-                    <span>{`${activity.user} mentioned you`}</span>
-                  </div>
-                {:else if activity.name === "state"}
-                  <div class="flex items-center gap-1">
-                    <i class="bx bx-book-open"></i>
-                    <span>{`Now in state ${activity.newState}`}</span>
-                  </div>
-                {:else if activity.name === "import"}
-                  <div class="flex items-center gap-1">
-                    <i class="bx bx-import"></i>
-                    <span>New import</span>
-                  </div>
-                {/if}
-              {/if}
-            </div>
-            {#if ["comment", "mention"].includes(activity.name)}
-              <div class="italic">{`${activity.content}`}</div>
-            {:else if activity.name === "state"}
-              <div class="text-black">
-                {`${activity.publisher}: ${activity.documentTitle}`}
+            </span>
+            {#if activity.event === "add_comment" || activity.event == "change_comment"}
+              <div>
+                {activity.message}
               </div>
-            {:else if activity.name === "import"}
-              <div class="text-black">
-                {`${activity.publisher}: ${activity.documentTitle}`}
+            {:else}
+              <div>
+                {activity.documentTitle}
               </div>
             {/if}
-            <div slot="bottom-right">
-              {#if activity.date}
-                <span title={activity.date.toISOString()} class="text-gray-500"
-                  >{getRelativeTime(activity.date)}</span
-                >
-              {/if}
-            </div>
+            <span class="text-gray-400" slot="bottom-left">
+              {activity.event === "add_comment" || activity.event == "change_comment"
+                ? `${activity.documentTitle}`
+                : ""}
+            </span>
           </Activity>
         {/each}
       {/if}
     </div>
     <ErrorMessage message={loadActivityError}></ErrorMessage>
+    <ErrorMessage message={loadMentionsError}></ErrorMessage>
+    <ErrorMessage message={loadDocumentsError}></ErrorMessage>
+    <ErrorMessage message={loadCommentsError}></ErrorMessage>
   </div>
 {/if}
