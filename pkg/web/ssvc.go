@@ -14,7 +14,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -25,9 +24,8 @@ import (
 
 func (c *Controller) changeSSVC(ctx *gin.Context) {
 
-	documentID, err := strconv.ParseInt(ctx.Param("document"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
 		return
 	}
 

@@ -43,22 +43,14 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
 	// Advisories flag
 	if advisories, ok := ctx.GetPostForm("advisories"); ok {
-		var err error
-		if sq.Advisories, err = strconv.ParseBool(advisories); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "bad 'advisories' value: " + err.Error(),
-			})
+		if sq.Advisories, ok = parse(ctx, toBool, advisories); !ok {
 			return
 		}
 	}
 
 	// Global flag
 	if global, ok := ctx.GetPostForm("global"); ok {
-		var err error
-		if sq.Global, err = strconv.ParseBool(global); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "bad 'global' value: " + err.Error(),
-			})
+		if sq.Global, ok = parse(ctx, toBool, global); !ok {
 			return
 		}
 	}
@@ -78,11 +70,8 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
 	// The query to filter the documents.
 	sq.Query = ctx.DefaultPostForm("query", "true")
-	expr, err := parser.Parse(sq.Query)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "bad 'query' value: " + err.Error(),
-		})
+	expr, ok := parse(ctx, parser.Parse, sq.Query)
+	if !ok {
 		return
 	}
 	// In advisory mode we only show the latest.
@@ -225,9 +214,8 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 
-	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
 		return
 	}
 
@@ -269,9 +257,8 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 
 func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 
-	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
 		return
 	}
 
@@ -322,9 +309,8 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 
-	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
 		return
 	}
 
