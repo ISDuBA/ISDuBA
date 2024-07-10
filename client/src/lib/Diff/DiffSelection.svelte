@@ -23,9 +23,10 @@
     TableHeadCell
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
-  import { getPublisher, request } from "$lib/utils";
+  import { getPublisher, getRelativeTime, request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import { onDestroy, onMount } from "svelte";
 
   $: $appStore.app.diff.docA_ID, getDocuments();
   $: $appStore.app.diff.docB_ID, getDocuments();
@@ -41,8 +42,21 @@
   let docA: any;
   let docB: any;
   let tempDocErrorMessage = "";
+  let intervalID: number | undefined = undefined;
 
   const tdClass = "px-6 py-0 whitespace-nowrap font-medium";
+
+  onMount(() => {
+    intervalID = setInterval(() => {
+      if (tempDocuments.length > 0) {
+        updateExpired();
+      }
+    }, 60000);
+  });
+
+  onDestroy(() => {
+    clearInterval(intervalID);
+  });
 
   const dropHandle = (event: any) => {
     event.preventDefault();
@@ -134,6 +148,7 @@
         }
       }
       tempDocuments = newTempDocuments;
+      updateExpired();
     }
   };
 
@@ -150,6 +165,20 @@
     } else if (response.error) {
       tempDocErrorMessage = getErrorMessage(response.error);
     }
+  };
+
+  const updateExpired = () => {
+    let didDocExpire = false;
+    tempDocuments.forEach((doc) => {
+      const expiredDate = new Date(doc.file.expired);
+      if (expiredDate.getTime() < Date.now()) {
+        didDocExpire = true;
+      } else {
+        doc.document.expired = getRelativeTime(expiredDate);
+      }
+    });
+    if (didDocExpire) getTempDocuments();
+    else tempDocuments = tempDocuments;
   };
 </script>
 
@@ -237,7 +266,7 @@
                 <TableHeadCell padding="px-6 pt-2">Tracking ID</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2">Publisher</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2">Title</TableHeadCell>
-                <TableHeadCell padding="px-6 pt-2">Expires</TableHeadCell>
+                <TableHeadCell padding="px-6 pt-2">Expires in</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2">File name</TableHeadCell>
                 <TableHeadCell padding="px-6 pt-2"></TableHeadCell>
               </TableHead>
@@ -249,9 +278,7 @@
                     <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
                     <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
                     <TableBodyCell {tdClass}>{doc.title.substring(0, 40)}</TableBodyCell>
-                    <TableBodyCell {tdClass}
-                      >{new Date(document.file.expired).toLocaleString()}</TableBodyCell
-                    >
+                    <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
                     <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
                     <TableBodyCell {tdClass}>
                       <div class="flex items-center">
