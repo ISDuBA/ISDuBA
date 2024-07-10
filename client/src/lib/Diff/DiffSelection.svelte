@@ -43,8 +43,10 @@
   let docB: any;
   let tempDocErrorMessage = "";
   let intervalID: number | undefined = undefined;
+  let innerWidth: number;
 
-  const tdClass = "px-6 py-0 whitespace-nowrap font-medium";
+  const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
+  const padding = "pe-5 pt-2";
 
   onMount(() => {
     intervalID = setInterval(() => {
@@ -182,19 +184,25 @@
   };
 </script>
 
+<svelte:window bind:innerWidth />
+
 <div class="fixed bottom-0 left-20 flex w-full flex-col items-center justify-center">
-  <Button on:click={appStore.toggleDiffBox} class="max-w-32 rounded-none border-b-0" color="light">
+  <Button
+    on:click={appStore.toggleDiffBox}
+    class="max-w-32 rounded-none rounded-t-md border-b-0"
+    color="light"
+  >
     <span class="me-2">Diff</span>
     <Img src="plus-minus.svg" class="h-4 min-h-2 min-w-2" />
   </Button>
   {#if $appStore.app.diff.isDiffBoxOpen}
     <div
-      class="flex items-stretch gap-6 border border-solid border-gray-300 bg-white px-2 py-4 shadow-gray-800"
+      class="flex items-stretch gap-6 rounded-t-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800"
     >
       <div class="flex flex-col">
-        <div class="mb-4 flex">
+        <div class="mb-4 flex justify-between">
           <div class="flex items-start gap-1">
-            <div class="flex min-h-28 justify-between gap-1 rounded-md py-2 pe-3">
+            <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3">
               {#if docA}
                 <div>
                   <Button
@@ -218,7 +226,7 @@
             </div>
           </div>
           <div class="flex items-center gap-1">
-            <div class="flex min-h-28 justify-between gap-1 rounded-md px-3 py-2">
+            <div class="flex min-h-28 justify-between gap-1 rounded-md px-3 pb-2">
               {#if docB}
                 <div>
                   <Button
@@ -246,7 +254,7 @@
               {/if}
             </div>
           </div>
-          <div class="flex h-full items-center">
+          <div class="flex h-full items-start">
             <Button
               on:click={() => push("/diff")}
               disabled={!docA || !docB}
@@ -263,12 +271,12 @@
             <span class="mb-1">Temporary documents:</span>
             <Table>
               <TableHead>
-                <TableHeadCell padding="px-6 pt-2">Tracking ID</TableHeadCell>
-                <TableHeadCell padding="px-6 pt-2">Publisher</TableHeadCell>
-                <TableHeadCell padding="px-6 pt-2">Title</TableHeadCell>
-                <TableHeadCell padding="px-6 pt-2">Expires in</TableHeadCell>
-                <TableHeadCell padding="px-6 pt-2">File name</TableHeadCell>
-                <TableHeadCell padding="px-6 pt-2"></TableHeadCell>
+                <TableHeadCell {padding}>Tracking ID</TableHeadCell>
+                <TableHeadCell {padding}>Publisher</TableHeadCell>
+                <TableHeadCell {padding}>Title</TableHeadCell>
+                <TableHeadCell {padding}>Expires in</TableHeadCell>
+                <TableHeadCell {padding}>File name</TableHeadCell>
+                <TableHeadCell {padding}></TableHeadCell>
               </TableHead>
               <TableBody>
                 {#each tempDocuments as document}
@@ -277,7 +285,11 @@
                   <TableBodyRow>
                     <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
                     <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.title.substring(0, 40)}</TableBodyCell>
+                    <TableBodyCell {tdClass}>
+                      <span title={doc.title}
+                        >{innerWidth < 1400 ? `${doc.title.substring(0, 26)}...` : doc.title}</span
+                      >
+                    </TableBodyCell>
                     <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
                     <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
                     <TableBodyCell {tdClass}>
