@@ -25,7 +25,7 @@ import (
 
 const cleanupDuration = 5 * time.Minute
 
-// ErrFileNotFound is returned by Fetch if the requested file is expired.
+// ErrFileNotFound is returned by Fetch if the requested file is not found.
 var ErrFileNotFound = errors.New("temp file not found")
 
 // Store implements an in-memory storage for temporary documents.
