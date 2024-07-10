@@ -25,6 +25,9 @@ import (
 
 const cleanupDuration = 5 * time.Minute
 
+// ErrFileNotFound is returned by Fetch if the requested file is expired.
+var ErrFileNotFound = errors.New("temp file not found")
+
 // Store implements an in-memory storage for temporary documents.
 type Store struct {
 	cfg     *config.TempStore
@@ -143,14 +146,14 @@ func (st *Store) Fetch(user string, id int64) (r io.Reader, result Entry, err er
 		defer close(done)
 		userEntries := st.entries[user]
 		if len(userEntries) == 0 {
-			err = errors.New("not found")
+			err = ErrFileNotFound
 			return
 		}
 		now := time.Now()
 		for i := range userEntries {
 			if entry := &userEntries[i]; entry.ID == id {
 				if entry.Expired.Before(now) {
-					err = errors.New("expired")
+					err = ErrFileNotFound
 				} else {
 					entry.Expired = now.Add(st.cfg.StorageDuration)
 					result = entry.Entry
@@ -159,6 +162,7 @@ func (st *Store) Fetch(user string, id int64) (r io.Reader, result Entry, err er
 				return
 			}
 		}
+		err = ErrFileNotFound
 	}
 	<-done
 	return
