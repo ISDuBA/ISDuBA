@@ -41,7 +41,9 @@
   let tempDocuments: any[] = [];
   let docA: any;
   let docB: any;
+  let loadDocumentsErrorMessage = "";
   let tempDocErrorMessage = "";
+  let loadTempDocsErrorMessage = "";
   let intervalID: number | undefined = undefined;
   let innerWidth: number;
 
@@ -107,10 +109,13 @@
   };
 
   const getDocuments = async () => {
+    loadDocumentsErrorMessage = "";
     if ($appStore.app.diff.docA_ID) {
       const responseDocA = await getDocument("A");
       if (responseDocA.ok) {
         docA = await responseDocA.content;
+      } else if (responseDocA.error) {
+        loadDocumentsErrorMessage = getErrorMessage(responseDocA.error);
       }
     } else {
       docA = undefined;
@@ -119,6 +124,8 @@
       const responseDocB = await getDocument("B");
       if (responseDocB.ok) {
         docB = await responseDocB.content;
+      } else if (responseDocB.error) {
+        loadDocumentsErrorMessage = getErrorMessage(responseDocB.error);
       }
     } else {
       docB = undefined;
@@ -151,6 +158,8 @@
       }
       tempDocuments = newTempDocuments;
       updateExpired();
+    } else if (response.error) {
+      loadTempDocsErrorMessage = getErrorMessage(response.error);
     }
   };
 
@@ -266,6 +275,7 @@
             </Button>
           </div>
         </div>
+        <ErrorMessage message={loadDocumentsErrorMessage}></ErrorMessage>
         <div class="flex flex-col">
           {#if tempDocuments?.length > 0}
             <span class="mb-1">Temporary documents:</span>
@@ -354,6 +364,7 @@
             </Dropzone>
           {/if}
           <ErrorMessage message={tempDocErrorMessage}></ErrorMessage>
+          <ErrorMessage message={loadTempDocsErrorMessage}></ErrorMessage>
         </div>
       </div>
     </div>
