@@ -155,7 +155,8 @@
 
 <div class="fixed bottom-0 left-20 flex w-full flex-col items-center justify-center">
   <Button on:click={appStore.toggleDiffMode} class="max-w-32 rounded-none border-b-0" color="light">
-    <Img src="plus-minus.svg" class="min-h-4 min-w-4" />
+    <span class="me-2">Diff</span>
+    <Img src="plus-minus.svg" class="h-4 min-h-2 min-w-2" />
   </Button>
   {#if $appStore.app.diff.isDiffModeEnabled}
     <div
