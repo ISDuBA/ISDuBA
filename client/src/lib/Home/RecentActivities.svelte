@@ -277,7 +277,12 @@
             </span>
             {#if activity.event === "add_comment" || activity.event == "change_comment"}
               <div>
-                {activity.message}
+                <i class="bx bxs-quote-alt-left"></i>
+                <span class="italic"
+                  >{activity.message.length < 30
+                    ? activity.message
+                    : activity.message.substring(0, 30)}</span
+                >
               </div>
             {:else}
               <div>
