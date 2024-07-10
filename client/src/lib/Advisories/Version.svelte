@@ -34,7 +34,7 @@
   const navigateToVersion = (version: any) => {
     push(`/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`);
   };
-  const toggleDiffModeActivated = () => {
+  const toggleDiffBoxActivated = () => {
     diffModeActivated = !diffModeActivated;
     if (diffModeActivated) {
       if (reversedAdvisoryVersions[0].version === selectedDocumentVersion) {
@@ -166,7 +166,7 @@
           {/each}
         {/if}
         {#if advisoryVersions.length > 1}
-          <Button color="light" class="flex h-8 gap-x-2 px-3" on:click={toggleDiffModeActivated}>
+          <Button color="light" class="flex h-8 gap-x-2 px-3" on:click={toggleDiffBoxActivated}>
             <i class="bx bx-transfer"></i>
             <span class="text-nowrap">{diffModeActivated ? "Hide" : "Show"} changes</span>
           </Button>

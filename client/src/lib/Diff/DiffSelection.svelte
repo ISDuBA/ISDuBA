@@ -29,7 +29,7 @@
 
   $: $appStore.app.diff.docA_ID, getDocuments();
   $: $appStore.app.diff.docB_ID, getDocuments();
-  $: if ($appStore.app.diff.isDiffModeEnabled) {
+  $: if ($appStore.app.diff.isDiffBoxOpen) {
     getTempDocuments();
     getDocuments();
   }
@@ -154,11 +154,11 @@
 </script>
 
 <div class="fixed bottom-0 left-20 flex w-full flex-col items-center justify-center">
-  <Button on:click={appStore.toggleDiffMode} class="max-w-32 rounded-none border-b-0" color="light">
+  <Button on:click={appStore.toggleDiffBox} class="max-w-32 rounded-none border-b-0" color="light">
     <span class="me-2">Diff</span>
     <Img src="plus-minus.svg" class="h-4 min-h-2 min-w-2" />
   </Button>
-  {#if $appStore.app.diff.isDiffModeEnabled}
+  {#if $appStore.app.diff.isDiffBoxOpen}
     <div
       class="flex items-stretch gap-6 border border-solid border-gray-300 bg-white px-2 py-4 shadow-gray-800"
     >
@@ -273,7 +273,7 @@
                               : appStore.setDiffDocA_ID(tempDocID);
                             e.preventDefault();
                           }}
-                          class:invisible={!$appStore.app.diff.isDiffModeEnabled}
+                          class:invisible={!$appStore.app.diff.isDiffBoxOpen}
                           disabled={$appStore.app.diff.docA_ID === tempDocID ||
                             $appStore.app.diff.docB_ID === tempDocID ||
                             disableDiffButtons}

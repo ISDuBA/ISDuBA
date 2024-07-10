@@ -38,7 +38,7 @@ type AppStore = {
     userManager: UserManager | null;
     errors: ErrorMessage[];
     diff: {
-      isDiffModeEnabled: boolean;
+      isDiffBoxOpen: boolean;
       docA_ID: string | undefined;
       docB_ID: string | undefined;
     };
@@ -83,7 +83,7 @@ const generateInitialState = (): AppStore => {
         lastName: ""
       },
       diff: {
-        isDiffModeEnabled: false,
+        isDiffBoxOpen: false,
         docA_ID: undefined,
         docB_ID: undefined
       },
@@ -327,9 +327,15 @@ function createStore() {
         return settings;
       });
     },
-    toggleDiffMode: () => {
+    toggleDiffBox: () => {
       update((settings) => {
-        settings.app.diff.isDiffModeEnabled = !settings.app.diff.isDiffModeEnabled;
+        settings.app.diff.isDiffBoxOpen = !settings.app.diff.isDiffBoxOpen;
+        return settings;
+      });
+    },
+    openDiffBox: () => {
+      update((settings) => {
+        settings.app.diff.isDiffBoxOpen = true;
         return settings;
       });
     },

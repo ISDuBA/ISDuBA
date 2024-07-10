@@ -499,9 +499,12 @@
                       $appStore.app.diff.docA_ID
                         ? appStore.setDiffDocB_ID(item.id)
                         : appStore.setDiffDocA_ID(item.id);
+                      appStore.openDiffBox();
                       e.preventDefault();
                     }}
-                    class:invisible={!$appStore.app.diff.isDiffModeEnabled}
+                    class:invisible={!$appStore.app.diff.isDiffBoxOpen &&
+                      $appStore.app.diff.docA_ID === undefined &&
+                      $appStore.app.diff.docB_ID === undefined}
                     disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
                       $appStore.app.diff.docB_ID === item.id.toString() ||
                       disableDiffButtons}
