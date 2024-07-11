@@ -113,7 +113,7 @@
     if ($appStore.app.diff.docA_ID) {
       const responseDocA = await getDocument("A");
       if (responseDocA.ok) {
-        docA = await responseDocA.content;
+        if ($appStore.app.diff.docA_ID) docA = await responseDocA.content;
       } else if (responseDocA.error) {
         if (responseDocA.error === "404") {
           appStore.setDiffDocA_ID(undefined);
@@ -127,7 +127,7 @@
     if ($appStore.app.diff.docB_ID) {
       const responseDocB = await getDocument("B");
       if (responseDocB.ok) {
-        docB = await responseDocB.content;
+        if ($appStore.app.diff.docB_ID) docB = await responseDocB.content;
       } else if (responseDocB.error) {
         if (responseDocB.error === "404") {
           appStore.setDiffDocB_ID(undefined);
@@ -232,7 +232,10 @@
               {#if docA}
                 <div>
                   <Button
-                    on:click={() => appStore.setDiffDocA_ID(undefined)}
+                    on:click={() => {
+                      appStore.setDiffDocA_ID(undefined);
+                      docA = undefined;
+                    }}
                     color="light"
                     class="border-0 p-1"
                   >
@@ -256,7 +259,10 @@
               {#if docB}
                 <div>
                   <Button
-                    on:click={() => appStore.setDiffDocB_ID(undefined)}
+                    on:click={() => {
+                      appStore.setDiffDocB_ID(undefined);
+                      docB = undefined;
+                    }}
                     color="light"
                     class="border-0 p-1"
                   >
@@ -283,7 +289,10 @@
           <div class="flex h-full items-start">
             <Button
               on:click={() => push("/diff")}
-              disabled={!docA || !docB}
+              disabled={!docA ||
+                !docB ||
+                !$appStore.app.diff.docA_ID ||
+                !$appStore.app.diff.docB_ID}
               size="sm"
               class="flex gap-x-2"
             >
