@@ -212,7 +212,7 @@
 
 <svelte:window bind:innerWidth />
 
-<div class="fixed bottom-0 left-20 flex w-full flex-col items-center justify-center">
+<div class="fixed bottom-0 flex flex-col items-center justify-center">
   <Button
     on:click={appStore.toggleDiffBox}
     class="max-w-32 rounded-none rounded-t-md border-b-0"
