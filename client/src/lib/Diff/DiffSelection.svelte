@@ -115,7 +115,11 @@
       if (responseDocA.ok) {
         docA = await responseDocA.content;
       } else if (responseDocA.error) {
-        loadDocumentsErrorMessage = getErrorMessage(responseDocA.error);
+        if (responseDocA.error === "404") {
+          appStore.setDiffDocA_ID(undefined);
+        } else {
+          loadDocumentsErrorMessage = getErrorMessage(responseDocA.error);
+        }
       }
     } else {
       docA = undefined;
@@ -125,7 +129,11 @@
       if (responseDocB.ok) {
         docB = await responseDocB.content;
       } else if (responseDocB.error) {
-        loadDocumentsErrorMessage = getErrorMessage(responseDocB.error);
+        if (responseDocB.error === "404") {
+          appStore.setDiffDocB_ID(undefined);
+        } else {
+          loadDocumentsErrorMessage = getErrorMessage(responseDocB.error);
+        }
       }
     } else {
       docB = undefined;
@@ -178,12 +186,21 @@
     }
   };
 
+  const deleteExpiredDocFromStore = (id: number) => {
+    if ($appStore.app.diff.docA_ID === `tempdocument${id}`) {
+      appStore.setDiffDocA_ID(undefined);
+    } else if ($appStore.app.diff.docB_ID === `tempdocument${id}`) {
+      appStore.setDiffDocB_ID(undefined);
+    }
+  };
+
   const updateExpired = () => {
     let didDocExpire = false;
     tempDocuments.forEach((doc) => {
       const expiredDate = new Date(doc.file.expired);
       if (expiredDate.getTime() < Date.now()) {
         didDocExpire = true;
+        deleteExpiredDocFromStore(doc.file.id);
       } else {
         doc.document.expired = getRelativeTime(expiredDate);
       }
