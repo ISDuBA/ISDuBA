@@ -15,7 +15,7 @@
   import Home from "$lib/Home/Home.svelte";
   import Statistics from "$lib/Statistics/Overview.svelte";
   import Sources from "$lib/Sources/Overview.svelte";
-  import Diff from "$lib/Diff/DiffPage.svelte";
+  import Diff from "$lib/Diff/Diff.svelte";
   import { wrap } from "svelte-spa-router/wrap";
   import Configuration from "$lib/Configuration/Overview.svelte";
   import Search from "$lib/Search/Overview.svelte";
@@ -173,7 +173,7 @@
   <div>
     <SideNav></SideNav>
   </div>
-  <main class="max-h-screen w-full overflow-auto bg-white p-6">
+  <main class="relative max-h-screen w-full overflow-auto bg-white p-6">
     {#if $appStore.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}

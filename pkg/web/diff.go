@@ -27,6 +27,7 @@ import (
 	"gomodules.xyz/jsonpatch/v2"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 )
 
 var tempdocumentIDRe = regexp.MustCompile(`^tempdocument(\d+)$`)
@@ -102,7 +103,11 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 	for _, f := range fromTempStore {
 		user := ctx.GetString("uid")
 		r, entry, err := c.tmpStore.Fetch(user, f.id)
-		if err != nil {
+		switch {
+		case errors.Is(err, tempstore.ErrFileNotFound):
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		case err != nil:
 			slog.Error("temp store fetch error", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

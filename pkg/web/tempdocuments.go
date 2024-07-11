@@ -13,9 +13,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
+	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/gin-gonic/gin"
 )
@@ -78,7 +80,12 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 	}
 	user := ctx.GetString("uid")
 	r, entry, err := c.tmpStore.Fetch(user, id)
-	if err != nil {
+	switch {
+	case errors.Is(err, tempstore.ErrFileNotFound):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	case err != nil:
+		slog.Error("fetch temp file failed", "err", err, "id", id)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

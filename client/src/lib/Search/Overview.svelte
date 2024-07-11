@@ -16,6 +16,7 @@
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
+  import DiffSelection from "$lib/Diff/DiffSelection.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
@@ -189,3 +190,4 @@
     bind:this={advisoryTable}
   ></AdvisoryTable>
 {/if}
+<DiffSelection></DiffSelection>

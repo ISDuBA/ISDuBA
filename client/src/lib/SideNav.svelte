@@ -76,11 +76,6 @@
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem class="px-6 py-2.5" label="Compare" href="/#/diff">
-              <svelte:fragment slot="icon">
-                <i class="bx bx-transfer"></i>
-              </svelte:fragment>
-            </SidebarItem>
             <SidebarItem
               class="px-6 py-2.5"
               label="Sources"
