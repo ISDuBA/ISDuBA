@@ -373,7 +373,7 @@
               </TableBody>
             </Table>
           {/if}
-          {#if freeTempDocuments && tempDocuments.length <= freeTempDocuments}
+          {#if freeTempDocuments}
             <Dropzone
               on:drop={dropHandle}
               on:dragover={(event) => {
