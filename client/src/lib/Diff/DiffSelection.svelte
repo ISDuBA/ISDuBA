@@ -223,7 +223,7 @@
   </Button>
   {#if $appStore.app.diff.isDiffBoxOpen}
     <div
-      class="flex items-stretch gap-6 rounded-t-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800"
+      class="flex items-stretch gap-6 rounded-tl-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800"
     >
       <div class="flex flex-col">
         <div class="mb-4 flex justify-between">
