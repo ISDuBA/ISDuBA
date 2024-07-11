@@ -385,7 +385,9 @@
             >
               <i class="bx bx-upload text-xl text-gray-500"></i>
               <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                Upload a temporary document
+                Upload temporary documents ({freeTempDocuments} free {freeTempDocuments > 1
+                  ? "slots"
+                  : "slot"} left)
               </p>
             </Dropzone>
           {/if}
