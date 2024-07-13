@@ -124,7 +124,7 @@ type Database struct {
 	AdminPassword           string        `toml:"admin_password"`
 	Migrate                 bool          `toml:"migrate"`
 	TerminateAfterMigration bool          `toml:"terminate_after_migration"`
-	MaxQueryDuration        time.Duration `toml:"max_query_time"`
+	MaxQueryDuration        time.Duration `toml:"max_query_duration"`
 }
 
 // TempStore are the config options for the temporary document storage.
