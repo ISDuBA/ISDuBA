@@ -44,7 +44,7 @@
   let loadDocumentsErrorMessage = "";
   let tempDocErrorMessage = "";
   let loadTempDocsErrorMessage = "";
-  let intervalID: number | undefined = undefined;
+  let intervalID: ReturnType<typeof setTimeout> | undefined = undefined;
   let innerWidth: number;
 
   const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
