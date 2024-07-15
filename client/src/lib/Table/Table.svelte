@@ -204,7 +204,9 @@
       error =
         response.error === "400"
           ? `${getErrorMessage(response.error)} (reason: "${response.content}"). Please check your search syntax.`
-          : `${getErrorMessage(response.error)} ${response.content}`;
+          : response.content.includes("deadline exceeded")
+            ? `The server wasn't able to answer your request in time.`
+            : `${getErrorMessage(response.error)} ${response.content}`;
     }
     loading = false;
     requestOngoing = false;
