@@ -50,6 +50,7 @@
   let documents: any = null;
   let loading = false;
   let error: string;
+  let prevQuery = "";
   export let columns: string[];
   export let query: string = "";
   export let searchTerm: string = "";
@@ -124,6 +125,9 @@
     let position = sessionStorage.getItem("tablePosition" + query + loadAdvisories);
     if (position) {
       [offset, currentPage, limit, orderBy] = JSON.parse(position);
+    } else {
+      offset = 0;
+      currentPage = 1;
     }
   };
 
@@ -152,9 +156,21 @@
     savePosition();
   }
 
+  $: (() => {
+    loadAdvisories;
+    restorePosition();
+    savePosition();
+  })();
+
   $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
   export async function fetchData(): Promise<void> {
+    if (query !== prevQuery) {
+      restorePosition();
+      savePosition();
+      console.log(prevQuery);
+      prevQuery = query;
+    }
     const searchSuffix = searchTerm ? `"${searchTerm}" search ${searchColumnName} as ` : "";
     const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";

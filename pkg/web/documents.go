@@ -333,7 +333,7 @@ func scanRows(
 		results = append(results, result)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("scannig failed: %w", err)
+		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
 	return results, nil
 }
