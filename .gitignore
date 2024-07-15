@@ -42,6 +42,7 @@ client/vite.config.ts.timestamp-*
 client/.env
 build/
 dist/
+web/
 
 # IDE
 .vscode
