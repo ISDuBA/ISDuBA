@@ -95,12 +95,6 @@ func (w *downloadWorker) run(ctx context.Context, job DownloadJob) error {
 		}
 	}
 
-	// TODO: Allow to set only part of the time range
-	var timeRange csafmodel.TimeRange
-	if job.Config.StartRange != nil && job.Config.EndRange != nil {
-		timeRange = csafmodel.TimeRange{*job.Config.StartRange, *job.Config.EndRange}
-	}
-
 	cfg := &downloader.Config{
 		Insecure:               job.Config.Insecure,
 		IgnoreSignatureCheck:   job.Config.IgnoreSignatureCheck,
@@ -108,7 +102,6 @@ func (w *downloadWorker) run(ctx context.Context, job DownloadJob) error {
 		ClientPassphrase:       job.Config.ClientPassphrase,
 		Rate:                   job.Config.Rate,
 		Worker:                 job.Config.Worker,
-		Range:                  &timeRange,
 		IgnorePattern:          ignorePatterns,
 		RemoteValidatorPresets: job.Presets,
 		ForwardQueue:           job.ForwardQueue,
@@ -116,6 +109,10 @@ func (w *downloadWorker) run(ctx context.Context, job DownloadJob) error {
 		DownloadHandler:        downloadHandler(ctx, job.Db),
 		ValidationMode:         job.ValidationMode,
 		Logger:                 logger,
+	}
+
+	if job.Config.StartRange != nil && job.Config.EndRange != nil {
+		cfg.Range = &csafmodel.TimeRange{*job.Config.StartRange, *job.Config.EndRange}
 	}
 	d, err := downloader.NewDownloader(cfg)
 	if err != nil {

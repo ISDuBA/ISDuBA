@@ -11,70 +11,65 @@ package web
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"errors"
 	"io"
 	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gin-gonic/gin"
 )
 
-// addJob creates a new job configuration.
-func (c *Controller) addJob(ctx *gin.Context) {
+func parseJobConfig(ctx *gin.Context, requireID bool) (*models.JobConfig, error) {
+
 	jobConfig := models.JobConfig{
 		Worker: 1,
+	}
+	var err error
+
+	if requireID {
+		var jobIDs string
+		if jobIDs = ctx.PostForm("job_id"); jobIDs == "" {
+			return nil, errors.New("job_id is required")
+		}
+
+		jobConfig.ID, err = strconv.ParseInt(jobIDs, 10, 64)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// We need the name.
 	if jobConfig.Name = ctx.PostForm("name"); jobConfig.Name == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing 'name'",
-		})
-		return
+		return nil, errors.New("missing 'name'")
+
 	}
 
 	// Domains to download from.
 	if jobConfig.Domains = ctx.PostFormArray("domains"); len(jobConfig.Domains) == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing 'domains'",
-		})
-		return
+		return nil, errors.New("missing 'domains'")
 	}
 
 	// Allow insecure download.
-	var err error
 	if jobConfig.Insecure, err = strconv.ParseBool(ctx.PostForm("insecure")); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "please specify 'insecure' boolean parameter",
-		})
-		return
+		return nil, errors.New("invalid 'insecure'")
 	}
 
 	if jobConfig.IgnoreSignatureCheck, err = strconv.ParseBool(ctx.PostForm("ignore_signature_check")); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "please specify 'ignore_signature_check' boolean parameter",
-		})
-		return
+		return nil, errors.New("invalid 'ignore_signature_check'")
 	}
 
 	for _, domain := range jobConfig.Domains {
 		if domain == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "don't specify empty domains",
-			})
-			return
+			return nil, errors.New("missing 'domains'")
 		}
 	}
 
@@ -94,20 +89,19 @@ func (c *Controller) addJob(ctx *gin.Context) {
 	if header == nil {
 		header = []string{}
 	}
+	jobConfig.Headers = models.ParseHeaders(header)
 
 	var file *multipart.FileHeader
 	if file, err = ctx.FormFile("client_cert"); err == nil {
 		open, err := file.Open()
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+			return nil, err
 		}
 		defer open.Close()
 
 		certFile := bytes.NewBuffer(nil)
 		if _, err := io.Copy(certFile, open); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+			return nil, err
 		}
 		jobConfig.ClientCerts = certFile.Bytes()
 	}
@@ -115,274 +109,81 @@ func (c *Controller) addJob(ctx *gin.Context) {
 	if startRange, ok := ctx.GetPostForm("start_range"); ok {
 		startRangeTime, err := time.Parse("2006-01-02", startRange)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.StartRange = &startRangeTime
+			return nil, err
 		}
+		jobConfig.StartRange = &startRangeTime
 	}
 
-	if endRange, ok := ctx.GetPostForm("start_range"); ok {
+	if endRange, ok := ctx.GetPostForm("end_range"); ok {
 		endRangeTime, err := time.Parse("2006-01-02", endRange)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.EndRange = &endRangeTime
+			return nil, err
 		}
+		jobConfig.EndRange = &endRangeTime
+	}
+
+	if (jobConfig.StartRange == nil) != (jobConfig.EndRange == nil) {
+		return nil, errors.New("specify both ranges'")
 	}
 
 	if rate, ok := ctx.GetPostForm("rate"); ok {
 		rateFloat, err := strconv.ParseFloat(rate, 32)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.Rate = &rateFloat
+			return nil, err
 		}
+		jobConfig.Rate = &rateFloat
 	}
 
 	if worker, ok := ctx.GetPostForm("worker"); ok {
 		workerInt, err := strconv.ParseInt(worker, 10, 64)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.Worker = int(workerInt)
+			return nil, err
 		}
+		jobConfig.Worker = int(workerInt)
 	}
-
-	const insertSQL = `INSERT INTO jobs (` +
-		`name,` +
-		`insecure,` +
-		`ignore_signature_check,` +
-		`client_key,` +
-		`client_passphrase,` +
-		`rate,` +
-		`worker,` +
-		`start_range,` +
-		`end_range,` +
-		`ignore_pattern,` +
-		`domains,` +
-		`http_headers,` +
-		`client_certs` +
-		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)` +
-		`RETURNING id`
-
-	var jobID int64
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, insertSQL,
-				jobConfig.Name,
-				jobConfig.Insecure,
-				jobConfig.IgnoreSignatureCheck,
-				jobConfig.ClientKey,
-				jobConfig.ClientPassphrase,
-				jobConfig.Rate,
-				jobConfig.Worker,
-				jobConfig.StartRange,
-				jobConfig.EndRange,
-				jobConfig.IgnorePattern,
-				jobConfig.Domains,
-				header,
-				jobConfig.ClientCerts,
-			).Scan(&jobID)
-		}, 0,
-	); err != nil {
-		var pgErr *pgconn.PgError
-		// Unique constraint violation
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
-			return
-		}
-		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	ctx.JSON(http.StatusCreated, gin.H{
-		"id": jobID,
-	})
+	return &jobConfig, nil
 }
 
-// updateJob updates a job configuration.
-func (c *Controller) updateJob(ctx *gin.Context) {
-	jobConfig := models.JobConfig{}
-
-	var jobIDs string
-	if jobIDs = ctx.PostForm("job_id"); jobIDs == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing 'job_id'",
-		})
-		return
-	}
-
-	var err error
-	jobConfig.ID, err = strconv.ParseInt(jobIDs, 10, 64)
+// addJob creates a new job configuration.
+func (c *Controller) addJob(ctx *gin.Context) {
+	jobConfig, err := parseJobConfig(ctx, false)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// We need the name.
-	if jobConfig.Name = ctx.PostForm("name"); jobConfig.Name == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing 'name'",
-		})
-		return
-	}
-
-	// Domains to download from.
-	if jobConfig.Domains = ctx.PostFormArray("domains"); len(jobConfig.Domains) == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing 'domains'",
-		})
-		return
-	}
-
-	// Allow insecure download.
-	if jobConfig.Insecure, err = strconv.ParseBool(ctx.PostForm("insecure")); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "please specify 'insecure' boolean parameter",
-		})
-		return
-	}
-
-	if jobConfig.IgnoreSignatureCheck, err = strconv.ParseBool(ctx.PostForm("ignore_signature_check")); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "please specify 'ignore_signature_check' boolean parameter",
-		})
-		return
-	}
-
-	for _, domain := range jobConfig.Domains {
-		if domain == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "don't specify empty domains",
-			})
-			return
-		}
-	}
-
-	if clientKey := ctx.PostForm("client_key"); clientKey != "" {
-		jobConfig.ClientKey = &clientKey
-	}
-
-	if clientPassphrase := ctx.PostForm("client_passphrase"); clientPassphrase != "" {
-		jobConfig.ClientPassphrase = &clientPassphrase
-	}
-
-	if ignorePattern := ctx.PostForm("ignore_pattern"); ignorePattern != "" {
-		jobConfig.IgnorePattern = &ignorePattern
-	}
-
-	if rate, ok := ctx.GetPostForm("rate"); ok {
-		rateFloat, err := strconv.ParseFloat(rate, 32)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.Rate = &rateFloat
-		}
-	}
-
-	if worker, ok := ctx.GetPostForm("worker"); ok {
-		workerInt, err := strconv.ParseInt(worker, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.Worker = int(workerInt)
-		}
-	}
-
-	header := ctx.PostFormArray("header")
-	if header == nil {
-		header = []string{}
-	}
-
-	var file *multipart.FileHeader
-	if file, err = ctx.FormFile("client_cert"); err == nil {
-		open, err := file.Open()
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		defer open.Close()
-
-		certFile := bytes.NewBuffer(nil)
-		if _, err := io.Copy(certFile, open); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		jobConfig.ClientCerts = certFile.Bytes()
-	}
-
-	if startRange, ok := ctx.GetPostForm("start_range"); ok {
-		startRangeTime, err := time.Parse("2006-01-02", startRange)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.StartRange = &startRangeTime
-		}
-	}
-
-	if endRange, ok := ctx.GetPostForm("start_range"); ok {
-		endRangeTime, err := time.Parse("2006-01-02", endRange)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			jobConfig.EndRange = &endRangeTime
-		}
-	}
-
-	expr := query.FieldEqInt("id", jobConfig.ID)
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
-
-	updateSQL := `UPDATE jobs SET ` +
-		`name = $1,` +
-		`insecure = $2,` +
-		`ignore_signature_check = $3,` +
-		`rate = $4,` +
-		`worker = $5,` +
-		`start_range = $6,` +
-		`end_range = $7,` +
-		`ignore_pattern = $8,` +
-		`domains = $9, ` +
-		`http_headers = $10,` +
-		`client_certs = $11 ` +
-		`WHERE ` +
-		builder.WhereClause +
-		`RETURNING id`
-
-	var jobID int64
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, updateSQL,
-				jobConfig.Name,
-				jobConfig.Insecure,
-				jobConfig.IgnoreSignatureCheck,
-				jobConfig.Rate,
-				jobConfig.Worker,
-				jobConfig.StartRange,
-				jobConfig.EndRange,
-				jobConfig.IgnorePattern,
-				jobConfig.Domains,
-				header,
-				jobConfig.ClientCerts,
-			).Scan(&jobID)
-		}, 0,
-	); err != nil {
-		var pgErr *pgconn.PgError
-		// Unique constraint violation
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
-			return
-		}
+	var id *int64
+	if err = c.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
+		id, err = models.InsertJob(ctx, conn, *jobConfig)
+		return err
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
-		"id": jobID,
+		"id": id,
+	})
+}
+
+// updateJob updates a job configuration.
+func (c *Controller) updateJob(ctx *gin.Context) {
+	jobConfig, err := parseJobConfig(ctx, true)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var id *int64
+	if err = c.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
+		id, err = models.UpdateJob(ctx, conn, *jobConfig)
+		return err
+	}, 0); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"id": id,
 	})
 }
 
@@ -394,29 +195,17 @@ func (c *Controller) deleteJob(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	expr := query.FieldEqInt("id", jobID)
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
-
-	deleteSQL := `DELETE FROM jobs WHERE ` +
-		builder.WhereClause
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			if _, err := conn.Exec(rctx, deleteSQL); err != nil {
-				return err
-			}
-			return nil
-		}, 0,
-	); err != nil {
+	var id *int64
+	if err = c.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
+		id, err = models.DeleteJob(ctx, conn, jobID)
+		return err
+	}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
-		"id": jobID,
+		"id": id,
 	})
 }
 
@@ -424,44 +213,13 @@ func (c *Controller) deleteJob(ctx *gin.Context) {
 func (c *Controller) viewJobs(ctx *gin.Context) {
 	var jobs []models.JobConfig
 
+	var err error
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			const fetchSQL = `SELECT id, name, insecure, ignore_signature_check, rate, worker, start_range, end_range, ignore_pattern, domains, http_headers FROM jobs`
-			rows, _ := conn.Query(rctx, fetchSQL)
-			var err error
-			jobs, err = pgx.CollectRows(
-				rows,
-				func(row pgx.CollectableRow) (models.JobConfig, error) {
-					var j models.JobConfig
-					var ignorePattern sql.NullString
-					var startRange sql.NullTime
-					var endRange sql.NullTime
-
-					var headers []string
-					err := row.Scan(&j.ID, &j.Name, &j.Insecure, &j.IgnoreSignatureCheck, &j.Rate, &j.Worker, &startRange, &endRange, &ignorePattern, &j.Domains, &headers)
-					if ignorePattern.Valid {
-						j.IgnorePattern = &ignorePattern.String
-					}
-					if startRange.Valid {
-						j.StartRange = &startRange.Time
-					}
-					if endRange.Valid {
-						j.EndRange = &endRange.Time
-					}
-
-					for _, h := range headers {
-						s := strings.Split(h, ":")
-						if len(s) < 2 {
-							continue
-						}
-						j.Headers[s[0]] = s[1]
-					}
-					return j, err
-				})
+			jobs, err = models.GetJobs(ctx, conn)
 			return err
-		}, 0,
-	); err != nil {
+		}, 0); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

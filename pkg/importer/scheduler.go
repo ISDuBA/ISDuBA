@@ -14,7 +14,6 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
@@ -52,6 +51,7 @@ func NewScheduler(db *database.DB, cfg *config.Config) *Scheduler {
 		downloader:   downloadWorker,
 		cron:         c,
 		runningTasks: make(map[int64]context.CancelFunc),
+		fns:          make(chan func(scheduler *Scheduler, ctx context.Context)),
 	}
 	return s
 }
@@ -193,13 +193,14 @@ func (s *Scheduler) abortTask(taskID int64) error {
 }
 
 func (s *Scheduler) AbortTask(taskID int64) error {
+	errChan := make(chan error)
 	s.fns <- func(s *Scheduler, ctx context.Context) {
-		err := (*Scheduler).abortTask(s, taskID)
-		if err != nil {
-			slog.Error("could not abort task", "id", taskID, "err", err)
-		}
+		errChan <- (*Scheduler).abortTask(s, taskID)
 	}
-	return nil
+	select {
+	case err := <-errChan:
+		return err
+	}
 }
 
 func (s *Scheduler) runCron(ctx context.Context) {
@@ -302,13 +303,7 @@ func (s *Scheduler) runTasks(ctx context.Context) {
 						if endRange.Valid {
 							j.EndRange = &endRange.Time
 						}
-						for _, h := range headers {
-							s := strings.Split(h, ":")
-							if len(s) < 2 {
-								continue
-							}
-							jobConf.Headers[s[0]] = s[1]
-						}
+						jobConf.Headers = models.ParseHeaders(headers)
 						return j, err
 					})
 				return err
@@ -386,20 +381,24 @@ func (s *Scheduler) setTaskState(ctx context.Context, taskID int64, status model
 // Run starts the scheduler.
 func (s *Scheduler) Run(ctx context.Context) {
 	s.init(ctx)
+	defer func() {
+		s.cron.Stop()
+		for t := range s.runningTasks {
+			if err := s.abortTask(t); err != nil {
+				slog.Error("could not abort task", "err", err)
+			}
+		}
+	}()
+
 	for !s.done {
 		select {
-		case fn := <-s.fns:
-			fn(s, ctx)
 		case <-ctx.Done():
 			return
+		case fn := <-s.fns:
+			fn(s, ctx)
 		}
 	}
-	s.cron.Stop()
-	for t := range s.runningTasks {
-		if err := s.abortTask(t); err != nil {
-			slog.Error("could not abort task", "err", err)
-		}
-	}
+
 }
 
 func (s *Scheduler) kill(_ context.Context) {
