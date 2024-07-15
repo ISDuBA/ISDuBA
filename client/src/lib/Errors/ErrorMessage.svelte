@@ -9,11 +9,12 @@
 -->
 
 <script lang="ts">
+  import { Alert } from "flowbite-svelte";
   export let message = "";
 </script>
 
 {#if message}
-  <div class="my-2 flex flex-row items-center">
+  <Alert dismissable>
     <span class="text-lg text-red-600"> {message}</span>
-  </div>
+  </Alert>
 {/if}
