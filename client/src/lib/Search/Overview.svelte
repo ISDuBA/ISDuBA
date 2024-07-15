@@ -16,6 +16,7 @@
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
+  import DiffSelection from "$lib/Diff/DiffSelection.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
@@ -165,6 +166,7 @@
         on:click={() => {
           query.advisories = true;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
+          clearSearch();
         }}>Advisories</Button
       >
       <Button
@@ -174,6 +176,7 @@
         on:click={() => {
           query.advisories = false;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
+          clearSearch();
         }}>Documents</Button
       >
     </ButtonGroup>
@@ -189,3 +192,4 @@
     bind:this={advisoryTable}
   ></AdvisoryTable>
 {/if}
+<DiffSelection></DiffSelection>

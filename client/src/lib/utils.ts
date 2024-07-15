@@ -120,3 +120,20 @@ export const getPublisher = (publisher: string, width?: number) => {
       return publisher;
   }
 };
+
+export const getRelativeTime = (date: Date, inFuture = true) => {
+  const now = Date.now();
+  const unixMillisec = date.getTime();
+  const passedTime = inFuture ? unixMillisec - now : now - unixMillisec;
+  let period = "";
+  if (passedTime < 60000) {
+    period = "<1 min";
+  } else if (passedTime < 3600000) {
+    period = `${Math.floor(passedTime / 60000)} min`;
+  } else if (passedTime < 86400000) {
+    period = `${Math.floor(passedTime / 3600000)} hours`;
+  } else {
+    period = `${Math.floor(passedTime / 86400000)} days`;
+  }
+  return period;
+};

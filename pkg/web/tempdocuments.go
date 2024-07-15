@@ -13,10 +13,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
-	"strconv"
 	"strings"
 
+	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/gin-gonic/gin"
 )
@@ -73,15 +74,18 @@ func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 }
 
 func (c *Controller) viewTempDocument(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 	user := ctx.GetString("uid")
 	r, entry, err := c.tmpStore.Fetch(user, id)
-	if err != nil {
+	switch {
+	case errors.Is(err, tempstore.ErrFileNotFound):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	case err != nil:
+		slog.Error("fetch temp file failed", "err", err, "id", id)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -97,10 +101,8 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteTempDocument(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 	user := ctx.GetString("uid")

@@ -16,7 +16,6 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -35,24 +34,15 @@ const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 // deleteDocument is an end point for deleting a document.
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
-	idS := ctx.Param("id")
-	docID, err := strconv.ParseInt(idS, 10, 64)
-	// Error handling for id acquisition
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
 	// FieldEqInt is a shortcut mainly for building expressions
 	// accessing an integer column like 'id's.
 	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
-	expr := query.FieldEqInt("id", docID)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -150,20 +140,12 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 // viewDocument is an end point to export a document.
 func (c *Controller) viewDocument(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
-	expr := query.FieldEqInt("id", id)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	fields := []string{"original"}
 	builder := query.SQLBuilder{}
@@ -201,9 +183,8 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	// Use the advisories.
-	advisory, err := strconv.ParseBool(ctx.DefaultQuery("advisories", "false"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	advisory, ok := parse(ctx, toBool, ctx.DefaultQuery("advisories", "false"))
+	if !ok {
 		return
 	}
 
@@ -219,17 +200,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	// The query to filter the documents.
-	expr, err := parser.Parse(ctx.DefaultQuery("query", "true"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
 		return
 	}
 
 	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr = c.andTLPExpr(ctx, expr)
 
 	// In advisory mode we only show the latest.
 	if advisory {
@@ -261,22 +238,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		limit, offset int64 = -1, -1
 	)
 
-	if count := ctx.Query("count"); count != "" {
-		calcCount = true
-	}
+	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
-		limit, err = strconv.ParseInt(lim, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if limit, ok = parse(ctx, toInt64, lim); !ok {
 			return
 		}
 	}
 
 	if ofs := ctx.Query("offset"); ofs != "" {
-		offset, err = strconv.ParseInt(ofs, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if offset, ok = parse(ctx, toInt64, ofs); !ok {
 			return
 		}
 	}

@@ -15,6 +15,10 @@ jobs:
   release:
     name: Release application
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
     env:
       PUBLIC_KEYCLOAK_URL: "http://localhost:8080"
       PUBLIC_KEYCLOAK_REALM: "isduba"

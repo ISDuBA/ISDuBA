@@ -85,7 +85,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 ### <a name="section_temp_storage"></a> Section `[temp_storage]` Temporary document storage
 - `files_total`: Max number of files hold in temp storage. Defaults to `10`.
 - `files_user`: Max number of files hold in temp storage per user. Defaults to `2`.
-- `storage_duration`: Ensured storage duration in temp storage. Defaults to `30` minutes.
+- `storage_duration`: Ensured storage duration in temp storage. Defaults to `"30m"` minutes.
 
 
 ## <a name="env_vars"></a>Environment variables

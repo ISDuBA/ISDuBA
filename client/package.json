@@ -49,7 +49,6 @@
   "dependencies": {
     "@types/dompurify": "^3.0.5",
     "boxicons": "^2.1.4",
-    "diff2html": "^3.4.47",
     "dompurify": "^3.0.9",
     "jwt-decode": "^4.0.0",
     "marked": "^12.0.0",

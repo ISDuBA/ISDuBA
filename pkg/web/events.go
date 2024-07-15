@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -35,17 +34,13 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	}
 
 	// The query to filter the documents.
-	expr, err := parser.Parse(ctx.DefaultQuery("query", "true"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
 		return
 	}
 
 	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr = c.andTLPExpr(ctx, expr)
 
 	builder := query.SQLBuilder{Mode: query.EventMode}
 	builder.CreateWhere(expr)
@@ -71,22 +66,16 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 		limit, offset int64 = -1, -1
 	)
 
-	if count := ctx.Query("count"); count != "" {
-		calcCount = true
-	}
+	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
-		limit, err = strconv.ParseInt(lim, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if limit, ok = parse(ctx, toInt64, lim); !ok {
 			return
 		}
 	}
 
 	if ofs := ctx.Query("offset"); ofs != "" {
-		offset, err = strconv.ParseInt(ofs, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if offset, ok = parse(ctx, toInt64, ofs); !ok {
 			return
 		}
 	}
@@ -143,20 +132,12 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 }
 
 func (c *Controller) viewEvents(ctx *gin.Context) {
-	idS := ctx.Param("document")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
 		return
 	}
 
-	expr := query.FieldEqInt("id", id)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)

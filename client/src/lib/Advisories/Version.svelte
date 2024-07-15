@@ -13,6 +13,8 @@
   import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
+  import { appStore } from "$lib/store";
+
   export let advisoryVersions: any;
   $: reversedAdvisoryVersions = advisoryVersions.toReversed();
   export let publisherNamespace: string;
@@ -32,7 +34,7 @@
   const navigateToVersion = (version: any) => {
     push(`/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`);
   };
-  const toggleDiffModeActivated = () => {
+  const toggleDiffBoxActivated = () => {
     diffModeActivated = !diffModeActivated;
     if (diffModeActivated) {
       if (reversedAdvisoryVersions[0].version === selectedDocumentVersion) {
@@ -66,10 +68,9 @@
       secondDocumentIndex !== undefined &&
       nextColor === "red"
     ) {
-      dispatch("selectedDiffDocuments", {
-        docA: reversedAdvisoryVersions[secondDocumentIndex],
-        docB: reversedAdvisoryVersions[firstDocumentIndex]
-      });
+      appStore.setDiffDocA_ID(reversedAdvisoryVersions[secondDocumentIndex].id);
+      appStore.setDiffDocB_ID(reversedAdvisoryVersions[firstDocumentIndex].id);
+      dispatch("selectedDiffDocuments");
     }
   };
   const selectDiffDocument = (index: number) => {
@@ -165,7 +166,7 @@
           {/each}
         {/if}
         {#if advisoryVersions.length > 1}
-          <Button color="light" class="flex h-8 gap-x-2 px-3" on:click={toggleDiffModeActivated}>
+          <Button color="light" class="flex h-8 gap-x-2 px-3" on:click={toggleDiffBoxActivated}>
             <i class="bx bx-transfer"></i>
             <span class="text-nowrap">{diffModeActivated ? "Hide" : "Show"} changes</span>
           </Button>

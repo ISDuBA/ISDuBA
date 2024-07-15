@@ -13,7 +13,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,20 +24,12 @@ import (
 )
 
 func (c *Controller) createComment(ctx *gin.Context) {
-	docIDs := ctx.Param("document")
-	docID, err := strconv.ParseInt(docIDs, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	docID, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
 		return
 	}
 
-	expr := query.FieldEqInt("id", docID)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 
@@ -164,10 +155,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 }
 
 func (c *Controller) updateComment(ctx *gin.Context) {
-	commentIDs := ctx.Param("id")
-	commentID, err := strconv.ParseInt(commentIDs, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	commentID, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 	var (
@@ -238,20 +227,13 @@ type comment struct {
 }
 
 func (c *Controller) viewComment(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
-	expr := query.FieldEqInt("comments.id", id)
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("comments.id", id))
 
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
 	builder := query.SQLBuilder{}
 
 	fetchSQL := `SELECT documents_id, time, commentator, message ` +
@@ -269,7 +251,7 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 				&post.Message)
 		}, 0); {
 	case errors.Is(err, pgx.ErrNoRows):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "comment post not found"})
 	case err != nil:
 		slog.Error("database error while fetching comment post", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -279,20 +261,12 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 }
 
 func (c *Controller) viewComments(ctx *gin.Context) {
-	idS := ctx.Param("document")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
 		return
 	}
 
-	expr := query.FieldEqInt("id", id)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		tlpExpr := tlps.AsExpr()
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
