@@ -14,7 +14,9 @@
 </script>
 
 {#if message}
-  <Alert dismissable>
-    <span class="text-lg text-red-600"> {message}</span>
-  </Alert>
+  <div class="w-fit">
+    <Alert color="red" dismissable>
+      <span class="text-lg"> {message}</span>
+    </Alert>
+  </div>
 {/if}
