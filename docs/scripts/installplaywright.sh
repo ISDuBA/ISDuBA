@@ -24,5 +24,5 @@ cd ../../client # change directory
 npm install
 echo "Successfully installed client dependencies."
 
-npx playwright install
+sudo npx playwright install --with-deps
 echo "Successfully installed playwright."
