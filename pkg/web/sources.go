@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/csaf-poc/csaf_distribution/v3/csaf/filter"
 	"io"
 	"log/slog"
 	"mime/multipart"
@@ -82,6 +83,10 @@ func parseJobConfig(ctx *gin.Context, requireID bool) (*models.JobConfig, error)
 	}
 
 	if ignorePattern := ctx.PostForm("ignore_pattern"); ignorePattern != "" {
+		_, err = filter.NewPatternMatcher([]string{ignorePattern})
+		if err != nil {
+			return nil, err
+		}
 		jobConfig.IgnorePattern = &ignorePattern
 	}
 
