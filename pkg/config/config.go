@@ -73,7 +73,7 @@ const (
 	defaultValidationPreset = "mandatory"
 	defaultValidationMode   = downloader.ValidationStrict
 	defaultImportLogLevel   = slog.LevelDebug
-	defaultImportLogPath    = "download"
+	defaultImportLogPath    = "log/download"
 )
 
 var defaultPublishersTLPs = models.PublishersTLPs{

@@ -51,7 +51,7 @@
 # remote_validator = ""
 # remote_validator_presets = ["mandatory"]
 # validation_mode = "strict"
-# log_path = "download"
+# log_path = "log/download"
 # log_level = "debug"
 
 # [publishers_tlps]
