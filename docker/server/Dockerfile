@@ -47,7 +47,7 @@ ENV ISDUBA_DB_MIGRATE true
 FROM scratch
 
 COPY --from=server /app/cmd/isdubad/isdubad /app/isdubad
-COPY --from=client /app/client/build /app/web
+COPY --from=client /app/web /app/web
 COPY ./docker/server/isdubad.toml /app/isdubad.toml
 
 WORKDIR /app
