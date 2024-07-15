@@ -58,7 +58,6 @@ func run(cfg *config.Config) error {
 
 	scheduler := importer.NewScheduler(db, cfg)
 	go scheduler.Run(ctx)
-	defer scheduler.Kill()
 
 	cfg.Web.Configure()
 
