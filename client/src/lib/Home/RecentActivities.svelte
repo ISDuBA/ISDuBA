@@ -18,13 +18,12 @@
   import Activity from "./Activity.svelte";
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
-
   const recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me involved`;
   const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
   const documentQueryBase = `/api/documents?columns=id title publisher tracking_id`;
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
-  let activities = { events: [] };
-  let mentions = { events: [] };
+  let activities = { count: 0, events: [] };
+  let mentions = { count: 0, events: [] };
   let documentsById: any;
   let documentIDs: any;
   let commentIDs: any;
@@ -117,8 +116,9 @@
   const fetchData = async () => {
     await fetchActivities();
     await fetchMentions();
-    const idsActivities = pluck(activities.events, ["id", "comments_id"]);
-    const idsMentions = pluck(mentions.events, ["id", "comments_id"]);
+    const idsActivities =
+      activities.count > 0 ? pluck(activities.events, ["id", "comments_id"]) : [];
+    const idsMentions = mentions.count > 0 ? pluck(mentions.events, ["id", "comments_id"]) : [];
     documentIDs = [
       ...new Set(
         idsActivities
@@ -148,8 +148,8 @@
           })
       )
     ];
-    await fetchDocuments();
-    await fetchComments();
+    if (activities.count > 0) await fetchDocuments();
+    if (mentions.count > 0) await fetchComments();
   };
 
   const aggregateNewest = (events: any) => {
@@ -205,11 +205,13 @@
   };
 
   const transformDataToActivities = () => {
-    const commentsByID = comments.reduce((o: any, n: any) => {
-      o[n.id] = n.message;
-      return o;
-    }, {});
-    const activitiesAggregated = aggregateNewest(activities.events);
+    const commentsByID = comments
+      ? comments.reduce((o: any, n: any) => {
+          o[n.id] = n.message;
+          return o;
+        }, {})
+      : {};
+    const activitiesAggregated = activities.count > 0 ? aggregateNewest(activities.events) : {};
     recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
       a.mention = false;
@@ -220,7 +222,7 @@
 
       return a;
     });
-    const mentionsAggregated = aggregateNewest(mentions.events);
+    const mentionsAggregated = mentions.count > 0 ? aggregateNewest(mentions.events) : {};
     recentMentions = Object.values(mentionsAggregated);
     recentMentions = recentMentions.map((a: any) => {
       a.mention = true;
@@ -249,53 +251,57 @@
     <SectionHeader title="Recent activities"></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if resultingActivities}
-        {#each resultingActivities as activity}
-          <Activity
-            on:click={() => {
-              push(activity.documentURL);
-            }}
-          >
-            <span slot="top-right">{getRelativeTime(new Date(activity.time))}</span>
-            <span slot="top-left">
-              {#if activity.mention}
-                {activity.actor} mentioned you
-              {:else if activity.event === "add_comment"}
-                {activity.actor} commented on {activity.documentTitle}
-              {:else if activity.event === "add_ssvc"}
-                {activity.actor} added a SSVC
-              {:else if activity.event === "import_document"}
-                {activity.actor} added imported a document
-              {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
-                {activity.actor} changed a SSVC
-              {:else if activity.event === "change_comment"}
-                {activity.actor} changed a comment
-              {:else if activity.event === "state_change"}
-                {activity.actor} changed the state to <Badge color="dark"
-                  >{activity.event_state}</Badge
-                >
+        {#if resultingActivities.length > 0}
+          {#each resultingActivities as activity}
+            <Activity
+              on:click={() => {
+                push(activity.documentURL);
+              }}
+            >
+              <span slot="top-right">{getRelativeTime(new Date(activity.time))}</span>
+              <span slot="top-left">
+                {#if activity.mention}
+                  {activity.actor} mentioned you
+                {:else if activity.event === "add_comment"}
+                  {activity.actor} commented on {activity.documentTitle}
+                {:else if activity.event === "add_ssvc"}
+                  {activity.actor} added a SSVC
+                {:else if activity.event === "import_document"}
+                  {activity.actor} added imported a document
+                {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
+                  {activity.actor} changed a SSVC
+                {:else if activity.event === "change_comment"}
+                  {activity.actor} changed a comment
+                {:else if activity.event === "state_change"}
+                  {activity.actor} changed the state to <Badge color="dark"
+                    >{activity.event_state}</Badge
+                  >
+                {/if}
+              </span>
+              {#if activity.event === "add_comment" || activity.event == "change_comment"}
+                <div>
+                  <i class="bx bxs-quote-alt-left"></i>
+                  <span class="italic"
+                    >{activity.message.length < 30
+                      ? activity.message
+                      : activity.message.substring(0, 30)}</span
+                  >
+                </div>
+              {:else}
+                <div>
+                  {activity.documentTitle}
+                </div>
               {/if}
-            </span>
-            {#if activity.event === "add_comment" || activity.event == "change_comment"}
-              <div>
-                <i class="bx bxs-quote-alt-left"></i>
-                <span class="italic"
-                  >{activity.message.length < 30
-                    ? activity.message
-                    : activity.message.substring(0, 30)}</span
-                >
-              </div>
-            {:else}
-              <div>
-                {activity.documentTitle}
-              </div>
-            {/if}
-            <span class="text-gray-400" slot="bottom-left">
-              {activity.event === "add_comment" || activity.event == "change_comment"
-                ? `${activity.documentTitle}`
-                : ""}
-            </span>
-          </Activity>
-        {/each}
+              <span class="text-gray-400" slot="bottom-left">
+                {activity.event === "add_comment" || activity.event == "change_comment"
+                  ? `${activity.documentTitle}`
+                  : ""}
+              </span>
+            </Activity>
+          {/each}
+        {:else}
+          No recent activities on advisories you are involved in.
+        {/if}
       {/if}
     </div>
     <ErrorMessage message={loadActivityError}></ErrorMessage>
