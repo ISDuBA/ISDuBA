@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="60mm"
+   height="60mm"
+   viewBox="0 0 60 60"
+   version="1.1"
+   id="svg1"
+   inkscape:export-filename="01ISDuBALogo.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   inkscape:version="1.3.2 (1:1.3.2+202311252150+091e20ef0f)"
+   sodipodi:docname="01ISDuBA_Logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.702883"
+     inkscape:cx="142.98255"
+     inkscape:cy="226.92255"
+     inkscape:window-width="1920"
+     inkscape:window-height="1047"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g17-9-39-9-0-6-2-3-4-1"
+       transform="matrix(0.95963996,0,0,0.95963996,233.30133,128.53595)"
+       inkscape:export-filename="03.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96">
+      <g
+         id="g11-75-1-4-5-1-8-5-7-0"
+         transform="matrix(0.83932661,0,0,0.83932661,-33.66951,-16.408533)">
+        <path
+           d="m -212.2918,-80.375598 c -3.11076,1.54e-4 -5.63239,2.522096 -5.63228,5.632895 2.4e-4,3.110551 2.55743,5.632114 5.66796,5.632279 3.11076,1.77e-4 5.59707,-2.521492 5.5972,-5.632279 2.2e-4,-3.111036 -2.52176,-5.633072 -5.63288,-5.632895 z"
+           style="fill:#be0b13;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.96026;stroke-linecap:round;stroke-linejoin:round;paint-order:markers fill stroke"
+           id="path1-3-8-89-6-4-6" />
+        <path
+           id="path5-8-9-1-1-7-2-2-4-1"
+           style="opacity:1;fill:#0b8ac3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.6597;stroke-linecap:round;stroke-linejoin:round;paint-order:markers fill stroke"
+           d="m -240.31059,-136.46292 c -3.13817,-2.6e-4 -5.68217,2.5434 -5.68219,5.68158 3e-5,3.13816 2.54403,5.68245 5.68219,5.68219 h 56.03819 c 3.13796,-3e-5 5.6816,-2.54423 5.68158,-5.68219 -1e-5,-1.37641 -0.48939,-2.63847 -1.30366,-3.62167 -1.04211,-1.25832 -2.61636,-2.05989 -4.37792,-2.05991 z m 14.0094,14.00939 c -3.13798,3e-5 -5.68156,2.5436 -5.68158,5.68158 3e-5,3.13797 2.54361,5.68216 5.68158,5.68219 h 28.0194 c 3.13796,-3e-5 5.68155,-2.54422 5.68158,-5.68219 -2e-5,-3.13798 -2.54361,-5.68155 -5.68158,-5.68158 z m 14.00939,14.00939 c -3.13803,1.6e-4 -5.68176,2.54417 -5.68158,5.6822 1.6e-4,3.137783 2.57975,5.681417 5.71753,5.681576 3.13802,1.78e-4 5.64608,-2.543555 5.64624,-5.681576 1.8e-4,-3.13826 -2.54393,-5.68238 -5.68219,-5.6822 z"
+           sodipodi:nodetypes="csccsscccsccsccsssss" />
+      </g>
+      <path
+         id="path1-7-49-7-6-0-7-8-9-6-9-88-9-3-5"
+         style="mix-blend-mode:normal;fill:#3ecb28;fill-opacity:1;fill-rule:evenodd;stroke:#3ecb28;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         d="m -227.14222,-94.684654 h 8.07241 v 8.072417 h -8.07241 z m 33.76211,0 h 8.07303 v 8.048047 l -8.07303,0.02437 z m -45.01615,11.254039 h 8.07241 v 8.072418 h -8.07241 z m 33.76211,0 h 8.07242 v 8.072418 h -8.07242 z m 11.25404,0 h 8.07303 v 8.072418 h -8.07303 z"
+         sodipodi:nodetypes="ccccccccccccccccccccccccc" />
+    </g>
+  </g>
+</svg>
