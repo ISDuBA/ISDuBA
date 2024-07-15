@@ -303,7 +303,7 @@
           No recent activities on advisories you are involved in.
         {/if}
       {/if}
-      {#if activities.count > 1}<div class="">…There are more activities</div>{/if}
+      {#if activities.count > 10}<div class="">…There are more activities</div>{/if}
     </div>
     <ErrorMessage message={loadActivityError}></ErrorMessage>
     <ErrorMessage message={loadMentionsError}></ErrorMessage>
