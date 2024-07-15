@@ -258,9 +258,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			if calcCount {
+				countSQL := builder.CreateCountSQL()
+				if slog.Default().Enabled(rctx, slog.LevelDebug) {
+					slog.Debug("count", "SQL", qndSQLReplace(countSQL, builder.Replacements))
+				}
 				if err := conn.QueryRow(
 					rctx,
-					builder.CreateCountSQL(),
+					countSQL,
 					builder.Replacements...,
 				).Scan(&count); err != nil {
 					return fmt.Errorf("cannot calculate count %w", err)
