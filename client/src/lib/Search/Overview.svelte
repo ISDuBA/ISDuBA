@@ -166,6 +166,7 @@
         on:click={() => {
           query.advisories = true;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
+          clearSearch();
         }}>Advisories</Button
       >
       <Button
@@ -175,6 +176,7 @@
         on:click={() => {
           query.advisories = false;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
+          clearSearch();
         }}>Documents</Button
       >
     </ButtonGroup>
