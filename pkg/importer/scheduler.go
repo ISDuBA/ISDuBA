@@ -192,6 +192,7 @@ func (s *Scheduler) abortTask(taskID int64) error {
 	return nil
 }
 
+// AbortTask aborts the specified task.
 func (s *Scheduler) AbortTask(taskID int64) error {
 	errChan := make(chan error)
 	s.fns <- func(s *Scheduler, ctx context.Context) {
@@ -227,7 +228,6 @@ func (s *Scheduler) runCron(ctx context.Context) {
 	}
 
 	s.cron.Stop()
-	// TODO: use cron.Remove(id EntryID) to delete cron job
 	s.cron = cron.New()
 	for _, c := range crons {
 		cronJob := func() {
@@ -405,6 +405,7 @@ func (s *Scheduler) kill(_ context.Context) {
 	s.done = true
 }
 
+// Kill kills the scheduler.
 func (s *Scheduler) Kill() {
 	s.fns <- (*Scheduler).kill
 }

@@ -65,6 +65,7 @@ type JobConfig struct {
 	Headers              map[string]string `json:"headers,omitempty"`
 }
 
+// ParseHeaders returns a key value pair of headers
 func ParseHeaders(headers []string) map[string]string {
 	var parsed map[string]string
 	for _, h := range headers {
@@ -77,6 +78,7 @@ func ParseHeaders(headers []string) map[string]string {
 	return parsed
 }
 
+// SerializeHeaders returns serialized view of headers.
 func SerializeHeaders(headers map[string]string) []string {
 	serialized := make([]string, 0)
 	for k, v := range headers {
@@ -85,6 +87,7 @@ func SerializeHeaders(headers map[string]string) []string {
 	return serialized
 }
 
+// InsertJob inserts a new job configuration.
 func InsertJob(ctx context.Context, conn *pgxpool.Conn, jobConfig JobConfig) (*int64, error) {
 	headers := SerializeHeaders(jobConfig.Headers)
 	const insertSQL = `INSERT INTO jobs (` +
@@ -127,6 +130,7 @@ func InsertJob(ctx context.Context, conn *pgxpool.Conn, jobConfig JobConfig) (*i
 	return &jobID, nil
 }
 
+// UpdateJob updates the job configuration in the database
 func UpdateJob(ctx context.Context, conn *pgxpool.Conn, jobConfig JobConfig) (*int64, error) {
 	headers := SerializeHeaders(jobConfig.Headers)
 
@@ -171,6 +175,7 @@ func UpdateJob(ctx context.Context, conn *pgxpool.Conn, jobConfig JobConfig) (*i
 	return &jobID, nil
 }
 
+// DeleteJob deletes the specified job configuration.
 func DeleteJob(ctx context.Context, conn *pgxpool.Conn, jobID int64) (*int64, error) {
 	expr := query.FieldEqInt("id", jobID)
 	builder := query.SQLBuilder{}
@@ -186,6 +191,7 @@ func DeleteJob(ctx context.Context, conn *pgxpool.Conn, jobID int64) (*int64, er
 	return &jobID, nil
 }
 
+// GetJobs returns all specified job configurations.
 func GetJobs(ctx context.Context, conn *pgxpool.Conn) ([]JobConfig, error) {
 	var jobs []JobConfig
 
