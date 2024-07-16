@@ -84,10 +84,6 @@
           <TableBodyCell tdClass={cellStyleKey}>Last update</TableBodyCell>
           <TableBodyCell tdClass={cellStyleValue}>{lastUpdate}</TableBodyCell>
         </TableBodyRow>
-      </Table>
-    </div>
-    <div class="flex flex-col">
-      <Table noborder>
         <TableBodyRow>
           <TableBodyCell tdClass={cellStyleKey}>CSAF-Version</TableBodyCell>
           <TableBodyCell tdClass={cellStyleValue}>{csafVersion}</TableBodyCell>
