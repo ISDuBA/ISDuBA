@@ -98,3 +98,15 @@ sudo -u keycloak /opt/keycloak/bin/kc.sh start-dev
 ```
 
 (The isduba-keycloak-specific-config is configured in `client/.env`.)
+
+### Notice when using versions of Keycloak other than a default installation of Keycloak 25
+
+The setup scripts utilize Keycloak's health checks to determine whether Keycloak is running. The port to use may change depending on your Keycloak version or admin's configuration.
+The default for the current version of 25 is port 9000.
+This means it may be necessary to call docs/scripts/keycloak/configurekeycloak.sh with the -l/--live flag to manually set a port, e.g. for keycloak 24:
+
+```bash
+  ./configureKeycloak.sh --live 8080
+```
+
+Not setting the correct port without the -k/--keycloakRunning option will cause the script to call the wrong port infinitely.
