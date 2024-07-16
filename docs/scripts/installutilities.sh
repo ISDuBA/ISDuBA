@@ -14,7 +14,7 @@ set -e # to exit if a command in the script fails
 sudo apt install -y make bash curl sed tar
 
 # Install Java
-sudo apt install -y openjdk-17-jre-headless
+sudo apt install -y openjdk-21-jre-headless
 
 # Install or update Go
 
