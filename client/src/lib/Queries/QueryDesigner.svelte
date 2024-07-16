@@ -12,7 +12,7 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Radio, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
-  import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/query/query";
+  import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
@@ -136,13 +136,10 @@
 
   const toggleSearchType = () => {
     if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
-      currentSearch.columns = currentSearch.columns.filter((c) => {
-        if (c.name !== "ssvc" && c.name !== "state") return c;
-      });
+      currentSearch.columns = columnsFromNames(COLUMNS.DOCUMENT);
     }
     if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
-      const newCols = columnsFromNames(["ssvc", "state"]);
-      currentSearch.columns = [...currentSearch.columns, ...newCols];
+      currentSearch.columns = columnsFromNames(COLUMNS.ADVISORY);
     }
   };
 

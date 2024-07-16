@@ -39,7 +39,7 @@
     updateCommentError = "";
     const formData = new FormData();
     formData.append("message", updatedComment);
-    const response = await request(`/api/comments/${comment.comment_id}`, "PUT", formData);
+    const response = await request(`/api/comments/post/${comment.comment_id}`, "PUT", formData);
     if (response.ok) {
       comment.message = updatedComment;
       toggleEditing();
@@ -54,7 +54,7 @@
     return DOMPurify.sanitize(html);
   };
 
-  $: iscommentingAllowed = !(state === "archived" || state === "deleted");
+  $: iscommentingAllowed = state !== "deleted";
   $: if (comment.times) {
     let latest = comment.times.sort().reverse()[0];
     latest = latest.replace("T", " ").split(".")[0];
@@ -71,7 +71,7 @@
       <small class="ml-1 flex-grow"
         >{fullHistory ? `Comment (${comment.actor})` : `${comment.actor}`}
       </small>
-      <small class="text-xs text-slate-400">on version: {comment.documentVersion}</small>
+      <small class="ml-1 text-xs text-slate-400">on version: {comment.documentVersion}</small>
     </div>
     {#if !isEditing}
       <div class="mt-1 flex flex-row items-center">

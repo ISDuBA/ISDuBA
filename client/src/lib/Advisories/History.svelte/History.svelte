@@ -32,25 +32,6 @@
       });
 </script>
 
-<ButtonGroup class="mb-9 ml-auto h-7">
-  <Button
-    size="xs"
-    color="light"
-    class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-    on:click={() => {
-      fullHistory = false;
-    }}>Comments</Button
-  >
-  <Button
-    size="xs"
-    color="light"
-    class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-    on:click={() => {
-      fullHistory = true;
-    }}>History</Button
-  >
-</ButtonGroup>
-
 <div class="flex max-h-[34rem] flex-col overflow-auto p-1">
   <Table>
     <TableBody>
@@ -106,4 +87,24 @@
   {#if historyEntries.length === 0}
     <span class="ml-auto mr-auto text-gray-400">{fullHistory ? "No entries" : "No comments"}</span>
   {/if}
+  <div class="mt-6 flex flex-row">
+    <ButtonGroup class="ml-auto h-7">
+      <Button
+        size="xs"
+        color="light"
+        class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        on:click={() => {
+          fullHistory = false;
+        }}>Comments</Button
+      >
+      <Button
+        size="xs"
+        color="light"
+        class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        on:click={() => {
+          fullHistory = true;
+        }}>History</Button
+      >
+    </ButtonGroup>
+  </div>
 </div>

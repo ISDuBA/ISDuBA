@@ -10,45 +10,55 @@ package models
 
 import (
 	"encoding/json"
-	"regexp"
-	"strings"
+	"slices"
 	"testing"
+
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 )
 
 func TestAsConditions(t *testing.T) {
-	stripSpace := regexp.MustCompile(`\s+`)
 	for _, x := range []struct {
-		input    string
-		expected string
-	}{
-		{`{"*": [ "WHITE", "GREEN" ]}`, `$tlp WHITE = $tlp GREEN = or`},
-		{`{"A": [ "WHITE", "GREEN" ]}`, `$tlp WHITE = $tlp GREEN = or $publisher "A" = and`},
-		{
-			`{"A": [ "AMBER", "RED" ], "*": ["WHITE"]}`,
-			`$tlp AMBER = $tlp RED = or $publisher "A" = and $tlp WHITE = $publisher "A" != and or`,
-		},
-		{
-			`{"A": [ "AMBER", "RED" ], "*": ["WHITE", "GREEN"]}`,
-			`$tlp AMBER = $tlp RED = or $publisher "A" = and $tlp WHITE = $tlp GREEN = or $publisher "A" != and or`,
-		},
-		{
-			`{"A": [ "AMBER" ], "B": ["RED"], "*": ["WHITE"]}`,
-			`$tlp AMBER = $publisher "A" = and $tlp RED = $publisher "B" = and or $tlp WHITE = $publisher "A" != $publisher "B" != and and or`,
-		},
-		{
-			`{"*": ["WHITE"], "A": [ "AMBER" ], "B": ["RED"]}`,
-			`$tlp AMBER = $publisher "A" = and $tlp RED = $publisher "B" = and or $tlp WHITE = $publisher "A" != $publisher "B" != and and or`,
-		},
+		input        string
+		expected     string
+		replacements []any
+	}{{
+		`{"*": [ "WHITE", "GREEN" ]}`,
+		`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
+		[]any{"WHITE", "GREEN"},
+	}, {
+		`{"A": [ "WHITE", "GREEN" ]}`,
+		`(((((documents.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))`,
+		[]any{"A", "WHITE", "GREEN"},
+	}, {
+		`{"A": [ "AMBER", "RED" ], "*": ["WHITE"]}`,
+		`(((((((documents.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((tlp)=($4)))AND((NOT (((documents.publisher)=($1)))))))))`,
+		[]any{"A", "AMBER", "RED", "WHITE"},
+	}, {
+		`{"A": [ "AMBER", "RED" ], "*": ["WHITE", "GREEN"]}`,
+		`(((((((documents.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((((tlp)=($4)))OR(((tlp)=($5)))))AND((NOT (((documents.publisher)=($1)))))))))`,
+		[]any{"A", "AMBER", "RED", "WHITE", "GREEN"},
+	}, {
+		`{"A": [ "AMBER" ], "B": ["RED"], "*": ["WHITE"]}`,
+		`(((((((((documents.publisher)=($1)))AND(((tlp)=($2)))))OR(((((documents.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((documents.publisher)=($1)))OR(((documents.publisher)=($3)))))))))))`,
+		[]any{"A", "AMBER", "B", "RED", "WHITE"},
+	}, {
+		`{"*": ["WHITE"], "A": [ "AMBER" ], "B": ["RED"]}`,
+		`(((((((((documents.publisher)=($1)))AND(((tlp)=($2)))))OR(((((documents.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((documents.publisher)=($1)))OR(((documents.publisher)=($3)))))))))))`,
+		[]any{"A", "AMBER", "B", "RED", "WHITE"},
+	},
 	} {
 		var ptlps PublishersTLPs
 		if err := json.Unmarshal([]byte(x.input), &ptlps); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		have := ptlps.AsConditions()
-		have = strings.TrimSpace(have)
-		have = stripSpace.ReplaceAllString(have, " ")
-		if have != x.expected {
-			t.Errorf("%s: have %q expect: %q", x.input, have, x.expected)
+		expr := ptlps.AsExpr()
+		builder := query.SQLBuilder{}
+		have := builder.CreateWhere(expr)
+		if x.expected != have {
+			t.Errorf("input: %s have: %s, expected: %s", x.input, have, x.expected)
+		}
+		if !slices.Equal(x.replacements, builder.Replacements) {
+			t.Errorf("input: %s have: %q expected: %q", x.input, builder.Replacements, x.replacements)
 		}
 	}
 }

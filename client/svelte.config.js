@@ -17,6 +17,7 @@ const config = {
 
   kit: {
     adapter: adapter({
+      pages: "../web/",
       fallback: "index.html" // may differ from host to host
     })
   }

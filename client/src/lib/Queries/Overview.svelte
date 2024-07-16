@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { tablePadding, tdClass } from "$lib/table/defaults";
+  import { tablePadding, tdClass } from "$lib/Table/defaults";
   import {
     Button,
     Table,

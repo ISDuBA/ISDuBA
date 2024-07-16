@@ -16,49 +16,36 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
+
+// MinSearchLength enforces a minimal length of search phrases.
+const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 
 // deleteDocument is an end point for deleting a document.
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
-	idS := ctx.Param("id")
-	docID, err := strconv.ParseInt(idS, 10, 64)
-	// Error handling for id acquisition
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
 	// FieldEqInt is a shortcut mainly for building expressions
 	// accessing an integer column like 'id's.
 	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
-	expr := database.FieldEqInt("id", docID)
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
 
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
-		// And concats two expressions and-wise.
-		expr = expr.And(tlpExpr)
-	}
-
-	where, replacements, _ := expr.Where()
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	deleted := false
 
@@ -72,10 +59,11 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			defer tx.Rollback(rctx)
 
 			const deletePrefix = `DELETE FROM documents WHERE `
-			deleteSQL := deletePrefix + where
-			slog.Debug("delete document", "SQL", qndSQLReplace(deleteSQL, replacements))
+			deleteSQL := deletePrefix + builder.WhereClause
+			slog.Debug("delete document", "SQL",
+				qndSQLReplace(deleteSQL, builder.Replacements))
 
-			tags, err := tx.Exec(rctx, deleteSQL, replacements...)
+			tags, err := tx.Exec(rctx, deleteSQL, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("delete failed: %w", err)
 			}
@@ -114,12 +102,12 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	limited := http.MaxBytesReader(
@@ -142,7 +130,7 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		case errors.Is(err, models.ErrNotAllowed):
 			ctx.JSON(http.StatusForbidden, gin.H{"error": "wrong publisher/tlp"})
 		default:
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 		return
 	}
@@ -152,38 +140,24 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 // viewDocument is an end point to export a document.
 func (c *Controller) viewDocument(ctx *gin.Context) {
-	idS := ctx.Param("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
-	expr := database.FieldEqInt("id", id)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	fields := []string{"original"}
-	where, replacements, aliases := expr.Where()
-	sql := database.CreateQuerySQL(fields, aliases, where, "", -1, -1, false)
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
+	sql := builder.CreateQuery(fields, "", -1, -1)
 
 	var original []byte
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, replacements...).Scan(&original)
+			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -209,56 +183,50 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	// Use the advisories.
-	advisoryS := ctx.DefaultQuery("advisories", "false")
-	advisory, err := strconv.ParseBool(advisoryS)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	advisory, ok := parse(ctx, toBool, ctx.DefaultQuery("advisories", "false"))
+	if !ok {
 		return
 	}
 
-	parser := database.Parser{
-		Advisory:  advisory,
-		Languages: c.cfg.Database.TextSearch,
+	mode := query.DocumentMode
+	if advisory {
+		mode = query.AdvisoryMode
+	}
+
+	parser := query.Parser{
+		Mode:            mode,
+		MinSearchLength: MinSearchLength,
+		Me:              ctx.GetString("uid"),
 	}
 
 	// The query to filter the documents.
-	query := ctx.DefaultQuery("query", "true")
-	expr, err := parser.Parse(query)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
 		return
 	}
 
 	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		expr = expr.And(tlpExpr)
-	}
+	expr = c.andTLPExpr(ctx, expr)
 
 	// In advisory mode we only show the latest.
 	if advisory {
-		expr = expr.And(database.BoolField("latest"))
+		expr = expr.And(query.BoolField("latest"))
 	}
 
-	where, replacements, aliases := expr.Where()
+	builder := query.SQLBuilder{Mode: mode}
+	builder.CreateWhere(expr)
 
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
-	if err := database.CheckProjections(fields, aliases, advisory); err != nil {
+	if err := builder.CheckProjections(fields); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	orderFields := strings.Fields(
 		ctx.DefaultQuery("order", "publisher tracking_id -current_release_date -rev_history_length"))
-	order, err := database.CreateOrder(orderFields, aliases, advisory)
+	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -268,37 +236,36 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		calcCount     bool
 		count         int64
 		limit, offset int64 = -1, -1
-		results       []map[string]any
 	)
 
-	if count := ctx.Query("count"); count != "" {
-		calcCount = true
-	}
+	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
-		limit, err = strconv.ParseInt(lim, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if limit, ok = parse(ctx, toInt64, lim); !ok {
 			return
 		}
 	}
 
 	if ofs := ctx.Query("offset"); ofs != "" {
-		offset, err = strconv.ParseInt(ofs, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if offset, ok = parse(ctx, toInt64, ofs); !ok {
 			return
 		}
 	}
+
+	var results []map[string]any
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			if calcCount {
+				countSQL := builder.CreateCountSQL()
+				if slog.Default().Enabled(rctx, slog.LevelDebug) {
+					slog.Debug("count", "SQL", qndSQLReplace(countSQL, builder.Replacements))
+				}
 				if err := conn.QueryRow(
 					rctx,
-					database.CreateCountSQL(where, len(aliases) > 0, advisory),
-					replacements...,
+					countSQL,
+					builder.Replacements...,
 				).Scan(&count); err != nil {
 					return fmt.Errorf("cannot calculate count %w", err)
 				}
@@ -308,34 +275,20 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 				return nil
 			}
 
-			sql := database.CreateQuerySQL(
-				fields, aliases, where, order, limit, offset, advisory)
-
-			values := make([]any, len(fields))
-			ptrs := make([]any, len(fields))
-			for i := range ptrs {
-				ptrs[i] = &values[i]
-			}
+			sql := builder.CreateQuery(fields, order, limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
-				slog.Debug("documents", "SQL", qndSQLReplace(sql, replacements))
+				slog.Debug("documents", "SQL", qndSQLReplace(sql, builder.Replacements))
 			}
-			rows, err := conn.Query(rctx, sql, replacements...)
+			rows, err := conn.Query(rctx, sql, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			for rows.Next() {
-				if err := rows.Scan(ptrs...); err != nil {
-					return fmt.Errorf("scan failed: %w", err)
-				}
-				result := make(map[string]any, len(fields))
-				for i, p := range fields {
-					result[p] = values[i]
-				}
-				results = append(results, result)
+			if results, err = scanRows(rows, fields, builder.Aliases); err != nil {
+				return fmt.Errorf("loading data failed: %w", err)
 			}
-			return rows.Err()
+			return nil
 		},
 		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
 	); err != nil {
@@ -352,6 +305,41 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		h["documents"] = results
 	}
 	ctx.JSON(http.StatusOK, h)
+}
+
+// scanRows turns a result set into a slice of maps.
+func scanRows(
+	rows pgx.Rows,
+	fields []string,
+	aliases map[string]string,
+) ([]map[string]any, error) {
+	values := make([]any, len(fields))
+	ptrs := make([]any, len(fields))
+	for i := range ptrs {
+		ptrs[i] = &values[i]
+	}
+	var results []map[string]any
+	for rows.Next() {
+		if err := rows.Scan(ptrs...); err != nil {
+			return nil, fmt.Errorf("scanning row failed: %w", err)
+		}
+		result := make(map[string]any, len(fields))
+		for i, p := range fields {
+			var v = values[i]
+			// XXX: A little bit hacky to support client.
+			if _, ok := aliases[p]; ok {
+				if s, ok := v.(string); ok {
+					v = template.HTMLEscapeString(s)
+				}
+			}
+			result[p] = v
+		}
+		results = append(results, result)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("scanning failed: %w", err)
+	}
+	return results, nil
 }
 
 var (

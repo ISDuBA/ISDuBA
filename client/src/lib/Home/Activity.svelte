@@ -9,10 +9,16 @@
 -->
 
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
+
+  const dispatch = createEventDispatcher();
 </script>
 
-<div class="rounded-md border border-solid border-gray-300 px-4 py-2 shadow-md">
-  <div class="mb-2 flex flex-row justify-between text-xs">
+<button
+  on:click={() => dispatch("click")}
+  class="flex flex-col justify-between rounded-md border border-solid border-gray-300 px-4 py-2 shadow-md"
+>
+  <div class="mb-2 flex w-full flex-row justify-between text-xs">
     <div>
       <slot name="top-left"></slot>
     </div>
@@ -21,7 +27,7 @@
     </div>
   </div>
   <hr class="mb-2" />
-  <div class="mb-3">
+  <div class="mb-3 flex-grow text-left">
     <slot></slot>
   </div>
   <div class="flex flex-row justify-between text-xs">
@@ -32,4 +38,4 @@
       <slot name="bottom-right"></slot>
     </div>
   </div>
-</div>
+</button>

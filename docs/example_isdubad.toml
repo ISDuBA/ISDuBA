@@ -40,8 +40,12 @@
 # admin_password = "postgres"
 # migrate = false
 # terminate_after_migration = true
-# text_search = ["german", "english"]
 # max_query_time = "30s"
+
+# [temp_storage]
+# storage_duration = "30m"
+# files_total = 10
+# files_user = 2
 
 # [publishers_tlps]
 # '*' = ["WHITE"]

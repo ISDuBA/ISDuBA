@@ -38,7 +38,8 @@ const COLUMNS = {
     "tlp",
     "cvss_v2_score",
     "cvss_v3_score",
-    "four_cves"
+    "four_cves",
+    "comments"
   ]
 };
 
@@ -50,6 +51,40 @@ const ORDERDIRECTIONS = {
 const SEARCHTYPES = {
   ADVISORY: "advisories",
   DOCUMENT: "documents"
+};
+
+const SEARCHPAGECOLUMNS = {
+  ADVISORY: [
+    "critical",
+    "cvss_v3_score",
+    "cvss_v2_score",
+    "ssvc",
+    "state",
+    "four_cves",
+    "publisher",
+    "title",
+    "tracking_id",
+    "initial_release_date",
+    "current_release_date",
+    "version",
+    "comments",
+    "recent",
+    "versions"
+  ],
+  DOCUMENT: [
+    "critical",
+    "cvss_v3_score",
+    "cvss_v2_score",
+    "ssvc",
+    "four_cves",
+    "publisher",
+    "title",
+    "tracking_id",
+    "initial_release_date",
+    "current_release_date",
+    "version",
+    "comments"
+  ]
 };
 
 const generateQueryString = (currentSearch: any) => {
@@ -76,4 +111,4 @@ const generateQueryString = (currentSearch: any) => {
   return encodeURI(queryURL);
 };
 
-export { generateQueryString, COLUMNS, ORDERDIRECTIONS, SEARCHTYPES };
+export { generateQueryString, COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, SEARCHPAGECOLUMNS };

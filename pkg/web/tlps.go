@@ -11,6 +11,7 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
@@ -54,6 +55,14 @@ func (c *Controller) tlps(ctx *gin.Context) models.PublishersTLPs {
 		return c.cfg.PublishersTLPs
 	}
 	return tlps
+}
+
+// andTLPExpr adds a filter expressin to only fetch the permitted documents.
+func (c *Controller) andTLPExpr(ctx *gin.Context, expr *query.Expr) *query.Expr {
+	if tlps := c.tlps(ctx); len(tlps) > 0 {
+		return expr.And(tlps.AsExpr())
+	}
+	return expr
 }
 
 // hasAnyRole checks if at least one of the roles is fullfilled.

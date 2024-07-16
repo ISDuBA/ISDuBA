@@ -17,7 +17,7 @@
     "prepare": "cd .. && husky client/.husky"
   },
   "devDependencies": {
-    "@playwright/test": "^1.28.1",
+    "@playwright/test": "^1.45.0",
     "@sveltejs/adapter-auto": "^3.0.0",
     "@sveltejs/adapter-static": "^3.0.1",
     "@sveltejs/kit": "^2.0.0",
@@ -49,7 +49,6 @@
   "dependencies": {
     "@types/dompurify": "^3.0.5",
     "boxicons": "^2.1.4",
-    "diff2html": "^3.4.47",
     "dompurify": "^3.0.9",
     "jwt-decode": "^4.0.0",
     "marked": "^12.0.0",

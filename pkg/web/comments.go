@@ -13,49 +13,34 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
 func (c *Controller) createComment(ctx *gin.Context) {
-	docIDs := ctx.Param("document")
-	docID, err := strconv.ParseInt(docIDs, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	docID, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
 		return
 	}
 
-	expr := database.FieldEqInt("id", docID)
-
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		expr = expr.And(tlpExpr)
-	}
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	var (
-		where, replacements, _ = expr.Where()
-		exists                 bool
-		commentingAllowed      bool
-		forbidden              bool
-		commentator            = c.currentUser(ctx)
-		message, _             = ctx.GetPostForm("message")
-		now                    = time.Now().UTC()
-		commentID              *int64
+		exists            bool
+		commentingAllowed bool
+		forbidden         bool
+		commentator       = c.currentUser(ctx)
+		message, _        = ctx.GetPostForm("message")
+		now               = time.Now().UTC()
+		commentID         *int64
 	)
 
 	if err := c.db.Run(
@@ -70,14 +55,14 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			stateSQL := `SELECT state, docs.tracking_id, docs.publisher ` +
 				`FROM documents docs JOIN advisories ads ` +
 				`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
-				` WHERE ` + where
+				` WHERE ` + builder.WhereClause
 
 			var (
 				stateS     string
 				trackingID string
 				publisher  string
 			)
-			if err := tx.QueryRow(rctx, stateSQL, replacements...).Scan(
+			if err := tx.QueryRow(rctx, stateSQL, builder.Replacements...).Scan(
 				&stateS, &trackingID, &publisher,
 			); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
@@ -91,7 +76,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			state := models.Workflow(stateS)
 			commentingAllowed = state == models.ReadWorkflow ||
 				state == models.AssessingWorkflow ||
-				(state == models.ReviewWorkflow && c.hasAnyRole(ctx, models.Reviewer))
+				(state == models.ReviewWorkflow && c.hasAnyRole(ctx, models.Reviewer, models.Editor)) ||
+				(state == models.ArchivedWorkflow && c.hasAnyRole(ctx, models.Editor))
 			if !commentingAllowed {
 				return nil
 			}
@@ -169,10 +155,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 }
 
 func (c *Controller) updateComment(ctx *gin.Context) {
-	commentIDs := ctx.Param("id")
-	commentID, err := strconv.ParseInt(commentIDs, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	commentID, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 	var (
@@ -234,38 +218,58 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{})
 }
 
-func (c *Controller) viewComments(ctx *gin.Context) {
-	idS := ctx.Param("document")
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+type comment struct {
+	DocumentID  int64     `json:"document_id"`
+	ID          int64     `json:"id"`
+	Time        time.Time `json:"time"`
+	Commentator string    `json:"commentator"`
+	Message     string    `json:"message"`
+}
+
+func (c *Controller) viewComment(ctx *gin.Context) {
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
 
-	expr := database.FieldEqInt("id", id)
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("comments.id", id))
 
-	// Filter the allowed
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		conditions := tlps.AsConditions()
-		parser := database.Parser{}
-		tlpExpr, err := parser.Parse(conditions)
-		if err != nil {
-			slog.Warn("TLP filter failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
-		expr = expr.And(tlpExpr)
+	builder := query.SQLBuilder{}
+
+	fetchSQL := `SELECT documents_id, time, commentator, message ` +
+		`FROM comments JOIN documents ON comments.documents_id = documents.id ` +
+		`WHERE ` + builder.CreateWhere(expr)
+
+	post := comment{ID: id}
+	switch err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, fetchSQL, builder.Replacements...).Scan(
+				&post.DocumentID,
+				&post.Time,
+				&post.Commentator,
+				&post.Message)
+		}, 0); {
+	case errors.Is(err, pgx.ErrNoRows):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "comment post not found"})
+	case err != nil:
+		slog.Error("database error while fetching comment post", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	default:
+		ctx.JSON(http.StatusOK, &post)
+	}
+}
+
+func (c *Controller) viewComments(ctx *gin.Context) {
+	id, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
+		return
 	}
 
-	where, replacements, _ := expr.Where()
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
-	type comment struct {
-		DocumentID  int64     `json:"document_id"`
-		ID          int64     `json:"id"`
-		Time        time.Time `json:"time"`
-		Commentator string    `json:"commentator"`
-		Message     string    `json:"message"`
-	}
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
 
 	var comments []comment
 	var exists bool
@@ -273,9 +277,10 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` + where + `)`
+			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` +
+				builder.WhereClause + `)`
 			if err := conn.QueryRow(
-				rctx, existsSQL, replacements...).Scan(&exists); err != nil {
+				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
 			}
 			if !exists {

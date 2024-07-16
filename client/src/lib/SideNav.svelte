@@ -62,7 +62,13 @@
       <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
         <SidebarWrapper class="bg-primary-700 px-0">
           <div class="flex flex-row gap-4">
-            <Heading class="mb-6 ml-6 font-normal text-white">ISDuBA</Heading>
+            <img
+              alt="ISDuBA logo"
+              class="ml-2 flex-none"
+              style="height: 50px; width: 50px"
+              src="favicon.svg"
+            />
+            <Heading class="mb-6 font-normal text-white">ISDuBA</Heading>
           </div>
           <SidebarGroup class="space-y-0 bg-primary-700">
             <!-- Entries which are available after login should go here-->
@@ -71,14 +77,9 @@
                 <i class="bx bxs-dashboard"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem class="px-6 py-2.5" label="Advisories" href="/#/advisories">
+            <SidebarItem class="px-6 py-2.5" label="Search" href="/#/search">
               <svelte:fragment slot="icon">
                 <i class="bx bx-spreadsheet"></i>
-              </svelte:fragment>
-            </SidebarItem>
-            <SidebarItem class="px-6 py-2.5" label="Compare" href="/#/diff">
-              <svelte:fragment slot="icon">
-                <i class="bx bx-transfer"></i>
               </svelte:fragment>
             </SidebarItem>
             <SidebarItem

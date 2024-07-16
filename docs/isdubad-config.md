@@ -25,6 +25,7 @@ The configuration consists of the following sections:
 - [`[web]`](#section_web) Web interface
 - [`[database]`](#section_database) Database credentials
 - [`[publishers_tlps]`](#section_publishers_tlps) publishers/TLPs filters
+- [`[temp_storage]`](#section_temp_storage) temporary document storage
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
@@ -67,7 +68,6 @@ The configuration consists of the following sections:
 - `admin_password`: Password of the admin user. For migrations only. Defaults to `"postgres"`.
 - `migrate`: Should a migration be performed if needed? Better triggered by the **ISDUBA_DB_MIGRATE** env variable. Defaults to `false`.
 - `terminate_after_migration` When a migration is started the program terminates by default.
-- `text_search`: When a database is first setup which languages should to used for full-text searches. Defaults to `["german", "english"]`.
 - `max_query_duration`: How long a user provided database may last at max. Defaults to `"30s"`.
 
 ### <a name="section_publishers_tlps"></a> Section `[publishers_tlps]` publishers/TLP filters
@@ -81,6 +81,12 @@ Defaults to:
 An empty `publisher` means all not explicity stated. `publisher`s with non empty values have a higher priority.
 Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values
 `WHITE`, `GREEN`, `AMBER` and `RED`.
+
+### <a name="section_temp_storage"></a> Section `[temp_storage]` Temporary document storage
+- `files_total`: Max number of files hold in temp storage. Defaults to `10`.
+- `files_user`: Max number of files hold in temp storage per user. Defaults to `2`.
+- `storage_duration`: Ensured storage duration in temp storage. Defaults to `"30m"` minutes.
+
 
 ## <a name="env_vars"></a>Environment variables
 
@@ -110,5 +116,8 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_DB_ADMIN_USER` | `database admin_user` |
 | `ISDUBA_DB_ADMIN_PASSWORD` | `database admin_password` |
 | `ISDUBA_DB_MIGRATE` | `database migrate` |
-| `ISDUBA_DB_TERMINATE_AFTER_MIGRATION` | `database `terminate_after_migration` |
-| `ISDUBA_DB_MAX_QUERY_DURATION` | `database `max_query_duration` |
+| `ISDUBA_DB_TERMINATE_AFTER_MIGRATION` | `database terminate_after_migration` |
+| `ISDUBA_DB_MAX_QUERY_DURATION` | `database max_query_duration` |
+| `ISDUBA_TEMP_STORAGE_FILES_TOTAL` | `temp_storage files_total` |
+| `ISDUBA_TEMP_STORAGE_FILES_USER`  | `temp_storage files_user` |
+| `ISDUBA_TEMP_STORAGE_DURATION`    | `temp_storage storage_duration` |

@@ -21,6 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
 )
@@ -50,10 +51,12 @@ func run(cfg *config.Config) error {
 		return err
 	}
 	defer db.Close(ctx)
+	tmpStore := tempstore.NewStore(&cfg.TempStore)
+	go tmpStore.Run(ctx)
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db)
+	ctrl := web.NewController(cfg, db, tmpStore)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)

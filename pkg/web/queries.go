@@ -23,18 +23,18 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
 func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
-	query := models.StoredQuery{
+	sq := models.StoredQuery{
 		Definer: ctx.GetString("uid"),
 	}
 
 	// We need the name.
-	if query.Name = ctx.PostForm("name"); query.Name == "" {
+	if sq.Name = ctx.PostForm("name"); sq.Name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing 'name'",
 		})
@@ -43,62 +43,53 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
 	// Advisories flag
 	if advisories, ok := ctx.GetPostForm("advisories"); ok {
-		var err error
-		if query.Advisories, err = strconv.ParseBool(advisories); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "bad 'advisories' value: " + err.Error(),
-			})
+		if sq.Advisories, ok = parse(ctx, toBool, advisories); !ok {
 			return
 		}
 	}
 
 	// Global flag
 	if global, ok := ctx.GetPostForm("global"); ok {
-		var err error
-		if query.Global, err = strconv.ParseBool(global); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "bad 'global' value: " + err.Error(),
-			})
+		if sq.Global, ok = parse(ctx, toBool, global); !ok {
 			return
 		}
 	}
 	// Global is only for admins.
-	if query.Global && !c.hasAnyRole(ctx, models.Admin) {
+	if sq.Global && !c.hasAnyRole(ctx, models.Admin) {
 		ctx.JSON(http.StatusForbidden, gin.H{
 			"error": "global flag can only be used by admins",
 		})
 		return
 	}
 
-	parser := database.Parser{
-		Advisory:  query.Advisories,
-		Languages: c.cfg.Database.TextSearch,
+	mode := query.DocumentMode
+	if sq.Advisories {
+		mode = query.AdvisoryMode
 	}
+	parser := query.Parser{Mode: mode}
 
 	// The query to filter the documents.
-	query.Query = ctx.DefaultPostForm("query", "true")
-	expr, err := parser.Parse(query.Query)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "bad 'query' value: " + err.Error(),
-		})
+	sq.Query = ctx.DefaultPostForm("query", "true")
+	expr, ok := parse(ctx, parser.Parse, sq.Query)
+	if !ok {
 		return
 	}
 	// In advisory mode we only show the latest.
-	if query.Advisories {
-		expr = expr.And(database.BoolField("latest"))
+	if sq.Advisories {
+		expr = expr.And(query.BoolField("latest"))
 	}
 
 	// columns are not optional.
-	if query.Columns = strings.Fields(ctx.PostForm("columns")); len(query.Columns) == 0 {
+	if sq.Columns = strings.Fields(ctx.PostForm("columns")); len(sq.Columns) == 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing 'columns' value",
 		})
 		return
 	}
 
-	_, _, aliases := expr.Where()
-	if err := database.CheckProjections(query.Columns, aliases, query.Advisories); err != nil {
+	builder := query.SQLBuilder{Mode: mode}
+	builder.CreateWhere(expr)
+	if err := builder.CheckProjections(sq.Columns); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "bad 'columns' value: " + err.Error(),
 		})
@@ -108,18 +99,18 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	// Check if we have orders given.
 	if orders, ok := ctx.GetPostForm("order"); ok {
 		os := strings.Fields(orders)
-		if _, err := database.CreateOrder(os, aliases, query.Advisories); err != nil {
+		if _, err := builder.CreateOrder(os); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"error": "bad 'order' value: " + err.Error(),
 			})
 			return
 		}
-		query.Orders = &os
+		sq.Orders = &os
 	}
 
 	// Check if we have a description given.
 	if description, ok := ctx.GetPostForm("description"); ok {
-		query.Description = &description
+		sq.Description = &description
 	}
 
 	const insertSQL = `INSERT INTO stored_queries (` +
@@ -140,14 +131,14 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			return conn.QueryRow(rctx, insertSQL,
-				query.Advisories,
-				query.Definer,
-				query.Global,
-				query.Name,
-				query.Description,
-				query.Query,
-				query.Columns,
-				query.Orders,
+				sq.Advisories,
+				sq.Definer,
+				sq.Global,
+				sq.Name,
+				sq.Description,
+				sq.Query,
+				sq.Columns,
+				sq.Orders,
 			).Scan(&queryID, &queryNum)
 		}, 0,
 	); err != nil {
@@ -223,9 +214,8 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 
-	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
 		return
 	}
 
@@ -267,9 +257,8 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 
 func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 
-	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
 		return
 	}
 
@@ -320,9 +309,8 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 
-	queryID, err := strconv.ParseInt(ctx.Param("query"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
 		return
 	}
 
@@ -357,7 +345,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 
 			admin := c.hasAnyRole(ctx, models.Admin)
 
-			var query models.StoredQuery
+			var sq models.StoredQuery
 
 			var selectSQL string
 			if admin {
@@ -367,14 +355,14 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			}
 			definer := ctx.GetString("uid")
 			if err := tx.QueryRow(rctx, selectSQL, queryID, definer).Scan(
-				&query.Advisories,
-				&query.Global,
-				&query.Name,
-				&query.Description,
-				&query.Query,
-				&query.Num,
-				&query.Columns,
-				&query.Orders,
+				&sq.Advisories,
+				&sq.Global,
+				&sq.Name,
+				&sq.Description,
+				&sq.Query,
+				&sq.Num,
+				&sq.Columns,
+				&sq.Orders,
 			); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
 					notFound = true
@@ -400,42 +388,45 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					bad = "bad 'advisories' value: " + err.Error()
 					return nil
 				}
-				add(advisories != query.Advisories, "advisories", advisories)
+				add(advisories != sq.Advisories, "advisories", advisories)
 				// Write back as the advisory mode changes the parser behavior.
-				query.Advisories = advisories
+				sq.Advisories = advisories
 			}
 
-			parser := database.Parser{
-				Advisory:  query.Advisories,
-				Languages: c.cfg.Database.TextSearch,
+			mode := query.DocumentMode
+			if sq.Advisories {
+				mode = query.AdvisoryMode
 			}
+			parser := query.Parser{Mode: mode}
 
 			// Check query
-			var expr *database.Expr
+			var expr *query.Expr
 			if qs, ok := ctx.GetPostForm("query"); ok {
 				expr, err = parser.Parse(qs)
-				add(qs != query.Query, "query", qs)
+				add(qs != sq.Query, "query", qs)
 			} else {
 				// We need to re-check if the database value is still valid.
-				expr, err = parser.Parse(query.Query)
+				expr, err = parser.Parse(sq.Query)
 			}
 			if err != nil {
 				bad = "bad 'query' value: " + err.Error()
 				return nil
 			}
-			if query.Advisories {
-				expr = expr.And(database.BoolField("latest"))
+			if sq.Advisories {
+				expr = expr.And(query.BoolField("latest"))
 			}
-			_, _, aliases := expr.Where()
+
+			builder := query.SQLBuilder{Mode: mode}
+			builder.CreateWhere(expr)
 
 			// Check columns
 			if cols, ok := ctx.GetPostForm("columns"); ok {
 				columns := strings.Fields(cols)
-				if err := database.CheckProjections(columns, aliases, query.Advisories); err != nil {
+				if err := builder.CheckProjections(columns); err != nil {
 					bad = "bad 'columns' value: " + err.Error()
 					return nil
 				}
-				add(!slices.Equal(columns, query.Columns), "columns", columns)
+				add(!slices.Equal(columns, sq.Columns), "columns", columns)
 			}
 
 			// Check global
@@ -450,7 +441,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					bad = "none admins are not allowed to set global"
 					return nil
 				}
-				add(global != query.Global, "global", global)
+				add(global != sq.Global, "global", global)
 			}
 
 			// Check num
@@ -460,7 +451,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					bad = "bad 'num' value: " + err.Error()
 					return nil
 				}
-				add(num != query.Num, "num", num)
+				add(num != sq.Num, "num", num)
 			}
 
 			// Check name
@@ -469,16 +460,16 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					bad = "empty name is not allowed"
 					return nil
 				}
-				add(nm != query.Name, "name", nm)
+				add(nm != sq.Name, "name", nm)
 			}
 
 			// Check description
 			if desc, ok := ctx.GetPostForm("description"); ok {
 				if desc == "" {
 					var s *string
-					add(query.Description != nil, "description", s)
+					add(sq.Description != nil, "description", s)
 				} else {
-					add(query.Description == nil || *query.Description != desc, "description", &desc)
+					add(sq.Description == nil || *sq.Description != desc, "description", &desc)
 				}
 			}
 
@@ -487,13 +478,13 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				orders := strings.Fields(os)
 				if len(orders) == 0 {
 					var s *[]string
-					add(query.Orders != nil, "orders", s)
+					add(sq.Orders != nil, "orders", s)
 				} else {
-					if _, err := database.CreateOrder(orders, aliases, query.Advisories); err != nil {
+					if _, err := builder.CreateOrder(orders); err != nil {
 						bad = "invalid 'orders' value: " + err.Error()
 						return nil
 					}
-					add(query.Orders == nil || !slices.Equal(*query.Orders, orders), "orders", orders)
+					add(sq.Orders == nil || !slices.Equal(*sq.Orders, orders), "orders", orders)
 				}
 			}
 

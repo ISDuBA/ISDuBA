@@ -70,6 +70,12 @@ var defaultPublishersTLPs = models.PublishersTLPs{
 	"*": []models.TLP{models.TLPWhite},
 }
 
+const (
+	defaultTempStorageFilesTotal = 10
+	defaultTempStorageFilesUser  = 2
+	defaultTempStorageDuration   = 30 * time.Minute
+)
+
 // HumanSize de-serializes sizes from integer strings
 // with suffix "k" (1000), "K" (1024), "m", "M", "g", "G".
 // With no suffix given bytes are assumed.
@@ -118,11 +124,15 @@ type Database struct {
 	AdminPassword           string        `toml:"admin_password"`
 	Migrate                 bool          `toml:"migrate"`
 	TerminateAfterMigration bool          `toml:"terminate_after_migration"`
-	TextSearch              []string      `toml:"text_search"`
-	MaxQueryDuration        time.Duration `toml:"max_query_time"`
+	MaxQueryDuration        time.Duration `toml:"max_query_duration"`
 }
 
-var defaultTextSearch = []string{"german", "english"}
+// TempStore are the config options for the temporary document storage.
+type TempStore struct {
+	FilesTotal      int           `toml:"files_total"`
+	FilesUser       int           `toml:"files_user"`
+	StorageDuration time.Duration `toml:"storage_duration"`
+}
 
 // Config are all the configuration options.
 type Config struct {
@@ -132,6 +142,7 @@ type Config struct {
 	Web            Web                   `toml:"web"`
 	Database       Database              `toml:"database"`
 	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
+	TempStore      TempStore             `toml:"temp_storage"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -223,10 +234,14 @@ func Load(file string) (*Config, error) {
 			AdminPassword:           defaultDatabaseAdminPassword,
 			Migrate:                 defaultDatabaseMigrate,
 			TerminateAfterMigration: defaultDatabaseTerminateAfterMigration,
-			TextSearch:              defaultTextSearch,
 			MaxQueryDuration:        defaultMaxQueryDuration,
 		},
 		PublishersTLPs: defaultPublishersTLPs,
+		TempStore: TempStore{
+			FilesTotal:      defaultTempStorageFilesTotal,
+			FilesUser:       defaultTempStorageFilesUser,
+			StorageDuration: defaultTempStorageDuration,
+		},
 	}
 	if file != "" {
 		md, err := toml.DecodeFile(file, cfg)
@@ -280,6 +295,9 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_DB_MIGRATE", storeBool(&cfg.Database.Migrate)},
 		envStore{"ISDUBA_DB_TERMINATE_AFTER_MIGRATION", storeBool(&cfg.Database.TerminateAfterMigration)},
 		envStore{"ISDUBA_DB_MAX_QUERY_DURATION", storeDuration(&cfg.Database.MaxQueryDuration)},
+		envStore{"ISDUBA_TEMP_STORAGE_FILES_TOTAL", storeInt(&cfg.TempStore.FilesTotal)},
+		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
+		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
 	)
 }
 

@@ -37,6 +37,11 @@ type AppStore = {
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
     errors: ErrorMessage[];
+    diff: {
+      isDiffBoxOpen: boolean;
+      docA_ID: string | undefined;
+      docB_ID: string | undefined;
+    };
   };
   webview: {
     doc: DocModel | null;
@@ -76,6 +81,11 @@ const generateInitialState = (): AppStore => {
       userProfile: {
         firstName: "",
         lastName: ""
+      },
+      diff: {
+        isDiffBoxOpen: false,
+        docA_ID: undefined,
+        docB_ID: undefined
       },
       sessionExpired: false,
       sessionExpiredMessage: null,
@@ -314,6 +324,30 @@ function createStore() {
         const { firstName, lastName } = userProfile;
         settings.app.userProfile.firstName = firstName;
         settings.app.userProfile.lastName = lastName;
+        return settings;
+      });
+    },
+    toggleDiffBox: () => {
+      update((settings) => {
+        settings.app.diff.isDiffBoxOpen = !settings.app.diff.isDiffBoxOpen;
+        return settings;
+      });
+    },
+    openDiffBox: () => {
+      update((settings) => {
+        settings.app.diff.isDiffBoxOpen = true;
+        return settings;
+      });
+    },
+    setDiffDocA_ID: (id: string | number | undefined) => {
+      update((settings) => {
+        settings.app.diff.docA_ID = id?.toString();
+        return settings;
+      });
+    },
+    setDiffDocB_ID: (id: string | number | undefined) => {
+      update((settings) => {
+        settings.app.diff.docB_ID = id?.toString();
         return settings;
       });
     },

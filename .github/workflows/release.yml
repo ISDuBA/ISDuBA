@@ -15,10 +15,15 @@ jobs:
   release:
     name: Release application
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
     env:
       PUBLIC_KEYCLOAK_URL: "http://localhost:8080"
       PUBLIC_KEYCLOAK_REALM: "isduba"
       PUBLIC_KEYCLOAK_CLIENTID: "auth"
+      PUBLIC_APPLICATION_URI: "http://localhost:5173/"
       SYFT_GOLANG_SEARCH_LOCAL_MOD_CACHE_LICENSES: true
       SYFT_GOLANG_SEARCH_REMOTE_LICENSES: true
 

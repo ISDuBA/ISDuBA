@@ -8,8 +8,8 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
-  import { allowedToChangeWorkflow } from "$lib/permissions";
+  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR, REVIEWER } from "$lib/workflow";
+  import { allowedToChangeWorkflow, isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { Badge } from "flowbite-svelte";
 
@@ -42,20 +42,58 @@
       >{READ}</Badge
     >
   </a>
-  <a
-    href={"javascript:void(0);"}
-    class="inline-flex"
-    on:click={() => updateStateIfAllowed(ASSESSING)}
-  >
-    <Badge title="Mark as assesing" class="w-fit" color={getBadgeColor(ASSESSING, advisoryState)}
-      >{ASSESSING}</Badge
+  {#if isRoleIncluded(appStore.getRoles(), [EDITOR, REVIEWER]) && advisoryState === REVIEW}
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => {
+        document.getElementById("comment-textarea")?.focus();
+      }}
     >
-  </a>
-  <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(REVIEW)}>
-    <Badge title="Release for review" class="w-fit" color={getBadgeColor(REVIEW, advisoryState)}
-      >{REVIEW}</Badge
+      <Badge title="Mark as assesing" class="w-fit" color="dark">{ASSESSING}</Badge>
+    </a>
+  {:else if isRoleIncluded(appStore.getRoles(), [EDITOR]) && advisoryState === ARCHIVED}
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => {
+        document.getElementById("comment-textarea")?.focus();
+      }}
     >
-  </a>
+      <Badge title="Mark as assesing" class="w-fit" color="dark">{ASSESSING}</Badge>
+    </a>
+  {:else}
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => updateStateIfAllowed(ASSESSING)}
+    >
+      <Badge title="Mark as assesing" class="w-fit" color={getBadgeColor(ASSESSING, advisoryState)}
+        >{ASSESSING}</Badge
+      >
+    </a>
+  {/if}
+  {#if advisoryState === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => {
+        document.getElementById("comment-textarea")?.focus();
+      }}
+    >
+      <Badge title="Release for review" class="w-fit" color="dark">{REVIEW}</Badge>
+    </a>
+  {:else}
+    <a
+      href={"javascript:void(0);"}
+      class="inline-flex"
+      on:click={() => updateStateIfAllowed(REVIEW)}
+    >
+      <Badge title="Release for review" class="w-fit" color={getBadgeColor(REVIEW, advisoryState)}
+        >{REVIEW}</Badge
+      >
+    </a>
+  {/if}
   <a
     href={"javascript:void(0);"}
     class="inline-flex"

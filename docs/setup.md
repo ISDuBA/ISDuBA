@@ -50,20 +50,14 @@ and stored in `docs/scripts/password.txt`.
 
 
 ### Import advisories
-Import the previously downloaded advisories into the database via the bulk importer. There are two options:
-- `host`: database host
+Import the previously downloaded advisories into the database via the bulk importer:
 
-- `/path/to/advisories/to/import`: location to download your advisories from
+An example for a local PostgreSQL:
+- `~/downloaded_advisories`: location to download your advisories from, replace with your actual location
 
-An example:
 ```sh
-./cmd/bulkimport/bulkimport -database isduba -user isduba -password isduba -host localhost ~/downloaded_advisories
+./cmd/bulkimport/bulkimport ~/downloaded_advisories
 ```
-
-where `host` ist set to `localhost` assuming PostgreSQL
-running locally and the path where the downloaded advisories
-are is set to `~/downloaded_advisories`.
-
 
 ### (Optional) Check whether `isdubad` is correctly installed
 The following will define a `TOKEN` variable which holds the information
