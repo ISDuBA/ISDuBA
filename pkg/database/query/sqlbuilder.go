@@ -207,12 +207,17 @@ func (sb *SQLBuilder) nowWhere(_ *Expr, b *strings.Builder) {
 	b.WriteString("current_timestamp")
 }
 
+const (
+	ilikePrefix = `'%'||regexp_replace(regexp_replace(`
+	ilikeSuffix = `,'(%|_)','\\\1','g'),'(\s+)','%','g')||'%'`
+)
+
 func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
 	b.WriteByte('(')
 	sb.whereRecurse(e.children[0], b)
-	b.WriteString(" ILIKE ")
+	b.WriteString(` ILIKE ` + ilikePrefix)
 	sb.whereRecurse(e.children[1], b)
-	b.WriteByte(')')
+	b.WriteString(ilikeSuffix + `)`)
 }
 
 func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
@@ -224,9 +229,9 @@ func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 		`SELECT * FROM documents_texts dts JOIN product_ids ` +
 		`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
 		`WHERE dts.documents_id = documents.id AND ` +
-		`unique_texts.txt ILIKE `)
+		`unique_texts.txt ILIKE ` + ilikePrefix)
 	sb.whereRecurse(e.children[0], b)
-	b.WriteByte(')')
+	b.WriteString(ilikeSuffix + `)`)
 	/*
 		b.WriteString(`EXISTS (` +
 			`SELECT jsonb_path_query(` +
