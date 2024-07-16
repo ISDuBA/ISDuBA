@@ -11,7 +11,6 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
-  import SectionHeader from "$lib/SectionHeader.svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
@@ -99,10 +98,6 @@
   <title>Search</title>
 </svelte:head>
 
-<div class="flex flex-row">
-  <SectionHeader title="Search"></SectionHeader>
-</div>
-<hr class="mb-6" />
 <Queries
   on:querySelected={async (e) => {
     let { detail } = e;
