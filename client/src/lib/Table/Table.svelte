@@ -365,7 +365,7 @@
       </div>
     {/if}
   </div>
-  <div class:invisible={!loading} class:mb-4={true}>
+  <div class:invisible={!loading} class:mb-4={true} class={loading ? "loadingFadeIn" : ""}>
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
