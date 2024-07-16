@@ -12,6 +12,7 @@ set -e # to exit if a command in the script fails
 
 keycloak_running=false
 file="./../password.txt"
+live="9000"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -25,6 +26,15 @@ while [[ $# -gt 0 ]]; do
         shift
       else
         echo "Error: Options -f and --file require an argument."
+        exit 1
+      fi
+      ;;
+    -l|--live)
+      if [[ -n "$2" ]]; then
+        live="$2"
+        shift
+      else
+        echo "Error: Options -l and --live require an argument."
         exit 1
       fi
       ;;
@@ -83,14 +93,14 @@ echo "Succesfully adjusted keycloaks configuration."
 if $keycloak_running; then
   echo "keycloak is assumed to be running"
 else
-  if curl --silent --head -fsS http://localhost:8080/health/ready; then
+  if curl --silent --head -fsS http://localhost:$live/health/ready; then
     echo "keycloak is already running..."
   else
     sudo --preserve-env=KEYCLOAK_ADMIN,KEYCLOAK_ADMIN_PASSWORD /opt/keycloak/bin/kc.sh start-dev --health-enabled=true &
 
     # wait for keycloak to start
     echo "Waiting for keycloak to start..."
-    until curl --silent --head -fsS http://localhost:8080/health/ready
+    until curl --silent --head -fsS http://localhost:$live/health/ready
     do
       sleep 1
     done
