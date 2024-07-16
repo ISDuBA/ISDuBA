@@ -100,7 +100,7 @@
     if (activitiesResponse.ok) {
       const activities = await activitiesResponse.content;
       activityCount = activities.count;
-      return activities.events;
+      return activities.events || [];
     } else if (activitiesResponse.error) {
       loadActivityError = `Could not load Activities. ${getErrorMessage(activitiesResponse.error)}. ${getErrorMessage(activitiesResponse.content)}`;
       return [];
@@ -111,7 +111,7 @@
     const mentionsResponse = await request(mentionedQuery, "GET");
     if (mentionsResponse.ok) {
       const mentions = await mentionsResponse.content;
-      return mentions.events;
+      return mentions.events || [];
     } else if (mentionsResponse.error) {
       loadMentionsError = `Could not load Activities. ${getErrorMessage(mentionsResponse.error)}. ${getErrorMessage(mentionsResponse.content)}`;
       return [];
@@ -201,10 +201,10 @@
     }
     documentIDs = [...new Set(documentIDs)];
     commentIDs = [...new Set(commentIDs)];
-    if (documentIDs) {
+    if (documentIDs.length > 0) {
       documents = await fetchDocuments(documentIDs);
     }
-    if (commentIDs) {
+    if (commentIDs.length > 0) {
       comments = await fetchComments(commentIDs);
     }
     const documentsById = documents.reduce((o: any, n: any) => {
@@ -215,7 +215,6 @@
       o[n.id] = n.message;
       return o;
     }, {});
-    console.log(commentsByID);
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
