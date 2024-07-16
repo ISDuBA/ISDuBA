@@ -195,7 +195,7 @@
     if (mentions.length > 0) {
       idsMentions = pluck(mentions, ["id", "comments_id"]);
       const mentionDocumentIDs = getDocumentIDs(idsMentions);
-      documentIDs.concat(mentionDocumentIDs);
+      documentIDs = documentIDs.concat(mentionDocumentIDs);
       const mentionCommentIDs = getCommentIDs(idsMentions);
       commentIDs = commentIDs.concat(mentionCommentIDs);
     }
