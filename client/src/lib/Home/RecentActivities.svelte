@@ -22,14 +22,7 @@
   const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
   const documentQueryBase = `/api/documents?columns=id title publisher tracking_id`;
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
-  let activities = { count: 0, events: [] };
-  let mentions = { count: 0, events: [] };
-  let documentsById: any;
-  let documentIDs: any;
-  let commentIDs: any;
-  let comments: any;
-  let recentActivities: any;
-  let recentMentions: any;
+  let activityCount = 0;
   let resultingActivities: any;
   let loadActivityError = "";
   let loadMentionsError = "";
@@ -48,108 +41,6 @@
     } else {
       return `${Math.floor(passedTime / 86400000)} days ago`;
     }
-  };
-
-  const fetchActivities = async () => {
-    const activitiesResponse = await request(recentActivityQuery, "GET");
-    if (activitiesResponse.ok) {
-      activities = await activitiesResponse.content;
-    } else if (activitiesResponse.error) {
-      loadActivityError = `Could not load Activities. ${getErrorMessage(activitiesResponse.error)}. ${getErrorMessage(activitiesResponse.content)}`;
-    }
-  };
-
-  const fetchMentions = async () => {
-    const mentionsResponse = await request(mentionedQuery, "GET");
-    if (mentionsResponse.ok) {
-      mentions = await mentionsResponse.content;
-    } else if (mentionsResponse.error) {
-      loadMentionsError = `Could not load Activities. ${getErrorMessage(mentionsResponse.error)}. ${getErrorMessage(mentionsResponse.content)}`;
-    }
-  };
-
-  const fetchDocuments = async () => {
-    const query = documentIDs.map((id: number) => {
-      return `$id ${id} integer = `;
-    });
-    const ors = documentIDs.map(() => {
-      return "or ";
-    });
-    ors.shift(); // we need one less or than ids
-    const documentQuery = `${documentQueryBase}&query=${query.join("")}${ors.join("")}`;
-    const result = await request(documentQuery, "GET");
-    if (result.ok) {
-      const content = result.content;
-      documentsById = content.documents.reduce((o: any, n: any) => {
-        o[n.id] = n;
-        return o;
-      }, {});
-    } else if (result.error) {
-      loadDocumentsError = `Could not load Documents. ${getErrorMessage(result.error)}. ${getErrorMessage(result.content)}`;
-    }
-  };
-
-  const fetchComments = async () => {
-    if (commentIDs.length > 0) {
-      const promises = await Promise.allSettled(
-        commentIDs.map(async (v: any) => {
-          return request(`/api/comments/post/${v}`, "GET");
-        })
-      );
-      const result = promises
-        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
-        .map((p: any) => {
-          return p.value;
-        });
-      if (promises.length != result.length) {
-        loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
-      }
-      comments = result.map((r) => {
-        return r.content;
-      });
-    } else {
-      loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
-      return [];
-    }
-  };
-
-  const fetchData = async () => {
-    await fetchActivities();
-    await fetchMentions();
-    const idsActivities =
-      activities.count > 0 ? pluck(activities.events, ["id", "comments_id"]) : [];
-    const idsMentions = mentions.count > 0 ? pluck(mentions.events, ["id", "comments_id"]) : [];
-    documentIDs = [
-      ...new Set(
-        idsActivities
-          .map((a: any) => {
-            return a[0];
-          })
-          .concat(
-            idsMentions.map((a: any) => {
-              return a[0];
-            })
-          )
-      )
-    ];
-    commentIDs = [
-      ...new Set(
-        idsActivities
-          .map((a: any) => {
-            return a[1];
-          })
-          .concat(
-            idsMentions.map((a: any) => {
-              return a[1];
-            })
-          )
-          .filter((id: any) => {
-            return id !== null;
-          })
-      )
-    ];
-    if (activities.count > 0) await fetchDocuments();
-    if (mentions.count > 0) await fetchComments();
   };
 
   const aggregateNewest = (events: any) => {
@@ -204,30 +95,146 @@
     );
   };
 
-  const transformDataToActivities = () => {
-    const commentsByID = comments
-      ? comments.reduce((o: any, n: any) => {
-          o[n.id] = n.message;
-          return o;
-        }, {})
-      : {};
-    const activitiesAggregated = activities.count > 0 ? aggregateNewest(activities.events) : {};
-    recentActivities = Object.values(activitiesAggregated);
+  const fetchActivities = async () => {
+    const activitiesResponse = await request(recentActivityQuery, "GET");
+    if (activitiesResponse.ok) {
+      const activities = await activitiesResponse.content;
+      activityCount = activities.count;
+      return activities.events;
+    } else if (activitiesResponse.error) {
+      loadActivityError = `Could not load Activities. ${getErrorMessage(activitiesResponse.error)}. ${getErrorMessage(activitiesResponse.content)}`;
+      return [];
+    }
+  };
+
+  const fetchMentions = async () => {
+    const mentionsResponse = await request(mentionedQuery, "GET");
+    if (mentionsResponse.ok) {
+      const mentions = await mentionsResponse.content;
+      return mentions.events;
+    } else if (mentionsResponse.error) {
+      loadMentionsError = `Could not load Activities. ${getErrorMessage(mentionsResponse.error)}. ${getErrorMessage(mentionsResponse.content)}`;
+      return [];
+    }
+  };
+
+  const getDocumentIDs = (arr: any) => {
+    return arr.map((a: any) => {
+      return a[0];
+    });
+  };
+
+  const getCommentIDs = (arr: any) => {
+    return arr
+      .map((a: any) => {
+        return a[1];
+      })
+      .filter((id: any) => {
+        return id !== null;
+      });
+  };
+
+  const fetchDocuments = async (documentIDs: number[]) => {
+    const query = documentIDs.map((id: number) => {
+      return `$id ${id} integer = `;
+    });
+    const ors = documentIDs.map(() => {
+      return "or ";
+    });
+    ors.shift(); // we need one less or than ids
+    const documentQuery = `${documentQueryBase}&query=${query.join("")}${ors.join("")}`;
+    const result = await request(documentQuery, "GET");
+    if (result.ok) {
+      const content = result.content;
+      return content.documents;
+    } else if (result.error) {
+      loadDocumentsError = `Could not load Documents. ${getErrorMessage(result.error)}. ${getErrorMessage(result.content)}`;
+      return [];
+    }
+  };
+
+  const fetchComments = async (commentIDs: number[]) => {
+    if (commentIDs.length > 0) {
+      const promises = await Promise.allSettled(
+        commentIDs.map(async (v: any) => {
+          return request(`/api/comments/post/${v}`, "GET");
+        })
+      );
+      const result = promises
+        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
+        .map((p: any) => {
+          return p.value;
+        });
+      if (promises.length != result.length) {
+        loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
+        return [];
+      }
+      return result.map((r) => {
+        return r.content;
+      });
+    } else {
+      loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
+      return [];
+    }
+  };
+
+  const transformDataToActivities = async () => {
+    const activities = await fetchActivities();
+    const mentions = await fetchMentions();
+    let idsActivities = [];
+    let idsMentions = [];
+    let documentIDs: any[] = [];
+    let commentIDs: any[] = [];
+    let documents = [];
+    let comments = [];
+    if (activities.length > 0) {
+      idsActivities = pluck(activities, ["id", "comments_id"]);
+      documentIDs = getDocumentIDs(idsActivities);
+      commentIDs = getCommentIDs(idsActivities);
+    }
+    if (mentions.length > 0) {
+      idsMentions = pluck(mentions, ["id", "comments_id"]);
+      const mentionDocumentIDs = getDocumentIDs(idsMentions);
+      documentIDs.concat(mentionDocumentIDs);
+      const mentionCommentIDs = getCommentIDs(idsMentions);
+      commentIDs.concat(mentionCommentIDs);
+    }
+    documentIDs = [...new Set(documentIDs)];
+    commentIDs = [...new Set(commentIDs)];
+    if (documentIDs) {
+      documents = await fetchDocuments(documentIDs);
+    }
+    if (commentIDs) {
+      comments = await fetchComments(commentIDs);
+    }
+    const documentsById = documents.reduce((o: any, n: any) => {
+      o[n.id] = n;
+      return o;
+    }, {});
+    const commentsByID = comments.reduce((o: any, n: any) => {
+      o[n.id] = n.message;
+      return o;
+    }, {});
+    const activitiesAggregated = aggregateNewest(activities);
+    let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
       a.mention = false;
-      a.documentTitle = documentsById[a.id]["title"];
-      a.documentURL = `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`;
+      a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
+      a.documentURL = documentsById[a.id]
+        ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
+        : "";
       if (a.event === "change_comment" || a.event === "add_comment")
         a.message = commentsByID[a.comments_id];
-
       return a;
     });
-    const mentionsAggregated = mentions.count > 0 ? aggregateNewest(mentions.events) : {};
-    recentMentions = Object.values(mentionsAggregated);
+    const mentionsAggregated = aggregateNewest(mentions);
+    let recentMentions = Object.values(mentionsAggregated);
     recentMentions = recentMentions.map((a: any) => {
       a.mention = true;
-      a.documentTitle = documentsById[a.id]["title"];
-      a.documentURL = `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`;
+      a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
+      a.documentURL = documentsById[a.id]
+        ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
+        : "";
       if (a.event === "change_comment" || a.event === "add_comment")
         a.message = commentsByID[a.comments_id];
 
@@ -241,7 +248,6 @@
   };
 
   onMount(async () => {
-    await fetchData();
     transformDataToActivities();
   });
 </script>
@@ -303,7 +309,7 @@
           No recent activities on advisories you are involved in.
         {/if}
       {/if}
-      {#if activities.count > 10}<div class="">…There are more activities</div>{/if}
+      {#if activityCount > 10}<div class="">…There are more activities</div>{/if}
     </div>
     <ErrorMessage message={loadActivityError}></ErrorMessage>
     <ErrorMessage message={loadMentionsError}></ErrorMessage>
