@@ -18,9 +18,10 @@
   import Activity from "./Activity.svelte";
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
+  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   const recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me involved`;
   const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
-  const documentQueryBase = `/api/documents?columns=id title publisher tracking_id`;
+  const documentQueryBase = `/api/documents?columns=id title publisher tracking_id ssvc`;
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
   let activityCount = 0;
   let resultingActivities: any;
@@ -225,8 +226,12 @@
         : "";
       if (a.event === "change_comment" || a.event === "add_comment")
         a.message = commentsByID[a.comments_id];
+      if (a.event === "add_ssvc" || a.event === "change_ssvc" || a.event === "change_sscv")
+        a.ssvc = documentsById[a.id] ? documentsById[a.id]["ssvc"] : "";
+      if (a.ssvc) a.ssvc = convertVectorToLabel(a.ssvc).label;
       return a;
     });
+
     const mentionsAggregated = aggregateNewest(mentions);
     let recentMentions = Object.values(mentionsAggregated);
     recentMentions = recentMentions.map((a: any) => {
@@ -269,13 +274,13 @@
                 {#if activity.mention}
                   {activity.actor} mentioned you
                 {:else if activity.event === "add_comment"}
-                  {activity.actor} commented on {activity.documentTitle}
+                  {activity.actor} added a comment
                 {:else if activity.event === "add_ssvc"}
-                  {activity.actor} added a SSVC
+                  {activity.actor} added a SSVC "{activity.ssvc}""
                 {:else if activity.event === "import_document"}
                   {activity.actor} added imported a document
                 {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
-                  {activity.actor} changed a SSVC
+                  {activity.actor} changed a SSVC to "{activity.ssvc}"
                 {:else if activity.event === "change_comment"}
                   {activity.actor} changed a comment
                 {:else if activity.event === "state_change"}
