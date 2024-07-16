@@ -10,12 +10,27 @@
 
 set -e # to exit if a command in the script fails
 
+help() {
+echo "Usage: configureKeycloak.sh [OPTIONS]"
+echo "where OPTIONS:"
+echo "  -h, --help                       Show this help text and exit script (optional)."
+echo "  -k, --keycloakRunning            Skip checks on whether keycloak is running."
+echo "  -f, --file                       Specify file storing the keycloak admin password. (optional, default: ./../password.txt)"
+echo "  -l, --live                       Specify the port which accepts keycloak health checks. (Optional, default: 9000)"
+echo "  -p, --password                   Specify the keycloak admin password directly (optional)."
+}
+
+
 keycloak_running=false
 file="./../password.txt"
 live="9000"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help)
+      help
+      exit 0
+      ;;
     -k|--keycloakRunning)
       echo "Assuming keycloak is running..."
       keycloak_running=true
