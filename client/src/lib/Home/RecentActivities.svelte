@@ -197,7 +197,7 @@
       const mentionDocumentIDs = getDocumentIDs(idsMentions);
       documentIDs.concat(mentionDocumentIDs);
       const mentionCommentIDs = getCommentIDs(idsMentions);
-      commentIDs.concat(mentionCommentIDs);
+      commentIDs = commentIDs.concat(mentionCommentIDs);
     }
     documentIDs = [...new Set(documentIDs)];
     commentIDs = [...new Set(commentIDs)];
