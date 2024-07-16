@@ -215,6 +215,7 @@
       o[n.id] = n.message;
       return o;
     }, {});
+    console.log(commentsByID);
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
@@ -288,9 +289,9 @@
                 <div>
                   <i class="bx bxs-quote-alt-left"></i>
                   <span class="italic"
-                    >{activity.message.length < 30
+                    >{activity.message?.length < 30
                       ? activity.message
-                      : activity.message.substring(0, 30)}</span
+                      : activity.message?.substring(0, 30)}</span
                   >
                 </div>
               {:else}
