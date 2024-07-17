@@ -302,7 +302,13 @@
   <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
       <div class="flex flex-row items-baseline">
-        <Label class="mr-3 text-nowrap">{query ? "Matches per page" : "Documents per page"}</Label>
+        <Label class="mr-3 text-nowrap"
+          >{query
+            ? "Matches per page"
+            : loadAdvisories
+              ? "Advisories per page"
+              : "Documents per page"}</Label
+        >
         <Select
           size="sm"
           id="pagecount"
@@ -359,6 +365,8 @@
       <div class="mr-3 text-nowrap">
         {#if query}
           {count} matches found
+        {:else if loadAdvisories}
+          {count} advisories in total
         {:else}
           {count} documents in total
         {/if}
