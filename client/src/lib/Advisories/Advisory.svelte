@@ -416,7 +416,7 @@
           {/if}
         </div>
         <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
-        <div class="ml-auto">
+        <div class="">
           {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
             <div class="mt-6">
               <History
