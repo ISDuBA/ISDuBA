@@ -133,8 +133,5 @@ func (c *Controller) Bind() http.Handler {
 
 	// Visibility information
 	api.GET("/view", authAll, c.view)
-
-	// Health status
-	api.GET("/health", c.health)
 	return r
 }
