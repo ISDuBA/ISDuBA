@@ -25,7 +25,3 @@ func (c *Controller) about(ctx *gin.Context) {
 func (c *Controller) view(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, c.tlps(ctx))
 }
-
-func (c *Controller) health(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"status": "up"})
-}
