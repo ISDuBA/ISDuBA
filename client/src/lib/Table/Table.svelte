@@ -339,7 +339,7 @@
           </div>
           <div class="flex items-center">
             <input
-              class="w-16 cursor-pointer border pr-1 text-right"
+              class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right`}
               on:change={() => {
                 if (!parseInt("" + currentPage)) currentPage = 1;
                 currentPage = Math.floor(currentPage);
