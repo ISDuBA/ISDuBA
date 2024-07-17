@@ -39,8 +39,10 @@
       onOpen();
       setTimeout(() => {
         const element = document.getElementById(`${uuid}`);
-        const y = element!.getBoundingClientRect().top + window.scrollY - 150;
-        window.scrollTo({ top: y, behavior: "smooth" });
+        if (element) {
+          const y = element!.getBoundingClientRect().top + window.scrollY - 150;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
       }, 200);
       visibility = "block";
     }
