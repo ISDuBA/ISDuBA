@@ -215,10 +215,17 @@
 <div class="fixed bottom-0 right-20 flex flex-col items-end justify-center">
   <Button
     on:click={appStore.toggleDiffBox}
-    class="max-w-32 rounded-none rounded-t-md border-b-0"
+    class="rounded-none rounded-t-md border-b-0"
     color="light"
   >
-    <span class="me-2">Diff</span>
+    <span class="me-2"
+      >Diff {docA
+        ? `${docA?.document?.title.substring(0, 25)}${docA?.document?.title.length > 25 ? "..." : ""}`
+        : ""}
+      {docB
+        ? ` - ${docB?.document?.title.substring(0, 25)}${docB?.document?.title.length > 25 ? "..." : ""}`
+        : ""}</span
+    >
     <Img src="plus-minus.svg" class="h-4 min-h-2 min-w-2" />
   </Button>
   {#if $appStore.app.diff.isDiffBoxOpen}
