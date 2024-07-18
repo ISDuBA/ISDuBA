@@ -155,7 +155,7 @@
 </Modal>
 
 <h2 class="text-lg">Queries</h2>
-<div class:invisible={!loading}>
+<div class:invisible={!loading} class={loading ? "loadingFadeIn" : ""}>
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>

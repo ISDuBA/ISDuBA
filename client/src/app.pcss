@@ -12,3 +12,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.loadingFadeIn {
+  opacity: 0;
+  animation-name: fadeIn;
+  animation-duration: 600ms;
+  animation-timing-function: ease;
+  animation-iteration-count: 1;
+  animation-delay: 400ms;
+  animation-fill-mode: forwards;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
