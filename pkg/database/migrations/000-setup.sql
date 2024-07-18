@@ -116,7 +116,7 @@ CREATE FUNCTION create_advisory() RETURNS trigger AS $$
         -- Ensure having an advisories record.
         INSERT INTO advisories (tracking_id, publisher)
             VALUES (NEW.tracking_id, NEW.publisher)
-            ON CONFLICT (tracking_id, publisher) DO NOTHING;
+            ON CONFLICT (tracking_id, publisher) DO UPDATE SET state = 'new';
 
         SELECT id, rev_history_length, current_release_date
             INTO old_id, old_rev_length, old_release_date
