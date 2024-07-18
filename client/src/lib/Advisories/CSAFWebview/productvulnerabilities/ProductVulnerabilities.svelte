@@ -11,8 +11,24 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
+  import {
+    Table,
+    TableHead,
+    TableHeadCell,
+    TableBody,
+    TableBodyCell,
+    TableBodyRow,
+    Toggle
+  } from "flowbite-svelte";
+  const tdClass = "whitespace-nowrap py-1 px-2 font-normal";
+  const tablePadding = "px-2";
+  let renderAllCVEs = false;
+  let PRODUCT_AND_TOTAL = 2;
+  let CVES_TO_RENDER = 1;
+  let MIN_CVES = PRODUCT_AND_TOTAL + CVES_TO_RENDER;
   let headerColumns: string[] = [];
   let productLines: string[][];
+
   $: if ($appStore.webview.doc) {
     const vulnerabilities = [...$appStore.webview.doc.productVulnerabilities];
     // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
@@ -46,40 +62,55 @@
   };
 </script>
 
-<div class="crosstable-overview">
+<div class="crosstable-overview mt-3 flex flex-row">
   {#if productLines.length > 0}
-    <div class="crosstable-container">
+    <div class="flex w-3/4 flex-col">
       <div class="crosstable">
-        <table>
-          <thead>
-            <tr class="crosstable-header-row">
-              {#each headerColumns as column, index}
-                {#if index == 0}
-                  <th class="productname">{column}</th>
-                {:else if index == 1}
-                  <th class="total">{column}</th>
-                {:else}
-                  <th class="cve"
-                    ><a id={crypto.randomUUID()} on:click={openCVE} href={column}>{column}</a></th
-                  >
-                {/if}
-              {/each}
-            </tr>
-          </thead>
-          <tbody>
+        <Toggle class="mb-3" bind:checked={renderAllCVEs}>Show all CVEs</Toggle>
+        <Table noborder>
+          <TableHead>
+            {#each headerColumns as column, index}
+              {#if index == 0}
+                <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
+                  >{column}</TableHeadCell
+                >
+              {:else if index == 1}
+                <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
+                  >{column}</TableHeadCell
+                >
+              {:else if !renderAllCVEs && index < MIN_CVES}
+                <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
+                  ><a id={crypto.randomUUID()} on:click={openCVE} href={column}>{column}</a
+                  ></TableHeadCell
+                >
+              {:else if renderAllCVEs}
+                <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
+                  ><a id={crypto.randomUUID()} on:click={openCVE} href={column}>{column}</a
+                  ></TableHeadCell
+                >
+              {/if}
+            {/each}
+          </TableHead>
+          <TableBody>
             {#each productLines as line}
-              <tr>
+              <TableBodyRow>
                 {#each line as column, index}
                   {#if index < 1}
-                    <td class="productname"
-                      ><a id={crypto.randomUUID()} on:click={openProduct} href={column}
-                        >{$appStore.webview.doc?.productsByID[column]} ({column})</a
-                      ></td
+                    <TableBodyCell {tdClass}
+                      ><a
+                        title={$appStore.webview.doc?.productsByID[column]}
+                        id={crypto.randomUUID()}
+                        on:click={openProduct}
+                        href={column}
+                        >{`${$appStore.webview.doc?.productsByID[column].substring(0, 20)}...`} ({column})</a
+                      ></TableBodyCell
                     >
-                  {:else if column === "N.A"}
-                    <td class="affectionstate">{column}</td>
-                  {:else}
-                    <td class="affectionstate">
+                  {:else if column === "N.A" && !renderAllCVEs && index < MIN_CVES}
+                    <TableBodyCell {tdClass}>{column}</TableBodyCell>
+                  {:else if column === "N.A" && renderAllCVEs && index < MIN_CVES}
+                    <TableBodyCell {tdClass}>{column}</TableBodyCell>
+                  {:else if !renderAllCVEs && index < MIN_CVES}
+                    <TableBodyCell {tdClass}>
                       {#if column === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
                         <i class="bx bx-heart" />
                         <i class="bx b-minus" />
@@ -93,29 +124,51 @@
                           class:bx-heart={column === ProductStatusSymbol.RECOMMENDED}
                         />
                       {/if}
-                    </td>
+                    </TableBodyCell>
+                  {:else if renderAllCVEs}
+                    <TableBodyCell {tdClass}>
+                      {#if column === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
+                        <i class="bx bx-heart" />
+                        <i class="bx b-minus" />
+                      {:else}
+                        <i
+                          class:bx={true}
+                          class:bx-x={column === ProductStatusSymbol.KNOWN_AFFECTED}
+                          class:bx-check={column === ProductStatusSymbol.FIXED}
+                          class:bx-error={column === ProductStatusSymbol.UNDER_INVESTIGATION}
+                          class:bx-minus={column === ProductStatusSymbol.NOT_AFFECTED}
+                          class:bx-heart={column === ProductStatusSymbol.RECOMMENDED}
+                        />
+                      {/if}
+                    </TableBodyCell>
                   {/if}
                 {/each}
-              </tr>
+              </TableBodyRow>
             {/each}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
-    <div class="legend">
+    <div class="ml-6 flex w-1/4 flex-col">
       <h5>Legend</h5>
-      <dl>
-        <dt><i class="bx bx-check" /></dt>
-        <dd>Fixed</dd>
-        <dt><i class="bx bx-error" /></dt>
-        <dd>Under investigation</dd>
-        <dt><i class="bx bx-x" /></dt>
-        <dd>Known affected</dd>
-        <dt><i class="bx bx-minus" /></dt>
-        <dd>Not affected</dd>
-        <dt><i class="bx bx-heart" /></dt>
-        <dd>Recommended</dd>
-      </dl>
+      <div class="flex flex-col">
+        <div class="flex flex-row">
+          <i class="bx bx-check" />
+          <span class="ml-2 text-nowrap">Fixed</span>
+        </div>
+        <div class="flex flex-row">
+          <i class="bx bx-error" /><span class="ml-2 text-nowrap">Under investigation</span>
+        </div>
+        <div class="flex flex-row">
+          <i class="bx bx-x" /><span class="ml-2 text-nowrap">Known affected</span>
+        </div>
+        <div class="flex flex-row">
+          <i class="bx bx-minus" /><span class="ml-2 text-nowrap">Not affected</span>
+        </div>
+        <div class="flex flex-row">
+          <i class="bx bx-heart" /><span class="ml-2 text-nowrap">Recommended</span>
+        </div>
+      </div>
     </div>
   {/if}
 </div>
