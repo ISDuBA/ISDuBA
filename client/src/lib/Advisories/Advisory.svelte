@@ -362,7 +362,7 @@
             ></Version>
           {/if}
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col min-[800px]:mr-56 min-[1080px]:mr-32">
           {#if isDiffOpen}
             <Diff showTitle={false}></Diff>
           {:else}
