@@ -239,14 +239,16 @@
 
 <div id="ssvc-calc" class="flex w-full flex-col">
   {#if !isEditing}
-    <div class="flex flex-row">
-      {#if !vectorInput}
-        <span class="h-6 text-lg">Please enter a SSVC</span>
-      {/if}
-      <button class="mr-auto h-6" {disabled} on:click={toggleEditing}
-        ><i class="bx bx-edit-alt ml-1"></i></button
-      >
-    </div>
+    {#if !disabled}
+      <div class="flex flex-row">
+        {#if !vectorInput}
+          <span class="h-6 text-lg">Please enter a SSVC</span>
+        {/if}
+        <button class="mr-auto h-6" {disabled} on:click={toggleEditing}
+          ><i class="bx bx-edit-alt ml-1"></i></button
+        >
+      </div>
+    {/if}
   {:else if !startedCalculation}
     <div class="flex flex-col">
       <Label class="mb-4">
