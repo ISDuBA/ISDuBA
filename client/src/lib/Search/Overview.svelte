@@ -16,6 +16,7 @@
   import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
   import DiffSelection from "$lib/Diff/DiffSelection.svelte";
+  import { appStore } from "$lib/store";
 
   let searchTerm: string | null;
   let advisoryTable: any;
@@ -187,4 +188,7 @@
     bind:this={advisoryTable}
   ></AdvisoryTable>
 {/if}
-<DiffSelection></DiffSelection>
+
+{#if appStore.isEditor() || appStore.isReviewer()}
+  <DiffSelection></DiffSelection>
+{/if}
