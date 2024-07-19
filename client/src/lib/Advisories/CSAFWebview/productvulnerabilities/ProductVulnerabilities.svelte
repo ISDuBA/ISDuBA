@@ -65,16 +65,6 @@
 <div class="crosstable-overview mb-3 mt-3 flex flex-col">
   {#if productLines.length > 0}
     <div class="mb-3 mt-3 flex flex-row">
-      {#if productLines[0].length > 1}
-        <Button
-          color="light"
-          size="sm"
-          class={`mr-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-          on:click={() => {
-            renderAllCVEs = !renderAllCVEs;
-          }}><span class="text-nowrap">All CVEs</span></Button
-        >
-      {/if}
       <div class="flex flex-row items-baseline gap-4">
         <div class="flex flex-row items-baseline">
           <i class="bx bx-check" />
@@ -92,6 +82,18 @@
         <div class="flex flex-row items-baseline">
           <i class="bx bx-heart" /><span class="ml-1 text-nowrap">Recommended</span>
         </div>
+        {#if productLines[0].length > 6}
+          <div class="flex flex-row items-baseline">
+            <Button
+              color="light"
+              size="sm"
+              class={`mr-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+              on:click={() => {
+                renderAllCVEs = !renderAllCVEs;
+              }}><span class="text-nowrap">All CVEs ({productLines[0].length - 2})</span></Button
+            >
+          </div>
+        {/if}
       </div>
     </div>
     <div class="crosstable flex flex-row">
