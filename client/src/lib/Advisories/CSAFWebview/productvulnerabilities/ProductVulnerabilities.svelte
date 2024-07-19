@@ -18,7 +18,7 @@
     TableBody,
     TableBodyCell,
     TableBodyRow,
-    Toggle
+    Button
   } from "flowbite-svelte";
   const tdClass = "whitespace-nowrap py-1 px-2 font-normal";
   const tablePadding = "px-2";
@@ -66,7 +66,14 @@
   {#if productLines.length > 0}
     <div class="flex w-3/4 flex-col">
       <div class="crosstable">
-        <Toggle class="mb-3" bind:checked={renderAllCVEs}>Show all CVEs</Toggle>
+        <Button
+          color="light"
+          size="sm"
+          class={`mb-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+          on:click={() => {
+            renderAllCVEs = !renderAllCVEs;
+          }}>All CVEs</Button
+        >
         <Table noborder>
           <TableHead>
             {#each headerColumns as column, index}
