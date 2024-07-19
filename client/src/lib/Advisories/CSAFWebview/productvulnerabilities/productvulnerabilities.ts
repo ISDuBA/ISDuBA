@@ -109,7 +109,7 @@ const generateCrossTableFrom = (
   });
   productLines.sort((line1: any, line2: any) => {
     if (productLookup[line1[0].content] < productLookup[line2[0].content]) return -1;
-    if (productLookup[line1[0].content] > productLookup[line2[0]].content) return 1;
+    if (productLookup[line1[0].content] > productLookup[line2[0].content]) return 1;
     return 0;
   });
   result = [...result, ...productLines];
