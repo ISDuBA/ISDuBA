@@ -35,6 +35,9 @@
     headerColumns = vulnerabilities.shift()!;
     productLines = vulnerabilities;
   }
+
+  // $: fourCVEs = $appStore.webview.four_cves;
+
   /**
    * openProduct opens the according product given via href.
    * @param e

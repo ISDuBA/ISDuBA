@@ -35,6 +35,7 @@
   let loadEventsError = "";
   let loadAdvisoryVersionsError = "";
   let loadDocumentError = "";
+  let loadFourCVEsError = "";
   let createCommentError = "";
   let loadDocumentSSVCError = "";
   let stateError = "";
@@ -275,7 +276,22 @@
     }
   };
 
+  const loadFourCVEs = async () => {
+    const response = await request(
+      `/api/documents?advisories=true&columns=four_cves&query=$id ${params.id} integer =`,
+      "GET"
+    );
+    if (response.ok) {
+      const content = await response.content;
+      let four_cves = content?.documents[0]?.four_cves;
+      appStore.setFourCVEs(four_cves);
+    } else if (response.error) {
+      loadFourCVEsError = `Couldn't load CVEs. ${getErrorMessage(response.error)}`;
+    }
+  };
+
   const loadData = async () => {
+    await loadFourCVEs();
     await loadDocumentSSVC();
     await loadDocument();
     await loadAdvisoryVersions();
@@ -348,6 +364,7 @@
     <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
+    <ErrorMessage message={loadFourCVEsError}></ErrorMessage>
     <div class="flex flex-row max-[800px]:flex-wrap-reverse">
       <div class="mr-12 flex w-2/3 flex-col">
         <div class="flex flex-row">
