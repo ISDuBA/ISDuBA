@@ -144,9 +144,12 @@ func (c *Controller) Bind() http.Handler {
 	api.POST("/job", authIm, c.addJob)
 	api.PUT("/job", authIm, c.updateJob)
 	api.DELETE("/job/:id", authIm, c.deleteJob)
+
 	api.GET("/cron", authIm, c.viewCrons)
+	api.PUT("/cron", authIm, c.updateCron)
 	api.POST("/cron", authIm, c.addCron)
 	api.DELETE("/cron/:id", authIm, c.deleteCron)
+
 	api.GET("/task", authIm, c.viewTasks)
 	api.GET("/task/:id", authIm, c.getTaskLog)
 	api.DELETE("/task/:id", authIm, c.abortTask)

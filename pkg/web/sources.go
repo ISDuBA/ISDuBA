@@ -12,13 +12,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/csaf-poc/csaf_distribution/v3/csaf/filter"
 	"io"
 	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/csaf-poc/csaf_distribution/v3/csaf/filter"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 
@@ -30,7 +31,6 @@ import (
 )
 
 func parseJobConfig(ctx *gin.Context, requireID bool) (*models.JobConfig, error) {
-
 	jobConfig := models.JobConfig{
 		Worker: 1,
 	}
@@ -51,7 +51,6 @@ func parseJobConfig(ctx *gin.Context, requireID bool) (*models.JobConfig, error)
 	// We need the name.
 	if jobConfig.Name = ctx.PostForm("name"); jobConfig.Name == "" {
 		return nil, errors.New("missing 'name'")
-
 	}
 
 	// Domains to download from.
@@ -245,7 +244,7 @@ func (c *Controller) addCron(ctx *gin.Context) {
 		return
 	}
 
-	//
+	// We need cron timing
 	if cron.CronTiming = ctx.PostForm("cron_timing"); cron.CronTiming == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing 'cron_timing'",
@@ -269,6 +268,66 @@ func (c *Controller) addCron(ctx *gin.Context) {
 	}
 
 	cronID, err := c.scheduler.AddCron(ctx, cron)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"cron_id": cronID,
+	})
+}
+
+// updateCron creates a new cron job.
+func (c *Controller) updateCron(ctx *gin.Context) {
+	var cron models.Cron
+
+	var cronIDs string
+	if cronIDs = ctx.PostForm("id"); cronIDs == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing 'id'",
+		})
+		return
+	}
+
+	// We need the name.
+	if cron.Name = ctx.PostForm("name"); cron.Name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing 'name'",
+		})
+		return
+	}
+
+	// We need cron timing
+	if cron.CronTiming = ctx.PostForm("cron_timing"); cron.CronTiming == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing 'cron_timing'",
+		})
+		return
+	}
+
+	var jobIDs string
+	if jobIDs = ctx.PostForm("job_id"); jobIDs == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing 'job_id'",
+		})
+		return
+	}
+
+	var err error
+	cron.JobID, err = strconv.ParseInt(jobIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	cron.ID, err = strconv.ParseInt(cronIDs, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	cronID, err := c.scheduler.UpdateCron(ctx, cron)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

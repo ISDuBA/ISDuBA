@@ -116,6 +116,9 @@ func (s *Scheduler) AddTask(ctx context.Context, jobID int64) (*int64, error) {
 
 // AddCron creates a new cron job.
 func (s *Scheduler) AddCron(ctx context.Context, cron models.Cron) (*int64, error) {
+	if err := checkCronTiming(cron.CronTiming); err != nil {
+		return nil, err
+	}
 	const insertSQL = `INSERT INTO cron (` +
 		`name,` +
 		`job_id,` +
@@ -151,9 +154,52 @@ func (s *Scheduler) AddCron(ctx context.Context, cron models.Cron) (*int64, erro
 	return &cronID, nil
 }
 
+func checkCronTiming(cronTiming string) error {
+	var options cron.ParseOption
+	parser := cron.NewParser(options)
+
+	_, err := parser.Parse(cronTiming)
+	return err
+}
+
+// UpdateCron updates the specified cron job.
+func (s *Scheduler) UpdateCron(ctx context.Context, cron models.Cron) (*int64, error) {
+	if err := checkCronTiming(cron.CronTiming); err != nil {
+		return nil, err
+	}
+
+	expr := query.FieldEqInt("id", cron.ID)
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
+
+	var updateCronID int64
+
+	updateSQL := `UPDATE cron SET ` +
+		`name = $1,` +
+		`job_id = $2,` +
+		`cron_timing = $3 ` +
+		`WHERE ` +
+		builder.WhereClause +
+		`RETURNING id`
+
+	if err := s.db.Run(
+		ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, updateSQL, cron.Name, cron.JobID, cron.CronTiming).Scan(&updateCronID)
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		return nil, err
+	}
+	s.fns <- func(s *Scheduler, ctx context.Context) {
+		s.runCron(ctx)
+	}
+
+	return &updateCronID, nil
+}
+
 // DeleteCron deletes a cron job.
 func (s *Scheduler) DeleteCron(ctx context.Context, cronID int64) (*int64, error) {
-
 	expr := query.FieldEqInt("id", cronID)
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -198,10 +244,8 @@ func (s *Scheduler) AbortTask(taskID int64) error {
 	s.fns <- func(s *Scheduler, ctx context.Context) {
 		errChan <- (*Scheduler).abortTask(s, taskID)
 	}
-	select {
-	case err := <-errChan:
-		return err
-	}
+	err := <-errChan
+	return err
 }
 
 func (s *Scheduler) runCron(ctx context.Context) {
@@ -398,7 +442,6 @@ func (s *Scheduler) Run(ctx context.Context) {
 			fn(s, ctx)
 		}
 	}
-
 }
 
 func (s *Scheduler) kill(_ context.Context) {
