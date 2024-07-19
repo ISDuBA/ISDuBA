@@ -60,18 +60,22 @@ const generateProductVulnerabilities = (jsonDocument: any, products: any, produc
  * @returns a crosstable as [[]]
  * E.g. [
  * [
- *   'Product',
- *   'Total result',
- *   'CVE-2016-0173',
- *   'CVE-2018-0172',
- *   'CVE-2019-0171',
- *   'CVE-2020-0174'
+ *   {name: 'Product' content:'Product'},
+ *   {name: 'Total result' content: 'Total result'},
+ *   {name: 'CVE-2016-0173' content: 'CVE-2016-0173'},
+ *   {name: 'CVE-2018-0172' content: 'CVE-2018-0172'},
+ *   {name: 'CVE-2019-0171', content: 'CVE-2019-0171'},
+ *   {name: 'CVE-2020-0174', content: 'CVE-2020-0174'}
  * ],
- * [ '123', 'K', '', '', 'K', '' ],
- * [ '3456', 'K', '', '', 'K', '' ],
- * [ '8910', 'K', '', 'K', '', '' ],
- * [ '1112', 'F', '', '', '', 'F' ],
- * [ '1314', 'N', 'NR', '', '', '' ]
+ * [
+ *  {name: 'Product' content:'123'},
+ *  {name: 'Total result' content:'K'},
+ *  {name: 'CVE-2016-0173' content: ''},
+ *  {name: 'CVE-2018-0172' content:''},
+ *  {name: 'CVE-2019-0171', content:'K'},
+ *  {name: 'CVE-2020-0174', content: ''}
+ *  ],
+ * ...
  * ]
  */
 const generateCrossTableFrom = (
@@ -80,18 +84,32 @@ const generateCrossTableFrom = (
   productLookup: any
 ) => {
   let result: any = [];
-  let header = ["Product", "Total result"];
-  const getCVE = vulnerabilities.map((vulnerability: Vulnerability) => vulnerability.cve);
+  let header: any = [
+    { name: "Product", content: "Product" },
+    { name: "Total result", content: "Total result" }
+  ];
+  const getCVE = vulnerabilities.map((vulnerability: Vulnerability) => {
+    return { name: vulnerability.cve, content: vulnerability.cve };
+  });
   header = header.concat(getCVE);
   result.push(header);
   const productLines = products.map((product: Product) => {
-    let line = [`${product.product_id}`];
-    line = line.concat(generateLineWith(product, vulnerabilities));
+    let line = [{ name: `Product`, content: `${product.product_id}` }];
+    let result = generateLineWith(product, vulnerabilities);
+    result = ["Total", ...vulnerabilities].map((r: any, i: number) => {
+      if (i === 0)
+        return {
+          name: "Total",
+          content: result[i]
+        };
+      return { name: r.cve, content: result[i] };
+    });
+    line = line.concat(result);
     return line;
   });
   productLines.sort((line1: any, line2: any) => {
-    if (productLookup[line1[0]] < productLookup[line2[0]]) return -1;
-    if (productLookup[line1[0]] > productLookup[line2[0]]) return 1;
+    if (productLookup[line1[0].content] < productLookup[line2[0].content]) return -1;
+    if (productLookup[line1[0].content] > productLookup[line2[0]].content) return 1;
     return 0;
   });
   result = [...result, ...productLines];

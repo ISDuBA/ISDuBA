@@ -23,11 +23,8 @@
   const tdClass = "whitespace-nowrap py-1 px-2 font-normal";
   const tablePadding = "px-2";
   let renderAllCVEs = false;
-  let PRODUCT_AND_TOTAL = 2;
-  let CVES_TO_RENDER = 1;
-  let MIN_CVES = PRODUCT_AND_TOTAL + CVES_TO_RENDER;
-  let headerColumns: string[] = [];
-  let productLines: string[][];
+  let headerColumns: any[] = [];
+  let productLines: any[] = [];
 
   $: if ($appStore.webview.doc) {
     const vulnerabilities = [...$appStore.webview.doc.productVulnerabilities];
@@ -36,7 +33,7 @@
     productLines = vulnerabilities;
   }
 
-  // $: fourCVEs = $appStore.webview.four_cves;
+  $: fourCVEs = $appStore.webview.four_cves;
 
   /**
    * openProduct opens the according product given via href.
@@ -69,33 +66,37 @@
   {#if productLines.length > 0}
     <div class="flex w-3/4 flex-col">
       <div class="crosstable">
-        <Button
-          color="light"
-          size="sm"
-          class={`mb-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100" : ""}`}
-          on:click={() => {
-            renderAllCVEs = !renderAllCVEs;
-          }}>All CVEs</Button
-        >
+        {#if productLines[0].length > 5}
+          <Button
+            color="light"
+            size="sm"
+            class={`mb-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+            on:click={() => {
+              renderAllCVEs = !renderAllCVEs;
+            }}>All CVEs</Button
+          >
+        {/if}
         <Table noborder>
           <TableHead>
             {#each headerColumns as column, index}
               {#if index == 0}
                 <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                  >{column}</TableHeadCell
+                  >{column.content}</TableHeadCell
                 >
               {:else if index == 1}
                 <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                  >{column}</TableHeadCell
+                  >{column.content}</TableHeadCell
                 >
-              {:else if !renderAllCVEs && index < MIN_CVES}
+              {:else if !renderAllCVEs && fourCVEs.includes(column.name)}
                 <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                  ><a id={crypto.randomUUID()} on:click={openCVE} href={column}>{column}</a
+                  ><a id={crypto.randomUUID()} on:click={openCVE} href={column.content}
+                    >{column.content}</a
                   ></TableHeadCell
                 >
               {:else if renderAllCVEs}
                 <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                  ><a id={crypto.randomUUID()} on:click={openCVE} href={column}>{column}</a
+                  ><a id={crypto.randomUUID()} on:click={openCVE} href={column.content}
+                    >{column.content}</a
                   ></TableHeadCell
                 >
               {/if}
@@ -104,50 +105,53 @@
           <TableBody>
             {#each productLines as line}
               <TableBodyRow>
-                {#each line as column, index}
-                  {#if index < 1}
+                {#each line as column}
+                  {#if column.name === "Product"}
                     <TableBodyCell {tdClass}
                       ><a
-                        title={$appStore.webview.doc?.productsByID[column]}
+                        title={$appStore.webview.doc?.productsByID[column.content]}
                         id={crypto.randomUUID()}
                         on:click={openProduct}
-                        href={column}
-                        >{`${$appStore.webview.doc?.productsByID[column].substring(0, 20)}...`} ({column})</a
+                        href={column.content}
+                        >{`${$appStore.webview.doc?.productsByID[column.content].substring(0, 20)}...`}
+                        ({column.content})</a
                       ></TableBodyCell
                     >
-                  {:else if column === "N.A" && !renderAllCVEs && index < MIN_CVES}
-                    <TableBodyCell {tdClass}>{column}</TableBodyCell>
-                  {:else if column === "N.A" && renderAllCVEs && index < MIN_CVES}
-                    <TableBodyCell {tdClass}>{column}</TableBodyCell>
-                  {:else if !renderAllCVEs && index < MIN_CVES}
+                  {:else if column.content === "N.A" && ((!renderAllCVEs && fourCVEs.includes(column.name)) || column.name === "Total")}
+                    <TableBodyCell {tdClass}>{column.content}</TableBodyCell>
+                  {:else if column.content === "N.A" && renderAllCVEs && (fourCVEs.includes(column.name) || column.name === "Total")}
+                    <TableBodyCell {tdClass}>{column.content}</TableBodyCell>
+                  {:else if !renderAllCVEs && (fourCVEs.includes(column.name) || column.name === "Total")}
                     <TableBodyCell {tdClass}>
-                      {#if column === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
+                      {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
                         <i class="bx bx-heart" />
                         <i class="bx b-minus" />
                       {:else}
                         <i
                           class:bx={true}
-                          class:bx-x={column === ProductStatusSymbol.KNOWN_AFFECTED}
-                          class:bx-check={column === ProductStatusSymbol.FIXED}
-                          class:bx-error={column === ProductStatusSymbol.UNDER_INVESTIGATION}
-                          class:bx-minus={column === ProductStatusSymbol.NOT_AFFECTED}
-                          class:bx-heart={column === ProductStatusSymbol.RECOMMENDED}
+                          class:bx-x={column.content === ProductStatusSymbol.KNOWN_AFFECTED}
+                          class:bx-check={column.content === ProductStatusSymbol.FIXED}
+                          class:bx-error={column.content ===
+                            ProductStatusSymbol.UNDER_INVESTIGATION}
+                          class:bx-minus={column.content === ProductStatusSymbol.NOT_AFFECTED}
+                          class:bx-heart={column.content === ProductStatusSymbol.RECOMMENDED}
                         />
                       {/if}
                     </TableBodyCell>
                   {:else if renderAllCVEs}
                     <TableBodyCell {tdClass}>
-                      {#if column === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
+                      {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
                         <i class="bx bx-heart" />
                         <i class="bx b-minus" />
                       {:else}
                         <i
                           class:bx={true}
-                          class:bx-x={column === ProductStatusSymbol.KNOWN_AFFECTED}
-                          class:bx-check={column === ProductStatusSymbol.FIXED}
-                          class:bx-error={column === ProductStatusSymbol.UNDER_INVESTIGATION}
-                          class:bx-minus={column === ProductStatusSymbol.NOT_AFFECTED}
-                          class:bx-heart={column === ProductStatusSymbol.RECOMMENDED}
+                          class:bx-x={column.content === ProductStatusSymbol.KNOWN_AFFECTED}
+                          class:bx-check={column.content === ProductStatusSymbol.FIXED}
+                          class:bx-error={column.content ===
+                            ProductStatusSymbol.UNDER_INVESTIGATION}
+                          class:bx-minus={column.content === ProductStatusSymbol.NOT_AFFECTED}
+                          class:bx-heart={column.content === ProductStatusSymbol.RECOMMENDED}
                         />
                       {/if}
                     </TableBodyCell>
