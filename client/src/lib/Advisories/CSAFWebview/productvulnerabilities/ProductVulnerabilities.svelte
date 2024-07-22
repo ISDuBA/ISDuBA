@@ -30,7 +30,7 @@
   onMount(() => {
     appStore.setProductTreeSectionInVisible();
     appStore.resetSelectedProduct();
-  })
+  });
 
   $: if ($appStore.webview.doc) {
     const vulnerabilities = [...$appStore.webview.doc.productVulnerabilities];
