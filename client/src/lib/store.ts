@@ -47,6 +47,7 @@ type AppStore = {
     doc: DocModel | null;
     providerMetadata: any;
     currentFeed: any;
+    four_cves: any;
     ui: {
       docToggleExpandAll: boolean;
       feedErrorMsg: string;
@@ -99,6 +100,7 @@ const generateInitialState = (): AppStore => {
       doc: null,
       providerMetadata: null,
       currentFeed: null,
+      four_cves: [],
       ui: {
         docToggleExpandAll: false,
         feedErrorMsg: "",
@@ -126,6 +128,18 @@ function createStore() {
   subscribe((v) => (state = v));
   return {
     subscribe,
+    setFourCVEs: (cves: any) => {
+      update((settings) => {
+        settings.webview.four_cves = cves;
+        return settings;
+      });
+    },
+    clearFourCVEs: () => {
+      update((settings) => {
+        settings.webview.four_cves = [];
+        return settings;
+      });
+    },
     setSessionExpired: (expired: boolean) => {
       update((settings) => {
         settings.app.sessionExpired = expired;
