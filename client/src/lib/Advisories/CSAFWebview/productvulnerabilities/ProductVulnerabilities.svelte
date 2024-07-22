@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import { onMount } from "svelte";
   import { appStore } from "$lib/store";
   import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
   import {
@@ -25,6 +26,11 @@
   let renderAllCVEs = false;
   let headerColumns: any[] = [];
   let productLines: any[] = [];
+
+  onMount(() => {
+    appStore.setProductTreeSectionInVisible();
+    appStore.resetSelectedProduct();
+  })
 
   $: if ($appStore.webview.doc) {
     const vulnerabilities = [...$appStore.webview.doc.productVulnerabilities];
