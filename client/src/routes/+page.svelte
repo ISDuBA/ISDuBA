@@ -31,7 +31,7 @@
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
   import QueryOverview from "$lib/Queries/Overview.svelte";
   import Test from "$lib/Test.svelte";
-  import JobEditor from "$lib/Sources/JobEditor.svelte";
+  import SourceEditor from "$lib/Sources/SourceEditor.svelte";
   import ScheduleEditor from "$lib/Sources/ScheduleEditor.svelte";
 
   let userManager = new UserManager(configuration.getConfiguration());
@@ -157,12 +157,12 @@
       conditions: [loginCondition]
     }),
     "/sources/job/new": wrap({
-      component: JobEditor,
+      component: SourceEditor,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources/job/:id": wrap({
-      component: JobEditor,
+      component: SourceEditor,
       userData: loginRequired,
       conditions: [loginCondition]
     }),

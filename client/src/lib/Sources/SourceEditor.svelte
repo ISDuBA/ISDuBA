@@ -10,7 +10,15 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Button, Checkbox, Fileupload, Input, Label } from "flowbite-svelte";
+  import {
+    Accordion,
+    AccordionItem,
+    Button,
+    Checkbox,
+    Fileupload,
+    Input,
+    Label
+  } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import { getErrorMessage } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -144,17 +152,17 @@
 </script>
 
 <svelte:head>
-  <title>Sources - {params?.id ? "Edit Job" : "New Job"}</title>
+  <title>Sources - {params?.id ? "Edit Source" : "New Source"}</title>
 </svelte:head>
 
-<SectionHeader title={params?.id ? "Edit Job" : "New Job"}></SectionHeader>
+<SectionHeader title={params?.id ? "Edit Source" : "New Source"}></SectionHeader>
 <form id="job-editor" on:submit={saveJob} class="max-w-[800pt]">
   <div class="mb-4 flex flex-col gap-3">
     <CustomInput
-      label="Job name"
+      label="Source name"
       id="name"
       minlength={3}
-      placeholder="Job #1"
+      placeholder="Source #1"
       required
       bind:value={job.name}
     ></CustomInput>
@@ -167,79 +175,99 @@
         minEntries={1}
         id="domains"
         initialEntries={job.domains}
-        label="Domains"
+        label="Domain/PMD"
         placeholder="example.com"
         required
       ></BadgeInput>
     </div>
-    <Label class="mb-1 space-y-2">
-      <span>TLS client certificate file</span>
-      <Fileupload bind:files />
-    </Label>
-    <div class="grid gap-x-2 gap-y-2 md:grid-cols-2">
-      <CustomInput id="client-key" label="TLS client private key file" bind:value={job.client_key}
-      ></CustomInput>
-      <CustomInput
-        id="client-passphrase"
-        type="password"
-        label="Client passphrase"
-        bind:value={job.client_passphrase}
-      ></CustomInput>
-      <CustomInput id="start-range" type="date" label="Start range" bind:value={job.start_range}
-      ></CustomInput>
-      <CustomInput id="end-range" type="date" label="End range" bind:value={job.end_range}
-      ></CustomInput>
-    </div>
-    <CustomInput id="worker" label="Worker" type="number" step={1} bind:value={job.worker} min={1}
-    ></CustomInput>
-    <CustomInput id="rate" type="number" label="Rate" placeholder="5" bind:value={job.rate}
-    ></CustomInput>
-    <CustomInput id="ignore-pattern" label="Ignore pattern" bind:value={job.ignore_pattern}
-    ></CustomInput>
-    <Label>HTTP headers</Label>
-    <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
-      {#if job.http_headers}
-        {#each job.http_headers as header, index (index)}
-          <Label>
-            <span class="text-gray-500">Key</span>
-            <Input on:change={onChangedHeaders} bind:value={header[0]} />
-          </Label>
-          <Label>
-            <span class="text-gray-500">Value</span>
-            <Input on:change={onChangedHeaders} bind:value={header[1]} />
-          </Label>
-          {#if !(job.http_headers.length === 1 && job.http_headers[0][0] === "" && job.http_headers[0][1] === "")}
-            <Button
-              on:click={() => removeHeader(index)}
-              title="Remove key-value-pair"
-              class="mb-3 w-fit p-1"
-              color="light"
-            >
-              <i class="bx bx-x"></i>
-            </Button>
-          {:else}
-            <div></div>
+    <Accordion>
+      <AccordionItem>
+        <span slot="header">Authentication</span>
+        <Label class="mb-1 space-y-2">
+          <span>TLS client certificate file</span>
+          <Fileupload bind:files />
+        </Label>
+        <div class="grid gap-x-2 gap-y-2 md:grid-cols-2">
+          <CustomInput
+            id="client-key"
+            label="TLS client private key file"
+            bind:value={job.client_key}
+          ></CustomInput>
+          <CustomInput
+            id="client-passphrase"
+            type="password"
+            label="Client passphrase"
+            bind:value={job.client_passphrase}
+          ></CustomInput>
+        </div>
+      </AccordionItem>
+
+      <AccordionItem>
+        <span slot="header">Advanced</span>
+        <div class="grid gap-x-2 gap-y-2 md:grid-cols-2">
+          <CustomInput id="start-range" type="date" label="Start range" bind:value={job.start_range}
+          ></CustomInput>
+          <CustomInput id="end-range" type="date" label="End range" bind:value={job.end_range}
+          ></CustomInput>
+        </div>
+        <CustomInput
+          id="worker"
+          label="Worker"
+          type="number"
+          step={1}
+          bind:value={job.worker}
+          min={1}
+        ></CustomInput>
+        <CustomInput id="rate" type="number" label="Rate" placeholder="5" bind:value={job.rate}
+        ></CustomInput>
+        <CustomInput id="ignore-pattern" label="Ignore pattern" bind:value={job.ignore_pattern}
+        ></CustomInput>
+        <Label>HTTP headers</Label>
+        <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
+          {#if job.http_headers}
+            {#each job.http_headers as header, index (index)}
+              <Label>
+                <span class="text-gray-500">Key</span>
+                <Input on:change={onChangedHeaders} bind:value={header[0]} />
+              </Label>
+              <Label>
+                <span class="text-gray-500">Value</span>
+                <Input on:change={onChangedHeaders} bind:value={header[1]} />
+              </Label>
+              {#if !(job.http_headers.length === 1 && job.http_headers[0][0] === "" && job.http_headers[0][1] === "")}
+                <Button
+                  on:click={() => removeHeader(index)}
+                  title="Remove key-value-pair"
+                  class="mb-3 w-fit p-1"
+                  color="light"
+                >
+                  <i class="bx bx-x"></i>
+                </Button>
+              {:else}
+                <div></div>
+              {/if}
+            {/each}
           {/if}
-        {/each}
-      {/if}
-    </div>
-    <CustomInput id="ignore-pattern" label="" bind:value={job.ignore_pattern}></CustomInput>
-    <Checkbox
-      on:change={() => {
-        job.insecure = !job.insecure;
-      }}
-      bind:checked={job.insecure}
-    >
-      <span>Insecure</span>
-    </Checkbox>
-    <Checkbox
-      on:change={() => {
-        job.ignore_signature_check = !job.ignore_signature_check;
-      }}
-      bind:checked={job.ignore_signature_check}
-    >
-      <span>Ignore signature check</span>
-    </Checkbox>
+        </div>
+        <CustomInput id="ignore-pattern" label="" bind:value={job.ignore_pattern}></CustomInput>
+        <Checkbox
+          on:change={() => {
+            job.insecure = !job.insecure;
+          }}
+          bind:checked={job.insecure}
+        >
+          <span>Insecure</span>
+        </Checkbox>
+        <Checkbox
+          on:change={() => {
+            job.ignore_signature_check = !job.ignore_signature_check;
+          }}
+          bind:checked={job.ignore_signature_check}
+        >
+          <span>Ignore signature check</span>
+        </Checkbox>
+      </AccordionItem>
+    </Accordion>
   </div>
   <div class="mb-4 text-sm text-red-500">* Required fields</div>
   <Button disabled={disableSave} type="submit" color="light">

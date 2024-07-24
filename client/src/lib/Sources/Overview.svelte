@@ -15,15 +15,15 @@
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
-  let jobError = "";
-  let loadingJobs = false;
-  let jobs: any[] = [];
+  let sourceError = "";
+  let loadingSources = false;
+  let sources: any[] = [];
   let modalOpen = false;
   let modalMessage: string;
   let modalTitle: string;
   let modalCallback: any;
 
-  jobs.push({
+  sources.push({
     name: "RedHat",
     source: "redhat.com",
     intervall: "every 12 hours",
@@ -90,18 +90,18 @@
     }
   ]}
 >
-  {#each jobs as job, index (index)}
+  {#each sources as source, index (index)}
     <tr on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
-      <TableBodyCell {tdClass}>{job.name}</TableBodyCell>
-      <TableBodyCell {tdClass}>{job.source}</TableBodyCell>
-      <TableBodyCell {tdClass}>{job.intervall}</TableBodyCell>
-      <TableBodyCell {tdClass}>{getRelativeTime(job.lastRun)}</TableBodyCell>
+      <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
+      <TableBodyCell {tdClass}>{source.source}</TableBodyCell>
+      <TableBodyCell {tdClass}>{source.intervall}</TableBodyCell>
+      <TableBodyCell {tdClass}>{getRelativeTime(source.lastRun)}</TableBodyCell>
       <td>
         <Button
           on:click={() => {
-            push(`/sources/job/${job.id}`);
+            push(`/sources/job/${source.id}`);
           }}
-          title={`Edit Job "${job.name}"`}
+          title={`Edit Source "${source.name}"`}
           class="border-0 p-2"
           color="light"
         >
@@ -110,11 +110,11 @@
         <Button
           on:click={(event) => {
             event.stopPropagation();
-            modalMessage = "Are you sure you want to delete this job?";
-            modalTitle = `Job ${job.name}`;
+            modalMessage = "Are you sure you want to delete this source?";
+            modalTitle = `Source ${source.name}`;
             modalOpen = true;
           }}
-          title={`Remove Job "${job.name}"`}
+          title={`Remove Source "${source.name}"`}
           class="border-0 p-2"
           color="light"
         >
@@ -124,7 +124,7 @@
           on:click={(event) => {
             event.stopPropagation();
           }}
-          title={`Run Job "${job.name}"`}
+          title={`Download from source "${source.name}"`}
           class="border-0 p-2"
           color="light"
         >
@@ -134,7 +134,7 @@
     </tr>
   {/each}
   <div slot="bottom">
-    <div class:hidden={!loadingJobs} class:mb-4={true}>
+    <div class:hidden={!loadingSources} class:mb-4={true}>
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
@@ -142,6 +142,6 @@
       <i class="bx bx-plus"></i>
       <span>Add new source</span>
     </Button>
-    <ErrorMessage message={jobError}></ErrorMessage>
+    <ErrorMessage message={sourceError}></ErrorMessage>
   </div>
 </CustomTable>
