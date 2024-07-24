@@ -15,6 +15,7 @@
     AccordionItem,
     Button,
     Checkbox,
+    Select,
     Fileupload,
     Input,
     Label
@@ -43,9 +44,16 @@
   };
   setContext("validation", validation);
 
+  let intervals = [
+    { value: "m", name: "minutes" },
+    { value: "h", name: "hours" },
+    { value: "d", name: "days" }
+  ];
+
   type Job = {
     name: string;
     domains: string[];
+    interval: number;
     insecure: boolean;
     ignore_signature_check: boolean;
     worker: number;
@@ -62,6 +70,7 @@
   let job: Job = {
     name: "",
     domains: [],
+    interval: 1,
     insecure: false,
     ignore_signature_check: false,
     worker: 1,
@@ -179,6 +188,20 @@
         placeholder="example.com"
         required
       ></BadgeInput>
+    </div>
+    <div class="grid gap-x-2 gap-y-2 md:grid-cols-2">
+      <CustomInput
+        id="interval"
+        label="Interval"
+        type="number"
+        step={1}
+        bind:value={job.interval}
+        min={1}
+      ></CustomInput>
+      <Label>
+        <span>Unit</span>
+        <Select items={intervals} />
+      </Label>
     </div>
     <Accordion>
       <AccordionItem>

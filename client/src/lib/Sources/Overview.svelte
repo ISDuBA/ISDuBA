@@ -26,7 +26,7 @@
   sources.push({
     name: "RedHat",
     source: "redhat.com",
-    intervall: "every 12 hours",
+    interval: "every 12 hours",
     lastRun: new Date(Date.now() - 1000 * 60)
   });
 
@@ -77,8 +77,8 @@
       attribute: "source"
     },
     {
-      label: "Intervall",
-      attribute: "intervall"
+      label: "Interval",
+      attribute: "interval"
     },
     {
       label: "Last run",
@@ -94,7 +94,7 @@
     <tr on:blur={() => {}} on:focus={() => {}} class="cursor-pointer">
       <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
       <TableBodyCell {tdClass}>{source.source}</TableBodyCell>
-      <TableBodyCell {tdClass}>{source.intervall}</TableBodyCell>
+      <TableBodyCell {tdClass}>{source.interval}</TableBodyCell>
       <TableBodyCell {tdClass}>{getRelativeTime(source.lastRun)}</TableBodyCell>
       <td>
         <Button
