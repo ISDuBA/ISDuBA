@@ -223,6 +223,7 @@
         {/each}
       {/if}
     </div>
+    <CustomInput id="ignore-pattern" label="" bind:value={job.ignore_pattern}></CustomInput>
     <Checkbox
       on:change={() => {
         job.insecure = !job.insecure;
@@ -239,19 +240,15 @@
     >
       <span>Ignore signature check</span>
     </Checkbox>
-    <Checkbox
-      on:change={() => {
-        job.temporary = !job.temporary;
-      }}
-      bind:checked={job.temporary}
-    >
-      <span>Temporary</span>
-    </Checkbox>
   </div>
   <div class="mb-4 text-sm text-red-500">* Required fields</div>
   <Button disabled={disableSave} type="submit" color="light">
     <i class="bx bxs-save me-2"></i>
     <span>Save</span>
+  </Button>
+  <Button disabled={disableSave} type="submit" color="light">
+    <i class="bx bx-run me-2"></i>
+    <span>Run once</span>
   </Button>
 </form>
 <ErrorMessage message={saveError}></ErrorMessage>
