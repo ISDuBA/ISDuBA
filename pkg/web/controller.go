@@ -22,6 +22,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 )
 
@@ -30,6 +31,7 @@ type Controller struct {
 	cfg      *config.Config
 	db       *database.DB
 	tmpStore *tempstore.Store
+	dl       *sources.Downloader
 }
 
 // NewController returns a new Controller.
@@ -37,11 +39,13 @@ func NewController(
 	cfg *config.Config,
 	db *database.DB,
 	tmpStore *tempstore.Store,
+	dl *sources.Downloader,
 ) *Controller {
 	return &Controller{
 		cfg:      cfg,
 		db:       db,
 		tmpStore: tmpStore,
+		dl:       dl,
 	}
 }
 

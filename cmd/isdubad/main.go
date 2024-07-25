@@ -21,6 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
@@ -54,9 +55,15 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
+	downloader := sources.NewDownloader(&cfg.Sources, db)
+	if err := downloader.Boot(); err != nil {
+		return fmt.Errorf("booting downloader failed: %w", err)
+	}
+	go downloader.Run(ctx)
+
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, tmpStore)
+	ctrl := web.NewController(cfg, db, tmpStore, downloader)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)
