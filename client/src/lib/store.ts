@@ -410,7 +410,7 @@ function createStore() {
     isReviewer: () => appStore.getRoles().includes(REVIEWER),
     isAdmin: () => appStore.getRoles().includes(ADMIN),
     isAuditor: () => appStore.getRoles().includes(AUDITOR),
-    isSManager: () => appStore.getRoles().includes(SOURCE_MANAGER),
+    isSourceManager: () => appStore.getRoles().includes(SOURCE_MANAGER),
     getUserManager: () => state.app.userManager,
     getIsUserLoggedIn: () => state.app.isUserLoggedIn
   };
