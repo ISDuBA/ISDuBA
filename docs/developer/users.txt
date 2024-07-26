@@ -23,6 +23,7 @@
   medium    Medium      Geisterseher   med@example.com    medium   greenamber editor
   high      High        Hoch           hig@example.com    high     amberred   editor
   all       All         Alle           all@example.com    all      all        editor
+  srcm      Source      Manager        src@example.com    srcm     all        source-manager
 # The following users are intentionally not functional and for testing purposes only. The none group and role do not grant access to anything.
   none      None        Noone          non@example.com    none     none       none
   defr      Def         Role           der@example.com    defr     all        none

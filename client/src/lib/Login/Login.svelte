@@ -157,6 +157,9 @@
               {#if appStore.isEditor()}
                 <Li liClass="ml-3">Editor</Li>
               {/if}
+              {#if appStore.isSManager()}
+                <Li liClass="ml-3">Source-Manager</Li>
+              {/if}
             </List>
           </div>
         {/if}

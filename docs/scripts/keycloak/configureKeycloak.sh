@@ -151,18 +151,20 @@ fi
 
 ./createGroup.sh --name 'none'                   --noLogin
 
-# create roles  name        description               login
-./createRole.sh 'editor'    'Bearbeiter'              false
+# create roles  name             description               login
+./createRole.sh 'editor'         'Bearbeiter'              false
 
-./createRole.sh 'reviewer'  'Reviewer'                false
+./createRole.sh 'reviewer'       'Reviewer'                false
 
-./createRole.sh 'auditor'   'Auditor'                 false
+./createRole.sh 'auditor'        'Auditor'                 false
 
-./createRole.sh 'importer'  'Importierer'             false
+./createRole.sh 'importer'       'Importierer'             false
 
-./createRole.sh 'admin'     'Administrator'           false
+./createRole.sh 'admin'          'Administrator'           false
 
-./createRole.sh 'none'      'Role outside the system' false
+./createRole.sh 'source-manager' 'Source Manager'          false
+
+./createRole.sh 'none'           'Role outside the system' false
 
 # create Users    file containing users            login
 ./createUsers.sh  -f ./../../developer/users.txt  --noLogin

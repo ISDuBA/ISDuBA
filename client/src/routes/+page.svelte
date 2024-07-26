@@ -86,6 +86,7 @@
       appStore.isEditor() ||
       appStore.isAuditor() ||
       appStore.isReviewer() ||
+      appStore.isSManager() ||
       appStore.isImporter();
     return hasRole;
   };
