@@ -77,7 +77,9 @@ const (
 )
 
 const (
-	defaultMaxDownloads         = 20
+	defaultDownloadSlots        = 100
+	defaultSlotsPerSource       = 2
+	defaultRatePerSlot          = 0
 	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
 )
@@ -142,8 +144,10 @@ type TempStore struct {
 
 // Sources are the config options for the download sources.
 type Sources struct {
-	MaxDownloads   int    `toml:"max_downloads"`
-	DefaultMessage string `toml:"default_message"`
+	DownloadSlots  int     `toml:"max_download_slots"`
+	SlotsPerSource int     `toml:"slots_per_source"`
+	RatePerSlot    float64 `toml:"rate_per_slot"`
+	DefaultMessage string  `toml:"default_message"`
 }
 
 // Config are all the configuration options.
@@ -256,7 +260,9 @@ func Load(file string) (*Config, error) {
 			StorageDuration: defaultTempStorageDuration,
 		},
 		Sources: Sources{
-			MaxDownloads:   defaultMaxDownloads,
+			DownloadSlots:  defaultDownloadSlots,
+			SlotsPerSource: defaultSlotsPerSource,
+			RatePerSlot:    defaultRatePerSlot,
 			DefaultMessage: defaultMessageSourceManager,
 		},
 	}
@@ -284,6 +290,7 @@ func (cfg *Config) fillFromEnv() error {
 		storeLevel     = store(storeLevel)
 		storeDuration  = store(time.ParseDuration)
 		storeHumanSize = store(storeHumanSize)
+		storeFloat64   = store(parseFloat64)
 	)
 	return storeFromEnv(
 		envStore{"ISDUBA_ADVISORY_UPLOAD_LIMIT", storeHumanSize(&cfg.General.AdvisoryUploadLimit)},
@@ -315,7 +322,8 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_TOTAL", storeInt(&cfg.TempStore.FilesTotal)},
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
-		envStore{"ISDUBA_SOURCES_MAX_DOWNLOADS", storeInt(&cfg.Sources.MaxDownloads)},
+		envStore{"ISDUBA_SOURCES_DOWNLOAD_SLOTS", storeInt(&cfg.Sources.DownloadSlots)},
+		envStore{"ISDUBA_SOURCES_RATE_PER_SLOTS", storeFloat64(&cfg.Sources.RatePerSlot)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 	)
 }

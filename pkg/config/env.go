@@ -11,6 +11,7 @@ package config
 import (
 	"log/slog"
 	"os"
+	"strconv"
 )
 
 // envStore maps an env to a store function.
@@ -22,6 +23,10 @@ type envStore struct {
 func storeLevel(s string) (slog.Level, error) {
 	var level slog.Level
 	return level, level.UnmarshalText([]byte(s))
+}
+
+func parseFloat64(s string) (float64, error) {
+	return strconv.ParseFloat(s, 64)
 }
 
 func storeHumanSize(s string) (HumanSize, error) {
