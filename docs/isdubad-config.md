@@ -26,7 +26,7 @@ The configuration consists of the following sections:
 - [`[database]`](#section_database) Database credentials
 - [`[publishers_tlps]`](#section_publishers_tlps) publishers/TLPs filters
 - [`[temp_storage]`](#section_temp_storage) temporary document storage
-- [`[source_manager]`](#section_source_manager) Source Manager
+- [`[sources]`](#section_sources) Sources
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
@@ -93,41 +93,41 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `files_user`: Max number of files hold in temp storage per user. Defaults to `2`.
 - `storage_duration`: Ensured storage duration in temp storage. Defaults to `"30m"` minutes.
 
-### <a name="section_source_manager"></a> Section `[source_manager]` Source Manager
+### <a name="section_sources"></a> Section `[sources]` Sources
 
-- default_message: The message that should be displayed inside the source manager.
+- `default_message`: The message that should be displayed inside the source manager.
 
 ## <a name="env_vars"></a>Environment variables
 
-| Env variable                            | Overwrites                           |
-| --------------------------------------- | ------------------------------------ |
-| `ISDUBA_ADVISORY_UPLOAD_LIMIT`          | `general advisory_upload_limit`      |
-| `ISDUBA_ANONYMOUS_EVENT_LOGGING`        | `general anonymous_event_logging`    |
-| `ISDUBA_LOG_FILE`                       | `log file`                           |
-| `ISDUBA_LOG_LEVEL`                      | `log level`                          |
-| `ISDUBA_LOG_JSON"`                      | `log json`                           |
-| `ISDUBA_LOG_SOURCE`                     | `log source`                         |
-| `ISDUBA_KEYCLOAK_URL`                   | `keycloak url`                       |
-| `ISDUBA_KEYCLOAK_REALM`                 | `keycloak realm`                     |
-| `ISDUBA_KEYCLOAK_TIMEOUT`               | `keycloak timeout`                   |
-| `ISDUBA_KEYCLOAK_CERTS_CACHING`         | `keycloak certs_caching`             |
-| `ISDUBA_KEYCLOAK_FULL_CERTS_PATH`       | `keycloak full_certs_path`           |
-| `ISDUBA_WEB_HOST`                       | `web host`                           |
-| `ISDUBA_WEB_PORT`                       | `web port`                           |
-| `ISDUBA_WEB_GIN_MODE`                   | `web gin_mode`                       |
-| `ISDUBA_WEB_STATIC`                     | `web static`                         |
-| `ISDUBA_DB_HOST`                        | `database host`                      |
-| `ISDUBA_DB_PORT`                        | `database port`                      |
-| `ISDUBA_DB_DATABASE`                    | `database database`                  |
-| `ISDUBA_DB_USER`                        | `database user`                      |
-| `ISDUBA_DB_PASSWORD`                    | `database password`                  |
-| `ISDUBA_DB_ADMIN_DATABASE`              | `database admin_database`            |
-| `ISDUBA_DB_ADMIN_USER`                  | `database admin_user`                |
-| `ISDUBA_DB_ADMIN_PASSWORD`              | `database admin_password`            |
-| `ISDUBA_DB_MIGRATE`                     | `database migrate`                   |
-| `ISDUBA_DB_TERMINATE_AFTER_MIGRATION`   | `database terminate_after_migration` |
-| `ISDUBA_DB_MAX_QUERY_DURATION`          | `database max_query_duration`        |
-| `ISDUBA_TEMP_STORAGE_FILES_TOTAL`       | `temp_storage files_total`           |
-| `ISDUBA_TEMP_STORAGE_FILES_USER`        | `temp_storage files_user`            |
-| `ISDUBA_TEMP_STORAGE_DURATION`          | `temp_storage storage_duration`      |
-| `ISDUBA_SOURCE_MANAGER_DEFAULT_MESSAGE` | `source_manager default_message`     |
+| Env variable                          | Overwrites                           |
+| ------------------------------------- | ------------------------------------ |
+| `ISDUBA_ADVISORY_UPLOAD_LIMIT`        | `general advisory_upload_limit`      |
+| `ISDUBA_ANONYMOUS_EVENT_LOGGING`      | `general anonymous_event_logging`    |
+| `ISDUBA_LOG_FILE`                     | `log file`                           |
+| `ISDUBA_LOG_LEVEL`                    | `log level`                          |
+| `ISDUBA_LOG_JSON"`                    | `log json`                           |
+| `ISDUBA_LOG_SOURCE`                   | `log source`                         |
+| `ISDUBA_KEYCLOAK_URL`                 | `keycloak url`                       |
+| `ISDUBA_KEYCLOAK_REALM`               | `keycloak realm`                     |
+| `ISDUBA_KEYCLOAK_TIMEOUT`             | `keycloak timeout`                   |
+| `ISDUBA_KEYCLOAK_CERTS_CACHING`       | `keycloak certs_caching`             |
+| `ISDUBA_KEYCLOAK_FULL_CERTS_PATH`     | `keycloak full_certs_path`           |
+| `ISDUBA_WEB_HOST`                     | `web host`                           |
+| `ISDUBA_WEB_PORT`                     | `web port`                           |
+| `ISDUBA_WEB_GIN_MODE`                 | `web gin_mode`                       |
+| `ISDUBA_WEB_STATIC`                   | `web static`                         |
+| `ISDUBA_DB_HOST`                      | `database host`                      |
+| `ISDUBA_DB_PORT`                      | `database port`                      |
+| `ISDUBA_DB_DATABASE`                  | `database database`                  |
+| `ISDUBA_DB_USER`                      | `database user`                      |
+| `ISDUBA_DB_PASSWORD`                  | `database password`                  |
+| `ISDUBA_DB_ADMIN_DATABASE`            | `database admin_database`            |
+| `ISDUBA_DB_ADMIN_USER`                | `database admin_user`                |
+| `ISDUBA_DB_ADMIN_PASSWORD`            | `database admin_password`            |
+| `ISDUBA_DB_MIGRATE`                   | `database migrate`                   |
+| `ISDUBA_DB_TERMINATE_AFTER_MIGRATION` | `database terminate_after_migration` |
+| `ISDUBA_DB_MAX_QUERY_DURATION`        | `database max_query_duration`        |
+| `ISDUBA_TEMP_STORAGE_FILES_TOTAL`     | `temp_storage files_total`           |
+| `ISDUBA_TEMP_STORAGE_FILES_USER`      | `temp_storage files_user`            |
+| `ISDUBA_TEMP_STORAGE_DURATION`        | `temp_storage storage_duration`      |
+| `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `source_manager default_message`     |

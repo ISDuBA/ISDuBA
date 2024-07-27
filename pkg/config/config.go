@@ -139,8 +139,8 @@ type TempStore struct {
 	StorageDuration time.Duration `toml:"storage_duration"`
 }
 
-// SourceManager are the config options for the source manager.
-type SourceManager struct {
+// Sources are the config options for the source manager.
+type Sources struct {
 	DefaultMessage string `toml:"default_message"`
 }
 
@@ -153,7 +153,7 @@ type Config struct {
 	Database       Database              `toml:"database"`
 	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
 	TempStore      TempStore             `toml:"temp_storage"`
-	SourceManager  SourceManager         `toml:"source_manager"`
+	Sources        Sources               `toml:"sources"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -253,7 +253,7 @@ func Load(file string) (*Config, error) {
 			FilesUser:       defaultTempStorageFilesUser,
 			StorageDuration: defaultTempStorageDuration,
 		},
-		SourceManager: SourceManager{
+		Sources: Sources{
 			DefaultMessage: defaultMessageSourceManager,
 		},
 	}
@@ -312,7 +312,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_TOTAL", storeInt(&cfg.TempStore.FilesTotal)},
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
-		envStore{"ISDUBA_SOURCE_MANAGER_DEFAULT_MESSAGE", storeString(&cfg.SourceManager.DefaultMessage)},
+		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 	)
 }
 

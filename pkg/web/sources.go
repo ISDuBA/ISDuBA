@@ -16,5 +16,5 @@ import (
 
 // defaultMessage returns the default message.
 func (c *Controller) defaultMessage(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.SourceManager.DefaultMessage})
+	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
 }
