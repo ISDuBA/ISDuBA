@@ -10,6 +10,26 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { request } from "$lib/utils";
+
+  let messageError = "";
+  async function getMessage() {
+    const response = await request("api/sources/message", "GET");
+    if (response.ok) {
+      return response.content;
+    } else if (response.error) {
+      messageError = `Couldn't load default message`;
+    }
+    return new Map<string, [string]>();
+  }
 </script>
 
 <SectionHeader title="Sources"></SectionHeader>
+
+{#await getMessage() then resp}
+  {#if resp.message}
+    {resp.message}
+  {/if}
+{/await}
+<ErrorMessage message={messageError}></ErrorMessage>

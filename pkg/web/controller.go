@@ -82,7 +82,7 @@ func (c *Controller) Bind() http.Handler {
 		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
 		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
 		authAll    = authRoles(models.Admin, models.Importer, models.Editor,
-			models.Reviewer, models.Auditor)
+			models.Reviewer, models.Auditor, models.SourceManager)
 	)
 
 	api := r.Group("/api")
@@ -137,5 +137,8 @@ func (c *Controller) Bind() http.Handler {
 
 	// Visibility information
 	api.GET("/view", authAll, c.view)
+
+	// Source manager
+	api.GET("/sources/message", authAll, c.defaultMessage)
 	return r
 }

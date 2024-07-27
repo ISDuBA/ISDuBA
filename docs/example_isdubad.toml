@@ -49,3 +49,6 @@
 
 # [publishers_tlps]
 # '*' = ["WHITE"]
+
+# [sources]
+# default_message = "Missing something? To suggest new CSAF sources, please contact your CSAF source manager or your administrator."

@@ -77,7 +77,9 @@ const (
 )
 
 const (
-	defaultMaxDownloads = 20
+	defaultMaxDownloads         = 20
+	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
+		"please contact your CSAF source manager or your administrator."
 )
 
 // HumanSize de-serializes sizes from integer strings
@@ -140,7 +142,8 @@ type TempStore struct {
 
 // Sources are the config options for the download sources.
 type Sources struct {
-	MaxDownloads int `toml:"max_downloads"`
+	MaxDownloads   int    `toml:"max_downloads"`
+	DefaultMessage string `toml:"default_message"`
 }
 
 // Config are all the configuration options.
@@ -253,7 +256,8 @@ func Load(file string) (*Config, error) {
 			StorageDuration: defaultTempStorageDuration,
 		},
 		Sources: Sources{
-			MaxDownloads: defaultMaxDownloads,
+			MaxDownloads:   defaultMaxDownloads,
+			DefaultMessage: defaultMessageSourceManager,
 		},
 	}
 	if file != "" {
@@ -312,6 +316,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
 		envStore{"ISDUBA_SOURCES_MAX_DOWNLOADS", storeInt(&cfg.Sources.MaxDownloads)},
+		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 	)
 }
 
