@@ -76,6 +76,11 @@ const (
 	defaultTempStorageDuration   = 30 * time.Minute
 )
 
+const (
+	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
+		"please contact your CSAF source manager or your administrator."
+)
+
 // HumanSize de-serializes sizes from integer strings
 // with suffix "k" (1000), "K" (1024), "m", "M", "g", "G".
 // With no suffix given bytes are assumed.
@@ -134,6 +139,11 @@ type TempStore struct {
 	StorageDuration time.Duration `toml:"storage_duration"`
 }
 
+// Sources are the config options for the source manager.
+type Sources struct {
+	DefaultMessage string `toml:"default_message"`
+}
+
 // Config are all the configuration options.
 type Config struct {
 	General        General               `toml:"general"`
@@ -143,6 +153,7 @@ type Config struct {
 	Database       Database              `toml:"database"`
 	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
 	TempStore      TempStore             `toml:"temp_storage"`
+	Sources        Sources               `toml:"sources"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -242,6 +253,9 @@ func Load(file string) (*Config, error) {
 			FilesUser:       defaultTempStorageFilesUser,
 			StorageDuration: defaultTempStorageDuration,
 		},
+		Sources: Sources{
+			DefaultMessage: defaultMessageSourceManager,
+		},
 	}
 	if file != "" {
 		md, err := toml.DecodeFile(file, cfg)
@@ -298,6 +312,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_TOTAL", storeInt(&cfg.TempStore.FilesTotal)},
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
+		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 	)
 }
 
