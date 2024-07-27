@@ -81,6 +81,8 @@ func (c *Controller) Bind() http.Handler {
 		authEdRe   = authRoles(models.Editor, models.Reviewer)
 		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
 		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
+		authSM     = authRoles(models.SourceManager)
+		authEdSM   = authRoles(models.Editor, models.SourceManager)
 		authAll    = authRoles(models.Admin, models.Importer, models.Editor,
 			models.Reviewer, models.Auditor, models.SourceManager)
 	)
@@ -139,6 +141,18 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/view", authAll, c.view)
 
 	// Source manager
+	api.GET("/sources", authEdSM, c.viewSources)
+	api.POST("/sources", authSM, c.createSource)
 	api.GET("/sources/message", authAll, c.defaultMessage)
+	api.DELETE("/sources/:id", authSM, c.deleteSource)
+	api.PUT("/sources/:id", authSM, c.updateSource)
+
+	// Source feeds
+	api.GET("/sources/:id/feeds", authEdSM, c.viewFeeds)
+	api.POST("/sources/:id/feeds", authSM, c.createFeed)
+	api.GET("/sources/:id/feeds/:fid", authEdSM, c.viewFeed)
+	api.DELETE("/sources/:id/feeds/:fid", authSM, c.deleteFeed)
+	api.GET("/sources/:id/feeds/:fid/log", authSM, c.feedLog)
+
 	return r
 }
