@@ -80,6 +80,7 @@ const (
 	defaultDownloadSlots        = 100
 	defaultSlotsPerSource       = 2
 	defaultRatePerSlot          = 0
+	defaultFeedRefresh          = 15 * time.Minute
 	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
 )
@@ -142,12 +143,13 @@ type TempStore struct {
 	StorageDuration time.Duration `toml:"storage_duration"`
 }
 
-// Sources are the config options for the download sources.
+// Sources are the config options for downloading sources.
 type Sources struct {
-	DownloadSlots  int     `toml:"max_download_slots"`
-	SlotsPerSource int     `toml:"slots_per_source"`
-	RatePerSlot    float64 `toml:"rate_per_slot"`
-	DefaultMessage string  `toml:"default_message"`
+	DownloadSlots  int           `toml:"max_download_slots"`
+	SlotsPerSource int           `toml:"slots_per_source"`
+	RatePerSlot    float64       `toml:"rate_per_slot"`
+	FeedRefresh    time.Duration `toml:"feed_refresh"`
+	DefaultMessage string        `toml:"default_message"`
 }
 
 // Config are all the configuration options.
@@ -263,6 +265,7 @@ func Load(file string) (*Config, error) {
 			DownloadSlots:  defaultDownloadSlots,
 			SlotsPerSource: defaultSlotsPerSource,
 			RatePerSlot:    defaultRatePerSlot,
+			FeedRefresh:    defaultFeedRefresh,
 			DefaultMessage: defaultMessageSourceManager,
 		},
 	}
@@ -324,6 +327,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
 		envStore{"ISDUBA_SOURCES_DOWNLOAD_SLOTS", storeInt(&cfg.Sources.DownloadSlots)},
 		envStore{"ISDUBA_SOURCES_RATE_PER_SLOTS", storeFloat64(&cfg.Sources.RatePerSlot)},
+		envStore{"ISDUBA_SOURCES_FEED_REFRESH", storeDuration(&cfg.Sources.FeedRefresh)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 	)
 }
