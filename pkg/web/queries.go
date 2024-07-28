@@ -43,14 +43,14 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
 	// Advisories flag
 	if advisories, ok := ctx.GetPostForm("advisories"); ok {
-		if sq.Advisories, ok = parse(ctx, toBool, advisories); !ok {
+		if sq.Advisories, ok = parse(ctx, strconv.ParseBool, advisories); !ok {
 			return
 		}
 	}
 
 	// Global flag
 	if global, ok := ctx.GetPostForm("global"); ok {
-		if sq.Global, ok = parse(ctx, toBool, global); !ok {
+		if sq.Global, ok = parse(ctx, strconv.ParseBool, global); !ok {
 			return
 		}
 	}

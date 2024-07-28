@@ -10,26 +10,28 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (c *Controller) viewSources(ctx *gin.Context) {
+type source struct {
+	ID     int64    `json:"id" form:"id"`
+	Name   string   `json:"name" form:"name" binding:"required"`
+	Domain *string  `json:"domain,omitempty" form:"domain"`
+	PMD    *string  `json:"pmd,omitempty" form:"pmd"`
+	Active *bool    `json:"active" form:"active"`
+	Rate   *float64 `json:"rate,omitempty" form:"rate"`
+	Slots  *int     `json:"slots,omitempty" form:"slots"`
+}
 
-	type source struct {
-		ID     int64    `json:"id"`
-		Name   string   `json:"name"`
-		Domain string   `json:"domain,omitempty"`
-		PMD    string   `json:"pmd,omitempty"`
-		Active bool     `json:"active"`
-		Rate   *float64 `json:"rate,omitempty"`
-		Slots  *int     `json:"slots,omitempty"`
-	}
+func (c *Controller) viewSources(ctx *gin.Context) {
 
 	var srcs []*source
 	const sql = `SELECT id, name, domain, pmd, active, rate, slots FROM sources`
@@ -61,10 +63,78 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 }
 
 func (c *Controller) createSource(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'createSource' not implemented, yet.",
-	})
+
+	var src source
+	if err := ctx.ShouldBind(&src); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if src.Domain == nil && src.PMD == nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing 'domain' or 'pmd'"})
+		return
+	}
+
+	if src.Domain != nil && src.PMD != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'domain' and 'pmd' are exclusive"})
+		return
+	}
+
+	if src.Domain != nil && *src.Domain == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'domain' is empty"})
+		return
+	}
+
+	if src.PMD != nil && *src.PMD == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'pmd' is empty"})
+		return
+	}
+
+	if src.Rate != nil && (*src.Rate <= 0 ||
+		(c.cfg.Sources.RatePerSlot != 0 && *src.Rate > c.cfg.Sources.RatePerSlot)) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
+		return
+	}
+
+	if src.Slots != nil && (*src.Slots < 1 || *src.Slots > c.cfg.Sources.SlotsPerSource) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
+		return
+	}
+
+	const sql = `INSERT INTO sources (name, domain, pmd, active, rate, slots) ` +
+		`VALUES ($1, $2, $3, $4, $5, $6) ` +
+		`RETURNING id`
+
+	var id int64
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			return con.QueryRow(
+				rctx, sql,
+				src.Name,
+				src.Domain,
+				src.PMD,
+				src.Active != nil && *src.Active,
+				src.Rate,
+				src.Slots).Scan(&id)
+		}, 0,
+	); err != nil {
+		// As name can cause an unique constraint violation
+		// report this as a bad request as this expected.
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "not a unique value: " + pgErr.Message,
+			})
+		} else {
+			slog.Error("database error", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
 func (c *Controller) deleteSource(ctx *gin.Context) {

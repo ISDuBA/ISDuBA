@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -183,7 +184,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	// Use the advisories.
-	advisory, ok := parse(ctx, toBool, ctx.DefaultQuery("advisories", "false"))
+	advisory, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("advisories", "false"))
 	if !ok {
 		return
 	}
