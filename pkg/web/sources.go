@@ -9,16 +9,55 @@
 package web
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func (c *Controller) viewSources(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'viewSources' not implemented, yet.",
-	})
+
+	type source struct {
+		ID     int64    `json:"id"`
+		Name   string   `json:"name"`
+		Domain string   `json:"domain,omitempty"`
+		PMD    string   `json:"pmd,omitempty"`
+		Active bool     `json:"active"`
+		Rate   *float64 `json:"rate,omitempty"`
+		Slots  *int     `json:"slots,omitempty"`
+	}
+
+	var srcs []*source
+	const sql = `SELECT id, name, domain, pmd, active, rate, slots FROM sources`
+
+	if err := c.db.Run(ctx.Request.Context(), func(rctx context.Context, con *pgxpool.Conn) error {
+		rows, err := con.Query(rctx, sql)
+		if err != nil {
+			return fmt.Errorf("failed fetching sources: %w", err)
+		}
+		srcs, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (*source, error) {
+			var src source
+			return &src, row.Scan(
+				&src.ID,
+				&src.Name,
+				&src.Domain,
+				&src.PMD,
+				&src.Active,
+				&src.Rate,
+				&src.Slots,
+			)
+		})
+		return err
+	}, 0); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
 }
 
 func (c *Controller) createSource(ctx *gin.Context) {
