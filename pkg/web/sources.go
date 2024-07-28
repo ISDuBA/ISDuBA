@@ -138,10 +138,45 @@ func (c *Controller) createSource(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteSource(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'deleteSource' not implemented, yet.",
-	})
+	type input struct {
+		ID int64 `uri:"id" binding:"required"`
+	}
+	var in input
+	if err := ctx.ShouldBindUri(&in); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := c.sm.RemoveSource(in.ID); err != nil {
+		slog.Error("removing source failed", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	const sql = `DELETE FROM sources WHERE id = $1`
+
+	notFound := false
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			tags, err := con.Exec(rctx, sql, in.ID)
+			if err != nil {
+				return fmt.Errorf("removing source failed: %w", err)
+			}
+			notFound = tags.RowsAffected() == 0
+			return nil
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if notFound {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"message": "source deleted"})
+	}
 }
 
 func (c *Controller) updateSource(ctx *gin.Context) {

@@ -31,7 +31,7 @@ type Controller struct {
 	cfg      *config.Config
 	db       *database.DB
 	tmpStore *tempstore.Store
-	dl       *sources.Downloader
+	sm       *sources.Manager
 }
 
 // NewController returns a new Controller.
@@ -39,13 +39,13 @@ func NewController(
 	cfg *config.Config,
 	db *database.DB,
 	tmpStore *tempstore.Store,
-	dl *sources.Downloader,
+	dl *sources.Manager,
 ) *Controller {
 	return &Controller{
 		cfg:      cfg,
 		db:       db,
 		tmpStore: tmpStore,
-		dl:       dl,
+		sm:       dl,
 	}
 }
 

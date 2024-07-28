@@ -55,15 +55,15 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
-	downloader := sources.NewDownloader(&cfg.Sources, db)
-	if err := downloader.Boot(); err != nil {
-		return fmt.Errorf("booting downloader failed: %w", err)
+	sm := sources.NewManager(&cfg.Sources, db)
+	if err := sm.Boot(); err != nil {
+		return fmt.Errorf("booting source manager failed: %w", err)
 	}
-	go downloader.Run(ctx)
+	go sm.Run(ctx)
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, tmpStore, downloader)
+	ctrl := web.NewController(cfg, db, tmpStore, sm)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)
