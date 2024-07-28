@@ -65,6 +65,19 @@ func (m *Manager) RemoveSource(sourceID int64) error {
 	result := make(chan error)
 	m.fns <- func(_ *Manager) {
 		_ = sourceID
+		// TODO: Implement me!
+		result <- nil
+	}
+	return <-result
+}
+
+// AddFeed adds a new feed to a source.
+func (m *Manager) AddFeed(sourceID, feedID int64) error {
+	result := make(chan error)
+	m.fns <- func(_ *Manager) {
+		_ = sourceID
+		_ = feedID
+		// TODO: Implement me!
 		result <- nil
 	}
 	return <-result

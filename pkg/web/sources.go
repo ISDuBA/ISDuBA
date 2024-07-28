@@ -138,16 +138,15 @@ func (c *Controller) createSource(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteSource(ctx *gin.Context) {
-	type input struct {
+	var input struct {
 		ID int64 `uri:"id" binding:"required"`
 	}
-	var in input
-	if err := ctx.ShouldBindUri(&in); err != nil {
+	if err := ctx.ShouldBindUri(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := c.sm.RemoveSource(in.ID); err != nil {
+	if err := c.sm.RemoveSource(input.ID); err != nil {
 		slog.Error("removing source failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -160,7 +159,7 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, con *pgxpool.Conn) error {
-			tags, err := con.Exec(rctx, sql, in.ID)
+			tags, err := con.Exec(rctx, sql, input.ID)
 			if err != nil {
 				return fmt.Errorf("removing source failed: %w", err)
 			}
@@ -194,10 +193,68 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 }
 
 func (c *Controller) createFeed(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'createFeed' not implemented, yet.",
-	})
+	var input struct {
+		SourceID int64  `uri:"id" binding:"required"`
+		Label    string `form:"label" binding:"required"`
+		URL      string `form:"url" binding:"required,url"`
+		Rolie    bool   `form:"rolie"`
+	}
+	if err := ctx.ShouldBind(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	const (
+		sourceSQL = `SELECT EXISTS(SELECT 1 FROM sources WHERE id = $1`
+		insertSQL = `INSERT INTO feeds (label, sources_id, url, rolie) ` +
+			`VALUES ($1, $2, $3, $4) ` +
+			`RETURNING id`
+	)
+	var (
+		sourceFound bool
+		feedID      int64
+	)
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			tx, err := con.Begin(rctx)
+			if err != nil {
+				return fmt.Errorf("starting tx failed: %w", err)
+			}
+			defer tx.Rollback(rctx)
+			if err := tx.QueryRow(rctx, sourceSQL,
+				input.SourceID,
+			).Scan(&sourceFound); err != nil {
+				return fmt.Errorf("checking source id failed: %w", err)
+			}
+			if !sourceFound {
+				return nil
+			}
+			if err := tx.QueryRow(rctx, insertSQL,
+				input.Label,
+				input.SourceID,
+				input.URL,
+				input.Rolie,
+			).Scan(&feedID); err != nil {
+				return fmt.Errorf("inserting feed failed: %w", err)
+			}
+			return tx.Commit(rctx)
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if !sourceFound {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "source id not found"})
+		return
+	}
+	// Register feed in source manager.
+	if err := c.sm.AddFeed(input.SourceID, feedID); err != nil {
+		slog.Error("add feed failed", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusCreated, gin.H{"id": feedID})
 }
 
 func (c *Controller) viewFeed(ctx *gin.Context) {

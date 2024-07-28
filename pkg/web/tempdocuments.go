@@ -38,7 +38,7 @@ func (c *Controller) importTempDocument(ctx *gin.Context) {
 	defer limited.Close()
 
 	user := ctx.GetString("uid")
-	id, err := c.tmpStore.Store(user, file.Filename, func(w io.Writer) error {
+	id, err := c.ts.Store(user, file.Filename, func(w io.Writer) error {
 		// Check if the uploaded document is a valid CSAF document.
 		var document any
 		r := io.TeeReader(limited, w)
@@ -63,9 +63,9 @@ func (c *Controller) importTempDocument(ctx *gin.Context) {
 
 func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 	user := ctx.GetString("uid")
-	files := c.tmpStore.List(user)
+	files := c.ts.List(user)
 	free := max(0, min(
-		c.cfg.TempStore.FilesTotal-c.tmpStore.Total(),
+		c.cfg.TempStore.FilesTotal-c.ts.Total(),
 		c.cfg.TempStore.FilesUser-len(files)))
 	ctx.JSON(http.StatusOK, gin.H{
 		"files": files,
@@ -79,7 +79,7 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 		return
 	}
 	user := ctx.GetString("uid")
-	r, entry, err := c.tmpStore.Fetch(user, id)
+	r, entry, err := c.ts.Fetch(user, id)
 	switch {
 	case errors.Is(err, tempstore.ErrFileNotFound):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -106,7 +106,7 @@ func (c *Controller) deleteTempDocument(ctx *gin.Context) {
 		return
 	}
 	user := ctx.GetString("uid")
-	if c.tmpStore.Delete(user, id) {
+	if c.ts.Delete(user, id) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
 	} else {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})

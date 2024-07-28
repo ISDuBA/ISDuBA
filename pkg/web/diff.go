@@ -102,7 +102,7 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 	// Do we need to load documents from the temp store?
 	for _, f := range fromTempStore {
 		user := ctx.GetString("uid")
-		r, entry, err := c.tmpStore.Fetch(user, f.id)
+		r, entry, err := c.ts.Fetch(user, f.id)
 		switch {
 		case errors.Is(err, tempstore.ErrFileNotFound):
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

@@ -28,24 +28,24 @@ import (
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
-	cfg      *config.Config
-	db       *database.DB
-	tmpStore *tempstore.Store
-	sm       *sources.Manager
+	cfg *config.Config
+	db  *database.DB
+	ts  *tempstore.Store
+	sm  *sources.Manager
 }
 
 // NewController returns a new Controller.
 func NewController(
 	cfg *config.Config,
 	db *database.DB,
-	tmpStore *tempstore.Store,
+	ts *tempstore.Store,
 	dl *sources.Manager,
 ) *Controller {
 	return &Controller{
-		cfg:      cfg,
-		db:       db,
-		tmpStore: tmpStore,
-		sm:       dl,
+		cfg: cfg,
+		db:  db,
+		ts:  ts,
+		sm:  dl,
 	}
 }
 
@@ -150,9 +150,9 @@ func (c *Controller) Bind() http.Handler {
 	// Source feeds
 	api.GET("/sources/:id/feeds", authEdSM, c.viewFeeds)
 	api.POST("/sources/:id/feeds", authSM, c.createFeed)
-	api.GET("/sources/:id/feeds/:fid", authEdSM, c.viewFeed)
-	api.DELETE("/sources/:id/feeds/:fid", authSM, c.deleteFeed)
-	api.GET("/sources/:id/feeds/:fid/log", authSM, c.feedLog)
+	api.GET("/sources/feeds/:id", authEdSM, c.viewFeed)
+	api.DELETE("/sources/feeds/:id", authSM, c.deleteFeed)
+	api.GET("/sources/feeds/:id/log", authSM, c.feedLog)
 
 	return r
 }
