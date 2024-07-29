@@ -145,14 +145,14 @@ func (c *Controller) Bind() http.Handler {
 	api.POST("/sources", authSM, c.createSource)
 	api.GET("/sources/message", authAll, c.defaultMessage)
 	api.DELETE("/sources/:id", authSM, c.deleteSource)
-	api.PUT("/sources/:id", authSM, c.updateSource)
+	api.PUT("/sources/:id", authSM, c.updateSource) // TODO: Implement me!
 
 	// Source feeds
 	api.GET("/sources/:id/feeds", authEdSM, c.viewFeeds)
 	api.POST("/sources/:id/feeds", authSM, c.createFeed)
 	api.GET("/sources/feeds/:id", authEdSM, c.viewFeed)
-	api.DELETE("/sources/feeds/:id", authSM, c.deleteFeed)
-	api.GET("/sources/feeds/:id/log", authSM, c.feedLog)
+	api.DELETE("/sources/feeds/:id", authSM, c.deleteFeed) // TODO: Implement me!
+	api.GET("/sources/feeds/:id/log", authSM, c.feedLog)   // TODO: Implement me!
 
 	return r
 }

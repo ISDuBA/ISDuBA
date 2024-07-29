@@ -31,6 +31,13 @@ type source struct {
 	Slots  *int     `json:"slots,omitempty" form:"slots" binding:"gte=1"`
 }
 
+type feed struct {
+	ID    int64  `json:"id"`
+	Label string `json:"label"`
+	URL   string `json:"url"`
+	Rolie bool   `json:"rolie"`
+}
+
 func (c *Controller) viewSources(ctx *gin.Context) {
 
 	var srcs []*source
@@ -175,15 +182,40 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 }
 
 func (c *Controller) viewFeeds(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'viewFeeds' not implemented, yet.",
-	})
+	var input struct {
+		SourceID int64 `uri:"id"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	const sql = `SELECT id, label, url, rolie FROM feeds WHERE sources_id = $1`
+
+	var feeds []*feed
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			rows, err := con.Query(rctx, sql, input.SourceID)
+			if err != nil {
+				return fmt.Errorf("fetching feeds failed: %w", err)
+			}
+			feeds, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (*feed, error) {
+				var f feed
+				return &f, row.Scan(&f.ID, &f.Label, &f.URL, &f.Rolie)
+			})
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
 }
 
 func (c *Controller) createFeed(ctx *gin.Context) {
 	var input struct {
-		//SourceID int64  `uri:"id" binding:"required"`
 		SourceID int64  `uri:"id"`
 		Label    string `form:"label" binding:"required,min=1"`
 		URL      string `form:"url" binding:"required,url"`
@@ -257,10 +289,28 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 }
 
 func (c *Controller) viewFeed(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'viewFeed' not implemented, yet.",
-	})
+	var input struct {
+		FeedID int64 `uri:"id"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	const sql = `SELECT label, url, rolie FROM feeds WHERE id = $1`
+
+	feed := feed{ID: input.FeedID}
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			return con.QueryRow(rctx, sql, input.FeedID).Scan(
+				&feed.Label, &feed.URL, &feed.Rolie)
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, &feed)
 }
 
 func (c *Controller) deleteFeed(ctx *gin.Context) {
