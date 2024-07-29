@@ -72,12 +72,13 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
-		authAdm    = authRoles(models.Admin)
-		authIm     = authRoles(models.Importer)
-		authEdRe   = authRoles(models.Editor, models.Reviewer)
-		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
-		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
-		authAll    = authRoles(models.Admin, models.Importer, models.Editor,
+		authAdm      = authRoles(models.Admin)
+		authIm       = authRoles(models.Importer)
+		authEdRe     = authRoles(models.Editor, models.Reviewer)
+		authEdReAu   = authRoles(models.Editor, models.Reviewer, models.Auditor)
+		authEdReAd   = authRoles(models.Editor, models.Reviewer, models.Admin)
+		authEdReAuAd = authRoles(models.Editor, models.Reviewer, models.Auditor, models.Admin)
+		authAll      = authRoles(models.Admin, models.Importer, models.Editor,
 			models.Reviewer, models.Auditor, models.SourceManager)
 	)
 
@@ -109,8 +110,8 @@ func (c *Controller) Bind() http.Handler {
 	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
 
 	// Events
-	api.GET("/events", authEdReAu, c.overviewEvents)
-	api.GET("/events/:document", authEdReAu, c.viewEvents)
+	api.GET("/events", authEdReAuAd, c.overviewEvents)
+	api.GET("/events/:document", authEdReAuAd, c.viewEvents)
 
 	// State change
 	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)
