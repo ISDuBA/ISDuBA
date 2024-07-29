@@ -372,7 +372,7 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 		case "cvss_v2_score", "cvss_v3_score", "critical":
 			b.WriteString("COALESCE(")
 			b.WriteString(field)
-			b.WriteString(",0)")
+			b.WriteString(",5)")
 		case "version":
 			// TODO: This is not optimal (SemVer).
 			b.WriteString(
