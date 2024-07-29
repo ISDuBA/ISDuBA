@@ -42,7 +42,7 @@
 
 <Collapsible
   header={`${relation.full_product_name.product_id}`}
-  level="4"
+  level={4}
   open={relation.full_product_name.product_id === $appStore.webview.ui.selectedProduct}
   {highlight}
   onClose={() => {

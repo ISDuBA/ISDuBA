@@ -31,7 +31,7 @@
 <div id={product?.product_id}>
   <Collapsible
     header={product.name}
-    level="4"
+    level={4}
     {highlight}
     open={$appStore.webview.ui.selectedProduct === product.product_id}
     onClose={() => {
