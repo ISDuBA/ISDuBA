@@ -189,7 +189,8 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	const sql = `SELECT id, label, url, rolie FROM feeds WHERE sources_id = $1`
+	const sql = `SELECT id, label, url, rolie FROM feeds WHERE sources_id = $1 ` +
+		`ORDER BY id`
 
 	var feeds []*feed
 	if err := c.db.Run(
@@ -279,9 +280,9 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "source id not found"})
 		return
 	}
-	// Register feed in source manager.
-	if err := c.sm.AddFeed(input.SourceID, feedID); err != nil {
-		slog.Error("add feed failed", "err", err)
+	// Register feed to source manager.
+	if err := c.sm.AddFeed(feedID); err != nil {
+		slog.Error("adding feed failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -297,7 +298,6 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 		return
 	}
 	const sql = `SELECT label, url, rolie FROM feeds WHERE id = $1`
-
 	feed := feed{ID: input.FeedID}
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -314,10 +314,41 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteFeed(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'deleteFeed' not implemented, yet.",
-	})
+	var input struct {
+		FeedID int64 `uri:"id"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// Remove feed from source manager.
+	if err := c.sm.RemoveFeed(input.FeedID); err != nil {
+		slog.Error("removing feed failed", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	const sql = `DELETE FROM feeds WHERE id = $1`
+	notFound := false
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			tags, err := con.Exec(rctx, sql, input.FeedID)
+			if err != nil {
+				return fmt.Errorf("deleting feed failed: %w", err)
+			}
+			notFound = tags.RowsAffected() == 0
+			return nil
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if notFound {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	}
 }
 
 func (c *Controller) feedLog(ctx *gin.Context) {
