@@ -94,7 +94,6 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 
 // importDocument is an end point to import a document.
 func (c *Controller) importDocument(ctx *gin.Context) {
-
 	var actor *string
 	if user := c.currentUser(ctx); user.Valid {
 		actor = &user.String
@@ -181,7 +180,6 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 
 // overviewDocuments is an end point to return an overview document.
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
-
 	// Use the advisories.
 	advisory, ok := parse(ctx, toBool, ctx.DefaultQuery("advisories", "false"))
 	if !ok {
@@ -325,7 +323,7 @@ func scanRows(
 		}
 		result := make(map[string]any, len(fields))
 		for i, p := range fields {
-			var v = values[i]
+			v := values[i]
 			// XXX: A little bit hacky to support client.
 			if _, ok := aliases[p]; ok {
 				if s, ok := v.(string); ok {

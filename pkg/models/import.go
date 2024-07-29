@@ -124,7 +124,6 @@ func keepAndIndexSuffix(index func(string) int, path ...string) replacer {
 }
 
 func transformJSON(document any, replace replacer) {
-
 	var (
 		array  func(arr []any)
 		object func(obj map[string]any)

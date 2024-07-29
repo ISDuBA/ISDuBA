@@ -981,7 +981,6 @@ func (st *stack) andReduce() {
 }
 
 func (p *Parser) parse(input string) (*Expr, error) {
-
 	p.aliases = nil
 
 	st := stack{}

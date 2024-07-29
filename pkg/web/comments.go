@@ -190,9 +190,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 				`ON com.documents_id = docs.id` +
 				` WHERE ` + builder.WhereClause
 
-			var (
-				stateS string
-			)
+			var stateS string
 			if err := tx.QueryRow(rctx, stateSQL, builder.Replacements...).Scan(
 				&stateS); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {

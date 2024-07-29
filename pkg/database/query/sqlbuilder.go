@@ -124,7 +124,6 @@ func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 }
 
 func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
-
 	switch e.valueType {
 	case stringType:
 		b.WriteByte('$')
@@ -221,7 +220,6 @@ func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
 }
 
 func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
-
 	b.WriteString(`EXISTS (` +
 		`WITH product_ids AS (SELECT jsonb_path_query(` +
 		`document, '$.product_tree.**.product.product_id')::int num ` +
@@ -355,7 +353,6 @@ func (sb *SQLBuilder) CreateCountSQL() string {
 
 // CreateOrder returns a ORDER BY clause for given columns.
 func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
-
 	var b strings.Builder
 	for _, field := range fields {
 		desc := strings.HasPrefix(field, "-")
