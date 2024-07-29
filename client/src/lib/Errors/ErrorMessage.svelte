@@ -11,12 +11,26 @@
 <script lang="ts">
   import { Alert } from "flowbite-svelte";
   export let message = "";
+  export let details = "";
+
+  let showDetails: boolean = false;
 </script>
 
 {#if message}
   <div class="w-fit">
     <Alert color="red" dismissable>
       <span class="text-lg"> {message}</span>
+      {#if details}
+        <a
+          class="pl-1.5 text-lg underline"
+          href={"javascript:void(0);"}
+          on:click={() => (showDetails = !showDetails)}>Details</a
+        >
+        {#if showDetails}
+          <br />
+          <span class="text-lg"> {details}</span>
+        {/if}
+      {/if}
     </Alert>
   </div>
 {/if}

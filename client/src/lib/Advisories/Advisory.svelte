@@ -38,6 +38,7 @@
   let loadFourCVEsError = "";
   let createCommentError = "";
   let loadDocumentSSVCError = "";
+  let loadDocumentSSVCErrorDetails = "";
   let stateError = "";
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
@@ -108,6 +109,7 @@
       }
     } else if (response.error) {
       loadDocumentSSVCError = `Could not load SSVC. ${getErrorMessage(response.error)}`;
+      loadDocumentSSVCErrorDetails = `${response.error}\n${new Date().toISOString()}\n${response.content}`;
     }
   };
 
@@ -327,7 +329,6 @@
       <div class="mb-4 mt-2" />
     </div>
     <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
-    <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
     <ErrorMessage message={stateError}></ErrorMessage>
     <ErrorMessage message={loadDocumentError}></ErrorMessage>
     <ErrorMessage message={loadFourCVEsError}></ErrorMessage>
@@ -398,7 +399,8 @@
             </div>
           {/if}
         </div>
-        <ErrorMessage message={loadDocumentSSVCError}></ErrorMessage>
+        <ErrorMessage message={loadDocumentSSVCError} details={loadDocumentSSVCErrorDetails}
+        ></ErrorMessage>
         <div class="">
           {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
             <div class="mt-6">
