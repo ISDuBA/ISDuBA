@@ -26,7 +26,6 @@ import (
 )
 
 func (c *Controller) overviewEvents(ctx *gin.Context) {
-
 	parser := query.Parser{
 		Mode:            query.EventMode,
 		MinSearchLength: MinSearchLength,

@@ -28,7 +28,6 @@ import (
 )
 
 func (c *Controller) createStoredQuery(ctx *gin.Context) {
-
 	sq := models.StoredQuery{
 		Definer: ctx.GetString("uid"),
 	}
@@ -159,7 +158,6 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 }
 
 func (c *Controller) listStoredQueries(ctx *gin.Context) {
-
 	const selectSQL = `SELECT ` +
 		`id,` +
 		`advisories,` +
@@ -213,7 +211,6 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
-
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
 		return
@@ -256,7 +253,6 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 }
 
 func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
-
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
 		return
@@ -308,7 +304,6 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 }
 
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
-
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
 		return

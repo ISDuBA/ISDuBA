@@ -42,7 +42,6 @@ type migration struct {
 // CheckMigrations checks if the version of the database matches
 // migration level of the application.
 func CheckMigrations(ctx context.Context, cfg *config.Database) (bool, error) {
-
 	migs, err := listMigrations()
 	if err != nil {
 		return false, err

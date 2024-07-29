@@ -36,7 +36,6 @@ type advisoryState struct {
 type advisoryStates []advisoryState
 
 func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
-
 	const (
 		findAdvisory = `SELECT id, state::text, tlp ` +
 			`FROM advisories ads ` +

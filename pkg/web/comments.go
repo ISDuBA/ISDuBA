@@ -23,6 +23,14 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
+func (c *Controller) isCommentingAllowed(ctx *gin.Context, state models.Workflow) bool {
+	// Check if we are in a state in which commenting is allowed.
+	return state == models.ReadWorkflow ||
+		state == models.AssessingWorkflow ||
+		(state == models.ReviewWorkflow && c.hasAnyRole(ctx, models.Reviewer, models.Editor)) ||
+		(state == models.ArchivedWorkflow && c.hasAnyRole(ctx, models.Editor))
+}
+
 func (c *Controller) createComment(ctx *gin.Context) {
 	docID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
@@ -72,12 +80,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			}
 			exists = true
 
-			// Check if we are in a state in which commenting is allowed.
 			state := models.Workflow(stateS)
-			commentingAllowed = state == models.ReadWorkflow ||
-				state == models.AssessingWorkflow ||
-				(state == models.ReviewWorkflow && c.hasAnyRole(ctx, models.Reviewer, models.Editor)) ||
-				(state == models.ArchivedWorkflow && c.hasAnyRole(ctx, models.Editor))
+			commentingAllowed = c.isCommentingAllowed(ctx, state)
 			if !commentingAllowed {
 				return nil
 			}
@@ -159,11 +163,17 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 	if !ok {
 		return
 	}
+
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("com.id", commentID))
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
+
 	var (
-		exists      bool
-		now         = time.Now().UTC()
-		commentator = ctx.GetString("uid")
-		message, _  = ctx.GetPostForm("message")
+		exists            bool
+		now               = time.Now().UTC()
+		commentator       = ctx.GetString("uid")
+		commentingAllowed bool
+		message, _        = ctx.GetPostForm("message")
 	)
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -173,6 +183,28 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 				return err
 			}
 			defer tx.Rollback(rctx)
+			stateSQL := `SELECT state ` +
+				`FROM advisories ads JOIN documents docs ` +
+				`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
+				`JOIN comments com ` +
+				`ON com.documents_id = docs.id` +
+				` WHERE ` + builder.WhereClause
+
+			var stateS string
+			if err := tx.QueryRow(rctx, stateSQL, builder.Replacements...).Scan(
+				&stateS); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return nil
+				}
+				return err
+			}
+			exists = true
+
+			state := models.Workflow(stateS)
+			commentingAllowed = c.isCommentingAllowed(ctx, state)
+			if !commentingAllowed {
+				return nil
+			}
 
 			const updateSQL = `UPDATE comments ` +
 				`SET message = $1 ` +
@@ -215,6 +247,11 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
 		return
 	}
+	if !commentingAllowed {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid state to comment"})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{})
 }
 

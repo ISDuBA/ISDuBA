@@ -68,7 +68,6 @@ func or[T ~string](field string, tlps []T) *query.Expr {
 
 // AsExpr returns the list of TLP rules as an expression tree.
 func (ptlps PublishersTLPs) AsExpr() *query.Expr {
-
 	// Make build process deterministic.
 	pubs := make([]Publisher, 0, len(ptlps))
 	for pub := range ptlps {
