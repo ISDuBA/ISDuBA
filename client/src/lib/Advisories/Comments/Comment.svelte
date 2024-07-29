@@ -18,6 +18,7 @@
   import DOMPurify from "dompurify";
   import { createEventDispatcher } from "svelte";
   import { getErrorMessage } from "$lib/Errors/error";
+  import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
 
   export let comment: any;
   export let fullHistory: boolean;
@@ -26,6 +27,17 @@
   let isEditing = false;
   let updateCommentError: string;
   let lastEdited = "";
+  let isCommentingAllowed: boolean;
+
+  $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(state)) {
+    if (appStore.isReviewer() && [NEW, READ, ARCHIVED].includes(state)) {
+      isCommentingAllowed = false;
+    } else {
+      isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+    }
+  } else {
+    isCommentingAllowed = false;
+  }
 
   const tdClass = "py-2 px-2";
 
@@ -54,7 +66,6 @@
     return DOMPurify.sanitize(html);
   };
 
-  $: iscommentingAllowed = state !== "deleted";
   $: if (comment.times) {
     let latest = comment.times.sort().reverse()[0];
     latest = latest.replace("T", " ").split(".")[0];
@@ -79,7 +90,7 @@
           {@html parseMarkdown(comment.message)}
         </div>
         <div class="ml-auto">
-          {#if $appStore.app.tokenParsed?.preferred_username === comment.actor && iscommentingAllowed}
+          {#if $appStore.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
             <button class="h-7 !p-2" on:click={toggleEditing}>
               <i class="bx bx-edit text-lg"></i>
             </button>
