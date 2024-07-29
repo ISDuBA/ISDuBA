@@ -23,12 +23,12 @@ import (
 
 type source struct {
 	ID     int64    `json:"id" form:"id"`
-	Name   string   `json:"name" form:"name" binding:"required"`
-	Domain *string  `json:"domain,omitempty" form:"domain"`
-	PMD    *string  `json:"pmd,omitempty" form:"pmd"`
+	Name   string   `json:"name" form:"name" binding:"required,min=1"`
+	Domain *string  `json:"domain,omitempty" form:"domain" binding:"omitnil,min=1"`
+	PMD    *string  `json:"pmd,omitempty" form:"pmd" binding:"omitnil,url"`
 	Active *bool    `json:"active" form:"active"`
-	Rate   *float64 `json:"rate,omitempty" form:"rate"`
-	Slots  *int     `json:"slots,omitempty" form:"slots"`
+	Rate   *float64 `json:"rate,omitempty" form:"rate" binding:"gt=0"`
+	Slots  *int     `json:"slots,omitempty" form:"slots" binding:"gte=1"`
 }
 
 func (c *Controller) viewSources(ctx *gin.Context) {
@@ -80,23 +80,12 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		return
 	}
 
-	if src.Domain != nil && *src.Domain == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'domain' is empty"})
-		return
-	}
-
-	if src.PMD != nil && *src.PMD == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'pmd' is empty"})
-		return
-	}
-
-	if src.Rate != nil && (*src.Rate <= 0 ||
-		(c.cfg.Sources.RatePerSlot != 0 && *src.Rate > c.cfg.Sources.RatePerSlot)) {
+	if src.Rate != nil && (c.cfg.Sources.RatePerSlot != 0 && *src.Rate > c.cfg.Sources.RatePerSlot) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
 		return
 	}
 
-	if src.Slots != nil && (*src.Slots < 1 || *src.Slots > c.cfg.Sources.SlotsPerSource) {
+	if src.Slots != nil && *src.Slots > c.cfg.Sources.SlotsPerSource {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
 		return
 	}
@@ -194,17 +183,18 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 
 func (c *Controller) createFeed(ctx *gin.Context) {
 	var input struct {
-		SourceID int64  `uri:"id" binding:"required"`
-		Label    string `form:"label" binding:"required"`
+		//SourceID int64  `uri:"id" binding:"required"`
+		SourceID int64  `uri:"id"`
+		Label    string `form:"label" binding:"required,min=1"`
 		URL      string `form:"url" binding:"required,url"`
 		Rolie    bool   `form:"rolie"`
 	}
-	if err := ctx.ShouldBind(&input); err != nil {
+	if err := errors.Join(ctx.ShouldBind(&input), ctx.ShouldBindUri(&input)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	const (
-		sourceSQL = `SELECT EXISTS(SELECT 1 FROM sources WHERE id = $1`
+		sourceSQL = `SELECT EXISTS(SELECT 1 FROM sources WHERE id = $1)`
 		insertSQL = `INSERT INTO feeds (label, sources_id, url, rolie) ` +
 			`VALUES ($1, $2, $3, $4) ` +
 			`RETURNING id`
@@ -240,8 +230,17 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 			return tx.Commit(rctx)
 		}, 0,
 	); err != nil {
-		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// As name can cause an unique constraint violation
+		// report this as a bad request as this expected.
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "not a unique value: " + pgErr.Message,
+			})
+		} else {
+			slog.Error("database error", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 	if !sourceFound {
