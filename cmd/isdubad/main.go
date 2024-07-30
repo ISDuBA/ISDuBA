@@ -56,7 +56,7 @@ func run(cfg *config.Config) error {
 	go tmpStore.Run(ctx)
 
 	sm := sources.NewManager(&cfg.Sources, db)
-	if err := sm.Boot(); err != nil {
+	if err := sm.Boot(ctx); err != nil {
 		return fmt.Errorf("booting source manager failed: %w", err)
 	}
 	go sm.Run(ctx)
