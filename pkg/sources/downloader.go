@@ -114,6 +114,9 @@ func (af *activeFeed) refresh(db *database.DB) error {
 	// Extract candidates from feed leaving out location where we already
 	// have requests in memory which are more recent.
 	candidates, err := rolie.toLocations(af.url, af.sameOrNewer())
+	if err != nil {
+		return fmt.Errorf("extracting locations from feed failed: %w", err)
+	}
 
 	// Filter out candidates which are already in the database with same or newer.
 	if candidates, err = removeOlder(db, candidates); err != nil {
