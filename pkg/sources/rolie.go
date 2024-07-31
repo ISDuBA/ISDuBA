@@ -36,7 +36,7 @@ type rolie struct {
 	Feed rolieFeed `json:"feed"`
 }
 
-func (r *rolie) toLocations(base *url.URL) ([]location, error) {
+func (r *rolie) toLocations(base *url.URL, sameOrNewer func(*location) bool) ([]location, error) {
 	resolve := func(href string, store **url.URL) error {
 		u, err := url.Parse(href)
 		if err != nil {
@@ -79,7 +79,9 @@ func (r *rolie) toLocations(base *url.URL) ([]location, error) {
 				}
 			}
 		}
-		if dl.doc != nil {
+		// Only append if we don't have already the same or we are
+		// waiting to request a new one.
+		if dl.doc != nil && !sameOrNewer(&dl) {
 			dls = append(dls, dl)
 		}
 	}

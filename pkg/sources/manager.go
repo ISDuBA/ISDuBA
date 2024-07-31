@@ -45,7 +45,7 @@ func (m *Manager) refreshFeeds() {
 	for _, feed := range m.feeds {
 		// Does the feed need a refresh?
 		if feed.nextCheck.IsZero() || !feed.nextCheck.Before(now) {
-			if err := feed.refresh(); err != nil {
+			if err := feed.refresh(m.db); err != nil {
 				slog.Error("feed refresh failed", "feed", feed.id, "err", err)
 				// TODO: Log to database
 			}
