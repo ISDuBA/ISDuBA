@@ -27,9 +27,13 @@ type rolieEntry struct {
 	Updated time.Time   `json:"updated"`
 }
 
-type rolie struct {
+type rolieFeed struct {
 	Updated time.Time    `json:"updated"`
 	Entries []rolieEntry `json:"entry"`
+}
+
+type rolie struct {
+	Feed rolieFeed `json:"feed"`
 }
 
 func (r *rolie) toLocations(base *url.URL) ([]location, error) {
@@ -41,11 +45,11 @@ func (r *rolie) toLocations(base *url.URL) ([]location, error) {
 		if u.IsAbs() {
 			*store = u
 		} else {
-			*store = base.JoinPath(href)
+			*store = base.ResolveReference(u)
 		}
 		return nil
 	}
-	entries := r.Entries
+	entries := r.Feed.Entries
 	dls := make([]location, 0, len(entries))
 	for i := range entries {
 		entry := &entries[i]
