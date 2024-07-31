@@ -26,11 +26,21 @@ import (
 
 var userAgent = "isduba/" + version.SemVersion
 
+type state int
+
+const (
+	waiting state = iota
+	running
+	done
+)
+
 type location struct {
 	updated   time.Time
 	doc       *url.URL
 	hash      *url.URL
 	signature *url.URL
+	state     state
+	id        int64
 }
 
 type activeFeed struct {
@@ -49,7 +59,9 @@ type activeSource struct {
 	id    int64
 	rate  *float64
 	slots *int
-	feeds []*activeFeed
+
+	feeds     []*activeFeed
+	usedSlots int
 }
 
 func (af *activeFeed) fetchIndex() ([]byte, error) {

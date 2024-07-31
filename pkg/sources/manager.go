@@ -11,6 +11,7 @@ package sources
 import (
 	"context"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -27,8 +28,10 @@ type Manager struct {
 	fns  chan func(*Manager)
 	done bool
 
-	feeds   []*activeFeed
-	sources []*activeSource
+	feeds     []*activeFeed
+	sources   []*activeSource
+	usedSlots int
+	uniqueID  int64
 }
 
 // NewManager creates a new downloader.
@@ -40,6 +43,8 @@ func NewManager(cfg *config.Sources, db *database.DB) *Manager {
 	}
 }
 
+// refreshFeeds checks if there are feeds that need reloading
+// and does so in that case.
 func (m *Manager) refreshFeeds() {
 	now := time.Now()
 	for _, feed := range m.feeds {
@@ -55,12 +60,94 @@ func (m *Manager) refreshFeeds() {
 	}
 }
 
+// startDownloads starts downloads if there are enough slots and
+// there are things to download.
+func (m *Manager) startDownloads() {
+	for m.usedSlots < m.cfg.DownloadSlots {
+		started := false
+		for _, feed := range m.feeds {
+			// Has this feed a free slot?
+			maxSlots := min(m.cfg.SlotsPerSource, m.cfg.DownloadSlots)
+			if feed.source.slots != nil {
+				maxSlots = min(maxSlots, *feed.source.slots)
+			}
+			if feed.source.usedSlots >= maxSlots {
+				continue
+			}
+			// Find a candidate to download.
+			location := feed.findWaiting()
+			if location == nil {
+				continue
+			}
+			m.usedSlots++
+			feed.source.usedSlots++
+			location.state = running
+			location.id = m.generateID()
+			started = true
+			// Calling reciever by value is indented here!
+			go (*location).download(m, feed)
+			if m.usedSlots >= m.cfg.SlotsPerSource {
+				return
+			}
+		}
+		if !started {
+			return
+		}
+	}
+}
+
+// compactDone removes the locations the feeds which are downloaded.
+func (m *Manager) compactDone() {
+	for _, feed := range m.feeds {
+		feed.locations = slices.DeleteFunc(feed.locations, func(l location) bool {
+			return l.state == done
+		})
+	}
+}
+
+func (m *Manager) generateID() (id int64) {
+	id = m.uniqueID
+	m.uniqueID++
+	return
+}
+
+func (af *activeFeed) findLocationByID(id int64) *location {
+	for i := len(af.locations) - 1; i >= 0; i-- {
+		if location := &af.locations[i]; location.id == id {
+			return location
+		}
+	}
+	return nil
+}
+
+func (af *activeFeed) findWaiting() *location {
+	for i := len(af.locations) - 1; i >= 0; i-- {
+		if location := &af.locations[i]; location.state == waiting {
+			return location
+		}
+	}
+	return nil
+}
+
+func (l location) download(m *Manager, f *activeFeed) {
+	defer func() {
+		m.fns <- func(m *Manager) {
+			f.source.usedSlots--
+			m.usedSlots--
+			f.findLocationByID(l.id).state = done
+		}
+	}()
+	// TODO: Implement me!
+}
+
 // Run runs the manager. To be used in a Go routine.
 func (m *Manager) Run(ctx context.Context) {
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
 	for !m.done {
 		m.refreshFeeds()
+		m.startDownloads()
+		m.compactDone()
 		select {
 		case fn := <-m.fns:
 			fn(m)
