@@ -53,17 +53,7 @@
               {/if}
             </Button>
           {/if}
-          {#if state === REVIEW && isRoleIncluded(appStore.getRoles(), [REVIEWER])}
-            <Button
-              size="xs"
-              on:click={() => dispatch("saveForAssessing")}
-              disabled={count === 0}
-              color="light"
-            >
-              <span>Send back to assessing</span>
-            </Button>
-          {/if}
-          {#if (state === REVIEW || state === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] )}
+          {#if (state === REVIEW && isRoleIncluded( appStore.getRoles(), [REVIEWER] )) || ((state === REVIEW || state === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
             <Button
               size="xs"
               on:click={() => dispatch("saveForAssessing")}
