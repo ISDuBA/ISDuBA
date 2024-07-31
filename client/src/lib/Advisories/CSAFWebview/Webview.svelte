@@ -84,7 +84,7 @@
   {/if}
   {#if $appStore.webview.doc?.notes}
     <div>
-      <Collapsible header="Notes" level="2">
+      <Collapsible header="Notes" level={2}>
         <Notes notes={$appStore.webview.doc?.notes} />
       </Collapsible>
     </div>
@@ -92,7 +92,7 @@
 
   {#if $appStore.webview.doc?.acknowledgements}
     <div>
-      <Collapsible header="Acknowledgements" level="2">
+      <Collapsible header="Acknowledgements" level={2}>
         <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
       </Collapsible>
     </div>
@@ -100,7 +100,7 @@
 
   {#if $appStore.webview.doc && $appStore.webview.doc.references.length > 0}
     <div>
-      <Collapsible header="References" level="2">
+      <Collapsible header="References" level={2}>
         <References references={$appStore.webview.doc?.references} />
       </Collapsible>
     </div>
@@ -110,7 +110,7 @@
     <div>
       <Collapsible
         header="Revision history"
-        level="2"
+        level={2}
         open={$appStore.webview.ui.isRevisionHistoryVisible}
       >
         <RevisionHistory />
