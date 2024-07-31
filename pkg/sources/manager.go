@@ -49,7 +49,7 @@ func (m *Manager) refreshFeeds() {
 	now := time.Now()
 	for _, feed := range m.feeds {
 		// Does the feed need a refresh?
-		if feed.nextCheck.IsZero() || !feed.nextCheck.Before(now) {
+		if feed.nextCheck.IsZero() || !now.Before(feed.nextCheck) {
 			if err := feed.refresh(m.db); err != nil {
 				slog.Error("feed refresh failed", "feed", feed.id, "err", err)
 				// TODO: Log to database
@@ -135,6 +135,7 @@ func (l location) download(m *Manager, f *activeFeed) {
 			f.source.usedSlots--
 			m.usedSlots--
 			f.findLocationByID(l.id).state = done
+			slog.Debug("download done", "id", l.id)
 		}
 	}()
 	// TODO: Implement me!
