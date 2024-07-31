@@ -146,9 +146,9 @@ func (m *Manager) Run(ctx context.Context) {
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
 	for !m.done {
+		m.compactDone()
 		m.refreshFeeds()
 		m.startDownloads()
-		m.compactDone()
 		select {
 		case fn := <-m.fns:
 			fn(m)
