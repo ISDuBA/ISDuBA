@@ -8,10 +8,24 @@
 
 package sources
 
+import (
+	"net/url"
+	"time"
+)
+
+type location struct {
+	updated   time.Time
+	doc       *url.URL
+	hash      *url.URL
+	signature *url.URL
+}
+
 type activeFeed struct {
-	id    int64
-	url   string
-	rolie bool
+	id        int64
+	url       string
+	rolie     bool
+	nextCheck time.Time
+	locations []location
 }
 
 type activeSource struct {
