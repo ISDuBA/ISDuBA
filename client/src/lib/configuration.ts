@@ -10,7 +10,6 @@ import {
   PUBLIC_KEYCLOAK_URL,
   PUBLIC_KEYCLOAK_REALM,
   PUBLIC_KEYCLOAK_CLIENTID
-  // PUBLIC_UPDATE_INTERVALL
 } from "$env/static/public";
 import { type UserManagerSettings, WebStorageStateStore } from "oidc-client-ts";
 

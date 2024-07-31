@@ -30,6 +30,7 @@
   import { jwtDecode } from "jwt-decode";
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
   import QueryOverview from "$lib/Queries/Overview.svelte";
+  import { PUBLIC_IDLE_TIMEOUT } from "$env/static/public";
   import Test from "$lib/Test.svelte";
 
   let userManager = new UserManager(configuration.getConfiguration());
@@ -99,6 +100,28 @@
     if (!appStore.getUserManager()) return false;
     if (!checkUserForRoles()) return false;
     return appStore.getIsUserLoggedIn();
+  };
+
+  let inactivityTime = function () {
+    let time: number;
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeydown = resetTimer;
+
+    async function logout() {
+      appStore.setSessionExpired(true);
+      appStore.setSessionExpiredMessage("Idle logout");
+      sessionStorage.clear();
+      await $appStore.app.userManager?.signoutRedirect();
+    }
+
+    function resetTimer() {
+      clearTimeout(time);
+      time = setTimeout(logout, 1000 * 60 * Number(PUBLIC_IDLE_TIMEOUT));
+    }
+  };
+  window.onload = () => {
+    inactivityTime();
   };
 
   const routes = {
