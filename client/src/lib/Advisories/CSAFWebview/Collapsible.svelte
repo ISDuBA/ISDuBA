@@ -11,15 +11,15 @@
 <script lang="ts">
   export let header: string;
   export let open = false;
-  export let level = "2";
+  export let level = 2;
   export let class_ = "pl-4";
   export let highlight = false;
   const uuid = crypto.randomUUID();
   export let onOpen = () => {
-    //default: Do notthing
+    //default: Do nothing
   };
   export let onClose = () => {
-    //default: Do notthing
+    //default: Do nothing
   };
   let visibility = "none";
   $: if (open) {
@@ -52,50 +52,35 @@
   } else {
     icon = "bx-chevron-right";
   }
+
+  const getClass = (level: number) => {
+    switch (level) {
+      case 2:
+        return "text-xl";
+      case 3:
+        return "text-lg";
+      case 4:
+        return "";
+      case 5:
+        return "text-xs";
+      default:
+        return "";
+    }
+  };
 </script>
 
 <div class:collapsible={true} class:highlight-section={highlight}>
-  {#if level == "2"}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div title={header} id={header} on:click={toggle}>
-      <i class="bx text-xl {icon}" />
-      <span class="text-xl">{header}</span>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div title={header} id={header} class={class_}>
+    <div on:click={toggle}>
+      <i class="bx {getClass(level)} {icon}" />
+      <span class={getClass(level)}>{header}</span>
     </div>
-  {/if}
-  {#if level == "3"}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div title={header} id={header} on:click={toggle} class={class_}>
-      <i class="bx text-lg {icon}" />
-      <span class="text-lg">{header}</span>
-    </div>
-  {/if}
-  {#if level == "4"}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div title={header} id={header} on:click={toggle} class={class_}>
-      <i class="bx {icon}" />
-      <span class="">{header}</span>
-    </div>
-  {/if}
-  {#if level == "5"}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div title={header} id={header} on:click={toggle} class={class_}>
-      <i class="bx text-xs {icon}" />
-      <span class="text-xs">{header}</span>
-    </div>
-  {/if}
-  {#if visibility === "block"}
-    <div id={uuid} class="collapsible-body">
-      <slot />
-    </div>
-  {/if}
+    {#if visibility === "block"}
+      <div id={uuid} class={class_}>
+        <slot />
+      </div>
+    {/if}
+  </div>
 </div>
-
-<style>
-  .collapsible-body {
-    margin-left: 0.5rem;
-  }
-</style>
