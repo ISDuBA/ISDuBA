@@ -84,8 +84,8 @@ func (m *Manager) startDownloads() {
 			location.state = running
 			location.id = m.generateID()
 			started = true
-			// Calling reciever by value is indented here!
-			go (*location).download(m, feed)
+			// Calling reciever by value is intended here!
+			go (*location).download(m, feed, m.downloadDone(feed, location.id))
 			if m.usedSlots >= m.cfg.SlotsPerSource {
 				return
 			}
@@ -127,18 +127,6 @@ func (af *activeFeed) findWaiting() *location {
 		}
 	}
 	return nil
-}
-
-func (l location) download(m *Manager, f *activeFeed) {
-	defer func() {
-		m.fns <- func(m *Manager) {
-			f.source.usedSlots--
-			m.usedSlots--
-			f.findLocationByID(l.id).state = done
-			slog.Debug("download done", "id", l.id)
-		}
-	}()
-	// TODO: Implement me!
 }
 
 // Run runs the manager. To be used in a Go routine.
@@ -202,4 +190,15 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 		result <- nil
 	}
 	return <-result
+}
+
+func (m *Manager) downloadDone(f *activeFeed, id int64) func() {
+	return func() {
+		m.fns <- func(m *Manager) {
+			f.source.usedSlots--
+			m.usedSlots--
+			f.findLocationByID(id).state = done
+			slog.Debug("download done", "id", id)
+		}
+	}
 }

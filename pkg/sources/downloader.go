@@ -248,3 +248,13 @@ func (af *activeFeed) sameOrNewer() func(*location) bool {
 		return ok && !t.Before(location.updated)
 	}
 }
+
+// download fetches the files of a document and stores
+// them into the database.
+func (l location) download(m *Manager, f *activeFeed, done func()) {
+	defer done()
+
+	// TODO: Implement me!
+	_ = m
+	_ = f
+}
