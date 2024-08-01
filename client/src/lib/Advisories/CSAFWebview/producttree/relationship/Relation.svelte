@@ -18,14 +18,7 @@
   import { A } from "flowbite-svelte";
   export let relation: Relationship;
   let highlight = false;
-  const openProduct = (e: Event) => {
-    // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
-    let product: string = (e.target as Element).getAttribute("href")!;
-    appStore.setProductTreeSectionVisible();
-    appStore.setSelectedProduct(product);
-    appStore.unshiftHistory((e.target as Element).id);
-    e.preventDefault();
-  };
+  export let basePath = "";
   async function updateUI() {
     await tick();
     document
@@ -73,8 +66,7 @@
             ><A
               color="text-blue-700"
               id={crypto.randomUUID()}
-              on:click={openProduct}
-              href={relation.product_reference}>{relation.product_reference}</A
+              href={basePath + relation.product_reference}>{relation.product_reference}</A
             ></td
           >
         </tr>
@@ -84,7 +76,6 @@
             ><A
               color="text-blue-700"
               id={crypto.randomUUID()}
-              on:click={openProduct}
               href={relation.relates_to_product_reference}
               >{relation.relates_to_product_reference}</A
             ></td
