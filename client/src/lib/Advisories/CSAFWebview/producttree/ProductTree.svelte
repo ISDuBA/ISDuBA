@@ -15,6 +15,7 @@
   import ProductGroups from "./productgroup/ProductGroups.svelte";
   import ProductNames from "./product/ProductNames.svelte";
   import Relationships from "./relationship/Relationships.svelte";
+  export let basePath = "";
 </script>
 
 {#if $appStore.webview.doc?.productTree.branches}
@@ -45,7 +46,7 @@
           $appStore.webview.doc?.productTree.full_product_names
         ))}
   >
-    <Relationships relationships={$appStore.webview.doc?.productTree.relationships} />
+    <Relationships {basePath} relationships={$appStore.webview.doc?.productTree.relationships} />
   </Collapsible>
 {/if}
 

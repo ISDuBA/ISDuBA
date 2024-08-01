@@ -348,7 +348,16 @@
           {#if isDiffOpen}
             <Diff showTitle={false}></Diff>
           {:else}
-            <Webview></Webview>
+            <Webview
+              basePath={"#/advisories/" +
+                params.publisherNamespace +
+                "/" +
+                params.trackingID +
+                "/documents/" +
+                params.id +
+                "/"}
+              position={params.position}
+            ></Webview>
           {/if}
         </div>
       </div>

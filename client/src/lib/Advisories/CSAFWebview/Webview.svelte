@@ -19,6 +19,21 @@
   import Acknowledgements from "./acknowledgements/Acknowledgements.svelte";
   import References from "./references/References.svelte";
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
+
+  export let position = "";
+  export let basePath = "";
+
+  $: if (position) {
+    if (position.startsWith("product-")) {
+      appStore.setProductTreeSectionVisible();
+      appStore.setSelectedProduct(position.replace("product-", ""));
+    }
+    if (position.startsWith("cve-")) {
+      appStore.setSelectedCVE(position.replace("cve-", ""));
+      appStore.setVulnerabilitiesSectionVisible();
+    }
+  }
+
   $: aliases = $appStore.webview.doc?.aliases;
 
   $: isCSAF = !(
@@ -44,7 +59,7 @@
         header="Vulnerabilities overview"
         open={$appStore.webview.ui.isVulnerabilitiesOverviewVisible}
       >
-        <ProductVulnerabilities />
+        <ProductVulnerabilities {basePath} />
       </Collapsible>
     {:else}
       <h2>No Vulnerabilities overview</h2>
@@ -63,7 +78,7 @@
           appStore.setProductTreeClosed();
         }}
       >
-        <ProductTree />
+        <ProductTree {basePath} />
       </Collapsible>
     {/if}
     {#if $appStore.webview.doc && $appStore.webview.doc["isVulnerabilitiesPresent"]}
