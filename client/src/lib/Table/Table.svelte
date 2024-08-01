@@ -168,7 +168,6 @@
     if (query !== prevQuery) {
       restorePosition();
       savePosition();
-      console.log(prevQuery);
       prevQuery = query;
     }
     const searchSuffix = searchTerm ? `"${searchTerm}" search ${searchColumnName} as ` : "";

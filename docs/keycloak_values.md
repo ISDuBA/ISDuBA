@@ -30,7 +30,7 @@ The current default is:
 
 which allows access to all TLP:WHITE advisories of all publishers. Anyone without a group will have these priviledges.
 
-The creation of new groups can be done via the graphical keycloak interface or via the [createGroup script.](./scripts/keycloak/createGroups.sh)
+The creation of new groups can be done via the graphical keycloak interface or via the [createGroup script.](./scripts/keycloak/createGroup.sh)
 
 Editing any existing group can be done via the graphical interface.
 
