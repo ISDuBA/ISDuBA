@@ -15,7 +15,7 @@
 </script>
 
 <svelte:head>
-  <title>Home</title>
+  <title>Dashboard</title>
 </svelte:head>
 
 {#if $appStore.app.isUserLoggedIn}

@@ -72,7 +72,7 @@
           </div>
           <SidebarGroup class="space-y-0 bg-primary-700">
             <!-- Entries which are available after login should go here-->
-            <SidebarItem class="px-6 py-2.5" label="Home" href="/#/">
+            <SidebarItem class="px-6 py-2.5" label="Dashboard" href="/#/">
               <svelte:fragment slot="icon">
                 <i class="bx bxs-dashboard"></i>
               </svelte:fragment>
