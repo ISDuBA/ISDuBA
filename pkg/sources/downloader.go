@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/jackc/pgx/v5"
@@ -45,9 +46,11 @@ type location struct {
 }
 
 type activeFeed struct {
-	id        int64
-	url       *url.URL
-	rolie     bool
+	id       int64
+	url      *url.URL
+	rolie    bool
+	logLevel config.FeedLogLevel
+
 	nextCheck time.Time
 	locations []location
 	source    *activeSource

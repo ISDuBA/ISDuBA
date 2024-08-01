@@ -81,6 +81,7 @@ const (
 	defaultSlotsPerSource       = 2
 	defaultRatePerSlot          = 0
 	defaultFeedRefresh          = 15 * time.Minute
+	defaultFeedLogLevel         = InfoFeedLogLevel
 	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
 )
@@ -149,6 +150,7 @@ type Sources struct {
 	SlotsPerSource int           `toml:"slots_per_source"`
 	RatePerSlot    float64       `toml:"rate_per_slot"`
 	FeedRefresh    time.Duration `toml:"feed_refresh"`
+	FeedLogLevel   FeedLogLevel  `tomt:"feed_log_level"`
 	DefaultMessage string        `toml:"default_message"`
 }
 
@@ -266,6 +268,7 @@ func Load(file string) (*Config, error) {
 			SlotsPerSource: defaultSlotsPerSource,
 			RatePerSlot:    defaultRatePerSlot,
 			FeedRefresh:    defaultFeedRefresh,
+			FeedLogLevel:   defaultFeedLogLevel,
 			DefaultMessage: defaultMessageSourceManager,
 		},
 	}
@@ -287,13 +290,14 @@ func Load(file string) (*Config, error) {
 
 func (cfg *Config) fillFromEnv() error {
 	var (
-		storeString    = store(noparse)
-		storeInt       = store(strconv.Atoi)
-		storeBool      = store(strconv.ParseBool)
-		storeLevel     = store(storeLevel)
-		storeDuration  = store(time.ParseDuration)
-		storeHumanSize = store(storeHumanSize)
-		storeFloat64   = store(parseFloat64)
+		storeString       = store(noparse)
+		storeInt          = store(strconv.Atoi)
+		storeBool         = store(strconv.ParseBool)
+		storeLevel        = store(storeLevel)
+		storeDuration     = store(time.ParseDuration)
+		storeHumanSize    = store(storeHumanSize)
+		storeFeedLogLevel = store(storeFeedLogLevel)
+		storeFloat64      = store(parseFloat64)
 	)
 	return storeFromEnv(
 		envStore{"ISDUBA_ADVISORY_UPLOAD_LIMIT", storeHumanSize(&cfg.General.AdvisoryUploadLimit)},
@@ -328,6 +332,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_DOWNLOAD_SLOTS", storeInt(&cfg.Sources.DownloadSlots)},
 		envStore{"ISDUBA_SOURCES_RATE_PER_SLOTS", storeFloat64(&cfg.Sources.RatePerSlot)},
 		envStore{"ISDUBA_SOURCES_FEED_REFRESH", storeDuration(&cfg.Sources.FeedRefresh)},
+		envStore{"ISDUBA_SOURCES_FEED_LOG_LEVEL", storeFeedLogLevel(&cfg.Sources.FeedLogLevel)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 	)
 }

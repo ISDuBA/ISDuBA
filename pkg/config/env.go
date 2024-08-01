@@ -34,6 +34,11 @@ func storeHumanSize(s string) (HumanSize, error) {
 	return hs, hs.UnmarshalText([]byte(s))
 }
 
+func storeFeedLogLevel(s string) (FeedLogLevel, error) {
+	var fll FeedLogLevel
+	return fll, fll.UnmarshalText([]byte(s))
+}
+
 // noparse returns an unparsed string.
 func noparse(s string) (string, error) {
 	return s, nil

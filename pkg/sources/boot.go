@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"slices"
 
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -24,7 +25,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 
 	const (
 		sourcesSQL = `SELECT id, rate, slots FROM sources WHERE active`
-		feedsSQL   = `SELECT f.id, sources_id, url, rolie ` +
+		feedsSQL   = `SELECT f.id, sources_id, url, rolie, log_lvl::text ` +
 			`FROM feeds f JOIN sources s ON f.sources_id = s.id ` +
 			`WHERE active`
 	)
@@ -57,17 +58,25 @@ func (m *Manager) Boot(ctx context.Context) error {
 				return fmt.Errorf("querying sources failed: %w", err)
 			}
 			m.feeds, err = pgx.CollectRows(frows, func(row pgx.CollectableRow) (*activeFeed, error) {
-				var f activeFeed
-				var sid int64
-				var raw string
-				if err := row.Scan(&f.id, &sid, &raw, &f.rolie); err != nil {
+				var (
+					f   activeFeed
+					sid int64
+					raw string
+					lvl string
+				)
+				if err := row.Scan(&f.id, &sid, &raw, &f.rolie, &lvl); err != nil {
 					return nil, err
 				}
 				parsed, err := url.Parse(raw)
 				if err != nil {
 					return nil, fmt.Errorf("invalid URL: %w", err)
 				}
+				level, err := config.ParseFeedLogLevel(lvl)
+				if err != nil {
+					return nil, fmt.Errorf("invalid feed log level: %w", err)
+				}
 				f.url = parsed
+				f.logLevel = level
 
 				// Add to list of active feeds.
 				idx := slices.IndexFunc(m.sources, func(s *activeSource) bool { return s.id == sid })

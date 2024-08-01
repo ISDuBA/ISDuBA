@@ -221,15 +221,21 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		Label    string `form:"label" binding:"required,min=1"`
 		URL      string `form:"url" binding:"required,url"`
 		Rolie    bool   `form:"rolie"`
+		LogLevel string `form:"log_level" binding:"oneof=debug info warn error ''"`
 	}
 	if err := errors.Join(ctx.ShouldBind(&input), ctx.ShouldBindUri(&input)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if input.LogLevel == "" {
+		input.Label = c.cfg.Sources.FeedLogLevel.String()
+	}
+
 	const (
 		sourceSQL = `SELECT EXISTS(SELECT 1 FROM sources WHERE id = $1)`
-		insertSQL = `INSERT INTO feeds (label, sources_id, url, rolie) ` +
-			`VALUES ($1, $2, $3, $4) ` +
+		insertSQL = `INSERT INTO feeds (label, sources_id, url, rolie, log_lvl) ` +
+			`VALUES ($1, $2, $3, $4, $5::feed_logs_level) ` +
 			`RETURNING id`
 	)
 	var (
@@ -257,6 +263,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 				input.SourceID,
 				input.URL,
 				input.Rolie,
+				input.LogLevel,
 			).Scan(&feedID); err != nil {
 				return fmt.Errorf("inserting feed failed: %w", err)
 			}
