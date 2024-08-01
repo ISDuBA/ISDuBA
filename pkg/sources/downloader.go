@@ -16,12 +16,14 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/time/rate"
 )
 
 var userAgent = "isduba/" + version.SemVersion
@@ -62,6 +64,20 @@ type activeSource struct {
 
 	feeds     []*activeFeed
 	usedSlots int
+	limiterMu sync.Mutex
+	limiter   *rate.Limiter
+}
+
+// wait establishes the request rate per source.
+func (as *activeSource) wait(ctx context.Context) {
+	if as.rate != nil {
+		as.limiterMu.Lock()
+		defer as.limiterMu.Unlock()
+		if as.limiter == nil {
+			as.limiter = rate.NewLimiter(rate.Limit(*as.rate), 1)
+		}
+		as.limiter.Wait(ctx)
+	}
 }
 
 func (af *activeFeed) fetchIndex() ([]byte, error) {
@@ -79,6 +95,7 @@ func (af *activeFeed) fetchIndex() ([]byte, error) {
 	}
 
 	client := http.Client{}
+	af.source.wait(context.Background())
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
