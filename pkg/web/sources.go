@@ -14,7 +14,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -359,10 +361,45 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 }
 
 func (c *Controller) feedLog(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'feedLog' not implemented, yet.",
-	})
+	var input struct {
+		FeedID int64 `uri:"id"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	type entry struct {
+		Time    time.Time           `json:"time"`
+		Level   config.FeedLogLevel `json:"level"`
+		Message string              `json:"msg"`
+	}
+
+	const sql = `SELECT time, lvl::text, msg FROM feed_logs WHERE feeds_id = $1 ` +
+		`ORDER by time DESC`
+
+	var entries []entry
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			rows, err := con.Query(rctx, sql, input.FeedID)
+			if err != nil {
+				return fmt.Errorf("querying feed logs failed: %w", err)
+			}
+			entries, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (entry, error) {
+				var e entry
+				if err := row.Scan(&e.Time, &e.Level, &e.Message); err != nil {
+					return entry{}, fmt.Errorf("scanning log failed: %w", err)
+				}
+				return e, nil
+			})
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, entries)
 }
 
 // defaultMessage returns the default message.

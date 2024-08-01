@@ -15,21 +15,18 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Boot loads the sources from database.
 func (m *Manager) Boot(ctx context.Context) error {
-
 	const (
 		sourcesSQL = `SELECT id, rate, slots FROM sources WHERE active`
 		feedsSQL   = `SELECT f.id, sources_id, url, rolie, log_lvl::text ` +
 			`FROM feeds f JOIN sources s ON f.sources_id = s.id ` +
 			`WHERE active`
 	)
-
 	if err := m.db.Run(
 		ctx,
 		func(rctx context.Context, con *pgxpool.Conn) error {
@@ -38,7 +35,6 @@ func (m *Manager) Boot(ctx context.Context) error {
 				return fmt.Errorf("starting transaction failed: %w", err)
 			}
 			defer tx.Rollback(rctx)
-
 			// Collect active sources.
 			srows, err := tx.Query(rctx, sourcesSQL)
 			if err != nil {
@@ -51,7 +47,6 @@ func (m *Manager) Boot(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("collecting active sources failed: %w", err)
 			}
-
 			// Collect active feeds
 			frows, err := tx.Query(rctx, feedsSQL)
 			if err != nil {
@@ -62,22 +57,15 @@ func (m *Manager) Boot(ctx context.Context) error {
 					f   activeFeed
 					sid int64
 					raw string
-					lvl string
 				)
-				if err := row.Scan(&f.id, &sid, &raw, &f.rolie, &lvl); err != nil {
+				if err := row.Scan(&f.id, &sid, &raw, &f.rolie, &f.logLevel); err != nil {
 					return nil, err
 				}
 				parsed, err := url.Parse(raw)
 				if err != nil {
 					return nil, fmt.Errorf("invalid URL: %w", err)
 				}
-				level, err := config.ParseFeedLogLevel(lvl)
-				if err != nil {
-					return nil, fmt.Errorf("invalid feed log level: %w", err)
-				}
 				f.url = parsed
-				f.logLevel = level
-
 				// Add to list of active feeds.
 				idx := slices.IndexFunc(m.sources, func(s *activeSource) bool { return s.id == sid })
 				if idx == -1 {
@@ -92,7 +80,6 @@ func (m *Manager) Boot(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("collecting active feeds failed: %w", err)
 			}
-
 			return tx.Commit(rctx)
 		}, 0,
 	); err != nil {

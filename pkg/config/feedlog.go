@@ -9,6 +9,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -72,4 +73,17 @@ func (fll *FeedLogLevel) UnmarshalText(b []byte) error {
 // MarshalText implements [encoding.TextMarshaler].
 func (fll FeedLogLevel) MarshalText() ([]byte, error) {
 	return []byte(fll.String()), nil
+}
+
+// Scan implements [sql.Scanner].
+func (fll *FeedLogLevel) Scan(src any) error {
+	if s, ok := src.(string); ok {
+		x, err := ParseFeedLogLevel(s)
+		if err != nil {
+			return err
+		}
+		*fll = x
+		return nil
+	}
+	return errors.New("unsupported type")
 }
