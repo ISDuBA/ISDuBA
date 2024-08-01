@@ -54,8 +54,8 @@ type activeFeed struct {
 	locations []location
 	source    *activeSource
 
-	lastETag      string
-	modifiedSince time.Time
+	lastETag     string
+	lastModified time.Time
 }
 
 type activeSource struct {
@@ -120,24 +120,31 @@ func (as *activeSource) wait(ctx context.Context) {
 	}
 }
 
+// doRequest executes an HTTP request with the source specific parameters.
+func (as *activeSource) doRequest(req *http.Request) (*http.Response, error) {
+	req.Header.Add("User-Agent", userAgent)
+
+	client := http.Client{}
+	as.wait(context.Background())
+
+	// TODO: Implement me!
+
+	return client.Do(req)
+}
+
 // fetchIndex fetches the content of the feed index.
 func (af *activeFeed) fetchIndex() ([]byte, error) {
-
 	req, err := http.NewRequest(http.MethodGet, af.url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("User-Agent", userAgent)
 	if af.lastETag != "" {
 		req.Header.Add("If-None-Match", af.lastETag)
 	}
-	if !af.modifiedSince.IsZero() {
-		req.Header.Add("If-Modified-Since", af.modifiedSince.Format(http.TimeFormat))
+	if !af.lastModified.IsZero() {
+		req.Header.Add("If-Modified-Since", af.lastModified.Format(http.TimeFormat))
 	}
-
-	client := http.Client{}
-	af.source.wait(context.Background())
-	resp, err := client.Do(req)
+	resp, err := af.source.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +162,7 @@ func (af *activeFeed) fetchIndex() ([]byte, error) {
 	}
 	af.lastETag = resp.Header.Get("Etag")
 	if m := resp.Header.Get("Last-Modified"); m != "" {
-		af.modifiedSince, _ = time.Parse(http.TimeFormat, m)
+		af.lastModified, _ = time.Parse(http.TimeFormat, m)
 	}
 	return content, nil
 }
