@@ -19,7 +19,7 @@ Every request is done centralized in `client/src/lib/utils.ts`.
 | Component           | Usecase                | Request(s)              |
 | ------------------- | ---------------------- | ----------------------- |
 | Login               | login                  | `/view`<br>`/about`<br> |
-| Home                | newsflash              | _todo_                  |
+| Dashboard           | newsflash              | _todo_                  |
 | Advisories Overview | load documents         | `/documents`            |
 | Advisory            | load one document      | `/documents`            |
 |                     | load advisory versions | `/documents`            |
