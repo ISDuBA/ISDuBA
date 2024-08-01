@@ -45,7 +45,6 @@
   let tempDocErrorMessage = "";
   let loadTempDocsErrorMessage = "";
   let intervalID: ReturnType<typeof setTimeout> | undefined = undefined;
-  let innerWidth: number;
 
   const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
   const padding = "pe-5 pt-2";
@@ -210,9 +209,9 @@
   };
 </script>
 
-<svelte:window bind:innerWidth />
-
-<div class="fixed bottom-0 right-20 flex flex-col items-end justify-center">
+<div
+  class="fixed bottom-0 left-1 right-1 flex flex-col items-end justify-center sm:left-auto md:right-20"
+>
   <Button
     on:click={appStore.toggleDiffBox}
     class="rounded-none rounded-t-md border-b-0"
@@ -329,8 +328,9 @@
                     <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
                     <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
                     <TableBodyCell {tdClass}>
-                      <span title={doc.title}
-                        >{innerWidth < 1400 ? `${doc.title.substring(0, 26)}...` : doc.title}</span
+                      <span
+                        class="block w-12 overflow-hidden text-ellipsis whitespace-nowrap sm:w-20 md:w-44 lg:w-60 xl:w-96 2xl:w-auto"
+                        title={doc.title}>{doc.title}</span
                       >
                     </TableBodyCell>
                     <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
