@@ -30,48 +30,68 @@
   import { jwtDecode } from "jwt-decode";
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
   import QueryOverview from "$lib/Queries/Overview.svelte";
-  import { PUBLIC_IDLE_TIMEOUT } from "$env/static/public";
   import Test from "$lib/Test.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
-  let userManager = new UserManager(configuration.getConfiguration());
-  userManager.events.addSilentRenewError(function (e) {
-    appStore.setIsUserLoggedIn(false);
-    appStore.setSessionExpiredMessage(e.message);
-    appStore.setSessionExpired(true);
-    userManager.removeUser();
-    push("/login");
-  });
-  userManager.getUser().then(async (user: User | null) => {
-    if (!user) {
-      userManager
-        .signinRedirectCallback()
-        .then(function (user) {
-          appStore.setIsUserLoggedIn(true);
-          appStore.setSessionExpired(false);
-          appStore.setTokenParsed(jwtDecode(user.access_token));
-          push("/");
-          const hasAnyRole = checkUserForRoles();
-          if (!hasAnyRole) {
-            appStore.setSessionExpired(true);
-            appStore.setSessionExpiredMessage("User has no role");
+  let loadConfigError = "";
+
+  const loadConfig = () => {
+    return new Promise((resolve) => {
+      fetch("api/client-config").then((response) => {
+        if (response.ok) {
+          response.json().then((content: any) => {
+            appStore.setConfig(content);
+            resolve(response);
+          });
+        } else {
+          loadConfigError = `Couldn't load Config.`;
+          resolve(response);
+        }
+      });
+    });
+  };
+
+  loadConfig().then(() => {
+    let userManager = new UserManager(configuration.getConfiguration());
+    userManager.events.addSilentRenewError(function (e) {
+      appStore.setIsUserLoggedIn(false);
+      appStore.setSessionExpiredMessage(e.message);
+      appStore.setSessionExpired(true);
+      userManager.removeUser();
+      push("/login");
+    });
+    userManager.getUser().then(async (user: User | null) => {
+      if (!user) {
+        userManager
+          .signinRedirectCallback()
+          .then(function (user) {
+            appStore.setIsUserLoggedIn(true);
+            appStore.setSessionExpired(false);
+            appStore.setTokenParsed(jwtDecode(user.access_token));
+            push("/");
+            const hasAnyRole = checkUserForRoles();
+            if (!hasAnyRole) {
+              appStore.setSessionExpired(true);
+              appStore.setSessionExpiredMessage("User has no role");
+              push("/login");
+            }
+          })
+          .catch(function () {
             push("/login");
-          }
-        })
-        .catch(function () {
+          });
+      } else {
+        appStore.setIsUserLoggedIn(true);
+        appStore.setSessionExpired(false);
+        appStore.setTokenParsed(jwtDecode(user.access_token));
+        const hasAnyRole = checkUserForRoles();
+        if (!hasAnyRole) {
+          appStore.setSessionExpired(true);
+          appStore.setSessionExpiredMessage("User has no role");
           push("/login");
-        });
-    } else {
-      appStore.setIsUserLoggedIn(true);
-      appStore.setSessionExpired(false);
-      appStore.setTokenParsed(jwtDecode(user.access_token));
-      const hasAnyRole = checkUserForRoles();
-      if (!hasAnyRole) {
-        appStore.setSessionExpired(true);
-        appStore.setSessionExpiredMessage("User has no role");
-        push("/login");
+        }
       }
-    }
-    appStore.setUserManager(userManager);
+      appStore.setUserManager(userManager);
+    });
   });
 
   const checkUserForRoles = () => {
@@ -110,9 +130,10 @@
 
     function resetTimer() {
       clearTimeout(time);
-      time = setTimeout(logout, 1000 * 60 * Number(PUBLIC_IDLE_TIMEOUT));
+      time = setTimeout(logout, 1000 * 60 * Number(appStore.getOption("idle_timeout")));
     }
   };
+
   window.onload = () => {
     inactivityTime();
   };
@@ -194,6 +215,7 @@
     {#if $appStore.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}
+    <ErrorMessage message={loadConfigError}></ErrorMessage>
   </main>
   <Messages></Messages>
 </div>

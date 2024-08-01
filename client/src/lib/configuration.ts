@@ -6,11 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import {
-  PUBLIC_KEYCLOAK_URL,
-  PUBLIC_KEYCLOAK_REALM,
-  PUBLIC_KEYCLOAK_CLIENTID
-} from "$env/static/public";
+import { appStore } from "./store";
 import { type UserManagerSettings, WebStorageStateStore } from "oidc-client-ts";
 
 const url = window.location.origin;
@@ -18,8 +14,8 @@ const url = window.location.origin;
 const configuration = {
   getConfiguration: (): UserManagerSettings => {
     return {
-      authority: PUBLIC_KEYCLOAK_URL + "/realms/" + PUBLIC_KEYCLOAK_REALM,
-      client_id: PUBLIC_KEYCLOAK_CLIENTID,
+      authority: appStore.getKeycloakURL() + "/realms/" + appStore.getKeycloakRealm(),
+      client_id: appStore.getKeycloakClientID(),
       redirect_uri: url + "/#/",
       post_logout_redirect_uri: url + "/#/login",
       response_type: "code",
