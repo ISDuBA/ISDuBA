@@ -10,9 +10,7 @@ package sources
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -73,20 +71,13 @@ type activeSource struct {
 // the list of locations if needed.
 func (af *activeFeed) refresh(db *database.DB) error {
 
-	content, err := af.fetchIndex()
+	candidates, err := af.fetchIndex()
 	if err != nil {
 		return fmt.Errorf("fetching feed index failed: %w", err)
 	}
-	if content == nil {
+	if candidates == nil {
 		slog.Info("Feed has not changed", "feed", af.id)
 		return nil
-	}
-
-	// Extract candidates from feed leaving out location where we already
-	// have requests in memory which are more recent.
-	candidates, err := af.toLocations(content)
-	if err != nil {
-		return fmt.Errorf("extracting locations from feed failed: %w", err)
 	}
 
 	// Filter out candidates which are already in the database with same or newer.
@@ -133,7 +124,7 @@ func (as *activeSource) doRequest(req *http.Request) (*http.Response, error) {
 }
 
 // fetchIndex fetches the content of the feed index.
-func (af *activeFeed) fetchIndex() ([]byte, error) {
+func (af *activeFeed) fetchIndex() ([]location, error) {
 	req, err := http.NewRequest(http.MethodGet, af.url.String(), nil)
 	if err != nil {
 		return nil, err
@@ -156,7 +147,13 @@ func (af *activeFeed) fetchIndex() ([]byte, error) {
 		return nil, fmt.Errorf("status code %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
-	content, err := io.ReadAll(resp.Body)
+
+	var locations []location
+	if af.rolie {
+		locations, err = af.rolieLocations(resp.Body)
+	} else {
+		locations, err = af.directoryLocations(resp.Body)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -164,26 +161,7 @@ func (af *activeFeed) fetchIndex() ([]byte, error) {
 	if m := resp.Header.Get("Last-Modified"); m != "" {
 		af.lastModified, _ = time.Parse(http.TimeFormat, m)
 	}
-	return content, nil
-}
-
-// toLocations converts the content of the feed index to a list of locations.
-func (af *activeFeed) toLocations(content []byte) ([]location, error) {
-
-	var asLocations func(*url.URL, func(*location) bool) ([]location, error)
-
-	if af.rolie {
-		rolie, err := rolieFromData(content)
-		if err != nil {
-			return nil, fmt.Errorf("de-serializing rolie failed: %w", err)
-		}
-		asLocations = rolie.toLocations
-	} else {
-		// TODO: Implement me!
-		return nil, errors.New("none-ROLIE feeds are not implemented, yet")
-	}
-
-	return asLocations(af.url, af.sameOrNewer())
+	return locations, nil
 }
 
 // removeOlder takes a list of locations and removes the items which are already

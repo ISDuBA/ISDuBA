@@ -9,8 +9,10 @@
 package sources
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/url"
 	"strings"
@@ -36,7 +38,13 @@ type rolie struct {
 	Feed rolieFeed `json:"feed"`
 }
 
-func (r *rolie) toLocations(base *url.URL, sameOrNewer func(*location) bool) ([]location, error) {
+// rolieLocations assumes that the feed index is ROLIE.
+func (af *activeFeed) rolieLocations(r io.Reader) ([]location, error) {
+	// De-serialize JSON
+	var rolie rolie
+	if err := json.NewDecoder(r).Decode(&rolie); err != nil {
+		return nil, fmt.Errorf("rolie from data failed: %w", err)
+	}
 	resolve := func(href string, store **url.URL) error {
 		u, err := url.Parse(href)
 		if err != nil {
@@ -45,11 +53,13 @@ func (r *rolie) toLocations(base *url.URL, sameOrNewer func(*location) bool) ([]
 		if u.IsAbs() {
 			*store = u
 		} else {
-			*store = base.ResolveReference(u)
+			*store = af.url.ResolveReference(u)
 		}
 		return nil
 	}
-	entries := r.Feed.Entries
+	sameOrNewer := af.sameOrNewer()
+	// Extract the locations
+	entries := rolie.Feed.Entries
 	dls := make([]location, 0, len(entries))
 	for i := range entries {
 		entry := &entries[i]
@@ -88,10 +98,43 @@ func (r *rolie) toLocations(base *url.URL, sameOrNewer func(*location) bool) ([]
 	return dls, nil
 }
 
-func rolieFromData(data []byte) (*rolie, error) {
-	var rolie rolie
-	if err := json.Unmarshal(data, &rolie); err != nil {
-		return nil, fmt.Errorf("rolie from data failed: %w", err)
+// directoryLocations assumes that the feed index is changes.csv
+func (af *activeFeed) directoryLocations(r io.Reader) ([]location, error) {
+	c := csv.NewReader(r)
+	c.FieldsPerRecord = 2
+	c.ReuseRecord = true
+
+	sameOrNewer := af.sameOrNewer()
+
+	var dls []location
+
+	for lineNo := 1; ; lineNo++ {
+		record, err := c.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("CSV line %d is invalid: %w", lineNo, err)
+		}
+		doc, err := url.Parse(record[0])
+		if err != nil {
+			return nil, fmt.Errorf("column 1 in line %d is not a valid URL: %w", lineNo, err)
+		}
+		updated, err := time.Parse(time.RFC3339, record[1])
+		if err != nil {
+			return nil, fmt.Errorf("column 2 in line %d is not a valid RFC3339 time: %w", lineNo, err)
+		}
+		if !doc.IsAbs() {
+			doc = af.url.ResolveReference(doc)
+		}
+		dl := location{
+			updated: updated,
+			doc:     doc,
+		}
+		if !sameOrNewer(&dl) {
+			dls = append(dls, dl)
+		}
 	}
-	return &rolie, nil
+
+	return dls, nil
 }
