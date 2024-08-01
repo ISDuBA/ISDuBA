@@ -36,7 +36,7 @@ build_pkg:
 	cd pkg && go build $(LDFLAGS) ./...
 
 build_client:
-	cd client && npm run build
+	cd client && npm install && npm run build
 
 test:
 	go test ./...
