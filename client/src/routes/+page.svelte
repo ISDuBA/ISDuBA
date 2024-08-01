@@ -12,7 +12,7 @@
   import "../app.pcss";
   import "boxicons/css/boxicons.min.css";
   import SideNav from "$lib/SideNav.svelte";
-  import Home from "$lib/Home/Home.svelte";
+  import Dashboard from "$lib/Dashboard/Dashboard.svelte";
   import Statistics from "$lib/Statistics/Overview.svelte";
   import Sources from "$lib/Sources/Overview.svelte";
   import Diff from "$lib/Diff/Diff.svelte";
@@ -126,7 +126,7 @@
 
   const routes = {
     "/": wrap({
-      component: Home,
+      component: Dashboard,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
