@@ -82,11 +82,11 @@ const (
 )
 
 const (
-	defaultClientKeycloakUrl      = "http://localhost:8080"
+	defaultClientKeycloakURL      = "http://localhost:8080"
 	defaultClientKeycloakRealm    = "isduba"
 	defaultClientKeycloakClientID = "auth"
 	defaultClientUpdateInterval   = 5
-	defaultClientApplicationUri   = "http://localhost:5173/"
+	defaultClientApplicationURI   = "http://localhost:5173/"
 	defaultClientIdleTimeout      = 30
 )
 
@@ -155,7 +155,7 @@ type Sources struct {
 
 // Client are the config options for the client.
 type Client struct {
-	KeycloakUrl      string `toml:"keycloak_url" json:"keycloak_url"`
+	KeycloakURL      string `toml:"keycloak_url" json:"keycloak_url"`
 	KeycloakRealm    string `toml:"keycloak_realm" json:"keycloak_realm"`
 	KeycloakClientID string `toml:"keycloak_client_id" json:"keycloak_client_id"`
 	UpdateInterval   int    `toml:"update_interval" json:"update_interval"`
@@ -277,11 +277,11 @@ func Load(file string) (*Config, error) {
 			DefaultMessage: defaultMessageSourceManager,
 		},
 		Client: Client{
-			KeycloakUrl:      defaultClientKeycloakUrl,
+			KeycloakURL:      defaultClientKeycloakURL,
 			KeycloakRealm:    defaultClientKeycloakRealm,
 			KeycloakClientID: defaultClientKeycloakClientID,
 			UpdateInterval:   defaultClientUpdateInterval,
-			ApplicationURI:   defaultClientApplicationUri,
+			ApplicationURI:   defaultClientApplicationURI,
 			IdleTimeout:      defaultClientIdleTimeout,
 		},
 	}
@@ -341,7 +341,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
-		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakUrl)},
+		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_REALM", storeString(&cfg.Client.KeycloakRealm)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENTID", storeString(&cfg.Client.KeycloakClientID)},
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeInt(&cfg.Client.UpdateInterval)},
