@@ -10,6 +10,7 @@ package sources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -68,63 +69,10 @@ type activeSource struct {
 	limiter   *rate.Limiter
 }
 
-// wait establishes the request rate per source.
-func (as *activeSource) wait(ctx context.Context) {
-	if as.rate != nil {
-		as.limiterMu.Lock()
-		defer as.limiterMu.Unlock()
-		if as.limiter == nil {
-			as.limiter = rate.NewLimiter(rate.Limit(*as.rate), 1)
-		}
-		as.limiter.Wait(ctx)
-	}
-}
-
-func (af *activeFeed) fetchIndex() ([]byte, error) {
-
-	req, err := http.NewRequest(http.MethodGet, af.url.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("User-Agent", userAgent)
-	if af.lastETag != "" {
-		req.Header.Add("If-None-Match", af.lastETag)
-	}
-	if !af.modifiedSince.IsZero() {
-		req.Header.Add("If-Modified-Since", af.modifiedSince.Format(http.TimeFormat))
-	}
-
-	client := http.Client{}
-	af.source.wait(context.Background())
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode == http.StatusNotModified {
-		return nil, nil
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code %d", resp.StatusCode)
-	}
-	defer resp.Body.Close()
-	content, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	af.lastETag = resp.Header.Get("Etag")
-	if m := resp.Header.Get("Last-Modified"); m != "" {
-		af.modifiedSince, _ = time.Parse(http.TimeFormat, m)
-	}
-	return content, nil
-}
-
+// refresh fetches the feed index and accordingly updates
+// the list of locations if needed.
 func (af *activeFeed) refresh(db *database.DB) error {
 
-	if !af.rolie {
-		// TODO: Implement me!
-		slog.Warn("None-ROLIE feeds are not implemented, yet", "feed", af.id)
-		return nil
-	}
 	content, err := af.fetchIndex()
 	if err != nil {
 		return fmt.Errorf("fetching feed index failed: %w", err)
@@ -134,15 +82,9 @@ func (af *activeFeed) refresh(db *database.DB) error {
 		return nil
 	}
 
-	// TODO: Virtualize the None-ROLIE case
-	rolie, err := rolieFromData(content)
-	if err != nil {
-		return fmt.Errorf("de-serializing rolie failed: %w", err)
-	}
-
 	// Extract candidates from feed leaving out location where we already
 	// have requests in memory which are more recent.
-	candidates, err := rolie.toLocations(af.url, af.sameOrNewer())
+	candidates, err := af.toLocations(content)
 	if err != nil {
 		return fmt.Errorf("extracting locations from feed failed: %w", err)
 	}
@@ -166,6 +108,79 @@ func (af *activeFeed) refresh(db *database.DB) error {
 	return nil
 }
 
+// wait establishes the request rate per source.
+func (as *activeSource) wait(ctx context.Context) {
+	if as.rate != nil {
+		as.limiterMu.Lock()
+		defer as.limiterMu.Unlock()
+		if as.limiter == nil {
+			as.limiter = rate.NewLimiter(rate.Limit(*as.rate), 1)
+		}
+		as.limiter.Wait(ctx)
+	}
+}
+
+// fetchIndex fetches the content of the feed index.
+func (af *activeFeed) fetchIndex() ([]byte, error) {
+
+	req, err := http.NewRequest(http.MethodGet, af.url.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("User-Agent", userAgent)
+	if af.lastETag != "" {
+		req.Header.Add("If-None-Match", af.lastETag)
+	}
+	if !af.modifiedSince.IsZero() {
+		req.Header.Add("If-Modified-Since", af.modifiedSince.Format(http.TimeFormat))
+	}
+
+	client := http.Client{}
+	af.source.wait(context.Background())
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// Nothing changed since last call.
+	if resp.StatusCode == http.StatusNotModified {
+		return nil, nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code %d", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	af.lastETag = resp.Header.Get("Etag")
+	if m := resp.Header.Get("Last-Modified"); m != "" {
+		af.modifiedSince, _ = time.Parse(http.TimeFormat, m)
+	}
+	return content, nil
+}
+
+// toLocations converts the content of the feed index to a list of locations.
+func (af *activeFeed) toLocations(content []byte) ([]location, error) {
+
+	var asLocations func(*url.URL, func(*location) bool) ([]location, error)
+
+	if af.rolie {
+		rolie, err := rolieFromData(content)
+		if err != nil {
+			return nil, fmt.Errorf("de-serializing rolie failed: %w", err)
+		}
+		asLocations = rolie.toLocations
+	} else {
+		// TODO: Implement me!
+		return nil, errors.New("none-ROLIE feeds are not implemented, yet")
+	}
+
+	return asLocations(af.url, af.sameOrNewer())
+}
+
+// removeOlder takes a list of locations and removes the items which are already
+// in the database with a same or newer update time.
 func removeOlder(db *database.DB, candidates []location) ([]location, error) {
 
 	var remove []int
@@ -209,6 +224,8 @@ func removeOlder(db *database.DB, candidates []location) ([]location, error) {
 	return candidates, nil
 }
 
+// sameOrNewer returns a function which checks if a given location is
+// already in the current list of locations with the same or newer update time.
 func (af *activeFeed) sameOrNewer() func(*location) bool {
 	// XXX: Maybe this extra indexing could be replaced by something
 	// which uses the fact that the locations are already sorted by updated?!
