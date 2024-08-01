@@ -11,12 +11,6 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import { Button, Heading, Card } from "flowbite-svelte";
-  import {
-    PUBLIC_KEYCLOAK_URL,
-    PUBLIC_KEYCLOAK_REALM,
-    PUBLIC_KEYCLOAK_CLIENTID,
-    PUBLIC_APPLICATION_URI
-  } from "$env/static/public";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
@@ -36,7 +30,7 @@
     await $appStore.app.userManager?.signinRedirect();
   }
 
-  let profileUrl = `${PUBLIC_KEYCLOAK_URL}/realms/${PUBLIC_KEYCLOAK_REALM}/account/?referrer=${PUBLIC_KEYCLOAK_CLIENTID}&referrer_uri=${PUBLIC_APPLICATION_URI}`;
+  let profileUrl = `${appStore.getKeycloakURL()}/realms/${appStore.getKeycloakRealm()}/account/?referrer=${appStore.getKeycloakClientID()}&referrer_uri=${appStore.getApplicationURI()}`;
 
   async function getVersion() {
     const response = await request("api/about", "GET");
@@ -81,8 +75,8 @@
     <Card>
       <div class="flex flex-col gap-4">
         <P class="flex flex-col"
-          ><span><b>Server URL: </b>{PUBLIC_KEYCLOAK_URL}</span><span
-            ><b>Realm: </b>{PUBLIC_KEYCLOAK_REALM}</span
+          ><span><b>Server URL: </b>{appStore.getKeycloakURL()}</span><span
+            ><b>Realm: </b>{appStore.getKeycloakRealm()}</span
           ></P
         >
         {#if $appStore.app.userManager && !$appStore.app.isUserLoggedIn}

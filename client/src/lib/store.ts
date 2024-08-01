@@ -26,6 +26,7 @@ export type ProfileWithRoles = UserProfile & {
 
 type AppStore = {
   app: {
+    config: any;
     userProfile: {
       firstName: string;
       lastName: string;
@@ -79,6 +80,7 @@ const generateMessage = (msg: string, type: string) => {
 const generateInitialState = (): AppStore => {
   return {
     app: {
+      config: undefined,
       userProfile: {
         firstName: "",
         lastName: ""
@@ -401,6 +403,12 @@ function createStore() {
         return settings;
       });
     },
+    setConfig: (newConfig: any) => {
+      update((settings) => {
+        settings.app.config = newConfig;
+        return settings;
+      });
+    },
     reset: () => {
       set(generateInitialState());
     },
@@ -412,7 +420,14 @@ function createStore() {
     isAuditor: () => appStore.getRoles().includes(AUDITOR),
     isSourceManager: () => appStore.getRoles().includes(SOURCE_MANAGER),
     getUserManager: () => state.app.userManager,
-    getIsUserLoggedIn: () => state.app.isUserLoggedIn
+    getIsUserLoggedIn: () => state.app.isUserLoggedIn,
+    getOption: (option: string) => state.app.config[option],
+    getApplicationURI: () => appStore.getOption("application_uri"),
+    getIdleTimeout: () => appStore.getOption("idle_timeout"),
+    getKeycloakClientID: () => appStore.getOption("keycloak_client_id"),
+    getKeycloakRealm: () => appStore.getOption("keycloak_realm"),
+    getKeycloakURL: () => appStore.getOption("keycloak_url"),
+    getUpdateInterval: () => appStore.getOption("update_interval")
   };
 }
 
