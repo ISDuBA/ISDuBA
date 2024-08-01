@@ -34,14 +34,7 @@
   import Test from "$lib/Test.svelte";
 
   let userManager = new UserManager(configuration.getConfiguration());
-  userManager.events.addUserSignedIn(function () {
-    console.log("User loaded");
-  });
-  userManager.events.addAccessTokenExpiring(function () {
-    console.log("token expiring");
-  });
   userManager.events.addSilentRenewError(function (e) {
-    console.log("silent renew error", e.message);
     appStore.setIsUserLoggedIn(false);
     appStore.setSessionExpiredMessage(e.message);
     appStore.setSessionExpired(true);
