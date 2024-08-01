@@ -80,13 +80,6 @@
     <div><Heading class="mb-2">ISDuBA</Heading></div>
     <Card>
       <div class="flex flex-col gap-4">
-        <div>
-          <img
-            alt="Keycloak Logo"
-            style="height:2rem;"
-            src={`${PUBLIC_KEYCLOAK_URL}/resources/zph0a/admin/keycloak.v2/logo.svg`}
-          />
-        </div>
         <P class="flex flex-col"
           ><span><b>Server URL: </b>{PUBLIC_KEYCLOAK_URL}</span><span
             ><b>Realm: </b>{PUBLIC_KEYCLOAK_REALM}</span
