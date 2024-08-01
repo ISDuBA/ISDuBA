@@ -52,3 +52,11 @@
 
 # [sources]
 # default_message = "Missing something? To suggest new CSAF sources, please contact your CSAF source manager or your administrator."
+
+# [client]
+# keycloak_url = "http://localhost:8080"
+# keycloak_realm = "isduba"
+# keycloak_client_id = "auth"
+# update_interval = 5
+# application_uri = "http://localhost:5173"
+# idle_timeout = 30
