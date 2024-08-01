@@ -27,13 +27,5 @@ func (c *Controller) view(ctx *gin.Context) {
 }
 
 func (c *Controller) clientConfig(ctx *gin.Context) {
-	client := &c.cfg.Client
-	ctx.JSON(http.StatusOK, gin.H{
-		"keycloak_url":       client.KeycloakUrl,
-		"keycloak_realm":     client.KeycloakRealm,
-		"keycloak_client_id": client.KeycloakClientID,
-		"update_interval":    client.UpdateInterval,
-		"application_uri":    client.ApplicationURI,
-		"idle_timeout":       client.IdleTimeout,
-	})
+	ctx.JSON(http.StatusOK, c.cfg.Client)
 }
