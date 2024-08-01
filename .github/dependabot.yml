@@ -12,7 +12,9 @@ updates:
     directory: "/client"
     schedule:
       interval: "weekly"
+    labels: [ ]
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "weekly"
+    labels: [ ]
