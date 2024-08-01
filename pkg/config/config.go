@@ -155,12 +155,12 @@ type Sources struct {
 
 // Client are the config options for the client.
 type Client struct {
-	KeycloakUrl      string `toml:"keycloak_url"`
-	KeycloakRealm    string `toml:"keycloak_realm"`
-	KeycloakClientID string `toml:"keycloak_client_id"`
-	UpdateInterval   int    `toml:"update_interval"`
-	ApplicationURI   string `toml:"application_uri"`
-	IdleTimeout      int    `toml:"idle_timeout"`
+	KeycloakUrl      string `toml:"keycloak_url" json:"keycloak_url"`
+	KeycloakRealm    string `toml:"keycloak_realm" json:"keycloak_realm"`
+	KeycloakClientID string `toml:"keycloak_client_id" json:"keycloak_client_id"`
+	UpdateInterval   int    `toml:"update_interval" json:"update_interval"`
+	ApplicationURI   string `toml:"application_uri" json:"application_uri"`
+	IdleTimeout      int    `toml:"idle_timeout" json:"idle_timeout"`
 }
 
 // Config are all the configuration options.
