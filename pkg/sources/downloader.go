@@ -11,7 +11,6 @@ package sources
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"slices"
@@ -72,19 +71,22 @@ type activeSource struct {
 
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
-func (af *activeFeed) refresh(db *database.DB) error {
+func (af *activeFeed) refresh(m *Manager) error {
+
+	af.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
 	candidates, err := af.fetchIndex()
 	if err != nil {
 		return fmt.Errorf("fetching feed index failed: %w", err)
 	}
 	if candidates == nil {
-		slog.Info("Feed has not changed", "feed", af.id)
+		af.log(m, config.InfoFeedLogLevel, "feed %d has not changed", af.id)
+		af.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(af.locations))
 		return nil
 	}
 
 	// Filter out candidates which are already in the database with same or newer.
-	if candidates, err = removeOlder(db, candidates); err != nil {
+	if candidates, err = removeOlder(m.db, candidates); err != nil {
 		return fmt.Errorf("removing candidates by looking at database failed: %w", err)
 	}
 
@@ -98,7 +100,7 @@ func (af *activeFeed) refresh(db *database.DB) error {
 		return a.updated.Compare(b.updated)
 	})
 
-	slog.Info("Entries in feed", "num", len(af.locations), "feed", af.id)
+	af.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(af.locations))
 	return nil
 }
 
@@ -236,6 +238,5 @@ func (l location) download(m *Manager, f *activeFeed, done func()) {
 	defer done()
 
 	// TODO: Implement me!
-	_ = m
-	_ = f
+	f.log(m, config.InfoFeedLogLevel, "downloading %q done", l.doc)
 }

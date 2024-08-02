@@ -10,7 +10,6 @@ package sources
 
 import (
 	"context"
-	"log/slog"
 	"slices"
 	"time"
 
@@ -50,9 +49,8 @@ func (m *Manager) refreshFeeds() {
 	for _, feed := range m.feeds {
 		// Does the feed need a refresh?
 		if feed.nextCheck.IsZero() || !now.Before(feed.nextCheck) {
-			if err := feed.refresh(m.db); err != nil {
-				slog.Error("feed refresh failed", "feed", feed.id, "err", err)
-				// TODO: Log to database
+			if err := feed.refresh(m); err != nil {
+				feed.log(m, config.ErrorFeedLogLevel, "feed refresh failed: %v", err.Error())
 			}
 			// Even if there was an error try again later.
 			feed.nextCheck = time.Now().Add(m.cfg.FeedRefresh)
@@ -198,7 +196,6 @@ func (m *Manager) downloadDone(f *activeFeed, id int64) func() {
 			f.source.usedSlots--
 			m.usedSlots--
 			f.findLocationByID(id).state = done
-			slog.Debug("download done", "id", id)
 		}
 	}
 }
