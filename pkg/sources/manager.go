@@ -161,6 +161,10 @@ func (m *Manager) Run(ctx context.Context) {
 // ping wakes up the manager.
 func (m *Manager) ping() {}
 
+func (m *Manager) backgroundPing() {
+	go func() { m.fns <- (*Manager).ping }()
+}
+
 // Kill stops the manager.
 func (m *Manager) Kill() {
 	m.fns <- func(m *Manager) { m.done = true }
@@ -200,7 +204,7 @@ func (m *Manager) addSource(sourceID int64) error {
 	}
 	const (
 		sourceSQL = `SELECT rate, slots, active FROM sources WHERE id = $1`
-		feedsSQL  = `SELECT id, url, rolie, log_lvl::text FROM feeds WHERE source_id = $1`
+		feedsSQL  = `SELECT id, url, rolie, log_lvl::text FROM feeds WHERE sources_id = $1`
 	)
 	var (
 		s  *source
@@ -250,7 +254,6 @@ func (m *Manager) addSource(sourceID int64) error {
 			if err != nil {
 				return fmt.Errorf("collecting feeds failed: %w", err)
 			}
-			s.feeds = fs
 			return tx.Commit(ctx)
 		}, 0,
 	); err != nil {
@@ -259,11 +262,12 @@ func (m *Manager) addSource(sourceID int64) error {
 		}
 		return fmt.Errorf("fetching source failed: %w", err)
 	}
+	s.feeds = fs
 	m.sources = append(m.sources, s)
 	m.feeds = append(m.feeds, fs...)
 
 	if s.active && len(fs) > 0 {
-		go func() { m.fns <- (*Manager).ping }()
+		m.backgroundPing()
 	}
 	return nil
 }
@@ -273,7 +277,64 @@ func (m *Manager) addFeed(feedID int64) error {
 	if slices.ContainsFunc(m.feeds, func(f *feed) bool { return f.id == feedID }) {
 		return nil
 	}
-	// TODO: Implement me!
+	const feedSQL = `SELECT sources_id, url, rolie, log_lvl::text FROM feeds WHERE sources_id = $1`
+	var (
+		f *feed
+		s *source
+	)
+	if err := m.db.Run(
+		context.Background(),
+		func(ctx context.Context, con *pgxpool.Conn) error {
+			tx, err := con.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+			if err != nil {
+				return fmt.Errorf("starting transaction failed: %w", err)
+			}
+			defer tx.Rollback(ctx)
+			// Collect feed.
+			frows, err := tx.Query(ctx, feedSQL, feedID)
+			if err != nil {
+				return fmt.Errorf("querying feed failed: %w", err)
+			}
+			var sid int64
+			f, err = pgx.CollectOneRow(frows, func(row pgx.CollectableRow) (*feed, error) {
+				var (
+					f   feed
+					raw string
+				)
+				if err := row.Scan(&sid, &raw, &f.rolie, &f.logLevel); err != nil {
+					return nil, err
+				}
+				parsed, err := url.Parse(raw)
+				if err != nil {
+					return nil, err
+				}
+				f.url = parsed
+				return &f, nil
+			})
+			if err != nil {
+				return err
+			}
+			// Do we have the source already?
+			idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sid })
+			if idx == -1 {
+				// XXX: Maybe we should load the source and all the other feeds of this source?
+				return errors.New("source is missing")
+			}
+			s = m.sources[idx]
+			return tx.Commit(ctx)
+		}, 0,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		return fmt.Errorf("fetching feed failed: %w", err)
+	}
+	f.source = s
+	s.feeds = append(s.feeds, f)
+	m.feeds = append(m.feeds, f)
+	if s.active {
+		m.backgroundPing()
+	}
 	return nil
 }
 

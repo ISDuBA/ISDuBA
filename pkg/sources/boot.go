@@ -89,7 +89,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 
 	// Trigger a refresh of the loaded feeds.
 	if len(m.feeds) > 0 {
-		go func() { m.fns <- (*Manager).ping }()
+		m.backgroundPing()
 	}
 
 	return nil
