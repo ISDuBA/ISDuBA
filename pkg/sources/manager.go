@@ -150,21 +150,43 @@ func (m *Manager) Kill() {
 	m.fns <- func(m *Manager) { m.done = true }
 }
 
+func (m *Manager) removeSource(sourceID int64) error {
+	m.feeds = slices.DeleteFunc(m.feeds, func(f *activeFeed) bool {
+		return f.source.id == sourceID
+	})
+	m.sources = slices.DeleteFunc(m.sources, func(s *activeSource) bool {
+		if s.id == sourceID {
+			s.feeds = nil
+			return true
+		}
+		return false
+	})
+	return nil
+}
+
+func (m *Manager) removeFeed(feedID int64) error {
+	m.feeds = slices.DeleteFunc(m.feeds, func(f *activeFeed) bool {
+		if f.id == feedID {
+			f.source.feeds = slices.DeleteFunc(f.source.feeds, func(f *activeFeed) bool {
+				return f.id == feedID
+			})
+			return true
+		}
+		return false
+	})
+	return nil
+}
+
 // AddSource registers a new source.
 func (*Manager) AddSource(int64) error {
-	// There is currently no code needed here as new sources
-	// do not have feeds in particular no active ones.
+	// TODO: Implement me!
 	return nil
 }
 
 // RemoveSource removes a sources from manager.
 func (m *Manager) RemoveSource(sourceID int64) error {
 	result := make(chan error)
-	m.fns <- func(_ *Manager) {
-		_ = sourceID
-		// TODO: Implement me!
-		result <- nil
-	}
+	m.fns <- func(m *Manager) { result <- m.removeSource(sourceID) }
 	return <-result
 }
 
@@ -182,11 +204,7 @@ func (m *Manager) AddFeed(feedID int64) error {
 // RemoveFeed removes a feed from a source.
 func (m *Manager) RemoveFeed(feedID int64) error {
 	result := make(chan error)
-	m.fns <- func(_ *Manager) {
-		_ = feedID
-		// TODO: Implement me!
-		result <- nil
-	}
+	m.fns <- func(m *Manager) { result <- m.removeFeed(feedID) }
 	return <-result
 }
 
