@@ -211,8 +211,8 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 func (m *Manager) downloadDone(f *activeFeed, id int64) func() {
 	return func() {
 		m.fns <- func(m *Manager) {
-			f.source.usedSlots--
-			m.usedSlots--
+			f.source.usedSlots = max(0, f.source.usedSlots-1)
+			m.usedSlots = max(0, m.usedSlots-1)
 			f.findLocationByID(id).state = done
 		}
 	}
