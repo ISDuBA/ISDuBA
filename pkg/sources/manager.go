@@ -305,7 +305,9 @@ func (m *Manager) downloadDone(f *feed, id int64) func() {
 		m.fns <- func(m *Manager) {
 			f.source.usedSlots = max(0, f.source.usedSlots-1)
 			m.usedSlots = max(0, m.usedSlots-1)
-			f.findLocationByID(id).state = done
+			if l := f.findLocationByID(id); l != nil {
+				l.state = done
+			}
 		}
 	}
 }
