@@ -130,7 +130,7 @@
 
     function resetTimer() {
       clearTimeout(time);
-      time = setTimeout(logout, 1000 * 60 * Number(appStore.getOption("idle_timeout")));
+      time = setTimeout(logout, Number(appStore.getIdleTimeout() / (1000 * 1000)));
     }
   };
 
