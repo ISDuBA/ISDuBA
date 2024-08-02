@@ -268,36 +268,39 @@ func (m *Manager) addSource(sourceID int64) error {
 	return nil
 }
 
+func (m *Manager) addFeed(feedID int64) error {
+	// Ignore it if we already have it.
+	if slices.ContainsFunc(m.feeds, func(f *feed) bool { return f.id == feedID }) {
+		return nil
+	}
+	// TODO: Implement me!
+	return nil
+}
+
+func (m *Manager) asManager(fn func(*Manager, int64) error, id int64) error {
+	err := make(chan error)
+	m.fns <- func(m *Manager) { err <- fn(m, id) }
+	return <-err
+}
+
 // AddSource registers a new source.
 func (m *Manager) AddSource(sourceID int64) error {
-	result := make(chan error)
-	m.fns <- func(m *Manager) { result <- m.addSource(sourceID) }
-	return <-result
+	return m.asManager((*Manager).addSource, sourceID)
 }
 
 // RemoveSource removes a sources from manager.
 func (m *Manager) RemoveSource(sourceID int64) error {
-	result := make(chan error)
-	m.fns <- func(m *Manager) { result <- m.removeSource(sourceID) }
-	return <-result
+	return m.asManager((*Manager).removeSource, sourceID)
 }
 
 // AddFeed adds a new feed to a source.
 func (m *Manager) AddFeed(feedID int64) error {
-	result := make(chan error)
-	m.fns <- func(_ *Manager) {
-		_ = feedID
-		// TODO: Implement me!
-		result <- nil
-	}
-	return <-result
+	return m.asManager((*Manager).addFeed, feedID)
 }
 
 // RemoveFeed removes a feed from a source.
 func (m *Manager) RemoveFeed(feedID int64) error {
-	result := make(chan error)
-	m.fns <- func(m *Manager) { result <- m.removeFeed(feedID) }
-	return <-result
+	return m.asManager((*Manager).removeFeed, feedID)
 }
 
 func (m *Manager) downloadDone(f *feed, id int64) func() {
