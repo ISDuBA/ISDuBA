@@ -18,8 +18,8 @@ import (
 )
 
 // log writes a log message into the logs of a feed.
-func (af *activeFeed) log(m *Manager, level config.FeedLogLevel, format string, args ...any) {
-	if level < af.logLevel {
+func (f *feed) log(m *Manager, level config.FeedLogLevel, format string, args ...any) {
+	if level < f.logLevel {
 		return
 	}
 	message := fmt.Sprintf(format, args...)
@@ -29,7 +29,7 @@ func (af *activeFeed) log(m *Manager, level config.FeedLogLevel, format string, 
 	if err := m.db.Run(
 		context.Background(),
 		func(ctx context.Context, con *pgxpool.Conn) error {
-			_, err := con.Exec(ctx, sql, af.id, level.String(), message)
+			_, err := con.Exec(ctx, sql, f.id, level.String(), message)
 			return err
 		}, 0,
 	); err != nil {

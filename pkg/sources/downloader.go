@@ -44,7 +44,7 @@ type location struct {
 	id        int64
 }
 
-type activeFeed struct {
+type feed struct {
 	id       int64
 	url      *url.URL
 	rolie    bool
@@ -52,18 +52,19 @@ type activeFeed struct {
 
 	nextCheck time.Time
 	locations []location
-	source    *activeSource
+	source    *source
 
 	lastETag     string
 	lastModified time.Time
 }
 
-type activeSource struct {
-	id    int64
-	rate  *float64
-	slots *int
+type source struct {
+	id     int64
+	rate   *float64
+	slots  *int
+	active bool
 
-	feeds     []*activeFeed
+	feeds     []*feed
 	usedSlots int
 	limiterMu sync.Mutex
 	limiter   *rate.Limiter
@@ -71,17 +72,17 @@ type activeSource struct {
 
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
-func (af *activeFeed) refresh(m *Manager) error {
+func (f *feed) refresh(m *Manager) error {
 
-	af.log(m, config.InfoFeedLogLevel, "refreshing feed")
+	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
-	candidates, err := af.fetchIndex()
+	candidates, err := f.fetchIndex()
 	if err != nil {
 		return fmt.Errorf("fetching feed index failed: %w", err)
 	}
 	if candidates == nil {
-		af.log(m, config.InfoFeedLogLevel, "feed %d has not changed", af.id)
-		af.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(af.locations))
+		f.log(m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
+		f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.locations))
 		return nil
 	}
 
@@ -95,33 +96,33 @@ func (af *activeFeed) refresh(m *Manager) error {
 	}
 
 	// Merge candidates into list of locations.
-	af.locations = append(af.locations, candidates...)
-	slices.SortFunc(af.locations, func(a, b location) int {
+	f.locations = append(f.locations, candidates...)
+	slices.SortFunc(f.locations, func(a, b location) int {
 		return a.updated.Compare(b.updated)
 	})
 
-	af.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(af.locations))
+	f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.locations))
 	return nil
 }
 
 // wait establishes the request rate per source.
-func (as *activeSource) wait(ctx context.Context) {
-	if as.rate != nil {
-		as.limiterMu.Lock()
-		defer as.limiterMu.Unlock()
-		if as.limiter == nil {
-			as.limiter = rate.NewLimiter(rate.Limit(*as.rate), 1)
+func (s *source) wait(ctx context.Context) {
+	if s.rate != nil {
+		s.limiterMu.Lock()
+		defer s.limiterMu.Unlock()
+		if s.limiter == nil {
+			s.limiter = rate.NewLimiter(rate.Limit(*s.rate), 1)
 		}
-		as.limiter.Wait(ctx)
+		s.limiter.Wait(ctx)
 	}
 }
 
 // doRequest executes an HTTP request with the source specific parameters.
-func (as *activeSource) doRequest(req *http.Request) (*http.Response, error) {
+func (s *source) doRequest(req *http.Request) (*http.Response, error) {
 	req.Header.Add("User-Agent", userAgent)
 
 	client := http.Client{}
-	as.wait(context.Background())
+	s.wait(context.Background())
 
 	// TODO: Implement me!
 
@@ -129,18 +130,18 @@ func (as *activeSource) doRequest(req *http.Request) (*http.Response, error) {
 }
 
 // fetchIndex fetches the content of the feed index.
-func (af *activeFeed) fetchIndex() ([]location, error) {
-	req, err := http.NewRequest(http.MethodGet, af.url.String(), nil)
+func (f *feed) fetchIndex() ([]location, error) {
+	req, err := http.NewRequest(http.MethodGet, f.url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	if af.lastETag != "" {
-		req.Header.Add("If-None-Match", af.lastETag)
+	if f.lastETag != "" {
+		req.Header.Add("If-None-Match", f.lastETag)
 	}
-	if !af.lastModified.IsZero() {
-		req.Header.Add("If-Modified-Since", af.lastModified.Format(http.TimeFormat))
+	if !f.lastModified.IsZero() {
+		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
-	resp, err := af.source.doRequest(req)
+	resp, err := f.source.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -154,17 +155,17 @@ func (af *activeFeed) fetchIndex() ([]location, error) {
 	defer resp.Body.Close()
 
 	var locations []location
-	if af.rolie {
-		locations, err = af.rolieLocations(resp.Body)
+	if f.rolie {
+		locations, err = f.rolieLocations(resp.Body)
 	} else {
-		locations, err = af.directoryLocations(resp.Body)
+		locations, err = f.directoryLocations(resp.Body)
 	}
 	if err != nil {
 		return nil, err
 	}
-	af.lastETag = resp.Header.Get("Etag")
+	f.lastETag = resp.Header.Get("Etag")
 	if m := resp.Header.Get("Last-Modified"); m != "" {
-		af.lastModified, _ = time.Parse(http.TimeFormat, m)
+		f.lastModified, _ = time.Parse(http.TimeFormat, m)
 	}
 	return locations, nil
 }
@@ -216,11 +217,11 @@ func removeOlder(db *database.DB, candidates []location) ([]location, error) {
 
 // sameOrNewer returns a function which checks if a given location is
 // already in the current list of locations with the same or newer update time.
-func (af *activeFeed) sameOrNewer() func(*location) bool {
+func (f *feed) sameOrNewer() func(*location) bool {
 	// XXX: Maybe this extra indexing could be replaced by something
 	// which uses the fact that the locations are already sorted by updated?!
-	have := make(map[string]time.Time, len(af.locations))
-	for _, location := range af.locations {
+	have := make(map[string]time.Time, len(f.locations))
+	for _, location := range f.locations {
 		url := location.doc.String()
 		if t, ok := have[url]; !ok || location.updated.After(t) {
 			have[url] = location.updated
@@ -234,7 +235,7 @@ func (af *activeFeed) sameOrNewer() func(*location) bool {
 
 // download fetches the files of a document and stores
 // them into the database.
-func (l location) download(m *Manager, f *activeFeed, done func()) {
+func (l location) download(m *Manager, f *feed, done func()) {
 	defer done()
 
 	// TODO: Implement me!

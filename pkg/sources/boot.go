@@ -22,10 +22,8 @@ import (
 // Boot loads the sources from database.
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
-		sourcesSQL = `SELECT id, rate, slots FROM sources WHERE active`
-		feedsSQL   = `SELECT f.id, sources_id, url, rolie, log_lvl::text ` +
-			`FROM feeds f JOIN sources s ON f.sources_id = s.id ` +
-			`WHERE active`
+		sourcesSQL = `SELECT id, rate, slots, active FROM sources`
+		feedsSQL   = `SELECT id, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
 		ctx,
@@ -40,21 +38,21 @@ func (m *Manager) Boot(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("querying sources failed: %w", err)
 			}
-			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*activeSource, error) {
-				var s activeSource
-				return &s, row.Scan(&s.id, &s.rate, &s.slots)
+			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*source, error) {
+				var s source
+				return &s, row.Scan(&s.id, &s.rate, &s.slots, &s.active)
 			})
 			if err != nil {
-				return fmt.Errorf("collecting active sources failed: %w", err)
+				return fmt.Errorf("collecting sources failed: %w", err)
 			}
 			// Collect active feeds
 			frows, err := tx.Query(rctx, feedsSQL)
 			if err != nil {
 				return fmt.Errorf("querying sources failed: %w", err)
 			}
-			m.feeds, err = pgx.CollectRows(frows, func(row pgx.CollectableRow) (*activeFeed, error) {
+			m.feeds, err = pgx.CollectRows(frows, func(row pgx.CollectableRow) (*feed, error) {
 				var (
-					f   activeFeed
+					f   feed
 					sid int64
 					raw string
 				)
@@ -67,7 +65,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 				}
 				f.url = parsed
 				// Add to list of active feeds.
-				idx := slices.IndexFunc(m.sources, func(s *activeSource) bool { return s.id == sid })
+				idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sid })
 				if idx == -1 {
 					// Should really not happen! Considering a panic.
 					return nil, fmt.Errorf("cannot find source id %d", sid)
@@ -86,8 +84,8 @@ func (m *Manager) Boot(ctx context.Context) error {
 		return fmt.Errorf("fetching active feeds failed: %w", err)
 	}
 
-	slog.Info("number of active sources", "num", len(m.sources))
-	slog.Info("number of active feeds", "num", len(m.feeds))
+	slog.Info("number of sources", "num", len(m.sources))
+	slog.Info("number of feeds", "num", len(m.feeds))
 
 	// Trigger a refresh of the loaded feeds.
 	if len(m.feeds) > 0 {

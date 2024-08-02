@@ -27,8 +27,8 @@ type Manager struct {
 	fns  chan func(*Manager)
 	done bool
 
-	feeds     []*activeFeed
-	sources   []*activeSource
+	feeds     []*feed
+	sources   []*source
 	usedSlots int
 	uniqueID  int64
 }
@@ -47,6 +47,10 @@ func NewManager(cfg *config.Sources, db *database.DB) *Manager {
 func (m *Manager) refreshFeeds() {
 	now := time.Now()
 	for _, feed := range m.feeds {
+		// Ignore inactive sources.
+		if !feed.source.active {
+			continue
+		}
 		// Does the feed need a refresh?
 		if feed.nextCheck.IsZero() || !now.Before(feed.nextCheck) {
 			if err := feed.refresh(m); err != nil {
@@ -64,6 +68,10 @@ func (m *Manager) startDownloads() {
 	for m.usedSlots < m.cfg.DownloadSlots {
 		started := false
 		for _, feed := range m.feeds {
+			// Ignore inactive sources.
+			if !feed.source.active {
+				continue
+			}
 			// Has this feed a free slot?
 			maxSlots := min(m.cfg.SlotsPerSource, m.cfg.DownloadSlots)
 			if feed.source.slots != nil {
@@ -103,24 +111,24 @@ func (m *Manager) compactDone() {
 	}
 }
 
-func (m *Manager) generateID() (id int64) {
-	id = m.uniqueID
+func (m *Manager) generateID() int64 {
+	// Start with 1 to avoid clashes with zeroed locations.
 	m.uniqueID++
-	return
+	return m.uniqueID
 }
 
-func (af *activeFeed) findLocationByID(id int64) *location {
-	for i := len(af.locations) - 1; i >= 0; i-- {
-		if location := &af.locations[i]; location.id == id {
+func (f *feed) findLocationByID(id int64) *location {
+	for i := len(f.locations) - 1; i >= 0; i-- {
+		if location := &f.locations[i]; location.id == id {
 			return location
 		}
 	}
 	return nil
 }
 
-func (af *activeFeed) findWaiting() *location {
-	for i := len(af.locations) - 1; i >= 0; i-- {
-		if location := &af.locations[i]; location.state == waiting {
+func (f *feed) findWaiting() *location {
+	for i := len(f.locations) - 1; i >= 0; i-- {
+		if location := &f.locations[i]; location.state == waiting {
 			return location
 		}
 	}
@@ -151,10 +159,10 @@ func (m *Manager) Kill() {
 }
 
 func (m *Manager) removeSource(sourceID int64) error {
-	m.feeds = slices.DeleteFunc(m.feeds, func(f *activeFeed) bool {
+	m.feeds = slices.DeleteFunc(m.feeds, func(f *feed) bool {
 		return f.source.id == sourceID
 	})
-	m.sources = slices.DeleteFunc(m.sources, func(s *activeSource) bool {
+	m.sources = slices.DeleteFunc(m.sources, func(s *source) bool {
 		if s.id == sourceID {
 			s.feeds = nil
 			return true
@@ -165,9 +173,9 @@ func (m *Manager) removeSource(sourceID int64) error {
 }
 
 func (m *Manager) removeFeed(feedID int64) error {
-	m.feeds = slices.DeleteFunc(m.feeds, func(f *activeFeed) bool {
+	m.feeds = slices.DeleteFunc(m.feeds, func(f *feed) bool {
 		if f.id == feedID {
-			f.source.feeds = slices.DeleteFunc(f.source.feeds, func(f *activeFeed) bool {
+			f.source.feeds = slices.DeleteFunc(f.source.feeds, func(f *feed) bool {
 				return f.id == feedID
 			})
 			return true
@@ -208,7 +216,7 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 	return <-result
 }
 
-func (m *Manager) downloadDone(f *activeFeed, id int64) func() {
+func (m *Manager) downloadDone(f *feed, id int64) func() {
 	return func() {
 		m.fns <- func(m *Manager) {
 			f.source.usedSlots = max(0, f.source.usedSlots-1)

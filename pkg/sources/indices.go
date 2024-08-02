@@ -39,7 +39,7 @@ type rolie struct {
 }
 
 // rolieLocations assumes that the feed index is ROLIE.
-func (af *activeFeed) rolieLocations(r io.Reader) ([]location, error) {
+func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
 	// De-serialize JSON
 	var rolie rolie
 	if err := json.NewDecoder(r).Decode(&rolie); err != nil {
@@ -53,11 +53,11 @@ func (af *activeFeed) rolieLocations(r io.Reader) ([]location, error) {
 		if u.IsAbs() {
 			*store = u
 		} else {
-			*store = af.url.ResolveReference(u)
+			*store = f.url.ResolveReference(u)
 		}
 		return nil
 	}
-	sameOrNewer := af.sameOrNewer()
+	sameOrNewer := f.sameOrNewer()
 	// Extract the locations
 	entries := rolie.Feed.Entries
 	dls := make([]location, 0, len(entries))
@@ -99,12 +99,12 @@ func (af *activeFeed) rolieLocations(r io.Reader) ([]location, error) {
 }
 
 // directoryLocations assumes that the feed index is changes.csv
-func (af *activeFeed) directoryLocations(r io.Reader) ([]location, error) {
+func (f *feed) directoryLocations(r io.Reader) ([]location, error) {
 	c := csv.NewReader(r)
 	c.FieldsPerRecord = 2
 	c.ReuseRecord = true
 
-	sameOrNewer := af.sameOrNewer()
+	sameOrNewer := f.sameOrNewer()
 
 	var dls []location
 
@@ -125,7 +125,7 @@ func (af *activeFeed) directoryLocations(r io.Reader) ([]location, error) {
 			return nil, fmt.Errorf("column 2 in line %d is not a valid RFC3339 time: %w", lineNo, err)
 		}
 		if !doc.IsAbs() {
-			doc = af.url.ResolveReference(doc)
+			doc = f.url.ResolveReference(doc)
 		}
 		dl := location{
 			updated: updated,
