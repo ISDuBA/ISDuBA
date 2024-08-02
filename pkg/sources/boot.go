@@ -33,7 +33,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 				return fmt.Errorf("starting transaction failed: %w", err)
 			}
 			defer tx.Rollback(rctx)
-			// Collect active sources.
+			// Collect sources.
 			srows, err := tx.Query(rctx, sourcesSQL)
 			if err != nil {
 				return fmt.Errorf("querying sources failed: %w", err)
@@ -45,7 +45,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("collecting sources failed: %w", err)
 			}
-			// Collect active feeds
+			// Collect feeds.
 			frows, err := tx.Query(rctx, feedsSQL)
 			if err != nil {
 				return fmt.Errorf("querying sources failed: %w", err)
@@ -76,12 +76,12 @@ func (m *Manager) Boot(ctx context.Context) error {
 				return &f, nil
 			})
 			if err != nil {
-				return fmt.Errorf("collecting active feeds failed: %w", err)
+				return fmt.Errorf("collecting feeds failed: %w", err)
 			}
 			return tx.Commit(rctx)
 		}, 0,
 	); err != nil {
-		return fmt.Errorf("fetching active feeds failed: %w", err)
+		return err
 	}
 
 	slog.Info("number of sources", "num", len(m.sources))
@@ -89,7 +89,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 
 	// Trigger a refresh of the loaded feeds.
 	if len(m.feeds) > 0 {
-		go func() { m.fns <- func(*Manager) {} }()
+		go func() { m.fns <- (*Manager).ping }()
 	}
 
 	return nil

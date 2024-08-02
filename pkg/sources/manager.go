@@ -10,11 +10,16 @@ package sources
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net/url"
 	"slices"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // refreshDuration is the fallback duration for feeds to be checked for refresh.
@@ -153,6 +158,9 @@ func (m *Manager) Run(ctx context.Context) {
 	}
 }
 
+// ping wakes up the manager.
+func (m *Manager) ping() {}
+
 // Kill stops the manager.
 func (m *Manager) Kill() {
 	m.fns <- func(m *Manager) { m.done = true }
@@ -185,10 +193,86 @@ func (m *Manager) removeFeed(feedID int64) error {
 	return nil
 }
 
-// AddSource registers a new source.
-func (*Manager) AddSource(int64) error {
-	// TODO: Implement me!
+func (m *Manager) addSource(sourceID int64) error {
+	// Ignore it if we already have it.
+	if slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
+		return nil
+	}
+	const (
+		sourceSQL = `SELECT rate, slots, active FROM sources WHERE id = $1`
+		feedsSQL  = `SELECT id, url, rolie, log_lvl::text FROM feeds WHERE source_id = $1`
+	)
+	var (
+		s  *source
+		fs []*feed
+	)
+	if err := m.db.Run(
+		context.Background(),
+		func(ctx context.Context, con *pgxpool.Conn) error {
+			tx, err := con.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+			if err != nil {
+				return fmt.Errorf("starting transaction failed: %w", err)
+			}
+			defer tx.Rollback(ctx)
+			// Collect source.
+			srows, err := tx.Query(ctx, sourceSQL, sourceID)
+			if err != nil {
+				return fmt.Errorf("querying source failed: %w", err)
+			}
+			s, err = pgx.CollectOneRow(srows, func(row pgx.CollectableRow) (*source, error) {
+				var s source
+				return &s, row.Scan(&s.rate, &s.slots, &s.active)
+			})
+			if err != nil {
+				return err
+			}
+			// Collect feeds.
+			frows, err := tx.Query(ctx, feedsSQL, sourceID)
+			if err != nil {
+				return fmt.Errorf("querying feeds failed: %w", err)
+			}
+			fs, err = pgx.CollectRows(frows, func(row pgx.CollectableRow) (*feed, error) {
+				var (
+					f   feed
+					raw string
+				)
+				if err := row.Scan(&f.id, &raw, &f.rolie, &f.logLevel); err != nil {
+					return nil, err
+				}
+				parsed, err := url.Parse(raw)
+				if err != nil {
+					return nil, fmt.Errorf("invalid URL: %w", err)
+				}
+				f.url = parsed
+				f.source = s
+				return &f, nil
+			})
+			if err != nil {
+				return fmt.Errorf("collecting feeds failed: %w", err)
+			}
+			s.feeds = fs
+			return tx.Commit(ctx)
+		}, 0,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		return fmt.Errorf("fetching source failed: %w", err)
+	}
+	m.sources = append(m.sources, s)
+	m.feeds = append(m.feeds, fs...)
+
+	if s.active && len(fs) > 0 {
+		go func() { m.fns <- (*Manager).ping }()
+	}
 	return nil
+}
+
+// AddSource registers a new source.
+func (m *Manager) AddSource(sourceID int64) error {
+	result := make(chan error)
+	m.fns <- func(m *Manager) { result <- m.addSource(sourceID) }
+	return <-result
 }
 
 // RemoveSource removes a sources from manager.
