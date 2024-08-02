@@ -32,7 +32,6 @@ type Manager struct {
 	fns  chan func(*Manager)
 	done bool
 
-	feeds     []*feed
 	sources   []*source
 	usedSlots int
 	uniqueID  int64
@@ -47,24 +46,53 @@ func NewManager(cfg *config.Sources, db *database.DB) *Manager {
 	}
 }
 
+func (m *Manager) numActiveFeeds() int {
+	sum := 0
+	for _, s := range m.sources {
+		if s.active {
+			sum += len(s.feeds)
+		}
+	}
+	return sum
+}
+
+func (m *Manager) activeFeeds(fn func(*feed) bool) {
+	for _, s := range m.sources {
+		if s.active {
+			for _, f := range s.feeds {
+				if !fn(f) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func (m *Manager) allFeeds(fn func(*feed) bool) {
+	for _, s := range m.sources {
+		for _, f := range s.feeds {
+			if !fn(f) {
+				return
+			}
+		}
+	}
+}
+
 // refreshFeeds checks if there are feeds that need reloading
 // and does so in that case.
 func (m *Manager) refreshFeeds() {
 	now := time.Now()
-	for _, feed := range m.feeds {
-		// Ignore inactive sources.
-		if !feed.source.active {
-			continue
-		}
+	m.activeFeeds(func(f *feed) bool {
 		// Does the feed need a refresh?
-		if feed.nextCheck.IsZero() || !now.Before(feed.nextCheck) {
-			if err := feed.refresh(m); err != nil {
-				feed.log(m, config.ErrorFeedLogLevel, "feed refresh failed: %v", err.Error())
+		if f.nextCheck.IsZero() || !now.Before(f.nextCheck) {
+			if err := f.refresh(m); err != nil {
+				f.log(m, config.ErrorFeedLogLevel, "feed refresh failed: %v", err.Error())
 			}
 			// Even if there was an error try again later.
-			feed.nextCheck = time.Now().Add(m.cfg.FeedRefresh)
+			f.nextCheck = time.Now().Add(m.cfg.FeedRefresh)
 		}
-	}
+		return true
+	})
 }
 
 // startDownloads starts downloads if there are enough slots and
@@ -72,35 +100,29 @@ func (m *Manager) refreshFeeds() {
 func (m *Manager) startDownloads() {
 	for m.usedSlots < m.cfg.DownloadSlots {
 		started := false
-		for _, feed := range m.feeds {
-			// Ignore inactive sources.
-			if !feed.source.active {
-				continue
-			}
+		m.activeFeeds(func(f *feed) bool {
 			// Has this feed a free slot?
 			maxSlots := min(m.cfg.SlotsPerSource, m.cfg.DownloadSlots)
-			if feed.source.slots != nil {
-				maxSlots = min(maxSlots, *feed.source.slots)
+			if f.source.slots != nil {
+				maxSlots = min(maxSlots, *f.source.slots)
 			}
-			if feed.source.usedSlots >= maxSlots {
-				continue
+			if f.source.usedSlots >= maxSlots {
+				return true
 			}
 			// Find a candidate to download.
-			location := feed.findWaiting()
+			location := f.findWaiting()
 			if location == nil {
-				continue
+				return true
 			}
 			m.usedSlots++
-			feed.source.usedSlots++
+			f.source.usedSlots++
 			location.state = running
 			location.id = m.generateID()
 			started = true
 			// Calling reciever by value is intended here!
-			go (*location).download(m, feed, m.downloadDone(feed, location.id))
-			if m.usedSlots >= m.cfg.SlotsPerSource {
-				return
-			}
-		}
+			go (*location).download(m, f, m.downloadDone(f, location.id))
+			return m.usedSlots < m.cfg.DownloadSlots
+		})
 		if !started {
 			return
 		}
@@ -109,11 +131,12 @@ func (m *Manager) startDownloads() {
 
 // compactDone removes the locations the feeds which are downloaded.
 func (m *Manager) compactDone() {
-	for _, feed := range m.feeds {
-		feed.locations = slices.DeleteFunc(feed.locations, func(l location) bool {
+	m.allFeeds(func(f *feed) bool {
+		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
 			return l.state == done
 		})
-	}
+		return true
+	})
 }
 
 func (m *Manager) generateID() int64 {
@@ -171,9 +194,6 @@ func (m *Manager) Kill() {
 }
 
 func (m *Manager) removeSource(sourceID int64) error {
-	m.feeds = slices.DeleteFunc(m.feeds, func(f *feed) bool {
-		return f.source.id == sourceID
-	})
 	m.sources = slices.DeleteFunc(m.sources, func(s *source) bool {
 		if s.id == sourceID {
 			s.feeds = nil
@@ -185,15 +205,15 @@ func (m *Manager) removeSource(sourceID int64) error {
 }
 
 func (m *Manager) removeFeed(feedID int64) error {
-	m.feeds = slices.DeleteFunc(m.feeds, func(f *feed) bool {
-		if f.id == feedID {
-			f.source.feeds = slices.DeleteFunc(f.source.feeds, func(f *feed) bool {
-				return f.id == feedID
-			})
-			return true
+	for _, s := range m.sources {
+		before := len(s.feeds)
+		s.feeds = slices.DeleteFunc(s.feeds, func(f *feed) bool {
+			return f.id == feedID
+		})
+		if before > len(s.feeds) {
+			return nil
 		}
-		return false
-	})
+	}
 	return nil
 }
 
@@ -264,7 +284,6 @@ func (m *Manager) addSource(sourceID int64) error {
 	}
 	s.feeds = fs
 	m.sources = append(m.sources, s)
-	m.feeds = append(m.feeds, fs...)
 
 	if s.active && len(fs) > 0 {
 		m.backgroundPing()
@@ -274,8 +293,10 @@ func (m *Manager) addSource(sourceID int64) error {
 
 func (m *Manager) addFeed(feedID int64) error {
 	// Ignore it if we already have it.
-	if slices.ContainsFunc(m.feeds, func(f *feed) bool { return f.id == feedID }) {
-		return nil
+	for _, s := range m.sources {
+		if slices.ContainsFunc(s.feeds, func(f *feed) bool { return f.id == feedID }) {
+			return nil
+		}
 	}
 	const feedSQL = `SELECT sources_id, url, rolie, log_lvl::text FROM feeds WHERE sources_id = $1`
 	var (
@@ -331,7 +352,6 @@ func (m *Manager) addFeed(feedID int64) error {
 	}
 	f.source = s
 	s.feeds = append(s.feeds, f)
-	m.feeds = append(m.feeds, f)
 	if s.active {
 		m.backgroundPing()
 	}

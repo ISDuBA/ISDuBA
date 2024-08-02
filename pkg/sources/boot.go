@@ -50,32 +50,32 @@ func (m *Manager) Boot(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("querying sources failed: %w", err)
 			}
-			m.feeds, err = pgx.CollectRows(frows, func(row pgx.CollectableRow) (*feed, error) {
+			defer frows.Close()
+			for frows.Next() {
 				var (
 					f   feed
 					sid int64
 					raw string
 				)
-				if err := row.Scan(&f.id, &sid, &raw, &f.rolie, &f.logLevel); err != nil {
-					return nil, err
+				if err := frows.Scan(&f.id, &sid, &raw, &f.rolie, &f.logLevel); err != nil {
+					return err
 				}
 				parsed, err := url.Parse(raw)
 				if err != nil {
-					return nil, fmt.Errorf("invalid URL: %w", err)
+					return fmt.Errorf("invalid URL: %w", err)
 				}
 				f.url = parsed
 				// Add to list of active feeds.
 				idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sid })
 				if idx == -1 {
 					// Should really not happen! Considering a panic.
-					return nil, fmt.Errorf("cannot find source id %d", sid)
+					return fmt.Errorf("cannot find source id %d", sid)
 				}
-				src := m.sources[idx]
-				src.feeds = append(src.feeds, &f)
-				f.source = src
-				return &f, nil
-			})
-			if err != nil {
+				s := m.sources[idx]
+				s.feeds = append(s.feeds, &f)
+				f.source = s
+			}
+			if err := frows.Err(); err != nil {
 				return fmt.Errorf("collecting feeds failed: %w", err)
 			}
 			return tx.Commit(rctx)
@@ -84,13 +84,14 @@ func (m *Manager) Boot(ctx context.Context) error {
 		return err
 	}
 
+	activeFeeds := m.numActiveFeeds()
+
 	slog.Info("number of sources", "num", len(m.sources))
-	slog.Info("number of feeds", "num", len(m.feeds))
+	slog.Info("number of active feeds", "num", activeFeeds)
 
 	// Trigger a refresh of the loaded feeds.
-	if len(m.feeds) > 0 {
+	if activeFeeds > 0 {
 		m.backgroundPing()
 	}
-
 	return nil
 }
