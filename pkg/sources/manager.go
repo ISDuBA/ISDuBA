@@ -27,7 +27,7 @@ const refreshDuration = time.Minute
 
 // Manager fetches advisories from sources.
 type Manager struct {
-	cfg  *config.Sources
+	cfg  *config.Config
 	db   *database.DB
 	fns  chan func(*Manager)
 	done bool
@@ -38,7 +38,7 @@ type Manager struct {
 }
 
 // NewManager creates a new downloader.
-func NewManager(cfg *config.Sources, db *database.DB) *Manager {
+func NewManager(cfg *config.Config, db *database.DB) *Manager {
 	return &Manager{
 		cfg: cfg,
 		db:  db,
@@ -89,7 +89,7 @@ func (m *Manager) refreshFeeds() {
 				f.log(m, config.ErrorFeedLogLevel, "feed refresh failed: %v", err.Error())
 			}
 			// Even if there was an error try again later.
-			f.nextCheck = time.Now().Add(m.cfg.FeedRefresh)
+			f.nextCheck = time.Now().Add(m.cfg.Sources.FeedRefresh)
 		}
 		return true
 	})
@@ -98,11 +98,11 @@ func (m *Manager) refreshFeeds() {
 // startDownloads starts downloads if there are enough slots and
 // there are things to download.
 func (m *Manager) startDownloads() {
-	for m.usedSlots < m.cfg.DownloadSlots {
+	for m.usedSlots < m.cfg.Sources.DownloadSlots {
 		started := false
 		m.activeFeeds(func(f *feed) bool {
 			// Has this feed a free slot?
-			maxSlots := min(m.cfg.SlotsPerSource, m.cfg.DownloadSlots)
+			maxSlots := min(m.cfg.Sources.SlotsPerSource, m.cfg.Sources.DownloadSlots)
 			if f.source.slots != nil {
 				maxSlots = min(maxSlots, *f.source.slots)
 			}
@@ -121,7 +121,7 @@ func (m *Manager) startDownloads() {
 			started = true
 			// Calling reciever by value is intended here!
 			go (*location).download(m, f, m.downloadDone(f, location.id))
-			return m.usedSlots < m.cfg.DownloadSlots
+			return m.usedSlots < m.cfg.Sources.DownloadSlots
 		})
 		if !started {
 			return

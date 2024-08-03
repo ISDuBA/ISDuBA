@@ -55,7 +55,7 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
-	sm := sources.NewManager(&cfg.Sources, db)
+	sm := sources.NewManager(cfg, db)
 	if err := sm.Boot(ctx); err != nil {
 		return fmt.Errorf("booting source manager failed: %w", err)
 	}

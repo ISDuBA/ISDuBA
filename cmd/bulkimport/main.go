@@ -74,7 +74,7 @@ func processFile(
 
 		var id int64
 		if err = db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
-			id, err = models.ImportDocument(ctx, conn, r, actor, nil, dry)
+			id, err = models.ImportDocument(ctx, conn, r, actor, nil, nil, dry)
 			return err
 		}, 0); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {

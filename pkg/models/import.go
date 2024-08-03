@@ -235,6 +235,7 @@ func ImportDocument(
 	r io.Reader,
 	actor *string,
 	pstlps PublishersTLPs,
+	inTx func(context.Context, pgx.Tx, int64) error,
 	dry bool,
 ) (int64, error) {
 	var (
@@ -398,6 +399,12 @@ func ImportDocument(
 	}
 	if err := tx.SendBatch(ctx, batch).Close(); err != nil {
 		return 0, fmt.Errorf("inserting txt failed: %w", err)
+	}
+
+	if inTx != nil {
+		if err := inTx(ctx, tx, id); err != nil {
+			return 0, fmt.Errorf("in transaction failed: %w", err)
+		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {

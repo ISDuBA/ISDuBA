@@ -66,9 +66,19 @@ const (
 	defaultMaxQueryDuration                = 30 * time.Second
 )
 
-var defaultPublishersTLPs = models.PublishersTLPs{
-	"*": []models.TLP{models.TLPWhite},
-}
+var (
+	defaultPublishersTLPs = models.PublishersTLPs{
+		"*": []models.TLP{models.TLPWhite},
+	}
+	defaultSourcesPublishersTLPs = models.PublishersTLPs{
+		"*": []models.TLP{
+			models.TLPWhite,
+			models.TLPGreen,
+			models.TLPAmber,
+			models.TLPRed,
+		},
+	}
+)
 
 const (
 	defaultTempStorageFilesTotal = 10
@@ -146,12 +156,13 @@ type TempStore struct {
 
 // Sources are the config options for downloading sources.
 type Sources struct {
-	DownloadSlots  int           `toml:"max_download_slots"`
-	SlotsPerSource int           `toml:"slots_per_source"`
-	RatePerSlot    float64       `toml:"rate_per_slot"`
-	FeedRefresh    time.Duration `toml:"feed_refresh"`
-	FeedLogLevel   FeedLogLevel  `tomt:"feed_log_level"`
-	DefaultMessage string        `toml:"default_message"`
+	DownloadSlots  int                   `toml:"max_download_slots"`
+	SlotsPerSource int                   `toml:"slots_per_source"`
+	RatePerSlot    float64               `toml:"rate_per_slot"`
+	FeedRefresh    time.Duration         `toml:"feed_refresh"`
+	FeedLogLevel   FeedLogLevel          `tomt:"feed_log_level"`
+	DefaultMessage string                `toml:"default_message"`
+	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
 }
 
 // Config are all the configuration options.
@@ -270,6 +281,7 @@ func Load(file string) (*Config, error) {
 			FeedRefresh:    defaultFeedRefresh,
 			FeedLogLevel:   defaultFeedLogLevel,
 			DefaultMessage: defaultMessageSourceManager,
+			PublishersTLPs: defaultSourcesPublishersTLPs,
 		},
 	}
 	if file != "" {

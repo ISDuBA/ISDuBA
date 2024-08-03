@@ -9,17 +9,27 @@
 package sources
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"crypto/sha512"
+	"encoding/json"
 	"fmt"
+	"hash"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
+	"github.com/csaf-poc/csaf_distribution/v3/csaf"
+	"github.com/csaf-poc/csaf_distribution/v3/util"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/time/rate"
@@ -127,6 +137,14 @@ func (s *source) doRequest(req *http.Request) (*http.Response, error) {
 	// TODO: Implement me!
 
 	return client.Do(req)
+}
+
+func (s *source) httpGet(url string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return s.doRequest(req)
 }
 
 // fetchIndex fetches the content of the feed index.
@@ -238,6 +256,99 @@ func (f *feed) sameOrNewer() func(*location) bool {
 func (l location) download(m *Manager, f *feed, done func()) {
 	defer done()
 
-	// TODO: Implement me!
+	var (
+		writers        []io.Writer
+		checksum       hash.Hash
+		remoteChecksum []byte
+	)
+
+	// Loading the hash
+	if l.hash != nil { // ROLIE gave us an URL to hash file.
+		hashFile := l.hash.String()
+		switch lc := strings.ToLower(hashFile); {
+		case strings.HasSuffix(lc, ".sha256"):
+			checksum = sha256.New()
+		case strings.HasSuffix(lc, ".sha512"):
+			checksum = sha512.New()
+		}
+		if checksum != nil {
+			var err error
+			if remoteChecksum, err = f.source.loadHash(hashFile); err != nil {
+				f.log(m, config.WarnFeedLogLevel, "fetching hash %q failed: %v", hashFile, err)
+			} else {
+				writers = append(writers, checksum)
+			}
+		}
+	} else if !f.rolie { // If we are directory based, do some guessing:
+		// TODO: Implement me!
+		slog.Warn("Hash loading for none.ROLIE feeds is not implement, yet.")
+	}
+
+	// Download the CSAF document.
+	resp, err := f.source.httpGet(l.doc.String())
+	if err != nil {
+		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %v", l.doc, err)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %s (%d)",
+			l.doc, http.StatusText(resp.StatusCode), resp.StatusCode)
+		return
+	}
+	defer resp.Body.Close()
+
+	var data bytes.Buffer
+	writers = append(writers, &data)
+
+	// Prevent over-sized downloads.
+	limited := io.LimitReader(resp.Body, int64(m.cfg.General.AdvisoryUploadLimit))
+
+	tee := io.TeeReader(limited, io.MultiWriter(writers...))
+
+	// Decode document into JSON.
+	var doc any
+	if err := json.NewDecoder(tee).Decode(&doc); err != nil {
+		f.log(m, config.ErrorFeedLogLevel, "decoding document %q failed: %v", l.doc, err)
+		return
+	}
+
+	// Compare checksums.
+	if remoteChecksum != nil {
+		if !bytes.Equal(checksum.Sum(nil), remoteChecksum) {
+			f.log(m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
+			return
+		}
+	}
+
+	// Check document against schema.
+	if errors, err := csaf.ValidateCSAF(doc); err != nil || len(errors) > 0 {
+		if err != nil {
+			f.log(m, config.ErrorFeedLogLevel,
+				"Schema validation of document %q failed: %v", l.doc, err)
+		} else {
+			f.log(m, config.ErrorFeedLogLevel,
+				"Schema validation of document %q has %d errors", l.doc, len(errors))
+		}
+		return
+	}
+
+	// TODO: Check against remote validator
+	// TODO: Filename check. (???)
+	// TODO: Check signatures
+	// TODO: Store in database.
+
+	_ = data
+
 	f.log(m, config.InfoFeedLogLevel, "downloading %q done", l.doc)
+}
+
+func (s *source) loadHash(url string) ([]byte, error) {
+	resp, err := s.httpGet(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s (%d)", http.StatusText(resp.StatusCode), resp.StatusCode)
+	}
+	return util.HashFromReader(resp.Body)
 }

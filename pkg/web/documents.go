@@ -120,7 +120,7 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			id, err = models.ImportDocument(
-				rctx, conn, limited, actor, c.tlps(ctx), false)
+				rctx, conn, limited, actor, c.tlps(ctx), nil, false)
 			return err
 		}, 0,
 	); err != nil {
