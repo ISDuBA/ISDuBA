@@ -27,6 +27,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/csaf-poc/csaf_distribution/v3/util"
@@ -335,9 +336,32 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	// TODO: Check against remote validator
 	// TODO: Filename check. (???)
 	// TODO: Check signatures
-	// TODO: Store in database.
+	// TODO: Statistics
 
-	_ = data
+	// Remember last changes.
+	inTx := func(ctx context.Context, tx pgx.Tx, _ int64) error {
+		const updatedSQL = `INSERT INTO changes (url, feeds_id, time) ` +
+			`VALUES ($1, $2, $3) ` +
+			`ON CONFLICT (url, feeds_id) DO ` +
+			`UPDATE SET time = $3`
+		_, err := tx.Exec(ctx, updatedSQL, l.doc.String(), f.id, l.updated)
+		return err
+	}
+
+	ctx := context.Background()
+	if err := m.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
+		_, err := models.ImportDocumentData(
+			ctx, conn,
+			doc, data.Bytes(),
+			m.cfg.Sources.FeedImporter,
+			m.cfg.Sources.PublishersTLPs,
+			inTx,
+			false)
+		return err
+	}, 0); err != nil {
+		f.log(m, config.ErrorFeedLogLevel, "storing %q failed: %v", l.doc, err)
+		return
+	}
 
 	f.log(m, config.InfoFeedLogLevel, "downloading %q done", l.doc)
 }

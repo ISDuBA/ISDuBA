@@ -96,6 +96,11 @@ const (
 		"please contact your CSAF source manager or your administrator."
 )
 
+var (
+	defaultFeedImporterString = "feedimporter"
+	defaultFeedImporter       = &defaultFeedImporterString
+)
+
 // HumanSize de-serializes sizes from integer strings
 // with suffix "k" (1000), "K" (1024), "m", "M", "g", "G".
 // With no suffix given bytes are assumed.
@@ -161,8 +166,9 @@ type Sources struct {
 	RatePerSlot    float64               `toml:"rate_per_slot"`
 	FeedRefresh    time.Duration         `toml:"feed_refresh"`
 	FeedLogLevel   FeedLogLevel          `tomt:"feed_log_level"`
-	DefaultMessage string                `toml:"default_message"`
 	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
+	FeedImporter   *string               `toml:"import_user"`
+	DefaultMessage string                `toml:"default_message"`
 }
 
 // Config are all the configuration options.
@@ -280,8 +286,9 @@ func Load(file string) (*Config, error) {
 			RatePerSlot:    defaultRatePerSlot,
 			FeedRefresh:    defaultFeedRefresh,
 			FeedLogLevel:   defaultFeedLogLevel,
-			DefaultMessage: defaultMessageSourceManager,
+			FeedImporter:   defaultFeedImporter,
 			PublishersTLPs: defaultSourcesPublishersTLPs,
+			DefaultMessage: defaultMessageSourceManager,
 		},
 	}
 	if file != "" {
