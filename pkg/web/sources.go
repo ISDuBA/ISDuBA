@@ -89,12 +89,12 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		return
 	}
 
-	if src.Rate != nil && (c.cfg.Sources.RatePerSource != 0 && *src.Rate > c.cfg.Sources.RatePerSource) {
+	if src.Rate != nil && (c.cfg.Sources.MaxRatePerSource != 0 && *src.Rate > c.cfg.Sources.MaxRatePerSource) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
 		return
 	}
 
-	if src.Slots != nil && *src.Slots > c.cfg.Sources.SlotsPerSource {
+	if src.Slots != nil && *src.Slots > c.cfg.Sources.MaxSlotsPerSource {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
 		return
 	}

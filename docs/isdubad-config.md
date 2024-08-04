@@ -97,6 +97,8 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 - `default_message`: The message that should be displayed inside the source manager.
 
+
+
 ## <a name="env_vars"></a>Environment variables
 
 | Env variable                          | Overwrites                           |

@@ -98,11 +98,11 @@ func (m *Manager) refreshFeeds() {
 // startDownloads starts downloads if there are enough slots and
 // there are things to download.
 func (m *Manager) startDownloads() {
-	for m.usedSlots < m.cfg.Sources.MaxDownloadSlots {
+	for m.usedSlots < m.cfg.Sources.DownloadSlots {
 		started := false
 		m.activeFeeds(func(f *feed) bool {
 			// Has this feed a free slot?
-			maxSlots := min(m.cfg.Sources.SlotsPerSource, m.cfg.Sources.MaxDownloadSlots)
+			maxSlots := min(m.cfg.Sources.MaxSlotsPerSource, m.cfg.Sources.DownloadSlots)
 			if f.source.slots != nil {
 				maxSlots = min(maxSlots, *f.source.slots)
 			}
@@ -121,7 +121,7 @@ func (m *Manager) startDownloads() {
 			started = true
 			// Calling reciever by value is intended here!
 			go (*location).download(m, f, m.downloadDone(f, location.id))
-			return m.usedSlots < m.cfg.Sources.MaxDownloadSlots
+			return m.usedSlots < m.cfg.Sources.DownloadSlots
 		})
 		if !started {
 			return
