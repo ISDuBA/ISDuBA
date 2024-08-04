@@ -10,39 +10,20 @@ package sources
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 )
-
-type rolieLink struct {
-	Rel  string `json:"rel"`
-	HRef string `json:"href"`
-}
-
-type rolieEntry struct {
-	Links   []rolieLink `json:"link"`
-	Updated time.Time   `json:"updated"`
-}
-
-type rolieFeed struct {
-	Updated time.Time    `json:"updated"`
-	Entries []rolieEntry `json:"entry"`
-}
-
-type rolie struct {
-	Feed rolieFeed `json:"feed"`
-}
 
 // rolieLocations assumes that the feed index is ROLIE.
 func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
-	// De-serialize JSON
-	var rolie rolie
-	if err := json.NewDecoder(r).Decode(&rolie); err != nil {
+	rolie, err := csaf.LoadROLIEFeed(r)
+	if err != nil {
 		return nil, fmt.Errorf("rolie from data failed: %w", err)
 	}
 	resolve := func(href string, store **url.URL) error {
@@ -50,22 +31,20 @@ func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
 		if err != nil {
 			return fmt.Errorf("invalid href: %v", href)
 		}
-		if u.IsAbs() {
-			*store = u
-		} else {
-			*store = f.url.ResolveReference(u)
+		if !u.IsAbs() {
+			u = f.url.ResolveReference(u)
 		}
+		*store = u
 		return nil
 	}
 	sameOrNewer := f.sameOrNewer()
 	// Extract the locations
-	entries := rolie.Feed.Entries
+	entries := rolie.Feed.Entry
 	dls := make([]location, 0, len(entries))
-	for i := range entries {
-		entry := &entries[i]
-		links := entry.Links
+	for _, entry := range entries {
+		links := entry.Link
 		dl := location{
-			updated: entry.Updated,
+			updated: time.Time(entry.Updated),
 		}
 		for j := range links {
 			link := &links[j]
