@@ -145,24 +145,6 @@ func (m *Manager) generateID() int64 {
 	return m.uniqueID
 }
 
-func (f *feed) findLocationByID(id int64) *location {
-	for i := len(f.locations) - 1; i >= 0; i-- {
-		if location := &f.locations[i]; location.id == id {
-			return location
-		}
-	}
-	return nil
-}
-
-func (f *feed) findWaiting() *location {
-	for i := len(f.locations) - 1; i >= 0; i-- {
-		if location := &f.locations[i]; location.state == waiting {
-			return location
-		}
-	}
-	return nil
-}
-
 // Run runs the manager. To be used in a Go routine.
 func (m *Manager) Run(ctx context.Context) {
 	refreshTicker := time.NewTicker(refreshDuration)
@@ -384,6 +366,9 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 	return m.asManager((*Manager).removeFeed, feedID)
 }
 
+// downloadDone returns a function which does the needed
+// book keeping when a download is finished. To be used
+// as a defer function in the download.
 func (m *Manager) downloadDone(f *feed, id int64) func() {
 	return func() {
 		m.fns <- func(m *Manager) {
