@@ -89,7 +89,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		return
 	}
 
-	if src.Rate != nil && (c.cfg.Sources.RatePerSlot != 0 && *src.Rate > c.cfg.Sources.RatePerSlot) {
+	if src.Rate != nil && (c.cfg.Sources.RatePerSource != 0 && *src.Rate > c.cfg.Sources.RatePerSource) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
 		return
 	}

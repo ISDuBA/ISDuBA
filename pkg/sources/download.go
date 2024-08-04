@@ -123,12 +123,17 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	// TODO: Check signatures
 	// TODO: Statistics
 
+	var importer *string
+	if !m.cfg.General.AnonymousEventLogging {
+		importer = &m.cfg.Sources.FeedImporter
+	}
+
 	ctx := context.Background()
 	if err := m.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
 		_, err := models.ImportDocumentData(
 			ctx, conn,
 			doc, data.Bytes(),
-			m.cfg.Sources.FeedImporter,
+			importer,
 			m.cfg.Sources.PublishersTLPs,
 			f.storeLastChanges(&l),
 			false)

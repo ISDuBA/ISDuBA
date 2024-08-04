@@ -92,13 +92,9 @@ const (
 	defaultRatePerSlot          = 0
 	defaultFeedRefresh          = 15 * time.Minute
 	defaultFeedLogLevel         = InfoFeedLogLevel
+	defaultFeedImporter         = "feedimporter"
 	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
-)
-
-var (
-	defaultFeedImporterString = "feedimporter"
-	defaultFeedImporter       = &defaultFeedImporterString
 )
 
 // HumanSize de-serializes sizes from integer strings
@@ -161,14 +157,14 @@ type TempStore struct {
 
 // Sources are the config options for downloading sources.
 type Sources struct {
-	DownloadSlots  int                   `toml:"max_download_slots"`
-	SlotsPerSource int                   `toml:"slots_per_source"`
-	RatePerSlot    float64               `toml:"rate_per_slot"`
-	FeedRefresh    time.Duration         `toml:"feed_refresh"`
-	FeedLogLevel   FeedLogLevel          `tomt:"feed_log_level"`
-	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
-	FeedImporter   *string               `toml:"import_user"`
-	DefaultMessage string                `toml:"default_message"`
+	MaxDownloadSlots int                   `toml:"max_download_slots"`
+	SlotsPerSource   int                   `toml:"slots_per_source"`
+	RatePerSource    float64               `toml:"rate_per_source"`
+	FeedRefresh      time.Duration         `toml:"feed_refresh"`
+	FeedLogLevel     FeedLogLevel          `tomt:"feed_log_level"`
+	PublishersTLPs   models.PublishersTLPs `toml:"publishers_tlps"`
+	FeedImporter     string                `toml:"import_user"`
+	DefaultMessage   string                `toml:"default_message"`
 }
 
 // Config are all the configuration options.
@@ -281,14 +277,14 @@ func Load(file string) (*Config, error) {
 			StorageDuration: defaultTempStorageDuration,
 		},
 		Sources: Sources{
-			DownloadSlots:  defaultDownloadSlots,
-			SlotsPerSource: defaultSlotsPerSource,
-			RatePerSlot:    defaultRatePerSlot,
-			FeedRefresh:    defaultFeedRefresh,
-			FeedLogLevel:   defaultFeedLogLevel,
-			FeedImporter:   defaultFeedImporter,
-			PublishersTLPs: defaultSourcesPublishersTLPs,
-			DefaultMessage: defaultMessageSourceManager,
+			MaxDownloadSlots: defaultDownloadSlots,
+			SlotsPerSource:   defaultSlotsPerSource,
+			RatePerSource:    defaultRatePerSlot,
+			FeedRefresh:      defaultFeedRefresh,
+			FeedLogLevel:     defaultFeedLogLevel,
+			FeedImporter:     defaultFeedImporter,
+			PublishersTLPs:   defaultSourcesPublishersTLPs,
+			DefaultMessage:   defaultMessageSourceManager,
 		},
 	}
 	if file != "" {
@@ -348,10 +344,11 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_TOTAL", storeInt(&cfg.TempStore.FilesTotal)},
 		envStore{"ISDUBA_TEMP_STORAGE_FILES_USER", storeInt(&cfg.TempStore.FilesUser)},
 		envStore{"ISDUBA_TEMP_STORAGE_DURATION", storeDuration(&cfg.TempStore.StorageDuration)},
-		envStore{"ISDUBA_SOURCES_DOWNLOAD_SLOTS", storeInt(&cfg.Sources.DownloadSlots)},
-		envStore{"ISDUBA_SOURCES_RATE_PER_SLOTS", storeFloat64(&cfg.Sources.RatePerSlot)},
+		envStore{"ISDUBA_SOURCES_MAX_DOWNLOAD_SLOTS", storeInt(&cfg.Sources.MaxDownloadSlots)},
+		envStore{"ISDUBA_SOURCES_RATE_PER_SOURCE", storeFloat64(&cfg.Sources.RatePerSource)},
 		envStore{"ISDUBA_SOURCES_FEED_REFRESH", storeDuration(&cfg.Sources.FeedRefresh)},
 		envStore{"ISDUBA_SOURCES_FEED_LOG_LEVEL", storeFeedLogLevel(&cfg.Sources.FeedLogLevel)},
+		envStore{"ISDUBA_SOURCES_FEED_IMPORTER", storeString(&cfg.Sources.FeedImporter)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 	)
 }
