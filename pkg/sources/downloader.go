@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"slices"
@@ -281,8 +280,20 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			}
 		}
 	} else if !f.rolie { // If we are directory based, do some guessing:
-		// TODO: Implement me!
-		slog.Warn("Hash loading for none.ROLIE feeds is not implement, yet.")
+		for _, h := range []struct {
+			ext  string
+			cstr func() hash.Hash
+		}{
+			{".sha512", sha512.New},
+			{".sha256", sha256.New},
+		} {
+			guess := l.doc.String() + h.ext
+			if rc, err := f.source.loadHash(guess); err == nil {
+				remoteChecksum, checksum = rc, h.cstr()
+				writers = append(writers, checksum)
+				break
+			}
+		}
 	}
 
 	// Download the CSAF document.
@@ -366,6 +377,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	f.log(m, config.InfoFeedLogLevel, "downloading %q done", l.doc)
 }
 
+// loadHash fetches text form of a hash from remote location.
 func (s *source) loadHash(url string) ([]byte, error) {
 	resp, err := s.httpGet(url)
 	if err != nil {
