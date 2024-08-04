@@ -51,7 +51,7 @@
 # '*' = ["WHITE"]
 
 # [sources]
-# max_download_slots = 100
+# download_slots = 100
 # max_slots_per_source = 2
 # max_rate_per_source = 0
 # feed_refresh = "15m"

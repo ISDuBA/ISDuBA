@@ -95,9 +95,14 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
+- `download_slots`: The number of concurrent downloads from the sources. Defaults to `100`.
+- `max_slots_per_source`: The number of concurrent downloads per source. Defaults to `2`.
+- `max_rate_per_source`: The Number of requests per source per second. Defaults to `0` (unlimited).
+- `feed_refresh`: Duration between re-asking source for a new updated feed index. Defaults to `15m`.
+- `feed_log_level`: The log level per feed. Valid values are `debug`, `info`, `warn`, `error`. Defaults to `info`.
+- `feed_importer`: Name of the user that is doing the feed imports. Defaults to `feedimporter`.
+- `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }`
 - `default_message`: The message that should be displayed inside the source manager.
-
-
 
 ## <a name="env_vars"></a>Environment variables
 
@@ -132,4 +137,10 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_TEMP_STORAGE_FILES_TOTAL`     | `temp_storage files_total`           |
 | `ISDUBA_TEMP_STORAGE_FILES_USER`      | `temp_storage files_user`            |
 | `ISDUBA_TEMP_STORAGE_DURATION`        | `temp_storage storage_duration`      |
-| `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `source_manager default_message`     |
+| `ISDUBA_SOURCES_DOWNLOAD_SLOTS`       | `sources download_slots`             |
+| `ISDUBA_SOURCES_MAX_SLOTS_PER_SOURCE` | `sources max_slots_per_source`       |
+| `ISDUBA_SOURCES_MAX_RATE_PER_SOURCE`  | `sources max_rate_per_source`        |
+| `ISDUBA_SOURCES_FEED_REFRESH`         | `sources feed_refresh`               |
+| `ISDUBA_SOURCES_FEED_LOG_LEVEL`       | `sources feed_log_level`             |
+| `ISDUBA_SOURCES_FEED_IMPORTER`        | `sources feed_importer`              |
+| `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `sources default_message`            |
