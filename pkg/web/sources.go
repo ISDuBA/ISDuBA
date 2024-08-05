@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
+	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -109,35 +110,13 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	if err := c.sm.RemoveSource(input.ID); err != nil {
-		slog.Error("removing source failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	const sql = `DELETE FROM sources WHERE id = $1`
-
-	notFound := false
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, con *pgxpool.Conn) error {
-			tags, err := con.Exec(rctx, sql, input.ID)
-			if err != nil {
-				return fmt.Errorf("removing source failed: %w", err)
-			}
-			notFound = tags.RowsAffected() == 0
-			return nil
-		}, 0,
-	); err != nil {
+	switch err := c.sm.RemoveSource(input.ID); {
+	case errors.Is(err, sources.ErrNoSuchSource):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	case err != nil:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if notFound {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-	} else {
+	default:
 		ctx.JSON(http.StatusOK, gin.H{"message": "source deleted"})
 	}
 }

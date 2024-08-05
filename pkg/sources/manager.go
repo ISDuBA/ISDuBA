@@ -23,6 +23,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// ErrNoSuchSource is returned if a given source does not exists.
+var ErrNoSuchSource = errors.New("no such source")
+
 // refreshDuration is the fallback duration for feeds to be checked for refresh.
 const refreshDuration = time.Minute
 
@@ -177,13 +180,36 @@ func (m *Manager) Kill() {
 }
 
 func (m *Manager) removeSource(sourceID int64) error {
+	if slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
+		return ErrNoSuchSource
+	}
+	const sql = `DELETE FROM sources WHERE id = $1`
+	notFound := false
+	if err := m.db.Run(
+		context.Background(),
+		func(rctx context.Context, con *pgxpool.Conn) error {
+			tags, err := con.Exec(rctx, sql, sourceID)
+			if err != nil {
+				return fmt.Errorf("removing source failed: %w", err)
+			}
+			notFound = tags.RowsAffected() == 0
+			return nil
+		}, 0,
+	); err != nil {
+		return fmt.Errorf("deleting source from db failed: %w", err)
+	}
 	m.sources = slices.DeleteFunc(m.sources, func(s *source) bool {
 		if s.id == sourceID {
+			s.active = false
 			s.feeds = nil
 			return true
 		}
 		return false
 	})
+	// XXX: Should not happen!
+	if notFound {
+		return ErrNoSuchSource
+	}
 	return nil
 }
 
