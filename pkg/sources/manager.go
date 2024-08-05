@@ -189,6 +189,42 @@ func (m *Manager) AllSources(fn func(
 	<-done
 }
 
+// FeedLog sends the log of the feed with the given id to the given function.
+func (m *Manager) FeedLog(feedID int64, fn func(
+	t time.Time,
+	lvl config.FeedLogLevel,
+	msg string,
+)) error {
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		const sql = `SELECT time, lvl::text, msg FROM feed_logs WHERE feeds_id = $1 ` +
+			`ORDER by time DESC`
+		errCh <- m.db.Run(
+			context.Background(),
+			func(ctx context.Context, con *pgxpool.Conn) error {
+				rows, err := con.Query(ctx, sql, feedID)
+				if err != nil {
+					return fmt.Errorf("querying feed logs failed: %w", err)
+				}
+				defer rows.Close()
+				var (
+					t   time.Time
+					lvl config.FeedLogLevel
+					msg string
+				)
+				for rows.Next() {
+					if err := rows.Scan(&t, &lvl, &msg); err != nil {
+						return fmt.Errorf("scanning log failed: %w", err)
+					}
+					fn(t, lvl, msg)
+				}
+				return rows.Err()
+			}, 0,
+		)
+	}
+	return <-errCh
+}
+
 // ping wakes up the manager.
 func (m *Manager) ping() {}
 

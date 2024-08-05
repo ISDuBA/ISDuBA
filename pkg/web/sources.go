@@ -310,28 +310,18 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 		Level   config.FeedLogLevel `json:"level"`
 		Message string              `json:"msg"`
 	}
-
-	const sql = `SELECT time, lvl::text, msg FROM feed_logs WHERE feeds_id = $1 ` +
-		`ORDER by time DESC`
-
-	var entries []entry
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, con *pgxpool.Conn) error {
-			rows, err := con.Query(rctx, sql, input.FeedID)
-			if err != nil {
-				return fmt.Errorf("querying feed logs failed: %w", err)
-			}
-			entries, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (entry, error) {
-				var e entry
-				if err := row.Scan(&e.Time, &e.Level, &e.Message); err != nil {
-					return entry{}, fmt.Errorf("scanning log failed: %w", err)
-				}
-				return e, nil
-			})
-			return err
-		}, 0,
-	); err != nil {
+	entries := []entry{}
+	if err := c.sm.FeedLog(input.FeedID, func(
+		t time.Time,
+		lvl config.FeedLogLevel,
+		msg string,
+	) {
+		entries = append(entries, entry{
+			Time:    t,
+			Level:   lvl,
+			Message: msg,
+		})
+	}); err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
