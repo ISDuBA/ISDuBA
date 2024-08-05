@@ -21,6 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
@@ -54,9 +55,15 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
+	sm := sources.NewManager(cfg, db)
+	if err := sm.Boot(ctx); err != nil {
+		return fmt.Errorf("booting source manager failed: %w", err)
+	}
+	go sm.Run(ctx)
+
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, tmpStore)
+	ctrl := web.NewController(cfg, db, tmpStore, sm)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)

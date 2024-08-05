@@ -11,6 +11,7 @@ package config
 import (
 	"log/slog"
 	"os"
+	"strconv"
 )
 
 // envStore maps an env to a store function.
@@ -24,9 +25,18 @@ func storeLevel(s string) (slog.Level, error) {
 	return level, level.UnmarshalText([]byte(s))
 }
 
+func parseFloat64(s string) (float64, error) {
+	return strconv.ParseFloat(s, 64)
+}
+
 func storeHumanSize(s string) (HumanSize, error) {
 	var hs HumanSize
 	return hs, hs.UnmarshalText([]byte(s))
+}
+
+func storeFeedLogLevel(s string) (FeedLogLevel, error) {
+	var fll FeedLogLevel
+	return fll, fll.UnmarshalText([]byte(s))
 }
 
 // noparse returns an unparsed string.

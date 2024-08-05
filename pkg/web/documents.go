@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -119,7 +120,7 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			id, err = models.ImportDocument(
-				rctx, conn, limited, actor, c.tlps(ctx), false)
+				rctx, conn, limited, actor, c.tlps(ctx), nil, false)
 			return err
 		}, 0,
 	); err != nil {
@@ -181,7 +182,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 // overviewDocuments is an end point to return an overview document.
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	// Use the advisories.
-	advisory, ok := parse(ctx, toBool, ctx.DefaultQuery("advisories", "false"))
+	advisory, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("advisories", "false"))
 	if !ok {
 		return
 	}

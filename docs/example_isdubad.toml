@@ -51,7 +51,17 @@
 # '*' = ["WHITE"]
 
 # [sources]
-# default_message = "Missing something? To suggest new CSAF sources, please contact your CSAF source manager or your administrator."
+# download_slots = 100
+# max_slots_per_source = 2
+# max_rate_per_source = 0
+# feed_refresh = "15m"
+# feed_log_level = "info"
+# feed_importer = "feedimporter"
+# publishers_tlps = { "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }
+# default_message = """Missing something? \
+#                      To suggest new CSAF sources, \
+#                      please contact your CSAF source manager \
+#                      or your administrator."""
 
 # [client]
 # keycloak_url = "http://localhost:8080"

@@ -18,9 +18,6 @@ import (
 // toInt64 parses a given string to a 64bit integer.
 func toInt64(s string) (int64, error) { return strconv.ParseInt(s, 10, 64) }
 
-// toBool parses a given string to a bool.
-var toBool = strconv.ParseBool
-
 // parse parses a string with a given function to a value.
 // If that fails a bad request status code is set in the gin context.
 func parse[T any](ctx *gin.Context, conv func(string) (T, error), s string) (T, bool) {

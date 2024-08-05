@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -235,14 +234,9 @@ func ImportDocument(
 	r io.Reader,
 	actor *string,
 	pstlps PublishersTLPs,
+	inTx func(context.Context, pgx.Tx, int64) error,
 	dry bool,
 ) (int64, error) {
-	var (
-		tlp, tlpOk               = "", false
-		publisher, publisherOK   = "", false
-		trackingID, trackingIDOK = "", false
-	)
-
 	var buf bytes.Buffer
 	tee := io.TeeReader(r, &buf)
 
@@ -258,6 +252,26 @@ func ImportDocument(
 	if len(msgs) > 0 {
 		return 0, errors.New("schema validation failed: " + strings.Join(msgs, ", "))
 	}
+	return ImportDocumentData(ctx, conn, document, buf.Bytes(), actor, pstlps, inTx, dry)
+}
+
+// ImportDocumentData imports a given advisory into the database.
+func ImportDocumentData(
+	ctx context.Context,
+	conn *pgxpool.Conn,
+	document any,
+	raw []byte,
+	actor *string,
+	pstlps PublishersTLPs,
+	inTx func(context.Context, pgx.Tx, int64) error,
+	dry bool,
+) (int64, error) {
+
+	var (
+		tlp, tlpOk               = "", false
+		publisher, publisherOK   = "", false
+		trackingID, trackingIDOK = "", false
+	)
 
 	idxer := newIndexer[string]()
 
@@ -286,8 +300,6 @@ func ImportDocument(
 	if !trackingIDOK {
 		return 0, errors.New("missing /document/tracking/id")
 	}
-
-	slog.Debug("document publisher", "publisher", publisher)
 
 	if pstlps != nil && (!tlpOk || !pstlps.Allowed(publisher, TLP(tlp))) {
 		return 0, ErrNotAllowed
@@ -318,7 +330,7 @@ func ImportDocument(
 	var id int64
 	if err := tx.QueryRow(
 		ctx, insertDoc,
-		document, buf.Bytes(),
+		document, raw,
 	).Scan(&id); err != nil {
 		var pgErr *pgconn.PgError
 		// Unique constraint violation
@@ -398,6 +410,12 @@ func ImportDocument(
 	}
 	if err := tx.SendBatch(ctx, batch).Close(); err != nil {
 		return 0, fmt.Errorf("inserting txt failed: %w", err)
+	}
+
+	if inTx != nil {
+		if err := inTx(ctx, tx, id); err != nil {
+			return 0, fmt.Errorf("in transaction failed: %w", err)
+		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
