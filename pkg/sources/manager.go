@@ -333,9 +333,13 @@ func (m *Manager) AddSource(
 
 	errCh := make(chan error)
 
-	const sql = `INSERT INTO sources (name, url, active, rate, slots) ` +
-		`VALUES ($1, $2, $3, $4, $5, $6) ` +
-		`RETURNING id`
+	s := &source{
+		id:     id,
+		name:   name,
+		active: active != nil && *active,
+		rate:   rate,
+		slots:  slots,
+	}
 
 	// TODO: Load PMD
 
@@ -344,6 +348,11 @@ func (m *Manager) AddSource(
 			errCh <- ErrInvalidArgument
 			return
 		}
+
+		const sql = `INSERT INTO sources (name, url, active, rate, slots) ` +
+			`VALUES ($1, $2, $3, $4, $5, $6) ` +
+			`RETURNING id`
+
 		if err := m.db.Run(
 			context.Background(),
 			func(rctx context.Context, con *pgxpool.Conn) error {
@@ -358,13 +367,7 @@ func (m *Manager) AddSource(
 			errCh <- fmt.Errorf("adding source to database failed: %w", err)
 			return
 		}
-		m.sources = append(m.sources, &source{
-			id:     id,
-			name:   name,
-			active: active != nil && *active,
-			rate:   rate,
-			slots:  slots,
-		})
+		m.sources = append(m.sources, s)
 		errCh <- nil
 	}
 	return id, <-errCh

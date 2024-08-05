@@ -246,15 +246,19 @@ func (s *source) wait(ctx context.Context) {
 	}
 }
 
+func (s *source) httpClient() *http.Client {
+	client := http.Client{}
+	// TODO: Implement me!
+	return &client
+}
+
 // doRequest executes an HTTP request with the source specific parameters.
 func (s *source) doRequest(req *http.Request) (*http.Response, error) {
 	req.Header.Add("User-Agent", userAgent)
 
-	client := http.Client{}
-	s.wait(context.Background())
-
 	// TODO: Implement me!
-
+	client := s.httpClient()
+	s.wait(context.Background())
 	return client.Do(req)
 }
 
