@@ -12,7 +12,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/url"
 	"slices"
 	"time"
@@ -23,8 +22,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ErrNoSuchSource is returned if a given source does not exists.
-var ErrNoSuchSource = errors.New("no such source")
+var (
+	// ErrNoSuchSource is returned if a given source does not exists.
+	ErrNoSuchSource = errors.New("no such source")
+	// ErrInvalidArgument is return if a given argument is unsuited.
+	ErrInvalidArgument = errors.New("invalid argument")
+)
 
 // refreshDuration is the fallback duration for feeds to be checked for refresh.
 const refreshDuration = time.Minute
@@ -319,7 +322,7 @@ func (m *Manager) AddSource(
 
 	m.fns <- func(m *Manager) {
 		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
-			errCh <- errors.New("name is not unique")
+			errCh <- ErrInvalidArgument
 			return
 		}
 		if err := m.db.Run(
@@ -333,8 +336,7 @@ func (m *Manager) AddSource(
 					slots).Scan(&id)
 			}, 0,
 		); err != nil {
-			slog.Error("database error", "err", err)
-			errCh <- err
+			errCh <- fmt.Errorf("adding source to database failed: %w", err)
 			return
 		}
 		m.sources = append(m.sources, &source{

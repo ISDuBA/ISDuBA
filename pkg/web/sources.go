@@ -71,33 +71,33 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 }
 
 func (c *Controller) createSource(ctx *gin.Context) {
-
 	var src source
 	if err := ctx.ShouldBind(&src); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	if src.Rate != nil &&
 		(c.cfg.Sources.MaxRatePerSource != 0 && *src.Rate > c.cfg.Sources.MaxRatePerSource) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
 		return
 	}
-
 	if src.Slots != nil && *src.Slots > c.cfg.Sources.MaxSlotsPerSource {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
 		return
 	}
-
-	if id, err := c.sm.AddSource(
+	switch id, err := c.sm.AddSource(
 		src.Name,
 		src.URL,
 		src.Active,
 		src.Rate,
 		src.Slots,
-	); err != nil {
+	); {
+	case errors.Is(err, sources.ErrInvalidArgument):
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else {
+	case err != nil:
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	default:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})
 	}
 }
