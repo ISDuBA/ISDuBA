@@ -18,7 +18,7 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/samber/slog-gin v1.13.3
 	github.com/sergi/go-diff v1.3.1
-	golang.org/x/oauth2 v0.21.0
+	golang.org/x/oauth2 v0.22.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
