@@ -97,6 +97,15 @@ const (
 		"please contact your CSAF source manager or your administrator."
 )
 
+const (
+	defaultClientKeycloakURL      = "http://localhost:8080"
+	defaultClientKeycloakRealm    = "isduba"
+	defaultClientKeycloakClientID = "auth"
+	defaultClientUpdateInterval   = 5 * time.Minute
+	defaultClientApplicationURI   = "http://localhost:5173/"
+	defaultClientIdleTimeout      = 30 * time.Minute
+)
+
 // HumanSize de-serializes sizes from integer strings
 // with suffix "k" (1000), "K" (1024), "m", "M", "g", "G".
 // With no suffix given bytes are assumed.
@@ -167,6 +176,16 @@ type Sources struct {
 	DefaultMessage    string                `toml:"default_message"`
 }
 
+// Client are the config options for the client.
+type Client struct {
+	KeycloakURL      string        `toml:"keycloak_url" json:"keycloak_url"`
+	KeycloakRealm    string        `toml:"keycloak_realm" json:"keycloak_realm"`
+	KeycloakClientID string        `toml:"keycloak_client_id" json:"keycloak_client_id"`
+	UpdateInterval   time.Duration `toml:"update_interval" json:"update_interval"`
+	ApplicationURI   string        `toml:"application_uri" json:"application_uri"`
+	IdleTimeout      time.Duration `toml:"idle_timeout" json:"idle_timeout"`
+}
+
 // Config are all the configuration options.
 type Config struct {
 	General        General               `toml:"general"`
@@ -177,6 +196,7 @@ type Config struct {
 	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
 	TempStore      TempStore             `toml:"temp_storage"`
 	Sources        Sources               `toml:"sources"`
+	Client         Client                `toml:"client"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -286,6 +306,14 @@ func Load(file string) (*Config, error) {
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
 			DefaultMessage:    defaultMessageSourceManager,
 		},
+		Client: Client{
+			KeycloakURL:      defaultClientKeycloakURL,
+			KeycloakRealm:    defaultClientKeycloakRealm,
+			KeycloakClientID: defaultClientKeycloakClientID,
+			UpdateInterval:   defaultClientUpdateInterval,
+			ApplicationURI:   defaultClientApplicationURI,
+			IdleTimeout:      defaultClientIdleTimeout,
+		},
 	}
 	if file != "" {
 		md, err := toml.DecodeFile(file, cfg)
@@ -351,6 +379,12 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_FEED_LOG_LEVEL", storeFeedLogLevel(&cfg.Sources.FeedLogLevel)},
 		envStore{"ISDUBA_SOURCES_FEED_IMPORTER", storeString(&cfg.Sources.FeedImporter)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
+		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},
+		envStore{"ISDUBA_CLIENT_KEYCLOAK_REALM", storeString(&cfg.Client.KeycloakRealm)},
+		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},
+		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
+		envStore{"ISDUBA_CLIENT_APPLICATION_URI", storeString(&cfg.Client.ApplicationURI)},
+		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 	)
 }
 

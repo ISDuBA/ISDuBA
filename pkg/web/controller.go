@@ -140,6 +140,9 @@ func (c *Controller) Bind() http.Handler {
 	// Visibility information
 	api.GET("/view", authAll, c.view)
 
+	// Client configuration
+	api.GET("/client-config", c.clientConfig)
+
 	// Source manager
 	api.GET("/sources", authEdSM, c.viewSources)
 	api.POST("/sources", authSM, c.createSource)

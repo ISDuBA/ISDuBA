@@ -27,6 +27,7 @@ The configuration consists of the following sections:
 - [`[publishers_tlps]`](#section_publishers_tlps) publishers/TLPs filters
 - [`[temp_storage]`](#section_temp_storage) temporary document storage
 - [`[sources]`](#section_sources) Sources
+- [`[client]`](#section_client) Client configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
@@ -104,6 +105,15 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }`
 - `default_message`: The message that should be displayed inside the source manager.
 
+### <a name="section_client"></a> Section `[client]` Client configuration
+
+- `keycloak_url`: The URL where the Keycloak server is located. Defaults to "<http://localhost:8080>".
+- `keycloak_realm`: The name of the Keycloak realm. Defaults to "isduba".
+- `keycloak_client_id`: The public client identifier. Defaults to "auth".
+- `update_interval`: Specifies how often the token should be renewed. Defaults to "5m".
+- `application_uri`: The base URL of the application. Defaults to "<http://localhost:5173/>"
+- `idle_timeout`: When the user should be logged out after inactivity. Defaults to "30m".
+
 ## <a name="env_vars"></a>Environment variables
 
 | Env variable                          | Overwrites                           |
@@ -144,3 +154,9 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_SOURCES_FEED_LOG_LEVEL`       | `sources feed_log_level`             |
 | `ISDUBA_SOURCES_FEED_IMPORTER`        | `sources feed_importer`              |
 | `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `sources default_message`            |
+| `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |
+| `ISDUBA_CLIENT_KEYCLOAK_REALM`        | `client keycloak_realm`              |
+| `ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID`    | `client keycloak_client_id`          |
+| `ISDUBA_CLIENT_UPDATE_INTERVAL`       | `client update_interval`             |
+| `ISDUBA_CLIENT_APPLICATION_URI`       | `client application_uri`             |
+| `ISDUBA_CLIENT_IDLE_TIMEOUT`          | `client idle_timeout`                |

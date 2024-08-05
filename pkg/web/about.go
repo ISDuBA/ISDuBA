@@ -25,3 +25,7 @@ func (c *Controller) about(ctx *gin.Context) {
 func (c *Controller) view(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, c.tlps(ctx))
 }
+
+func (c *Controller) clientConfig(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, c.cfg.Client)
+}

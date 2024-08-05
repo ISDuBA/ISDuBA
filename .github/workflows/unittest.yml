@@ -18,12 +18,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      PUBLIC_KEYCLOAK_URL: "http://localhost:8080"
-      PUBLIC_KEYCLOAK_REALM: "isduba"
-      PUBLIC_KEYCLOAK_CLIENTID: "auth"
-      PUBLIC_APPLICATION_URI: "http://localhost:5173/"
-      PUBLIC_IDLE_TIMEOUT: 30
     defaults:
       run:
         working-directory: ./client

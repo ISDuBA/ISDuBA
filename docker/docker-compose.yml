@@ -86,13 +86,14 @@ services:
       dockerfile: ./docker/server/Dockerfile
       args:
         BUILD_VERSION: v0.0.0
-        PUBLIC_KEYCLOAK_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
-        PUBLIC_KEYCLOAK_REALM: "isduba"
-        PUBLIC_KEYCLOAK_CLIENTID: "auth"
-        PUBLIC_APPLICATION_URI: ${PROTOCOL}://${CLIENT_HOST}:${CLIENT_PORT}
-        PUBLIC_IDLE_TIMEOUT: 30
     networks:
       - isduba
+    environment:
+      ISDUBA_CLIENT_KEYCLOAK_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
+      ISDUBA_CLIENT_KEYCLOAK_REALM: "isduba"
+      ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID: "auth"
+      ISDUBA_CLIENT_APPLICATION_URI: ${PROTOCOL}://${CLIENT_HOST}:${CLIENT_PORT}
+      ISDUBA_CLIENT_IDLE_TIMEOUT: 30
     ports:
       - "${CLIENT_PORT}:8081"
     depends_on:
