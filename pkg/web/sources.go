@@ -20,7 +20,6 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -130,30 +129,30 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	const sql = `SELECT id, label, url, rolie FROM feeds WHERE sources_id = $1 ` +
-		`ORDER BY id`
-
-	var feeds []*feed
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, con *pgxpool.Conn) error {
-			rows, err := con.Query(rctx, sql, input.SourceID)
-			if err != nil {
-				return fmt.Errorf("fetching feeds failed: %w", err)
-			}
-			feeds, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (*feed, error) {
-				var f feed
-				return &f, row.Scan(&f.ID, &f.Label, &f.URL, &f.Rolie)
-			})
-			return err
-		}, 0,
-	); err != nil {
+	feeds := []*feed{}
+	switch err := c.sm.Feeds(input.SourceID, func(
+		id int64,
+		label string,
+		url *url.URL,
+		rolie bool,
+		lvl config.FeedLogLevel,
+	) {
+		feeds = append(feeds, &feed{
+			ID:       id,
+			Label:    label,
+			URL:      url.String(),
+			Rolie:    rolie,
+			LogLevel: lvl,
+		})
+	}); {
+	case errors.Is(err, sources.ErrNoSuchEntry):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	case err != nil:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	default:
+		ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
 }
 
 func (c *Controller) createFeed(ctx *gin.Context) {

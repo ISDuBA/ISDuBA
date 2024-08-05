@@ -94,6 +94,13 @@ func (m *Manager) findFeedByID(feedID int64) *feed {
 	return nil
 }
 
+func (m *Manager) findSourceByID(sourceID int64) *source {
+	if idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sourceID }); idx >= 0 {
+		return m.sources[idx]
+	}
+	return nil
+}
+
 // refreshFeeds checks if there are feeds that need reloading
 // and does so in that case.
 func (m *Manager) refreshFeeds() {
@@ -198,7 +205,30 @@ func (m *Manager) AllSources(fn func(
 	<-done
 }
 
-// Feed passes the field of feed to a given function.
+// Feeds passes the fields of the feeds of a given source to a given function.
+func (m *Manager) Feeds(sourceID int64, fn func(
+	id int64,
+	label string,
+	url *url.URL,
+	rolie bool,
+	lvl config.FeedLogLevel,
+)) error {
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		s := m.findSourceByID(sourceID)
+		if s == nil {
+			errCh <- ErrNoSuchEntry
+			return
+		}
+		for _, f := range s.feeds {
+			fn(f.id, f.label, f.url, f.rolie, f.logLevel)
+		}
+		errCh <- nil
+	}
+	return <-errCh
+}
+
+// Feed passes the fields of feed to a given function.
 func (m *Manager) Feed(feedID int64, fn func(
 	label string,
 	url *url.URL,
@@ -358,12 +388,10 @@ func (m *Manager) addFeed(feedID int64) error {
 				return err
 			}
 			// Do we have the source already?
-			idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sid })
-			if idx == -1 {
+			if s = m.findSourceByID(sid); s == nil {
 				// XXX: Maybe we should load the source and all the other feeds of this source?
 				return errors.New("source is missing")
 			}
-			s = m.sources[idx]
 			return tx.Commit(ctx)
 		}, 0,
 	); err != nil {
