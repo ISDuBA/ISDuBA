@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	// ErrNoSuchSource is returned if a given source does not exists.
-	ErrNoSuchSource = errors.New("no such source")
+	// ErrNoSuchEntry is returned if a given feed or source does not exists.
+	ErrNoSuchEntry = errors.New("no such entry")
 	// ErrInvalidArgument is return if a given argument is unsuited.
 	ErrInvalidArgument = errors.New("invalid argument")
 )
@@ -83,6 +83,15 @@ func (m *Manager) allFeeds(fn func(*feed) bool) {
 			}
 		}
 	}
+}
+
+func (m *Manager) findFeedByID(feedID int64) *feed {
+	for _, s := range m.sources {
+		if idx := slices.IndexFunc(s.feeds, func(f *feed) bool { return f.id == feedID }); idx >= 0 {
+			return s.feeds[idx]
+		}
+	}
+	return nil
 }
 
 // refreshFeeds checks if there are feeds that need reloading
@@ -189,6 +198,26 @@ func (m *Manager) AllSources(fn func(
 	<-done
 }
 
+// Feed passes the field of feed to a given function.
+func (m *Manager) Feed(feedID int64, fn func(
+	label string,
+	url *url.URL,
+	rolie bool,
+	lvl config.FeedLogLevel,
+)) error {
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		f := m.findFeedByID(feedID)
+		if f == nil {
+			errCh <- ErrNoSuchEntry
+			return
+		}
+		fn(f.label, f.url, f.rolie, f.logLevel)
+		errCh <- nil
+	}
+	return <-errCh
+}
+
 // FeedLog sends the log of the feed with the given id to the given function.
 func (m *Manager) FeedLog(feedID int64, fn func(
 	t time.Time,
@@ -239,7 +268,7 @@ func (m *Manager) Kill() {
 
 func (m *Manager) removeSource(sourceID int64) error {
 	if slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
-		return ErrNoSuchSource
+		return ErrNoSuchEntry
 	}
 	const sql = `DELETE FROM sources WHERE id = $1`
 	notFound := false
@@ -266,7 +295,7 @@ func (m *Manager) removeSource(sourceID int64) error {
 	})
 	// XXX: Should not happen!
 	if notFound {
-		return ErrNoSuchSource
+		return ErrNoSuchEntry
 	}
 	return nil
 }

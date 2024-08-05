@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -34,10 +35,11 @@ type source struct {
 }
 
 type feed struct {
-	ID    int64  `json:"id"`
-	Label string `json:"label"`
-	URL   string `json:"url"`
-	Rolie bool   `json:"rolie"`
+	ID       int64               `json:"id"`
+	Label    string              `json:"label"`
+	URL      string              `json:"url"`
+	Rolie    bool                `json:"rolie"`
+	LogLevel config.FeedLogLevel `json:"log_level"`
 }
 
 func (c *Controller) viewSources(ctx *gin.Context) {
@@ -103,7 +105,7 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 		return
 	}
 	switch err := c.sm.RemoveSource(input.ID); {
-	case errors.Is(err, sources.ErrNoSuchSource):
+	case errors.Is(err, sources.ErrNoSuchEntry):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 	case err != nil:
 		slog.Error("database error", "err", err)
@@ -243,20 +245,26 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	const sql = `SELECT label, url, rolie FROM feeds WHERE id = $1`
-	feed := feed{ID: input.FeedID}
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, con *pgxpool.Conn) error {
-			return con.QueryRow(rctx, sql, input.FeedID).Scan(
-				&feed.Label, &feed.URL, &feed.Rolie)
-		}, 0,
-	); err != nil {
+	f := feed{ID: input.FeedID}
+	switch err := c.sm.Feed(input.FeedID, func(
+		label string,
+		url *url.URL,
+		rolie bool,
+		lvl config.FeedLogLevel,
+	) {
+		f.Label = label
+		f.URL = url.String()
+		f.Rolie = rolie
+		f.LogLevel = lvl
+	}); {
+	case errors.Is(err, sources.ErrNoSuchEntry):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	case err != nil:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	default:
+		ctx.JSON(http.StatusOK, &f)
 	}
-	ctx.JSON(http.StatusOK, &feed)
 }
 
 func (c *Controller) deleteFeed(ctx *gin.Context) {

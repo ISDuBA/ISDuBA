@@ -23,7 +23,7 @@ import (
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
 		sourcesSQL = `SELECT id, name, url, rate, slots, active FROM sources`
-		feedsSQL   = `SELECT id, sources_id, url, rolie, log_lvl::text FROM feeds`
+		feedsSQL   = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
 		ctx,
@@ -40,7 +40,13 @@ func (m *Manager) Boot(ctx context.Context) error {
 			}
 			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*source, error) {
 				var s source
-				return &s, row.Scan(&s.id, &s.name, &s.url, &s.rate, &s.slots, &s.active)
+				return &s, row.Scan(
+					&s.id,
+					&s.name,
+					&s.url,
+					&s.rate,
+					&s.slots,
+					&s.active)
 			})
 			if err != nil {
 				return fmt.Errorf("collecting sources failed: %w", err)
@@ -57,7 +63,14 @@ func (m *Manager) Boot(ctx context.Context) error {
 					sid int64
 					raw string
 				)
-				if err := frows.Scan(&f.id, &sid, &raw, &f.rolie, &f.logLevel); err != nil {
+				if err := frows.Scan(
+					&f.id,
+					&f.label,
+					&sid,
+					&raw,
+					&f.rolie,
+					&f.logLevel,
+				); err != nil {
 					return err
 				}
 				parsed, err := url.Parse(raw)

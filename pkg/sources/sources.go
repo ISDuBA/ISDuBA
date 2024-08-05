@@ -48,6 +48,7 @@ type location struct {
 
 type feed struct {
 	id       int64
+	label    string
 	url      *url.URL
 	rolie    bool
 	logLevel config.FeedLogLevel
