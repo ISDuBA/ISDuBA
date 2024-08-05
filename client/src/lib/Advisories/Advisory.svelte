@@ -45,6 +45,7 @@
   let historyEntries: any = [];
   let isCommentingAllowed: boolean;
   let isSSVCediting = false;
+  let position = "";
   $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
     if (appStore.isReviewer() && [NEW, READ, ARCHIVED].includes(advisoryState)) {
       isCommentingAllowed = false;
@@ -301,6 +302,11 @@
 
   $: if (params) {
     loadData();
+    position = params.position;
+    if (!params.position) {
+      const topElement = window.document.getElementById("top");
+      topElement?.scrollIntoView();
+    }
   }
   $: ssvcStyle = ssvc ? `color: white; background-color: ${ssvc.color};` : "";
 </script>
@@ -309,7 +315,10 @@
   <title>{params.trackingID}</title>
 </svelte:head>
 
-<div class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 xl:flex-nowrap">
+<div
+  class="flex h-screen max-h-full flex-wrap justify-between gap-x-4 gap-y-8 xl:flex-nowrap"
+  id="top"
+>
   <div class="flex max-h-full w-full grow flex-col gap-y-2 px-2">
     <div class="flex flex-col">
       <div class="flex gap-2">
@@ -356,7 +365,7 @@
                 "/documents/" +
                 params.id +
                 "/"}
-              position={params.position}
+              {position}
             ></Webview>
           {/if}
         </div>
