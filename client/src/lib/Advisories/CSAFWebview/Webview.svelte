@@ -23,7 +23,7 @@
   export let position = "";
   export let basePath = "";
 
-  $: if (position) {
+  $: if (position && position != "") {
     if (position.startsWith("product-")) {
       appStore.setProductTreeSectionVisible();
       appStore.setSelectedProduct(position.replace("product-", ""));
