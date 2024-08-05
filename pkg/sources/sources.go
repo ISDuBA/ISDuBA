@@ -62,6 +62,8 @@ type feed struct {
 
 type source struct {
 	id     int64
+	name   string
+	url    string
 	rate   *float64
 	slots  *int
 	active bool

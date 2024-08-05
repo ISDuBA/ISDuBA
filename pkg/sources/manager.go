@@ -12,6 +12,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"slices"
 	"time"
@@ -199,80 +200,6 @@ func (m *Manager) removeFeed(feedID int64) error {
 	return nil
 }
 
-func (m *Manager) addSource(sourceID int64) error {
-	// Ignore it if we already have it.
-	if slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
-		return nil
-	}
-	const (
-		sourceSQL = `SELECT rate, slots, active FROM sources WHERE id = $1`
-		feedsSQL  = `SELECT id, url, rolie, log_lvl::text FROM feeds WHERE sources_id = $1`
-	)
-	var (
-		s  *source
-		fs []*feed
-	)
-	if err := m.db.Run(
-		context.Background(),
-		func(ctx context.Context, con *pgxpool.Conn) error {
-			tx, err := con.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
-			if err != nil {
-				return fmt.Errorf("starting transaction failed: %w", err)
-			}
-			defer tx.Rollback(ctx)
-			// Collect source.
-			srows, err := tx.Query(ctx, sourceSQL, sourceID)
-			if err != nil {
-				return fmt.Errorf("querying source failed: %w", err)
-			}
-			s, err = pgx.CollectOneRow(srows, func(row pgx.CollectableRow) (*source, error) {
-				var s source
-				return &s, row.Scan(&s.rate, &s.slots, &s.active)
-			})
-			if err != nil {
-				return err
-			}
-			// Collect feeds.
-			frows, err := tx.Query(ctx, feedsSQL, sourceID)
-			if err != nil {
-				return fmt.Errorf("querying feeds failed: %w", err)
-			}
-			fs, err = pgx.CollectRows(frows, func(row pgx.CollectableRow) (*feed, error) {
-				var (
-					f   feed
-					raw string
-				)
-				if err := row.Scan(&f.id, &raw, &f.rolie, &f.logLevel); err != nil {
-					return nil, err
-				}
-				parsed, err := url.Parse(raw)
-				if err != nil {
-					return nil, fmt.Errorf("invalid URL: %w", err)
-				}
-				f.url = parsed
-				f.source = s
-				return &f, nil
-			})
-			if err != nil {
-				return fmt.Errorf("collecting feeds failed: %w", err)
-			}
-			return tx.Commit(ctx)
-		}, 0,
-	); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil
-		}
-		return fmt.Errorf("fetching source failed: %w", err)
-	}
-	s.feeds = fs
-	m.sources = append(m.sources, s)
-
-	if s.active && len(fs) > 0 {
-		m.backgroundPing()
-	}
-	return nil
-}
-
 func (m *Manager) addFeed(feedID int64) error {
 	// Ignore it if we already have it.
 	for _, s := range m.sources {
@@ -347,8 +274,53 @@ func (m *Manager) asManager(fn func(*Manager, int64) error, id int64) error {
 }
 
 // AddSource registers a new source.
-func (m *Manager) AddSource(sourceID int64) error {
-	return m.asManager((*Manager).addSource, sourceID)
+func (m *Manager) AddSource(
+	name string,
+	url string,
+	active *bool,
+	rate *float64,
+	slots *int,
+) (int64, error) {
+	var id int64
+
+	errCh := make(chan error)
+
+	const sql = `INSERT INTO sources (name, url, active, rate, slots) ` +
+		`VALUES ($1, $2, $3, $4, $5, $6) ` +
+		`RETURNING id`
+
+	// TODO: Load PMD
+
+	m.fns <- func(m *Manager) {
+		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
+			errCh <- errors.New("name is not unique")
+			return
+		}
+		if err := m.db.Run(
+			context.Background(),
+			func(rctx context.Context, con *pgxpool.Conn) error {
+				return con.QueryRow(rctx, sql,
+					name,
+					url,
+					active != nil && *active,
+					rate,
+					slots).Scan(&id)
+			}, 0,
+		); err != nil {
+			slog.Error("database error", "err", err)
+			errCh <- err
+			return
+		}
+		m.sources = append(m.sources, &source{
+			id:     id,
+			name:   name,
+			active: active != nil && *active,
+			rate:   rate,
+			slots:  slots,
+		})
+		errCh <- nil
+	}
+	return id, <-errCh
 }
 
 // RemoveSource removes a sources from manager.

@@ -22,7 +22,7 @@ import (
 // Boot loads the sources from database.
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
-		sourcesSQL = `SELECT id, rate, slots, active FROM sources`
+		sourcesSQL = `SELECT id, name, url, rate, slots, active FROM sources`
 		feedsSQL   = `SELECT id, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
@@ -40,7 +40,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 			}
 			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*source, error) {
 				var s source
-				return &s, row.Scan(&s.id, &s.rate, &s.slots, &s.active)
+				return &s, row.Scan(&s.id, &s.name, &s.url, &s.rate, &s.slots, &s.active)
 			})
 			if err != nil {
 				return fmt.Errorf("collecting sources failed: %w", err)
@@ -83,6 +83,8 @@ func (m *Manager) Boot(ctx context.Context) error {
 	); err != nil {
 		return err
 	}
+
+	// TODO: Load PMDs
 
 	activeFeeds := m.numActiveFeeds()
 

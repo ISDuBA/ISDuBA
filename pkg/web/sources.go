@@ -26,9 +26,8 @@ import (
 type source struct {
 	ID     int64    `json:"id" form:"id"`
 	Name   string   `json:"name" form:"name" binding:"required,min=1"`
-	Domain *string  `json:"domain,omitempty" form:"domain" binding:"omitnil,min=1"`
-	PMD    *string  `json:"pmd,omitempty" form:"pmd" binding:"omitnil,url"`
-	Active *bool    `json:"active" form:"active"`
+	URL    string   `json:"url" form:"url" binding:"required,min=1"`
+	Active *bool    `json:"active,omitempty" form:"active"`
 	Rate   *float64 `json:"rate,omitempty" form:"rate" binding:"gt=0"`
 	Slots  *int     `json:"slots,omitempty" form:"slots" binding:"gte=1"`
 }
@@ -43,7 +42,7 @@ type feed struct {
 func (c *Controller) viewSources(ctx *gin.Context) {
 
 	var srcs []*source
-	const sql = `SELECT id, name, domain, pmd, active, rate, slots FROM sources`
+	const sql = `SELECT id, name, url, active, rate, slots FROM sources`
 
 	if err := c.db.Run(ctx.Request.Context(), func(rctx context.Context, con *pgxpool.Conn) error {
 		rows, err := con.Query(rctx, sql)
@@ -55,8 +54,7 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 			return &src, row.Scan(
 				&src.ID,
 				&src.Name,
-				&src.Domain,
-				&src.PMD,
+				&src.URL,
 				&src.Active,
 				&src.Rate,
 				&src.Slots,
@@ -79,17 +77,8 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		return
 	}
 
-	if src.Domain == nil && src.PMD == nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing 'domain' or 'pmd'"})
-		return
-	}
-
-	if src.Domain != nil && src.PMD != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'domain' and 'pmd' are exclusive"})
-		return
-	}
-
-	if src.Rate != nil && (c.cfg.Sources.MaxRatePerSource != 0 && *src.Rate > c.cfg.Sources.MaxRatePerSource) {
+	if src.Rate != nil &&
+		(c.cfg.Sources.MaxRatePerSource != 0 && *src.Rate > c.cfg.Sources.MaxRatePerSource) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
 		return
 	}
@@ -99,40 +88,17 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		return
 	}
 
-	const sql = `INSERT INTO sources (name, domain, pmd, active, rate, slots) ` +
-		`VALUES ($1, $2, $3, $4, $5, $6) ` +
-		`RETURNING id`
-
-	var id int64
-
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, con *pgxpool.Conn) error {
-			return con.QueryRow(
-				rctx, sql,
-				src.Name,
-				src.Domain,
-				src.PMD,
-				src.Active != nil && *src.Active,
-				src.Rate,
-				src.Slots).Scan(&id)
-		}, 0,
+	if id, err := c.sm.AddSource(
+		src.Name,
+		src.URL,
+		src.Active,
+		src.Rate,
+		src.Slots,
 	); err != nil {
-		// As name can cause an unique constraint violation
-		// report this as a bad request as this expected.
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "not a unique value: " + pgErr.Message,
-			})
-		} else {
-			slog.Error("database error", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
-		return
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusCreated, gin.H{"id": id})
 	}
-
-	ctx.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
 func (c *Controller) deleteSource(ctx *gin.Context) {
