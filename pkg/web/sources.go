@@ -274,33 +274,15 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// Remove feed from source manager.
-	if err := c.sm.RemoveFeed(input.FeedID); err != nil {
+	switch err := c.sm.RemoveFeed(input.FeedID); {
+	case errors.Is(err, sources.ErrNoSuchEntry):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	case err != nil:
 		slog.Error("removing feed failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	const sql = `DELETE FROM feeds WHERE id = $1`
-	notFound := false
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, con *pgxpool.Conn) error {
-			tags, err := con.Exec(rctx, sql, input.FeedID)
-			if err != nil {
-				return fmt.Errorf("deleting feed failed: %w", err)
-			}
-			notFound = tags.RowsAffected() == 0
-			return nil
-		}, 0,
-	); err != nil {
-		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if notFound {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-	} else {
+	default:
 		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+		return
 	}
 }
 

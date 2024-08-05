@@ -331,15 +331,23 @@ func (m *Manager) removeSource(sourceID int64) error {
 }
 
 func (m *Manager) removeFeed(feedID int64) error {
-	for _, s := range m.sources {
-		before := len(s.feeds)
-		s.feeds = slices.DeleteFunc(s.feeds, func(f *feed) bool {
-			return f.id == feedID
-		})
-		if before > len(s.feeds) {
-			return nil
-		}
+	f := m.findFeedByID(feedID)
+	if f == nil {
+		return ErrNoSuchEntry
 	}
+	f.invalid.Store(true)
+	const sql = `DELETE FROM feeds WHERE id = $1`
+	if err := m.db.Run(
+		context.Background(),
+		func(ctx context.Context, con *pgxpool.Conn) error {
+			_, err := con.Exec(ctx, sql, feedID)
+			return err
+		}, 0,
+	); err != nil {
+		return fmt.Errorf("deleting feed failed: %w", err)
+	}
+	s := f.source
+	s.feeds = slices.DeleteFunc(s.feeds, func(g *feed) bool { return f == g })
 	return nil
 }
 
