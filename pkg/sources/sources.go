@@ -91,7 +91,7 @@ func (f *feed) refresh(m *Manager) error {
 	}
 
 	// Filter out candidates which are already in the database with same or newer.
-	if candidates, err = removeOlder(m.db, candidates); err != nil {
+	if candidates, err = f.removeOlder(m.db, candidates); err != nil {
 		return fmt.Errorf("removing candidates by looking at database failed: %w", err)
 	}
 
@@ -152,13 +152,14 @@ func (f *feed) fetchIndex() ([]location, error) {
 
 // removeOlder takes a list of locations and removes the items which are already
 // in the database with a same or newer update time.
-func removeOlder(db *database.DB, candidates []location) ([]location, error) {
+func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, error) {
 
 	var remove []int
 
 	batch := pgx.Batch{}
 
-	const sql = `SELECT EXISTS(SELECT 1 FROM changes WHERE url = $1 AND time >= $2)`
+	const sql = `SELECT EXISTS(SELECT 1 FROM changes ` +
+		`WHERE url = $1 AND feeds_id = $2 AND time >= $3)`
 
 	exists := func(idx int) func(pgx.Row) error {
 		return func(row pgx.Row) error {
@@ -174,8 +175,8 @@ func removeOlder(db *database.DB, candidates []location) ([]location, error) {
 	}
 
 	for i := range candidates {
-		candidate := &candidates[i]
-		batch.Queue(sql, candidate.doc.String(), candidate.updated).QueryRow(exists(i))
+		cand := &candidates[i]
+		batch.Queue(sql, cand.doc.String(), f.id, cand.updated).QueryRow(exists(i))
 	}
 
 	if err := db.Run(
