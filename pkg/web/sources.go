@@ -41,32 +41,24 @@ type feed struct {
 }
 
 func (c *Controller) viewSources(ctx *gin.Context) {
-
 	var srcs []*source
-	const sql = `SELECT id, name, url, active, rate, slots FROM sources`
-
-	if err := c.db.Run(ctx.Request.Context(), func(rctx context.Context, con *pgxpool.Conn) error {
-		rows, err := con.Query(rctx, sql)
-		if err != nil {
-			return fmt.Errorf("failed fetching sources: %w", err)
-		}
-		srcs, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (*source, error) {
-			var src source
-			return &src, row.Scan(
-				&src.ID,
-				&src.Name,
-				&src.URL,
-				&src.Active,
-				&src.Rate,
-				&src.Slots,
-			)
+	c.sm.AllSources(func(
+		id int64,
+		name string,
+		url string,
+		active bool,
+		rate *float64,
+		slots *int,
+	) {
+		srcs = append(srcs, &source{
+			ID:     id,
+			Name:   name,
+			URL:    url,
+			Active: &active,
+			Rate:   rate,
+			Slots:  slots,
 		})
-		return err
-	}, 0); err != nil {
-		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
 }
 

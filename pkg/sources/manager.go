@@ -170,6 +170,25 @@ func (m *Manager) Run(ctx context.Context) {
 	}
 }
 
+// AllSources iterates over all sources.
+func (m *Manager) AllSources(fn func(
+	id int64,
+	name string,
+	url string,
+	active bool,
+	rate *float64,
+	slots *int,
+)) {
+	done := make(chan struct{})
+	m.fns <- func(m *Manager) {
+		defer close(done)
+		for _, s := range m.sources {
+			fn(s.id, s.name, s.url, s.active, s.rate, s.slots)
+		}
+	}
+	<-done
+}
+
 // ping wakes up the manager.
 func (m *Manager) ping() {}
 
