@@ -31,7 +31,7 @@
     if (response.ok) {
       result = response.content;
     } else if (response.error) {
-      error = getErrorDetails(`Could not entry`, response);
+      error = getErrorDetails(`Could not load entry.`, response);
     }
   };
 </script>

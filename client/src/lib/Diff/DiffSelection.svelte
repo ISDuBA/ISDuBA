@@ -121,7 +121,10 @@
         if (responseDocA.error === "404") {
           appStore.setDiffDocA_ID(undefined);
         } else {
-          loadDocumentsErrorMessage = getErrorDetails(`Could not load document A.`, responseDocA);
+          loadDocumentsErrorMessage = getErrorDetails(
+            `Could not load first document.`,
+            responseDocA
+          );
         }
       }
     } else {
@@ -135,7 +138,10 @@
         if (responseDocB.error === "404") {
           appStore.setDiffDocB_ID(undefined);
         } else {
-          loadDocumentsErrorMessage = getErrorDetails(`Could not load document B.`, responseDocB);
+          loadDocumentsErrorMessage = getErrorDetails(
+            `Could not load second document.`,
+            responseDocB
+          );
         }
       }
     } else {
