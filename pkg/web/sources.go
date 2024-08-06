@@ -9,9 +9,7 @@
 package web
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -20,8 +18,6 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type source struct {
@@ -167,73 +163,30 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	var logLevel config.FeedLogLevel
 	if input.LogLevel == "" {
-		input.Label = c.cfg.Sources.FeedLogLevel.String()
+		logLevel = c.cfg.Sources.FeedLogLevel
+	} else {
+		logLevel, _ = config.ParseFeedLogLevel(input.LogLevel)
 	}
-
-	const (
-		sourceSQL = `SELECT EXISTS(SELECT 1 FROM sources WHERE id = $1)`
-		insertSQL = `INSERT INTO feeds (label, sources_id, url, rolie, log_lvl) ` +
-			`VALUES ($1, $2, $3, $4, $5::feed_logs_level) ` +
-			`RETURNING id`
-	)
-	var (
-		sourceFound bool
-		feedID      int64
-	)
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, con *pgxpool.Conn) error {
-			tx, err := con.Begin(rctx)
-			if err != nil {
-				return fmt.Errorf("starting tx failed: %w", err)
-			}
-			defer tx.Rollback(rctx)
-			if err := tx.QueryRow(rctx, sourceSQL,
-				input.SourceID,
-			).Scan(&sourceFound); err != nil {
-				return fmt.Errorf("checking source id failed: %w", err)
-			}
-			if !sourceFound {
-				return nil
-			}
-			if err := tx.QueryRow(rctx, insertSQL,
-				input.Label,
-				input.SourceID,
-				input.URL,
-				input.Rolie,
-				input.LogLevel,
-			).Scan(&feedID); err != nil {
-				return fmt.Errorf("inserting feed failed: %w", err)
-			}
-			return tx.Commit(rctx)
-		}, 0,
-	); err != nil {
-		// As name can cause an unique constraint violation
-		// report this as a bad request as this expected.
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "not a unique value: " + pgErr.Message,
-			})
-		} else {
-			slog.Error("database error", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
-		return
-	}
-	if !sourceFound {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "source id not found"})
-		return
-	}
-	// Register feed to source manager.
-	if err := c.sm.AddFeed(feedID); err != nil {
-		slog.Error("adding feed failed", "err", err)
+	parsed, _ := url.Parse(input.URL)
+	switch feedID, err := c.sm.AddFeed(
+		input.SourceID,
+		input.Label,
+		parsed,
+		input.Rolie,
+		logLevel,
+	); {
+	case errors.Is(err, sources.ErrNoSuchEntry):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	case errors.Is(err, sources.ErrInvalidArgument):
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	case err != nil:
+		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	default:
+		ctx.JSON(http.StatusCreated, gin.H{"id": feedID})
 	}
-	ctx.JSON(http.StatusCreated, gin.H{"id": feedID})
 }
 
 func (c *Controller) viewFeed(ctx *gin.Context) {
