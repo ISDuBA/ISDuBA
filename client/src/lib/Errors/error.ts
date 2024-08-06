@@ -36,9 +36,9 @@ export type ErrorDetails = {
 };
 
 export const getErrorDetails = (message: string, response?: HttpResponse): ErrorDetails => {
-  const errorDetails = { message: message };
+  const errorDetails: ErrorDetails = { message: message, details: undefined };
   if (response) {
-    errorDetails.message = `${getErrorMessage(response?.error)} ${response.content}`;
+    errorDetails.details = `${getErrorMessage(response?.error)} ${response.content}`;
   }
   return errorDetails;
 };
