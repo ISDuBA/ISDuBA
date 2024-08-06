@@ -103,6 +103,10 @@ func (f *feed) refresh(m *Manager) error {
 		return nil
 	}
 
+	// Candidates may pile up on same urls so only keep
+	// the latest ones.
+	f.removeOutdatedWaiting(candidates)
+
 	// Merge candidates into list of locations.
 	f.locations = append(f.locations, candidates...)
 	slices.SortFunc(f.locations, func(a, b location) int {
@@ -111,6 +115,26 @@ func (f *feed) refresh(m *Manager) error {
 
 	f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.locations))
 	return nil
+}
+
+// removeOutdatedWaiting removes locations with urls from queue which
+// have newer update candidates.
+func (f *feed) removeOutdatedWaiting(candidates []location) {
+	if len(f.locations) == 0 {
+		return
+	}
+	urls := make(map[string]time.Time, len(candidates))
+	for i := range candidates {
+		cand := &candidates[i]
+		urls[cand.doc.String()] = cand.updated
+	}
+	f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+		if l.state == waiting {
+			updated, ok := urls[l.doc.String()]
+			return ok && updated.After(l.updated)
+		}
+		return false
+	})
 }
 
 // fetchIndex fetches the content of the feed index.
