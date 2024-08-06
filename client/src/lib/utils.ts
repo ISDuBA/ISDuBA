@@ -75,11 +75,11 @@ export const request = async (
       case 400:
       case 403:
       case 500:
-        return { error: `${response.statusText}`, content: content, ok: false };
+        return { error: `${response.status}`, content: content, ok: false };
       default:
       // do nothing and return later
     }
-    return { error: `${response.statusText}`, content: content, ok: false };
+    return { error: `${response.status}`, content: content, ok: false };
   } catch (error: any) {
     if (/fetch/.test(error)) {
       return {

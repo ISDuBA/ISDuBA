@@ -20,7 +20,7 @@
   import { createEventDispatcher, onMount } from "svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import ComplexDecision from "./ComplexDecision.svelte";
 
   const dispatch = createEventDispatcher();
@@ -41,7 +41,7 @@
   let vector: string;
   export let vectorInput = "";
   let result: any;
-  let saveSSVCError: string;
+  let saveSSVCError: ErrorDetails | null;
   $: resultStyle = result?.color ? `color: ${result.color}` : "";
 
   onMount(async () => {
@@ -156,7 +156,7 @@
   }
 
   function resetError() {
-    saveSSVCError = "";
+    saveSSVCError = null;
   }
 
   function stepBack() {
@@ -215,11 +215,7 @@
       resetUserDecisions();
       dispatch("updateSSVC");
     } else if (response.error) {
-      if (response.error === "400") {
-        saveSSVCError = `An error occured: ${response.content}.`;
-      } else {
-        saveSSVCError = getErrorMessage(response.error);
-      }
+      saveSSVCError = getErrorDetails(`Could not save SSVC.`, response);
     }
   }
 
@@ -405,5 +401,5 @@
       </div>
     </div>
   {/if}
-  <ErrorMessage message={saveSSVCError}></ErrorMessage>
+  <ErrorMessage error={saveSSVCError}></ErrorMessage>
 </div>

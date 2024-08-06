@@ -22,24 +22,23 @@
   import CommentTextArea from "./Comments/CommentTextArea.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./History.svelte/History.svelte";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Tlp from "./TLP.svelte";
   export let params: any = null;
 
   let document: any = {};
   let ssvc: any;
   let comment: string = "";
-  let loadCommentsError = "";
-  let loadEventsError = "";
-  let loadAdvisoryVersionsError = "";
-  let loadDocumentError = "";
-  let loadFourCVEsError = "";
-  let createCommentError = "";
-  let loadDocumentSSVCError = "";
-  let loadDocumentSSVCErrorDetails = "";
-  let stateError = "";
+  let loadCommentsError: ErrorDetails | null;
+  let loadEventsError: ErrorDetails | null;
+  let loadAdvisoryVersionsError: ErrorDetails | null;
+  let loadDocumentError: ErrorDetails | null;
+  let loadFourCVEsError: ErrorDetails | null;
+  let createCommentError: ErrorDetails | null;
+  let loadDocumentSSVCError: ErrorDetails | null;
+  let stateError: ErrorDetails | null;
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState = "";
@@ -81,7 +80,7 @@
         return acc;
       }, {});
     } else if (response.error) {
-      loadAdvisoryVersionsError = `Could not load versions. ${getErrorMessage(response.error)}`;
+      loadAdvisoryVersionsError = getErrorDetails(`Could not load versions.`, response);
     }
   };
 
@@ -93,7 +92,7 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
-      loadDocumentError = `Could not load document. ${getErrorMessage(response.error)}`;
+      loadDocumentError = getErrorDetails(`Could not load document.`, response);
     }
   };
 
@@ -108,8 +107,7 @@
         ssvc = convertVectorToLabel(result.documents[0].ssvc);
       }
     } else if (response.error) {
-      loadDocumentSSVCError = `Could not load SSVC. ${getErrorMessage(response.error)}`;
-      loadDocumentSSVCErrorDetails = `${response.error}\n${new Date().toISOString()}\n${response.content}`;
+      loadDocumentSSVCError = getErrorDetails(`Could not load SSVC.`, response);
     }
   };
 
@@ -121,7 +119,7 @@
     if (response.ok) {
       return await response.content;
     } else if (response.error) {
-      loadEventsError = `Could not load events. ${getErrorMessage(response.error)}`;
+      loadEventsError = getErrorDetails(`Could not load events.`, response);
       return [];
     }
   };
@@ -138,7 +136,7 @@
       }
       return comments;
     } else if (response.error) {
-      loadEventsError = `Could not comments. ${getErrorMessage(response.error)}`;
+      loadEventsError = getErrorDetails(`Could not comments.`, response);
       return [];
     }
   };
@@ -194,7 +192,7 @@
       await loadAdvisoryState();
       await buildHistory();
     } else if (response.error) {
-      createCommentError = `Could not create comment. ${getErrorMessage(response.error)}`;
+      createCommentError = getErrorDetails(`Could not create comment.`, response);
     }
   }
 
@@ -226,7 +224,7 @@
       advisoryState = newState;
       await buildHistory();
     } else if (response.error) {
-      stateError = `Could not change state. ${getErrorMessage(response.error)}`;
+      stateError = getErrorDetails(`Could not change state.`, response);
     }
   }
 
@@ -240,7 +238,7 @@
       advisoryState = result.documents[0].state;
       return result.documents[0].state;
     } else if (response.error) {
-      stateError = `Couldn't load state. ${getErrorMessage(response.error)}`;
+      stateError = getErrorDetails(`Couldn't load state.`, response);
     }
   };
 
@@ -254,7 +252,7 @@
       let four_cves = content?.documents[0]?.four_cves;
       appStore.setFourCVEs(four_cves);
     } else if (response.error) {
-      loadFourCVEsError = `Couldn't load CVEs. ${getErrorMessage(response.error)}`;
+      loadFourCVEsError = getErrorDetails(`Couldn't load CVEs.`, response);
     }
   };
 
@@ -328,10 +326,10 @@
       </div>
       <div class="mb-4 mt-2" />
     </div>
-    <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
-    <ErrorMessage message={stateError}></ErrorMessage>
-    <ErrorMessage message={loadDocumentError}></ErrorMessage>
-    <ErrorMessage message={loadFourCVEsError}></ErrorMessage>
+    <ErrorMessage error={loadAdvisoryVersionsError}></ErrorMessage>
+    <ErrorMessage error={stateError}></ErrorMessage>
+    <ErrorMessage error={loadDocumentError}></ErrorMessage>
+    <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
     <div class="flex flex-row max-[800px]:flex-wrap-reverse">
       <div class="mr-12 flex w-2/3 flex-col">
         <div class="flex flex-row">
@@ -387,7 +385,7 @@
                 on:blur={() => {
                   commentFocus = false;
                 }}
-                on:input={() => (createCommentError = "")}
+                on:input={() => (createCommentError = null)}
                 on:saveComment={createComment}
                 on:saveForReview={sendForReview}
                 on:saveForAssessing={sendForAssessing}
@@ -399,8 +397,7 @@
             </div>
           {/if}
         </div>
-        <ErrorMessage message={loadDocumentSSVCError} details={loadDocumentSSVCErrorDetails}
-        ></ErrorMessage>
+        <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
         <div class="">
           {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
             <div class="mt-6">
@@ -412,8 +409,8 @@
                 entries={historyEntries}
               ></History>
             </div>
-            <ErrorMessage message={loadEventsError}></ErrorMessage>
-            <ErrorMessage message={loadCommentsError}></ErrorMessage>
+            <ErrorMessage error={loadEventsError}></ErrorMessage>
+            <ErrorMessage error={loadCommentsError}></ErrorMessage>
           {/if}
         </div>
       </div>

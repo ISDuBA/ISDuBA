@@ -14,10 +14,10 @@
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 
-  let viewError = "";
-  let versionError = "";
+  let viewError: ErrorDetails | null;
+  let versionError: ErrorDetails | null;
 
   async function logout() {
     appStore.setSessionExpired(true);
@@ -38,7 +38,7 @@
       const backendInfo = response.content;
       return backendInfo.version;
     } else if (response.error) {
-      versionError = `Couldn't load version. ${getErrorMessage(response.error)}`;
+      versionError = getErrorDetails(`Couldn't load version.`, response);
     }
   }
 
@@ -47,7 +47,7 @@
     if (response.ok) {
       return new Map<string, [string]>(Object.entries(response.content));
     } else if (response.error) {
-      viewError = `Couldn't determine your role.`;
+      viewError = getErrorDetails(`Couldn't determine your role.`, response);
     }
     return new Map<string, [string]>();
   }
@@ -162,8 +162,8 @@
         {/await}
       </P>
     {/if}
-    <ErrorMessage message={viewError}></ErrorMessage>
-    <ErrorMessage message={versionError}></ErrorMessage>
+    <ErrorMessage error={viewError}></ErrorMessage>
+    <ErrorMessage error={versionError}></ErrorMessage>
   </div>
 </div>
 

@@ -9,18 +9,18 @@
 -->
 
 <script lang="ts">
+  import type { ErrorDetails } from "$lib/Errors/error";
   import { Alert } from "flowbite-svelte";
-  export let message = "";
-  export let details = "";
+  export let error: ErrorDetails | null;
 
   let showDetails: boolean = false;
 </script>
 
-{#if message}
+{#if error}
   <div class="w-fit">
     <Alert color="red" dismissable>
-      <span class="text-lg"> {message}</span>
-      {#if details}
+      <span class="text-lg"> {error.message}</span>
+      {#if error.details}
         <a
           class="pl-1.5 text-lg underline"
           href={"javascript:void(0);"}
@@ -28,7 +28,7 @@
         >
         {#if showDetails}
           <br />
-          <span class="text-lg"> {details}</span>
+          <span class="text-lg"> {error.details}</span>
         {/if}
       {/if}
     </Alert>

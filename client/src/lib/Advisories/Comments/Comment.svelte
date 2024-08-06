@@ -17,7 +17,7 @@
   import { marked } from "marked";
   import DOMPurify from "dompurify";
   import { createEventDispatcher } from "svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
 
   export let comment: any;
@@ -25,7 +25,7 @@
   export let state = "";
   let updatedComment = comment.message;
   let isEditing = false;
-  let updateCommentError: string;
+  let updateCommentError: ErrorDetails | null;
   let lastEdited = "";
   let isCommentingAllowed: boolean;
 
@@ -48,7 +48,7 @@
   }
 
   async function updateComment() {
-    updateCommentError = "";
+    updateCommentError = null;
     const formData = new FormData();
     formData.append("message", updatedComment);
     const response = await request(`/api/comments/post/${comment.comment_id}`, "PUT", formData);
@@ -56,7 +56,7 @@
       comment.message = updatedComment;
       toggleEditing();
     } else if (response.error) {
-      updateCommentError = getErrorMessage(response.error);
+      updateCommentError = getErrorDetails(`Could not update comment.`, response);
     }
     dispatch("commentUpdate");
   }
@@ -100,7 +100,7 @@
     {:else}
       <CommentTextArea
         on:cancel={toggleEditing}
-        on:input={() => (updateCommentError = "")}
+        on:input={() => (updateCommentError = null)}
         on:saveComment={updateComment}
         cancelable={true}
         buttonText="Save"

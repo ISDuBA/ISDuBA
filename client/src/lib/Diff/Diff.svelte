@@ -15,14 +15,14 @@
   import LazyEntry from "./LazyEntry.svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
 
   export let showTitle = true;
   let title = "";
   let diffDocuments: any;
-  let error: string;
+  let error: ErrorDetails | null;
   let diff: any;
   let urlPath: string;
   let isAddSectionOpen = false;
@@ -69,12 +69,12 @@
   const getDiff = async () => {
     if (!diffDocuments) return;
     urlPath = `/api/diff/${$appStore.app.diff.docB_ID}/${$appStore.app.diff.docA_ID}?word-diff=true`;
-    error = "";
+    error = null;
     const response = await request(urlPath, "GET");
     if (response.ok) {
       diff = response.content;
     } else if (response.error) {
-      error = `Couldn't load diffs. ${getErrorMessage(response.error)}`;
+      error = getErrorDetails(`Couldn't load diffs.`, response);
     }
   };
 
@@ -95,7 +95,7 @@
 </svelte:head>
 
 <div>
-  <ErrorMessage message={error}></ErrorMessage>
+  <ErrorMessage {error}></ErrorMessage>
   {#if diff}
     {#if showTitle}
       <Label class="text-lg">{title}</Label>
