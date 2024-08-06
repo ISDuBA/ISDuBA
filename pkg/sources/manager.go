@@ -18,13 +18,12 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
-	// ErrNoSuchSource is returned if a given source does not exists.
-	ErrNoSuchSource = errors.New("no such source")
+	// ErrNoSuchEntry is returned if a given feed or source does not exists.
+	ErrNoSuchEntry = errors.New("no such entry")
 	// ErrInvalidArgument is return if a given argument is unsuited.
 	ErrInvalidArgument = errors.New("invalid argument")
 )
@@ -83,6 +82,22 @@ func (m *Manager) allFeeds(fn func(*feed) bool) {
 			}
 		}
 	}
+}
+
+func (m *Manager) findFeedByID(feedID int64) *feed {
+	for _, s := range m.sources {
+		if idx := slices.IndexFunc(s.feeds, func(f *feed) bool { return f.id == feedID }); idx >= 0 {
+			return s.feeds[idx]
+		}
+	}
+	return nil
+}
+
+func (m *Manager) findSourceByID(sourceID int64) *source {
+	if idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sourceID }); idx >= 0 {
+		return m.sources[idx]
+	}
+	return nil
 }
 
 // refreshFeeds checks if there are feeds that need reloading
@@ -189,6 +204,85 @@ func (m *Manager) AllSources(fn func(
 	<-done
 }
 
+// Feeds passes the fields of the feeds of a given source to a given function.
+func (m *Manager) Feeds(sourceID int64, fn func(
+	id int64,
+	label string,
+	url *url.URL,
+	rolie bool,
+	lvl config.FeedLogLevel,
+)) error {
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		s := m.findSourceByID(sourceID)
+		if s == nil {
+			errCh <- ErrNoSuchEntry
+			return
+		}
+		for _, f := range s.feeds {
+			fn(f.id, f.label, f.url, f.rolie, f.logLevel)
+		}
+		errCh <- nil
+	}
+	return <-errCh
+}
+
+// Feed passes the fields of feed to a given function.
+func (m *Manager) Feed(feedID int64, fn func(
+	label string,
+	url *url.URL,
+	rolie bool,
+	lvl config.FeedLogLevel,
+)) error {
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		f := m.findFeedByID(feedID)
+		if f == nil {
+			errCh <- ErrNoSuchEntry
+			return
+		}
+		fn(f.label, f.url, f.rolie, f.logLevel)
+		errCh <- nil
+	}
+	return <-errCh
+}
+
+// FeedLog sends the log of the feed with the given id to the given function.
+func (m *Manager) FeedLog(feedID int64, fn func(
+	t time.Time,
+	lvl config.FeedLogLevel,
+	msg string,
+)) error {
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		const sql = `SELECT time, lvl::text, msg FROM feed_logs WHERE feeds_id = $1 ` +
+			`ORDER by time DESC`
+		errCh <- m.db.Run(
+			context.Background(),
+			func(ctx context.Context, con *pgxpool.Conn) error {
+				rows, err := con.Query(ctx, sql, feedID)
+				if err != nil {
+					return fmt.Errorf("querying feed logs failed: %w", err)
+				}
+				defer rows.Close()
+				var (
+					t   time.Time
+					lvl config.FeedLogLevel
+					msg string
+				)
+				for rows.Next() {
+					if err := rows.Scan(&t, &lvl, &msg); err != nil {
+						return fmt.Errorf("scanning log failed: %w", err)
+					}
+					fn(t, lvl, msg)
+				}
+				return rows.Err()
+			}, 0,
+		)
+	}
+	return <-errCh
+}
+
 // ping wakes up the manager.
 func (m *Manager) ping() {}
 
@@ -203,7 +297,7 @@ func (m *Manager) Kill() {
 
 func (m *Manager) removeSource(sourceID int64) error {
 	if slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
-		return ErrNoSuchSource
+		return ErrNoSuchEntry
 	}
 	const sql = `DELETE FROM sources WHERE id = $1`
 	notFound := false
@@ -230,88 +324,29 @@ func (m *Manager) removeSource(sourceID int64) error {
 	})
 	// XXX: Should not happen!
 	if notFound {
-		return ErrNoSuchSource
+		return ErrNoSuchEntry
 	}
 	return nil
 }
 
 func (m *Manager) removeFeed(feedID int64) error {
-	for _, s := range m.sources {
-		before := len(s.feeds)
-		s.feeds = slices.DeleteFunc(s.feeds, func(f *feed) bool {
-			return f.id == feedID
-		})
-		if before > len(s.feeds) {
-			return nil
-		}
+	f := m.findFeedByID(feedID)
+	if f == nil {
+		return ErrNoSuchEntry
 	}
-	return nil
-}
-
-func (m *Manager) addFeed(feedID int64) error {
-	// Ignore it if we already have it.
-	for _, s := range m.sources {
-		if slices.ContainsFunc(s.feeds, func(f *feed) bool { return f.id == feedID }) {
-			return nil
-		}
-	}
-	const feedSQL = `SELECT sources_id, url, rolie, log_lvl::text FROM feeds WHERE sources_id = $1`
-	var (
-		f *feed
-		s *source
-	)
+	f.invalid.Store(true)
+	const sql = `DELETE FROM feeds WHERE id = $1`
 	if err := m.db.Run(
 		context.Background(),
 		func(ctx context.Context, con *pgxpool.Conn) error {
-			tx, err := con.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
-			if err != nil {
-				return fmt.Errorf("starting transaction failed: %w", err)
-			}
-			defer tx.Rollback(ctx)
-			// Collect feed.
-			frows, err := tx.Query(ctx, feedSQL, feedID)
-			if err != nil {
-				return fmt.Errorf("querying feed failed: %w", err)
-			}
-			var sid int64
-			f, err = pgx.CollectOneRow(frows, func(row pgx.CollectableRow) (*feed, error) {
-				var (
-					f   feed
-					raw string
-				)
-				if err := row.Scan(&sid, &raw, &f.rolie, &f.logLevel); err != nil {
-					return nil, err
-				}
-				parsed, err := url.Parse(raw)
-				if err != nil {
-					return nil, err
-				}
-				f.url = parsed
-				return &f, nil
-			})
-			if err != nil {
-				return err
-			}
-			// Do we have the source already?
-			idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sid })
-			if idx == -1 {
-				// XXX: Maybe we should load the source and all the other feeds of this source?
-				return errors.New("source is missing")
-			}
-			s = m.sources[idx]
-			return tx.Commit(ctx)
+			_, err := con.Exec(ctx, sql, feedID)
+			return err
 		}, 0,
 	); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil
-		}
-		return fmt.Errorf("fetching feed failed: %w", err)
+		return fmt.Errorf("deleting feed failed: %w", err)
 	}
-	f.source = s
-	s.feeds = append(s.feeds, f)
-	if s.active {
-		m.backgroundPing()
-	}
+	s := f.source
+	s.feeds = slices.DeleteFunc(s.feeds, func(g *feed) bool { return f == g })
 	return nil
 }
 
@@ -373,14 +408,66 @@ func (m *Manager) AddSource(
 	return id, <-errCh
 }
 
+// AddFeed adds a new feed to a source.
+func (m *Manager) AddFeed(
+	sourceID int64,
+	label string,
+	url *url.URL,
+	rolie bool,
+	logLevel config.FeedLogLevel,
+) (int64, error) {
+	var feedID int64
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		s := m.findSourceByID(sourceID)
+		if s == nil {
+			errCh <- ErrNoSuchEntry
+			return
+		}
+		if slices.ContainsFunc(s.feeds, func(f *feed) bool { return f.label == label }) {
+			errCh <- ErrInvalidArgument
+			return
+		}
+		const sql = `INSERT INTO feeds (label, sources_id, url, rolie, log_lvl) ` +
+			`VALUES ($1, $2, $3, $4, $5::feed_logs_level) ` +
+			`RETURNING id`
+		if err := m.db.Run(
+			context.Background(),
+			func(ctx context.Context, conn *pgxpool.Conn) error {
+				return conn.QueryRow(ctx, sql,
+					label,
+					sourceID,
+					url.String(),
+					rolie,
+					logLevel,
+				).Scan(&feedID)
+			}, 0,
+		); err != nil {
+			errCh <- fmt.Errorf("inserting feed failed: %w", err)
+			return
+		}
+		s.feeds = append(s.feeds, &feed{
+			id:       feedID,
+			label:    label,
+			url:      url,
+			rolie:    rolie,
+			source:   s,
+			logLevel: logLevel,
+		})
+		if s.active {
+			m.backgroundPing()
+		}
+		errCh <- nil
+	}
+	if err := <-errCh; err != nil {
+		return 0, err
+	}
+	return feedID, nil
+}
+
 // RemoveSource removes a sources from manager.
 func (m *Manager) RemoveSource(sourceID int64) error {
 	return m.asManager((*Manager).removeSource, sourceID)
-}
-
-// AddFeed adds a new feed to a source.
-func (m *Manager) AddFeed(feedID int64) error {
-	return m.asManager((*Manager).addFeed, feedID)
 }
 
 // RemoveFeed removes a feed from a source.

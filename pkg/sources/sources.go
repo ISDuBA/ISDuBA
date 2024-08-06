@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"slices"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -48,9 +49,12 @@ type location struct {
 
 type feed struct {
 	id       int64
+	label    string
 	url      *url.URL
 	rolie    bool
 	logLevel config.FeedLogLevel
+
+	invalid atomic.Bool
 
 	nextCheck time.Time
 	locations []location
@@ -288,6 +292,9 @@ func (s *source) loadHash(url string) ([]byte, error) {
 // last changes per location so we don't need to download them all again and again.
 func (f *feed) storeLastChanges(l *location) func(context.Context, pgx.Tx, int64) error {
 	return func(ctx context.Context, tx pgx.Tx, _ int64) error {
+		if f.invalid.Load() {
+			return nil
+		}
 		const updatedSQL = `INSERT INTO changes (url, feeds_id, time) ` +
 			`VALUES ($1, $2, $3) ` +
 			`ON CONFLICT (url, feeds_id) DO ` +
