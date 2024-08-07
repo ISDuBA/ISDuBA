@@ -22,18 +22,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
-type advisoryKey struct {
-	Publisher  string `uri:"publisher" binding:"required" json:"publisher"`
-	TrackingID string `uri:"trackingid" binding:"required" json:"tracking_id"`
-}
-
-type advisoryState struct {
-	Publisher  string          `uri:"publisher" binding:"required" json:"publisher"`
-	TrackingID string          `uri:"trackingid" binding:"required" json:"tracking_id"`
-	State      models.Workflow `uri:"state" binding:"required" json:"state"`
-}
-
-type advisoryStates []advisoryState
+type advisoryStates []models.AdvisoryState
 
 func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 	const (
@@ -141,7 +130,7 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 }
 
 func (c *Controller) changeStatus(ctx *gin.Context) {
-	var input advisoryState
+	var input models.AdvisoryState
 	if err := ctx.ShouldBindUri(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -160,7 +149,7 @@ func (c *Controller) changeStatusBulk(ctx *gin.Context) {
 
 // deleteAdvisory deletes a given advisory.
 func (c *Controller) deleteAdvisory(ctx *gin.Context) {
-	var key advisoryKey
+	var key models.AdvisoryKey
 	if err := ctx.ShouldBindUri(&key); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -221,14 +210,14 @@ func (c *Controller) deleteAdvisory(ctx *gin.Context) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 		} else {
-			slog.Error("deleting adviory failed", "err", err)
+			slog.Error("deleting advisory failed", "err", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}
 	switch {
 	case forbidden:
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "not allowed to delete adviory"})
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "not allowed to delete advisory"})
 	case !deleted:
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 	default:
