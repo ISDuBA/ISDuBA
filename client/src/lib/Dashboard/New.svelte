@@ -22,23 +22,6 @@
 
   let documents: any[] = [];
   let newDocumentsError = "";
-  let loadAdvisoryVersionsError = "";
-
-  const loadAdvisoryVersions = async () => {
-    for (let i = 0; i < documents.length; i++) {
-      const doc = documents[i];
-      const response = await request(
-        `/api/documents?&columns=id version tracking_id&query=$tracking_id ${doc.tracking_id} = $publisher "${doc.publisher}" = and`,
-        "GET"
-      );
-      if (response.ok) {
-        const result = (await response.content).documents;
-        documents[i].isNewAdvisory = result.length === 1;
-      } else if (response.error) {
-        loadAdvisoryVersionsError = `Could not all details. ${getErrorMessage(response.error)}`;
-      }
-    }
-  };
 
   const compareCrit = (a: any, b: any) => {
     if (!b.critical || a.critical > b.critical) {
@@ -67,7 +50,6 @@
 
   onMount(async () => {
     await loadDocuments();
-    loadAdvisoryVersions();
   });
 
   const openDocument = (doc: any) => {
@@ -128,6 +110,5 @@
       {/if}
     </div>
     <ErrorMessage message={newDocumentsError}></ErrorMessage>
-    <ErrorMessage message={loadAdvisoryVersionsError}></ErrorMessage>
   </div>
 {/if}
