@@ -8,8 +8,6 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
-import type { HttpResponse } from "../types";
-
 const contactAdmin = `Please contact an administrator.`;
 
 const ERRORMESSAGES: any = {
@@ -22,7 +20,7 @@ const ERRORMESSAGES: any = {
   "783": `The response from the server is not parsable. ${contactAdmin}`
 };
 
-const getErrorMessage = (code?: string) => {
+const getErrorMessage = (code: string) => {
   const standardmessage = `An error occured. ${contactAdmin}`;
   if (code) {
     if (ERRORMESSAGES[code]) return ERRORMESSAGES[code];
@@ -35,10 +33,10 @@ export type ErrorDetails = {
   details?: string;
 };
 
-export const getErrorDetails = (message: string, response?: HttpResponse): ErrorDetails => {
+export const getErrorDetails = (message: string, response?: any): ErrorDetails => {
   const errorDetails: ErrorDetails = { message: message, details: undefined };
-  if (response) {
-    errorDetails.details = `${getErrorMessage(response?.error)} ${response.content}`;
+  if (response?.status) {
+    errorDetails.details = `${response.status}: ${getErrorMessage(response.status)}${response.content ? "\n" + response.content : ""}`;
   }
   return errorDetails;
 };
