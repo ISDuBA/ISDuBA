@@ -112,65 +112,31 @@
   };
 
   const loadEvents = async () => {
-    let loadedEvents: any = [];
-    if (advisoryVersions.length > 0) {
-      const promises = await Promise.allSettled(
-        advisoryVersions.map(async (v) => {
-          return request(`/api/events/${v.id}`, "GET");
-        })
-      );
-      const result = promises
-        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
-        .map((p: any) => {
-          return p.value;
-        });
-      if (promises.length != result.length) {
-        loadEventsError = `Could not load all events. An error occured on the server. Please contact an administrator.`;
-      }
-      result.forEach((e) => {
-        if (e.content !== "undefined") {
-          loadedEvents = loadedEvents.concat(e.content);
-        } else {
-          loadEventsError = `Could not load all events. An error occured on the server. Please contact an administrator.`;
-        }
-      });
-      return loadedEvents;
-    } else {
-      loadEventsError = `Could not load events. An error occured on the server. Please contact an administrator.`;
+    const response = await request(
+      `/api/events/${params.publisherNamespace}/${params.trackingID}`,
+      "GET"
+    );
+    if (response.ok) {
+      return await response.content;
+    } else if (response.error) {
+      loadEventsError = `Could not load events. ${getErrorMessage(response.error)}`;
       return [];
     }
   };
 
   const loadComments = async () => {
-    let loadedComments: any = [];
-    if (advisoryVersions.length > 0) {
-      const promises = await Promise.allSettled(
-        advisoryVersions.map(async (v) => {
-          return request(`/api/comments/${v.id}`, "GET");
-        })
-      );
-      const result = promises
-        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
-        .map((p: any) => {
-          return p.value;
-        });
-      if (promises.length != result.length) {
-        loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
+    const response = await request(
+      `/api/comments/${params.publisherNamespace}/${params.trackingID}`,
+      "GET"
+    );
+    if (response.ok) {
+      let comments = await response.content;
+      for (let i = 0; i < comments.length; i++) {
+        comments[i].documentVersion = advisoryVersionByDocumentID[comments[i].document_id];
       }
-      result.forEach((c) => {
-        if (c.content !== "undefined") {
-          let comments = c.content;
-          for (let i = 0; i < comments.length; i++) {
-            comments[i].documentVersion = advisoryVersionByDocumentID[comments[i].document_id];
-          }
-          loadedComments = loadedComments.concat(comments);
-        } else {
-          loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
-        }
-      });
-      return loadedComments;
-    } else {
-      loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
+      return comments;
+    } else if (response.error) {
+      loadEventsError = `Could not comments. ${getErrorMessage(response.error)}`;
       return [];
     }
   };
