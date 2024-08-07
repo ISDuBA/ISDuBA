@@ -103,7 +103,7 @@ func (c *Controller) Bind() http.Handler {
 
 	// Comments
 	api.POST("/comments/:document", authEdRe, c.createComment)
-	api.GET("/comments/:document", authEdReAu, c.viewComments)
+	api.GET("/comments/:publisher/:trackingid", authEdReAu, c.viewComments)
 	api.PUT("/comments/post/:id", authEdRe, c.updateComment)
 	api.GET("/comments/post/:id", authEdReAu, c.viewComment)
 
@@ -116,7 +116,7 @@ func (c *Controller) Bind() http.Handler {
 
 	// Events
 	api.GET("/events", authEdReAu, c.overviewEvents)
-	api.GET("/events/:document", authEdReAu, c.viewEvents)
+	api.GET("/events/:publisher/:trackingid", authEdReAu, c.viewEvents)
 
 	// State change
 	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)

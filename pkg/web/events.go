@@ -131,12 +131,18 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 }
 
 func (c *Controller) viewEvents(ctx *gin.Context) {
-	id, ok := parse(ctx, toInt64, ctx.Param("document"))
-	if !ok {
+	var key models.AdvisoryKey
+	if err := ctx.ShouldBindUri(&key); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
+	if key.Publisher == "" || key.TrackingID == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing publisher or tracking_id"})
+		return
+	}
+
+	expr := c.andTLPExpr(ctx, query.FieldEqString("tracking_id", key.TrackingID).And(query.FieldEqString("publisher", key.Publisher)))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -165,9 +171,9 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 			if !exists {
 				return nil
 			}
-			const fetchSQL = `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
-				`WHERE documents_id = $1 ORDER BY time DESC`
-			rows, _ := conn.Query(rctx, fetchSQL, id)
+			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
+				`WHERE documents_id in (SELECT id FROM documents WHERE ` + builder.WhereClause + `) ORDER BY time DESC`
+			rows, _ := conn.Query(rctx, fetchSQL, builder.Replacements...)
 			var err error
 			events, err = pgx.CollectRows(
 
@@ -191,7 +197,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	}
 
 	if !exists {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 		return
 	}
 
