@@ -19,7 +19,7 @@
     const response = await request("api/sources/message", "GET");
     if (response.ok) {
       return response.content;
-    } else if (response.error) {
+    } else {
       messageError = getErrorDetails(`Couldn't load default message`, response);
     }
     return new Map<string, [string]>();

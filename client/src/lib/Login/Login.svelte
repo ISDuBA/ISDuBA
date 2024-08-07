@@ -37,7 +37,7 @@
     if (response.ok) {
       const backendInfo = response.content;
       return backendInfo.version;
-    } else if (response.error) {
+    } else {
       versionError = getErrorDetails(`Couldn't load version.`, response);
     }
   }
@@ -46,7 +46,7 @@
     const response = await request("api/view", "GET");
     if (response.ok) {
       return new Map<string, [string]>(Object.entries(response.content));
-    } else if (response.error) {
+    } else {
       viewError = getErrorDetails(`Couldn't determine your role.`, response);
     }
     return new Map<string, [string]>();
