@@ -28,7 +28,6 @@
   let loadActivityError = "";
   let loadMentionsError = "";
   let loadDocumentsError = "";
-  let loadCommentsError = "";
 
   const getRelativeTime = (date: Date) => {
     const now = Date.now();
@@ -125,16 +124,6 @@
     });
   };
 
-  const getCommentIDs = (arr: any) => {
-    return arr
-      .map((a: any) => {
-        return a[1];
-      })
-      .filter((id: any) => {
-        return id !== null;
-      });
-  };
-
   const fetchDocuments = async (documentIDs: number[]) => {
     const query = documentIDs.map((id: number) => {
       return `$id ${id} integer = `;
@@ -154,66 +143,28 @@
     }
   };
 
-  const fetchComments = async (commentIDs: number[]) => {
-    if (commentIDs.length > 0) {
-      const promises = await Promise.allSettled(
-        commentIDs.map(async (v: any) => {
-          return request(`/api/comments/post/${v}`, "GET");
-        })
-      );
-      const result = promises
-        .filter((p: any) => p.status === "fulfilled" && p.value.ok)
-        .map((p: any) => {
-          return p.value;
-        });
-      if (promises.length != result.length) {
-        loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
-        return [];
-      }
-      return result.map((r) => {
-        return r.content;
-      });
-    } else {
-      loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
-      return [];
-    }
-  };
-
   const transformDataToActivities = async () => {
     const activities = await fetchActivities();
     const mentions = await fetchMentions();
     let idsActivities = [];
     let idsMentions = [];
     let documentIDs: any[] = [];
-    let commentIDs: any[] = [];
     let documents = [];
-    let comments = [];
     if (activities.length > 0) {
       idsActivities = pluck(activities, ["id", "comments_id"]);
       documentIDs = getDocumentIDs(idsActivities);
-      commentIDs = getCommentIDs(idsActivities);
     }
     if (mentions.length > 0) {
       idsMentions = pluck(mentions, ["id", "comments_id"]);
       const mentionDocumentIDs = getDocumentIDs(idsMentions);
       documentIDs = documentIDs.concat(mentionDocumentIDs);
-      const mentionCommentIDs = getCommentIDs(idsMentions);
-      commentIDs = commentIDs.concat(mentionCommentIDs);
     }
     documentIDs = [...new Set(documentIDs)];
-    commentIDs = [...new Set(commentIDs)];
     if (documentIDs.length > 0) {
       documents = await fetchDocuments(documentIDs);
     }
-    if (commentIDs.length > 0) {
-      comments = await fetchComments(commentIDs);
-    }
     const documentsById = documents.reduce((o: any, n: any) => {
       o[n.id] = n;
-      return o;
-    }, {});
-    const commentsByID = comments.reduce((o: any, n: any) => {
-      o[n.id] = n.message;
       return o;
     }, {});
     const activitiesAggregated = aggregateNewest(activities);
@@ -224,8 +175,6 @@
       a.documentURL = documentsById[a.id]
         ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
         : "";
-      if (a.event === "change_comment" || a.event === "add_comment")
-        a.message = commentsByID[a.comments_id];
       if (a.event === "add_ssvc" || a.event === "change_ssvc" || a.event === "change_sscv")
         a.ssvc = documentsById[a.id] ? documentsById[a.id]["ssvc"] : "";
       if (a.ssvc) a.ssvc = convertVectorToLabel(a.ssvc).label;
@@ -240,9 +189,6 @@
       a.documentURL = documentsById[a.id]
         ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
         : "";
-      if (a.event === "change_comment" || a.event === "add_comment")
-        a.message = commentsByID[a.comments_id];
-
       return a;
     });
     const activitiesAggregatedByMentions = aggregateByMentions([
@@ -319,6 +265,5 @@
     <ErrorMessage message={loadActivityError}></ErrorMessage>
     <ErrorMessage message={loadMentionsError}></ErrorMessage>
     <ErrorMessage message={loadDocumentsError}></ErrorMessage>
-    <ErrorMessage message={loadCommentsError}></ErrorMessage>
   </div>
 {/if}

@@ -303,6 +303,7 @@ var documentColumns = []documentColumn{
 	{"time", timeType, evtsModes, false},
 	{"actor", stringType, evtsModes, false},
 	{"comments_id", intType, evtsModes, false},
+	{"message", stringType, evtsModes, false},
 }
 
 var (
