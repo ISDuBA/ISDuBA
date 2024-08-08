@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-// SQLBuilder helps constructing a SQL query.
+// SQLBuilder helps to construct a SQL query.
 type SQLBuilder struct {
 	WhereClause  string
 	Replacements []any
@@ -329,7 +329,8 @@ func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 	case DocumentMode:
 		b.WriteString(`documents`)
 	case EventMode:
-		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id`)
+		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
+			`LEFT JOIN (SELECT message, id AS comment_id FROM comments) ON events_log.comments_id = comment_id`)
 		return
 	}
 

@@ -45,7 +45,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	builder.CreateWhere(expr)
 
 	fields := strings.Fields(
-		ctx.DefaultQuery("columns", "event event_state time actor comments_id id"))
+		ctx.DefaultQuery("columns", "event event_state time actor comments_id message id"))
 
 	if err := builder.CheckProjections(fields); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
