@@ -275,3 +275,27 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 func (c *Controller) defaultMessage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
 }
+
+func (c *Controller) pmd(ctx *gin.Context) {
+	var input struct {
+		URL string `form:"url" binding:"required,min=1"`
+	}
+	if err := ctx.ShouldBindQuery(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	lpmd := c.sm.PMD(input.URL)
+	if !lpmd.Valid() {
+		h := gin.H{}
+		if n := len(lpmd.Messages); n > 0 {
+			msgs := make([]string, 0, n)
+			for i := range lpmd.Messages {
+				msgs = append(msgs, lpmd.Messages[i].Message)
+			}
+			h["messages"] = msgs
+		}
+		ctx.JSON(http.StatusBadGateway, h)
+		return
+	}
+	ctx.JSON(http.StatusOK, lpmd.Document)
+}

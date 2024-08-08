@@ -18,6 +18,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -38,7 +39,10 @@ type Manager struct {
 	fns  chan func(*Manager)
 	done bool
 
-	sources   []*source
+	sources []*source
+
+	pmdCache *pmdCache
+
 	usedSlots int
 	uniqueID  int64
 }
@@ -46,9 +50,10 @@ type Manager struct {
 // NewManager creates a new downloader.
 func NewManager(cfg *config.Config, db *database.DB) *Manager {
 	return &Manager{
-		cfg: cfg,
-		db:  db,
-		fns: make(chan func(*Manager)),
+		cfg:      cfg,
+		db:       db,
+		fns:      make(chan func(*Manager)),
+		pmdCache: newPMDCache(),
 	}
 }
 
@@ -172,6 +177,7 @@ func (m *Manager) Run(ctx context.Context) {
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
 	for !m.done {
+		m.pmdCache.cleanup()
 		m.compactDone()
 		m.refreshFeeds()
 		m.startDownloads()
@@ -488,4 +494,9 @@ func (m *Manager) downloadDone(f *feed, id int64) func() {
 			}
 		}
 	}
+}
+
+// PMD returns the provider metadata from the given url.
+func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
+	return m.pmdCache.pmd(url)
 }
