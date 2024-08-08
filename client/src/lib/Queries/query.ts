@@ -111,4 +111,34 @@ const generateQueryString = (currentSearch: any) => {
   return encodeURI(queryURL);
 };
 
-export { generateQueryString, COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, SEARCHPAGECOLUMNS };
+const predefinedQueries = [
+  {
+    advisories: true,
+    columns: [
+      "cvss_v3_score",
+      "cvss_v2_score",
+      "comments",
+      "critical",
+      "id",
+      "recent",
+      "title",
+      "publisher",
+      "ssvc",
+      "state",
+      "tracking_id"
+    ],
+    description: "Get new advisories sorted by criticality",
+    name: "Dashboard:1:NewAdvisories",
+    orders: "-recent",
+    query: "$state new workflow ="
+  }
+];
+
+export {
+  generateQueryString,
+  predefinedQueries,
+  COLUMNS,
+  ORDERDIRECTIONS,
+  SEARCHTYPES,
+  SEARCHPAGECOLUMNS
+};

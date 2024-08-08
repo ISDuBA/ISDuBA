@@ -28,6 +28,7 @@
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
+  import { predefinedQueries } from "./query";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
@@ -347,6 +348,79 @@
                       ><i class="bx bx-trash text-red-500"></i></button
                     >
                   {/if}
+                </td>
+              </tr>
+            {/each}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+    <div class="mb-12 w-fit">
+      <span class="text-2xl">Predefined</span>
+      <hr class="mb-6" />
+      <div class="max-h-[66vh] overflow-auto">
+        <Table hoverable={true} noborder={true}>
+          <TableHead>
+            <TableHeadCell padding={tablePadding}></TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}
+              >Name<i
+                class:bx={true}
+                class:bx-caret-up={orderBy == "name"}
+                class:bx-caret-down={orderBy == "-name"}
+              ></i></TableHeadCell
+            >
+            <TableHeadCell padding={tablePadding} on:click={() => {}}
+              >Description<i
+                class:bx={true}
+                class:bx-caret-up={orderBy == "description"}
+                class:bx-caret-down={orderBy == "-description"}
+              ></i>
+            </TableHeadCell>
+            <TableHeadCell></TableHeadCell>
+          </TableHead>
+          <TableBody>
+            {#each predefinedQueries as query, index (index)}
+              <tr
+                on:click={() => {
+                  push(`/queries/-1`);
+                }}
+                class="cursor-pointer"
+                ><TableBodyCell {tdClass}>
+                  <div
+                    class:invisible={hoveredAdminQuery !== index}
+                    class:w-1={true}
+                    class:flex={true}
+                    class:flex-col={true}
+                  >
+                    <button
+                      class="h-4"
+                      on:click|stopPropagation={() => {
+                        promoteAdminQuery();
+                      }}
+                    >
+                      <i class="bx bxs-up-arrow-circle"></i>
+                    </button>
+                    <button
+                      on:click|stopPropagation={() => {
+                        demoteAdminQuery();
+                      }}
+                      class="h-4"
+                    >
+                      <i class="bx bxs-down-arrow-circle"></i>
+                    </button>
+                  </div>
+                </TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <span>{query.name ?? "-"}</span>
+                </TableBodyCell>
+                <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
+                <td>
+                  <button
+                    title={`clone ${query.name}`}
+                    on:click|stopPropagation={() => {
+                      push(`/queries/new?clone=${query.name}`);
+                    }}><i class="bx bx-copy"></i></button
+                  >
                 </td>
               </tr>
             {/each}

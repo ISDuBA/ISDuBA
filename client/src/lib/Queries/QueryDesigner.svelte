@@ -12,7 +12,13 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Radio, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
   import { request } from "$lib/utils";
-  import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/Queries/query";
+  import {
+    COLUMNS,
+    ORDERDIRECTIONS,
+    SEARCHTYPES,
+    generateQueryString,
+    predefinedQueries
+  } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
@@ -237,7 +243,7 @@
       id = queryString.clone;
     }
     if (params) id = params.id;
-    if (id) {
+    if (id && !`${id}`.startsWith("Dashboard")) {
       const response = await request(`/api/queries/`, "GET");
       if (response.ok) {
         const result = await response.content;
@@ -257,6 +263,11 @@
       } else if (response.error) {
         loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
       }
+    } else if (id) {
+      const query = predefinedQueries.filter((q) => q.name === id)[0];
+      currentSearch = generateQueryFrom(query);
+      currentSearch.name = query.name;
+      currentSearch.global = false;
     }
   });
 
