@@ -51,14 +51,11 @@ func (pc *pmdCache) cleanup() {
 func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
-again:
-	e := pc.entries[url]
-	if e != nil {
-		if e.expires.Before(time.Now()) {
-			delete(pc.entries, url)
-			goto again
+	if e := pc.entries[url]; e != nil {
+		if time.Now().After(e.expires) {
+			return e.lpmd
 		}
-		return e.lpmd
+		delete(pc.entries, url)
 	}
 	header := http.Header{}
 	header.Add("User-Agent", UserAgent)
