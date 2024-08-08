@@ -100,7 +100,7 @@ const generateQueryString = (currentSearch: any) => {
   const columnsParam = `&columns=${columns.map((col: any) => col.name).join(" ")}`;
   const order =
     orderColumns.length > 0
-      ? `&order=${orderColumns
+      ? `&orders=${orderColumns
           .map((col: any) => {
             return col.orderBy === ORDERDIRECTIONS.ASC ? col.name : `-${col.name}`;
           })
