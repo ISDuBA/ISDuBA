@@ -13,7 +13,7 @@
   import { appStore } from "$lib/store";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { request } from "$lib/utils";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Activity from "./Activity.svelte";
@@ -21,7 +21,7 @@
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
   let documents: any[] = [];
-  let newDocumentsError = "";
+  let newDocumentsError: ErrorDetails | null;
 
   const compareCrit = (a: any, b: any) => {
     if (!b.critical || a.critical > b.critical) {
@@ -44,7 +44,7 @@
     if (response.ok) {
       documents = (await response.content.documents)?.sort(compareCrit) ?? [];
     } else if (response.error) {
-      newDocumentsError = `Could not load new documents. ${getErrorMessage(response.error)}`;
+      newDocumentsError = getErrorDetails(`Could not load new documents.`, response);
     }
   };
 
@@ -109,6 +109,6 @@
         {/each}
       {/if}
     </div>
-    <ErrorMessage message={newDocumentsError}></ErrorMessage>
+    <ErrorMessage error={newDocumentsError}></ErrorMessage>
   </div>
 {/if}

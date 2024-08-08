@@ -14,7 +14,7 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
@@ -25,10 +25,10 @@
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
   let activityCount = 0;
   let resultingActivities: any;
-  let loadActivityError = "";
-  let loadMentionsError = "";
-  let loadDocumentsError = "";
-  let loadCommentsError = "";
+  let loadActivityError: ErrorDetails | null;
+  let loadMentionsError: ErrorDetails | null;
+  let loadDocumentsError: ErrorDetails | null;
+  let loadCommentsError: ErrorDetails | null;
 
   const getRelativeTime = (date: Date) => {
     const now = Date.now();
@@ -103,7 +103,7 @@
       activityCount = activities.count;
       return activities.events || [];
     } else if (activitiesResponse.error) {
-      loadActivityError = `Could not load Activities. ${getErrorMessage(activitiesResponse.error)}. ${getErrorMessage(activitiesResponse.content)}`;
+      loadActivityError = getErrorDetails(`Could not load Activities.`, activitiesResponse);
       return [];
     }
   };
@@ -114,7 +114,7 @@
       const mentions = await mentionsResponse.content;
       return mentions.events || [];
     } else if (mentionsResponse.error) {
-      loadMentionsError = `Could not load Activities. ${getErrorMessage(mentionsResponse.error)}. ${getErrorMessage(mentionsResponse.content)}`;
+      loadMentionsError = getErrorDetails(`Could not load Activities.`, mentionsResponse);
       return [];
     }
   };
@@ -149,7 +149,7 @@
       const content = result.content;
       return content.documents;
     } else if (result.error) {
-      loadDocumentsError = `Could not load Documents. ${getErrorMessage(result.error)}. ${getErrorMessage(result.content)}`;
+      loadDocumentsError = getErrorDetails(`Could not load Documents.`, result);
       return [];
     }
   };
@@ -167,14 +167,18 @@
           return p.value;
         });
       if (promises.length != result.length) {
-        loadCommentsError = `Could not load all comments. An error occured on the server. Please contact an administrator.`;
+        loadCommentsError = getErrorDetails(
+          `Could not load all comments. An error occured on the server. Please contact an administrator.`
+        );
         return [];
       }
       return result.map((r) => {
         return r.content;
       });
     } else {
-      loadCommentsError = `Could not load comments. An error occured on the server. Please contact an administrator.`;
+      loadCommentsError = getErrorDetails(
+        `Could not load comments. An error occured on the server. Please contact an administrator.`
+      );
       return [];
     }
   };
@@ -316,9 +320,9 @@
       {/if}
       {#if activityCount > 10}<div class="">…There are more activities</div>{/if}
     </div>
-    <ErrorMessage message={loadActivityError}></ErrorMessage>
-    <ErrorMessage message={loadMentionsError}></ErrorMessage>
-    <ErrorMessage message={loadDocumentsError}></ErrorMessage>
-    <ErrorMessage message={loadCommentsError}></ErrorMessage>
+    <ErrorMessage error={loadActivityError}></ErrorMessage>
+    <ErrorMessage error={loadMentionsError}></ErrorMessage>
+    <ErrorMessage error={loadDocumentsError}></ErrorMessage>
+    <ErrorMessage error={loadCommentsError}></ErrorMessage>
   </div>
 {/if}

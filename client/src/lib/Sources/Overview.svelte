@@ -11,15 +11,16 @@
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { request } from "$lib/utils";
 
-  let messageError = "";
+  let messageError: ErrorDetails | null;
   async function getMessage() {
     const response = await request("api/sources/message", "GET");
     if (response.ok) {
       return response.content;
-    } else if (response.error) {
-      messageError = `Couldn't load default message`;
+    } else {
+      messageError = getErrorDetails(`Couldn't load default message`, response);
     }
     return new Map<string, [string]>();
   }
@@ -32,4 +33,4 @@
     {resp.message}
   {/if}
 {/await}
-<ErrorMessage message={messageError}></ErrorMessage>
+<ErrorMessage error={messageError}></ErrorMessage>

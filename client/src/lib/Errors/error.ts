@@ -8,6 +8,8 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
+import type { HttpResponse } from "$lib/types";
+
 const contactAdmin = `Please contact an administrator.`;
 
 const ERRORMESSAGES: any = {
@@ -22,8 +24,21 @@ const ERRORMESSAGES: any = {
 
 const getErrorMessage = (code: string) => {
   const standardmessage = `An error occured. ${contactAdmin}`;
-  if (ERRORMESSAGES[code]) return ERRORMESSAGES[code];
+  if (code) {
+    if (ERRORMESSAGES[code]) return ERRORMESSAGES[code];
+  }
   return standardmessage;
 };
 
-export { getErrorMessage };
+export type ErrorDetails = {
+  message: string;
+  details?: string;
+};
+
+export const getErrorDetails = (message: string, response?: HttpResponse): ErrorDetails => {
+  const errorDetails: ErrorDetails = { message: message, details: undefined };
+  if (response?.error) {
+    errorDetails.details = `${response.error}: ${getErrorMessage(response.error)}${response.content ? "\n" + response.content : ""}`;
+  }
+  return errorDetails;
+};

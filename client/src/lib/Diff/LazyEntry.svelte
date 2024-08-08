@@ -13,25 +13,25 @@
   import DiffEntry from "./DiffEntry.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { Button } from "flowbite-svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 
   export let operation: string;
   export let path: string;
   export let urlPath: string;
   let result: any;
-  let error: string;
+  let error: ErrorDetails | null;
   let isOpen = false;
 
   const loadEntry = async () => {
     isOpen = !isOpen;
     if (result) return;
-    error = "";
+    error = null;
     const requestPath = encodeURI(`${urlPath}&item_op=${operation}&item_path=${path}`);
     const response = await request(requestPath, "GET");
     if (response.ok) {
       result = response.content;
     } else if (response.error) {
-      error = getErrorMessage(response.error);
+      error = getErrorDetails(`Could not load entry.`, response);
     }
   };
 </script>
@@ -55,5 +55,5 @@
       <DiffEntry content={result} {operation}></DiffEntry>
     </div>
   {/if}
-  <ErrorMessage message={error}></ErrorMessage>
+  <ErrorMessage {error}></ErrorMessage>
 </div>

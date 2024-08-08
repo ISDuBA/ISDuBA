@@ -54,13 +54,14 @@ export const request = async (
         };
       }
     }
+    let content;
+    if (contentType && isJson) {
+      content = json;
+    } else {
+      content = await response.text();
+    }
     if (response.ok) {
-      if (contentType && isJson) {
-        return { content: json, ok: true };
-      } else {
-        const text = await response.text();
-        return { content: text, ok: true };
-      }
+      return { content: content, ok: true };
     }
     if (response.status == 401) {
       appStore.setSessionExpired(true);
@@ -74,11 +75,11 @@ export const request = async (
       case 400:
       case 403:
       case 500:
-        return { error: `${response.status}`, content: response.statusText, ok: false };
+        return { error: `${response.status}`, content: content, ok: false };
       default:
       // do nothing and return later
     }
-    return { error: `${response.status}`, content: response.statusText, ok: false };
+    return { error: `${response.status}`, content: content, ok: false };
   } catch (error: any) {
     if (/fetch/.test(error)) {
       return {
