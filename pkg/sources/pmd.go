@@ -9,9 +9,9 @@
 package sources
 
 import (
-	"fmt"
+	"context"
+	"log/slog"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -19,7 +19,8 @@ import (
 	"github.com/csaf-poc/csaf_distribution/v3/util"
 )
 
-const holdPMDs = time.Minute * 15
+// holdingPMDsDuration is the duration how long PMDs are cached.
+const holdingPMDsDuration = time.Minute * 15
 
 type pmdCacheEntry struct {
 	expires time.Time
@@ -52,27 +53,29 @@ func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
 	if e := pc.entries[url]; e != nil {
-		if time.Now().After(e.expires) {
+		if e.expires.After(time.Now()) {
 			return e.lpmd
 		}
 		delete(pc.entries, url)
 	}
 	header := http.Header{}
 	header.Add("User-Agent", UserAgent)
-	client := util.HeaderClient{
+	client := util.Client(&util.HeaderClient{
 		Client: &http.Client{},
 		Header: header,
+	})
+	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+		client = &util.LoggingClient{
+			Client: client,
+			Log: func(method, url string) {
+				slog.Debug("looking up PMD", "method", method, "url", url)
+			},
+		}
 	}
-	logClient := util.LoggingClient{
-		Client: &client,
-		Log: func(method, url string) {
-			fmt.Fprintf(os.Stderr, "[%s]: %q\n", method, url)
-		},
-	}
-	pmdLoader := csaf.NewProviderMetadataLoader(&logClient)
+	pmdLoader := csaf.NewProviderMetadataLoader(client)
 	lpmd := pmdLoader.Load(url)
 	pc.entries[url] = &pmdCacheEntry{
-		expires: time.Now().Add(holdPMDs),
+		expires: time.Now().Add(holdingPMDsDuration),
 		lpmd:    lpmd,
 	}
 	return lpmd
