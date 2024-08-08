@@ -38,7 +38,7 @@
     const query = "$state new workflow =";
     const sort = "-recent";
     const response = await request(
-      `/api/documents?columns=${columns}&advisories=true&query=${query}&limit=6&order=${sort}`,
+      `/api/documents?columns=${columns}&advisories=true&query=${query}&limit=6&orders=${sort}`,
       "GET"
     );
     if (response.ok) {

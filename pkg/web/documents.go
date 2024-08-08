@@ -224,7 +224,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	orderFields := strings.Fields(
-		ctx.DefaultQuery("order", "publisher tracking_id -current_release_date -rev_history_length"))
+		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
 	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

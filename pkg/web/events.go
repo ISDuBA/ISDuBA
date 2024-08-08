@@ -52,7 +52,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 		return
 	}
 
-	orderFields := strings.Fields(ctx.DefaultQuery("order", "-time"))
+	orderFields := strings.Fields(ctx.DefaultQuery("orders", "-time"))
 	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

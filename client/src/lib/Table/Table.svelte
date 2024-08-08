@@ -185,7 +185,7 @@
     }
 
     const documentURL = encodeURI(
-      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&order=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
     );
     error = "";
     loading = true;
