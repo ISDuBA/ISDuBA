@@ -166,13 +166,13 @@ type TempStore struct {
 
 // Sources are the config options for downloading sources.
 type Sources struct {
-	DownloadSlots     int                   `toml:"max_download_slots"`
-	MaxSlotsPerSource int                   `toml:"slots_per_source"`
-	MaxRatePerSource  float64               `toml:"rate_per_source"`
+	DownloadSlots     int                   `toml:"download_slots"`
+	MaxSlotsPerSource int                   `toml:"max_slots_per_source"`
+	MaxRatePerSource  float64               `toml:"max_rate_per_source"`
 	FeedRefresh       time.Duration         `toml:"feed_refresh"`
 	FeedLogLevel      FeedLogLevel          `tomt:"feed_log_level"`
 	PublishersTLPs    models.PublishersTLPs `toml:"publishers_tlps"`
-	FeedImporter      string                `toml:"import_user"`
+	FeedImporter      string                `toml:"feed_importer"`
 	DefaultMessage    string                `toml:"default_message"`
 }
 

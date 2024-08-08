@@ -370,30 +370,26 @@ func (m *Manager) AddSource(
 	rate *float64,
 	slots *int,
 ) (int64, error) {
-	var id int64
-
+	lpmd := m.PMD(url)
+	if !lpmd.Valid() {
+		return 0, ErrInvalidArgument
+	}
 	errCh := make(chan error)
-
 	s := &source{
-		id:     id,
 		name:   name,
+		url:    url,
 		active: active != nil && *active,
 		rate:   rate,
 		slots:  slots,
 	}
-
-	// TODO: Load PMD
-
 	m.fns <- func(m *Manager) {
 		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
 			errCh <- ErrInvalidArgument
 			return
 		}
-
 		const sql = `INSERT INTO sources (name, url, active, rate, slots) ` +
-			`VALUES ($1, $2, $3, $4, $5, $6) ` +
+			`VALUES ($1, $2, $3, $4, $5) ` +
 			`RETURNING id`
-
 		if err := m.db.Run(
 			context.Background(),
 			func(rctx context.Context, con *pgxpool.Conn) error {
@@ -402,7 +398,7 @@ func (m *Manager) AddSource(
 					url,
 					active != nil && *active,
 					rate,
-					slots).Scan(&id)
+					slots).Scan(&s.id)
 			}, 0,
 		); err != nil {
 			errCh <- fmt.Errorf("adding source to database failed: %w", err)
@@ -411,7 +407,7 @@ func (m *Manager) AddSource(
 		m.sources = append(m.sources, s)
 		errCh <- nil
 	}
-	return id, <-errCh
+	return s.id, <-errCh
 }
 
 // AddFeed adds a new feed to a source.
@@ -431,6 +427,11 @@ func (m *Manager) AddFeed(
 			return
 		}
 		if slices.ContainsFunc(s.feeds, func(f *feed) bool { return f.label == label }) {
+			errCh <- ErrInvalidArgument
+			return
+		}
+		lpmd := m.PMD(s.url)
+		if !lpmd.Valid() {
 			errCh <- ErrInvalidArgument
 			return
 		}

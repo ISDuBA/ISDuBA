@@ -25,8 +25,8 @@ type source struct {
 	Name   string   `json:"name" form:"name" binding:"required,min=1"`
 	URL    string   `json:"url" form:"url" binding:"required,min=1"`
 	Active *bool    `json:"active,omitempty" form:"active"`
-	Rate   *float64 `json:"rate,omitempty" form:"rate" binding:"gt=0"`
-	Slots  *int     `json:"slots,omitempty" form:"slots" binding:"gte=1"`
+	Rate   *float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots  *int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
 }
 
 type feed struct {
