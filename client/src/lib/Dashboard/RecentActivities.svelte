@@ -19,8 +19,7 @@
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
-  const recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me involved`;
-  const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
+  const recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != me mentioned me involved or and now 168h duration - $time <= $actor me !=`;
   const documentQueryBase = `/api/documents?columns=id title publisher tracking_id ssvc`;
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
   let activityCount = 0;
@@ -107,17 +106,6 @@
     }
   };
 
-  const fetchMentions = async () => {
-    const mentionsResponse = await request(mentionedQuery, "GET");
-    if (mentionsResponse.ok) {
-      const mentions = await mentionsResponse.content;
-      return mentions.events || [];
-    } else if (mentionsResponse.error) {
-      loadMentionsError = `Could not load Activities. ${getErrorMessage(mentionsResponse.error)}. ${getErrorMessage(mentionsResponse.content)}`;
-      return [];
-    }
-  };
-
   const getDocumentIDs = (arr: any) => {
     return arr.map((a: any) => {
       return a[0];
@@ -145,19 +133,12 @@
 
   const transformDataToActivities = async () => {
     const activities = await fetchActivities();
-    const mentions = await fetchMentions();
     let idsActivities = [];
-    let idsMentions = [];
     let documentIDs: any[] = [];
     let documents = [];
     if (activities.length > 0) {
       idsActivities = pluck(activities, ["id", "comments_id"]);
       documentIDs = getDocumentIDs(idsActivities);
-    }
-    if (mentions.length > 0) {
-      idsMentions = pluck(mentions, ["id", "comments_id"]);
-      const mentionDocumentIDs = getDocumentIDs(idsMentions);
-      documentIDs = documentIDs.concat(mentionDocumentIDs);
     }
     documentIDs = [...new Set(documentIDs)];
     if (documentIDs.length > 0) {
@@ -170,7 +151,7 @@
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
-      a.mention = false;
+      a.mention = a.message && a.message.includes($appStore.app.tokenParsed?.preferred_username);
       a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
       a.documentURL = documentsById[a.id]
         ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
@@ -181,20 +162,7 @@
       return a;
     });
 
-    const mentionsAggregated = aggregateNewest(mentions);
-    let recentMentions = Object.values(mentionsAggregated);
-    recentMentions = recentMentions.map((a: any) => {
-      a.mention = true;
-      a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
-      a.documentURL = documentsById[a.id]
-        ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
-        : "";
-      return a;
-    });
-    const activitiesAggregatedByMentions = aggregateByMentions([
-      ...recentActivities,
-      ...recentMentions
-    ]);
+    const activitiesAggregatedByMentions = aggregateByMentions(recentActivities);
     resultingActivities = sortByTime(aggregateByChange(activitiesAggregatedByMentions));
   };
 
