@@ -96,11 +96,11 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	}
 
 	// Check if we have orders given.
-	if orders, ok := ctx.GetPostForm("order"); ok {
+	if orders, ok := ctx.GetPostForm("orders"); ok {
 		os := strings.Fields(orders)
 		if _, err := builder.CreateOrder(os); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "bad 'order' value: " + err.Error(),
+				"error": "bad 'orders' value: " + err.Error(),
 			})
 			return
 		}
