@@ -80,3 +80,42 @@ func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
 	}
 	return lpmd
 }
+
+func asProviderMetaData(lpmd *csaf.LoadedProviderMetadata) (*csaf.ProviderMetadata, error) {
+	if !lpmd.Valid() {
+		return nil, ErrInvalidArgument
+	}
+	pmd := new(csaf.ProviderMetadata)
+	// XXX: This is ugly! We should better keep the original data when loading the PMD.
+	if err := util.ReMarshalJSON(pmd, lpmd.Document); err != nil {
+		return nil, ErrInvalidArgument
+	}
+	return pmd, nil
+}
+
+// isROLIEFeed checks if the given url leads to a ROLIE feed.
+func isROLIEFeed(pmd *csaf.ProviderMetadata, url string) bool {
+	for i := range pmd.Distributions {
+		d := pmd.Distributions[i]
+		if d.Rolie == nil {
+			continue
+		}
+		feeds := d.Rolie.Feeds
+		for j := range feeds {
+			if f := &feeds[j]; f.URL != nil && string(*f.URL) == url {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// isDirectoryFeed checks if the given url leads to a directory based feed.
+func isDirectoryFeed(pmd *csaf.ProviderMetadata, url string) bool {
+	for i := range pmd.Distributions {
+		if d := pmd.Distributions[i]; d.Rolie == nil && d.DirectoryURL == url {
+			return true
+		}
+	}
+	return false
+}

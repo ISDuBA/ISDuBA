@@ -415,7 +415,6 @@ func (m *Manager) AddFeed(
 	sourceID int64,
 	label string,
 	url *url.URL,
-	rolie bool,
 	logLevel config.FeedLogLevel,
 ) (int64, error) {
 	var feedID int64
@@ -430,8 +429,13 @@ func (m *Manager) AddFeed(
 			errCh <- ErrInvalidArgument
 			return
 		}
-		lpmd := m.PMD(s.url)
-		if !lpmd.Valid() {
+		pmd, err := asProviderMetaData(m.PMD(s.url))
+		if err != nil {
+			errCh <- err
+			return
+		}
+		rolie := isROLIEFeed(pmd, url.String())
+		if !rolie && !isDirectoryFeed(pmd, url.String()) {
 			errCh <- ErrInvalidArgument
 			return
 		}

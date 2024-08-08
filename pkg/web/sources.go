@@ -156,7 +156,6 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		SourceID int64  `uri:"id"`
 		Label    string `form:"label" binding:"required,min=1"`
 		URL      string `form:"url" binding:"required,url"`
-		Rolie    bool   `form:"rolie"`
 		LogLevel string `form:"log_level" binding:"oneof=debug info warn error ''"`
 	}
 	if err := errors.Join(ctx.ShouldBind(&input), ctx.ShouldBindUri(&input)); err != nil {
@@ -174,7 +173,6 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		input.SourceID,
 		input.Label,
 		parsed,
-		input.Rolie,
 		logLevel,
 	); {
 	case errors.Is(err, sources.ErrNoSuchEntry):
