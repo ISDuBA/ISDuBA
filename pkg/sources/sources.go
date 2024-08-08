@@ -28,7 +28,8 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var userAgent = "isduba/" + version.SemVersion
+// UserAgent is the name of the http client
+var UserAgent = "isduba/" + version.SemVersion
 
 type state int
 
@@ -283,7 +284,7 @@ func (s *source) httpClient() *http.Client {
 
 // doRequest executes an HTTP request with the source specific parameters.
 func (s *source) doRequest(req *http.Request) (*http.Response, error) {
-	req.Header.Add("User-Agent", userAgent)
+	req.Header.Add("User-Agent", UserAgent)
 
 	// TODO: Implement me!
 	client := s.httpClient()
