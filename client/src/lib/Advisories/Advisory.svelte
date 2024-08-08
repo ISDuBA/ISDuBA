@@ -354,9 +354,7 @@
         </div>
       </div>
       <div class=" right-3 mr-3 flex w-[29rem] flex-col min-[800px]:ml-auto min-[1080px]:absolute">
-        <div
-          class={isSSVCediting || commentFocus ? "h-60 w-full p-3 shadow-md" : "h-60 w-full p-3"}
-        >
+        <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
           <div class="mb-4 flex flex-row items-center">
             {#if ssvc}
               {#if !isSSVCediting}
