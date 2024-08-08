@@ -110,6 +110,5 @@
       {/if}
     </div>
     <ErrorMessage error={newDocumentsError}></ErrorMessage>
-    <ErrorMessage error={loadAdvisoryVersionsError}></ErrorMessage>
   </div>
 {/if}
