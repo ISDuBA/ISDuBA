@@ -27,6 +27,8 @@
   let headerColumns: any[] = [];
   let productLines: any[] = [];
 
+  export let basePath = "";
+
   onMount(() => {
     appStore.setProductTreeSectionInVisible();
     appStore.resetSelectedProduct();
@@ -40,32 +42,6 @@
   }
 
   $: fourCVEs = $appStore.webview.four_cves;
-
-  /**
-   * openProduct opens the according product given via href.
-   * @param e
-   */
-  const openProduct = (e: Event) => {
-    // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
-    let product: string = (e.target as Element).getAttribute("href")!;
-    appStore.setProductTreeSectionVisible();
-    appStore.setSelectedProduct(product);
-    appStore.unshiftHistory((e.target as Element).id);
-    e.preventDefault();
-  };
-
-  /**
-   * openCVE opens the CVE given via href.
-   * @param e
-   */
-  const openCVE = (e: Event) => {
-    // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
-    let CVE: string = (e.target as Element).getAttribute("href")!;
-    appStore.setSelectedCVE(CVE);
-    appStore.unshiftHistory((e.target as Element).id);
-    appStore.setVulnerabilitiesSectionVisible();
-    e.preventDefault();
-  };
 </script>
 
 <div class="crosstable-overview mb-3 mt-3 flex flex-col">
@@ -116,13 +92,13 @@
               >
             {:else if !renderAllCVEs && fourCVEs.includes(column.name)}
               <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                ><a id={crypto.randomUUID()} on:click={openCVE} href={column.content}
+                ><a id={crypto.randomUUID()} href={basePath + "cve-" + column.content}
                   >{column.content}</a
                 ></TableHeadCell
               >
             {:else if renderAllCVEs}
               <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                ><a id={crypto.randomUUID()} on:click={openCVE} href={column.content}
+                ><a id={crypto.randomUUID()} href={basePath + "cve-" + column.content}
                   >{column.content}</a
                 ></TableHeadCell
               >
@@ -138,8 +114,7 @@
                     ><a
                       title={$appStore.webview.doc?.productsByID[column.content]}
                       id={crypto.randomUUID()}
-                      on:click={openProduct}
-                      href={column.content}
+                      href={basePath + "product-" + column.content}
                       >{$appStore.webview.doc?.productsByID[column.content].length > 20
                         ? `${$appStore.webview.doc?.productsByID[column.content].substring(0, 20)}...`
                         : `${$appStore.webview.doc?.productsByID[column.content]}`}
