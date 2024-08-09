@@ -451,6 +451,9 @@
       <div class="flex flex-row">
         <Input bind:value={currentSearch.query} />
       </div>
+      {#if saveErrorMessage.length > 0}
+        <ErrorMessage message={saveErrorMessage}></ErrorMessage>
+      {/if}
       <div class="mt-3 flex flex-row">
         {#if loading}
           <div class="loadingFadeIn mr-4 mt-3">
@@ -498,9 +501,6 @@
           >
         </div>
       </div>
-      {#if saveErrorMessage.length > 0}
-        <ErrorMessage message={saveErrorMessage}></ErrorMessage>
-      {/if}
     </div>
   </div>
 {:else}
