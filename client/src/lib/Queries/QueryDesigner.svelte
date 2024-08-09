@@ -22,11 +22,11 @@
   import { appStore } from "$lib/store";
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
+  import Sortable from "sortablejs";
 
   export let params: any = null;
   let editName = false;
   let editDescription = false;
-  let hoveredLine = -1;
   let queryCount: any = null;
   let loading = false;
   let errorMessage = "";
@@ -35,6 +35,8 @@
   let loadedData: any = null;
   let abortController: AbortController;
   let placeholder = "";
+
+  let columnList: any;
 
   const unsetMessages = () => {
     queryCount = null;
@@ -85,8 +87,18 @@
 
   let currentSearch = newQuery();
 
+  const sortColumns = () => {
+    let columns = columnList.querySelectorAll(".columnName");
+    console.log(columns);
+    for (let i = 0; i < columns.length; i++) {
+      let columnName = columns[i].innerHtml;
+      console.log(columnName);
+    }
+  };
+
   const saveQuery = async () => {
     unsetMessages();
+    sortColumns();
     const formData = new FormData();
     formData.append("advisories", `${currentSearch.searchType === SEARCHTYPES.ADVISORY}`);
     formData.append("name", currentSearch.name);
@@ -141,20 +153,6 @@
     if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
       currentSearch.columns = columnsFromNames(COLUMNS.ADVISORY);
     }
-  };
-
-  const promoteColumn = (index: number) => {
-    if (index === 0) return;
-    let tmp = currentSearch.columns[index - 1];
-    currentSearch.columns[index - 1] = currentSearch.columns[index];
-    currentSearch.columns[index] = tmp;
-  };
-
-  const demoteColumn = (index: number) => {
-    if (index === currentSearch.columns.length - 1) return;
-    let tmp = currentSearch.columns[index + 1];
-    currentSearch.columns[index + 1] = currentSearch.columns[index];
-    currentSearch.columns[index] = tmp;
   };
 
   const shorten = (text: string) => {
@@ -258,6 +256,10 @@
         loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
       }
     }
+
+    Sortable.create(columnList, {
+      handle: ".bx-dots-vertical-rounded"
+    });
   });
 
   $: noColumnSelected = currentSearch.columns.every((c) => c.visible == false);
@@ -381,52 +383,28 @@
         <div class="w-1/4 min-w-28">Visible</div>
         <div class="text-nowrap">Orderdirection</div>
       </div>
-      {#each currentSearch.columns as col, index (index)}
-        <div
-          role="presentation"
-          class="mb-1 flex cursor-pointer flex-row items-center"
-          on:mouseover={() => {
-            hoveredLine = index;
-          }}
-          on:mouseout={() => {
-            hoveredLine = -1;
-          }}
-          on:blur={() => {}}
-          on:focus={() => {}}
-        >
+      <section bind:this={columnList}>
+        {#each currentSearch.columns as col, index (index)}
           <div
-            class:w-6={true}
-            class:flex={true}
-            class:flex-col={true}
-            class:invisible={hoveredLine !== index}
+            role="presentation"
+            class="mb-1 flex cursor-pointer flex-row items-center"
+            on:blur={() => {}}
+            on:focus={() => {}}
           >
-            <button
-              class="h-4"
-              on:click={() => {
-                promoteColumn(index);
-              }}
-            >
-              <i class="bx bxs-up-arrow-circle"></i>
-            </button>
-            <button
-              on:click={() => {
-                demoteColumn(index);
-              }}
-              class="h-4"
-            >
-              <i class="bx bxs-down-arrow-circle"></i>
-            </button>
-          </div>
-          <div class="w-1/3 min-w-40">{col.name}</div>
-          <div class="w-1/4 min-w-28">
-            <Checkbox
-              on:change={() => {
-                setVisible(index);
-              }}
-              checked={currentSearch.columns[index].visible}
-            ></Checkbox>
-          </div>
-          <div class="">
+            <div class:w-6={true} class:flex={true} class:flex-col={true}>
+              <button class="h-4">
+                <i class="bx bx-dots-vertical-rounded"></i>
+              </button>
+            </div>
+            <div class="columnName w-1/3 min-w-40">{col.name}</div>
+            <div class="w-1/4 min-w-28">
+              <Checkbox
+                on:change={() => {
+                  setVisible(index);
+                }}
+                checked={currentSearch.columns[index].visible}
+              ></Checkbox>
+            </div>
             <button
               on:click={() => {
                 switchOrderDirection(index);
@@ -443,8 +421,8 @@
               {/if}
             </button>
           </div>
-        </div>
-      {/each}
+        {/each}
+      </section>
     </div>
     <div class="mt-6 w-full min-w-96">
       <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
