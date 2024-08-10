@@ -422,7 +422,6 @@ function createStore() {
     getUserManager: () => state.app.userManager,
     getIsUserLoggedIn: () => state.app.isUserLoggedIn,
     getOption: (option: string) => state.app.config[option],
-    getApplicationURI: () => appStore.getOption("application_uri"),
     getIdleTimeout: () => appStore.getOption("idle_timeout"),
     getKeycloakClientID: () => appStore.getOption("keycloak_client_id"),
     getKeycloakRealm: () => appStore.getOption("keycloak_realm"),

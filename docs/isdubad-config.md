@@ -111,7 +111,6 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `keycloak_realm`: The name of the Keycloak realm. Defaults to "isduba".
 - `keycloak_client_id`: The public client identifier. Defaults to "auth".
 - `update_interval`: Specifies how often the token should be renewed. Defaults to "5m".
-- `application_uri`: The base URL of the application. Defaults to `http://localhost:8081` where **localhost** is the same as `web.host` and **8081** is the same as `web.port`.
 - `idle_timeout`: When the user should be logged out after inactivity. Defaults to "30m".
 
 ## <a name="env_vars"></a>Environment variables
@@ -158,5 +157,4 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_CLIENT_KEYCLOAK_REALM`        | `client keycloak_realm`              |
 | `ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID`    | `client keycloak_client_id`          |
 | `ISDUBA_CLIENT_UPDATE_INTERVAL`       | `client update_interval`             |
-| `ISDUBA_CLIENT_APPLICATION_URI`       | `client application_uri`             |
 | `ISDUBA_CLIENT_IDLE_TIMEOUT`          | `client idle_timeout`                |

@@ -30,7 +30,7 @@
     await $appStore.app.userManager?.signinRedirect();
   }
 
-  let profileUrl = `${appStore.getKeycloakURL()}/realms/${appStore.getKeycloakRealm()}/account/?referrer=${appStore.getKeycloakClientID()}&referrer_uri=${appStore.getApplicationURI()}`;
+  let profileUrl = `${appStore.getKeycloakURL()}/realms/${appStore.getKeycloakRealm()}/account/?referrer=${appStore.getKeycloakClientID()}&referrer_uri=${encodeURIComponent(window.location.href)}`;
 
   async function getVersion() {
     const response = await request("api/about", "GET");

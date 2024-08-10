@@ -68,5 +68,4 @@
 # keycloak_realm = "isduba"
 # keycloak_client_id = "auth"
 # update_interval = "5m"
-# application_uri = "http://{{web.host}}:{{web.port}}"
 # idle_timeout = "30m"
