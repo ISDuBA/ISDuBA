@@ -98,7 +98,6 @@ const (
 )
 
 const (
-	defaultClientKeycloakURL      = "http://localhost:8080"
 	defaultClientKeycloakRealm    = "isduba"
 	defaultClientKeycloakClientID = "auth"
 	defaultClientUpdateInterval   = 5 * time.Minute
@@ -305,7 +304,6 @@ func Load(file string) (*Config, error) {
 			DefaultMessage:    defaultMessageSourceManager,
 		},
 		Client: Client{
-			KeycloakURL:      defaultClientKeycloakURL,
 			KeycloakRealm:    defaultClientKeycloakRealm,
 			KeycloakClientID: defaultClientKeycloakClientID,
 			UpdateInterval:   defaultClientUpdateInterval,
@@ -325,7 +323,14 @@ func Load(file string) (*Config, error) {
 	if err := cfg.fillFromEnv(); err != nil {
 		return nil, err
 	}
+	cfg.presetEmptyDefaults()
 	return cfg, nil
+}
+
+func (cfg *Config) presetEmptyDefaults() {
+	if cfg.Client.KeycloakURL == "" {
+		cfg.Client.KeycloakURL = cfg.Keycloak.URL
+	}
 }
 
 func (cfg *Config) fillFromEnv() error {

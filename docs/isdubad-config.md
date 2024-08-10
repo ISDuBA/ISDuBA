@@ -107,7 +107,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_client"></a> Section `[client]` Client configuration
 
-- `keycloak_url`: The URL where the Keycloak server is located. Defaults to "<http://localhost:8080>".
+- `keycloak_url`: The URL where the Keycloak server is located. Defaults to same as `keycloak.url`.
 - `keycloak_realm`: The name of the Keycloak realm. Defaults to "isduba".
 - `keycloak_client_id`: The public client identifier. Defaults to "auth".
 - `update_interval`: Specifies how often the token should be renewed. Defaults to "5m".

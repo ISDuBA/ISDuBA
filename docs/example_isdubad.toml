@@ -64,7 +64,7 @@
 #                      or your administrator."""
 
 # [client]
-# keycloak_url = "http://localhost:8080"
+# keycloak_url = "{{keycloak.url}}"
 # keycloak_realm = "isduba"
 # keycloak_client_id = "auth"
 # update_interval = "5m"
