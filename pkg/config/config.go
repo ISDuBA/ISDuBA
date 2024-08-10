@@ -102,7 +102,6 @@ const (
 	defaultClientKeycloakRealm    = "isduba"
 	defaultClientKeycloakClientID = "auth"
 	defaultClientUpdateInterval   = 5 * time.Minute
-	defaultClientApplicationURI   = "http://localhost:5173/"
 	defaultClientIdleTimeout      = 30 * time.Minute
 )
 
@@ -182,7 +181,6 @@ type Client struct {
 	KeycloakRealm    string        `toml:"keycloak_realm" json:"keycloak_realm"`
 	KeycloakClientID string        `toml:"keycloak_client_id" json:"keycloak_client_id"`
 	UpdateInterval   time.Duration `toml:"update_interval" json:"update_interval"`
-	ApplicationURI   string        `toml:"application_uri" json:"application_uri"`
 	IdleTimeout      time.Duration `toml:"idle_timeout" json:"idle_timeout"`
 }
 
@@ -311,7 +309,6 @@ func Load(file string) (*Config, error) {
 			KeycloakRealm:    defaultClientKeycloakRealm,
 			KeycloakClientID: defaultClientKeycloakClientID,
 			UpdateInterval:   defaultClientUpdateInterval,
-			ApplicationURI:   defaultClientApplicationURI,
 			IdleTimeout:      defaultClientIdleTimeout,
 		},
 	}
@@ -383,7 +380,6 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_REALM", storeString(&cfg.Client.KeycloakRealm)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
-		envStore{"ISDUBA_CLIENT_APPLICATION_URI", storeString(&cfg.Client.ApplicationURI)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 	)
 }
