@@ -586,7 +586,12 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 	if active == su.source.active {
 		return nil
 	}
-	su.addChange(func(s *source) { s.active = active }, "active", active)
+	su.addChange(func(s *source) {
+		s.active = active
+		if active {
+			su.manager.backgroundPing()
+		}
+	}, "active", active)
 	return nil
 }
 
