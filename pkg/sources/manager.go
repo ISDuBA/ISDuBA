@@ -10,7 +10,6 @@ package sources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 	"slices"
@@ -24,12 +23,30 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var (
-	// ErrNoSuchEntry is returned if a given feed or source does not exists.
-	ErrNoSuchEntry = errors.New("no such entry")
-	// ErrInvalidArgument is return if a given argument is unsuited.
-	ErrInvalidArgument = errors.New("invalid argument")
+type (
+	// NoSuchEntryError is returned if a given feed or source does not exists.
+	NoSuchEntryError string
+	// InvalidArgumentError is returned if a given argument is unsuited.
+	InvalidArgumentError string
 )
+
+// Error implements [builtin.error].
+func (nsee NoSuchEntryError) Error() string { return string(nsee) }
+
+// Error implements [builtin.error].
+func (iae InvalidArgumentError) Error() string { return string(iae) }
+
+// Is supports [errors.Is].
+func (NoSuchEntryError) Is(target error) bool {
+	_, ok := target.(NoSuchEntryError)
+	return ok
+}
+
+// Is supports [errors.Is].
+func (InvalidArgumentError) Is(target error) bool {
+	_, ok := target.(InvalidArgumentError)
+	return ok
+}
 
 // refreshDuration is the fallback duration for feeds to be checked for refresh.
 const refreshDuration = time.Minute
@@ -231,7 +248,7 @@ func (m *Manager) Feeds(sourceID int64, fn func(
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
 		if s == nil {
-			errCh <- ErrNoSuchEntry
+			errCh <- NoSuchEntryError("no such source")
 			return
 		}
 		for _, f := range s.feeds {
@@ -253,7 +270,7 @@ func (m *Manager) Feed(feedID int64, fn func(
 	m.fns <- func(m *Manager) {
 		f := m.findFeedByID(feedID)
 		if f == nil {
-			errCh <- ErrNoSuchEntry
+			errCh <- NoSuchEntryError("no such feed")
 			return
 		}
 		fn(f.label, f.url, f.rolie, f.logLevel)
@@ -312,7 +329,7 @@ func (m *Manager) Kill() {
 
 func (m *Manager) removeSource(sourceID int64) error {
 	if slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
-		return ErrNoSuchEntry
+		return NoSuchEntryError("no such source")
 	}
 	const sql = `DELETE FROM sources WHERE id = $1`
 	notFound := false
@@ -339,7 +356,7 @@ func (m *Manager) removeSource(sourceID int64) error {
 	})
 	// XXX: Should not happen!
 	if notFound {
-		return ErrNoSuchEntry
+		return NoSuchEntryError("no such source")
 	}
 	return nil
 }
@@ -347,7 +364,7 @@ func (m *Manager) removeSource(sourceID int64) error {
 func (m *Manager) removeFeed(feedID int64) error {
 	f := m.findFeedByID(feedID)
 	if f == nil {
-		return ErrNoSuchEntry
+		return NoSuchEntryError("no such feed")
 	}
 	f.invalid.Store(true)
 	const sql = `DELETE FROM feeds WHERE id = $1`
@@ -381,7 +398,7 @@ func (m *Manager) AddSource(
 ) (int64, error) {
 	lpmd := m.PMD(url)
 	if !lpmd.Valid() {
-		return 0, ErrInvalidArgument
+		return 0, InvalidArgumentError("PMD is invalid")
 	}
 	errCh := make(chan error)
 	s := &source{
@@ -393,7 +410,7 @@ func (m *Manager) AddSource(
 	}
 	m.fns <- func(m *Manager) {
 		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
-			errCh <- ErrInvalidArgument
+			errCh <- InvalidArgumentError("source already exists")
 			return
 		}
 		const sql = `INSERT INTO sources (name, url, active, rate, slots) ` +
@@ -431,11 +448,11 @@ func (m *Manager) AddFeed(
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
 		if s == nil {
-			errCh <- ErrNoSuchEntry
+			errCh <- NoSuchEntryError("no such source")
 			return
 		}
 		if slices.ContainsFunc(s.feeds, func(f *feed) bool { return f.label == label }) {
-			errCh <- ErrInvalidArgument
+			errCh <- InvalidArgumentError("label already exists")
 			return
 		}
 		pmd, err := asProviderMetaData(m.PMD(s.url))
@@ -445,7 +462,7 @@ func (m *Manager) AddFeed(
 		}
 		rolie := isROLIEFeed(pmd, url.String())
 		if !rolie && !isDirectoryFeed(pmd, url.String()) {
-			errCh <- ErrInvalidArgument
+			errCh <- InvalidArgumentError("feed is neither ROLIE nor directory based")
 			return
 		}
 		const sql = `INSERT INTO feeds (label, sources_id, url, rolie, log_lvl) ` +
@@ -544,8 +561,8 @@ func (su *SourceUpdater) UpdateName(name string) error {
 	if name == su.source.name {
 		return nil
 	}
-	if su.manager.findSourceByName(name) != nil {
-		return ErrInvalidArgument
+	if name == "" || su.manager.findSourceByName(name) != nil {
+		return InvalidArgumentError("invalid name")
 	}
 	su.addChange(func(s *source) { s.name = name }, "name", name)
 	return nil
@@ -560,7 +577,7 @@ func (su *SourceUpdater) UpdateRate(rate *float64) error {
 		return nil
 	}
 	if rate != nil && (*rate <= 0 || *rate > su.manager.cfg.Sources.MaxRatePerSource) {
-		return ErrInvalidArgument
+		return InvalidArgumentError("invalid rate value")
 	}
 	su.addChange(func(s *source) { s.setRate(rate) }, "rate", rate)
 	return nil
@@ -575,7 +592,7 @@ func (su *SourceUpdater) UpdateSlots(slots *int) error {
 		return nil
 	}
 	if slots != nil && (*slots < 1 || *slots > su.manager.cfg.Sources.MaxSlotsPerSource) {
-		return ErrInvalidArgument
+		return InvalidArgumentError("invalid slot value")
 	}
 	su.addChange(func(s *source) { s.slots = slots }, "slots", slots)
 	return nil
@@ -635,7 +652,7 @@ func (m *Manager) UpdateSource(sourceID int64, updates func(*SourceUpdater) erro
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
 		if s != nil {
-			errCh <- ErrNoSuchEntry
+			errCh <- NoSuchEntryError("no such source")
 			return
 		}
 		su := SourceUpdater{manager: m, source: s}

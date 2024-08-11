@@ -10,9 +10,11 @@ package web
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -81,13 +83,13 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.Rate,
 		src.Slots,
 	); {
-	case errors.Is(err, sources.ErrInvalidArgument):
+	case err == nil:
+		ctx.JSON(http.StatusCreated, gin.H{"id": id})
+	case errors.Is(err, sources.InvalidArgumentError("")):
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	case err != nil:
+	default:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	default:
-		ctx.JSON(http.StatusCreated, gin.H{"id": id})
 	}
 }
 
@@ -100,21 +102,84 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 		return
 	}
 	switch err := c.sm.RemoveSource(input.ID); {
-	case errors.Is(err, sources.ErrNoSuchEntry):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-	case err != nil:
+	case err == nil:
+		ctx.JSON(http.StatusOK, gin.H{"message": "source deleted"})
+	case errors.Is(err, sources.NoSuchEntryError("")):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	default:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	default:
-		ctx.JSON(http.StatusOK, gin.H{"message": "source deleted"})
 	}
 }
 
 func (c *Controller) updateSource(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": "'updateSource' not implemented, yet.",
-	})
+	var input struct {
+		SourceID int64 `uri:"id"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	switch err := c.sm.UpdateSource(input.SourceID, func(su *sources.SourceUpdater) error {
+		// name
+		if name, ok := ctx.GetPostForm("name"); ok {
+			if err := su.UpdateName(name); err != nil {
+				return err
+			}
+		}
+		// rate
+		if rate, ok := ctx.GetPostForm("rate"); ok {
+			var r *float64
+			if rate != "" {
+				x, err := strconv.ParseFloat(rate, 64)
+				if err != nil {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("parsing 'rate' failed: %v", err.Error()))
+				}
+				r = &x
+			}
+			if err := su.UpdateRate(r); err != nil {
+				return err
+			}
+		}
+		// slots
+		if slots, ok := ctx.GetPostForm("slots"); ok {
+			var sl *int
+			if slots != "" {
+				x, err := strconv.Atoi(slots)
+				if err != nil {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("parsing 'slots' failed: %v", err.Error()))
+				}
+				sl = &x
+			}
+			if err := su.UpdateSlots(sl); err != nil {
+				return err
+			}
+		}
+		// active
+		if active, ok := ctx.GetPostForm("active"); ok {
+			act, err := strconv.ParseBool(active)
+			if err != nil {
+				return sources.InvalidArgumentError(
+					fmt.Sprintf("parsing 'active' failed: %v", err.Error()))
+			}
+			if err := su.UpdateActive(act); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); {
+	case err == nil:
+		ctx.JSON(http.StatusOK, gin.H{"message": "source updated"})
+	case errors.Is(err, sources.NoSuchEntryError("")):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	case errors.Is(err, sources.InvalidArgumentError("")):
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	default:
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 }
 
 func (c *Controller) viewFeeds(ctx *gin.Context) {
@@ -141,13 +206,13 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 			LogLevel: lvl,
 		})
 	}); {
-	case errors.Is(err, sources.ErrNoSuchEntry):
+	case err == nil:
+		ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
+	case errors.Is(err, sources.NoSuchEntryError("")):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	case err != nil:
+	default:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	default:
-		ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
 	}
 }
 
@@ -175,15 +240,15 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		parsed,
 		logLevel,
 	); {
-	case errors.Is(err, sources.ErrNoSuchEntry):
+	case err == nil:
+		ctx.JSON(http.StatusCreated, gin.H{"id": feedID})
+	case errors.Is(err, sources.NoSuchEntryError("")):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	case errors.Is(err, sources.ErrInvalidArgument):
+	case errors.Is(err, sources.InvalidArgumentError("")):
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	case err != nil:
+	default:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	default:
-		ctx.JSON(http.StatusCreated, gin.H{"id": feedID})
 	}
 }
 
@@ -207,13 +272,13 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 		f.Rolie = rolie
 		f.LogLevel = lvl
 	}); {
-	case errors.Is(err, sources.ErrNoSuchEntry):
+	case err == nil:
+		ctx.JSON(http.StatusOK, &f)
+	case errors.Is(err, sources.NoSuchEntryError("")):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	case err != nil:
+	default:
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	default:
-		ctx.JSON(http.StatusOK, &f)
 	}
 }
 
@@ -226,14 +291,13 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 		return
 	}
 	switch err := c.sm.RemoveFeed(input.FeedID); {
-	case errors.Is(err, sources.ErrNoSuchEntry):
+	case err == nil:
+		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	case errors.Is(err, sources.NoSuchEntryError("")):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	case err != nil:
+	default:
 		slog.Error("removing feed failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	default:
-		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
-		return
 	}
 }
 

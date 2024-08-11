@@ -10,6 +10,7 @@ package sources
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -83,12 +84,13 @@ func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
 
 func asProviderMetaData(lpmd *csaf.LoadedProviderMetadata) (*csaf.ProviderMetadata, error) {
 	if !lpmd.Valid() {
-		return nil, ErrInvalidArgument
+		return nil, InvalidArgumentError("PMD is invalid")
 	}
 	pmd := new(csaf.ProviderMetadata)
 	// XXX: This is ugly! We should better keep the original data when loading the PMD.
 	if err := util.ReMarshalJSON(pmd, lpmd.Document); err != nil {
-		return nil, ErrInvalidArgument
+		return nil, InvalidArgumentError(
+			fmt.Sprintf("re-marshaling of PDM failed: %v", err.Error()))
 	}
 	return pmd, nil
 }
