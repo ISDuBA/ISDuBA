@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"net/url"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -100,6 +102,13 @@ func (m *Manager) findFeedByID(feedID int64) *feed {
 
 func (m *Manager) findSourceByID(sourceID int64) *source {
 	if idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sourceID }); idx >= 0 {
+		return m.sources[idx]
+	}
+	return nil
+}
+
+func (m *Manager) findSourceByName(name string) *source {
+	if idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.name == name }); idx >= 0 {
 		return m.sources[idx]
 	}
 	return nil
@@ -504,4 +513,138 @@ func (m *Manager) downloadDone(f *feed, id int64) func() {
 // PMD returns the provider metadata from the given url.
 func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
 	return m.pmdCache.pmd(url)
+}
+
+// SourceUpdater offers a protocol to update a source. Call the UpdateX
+// (with X in Name, Rate, ...) methods to update specfic fields.
+type SourceUpdater struct {
+	manager *Manager
+	source  *source
+	changes []func(*source)
+	fields  []string
+	values  []any
+}
+
+func (su *SourceUpdater) addChange(ch func(*source), field string, value any) {
+	if !slices.Contains(su.fields, field) {
+		su.changes = append(su.changes, ch)
+		su.fields = append(su.fields, field)
+		su.values = append(su.values, value)
+	}
+}
+
+func (su *SourceUpdater) applyChanges() {
+	for _, ch := range su.changes {
+		ch(su.source)
+	}
+}
+
+// UpdateName requests a name update.
+func (su *SourceUpdater) UpdateName(name string) error {
+	if name == su.source.name {
+		return nil
+	}
+	if su.manager.findSourceByName(name) != nil {
+		return ErrInvalidArgument
+	}
+	su.addChange(func(s *source) { s.name = name }, "name", name)
+	return nil
+}
+
+// UpdateRate requests a rate update.
+func (su *SourceUpdater) UpdateRate(rate *float64) error {
+	if rate == nil && su.source.rate == nil {
+		return nil
+	}
+	if rate != nil && su.source.rate != nil && *rate == *su.source.rate {
+		return nil
+	}
+	if rate != nil && (*rate <= 0 || *rate > su.manager.cfg.Sources.MaxRatePerSource) {
+		return ErrInvalidArgument
+	}
+	su.addChange(func(s *source) { s.setRate(rate) }, "rate", rate)
+	return nil
+}
+
+// UpdateSlots requests a slots update.
+func (su *SourceUpdater) UpdateSlots(slots *int) error {
+	if slots == nil && su.source.slots == nil {
+		return nil
+	}
+	if slots != nil && su.source.slots != nil && *slots == *su.source.slots {
+		return nil
+	}
+	if slots != nil && (*slots < 1 || *slots > su.manager.cfg.Sources.MaxSlotsPerSource) {
+		return ErrInvalidArgument
+	}
+	su.addChange(func(s *source) { s.slots = slots }, "slots", slots)
+	return nil
+}
+
+// UpdateActive requests an active update.
+func (su *SourceUpdater) UpdateActive(active bool) error {
+	if active == su.source.active {
+		return nil
+	}
+	su.addChange(func(s *source) { s.active = active }, "active", active)
+	return nil
+}
+
+func (su *SourceUpdater) updateDB() error {
+	if len(su.fields) == 0 {
+		return nil
+	}
+	var ob, cb string
+	if len(su.fields) > 0 {
+		ob, cb = "(", ")"
+	}
+	sql := fmt.Sprintf(
+		"UPDATE sources SET %[1]s%[3]s%[2]s = %[1]s%[4]s%[2]s WHERE id = %[5]d",
+		ob, cb,
+		strings.Join(su.fields, ","),
+		placeholders(len(su.values)),
+		su.source.id)
+	return su.manager.db.Run(
+		context.Background(),
+		func(ctx context.Context, conn *pgxpool.Conn) error {
+			_, err := conn.Exec(ctx, sql, su.values...)
+			return err
+		}, 0)
+}
+
+func placeholders(n int) string {
+	var b strings.Builder
+	for i := range n {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		b.WriteByte('$')
+		b.WriteString(strconv.Itoa(i + 1))
+	}
+	return b.String()
+}
+
+// UpdateSource passes an updater to manipulate a source for a given id to a given callback.
+func (m *Manager) UpdateSource(sourceID int64, updates func(*SourceUpdater) error) error {
+	errCh := make(chan error)
+	m.fns <- func(m *Manager) {
+		s := m.findSourceByID(sourceID)
+		if s != nil {
+			errCh <- ErrNoSuchEntry
+			return
+		}
+		su := SourceUpdater{manager: m, source: s}
+		if err := updates(&su); err != nil {
+			errCh <- fmt.Errorf("updates failed: %w", err)
+			return
+		}
+		if err := su.updateDB(); err != nil {
+			errCh <- fmt.Errorf("updating database failed: %w", err)
+			return
+		}
+		// Only apply changes if database updates went through.
+		su.applyChanges()
+		errCh <- nil
+	}
+	return <-errCh
 }

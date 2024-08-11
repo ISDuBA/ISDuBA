@@ -264,11 +264,18 @@ func (f *feed) findWaiting() *location {
 	return nil
 }
 
+func (s *source) setRate(rate *float64) {
+	s.limiterMu.Lock()
+	s.rate = rate
+	s.limiter = nil
+	s.limiterMu.Unlock()
+}
+
 // wait establishes the request rate per source.
 func (s *source) wait(ctx context.Context) {
+	s.limiterMu.Lock()
+	defer s.limiterMu.Unlock()
 	if s.rate != nil {
-		s.limiterMu.Lock()
-		defer s.limiterMu.Unlock()
 		if s.limiter == nil {
 			s.limiter = rate.NewLimiter(rate.Limit(*s.rate), 1)
 		}

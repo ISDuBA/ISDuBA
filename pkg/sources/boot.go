@@ -97,8 +97,6 @@ func (m *Manager) Boot(ctx context.Context) error {
 		return err
 	}
 
-	// TODO: Load PMDs
-
 	activeFeeds := m.numActiveFeeds()
 
 	slog.Info("number of sources", "num", len(m.sources))
