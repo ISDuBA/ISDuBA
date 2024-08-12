@@ -203,7 +203,7 @@ func (m *Manager) Run(ctx context.Context) {
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
 	for !m.done {
-		m.pmdCache.cleanup()
+		m.pmdCache.Cleanup()
 		m.compactDone()
 		m.refreshFeeds()
 		m.startDownloads()
