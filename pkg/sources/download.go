@@ -17,10 +17,12 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -118,9 +120,47 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		return
 	}
 
+	// Check signatures
+	var signature *crypto.PGPSignature
+	var signatureData []byte
+
+	keys, err := m.openPGPKeys(f.source)
+	if err != nil {
+		f.log(m, config.ErrorFeedLogLevel,
+			"OpenPGP signature for %q failed: %v", l.doc, err)
+	} else if keys.CountEntities() > 0 {
+		// Only check signature if we have something in the key ring.
+		var sign *url.URL
+		switch {
+		case l.signature != nil: // from ROLIE feed.
+			sign = l.signature
+		case !f.rolie: // If we are directory based, do some guessing:
+			guess := l.doc.String() + ".asc"
+			sign, _ = url.Parse(guess)
+		default:
+			goto skipSignatureCheck
+		}
+		var err error
+		if signature, signatureData, err = f.source.loadSignature(sign); err != nil {
+			f.log(m, config.ErrorFeedLogLevel,
+				"Loading OpenPGP signature for %q failed: %v", l.doc, err)
+		} else {
+			pm := crypto.NewPlainMessage(data.Bytes())
+			if err := keys.VerifyDetached(pm, signature, crypto.GetUnixTime()); err != nil {
+				f.log(m, config.ErrorFeedLogLevel,
+					"Verifying OpenPGP signature of %q failed: %v", l.doc, err)
+				// TODO: Survive failed signature check.
+				return
+			}
+		}
+	}
+skipSignatureCheck:
+
+	// TODO: store signature data in database.
+	_ = signatureData
+
 	// TODO: Check against remote validator
 	// TODO: Filename check. (???)
-	// TODO: Check signatures
 	// TODO: Statistics
 
 	var importer *string

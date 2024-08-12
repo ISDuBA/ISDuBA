@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ISDuBA/ISDuBA/internal/cache"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -42,7 +43,7 @@ type Config struct {
 	timeout            time.Duration
 	fullCertsPath      string
 	customClaimsMapper ClaimMapperFunc
-	cache              *cache[string, *keyEntry]
+	cache              *cache.ExpirationCache[string, *keyEntry]
 }
 
 // TokenContainer stores all relevant token information.
@@ -90,7 +91,7 @@ func FullCertsPath(path string) ConfigOption {
 // assumed to stay valid.
 func Cache(expiration time.Duration) ConfigOption {
 	return func(cfg *Config) {
-		cfg.cache = newCache[string, *keyEntry](expiration)
+		cfg.cache = cache.NewExpirationCache[string, *keyEntry](expiration)
 	}
 }
 
@@ -278,7 +279,7 @@ func getPublicKey(keyID string, cfg *Config) (any, error) {
 
 func fetchPublicKey(keyID string, cfg *Config) (*keyEntry, error) {
 	if cfg.cache != nil {
-		if entry, exists := cfg.cache.get(keyID); exists {
+		if entry, exists := cfg.cache.Get(keyID); exists {
 			return entry, nil
 		}
 	}
@@ -321,7 +322,7 @@ func fetchPublicKey(keyID string, cfg *Config) (*keyEntry, error) {
 	for _, entry := range certs.Keys {
 		if entry.Kid == keyID {
 			if cfg.cache != nil {
-				cfg.cache.set(keyID, entry)
+				cfg.cache.Set(keyID, entry)
 			}
 			return entry, nil
 		}

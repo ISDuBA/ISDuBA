@@ -13,9 +13,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"sync"
 	"time"
 
+	"github.com/ISDuBA/ISDuBA/internal/cache"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/csaf-poc/csaf_distribution/v3/util"
 )
@@ -23,42 +23,22 @@ import (
 // holdingPMDsDuration is the duration how long PMDs are cached.
 const holdingPMDsDuration = time.Minute * 15
 
-type pmdCacheEntry struct {
-	expires time.Time
-	lpmd    *csaf.LoadedProviderMetadata
-}
-
 type pmdCache struct {
-	mu      sync.Mutex
-	entries map[string]*pmdCacheEntry
+	*cache.ExpirationCache[string, *csaf.LoadedProviderMetadata]
 }
 
 func newPMDCache() *pmdCache {
 	return &pmdCache{
-		entries: map[string]*pmdCacheEntry{},
-	}
-}
-
-func (pc *pmdCache) cleanup() {
-	pc.mu.Lock()
-	defer pc.mu.Unlock()
-	now := time.Now()
-	for url, entry := range pc.entries {
-		if entry.expires.Before(now) {
-			delete(pc.entries, url)
-		}
+		ExpirationCache: cache.NewExpirationCache[string, *csaf.LoadedProviderMetadata](holdingPMDsDuration),
 	}
 }
 
 func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
-	pc.mu.Lock()
-	defer pc.mu.Unlock()
-	if e := pc.entries[url]; e != nil {
-		if e.expires.After(time.Now()) {
-			return e.lpmd
-		}
-		delete(pc.entries, url)
+
+	if lpmd, ok := pc.Get(url); ok {
+		return lpmd
 	}
+
 	header := http.Header{}
 	header.Add("User-Agent", UserAgent)
 	client := util.Client(&util.HeaderClient{
@@ -75,10 +55,7 @@ func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
 	}
 	pmdLoader := csaf.NewProviderMetadataLoader(client)
 	lpmd := pmdLoader.Load(url)
-	pc.entries[url] = &pmdCacheEntry{
-		expires: time.Now().Add(holdingPMDsDuration),
-		lpmd:    lpmd,
-	}
+	pc.Set(url, lpmd)
 	return lpmd
 }
 

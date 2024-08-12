@@ -60,7 +60,8 @@ type Manager struct {
 
 	sources []*source
 
-	pmdCache *pmdCache
+	pmdCache  *pmdCache
+	keysCache *keysCache
 
 	usedSlots int
 	uniqueID  int64
@@ -69,10 +70,11 @@ type Manager struct {
 // NewManager creates a new downloader.
 func NewManager(cfg *config.Config, db *database.DB) *Manager {
 	return &Manager{
-		cfg:      cfg,
-		db:       db,
-		fns:      make(chan func(*Manager)),
-		pmdCache: newPMDCache(),
+		cfg:       cfg,
+		db:        db,
+		fns:       make(chan func(*Manager)),
+		pmdCache:  newPMDCache(),
+		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
 	}
 }
 
@@ -203,7 +205,8 @@ func (m *Manager) Run(ctx context.Context) {
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
 	for !m.done {
-		m.pmdCache.cleanup()
+		m.pmdCache.Cleanup()
+		m.keysCache.Cleanup()
 		m.compactDone()
 		m.refreshFeeds()
 		m.startDownloads()
