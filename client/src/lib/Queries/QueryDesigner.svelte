@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Radio, Input, Spinner, Button, Checkbox } from "flowbite-svelte";
+  import { Radio, Input, Spinner, Button, Checkbox, Img } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -263,7 +263,7 @@
 
   $: if (columnList) {
     Sortable.create(columnList, {
-      handle: ".bx-dots-vertical-rounded",
+      handle: "#handle",
       animation: 150
     });
   }
@@ -399,7 +399,11 @@
           >
             <div class:w-6={true} class:flex={true} class:flex-col={true}>
               <button class="h-4">
-                <i class="bx bx-dots-vertical-rounded"></i>
+                <Img
+                  id="handle"
+                  src="grid-dots-vertical-rounded.svg"
+                  class="h-4 min-h-2 min-w-2 invert-[.5]"
+                />
               </button>
             </div>
             <div class="columnName w-1/3 min-w-40">{col.name}</div>
