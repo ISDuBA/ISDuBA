@@ -12,12 +12,18 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Radio, Input, Spinner, Button, Checkbox, Img } from "flowbite-svelte";
   import { request } from "$lib/utils";
-  import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/Queries/query";
+  import {
+    COLUMNS,
+    ORDERDIRECTIONS,
+    SEARCHTYPES,
+    generateQueryString,
+    type Search,
+    type Column
+  } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorMessage } from "$lib/Errors/error";
   import { onMount } from "svelte";
   import { push, querystring } from "svelte-spa-router";
-  // @ts-expect-error ignore complaining qs has not type declaration
   import { parse } from "qs";
   import { appStore } from "$lib/store";
   import { ADMIN } from "$lib/workflow";
@@ -47,7 +53,6 @@
   const testQuery = async () => {
     loading = true;
     unsetMessages();
-    sortColumns();
     abortController = new AbortController();
     const query = generateQueryString(currentSearch);
     const response = await request(query, "GET", undefined, abortController);
@@ -63,22 +68,22 @@
     loading = false;
   };
 
-  const columnsFromNames = (columns: string[]) => {
+  const columnsFromNames = (columns: string[]): Column[] => {
     const result = [...columns];
     return result.map((name) => {
       return {
         name: name,
-        visible: false,
-        orderBy: ""
+        visible: false
       };
     });
   };
 
-  const newQuery = () => {
-    const columns: any[] = columnsFromNames(COLUMNS.ADVISORY);
+  const newQuery = (): Search => {
+    const columns = columnsFromNames(COLUMNS.ADVISORY);
     return {
       searchType: SEARCHTYPES.ADVISORY,
       columns: columns,
+      orderBy: [],
       name: "New Query",
       query: "",
       description: "",
@@ -88,20 +93,21 @@
 
   let currentSearch = newQuery();
 
-  const sortColumns = () => {
-    let oldColumns = [...currentSearch.columns];
-    currentSearch.columns = [];
-    let columns = columnList.querySelectorAll(".columnName");
-    for (const column of columns) {
-      let columnName = column.innerText;
-      let newColumn = oldColumns.find((c) => c.name === columnName);
-      currentSearch.columns.push(newColumn);
+  const sortColumns = (columns: Column[]): Column[] => {
+    let nodes = columnList.querySelectorAll(".columnName");
+    let sortedColumns: Column[] = [];
+    for (const node of nodes) {
+      let columnName = node.innerText;
+      let found = columns.find((c) => c.name === columnName);
+      if (found) {
+        sortedColumns.push(found);
+      }
     }
+    return sortedColumns;
   };
 
   const saveQuery = async () => {
     unsetMessages();
-    sortColumns();
     const formData = new FormData();
     formData.append("advisories", `${currentSearch.searchType === SEARCHTYPES.ADVISORY}`);
     formData.append("name", currentSearch.name);
@@ -112,10 +118,13 @@
     if (currentSearch.query.length > 0) {
       formData.append("query", currentSearch.query);
     }
-    const columns = currentSearch.columns.filter((c) => c.visible).map((c) => c.name);
+    let sortedColumns = sortColumns(currentSearch.columns);
+    const columns = sortedColumns.filter((c) => c.visible).map((c) => c.name);
     formData.append("columns", columns.join(" "));
-    const columnsForOrder = currentSearch.columns.filter((c) => c.orderBy);
-    const orderBy = columnsForOrder.map((c) => `${c.orderBy === "desc" ? "-" : ""}${c.name}`);
+    const columnsForOrder = currentSearch.orderBy.filter((order) => order[0] !== "");
+    const orderBy = columnsForOrder.map(
+      (c) => `${c[1] === ORDERDIRECTIONS.DESC ? "-" : ""}${c[0]}`
+    );
     formData.append("orders", orderBy.join(" "));
     let response;
     if (loadedData) {
@@ -133,16 +142,18 @@
     }
   };
 
-  const switchOrderDirection = (index: number) => {
-    if (currentSearch.columns[index].orderBy == "") {
-      currentSearch.columns[index].orderBy = ORDERDIRECTIONS.ASC;
-      return;
-    }
-    if (currentSearch.columns[index].orderBy === ORDERDIRECTIONS.ASC) {
-      currentSearch.columns[index].orderBy = ORDERDIRECTIONS.DESC;
+  const switchOrderDirection = (name: string) => {
+    let order = currentSearch.orderBy.find((o) => o[0] === name);
+    if (order) {
+      if (order[1] === ORDERDIRECTIONS.ASC) {
+        order[1] = ORDERDIRECTIONS.DESC;
+      } else {
+        currentSearch.orderBy = currentSearch.orderBy.filter((o) => o[0] !== name);
+      }
     } else {
-      currentSearch.columns[index].orderBy = "";
+      currentSearch.orderBy.push([name, ORDERDIRECTIONS.ASC]);
     }
+    currentSearch.columns = currentSearch.columns;
   };
 
   const setVisible = (index: number) => {
@@ -164,8 +175,8 @@
     return `${text.substring(0, 20)}...`;
   };
 
-  const generateQueryFrom = (result: any) => {
-    let searchType = "";
+  const generateQueryFrom = (result: any): Search => {
+    let searchType = SEARCHTYPES.DOCUMENT;
     let columns = [];
     if (result.advisories) {
       searchType = SEARCHTYPES.ADVISORY;
@@ -182,13 +193,25 @@
     columns = columnsFromNames(columns);
     columns = columns.map((c) => {
       if (result.columns.includes(c.name)) c.visible = true;
-      if (result.orders?.includes(c.name)) c.orderBy = ORDERDIRECTIONS.ASC;
-      if (result.orders?.includes(`-${c.name}`)) c.orderBy = ORDERDIRECTIONS.DESC;
       return c;
     });
+
+    let orderBy: [string, ORDERDIRECTIONS][] = [];
+    if (result.orders) {
+      for (let order of result.orders) {
+        let direction = ORDERDIRECTIONS.ASC;
+        if (order.startsWith("-")) {
+          direction = ORDERDIRECTIONS.DESC;
+          order = order.substring(1);
+        }
+        orderBy.push([order, direction]);
+      }
+    }
+
     return {
       searchType: searchType,
       columns: columns,
+      orderBy: orderBy,
       name: result.name,
       query: result.query,
       description: result.description || "",
@@ -232,10 +255,13 @@
   };
 
   onMount(async () => {
-    const queryString = parse($querystring);
+    let queryString;
+    if ($querystring) {
+      queryString = parse($querystring);
+    }
     let id;
-    if (queryString.clone) {
-      id = queryString.clone;
+    if (queryString?.clone) {
+      id = queryString?.clone;
     }
     if (params) id = params.id;
     if (id) {
@@ -249,7 +275,7 @@
           loadedData = thisQuery;
         }
         currentSearch = generateQueryFrom(thisQuery);
-        if (queryString.clone) {
+        if (queryString?.clone) {
           currentSearch.name = proposeName(result, currentSearch.name);
           if (!isRoleIncluded(appStore.getRoles(), [ADMIN])) {
             currentSearch.global = false;
@@ -260,6 +286,14 @@
       }
     }
   });
+
+  const getOrderDirection = (name: string): [number, ORDERDIRECTIONS] | undefined => {
+    let index = currentSearch.orderBy.findIndex((o) => o[0] === name);
+    if (index >= 0) {
+      return [index, currentSearch.orderBy[index][1]];
+    }
+    return undefined;
+  };
 
   $: if (columnList) {
     Sortable.create(columnList, {
@@ -386,10 +420,11 @@
       <div class="mb-2 flex flex-row">
         <div class="ml-6 w-1/3 min-w-40">Column</div>
         <div class="w-1/4 min-w-28">Visible</div>
-        <div class="text-nowrap">Orderdirection</div>
+        <div class="text-nowrap">Order</div>
       </div>
       <section bind:this={columnList}>
         {#each currentSearch.columns as col, index (index)}
+          {@const order = getOrderDirection(currentSearch.columns[index].name)}
           <div
             role="presentation"
             class="mb-1 flex cursor-pointer flex-row items-center"
@@ -412,16 +447,18 @@
             </div>
             <button
               on:click={() => {
-                switchOrderDirection(index);
+                switchOrderDirection(col.name);
               }}
             >
-              {#if col.orderBy === ORDERDIRECTIONS.ASC}
-                <i class="bx bx-sort-a-z"></i>
-              {/if}
-              {#if col.orderBy === ORDERDIRECTIONS.DESC}
-                <i class="bx bx-sort-z-a"></i>
-              {/if}
-              {#if col.orderBy === ""}
+              {#if order}
+                {order[0] + 1}
+                {#if order[1] === ORDERDIRECTIONS.ASC}
+                  <i class="bx bx-sort-a-z"></i>
+                {/if}
+                {#if order[1] === ORDERDIRECTIONS.DESC}
+                  <i class="bx bx-sort-z-a"></i>
+                {/if}
+              {:else}
                 <i class="bx bx-minus"></i>
               {/if}
             </button>
