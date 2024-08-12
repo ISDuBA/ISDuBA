@@ -83,3 +83,13 @@ func (c *ExpirationCache[K, V]) Set(k K, v V) {
 		value:   v,
 	}
 }
+
+// SetWithExpiration stores a value for a given key with an explicit expiration.
+func (c *ExpirationCache[K, V]) SetWithExpiration(k K, v V, expiration time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.items[k] = &item[V]{
+		expires: time.Now().Add(expiration),
+		value:   v,
+	}
+}
