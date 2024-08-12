@@ -6,7 +6,8 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-package ginkeycloak
+// Package cache implements an in-memory cache with expiration for its items.
+package cache
 
 import (
 	"sync"
@@ -25,20 +26,35 @@ func (i *item[V]) expired() bool {
 	return i.expires.Before(time.Now())
 }
 
-type cache[K comparable, V any] struct {
+// ExpirationCache is a cache with a expiration duration for its items.
+type ExpirationCache[K comparable, V any] struct {
 	expiration time.Duration
 	mu         sync.Mutex
 	items      map[K]*item[V]
 }
 
-func newCache[K comparable, V any](expiration time.Duration) *cache[K, V] {
-	return &cache[K, V]{
+// NewExpirationCache creates a new cache with a given expiration duration.
+func NewExpirationCache[K comparable, V any](expiration time.Duration) *ExpirationCache[K, V] {
+	return &ExpirationCache[K, V]{
 		expiration: expiration,
 		items:      map[K]*item[V]{},
 	}
 }
 
-func (c *cache[K, V]) get(k K) (V, bool) {
+// Cleanup removes all expired items from the cache.
+func (c *ExpirationCache[K, V]) Cleanup() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	now := time.Now()
+	for k, v := range c.items {
+		if !v.expires.IsZero() && v.expires.Before(now) {
+			delete(c.items, k)
+		}
+	}
+}
+
+// Get fetches a value for a given key.
+func (c *ExpirationCache[K, V]) Get(k K) (V, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	it := c.items[k]
@@ -54,7 +70,8 @@ func (c *cache[K, V]) get(k K) (V, bool) {
 	return it.value, true
 }
 
-func (c *cache[K, V]) set(k K, v V) {
+// Set stores a value for a given key.
+func (c *ExpirationCache[K, V]) Set(k K, v V) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	var expires time.Time
