@@ -263,7 +263,6 @@
 
   $: if (columnList) {
     Sortable.create(columnList, {
-      handle: "#handle",
       animation: 150
     });
   }
@@ -399,11 +398,7 @@
           >
             <div class:w-6={true} class:flex={true} class:flex-col={true}>
               <button class="h-4">
-                <Img
-                  id="handle"
-                  src="grid-dots-vertical-rounded.svg"
-                  class="h-4 min-h-2 min-w-2 invert-[.5]"
-                />
+                <Img src="grid-dots-vertical-rounded.svg" class="h-4 min-h-2 min-w-2 invert-[.5]" />
               </button>
             </div>
             <div class="columnName w-1/3 min-w-40">{col.name}</div>
