@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"hash"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -118,6 +119,23 @@ func (l location) download(m *Manager, f *feed, done func()) {
 				"Schema validation of document %q has %d errors", l.doc, len(errors))
 		}
 		return
+	}
+
+	// Check against remote validator if configured.
+	if m.val != nil {
+		rvr, err := m.val.Validate(doc)
+		if err != nil {
+			slog.Error("Remote validation failed", "err", err, "url", l.doc)
+			f.log(m, config.ErrorFeedLogLevel,
+				"Remote validation of document %q failed: %v", l.doc, err)
+			return
+		}
+		if !rvr.Valid {
+			// XXX: Maybe we should tell more details here?!
+			f.log(m, config.ErrorFeedLogLevel,
+				"Remote validator classifies document %q as invalid", l.doc)
+			return
+		}
 	}
 
 	// Check signatures

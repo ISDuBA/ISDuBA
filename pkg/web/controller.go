@@ -14,6 +14,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	sloggin "github.com/samber/slog-gin"
@@ -32,6 +33,7 @@ type Controller struct {
 	db  *database.DB
 	ts  *tempstore.Store
 	sm  *sources.Manager
+	val csaf.RemoteValidator
 }
 
 // NewController returns a new Controller.
@@ -40,12 +42,14 @@ func NewController(
 	db *database.DB,
 	ts *tempstore.Store,
 	dl *sources.Manager,
+	val csaf.RemoteValidator,
 ) *Controller {
 	return &Controller{
 		cfg: cfg,
 		db:  db,
 		ts:  ts,
 		sm:  dl,
+		val: val,
 	}
 }
 

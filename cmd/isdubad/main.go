@@ -25,6 +25,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"github.com/ISDuBA/ISDuBA/pkg/web"
+	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 )
 
 func check(err error) {
@@ -55,7 +56,19 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
-	sm := sources.NewManager(cfg, db)
+	// Is the remote validator configured?
+	var val csaf.RemoteValidator
+	if cfg.RemoteValidator.URL != "" {
+		v, err := cfg.RemoteValidator.Open()
+		if err != nil {
+			return fmt.Errorf("configuring remote validator failed: %w", err)
+		}
+		val = csaf.SynchronizedRemoteValidator(v)
+		defer val.Close()
+	}
+
+	// Setup the source manager.
+	sm := sources.NewManager(cfg, db, val)
 	if err := sm.Boot(ctx); err != nil {
 		return fmt.Errorf("booting source manager failed: %w", err)
 	}
@@ -63,7 +76,7 @@ func run(cfg *config.Config) error {
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, tmpStore, sm)
+	ctrl := web.NewController(cfg, db, tmpStore, sm, val)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)

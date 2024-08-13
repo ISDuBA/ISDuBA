@@ -27,6 +27,7 @@ The configuration consists of the following sections:
 - [`[publishers_tlps]`](#section_publishers_tlps) publishers/TLPs filters
 - [`[temp_storage]`](#section_temp_storage) temporary document storage
 - [`[sources]`](#section_sources) Sources
+- [`[remote_validator]`](#section_remote_validator) Remote validator
 - [`[client]`](#section_client) Client configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
@@ -106,6 +107,12 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }`
 - `default_message`: The message that should be displayed inside the source manager.
 
+### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
+
+- `url`: URL of the remote validator. Defaults to `""` (unset).
+- `cache`: Path to an optional local cache file. Defaults to `""` (unset).
+- `presets`: List of presets to be checked by the remote validator. Defaults to `["mandatory"]`.
+
 ### <a name="section_client"></a> Section `[client]` Client configuration
 
 - `keycloak_url`: The URL where the Keycloak server is located. Defaults to same as `keycloak.url`.
@@ -155,6 +162,8 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_SOURCES_FEED_LOG_LEVEL`       | `sources feed_log_level`             |
 | `ISDUBA_SOURCES_FEED_IMPORTER`        | `sources feed_importer`              |
 | `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `sources default_message`            |
+| `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
+| `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |
 | `ISDUBA_CLIENT_KEYCLOAK_REALM`        | `client keycloak_realm`              |
 | `ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID`    | `client keycloak_client_id`          |
