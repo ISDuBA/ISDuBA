@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -97,6 +98,13 @@ const (
 	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
 )
+
+const (
+	defaultRemoteValidatorURL   = ""
+	defaultRemoteValidatorCache = ""
+)
+
+var defaultRemoteValidatorPresets = []string{"mandatory"}
 
 const (
 	defaultClientKeycloakRealm    = "isduba"
@@ -187,15 +195,16 @@ type Client struct {
 
 // Config are all the configuration options.
 type Config struct {
-	General        General               `toml:"general"`
-	Log            Log                   `toml:"log"`
-	Keycloak       Keycloak              `toml:"keycloak"`
-	Web            Web                   `toml:"web"`
-	Database       Database              `toml:"database"`
-	PublishersTLPs models.PublishersTLPs `toml:"publishers_tlps"`
-	TempStore      TempStore             `toml:"temp_storage"`
-	Sources        Sources               `toml:"sources"`
-	Client         Client                `toml:"client"`
+	General         General                     `toml:"general"`
+	Log             Log                         `toml:"log"`
+	Keycloak        Keycloak                    `toml:"keycloak"`
+	Web             Web                         `toml:"web"`
+	Database        Database                    `toml:"database"`
+	PublishersTLPs  models.PublishersTLPs       `toml:"publishers_tlps"`
+	TempStore       TempStore                   `toml:"temp_storage"`
+	Sources         Sources                     `toml:"sources"`
+	RemoteValidator csaf.RemoteValidatorOptions `toml:"remote_validator"`
+	Client          Client                      `toml:"client"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -306,6 +315,11 @@ func Load(file string) (*Config, error) {
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
 			DefaultMessage:    defaultMessageSourceManager,
 		},
+		RemoteValidator: csaf.RemoteValidatorOptions{
+			URL:     defaultRemoteValidatorURL,
+			Presets: defaultRemoteValidatorPresets,
+			Cache:   defaultRemoteValidatorCache,
+		},
 		Client: Client{
 			KeycloakRealm:    defaultClientKeycloakRealm,
 			KeycloakClientID: defaultClientKeycloakClientID,
@@ -385,6 +399,8 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_FEED_LOG_LEVEL", storeFeedLogLevel(&cfg.Sources.FeedLogLevel)},
 		envStore{"ISDUBA_SOURCES_FEED_IMPORTER", storeString(&cfg.Sources.FeedImporter)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
+		envStore{"ISDUBA_REMOTE_VALIDATOR_URL", storeString(&cfg.RemoteValidator.URL)},
+		envStore{"ISDUBA_REMOTE_VALIDATOR_Cache", storeString(&cfg.RemoteValidator.Cache)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_REALM", storeString(&cfg.Client.KeycloakRealm)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},
