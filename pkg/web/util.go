@@ -12,8 +12,18 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/gin-gonic/gin"
 )
+
+// parserMode parses parser mode from a given string.
+func parserMode(s string) (query.ParserMode, error) {
+	var pm query.ParserMode
+	if err := pm.UnmarshalText([]byte(s)); err != nil {
+		return 0, err
+	}
+	return pm, nil
+}
 
 // toInt64 parses a given string to a 64bit integer.
 func toInt64(s string) (int64, error) { return strconv.ParseInt(s, 10, 64) }
