@@ -177,7 +177,6 @@ skipSignatureCheck:
 	// TODO: store signature data in database.
 	_ = signatureData
 
-	// TODO: Check against remote validator
 	// TODO: Filename check. (???)
 	// TODO: Statistics
 
