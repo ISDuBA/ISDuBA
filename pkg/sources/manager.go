@@ -63,18 +63,25 @@ type Manager struct {
 	pmdCache  *pmdCache
 	keysCache *keysCache
 
+	val csaf.RemoteValidator
+
 	usedSlots int
 	uniqueID  int64
 }
 
 // NewManager creates a new downloader.
-func NewManager(cfg *config.Config, db *database.DB) *Manager {
+func NewManager(
+	cfg *config.Config,
+	db *database.DB,
+	val csaf.RemoteValidator,
+) *Manager {
 	return &Manager{
 		cfg:       cfg,
 		db:        db,
 		fns:       make(chan func(*Manager)),
 		pmdCache:  newPMDCache(),
 		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
+		val:       val,
 	}
 }
 
