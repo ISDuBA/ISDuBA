@@ -32,6 +32,7 @@
   import QueryOverview from "$lib/Queries/Overview.svelte";
   import Test from "$lib/Test.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import SourceEditor from "$lib/Sources/SourceEditor.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import type { HttpResponse } from "$lib/types";
 
@@ -193,6 +194,16 @@
     }),
     "/sources": wrap({
       component: Sources,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/sources/new": wrap({
+      component: SourceEditor,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/sources/:id": wrap({
+      component: SourceEditor,
       userData: loginRequired,
       conditions: [loginCondition]
     }),

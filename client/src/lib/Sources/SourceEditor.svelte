@@ -1,0 +1,543 @@
+<!--
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+
+ SPDX-License-Identifier: Apache-2.0
+
+ SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+-->
+
+<script lang="ts">
+  import type { Source } from "$lib/Sources/source";
+  import { request } from "$lib/utils";
+  import {
+    Checkbox,
+    Input,
+    Label,
+    Button,
+    StepIndicator,
+    TableBodyCell,
+    Spinner,
+    Modal,
+    Select
+  } from "flowbite-svelte";
+  import { push } from "svelte-spa-router";
+  import { tdClass } from "$lib/Table/defaults";
+  import CustomTable from "$lib/Table/CustomTable.svelte";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
+  import type { CSAFProviderMetadata, DirectoryURL, ROLIEFeed } from "$lib/provider";
+  import SectionHeader from "$lib/SectionHeader.svelte";
+  import { onMount } from "svelte";
+  export let params: any = null;
+
+  enum LogLevel {
+    debug = "debug",
+    info = "info",
+    warn = "warn",
+    error = "error"
+  }
+
+  type Feed = {
+    id?: number;
+    enable?: boolean;
+    url: string;
+    label: string;
+    rolie: boolean;
+    log_level: LogLevel;
+  };
+
+  let modalOpen: boolean = false;
+  let modalMessage = "";
+  let modalTitle = "";
+  let modalCallback: any;
+
+  let saveError: ErrorDetails | null;
+  let loadError: ErrorDetails | null;
+  let feedError: ErrorDetails | null;
+  let pmd: CSAFProviderMetadata;
+  let pmdFeeds: Feed[] = [];
+  let missingFeeds: Feed[] = [];
+  let feeds: Feed[] = [];
+
+  let newFeed: Feed | null;
+
+  let logs: any;
+
+  let logLevels = [
+    { value: LogLevel.error, name: "Error" },
+    { value: LogLevel.info, name: "Info" },
+    { value: LogLevel.warn, name: "Warn" },
+    { value: LogLevel.debug, name: "Debug" }
+  ];
+
+  let loadingFeeds: boolean = false;
+  let loadingPMD: boolean = false;
+
+  let currentStep = 0;
+  let steps: string[] = ["Source URL", "Source Config", "Feed Selection"];
+
+  let sources: Source[] = [];
+
+  let source: Source = {
+    name: "",
+    url: "",
+    active: true,
+    rate: 1,
+    slots: 2
+  };
+
+  const saveSource = async (): Promise<boolean> => {
+    let method = "POST";
+    let path = `/api/sources`;
+    const formData = new FormData();
+    if (source.id) {
+      method = "PUT";
+      path += `/${source.id}`;
+      formData.append("id", source.id.toString());
+    } else {
+      formData.append("url", source.url);
+    }
+    formData.append("name", source.name);
+    if (source.active !== undefined) {
+      formData.append("active", source.active.toString());
+    }
+    if (source.rate && source.rate !== 0) {
+      formData.append("rate", source.rate.toString());
+    }
+    if (source.slots && source.slots !== 0) {
+      formData.append("slots", source.slots.toString());
+    }
+    const resp = await request(path, method, formData);
+    if (resp.ok) {
+      source.id = resp.content.id;
+      saveError = null;
+      return true;
+    } else if (resp.error) {
+      saveError = getErrorDetails(`Could not save source`, resp);
+    }
+    return false;
+  };
+
+  const getLabelName = (feed: ROLIEFeed | DirectoryURL): string => {
+    let label = "";
+    if (typeof feed === "string") {
+      label += feed;
+    } else {
+      if (feed.summary) {
+        label += `${feed.summary} `;
+      }
+      label += feed.tlp_label;
+      label += feed.url;
+    }
+    return label;
+  };
+
+  const parseFeeds = (): Feed[] => {
+    let feeds: Feed[] = [];
+
+    let dist = pmd.distributions ?? [];
+
+    for (const entry of dist) {
+      if (entry.rolie) {
+        for (const feed of entry.rolie.feeds) {
+          feeds.push({
+            url: feed.url,
+            label: getLabelName(feed),
+            log_level: LogLevel.error,
+            rolie: true,
+            enable: true
+          });
+        }
+      }
+      if (entry.directory_url) {
+        feeds.push({
+          url: entry.directory_url,
+          label: getLabelName(entry.directory_url),
+          log_level: LogLevel.error,
+          rolie: false,
+          enable: true
+        });
+      }
+    }
+
+    return feeds;
+  };
+
+  const saveFeeds = async (feeds: Feed[]) => {
+    for (const feed of feeds) {
+      if (!feed.enable) {
+        continue;
+      }
+      const formData = new FormData();
+      formData.append("url", feed.url);
+      formData.append("label", feed.label);
+      formData.append("log_level", feed.log_level);
+      const resp = await request(`/api/sources/${source.id}/feeds`, "POST", formData);
+      if (resp.ok) {
+        if (!params?.id) {
+          push(`/sources/${source.id}`);
+        }
+      } else if (resp.error) {
+        saveError = getErrorDetails(`Could not save feed.`, resp);
+      }
+    }
+  };
+
+  const getSourceName = async (): Promise<string> => {
+    await fetchSources();
+    let name = pmd.publisher.name;
+    if (!sources.find((s) => s.name === name)) {
+      return name;
+    }
+    for (let i = 1; ; i++) {
+      let customName = `${name} #${i}`;
+      if (!sources.find((s) => s.name === customName)) {
+        return customName;
+      }
+    }
+  };
+
+  const fetchPMD = async () => {
+    loadingPMD = true;
+    const resp = await request(`/api/pmd?url=${encodeURIComponent(source.url)}`, "GET");
+    if (resp.ok) {
+      pmd = resp.content;
+      source.name = await getSourceName();
+      loadError = null;
+      currentStep = 1;
+      pmdFeeds = parseFeeds();
+    } else if (resp.error) {
+      loadError = getErrorDetails(`Could not load PMD.`, resp);
+    }
+    loadingPMD = false;
+  };
+
+  const fetchSources = async () => {
+    loadingPMD = true;
+    const resp = await request(`/api/sources`, "GET");
+    loadingPMD = false;
+    if (resp.ok) {
+      if (resp.content.sources) {
+        sources = resp.content.sources;
+      }
+    } else if (resp.error) {
+      loadError = getErrorDetails(`Could not load source`, resp);
+    }
+  };
+
+  const fetchFeeds = async () => {
+    loadingFeeds = true;
+    const resp = await request(`/api/sources/${source.id}/feeds`, "GET");
+    loadingFeeds = false;
+    if (resp.ok) {
+      if (resp.content.feeds) {
+        feeds = resp.content.feeds;
+      }
+    } else if (resp.error) {
+      feedError = getErrorDetails(`Could not load feed`, resp);
+    }
+  };
+
+  const deleteFeed = async (id: number) => {
+    const resp = await request(`/api/sources/feeds/${id}`, "DELETE");
+    if (resp.error) {
+      feedError = getErrorDetails(`Could not load feed`, resp);
+    }
+    await fetchFeeds();
+    calculateMissingFeeds();
+  };
+
+  const fetchFeedLogs = async (id: number) => {
+    const resp = await request(`/api/sources/feeds/${id}/log`, "GET");
+    if (resp.ok) {
+      logs = resp.content;
+    } else if (resp.error) {
+      feedError = getErrorDetails(`Could not load feed logs`, resp);
+    }
+  };
+
+  const isSameFeed = (a: Feed, b: Feed) => a.url === b.url && a.rolie === b.rolie;
+
+  const calculateMissingFeeds = () => {
+    missingFeeds = pmdFeeds.filter((a) => !feeds.some((b) => isSameFeed(a, b)));
+  };
+
+  const getSource = async (id: number) => {
+    await fetchSources();
+    let found = sources.find((s) => s.id === id);
+    if (found) {
+      source = found;
+      loadError = null;
+    } else {
+      loadError = getErrorDetails(`Could not find source`);
+    }
+  };
+
+  onMount(async () => {
+    let id;
+    if (params) id = params.id;
+    if (id) {
+      await getSource(Number(id));
+      await fetchPMD();
+      await fetchFeeds();
+      calculateMissingFeeds();
+    }
+  });
+</script>
+
+<svelte:head>
+  <title>Sources - {params?.id ? "Edit source" : "New source"}</title>
+</svelte:head>
+
+<Modal size="xs" title={modalTitle} bind:open={modalOpen} autoclose outsideclose>
+  <div class="text-center">
+    <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+      {modalMessage}
+    </h3>
+    <Button
+      on:click={() => {
+        modalCallback();
+      }}
+      color="red"
+      class="me-2">Yes, I'm sure</Button
+    >
+    <Button color="alternative">No, cancel</Button>
+  </div>
+</Modal>
+
+{#if params?.id}
+  <SectionHeader title={source.name}></SectionHeader>
+  <div class:hidden={!loadingPMD} class:mb-4={true}>
+    Loading ...
+    <Spinner color="gray" size="4"></Spinner>
+  </div>
+  <form
+    on:submit={async () => {
+      await saveSource();
+    }}
+  >
+    <Label>Name</Label>
+    <Input bind:value={source.name}></Input>
+    <Checkbox bind:checked={source.active}>Active</Checkbox>
+    <Label>Rate</Label>
+    <Input bind:value={source.rate}></Input>
+    <Label>Slots</Label>
+    <Input bind:value={source.slots}></Input>
+    <Button type="submit" color="light">
+      <i class="bx bxs-save me-2"></i>
+      <span>Update source</span>
+    </Button>
+  </form>
+
+  <pre>{#if pmd}{JSON.stringify(pmd, null, 2)}{/if}</pre>
+  <CustomTable
+    title="Feeds"
+    headers={[
+      {
+        label: "Label",
+        attribute: "label"
+      },
+      {
+        label: "URL",
+        attribute: "url"
+      },
+      {
+        label: "Rolie",
+        attribute: "rolie"
+      },
+      {
+        label: "Log level",
+        attribute: "log_level"
+      }
+    ]}
+  >
+    {#each feeds as feed, index (index)}
+      <tr
+        on:click={() => {
+          if (feed.id) {
+            fetchFeedLogs(feed.id);
+          }
+        }}
+        class="cursor-pointer"
+      >
+        <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
+        <td>
+          <Button
+            on:click={(event) => {
+              event.stopPropagation();
+              modalCallback = () => {
+                if (feed.id) {
+                  deleteFeed(feed.id);
+                }
+              };
+              modalMessage = "Are you sure you want to delete this source?";
+              modalTitle = `Source ${source.name}`;
+              modalOpen = true;
+            }}
+            title={`Delete source "${source.name}"`}
+            class="border-0 p-2"
+            color="light"
+          >
+            <i class="bx bx-trash text-xl text-red-500"></i>
+          </Button>
+        </td>
+      </tr>
+    {/each}
+    <div slot="bottom">
+      <div class:hidden={!loadingFeeds} class:mb-4={true}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+      <ErrorMessage error={feedError}></ErrorMessage>
+    </div>
+  </CustomTable>
+
+  <CustomTable
+    title="Missing feeds"
+    headers={[
+      {
+        label: "Label",
+        attribute: "label"
+      },
+      {
+        label: "URL",
+        attribute: "url"
+      },
+      {
+        label: "Rolie",
+        attribute: "rolie"
+      },
+      {
+        label: "Log level",
+        attribute: "log_level"
+      }
+    ]}
+  >
+    {#each missingFeeds as feed, index (index)}
+      <tr
+        class="cursor-pointer"
+        on:click={() => {
+          newFeed = feed;
+        }}
+      >
+        <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
+        <td>
+          <Button
+            on:click={(event) => {
+              event.stopPropagation();
+              modalCallback = () => {
+                console.log("TODO");
+              };
+              modalMessage = "Are you sure you want to delete this source?";
+              modalTitle = `Source ${source.name}`;
+              modalOpen = true;
+            }}
+            title={`Delete source "${source.name}"`}
+            class="border-0 p-2"
+            color="light"
+          >
+            <i class="bx bx-trash text-xl text-red-500"></i>
+          </Button>
+        </td>
+      </tr>
+    {/each}
+    <div slot="bottom">
+      <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+      <ErrorMessage error={feedError}></ErrorMessage>
+    </div>
+  </CustomTable>
+  {#if newFeed}
+    <form
+      on:submit={async () => {
+        if (newFeed) {
+          await saveFeeds([newFeed]);
+          newFeed = null;
+          await fetchFeeds();
+          calculateMissingFeeds();
+        }
+      }}
+    >
+      <Label>URL</Label>
+      <Input readonly bind:value={newFeed.url}></Input>
+      <Label>Log level</Label>
+      <Select items={logLevels} bind:value={newFeed.log_level} />
+      <Label>Label</Label>
+      <Input bind:value={newFeed.label}></Input>
+      <Button type="submit" color="light">
+        <i class="bx bxs-save me-2"></i>
+        <span>Save feed</span>
+      </Button>
+    </form>{/if}
+
+  <pre>{#if logs}{JSON.stringify(logs, null, 2)}{/if}</pre>
+{:else}
+  <SectionHeader title="Add new source"></SectionHeader>
+
+  <StepIndicator size="h-1" currentStep={currentStep + 1} {steps} />
+  {#if currentStep === 0}
+    <form on:submit={fetchPMD}>
+      <Label>URL</Label>
+      <Input bind:value={source.url}></Input>
+      <Button type="submit" color="light">
+        <i class="bx bx-check me-2"></i>
+        <span>Check URL</span>
+      </Button>
+    </form>
+  {/if}
+  {#if currentStep === 1}
+    <form
+      on:submit={async () => {
+        if (await saveSource()) {
+          currentStep = 2;
+        }
+      }}
+    >
+      <Label>Name</Label>
+      <Input bind:value={source.name}></Input>
+      <Checkbox bind:checked={source.active}>Active</Checkbox>
+      <Label>Rate</Label>
+      <Input bind:value={source.rate}></Input>
+      <Label>Slots</Label>
+      <Input bind:value={source.slots}></Input>
+      <Button type="submit" color="light">
+        <i class="bx bxs-save me-2"></i>
+        <span>Save source</span>
+      </Button>
+    </form>
+  {/if}
+  {#if currentStep === 2}
+    <form
+      on:submit={() => {
+        saveFeeds(pmdFeeds);
+      }}
+    >
+      {#each pmdFeeds as feed}
+        <Label>URL</Label>
+        <Input readonly bind:value={feed.url}></Input>
+        <Label>Log level</Label>
+        <Select items={logLevels} bind:value={feed.log_level} />
+        <Label>Label</Label>
+        <Input bind:value={feed.label}></Input>
+        <Checkbox bind:checked={feed.enable}>Enable</Checkbox>
+      {/each}
+      <Button type="submit" color="light">
+        <i class="bx bxs-save me-2"></i>
+        <span>Save feed</span>
+      </Button>
+    </form>
+  {/if}
+{/if}
+
+<ErrorMessage error={saveError}></ErrorMessage>
+<ErrorMessage error={loadError}></ErrorMessage>
