@@ -11,8 +11,10 @@ package web
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"regexp"
@@ -21,6 +23,7 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -114,28 +117,63 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		ctx.Writer, f, int64(c.cfg.General.AdvisoryUploadLimit))
 	defer limited.Close()
 
-	var id int64
+	var buf bytes.Buffer
+	tee := io.TeeReader(limited, &buf)
 
-	if err = c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			id, err = models.ImportDocument(
-				rctx, conn, limited, actor, c.tlps(ctx), nil, false)
-			return err
-		}, 0,
-	); err != nil {
-		switch {
-		case errors.Is(err, models.ErrAlreadyInDatabase):
-			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
-		case errors.Is(err, models.ErrNotAllowed):
-			ctx.JSON(http.StatusForbidden, gin.H{"error": "wrong publisher/tlp"})
-		default:
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
+	var document any
+	if err := json.NewDecoder(tee).Decode(&document); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "document is not JSON: " + err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"id": id})
+	msgs, err := csaf.ValidateCSAF(document)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "schema validation failed: " + err.Error()})
+		return
+	}
+	if len(msgs) > 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "schema validation failed: " + strings.Join(msgs, ", "),
+		})
+		return
+	}
+
+	// Is remote validator configured?
+	if c.val != nil {
+		rvr, err := c.val.Validate(document)
+		if err != nil {
+			slog.Error("remote validation failed", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": "remote validation failed: " + err.Error(),
+			})
+			return
+		}
+		if !rvr.Valid {
+			// XXX: Maybe we should tell, what's exactly wrong?
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "remote validation"})
+			return
+		}
+	}
+
+	var id int64
+	switch err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			id, err = models.ImportDocumentData(
+				rctx, conn, document, buf.Bytes(), actor, c.tlps(ctx), nil, false)
+			return err
+		}, 0,
+	); {
+	case err == nil:
+		ctx.JSON(http.StatusCreated, gin.H{"id": id})
+	case errors.Is(err, models.ErrAlreadyInDatabase):
+		ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+	case errors.Is(err, models.ErrNotAllowed):
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "wrong publisher/tlp"})
+	default:
+		slog.Error("storing document failed", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 }
 
 // viewDocument is an end point to export a document.
