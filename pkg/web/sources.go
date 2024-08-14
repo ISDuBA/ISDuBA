@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -85,7 +86,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.Active,
 		src.Rate,
 		src.Slots,
-		src.Headers,
+		validHeaders(src.Headers),
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})
@@ -172,6 +173,12 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 				return err
 			}
 		}
+		// headers
+		if headers, ok := ctx.GetPostFormArray("headers"); ok {
+			if err := su.UpdateHeaders(validHeaders(headers)); err != nil {
+				return err
+			}
+		}
 		return nil
 	}); {
 	case err == nil:
@@ -184,6 +191,16 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+}
+
+func validHeaders(headers []string) []string {
+	var valids []string
+	for _, header := range headers {
+		if k, _, ok := strings.Cut(header, ":"); ok && strings.TrimSpace(k) != "" {
+			valids = append(valids, header)
+		}
+	}
+	return valids
 }
 
 func (c *Controller) viewFeeds(ctx *gin.Context) {
