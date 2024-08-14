@@ -64,6 +64,11 @@
 #                      please contact your CSAF source manager \
 #                      or your administrator."""
 
+# [remote_validator]
+# url = ""
+# presets = [ "mandatory" ]
+# cache = ""
+
 # [client]
 # keycloak_url = "{{keycloak.url}}"
 # keycloak_realm = "isduba"

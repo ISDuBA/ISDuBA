@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"hash"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -120,6 +121,23 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		return
 	}
 
+	// Check against remote validator if configured.
+	if m.val != nil {
+		rvr, err := m.val.Validate(doc)
+		if err != nil {
+			slog.Error("Remote validation failed", "err", err, "url", l.doc)
+			f.log(m, config.ErrorFeedLogLevel,
+				"Remote validation of document %q failed: %v", l.doc, err)
+			return
+		}
+		if !rvr.Valid {
+			// XXX: Maybe we should tell more details here?!
+			f.log(m, config.ErrorFeedLogLevel,
+				"Remote validator classifies document %q as invalid", l.doc)
+			return
+		}
+	}
+
 	// Check signatures
 	var signature *crypto.PGPSignature
 	var signatureData []byte
@@ -159,7 +177,6 @@ skipSignatureCheck:
 	// TODO: store signature data in database.
 	_ = signatureData
 
-	// TODO: Check against remote validator
 	// TODO: Filename check. (???)
 	// TODO: Statistics
 

@@ -67,16 +67,16 @@ const COLUMNS = {
   ]
 };
 
-const ORDERDIRECTIONS = {
-  ASC: "asc",
-  DESC: "desc"
-};
+enum ORDERDIRECTIONS {
+  ASC = "asc",
+  DESC = "desc"
+}
 
-const SEARCHTYPES = {
-  ADVISORY: "advisories",
-  DOCUMENT: "documents",
-  EVENT: "events"
-};
+enum SEARCHTYPES {
+  ADVISORY = "advisories",
+  DOCUMENT = "documents",
+  EVENT = "events"
+}
 
 const SEARCHPAGECOLUMNS = {
   ADVISORY: [
@@ -111,33 +111,44 @@ const SEARCHPAGECOLUMNS = {
     "comments"
   ]
 };
+interface Column {
+  name: string;
+  visible: boolean;
+}
 
-const generateQueryString = (currentSearch: any) => {
+interface Search {
+  searchType: SEARCHTYPES;
+  columns: Column[];
+  orderBy: [string, ORDERDIRECTIONS][];
+  name: string;
+  query: string;
+  description: string;
+  global: boolean;
+}
+
+const generateQueryString = (currentSearch: Search) => {
   const chosenColumns = currentSearch.columns.filter((c: any) => {
     return c.visible === true;
-  });
-  const orderColumns = currentSearch.columns.filter((c: any) => {
-    return c.orderBy !== "";
   });
   const columns = /search msg as/.test(currentSearch.query)
     ? [{ name: "msg" }, ...chosenColumns]
     : chosenColumns;
   const columnsParam = `&columns=${columns.map((col: any) => col.name).join(" ")}`;
-  const order =
-    orderColumns.length > 0
-      ? `&orders=${orderColumns
-          .map((col: any) => {
-            return col.orderBy === ORDERDIRECTIONS.ASC ? col.name : `-${col.name}`;
-          })
-          .join(" ")}`
-      : "";
   const query = currentSearch.query ? `&query=${currentSearch.query}` : "";
   const advisoriesParam =
     currentSearch.searchType !== SEARCHTYPES.EVENT
       ? `advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}`
       : "";
-  const queryURL = `/api/${currentSearch.searchType === SEARCHTYPES.EVENT ? "events" : "documents"}?count=1&${advisoriesParam}${columnsParam}${order}${query}`;
+  const queryURL = `/api/${currentSearch.searchType === SEARCHTYPES.EVENT ? "events" : "documents"}?count=1&${advisoriesParam}${columnsParam}${query}`;
   return encodeURI(queryURL);
 };
 
-export { generateQueryString, COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, SEARCHPAGECOLUMNS };
+export {
+  generateQueryString,
+  COLUMNS,
+  ORDERDIRECTIONS,
+  SEARCHTYPES,
+  SEARCHPAGECOLUMNS,
+  type Column,
+  type Search
+};
