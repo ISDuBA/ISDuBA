@@ -329,7 +329,7 @@ CREATE TABLE sources (
     active  bool    NOT NULL DEFAULT FALSE,
     rate    float,
     slots   int,
-    headers TEXT[] DEFAULT '{}'::text[],
+    headers text[],
     CHECK(name <> ''),
     CHECK(url <> ''),
     CHECK(rate IS NULL OR rate > 0.0),
