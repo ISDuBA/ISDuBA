@@ -40,6 +40,27 @@ const COLUMNS = {
     "cvss_v3_score",
     "four_cves",
     "comments"
+  ],
+  EVENT: [
+    "critical",
+    "id",
+    "tracking_id",
+    "version",
+    "publisher",
+    "current_release_date",
+    "initial_release_date",
+    "title",
+    "tlp",
+    "cvss_v2_score",
+    "cvss_v3_score",
+    "ssvc",
+    "four_cves",
+    "comments",
+    "event",
+    "event_state",
+    "time",
+    "actor",
+    "comments_id"
   ]
 };
 
@@ -50,7 +71,8 @@ enum ORDERDIRECTIONS {
 
 enum SEARCHTYPES {
   ADVISORY = "advisories",
-  DOCUMENT = "documents"
+  DOCUMENT = "documents",
+  EVENT = "events"
 }
 
 const SEARCHPAGECOLUMNS = {
@@ -110,7 +132,11 @@ const generateQueryString = (currentSearch: Search) => {
     : chosenColumns;
   const columnsParam = `&columns=${columns.map((col: any) => col.name).join(" ")}`;
   const query = currentSearch.query ? `&query=${currentSearch.query}` : "";
-  const queryURL = `/api/documents?count=1&advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}${columnsParam}${query}`;
+  const advisoriesParam =
+    currentSearch.searchType !== SEARCHTYPES.EVENT
+      ? `advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}`
+      : "";
+  const queryURL = `/api/${currentSearch.searchType === SEARCHTYPES.EVENT ? "events" : "documents"}?count=1&${advisoriesParam}${columnsParam}${query}`;
   return encodeURI(queryURL);
 };
 

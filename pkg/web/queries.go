@@ -41,8 +41,8 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	}
 
 	// Advisories flag
-	if advisories, ok := ctx.GetPostForm("advisories"); ok {
-		if sq.Advisories, ok = parse(ctx, strconv.ParseBool, advisories); !ok {
+	if kind, ok := ctx.GetPostForm("kind"); ok {
+		if sq.Kind, ok = parse(ctx, parserMode, kind); !ok {
 			return
 		}
 	}
@@ -61,11 +61,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	mode := query.DocumentMode
-	if sq.Advisories {
-		mode = query.AdvisoryMode
-	}
-	parser := query.Parser{Mode: mode}
+	parser := query.Parser{Mode: sq.Kind}
 
 	// The query to filter the documents.
 	sq.Query = ctx.DefaultPostForm("query", "true")
@@ -74,7 +70,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 	// In advisory mode we only show the latest.
-	if sq.Advisories {
+	if sq.Kind == query.AdvisoryMode {
 		expr = expr.And(query.BoolField("latest"))
 	}
 
@@ -86,7 +82,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	builder := query.SQLBuilder{Mode: mode}
+	builder := query.SQLBuilder{Mode: sq.Kind}
 	builder.CreateWhere(expr)
 	if err := builder.CheckProjections(sq.Columns); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -113,7 +109,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	}
 
 	const insertSQL = `INSERT INTO stored_queries (` +
-		`advisories,` +
+		`kind,` +
 		`definer,` +
 		`global,` +
 		`name,` +
@@ -121,7 +117,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		`query,` +
 		`columns,` +
 		`orders` +
-		`) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)` +
+		`) VALUES ($1::stored_queries_kind, $2, $3, $4, $5, $6, $7, $8)` +
 		`RETURNING id, num`
 
 	var queryID, queryNum int64
@@ -130,7 +126,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			return conn.QueryRow(rctx, insertSQL,
-				sq.Advisories,
+				sq.Kind.String(),
 				sq.Definer,
 				sq.Global,
 				sq.Name,
@@ -160,7 +156,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 func (c *Controller) listStoredQueries(ctx *gin.Context) {
 	const selectSQL = `SELECT ` +
 		`id,` +
-		`advisories,` +
+		`kind::text,` +
 		`definer,` +
 		`global,` +
 		`name,` +
@@ -186,7 +182,7 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 					var query models.StoredQuery
 					if err := row.Scan(
 						&query.ID,
-						&query.Advisories,
+						&query.Kind,
 						&query.Definer,
 						&query.Global,
 						&query.Name,
@@ -259,7 +255,7 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 	}
 
 	const selectSQL = `SELECT ` +
-		`advisories,` +
+		`kind::text,` +
 		`definer,` +
 		`global,` +
 		`name,` +
@@ -279,7 +275,7 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			definer := ctx.GetString("uid")
 			return conn.QueryRow(rctx, selectSQL, queryID, definer).Scan(
-				&query.Advisories,
+				&query.Kind,
 				&query.Definer,
 				&query.Global,
 				&query.Name,
@@ -311,7 +307,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 
 	const (
 		selectSQLPrefix = `SELECT ` +
-			`advisories,` +
+			`kind::text,` +
 			`global,` +
 			`name,` +
 			`description,` +
@@ -350,7 +346,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			}
 			definer := ctx.GetString("uid")
 			if err := tx.QueryRow(rctx, selectSQL, queryID, definer).Scan(
-				&sq.Advisories,
+				&sq.Kind,
 				&sq.Global,
 				&sq.Name,
 				&sq.Description,
@@ -377,22 +373,18 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			}
 
 			// Check advisories
-			if advs, ok := ctx.GetPostForm("advisories"); ok {
-				advisories, err := strconv.ParseBool(advs)
-				if err != nil {
-					bad = "bad 'advisories' value: " + err.Error()
+			if kind, ok := ctx.GetPostForm("kind"); ok {
+				var pm query.ParserMode
+				if err := pm.UnmarshalText([]byte(kind)); err != nil {
+					bad = "bad 'kind' value: " + err.Error()
 					return nil
 				}
-				add(advisories != sq.Advisories, "advisories", advisories)
+				add(pm != sq.Kind, "kind", kind)
 				// Write back as the advisory mode changes the parser behavior.
-				sq.Advisories = advisories
+				sq.Kind = pm
 			}
 
-			mode := query.DocumentMode
-			if sq.Advisories {
-				mode = query.AdvisoryMode
-			}
-			parser := query.Parser{Mode: mode}
+			parser := query.Parser{Mode: sq.Kind}
 
 			// Check query
 			var expr *query.Expr
@@ -407,11 +399,11 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				bad = "bad 'query' value: " + err.Error()
 				return nil
 			}
-			if sq.Advisories {
+			if sq.Kind == query.AdvisoryMode {
 				expr = expr.And(query.BoolField("latest"))
 			}
 
-			builder := query.SQLBuilder{Mode: mode}
+			builder := query.SQLBuilder{Mode: sq.Kind}
 			builder.CreateWhere(expr)
 
 			// Check columns

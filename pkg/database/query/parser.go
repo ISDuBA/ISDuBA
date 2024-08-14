@@ -9,6 +9,7 @@
 package query
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"regexp"
@@ -69,6 +70,43 @@ const (
 	AdvisoryMode                   // AdvisoryMode operates on advisories.
 	EventMode                      // EventMode operates on events.
 )
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (pm *ParserMode) UnmarshalText(text []byte) error {
+	switch s := string(text); s {
+	case "advisories":
+		*pm = AdvisoryMode
+	case "documents":
+		*pm = DocumentMode
+	case "events":
+		*pm = EventMode
+	default:
+		return fmt.Errorf("unknown parser mode %q", s)
+	}
+	return nil
+}
+
+// MarshalText implements [encoding.TextMarshaler].
+func (pm ParserMode) MarshalText() ([]byte, error) {
+	switch pm {
+	case AdvisoryMode:
+		return []byte("advisories"), nil
+	case DocumentMode:
+		return []byte("documents"), nil
+	case EventMode:
+		return []byte("events"), nil
+	default:
+		return nil, fmt.Errorf("unknown parser mode %d", pm)
+	}
+}
+
+// Scan implements [sql.Scanner].
+func (pm *ParserMode) Scan(src any) error {
+	if s, ok := src.(string); ok {
+		return pm.UnmarshalText([]byte(s))
+	}
+	return errors.New("unsupported type")
+}
 
 // Parser helps parsing database queries,
 type Parser struct {
@@ -168,11 +206,11 @@ func (vt valueType) String() string {
 func (pm ParserMode) String() string {
 	switch pm {
 	case DocumentMode:
-		return "document"
+		return "documents"
 	case AdvisoryMode:
-		return "advisory"
+		return "advisories"
 	case EventMode:
-		return "event"
+		return "events"
 	default:
 		return fmt.Sprintf("Unknown parser mode: %d", pm)
 	}

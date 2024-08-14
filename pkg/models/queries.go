@@ -8,16 +8,18 @@
 
 package models
 
+import "github.com/ISDuBA/ISDuBA/pkg/database/query"
+
 // StoredQuery represents a stored query.
 type StoredQuery struct {
-	ID          int64     `json:"id"`
-	Advisories  bool      `json:"advisories"`
-	Definer     string    `json:"definer"`
-	Global      bool      `json:"global"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description,omitempty"`
-	Query       string    `json:"query"`
-	Num         int64     `json:"num"`
-	Columns     []string  `json:"columns"`
-	Orders      *[]string `json:"orders,omitempty"`
+	ID          int64            `json:"id"`
+	Kind        query.ParserMode `json:"kind"`
+	Definer     string           `json:"definer"`
+	Global      bool             `json:"global"`
+	Name        string           `json:"name"`
+	Description *string          `json:"description,omitempty"`
+	Query       string           `json:"query"`
+	Num         int64            `json:"num"`
+	Columns     []string         `json:"columns"`
+	Orders      *[]string        `json:"orders,omitempty"`
 }
