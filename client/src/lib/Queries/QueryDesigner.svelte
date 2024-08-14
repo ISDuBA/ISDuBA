@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Radio, Input, Spinner, Button, Checkbox, Img } from "flowbite-svelte";
+  import { Input, Spinner, Button, Checkbox, Img, RadioButton, ButtonGroup } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import { COLUMNS, ORDERDIRECTIONS, SEARCHTYPES, generateQueryString } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -103,7 +103,7 @@
     unsetMessages();
     sortColumns();
     const formData = new FormData();
-    formData.append("advisories", `${currentSearch.searchType === SEARCHTYPES.ADVISORY}`);
+    formData.append("kind", currentSearch.searchType);
     formData.append("name", currentSearch.name);
     formData.append("global", `${currentSearch.global}`);
     if (currentSearch.description.length > 0) {
@@ -156,6 +156,9 @@
     if (currentSearch.searchType === SEARCHTYPES.ADVISORY) {
       currentSearch.columns = columnsFromNames(COLUMNS.ADVISORY);
     }
+    if (currentSearch.searchType === SEARCHTYPES.EVENT) {
+      currentSearch.columns = columnsFromNames(COLUMNS.EVENT);
+    }
   };
 
   const shorten = (text: string) => {
@@ -167,12 +170,15 @@
   const generateQueryFrom = (result: any) => {
     let searchType = "";
     let columns = [];
-    if (result.advisories) {
+    if (result.kind === SEARCHTYPES.ADVISORY) {
       searchType = SEARCHTYPES.ADVISORY;
       columns = COLUMNS.ADVISORY;
-    } else {
+    } else if (result.kind === SEARCHTYPES.DOCUMENT) {
       searchType = SEARCHTYPES.DOCUMENT;
       columns = COLUMNS.DOCUMENT;
+    } else {
+      searchType = SEARCHTYPES.EVENT;
+      columns = COLUMNS.EVENT;
     }
     columns = result.columns.concat(
       columns.filter((c: string) => {
@@ -365,22 +371,28 @@
           >Select at least 1 column</small
         >
       </div>
-      <div class="ml-6 w-1/4 min-w-28">
-        <Radio
-          name="queryType"
+      <ButtonGroup class="ml-6">
+        <RadioButton
+          class="h-8"
           on:change={toggleSearchType}
           value={SEARCHTYPES.ADVISORY}
-          bind:group={currentSearch.searchType}>Advisories</Radio
+          bind:group={currentSearch.searchType}
         >
-      </div>
-      <div>
-        <Radio
-          name="queryType"
+          Advisories</RadioButton
+        >
+        <RadioButton
+          class="h-8"
           on:change={toggleSearchType}
           value={SEARCHTYPES.DOCUMENT}
-          bind:group={currentSearch.searchType}>Documents</Radio
+          bind:group={currentSearch.searchType}>Documents</RadioButton
         >
-      </div>
+        <RadioButton
+          class="h-8"
+          on:change={toggleSearchType}
+          value={SEARCHTYPES.EVENT}
+          bind:group={currentSearch.searchType}>Events</RadioButton
+        >
+      </ButtonGroup>
     </div>
     <div class="mt-4">
       <div class="mb-2 flex flex-row">
