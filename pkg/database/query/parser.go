@@ -96,7 +96,7 @@ func (pm ParserMode) MarshalText() ([]byte, error) {
 	case EventMode:
 		return []byte("events"), nil
 	default:
-		return []byte{}, fmt.Errorf("unknown parser mode %d", pm)
+		return nil, fmt.Errorf("unknown parser mode %d", pm)
 	}
 }
 
