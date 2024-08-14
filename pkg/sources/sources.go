@@ -77,6 +77,7 @@ type source struct {
 	usedSlots int
 	limiterMu sync.Mutex
 	limiter   *rate.Limiter
+	headers   []string
 }
 
 // refresh fetches the feed index and accordingly updates

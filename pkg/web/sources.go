@@ -23,12 +23,13 @@ import (
 )
 
 type source struct {
-	ID     int64    `json:"id" form:"id"`
-	Name   string   `json:"name" form:"name" binding:"required,min=1"`
-	URL    string   `json:"url" form:"url" binding:"required,min=1"`
-	Active *bool    `json:"active,omitempty" form:"active"`
-	Rate   *float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots  *int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	ID      int64    `json:"id" form:"id"`
+	Name    string   `json:"name" form:"name" binding:"required,min=1"`
+	URL     string   `json:"url" form:"url" binding:"required,min=1"`
+	Active  *bool    `json:"active,omitempty" form:"active"`
+	Rate    *float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots   *int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers []string `json:"headers,omitempty" form:"headers"`
 }
 
 type feed struct {
@@ -48,14 +49,16 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		active bool,
 		rate *float64,
 		slots *int,
+		headers []string,
 	) {
 		srcs = append(srcs, &source{
-			ID:     id,
-			Name:   name,
-			URL:    url,
-			Active: &active,
-			Rate:   rate,
-			Slots:  slots,
+			ID:      id,
+			Name:    name,
+			URL:     url,
+			Active:  &active,
+			Rate:    rate,
+			Slots:   slots,
+			Headers: headers,
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
@@ -82,6 +85,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.Active,
 		src.Rate,
 		src.Slots,
+		src.Headers,
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})
