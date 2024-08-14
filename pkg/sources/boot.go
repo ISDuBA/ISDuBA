@@ -22,7 +22,7 @@ import (
 // Boot loads the sources from database.
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
-		sourcesSQL = `SELECT id, name, url, rate, slots, active FROM sources`
+		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers FROM sources`
 		feedsSQL   = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
@@ -46,7 +46,8 @@ func (m *Manager) Boot(ctx context.Context) error {
 					&s.url,
 					&s.rate,
 					&s.slots,
-					&s.active)
+					&s.active,
+					&s.headers)
 			})
 			if err != nil {
 				return fmt.Errorf("collecting sources failed: %w", err)
