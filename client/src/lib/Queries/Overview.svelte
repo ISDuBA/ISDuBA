@@ -10,44 +10,50 @@
 
 <script lang="ts">
   import { tablePadding, tdClass } from "$lib/Table/defaults";
-  import {
-    Button,
-    Table,
-    TableHead,
-    TableBody,
-    TableHeadCell,
-    TableBodyCell,
-    Spinner
-  } from "flowbite-svelte";
+  import { Button, Table, TableHead, TableHeadCell, TableBodyCell, Spinner } from "flowbite-svelte";
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { push } from "svelte-spa-router";
-  import { Modal } from "flowbite-svelte";
+  import { Modal, Img } from "flowbite-svelte";
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
+  import Sortable from "sortablejs";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
     return { name: "", id: -1 };
   };
 
-  let queries: any[] = [];
+  type Query = {
+    advisories: boolean;
+    columns: string[];
+    definer: string;
+    global: boolean;
+    id: number;
+    name: string;
+    num: number;
+    orders: string[] | undefined;
+    query: string;
+    description: string | undefined;
+  };
+
+  let queries: Query[] = [];
   let orderBy = "";
   let errorMessage: ErrorDetails | null;
   let querytoDelete: any = resetQueryToDelete();
-  let hoveredAdminQuery: any;
-  let hoveredUserQuery: any;
   let loading = false;
+  let columnList: any;
+  let columnListAdmin: any;
 
   const fetchQueries = async () => {
     loading = true;
     const response = await request("/api/queries", "GET");
     if (response.ok) {
       const result = response.content;
-      queries = result.sort((q1: any, q2: any) => {
+      queries = result.sort((q1: Query, q2: Query) => {
         return q1.num > q2.num;
       });
     } else if (response.error) {
@@ -66,78 +72,62 @@
     fetchQueries();
   };
 
-  const swapQueryNum = async (query1: any, query2: any) => {
-    loading = true;
-    let formData = new FormData();
-    let TEMP_NUM = 1_000_000;
-    formData.append("num", `${TEMP_NUM}`);
-    const response1 = await request(`/api/queries/${query1.id}`, "PUT", formData);
-    if (response1.ok) {
-      formData = new FormData();
-      formData.append("num", `${query1.num}`);
-      const response2 = await request(`/api/queries/${query2.id}`, "PUT", formData);
-      if (response2.ok) {
-        formData = new FormData();
-        formData.append("num", `${query2.num}`);
-        const response3 = await request(`/api/queries/${query1.id}`, "PUT", formData);
-        if (response3.error) {
-          errorMessage = getErrorDetails(
-            `An error occured while swapping order of queries`,
-            response3
-          );
-        }
+  const updateQueryOrder = async (queries: Query[]) => {
+    let nodes = columnList.querySelectorAll(".columnName");
+    type Order = {
+      id: number;
+      order: number;
+    };
+    let orders: Order[] = [];
+    let i = 0;
+    for (const node of nodes) {
+      let columnName = node.innerText;
+      let query = queries.find((q) => q.name === columnName);
+      if (query) {
+        orders.push({ id: query.id, order: i });
       }
-      if (response2.error) {
-        errorMessage = getErrorDetails(
-          `An error occured while swapping order of queries`,
-          response2
-        );
-      }
+      i++;
     }
-    if (response1.error) {
-      errorMessage = getErrorDetails(`An error occured while swapping order of queries`, response1);
+
+    let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
+    if (!response.ok && response.error) {
+      errorMessage = getErrorDetails(`Could not update query order.`, response);
     }
-    loading = false;
-    fetchQueries();
-  };
-
-  const promoteUserQuery = () => {
-    if (hoveredUserQuery === 0) return;
-    const first = useryQueries[hoveredUserQuery];
-    const second = useryQueries[hoveredUserQuery - 1];
-    swapQueryNum(second, first);
-  };
-
-  const demoteUserQuery = () => {
-    if (hoveredUserQuery === useryQueries.length - 1) return;
-    const first = useryQueries[hoveredUserQuery];
-    const second = useryQueries[hoveredUserQuery + 1];
-    swapQueryNum(first, second);
-  };
-
-  const promoteAdminQuery = () => {
-    if (hoveredAdminQuery === 0) return;
-    const first = adminQueries[hoveredAdminQuery];
-    const second = adminQueries[hoveredAdminQuery - 1];
-    swapQueryNum(second, first);
-  };
-
-  const demoteAdminQuery = () => {
-    if (hoveredAdminQuery === adminQueries.length - 1) return;
-    const first = adminQueries[hoveredAdminQuery];
-    const second = adminQueries[hoveredAdminQuery + 1];
-    swapQueryNum(first, second);
+    if (response.ok) {
+      push(`/queries/`);
+    }
   };
 
   onMount(() => {
     fetchQueries();
   });
-  $: useryQueries = queries.filter((q: any) => {
+  $: userQueries = queries.filter((q: Query) => {
     return !q.global;
   });
-  $: adminQueries = queries.filter((q: any) => {
+  $: adminQueries = queries.filter((q: Query) => {
     return q.global;
   });
+
+  const elementDragEventUserQuery = () => {
+    updateQueryOrder(userQueries);
+  };
+
+  const elementDragEventAdminQuery = () => {
+    updateQueryOrder(adminQueries);
+  };
+
+  $: if (columnList) {
+    Sortable.create(columnList, {
+      animation: 150,
+      onEnd: elementDragEventUserQuery
+    });
+  }
+  $: if (columnListAdmin) {
+    Sortable.create(columnList, {
+      animation: 150,
+      onEnd: elementDragEventAdminQuery
+    });
+  }
 </script>
 
 <svelte:head>
@@ -192,48 +182,21 @@
             </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
-          <TableBody>
-            {#each useryQueries as query, index (index)}
+          <tbody bind:this={columnList}>
+            {#each userQueries as query, index (index)}
               <tr
                 on:click={() => {
                   push(`/queries/${query.id}`);
                 }}
-                on:mouseover={() => {
-                  hoveredUserQuery = index;
-                }}
-                on:mouseout={() => {
-                  hoveredUserQuery = -1;
-                }}
-                on:blur={() => {}}
-                on:focus={() => {}}
                 class="cursor-pointer"
                 ><TableBodyCell {tdClass}>
-                  <div
-                    class:invisible={hoveredUserQuery !== index}
-                    class:w-1={true}
-                    class:flex={true}
-                    class:flex-col={true}
-                  >
-                    <button
-                      class="h-4"
-                      on:click|stopPropagation={() => {
-                        promoteUserQuery();
-                      }}
-                    >
-                      <i class="bx bxs-up-arrow-circle"></i>
-                    </button>
-                    <button
-                      on:click|stopPropagation={() => {
-                        demoteUserQuery();
-                      }}
-                      class="h-4"
-                    >
-                      <i class="bx bxs-down-arrow-circle"></i>
-                    </button>
-                  </div>
+                  <Img
+                    src="grid-dots-vertical-rounded.svg"
+                    class="h-4 min-h-2 min-w-2 invert-[.5]"
+                  />
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <span>{query.name ?? "-"}</span>
+                  <span class="columnName">{query.name ?? "-"}</span>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <td>
@@ -256,7 +219,7 @@
                 </td>
               </tr>
             {/each}
-          </TableBody>
+          </tbody>
         </Table>
       </div>
     </div>
@@ -283,7 +246,7 @@
             </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
-          <TableBody>
+          <tbody bind:this={columnListAdmin}>
             {#each adminQueries as query, index (index)}
               <tr
                 on:click={() => {
@@ -291,42 +254,15 @@
                     push(`/queries/${query.id}`);
                   }
                 }}
-                on:mouseover={() => {
-                  hoveredAdminQuery = index;
-                }}
-                on:mouseout={() => {
-                  hoveredAdminQuery = -1;
-                }}
-                on:blur={() => {}}
-                on:focus={() => {}}
                 class={!(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))
                   ? "cursor-pointer"
                   : ""}
                 ><TableBodyCell {tdClass}>
                   {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
-                    <div
-                      class:invisible={hoveredAdminQuery !== index}
-                      class:w-1={true}
-                      class:flex={true}
-                      class:flex-col={true}
-                    >
-                      <button
-                        class="h-4"
-                        on:click|stopPropagation={() => {
-                          promoteAdminQuery();
-                        }}
-                      >
-                        <i class="bx bxs-up-arrow-circle"></i>
-                      </button>
-                      <button
-                        on:click|stopPropagation={() => {
-                          demoteAdminQuery();
-                        }}
-                        class="h-4"
-                      >
-                        <i class="bx bxs-down-arrow-circle"></i>
-                      </button>
-                    </div>
+                    <Img
+                      src="grid-dots-vertical-rounded.svg"
+                      class="h-4 min-h-2 min-w-2 invert-[.5]"
+                    />
                   {/if}
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>
@@ -356,7 +292,7 @@
                 </td>
               </tr>
             {/each}
-          </TableBody>
+          </tbody>
         </Table>
       </div>
     </div>

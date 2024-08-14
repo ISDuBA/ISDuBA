@@ -16,7 +16,7 @@ import type { HttpResponse } from "./types";
 export const request = async (
   path: string,
   requestMethod: string,
-  formData?: FormData,
+  formData?: FormData | string,
   abortController?: AbortController
 ): Promise<HttpResponse> => {
   try {

@@ -316,7 +316,7 @@ CREATE TABLE stored_queries (
     orders      varchar[],
     CHECK(name <> ''),
     UNIQUE (definer, name),
-    UNIQUE (definer, num)
+    UNIQUE (definer, num) DEFERRABLE INITIALLY DEFERRED
 );
 
 ---

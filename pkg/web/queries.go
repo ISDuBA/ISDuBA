@@ -153,6 +153,56 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	})
 }
 
+func (c *Controller) updateOrder(ctx *gin.Context) {
+	type queryOrder struct {
+		ID    int64 `json:"id"`
+		Order int64 `json:"order"`
+	}
+	var orders []queryOrder
+	if err := ctx.ShouldBindJSON(&orders); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	const (
+		prefix   = `UPDATE stored_queries SET num = $2 WHERE id = $1 AND `
+		adminSQL = prefix + `(definer = $3 OR global)`
+		userSQL  = prefix + `definer = $3`
+	)
+	var updateSQL string
+	if c.hasAnyRole(ctx, models.Admin) {
+		updateSQL = adminSQL
+	} else {
+		updateSQL = userSQL
+	}
+
+	batch := &pgx.Batch{}
+	definer := ctx.GetString("uid")
+	for _, order := range orders {
+		batch.Queue(updateSQL, order.ID, order.Order, definer)
+	}
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			tx, err := conn.Begin(rctx)
+			if err != nil {
+				return err
+			}
+			defer tx.Rollback(rctx)
+			if err := tx.SendBatch(rctx, batch).Close(); err != nil {
+				return err
+			}
+			return tx.Commit(rctx)
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "changed"})
+}
+
 func (c *Controller) listStoredQueries(ctx *gin.Context) {
 	const selectSQL = `SELECT ` +
 		`id,` +
