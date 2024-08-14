@@ -338,7 +338,7 @@ func (m *Manager) Kill() {
 }
 
 func (m *Manager) removeSource(sourceID int64) error {
-	if slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
+	if !slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
 		return NoSuchEntryError("no such source")
 	}
 	const sql = `DELETE FROM sources WHERE id = $1`
