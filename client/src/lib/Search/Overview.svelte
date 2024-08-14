@@ -13,7 +13,7 @@
   import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
-  import { SEARCHPAGECOLUMNS } from "$lib/Queries/query";
+  import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
   import DiffSelection from "$lib/Diff/DiffSelection.svelte";
   import { appStore } from "$lib/store";
@@ -106,7 +106,7 @@
       query: detail.query,
       queryReset: detail.query,
       columns: [...detail.columns],
-      advisories: detail.advisories,
+      advisories: detail.kind === SEARCHTYPES.ADVISORY,
       orders: detail.orders || []
     };
     searchTerm = "";
