@@ -32,19 +32,23 @@
   import QueryOverview from "$lib/Queries/Overview.svelte";
   import Test from "$lib/Test.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import type { HttpResponse } from "$lib/types";
 
-  let loadConfigError = "";
+  let loadConfigError: ErrorDetails | null;
 
   const loadConfig = () => {
     return new Promise((resolve) => {
-      fetch("api/client-config").then((response) => {
+      fetch("api/client-config").then((response: any) => {
         if (response.ok) {
           response.json().then((content: any) => {
             appStore.setConfig(content);
             resolve(response);
           });
         } else {
-          loadConfigError = `Couldn't load Config.`;
+          let errorRespose: HttpResponse = response;
+          errorRespose.error = response.status.toString();
+          loadConfigError = getErrorDetails(`Couldn't load Config.`, response);
           resolve(response);
         }
       });
@@ -215,7 +219,7 @@
     {#if $appStore.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}
-    <ErrorMessage message={loadConfigError}></ErrorMessage>
+    <ErrorMessage error={loadConfigError}></ErrorMessage>
   </main>
   <Messages></Messages>
 </div>

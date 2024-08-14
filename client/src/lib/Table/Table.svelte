@@ -30,7 +30,7 @@
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
@@ -49,7 +49,7 @@
   let currentPage = 1;
   let documents: any = null;
   let loading = false;
-  let error: string;
+  let error: ErrorDetails | null;
   let prevQuery = "";
   export let columns: string[];
   export let query: string = "";
@@ -187,7 +187,7 @@
     const documentURL = encodeURI(
       `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
     );
-    error = "";
+    error = null;
     loading = true;
     if (!requestOngoing) {
       requestOngoing = true;
@@ -202,10 +202,10 @@
     } else if (response.error) {
       error =
         response.error === "400"
-          ? `${getErrorMessage(response.error)} (reason: "${response.content}"). Please check your search syntax.`
+          ? getErrorDetails(`Please check your search syntax.`, response)
           : response.content.includes("deadline exceeded")
-            ? `The server wasn't able to answer your request in time.`
-            : `${getErrorMessage(response.error)} ${response.content}`;
+            ? getErrorDetails(`The server wasn't able to answer your request in time.`)
+            : getErrorDetails(`Could not load query.`, response);
     }
     loading = false;
     requestOngoing = false;
@@ -270,7 +270,10 @@
     }
     const response = await request(url, "DELETE");
     if (response.error) {
-      error = `Could not delete ${loadAdvisories ? "advisory" : "document"} ${getErrorMessage(response.error)}`;
+      error = getErrorDetails(
+        `Could not delete ${loadAdvisories ? "advisory" : "document"}`,
+        response
+      );
     }
     await fetchData();
     first();
@@ -377,7 +380,7 @@
     <Spinner color="gray" size="4"></Spinner>
   </div>
 
-  <ErrorMessage message={error}></ErrorMessage>
+  <ErrorMessage {error}></ErrorMessage>
   {#if documents?.length > 0}
     <div class="w-auto">
       <a href={anchorLink}>

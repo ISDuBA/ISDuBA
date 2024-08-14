@@ -21,7 +21,7 @@
     type Column
   } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onMount } from "svelte";
   import { push, querystring } from "svelte-spa-router";
   import { parse } from "qs";
@@ -35,9 +35,9 @@
   let editDescription = false;
   let queryCount: any = null;
   let loading = false;
-  let errorMessage = "";
-  let saveErrorMessage = "";
-  let loadQueryError = "";
+  let errorMessage: ErrorDetails | null;
+  let saveErrorMessage: ErrorDetails | null;
+  let loadQueryError: ErrorDetails | null;
   let loadedData: any = null;
   let abortController: AbortController;
   let placeholder = "";
@@ -46,8 +46,8 @@
 
   const unsetMessages = () => {
     queryCount = null;
-    errorMessage = "";
-    saveErrorMessage = "";
+    errorMessage = null;
+    saveErrorMessage = null;
   };
 
   const testQuery = async () => {
@@ -62,7 +62,7 @@
       if (/Error/.test(response.error)) {
         // Intentionally ignore errors induced by aborting the request
       } else {
-        errorMessage = `An error occured: ${response.content}`;
+        errorMessage = getErrorDetails(`An error occured.`, response);
       }
     }
     loading = false;
@@ -133,9 +133,11 @@
       response = await request("/api/queries", "POST", formData);
     }
     if (!response.ok && response.error) {
-      saveErrorMessage = `${getErrorMessage(response.error)} Reason: "${response.content}"`;
+      saveErrorMessage = getErrorDetails(`Failed to save query.`, response);
       if (response.error === "409")
-        saveErrorMessage = `A query with the name "${currentSearch.name}" already exists.`;
+        saveErrorMessage = getErrorDetails(
+          `A query with the name "${currentSearch.name}" already exists.`
+        );
     }
     if (response.ok) {
       push(`/queries/`);
@@ -288,7 +290,7 @@
           }
         }
       } else if (response.error) {
-        loadQueryError = `Could not load query. ${getErrorMessage(response.error)}`;
+        loadQueryError = getErrorDetails(`Could not load query.`, response);
       }
     }
   });
@@ -314,7 +316,7 @@
 <SectionHeader title="Queries"></SectionHeader>
 <hr class="mb-6" />
 
-{#if loadQueryError === ""}
+{#if loadQueryError}
   <div class="w-3/4">
     <div class="flex h-1 flex-row">
       <div class="flex w-1/3 min-w-40 flex-row items-center gap-x-2">
@@ -530,11 +532,11 @@
           >
         </div>
       </div>
-      {#if saveErrorMessage.length > 0}
-        <ErrorMessage message={saveErrorMessage}></ErrorMessage>
+      {#if saveErrorMessage}
+        <ErrorMessage error={saveErrorMessage}></ErrorMessage>
       {/if}
     </div>
   </div>
 {:else}
-  <ErrorMessage message={loadQueryError}></ErrorMessage>
+  <ErrorMessage error={loadQueryError}></ErrorMessage>
 {/if}

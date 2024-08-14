@@ -15,11 +15,12 @@
   import { canSetStateReview, isRoleIncluded } from "$lib/permissions";
   import { ARCHIVED, EDITOR, REVIEW, REVIEWER } from "$lib/workflow";
   import { appStore } from "$lib/store";
+  import type { ErrorDetails } from "$lib/Errors/error";
 
   export let value: string;
   export let buttonText: string;
   export let cancelable = false;
-  export let errorMessage: string;
+  export let errorMessage: ErrorDetails | null;
   export let state: string = "";
   export let old = "";
   $: count = value.length;
@@ -95,6 +96,6 @@
         </Label>
       {/if}
     </div>
-    <ErrorMessage message={errorMessage}></ErrorMessage>
+    <ErrorMessage error={errorMessage}></ErrorMessage>
   </div>
 </Textarea>

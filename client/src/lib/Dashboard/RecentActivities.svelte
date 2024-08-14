@@ -14,7 +14,7 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/utils";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
@@ -25,9 +25,9 @@
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
   let activityCount = 0;
   let resultingActivities: any;
-  let loadActivityError = "";
-  let loadMentionsError = "";
-  let loadDocumentsError = "";
+  let loadActivityError: ErrorDetails | null;
+  let loadMentionsError: ErrorDetails | null;
+  let loadDocumentsError: ErrorDetails | null;
 
   const getRelativeTime = (date: Date) => {
     const now = Date.now();
@@ -102,7 +102,7 @@
       activityCount = activities.count;
       return activities.events || [];
     } else if (activitiesResponse.error) {
-      loadActivityError = `Could not load Activities. ${getErrorMessage(activitiesResponse.error)}. ${getErrorMessage(activitiesResponse.content)}`;
+      loadActivityError = getErrorDetails(`Could not load Activities.`, activitiesResponse);
       return [];
     }
   };
@@ -113,7 +113,7 @@
       const mentions = await mentionsResponse.content;
       return mentions.events || [];
     } else if (mentionsResponse.error) {
-      loadMentionsError = `Could not load Activities. ${getErrorMessage(mentionsResponse.error)}. ${getErrorMessage(mentionsResponse.content)}`;
+      loadMentionsError = getErrorDetails(`Could not load Activities.`, mentionsResponse);
       return [];
     }
   };
@@ -138,7 +138,7 @@
       const content = result.content;
       return content.documents;
     } else if (result.error) {
-      loadDocumentsError = `Could not load Documents. ${getErrorMessage(result.error)}. ${getErrorMessage(result.content)}`;
+      loadDocumentsError = getErrorDetails(`Could not load Documents.`, result);
       return [];
     }
   };
@@ -262,8 +262,8 @@
       {/if}
       {#if activityCount > 10}<div class="">…There are more activities</div>{/if}
     </div>
-    <ErrorMessage message={loadActivityError}></ErrorMessage>
-    <ErrorMessage message={loadMentionsError}></ErrorMessage>
-    <ErrorMessage message={loadDocumentsError}></ErrorMessage>
+    <ErrorMessage error={loadActivityError}></ErrorMessage>
+    <ErrorMessage error={loadMentionsError}></ErrorMessage>
+    <ErrorMessage error={loadDocumentsError}></ErrorMessage>
   </div>
 {/if}
