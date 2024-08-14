@@ -25,7 +25,7 @@
   import { push } from "svelte-spa-router";
   import { getPublisher, getRelativeTime, request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onDestroy, onMount } from "svelte";
 
   $: $appStore.app.diff.docA_ID, getDocuments();
@@ -41,9 +41,9 @@
   let tempDocuments: any[] = [];
   let docA: any;
   let docB: any;
-  let loadDocumentsErrorMessage = "";
-  let tempDocErrorMessage = "";
-  let loadTempDocsErrorMessage = "";
+  let loadDocumentsErrorMessage: ErrorDetails | null;
+  let tempDocErrorMessage: ErrorDetails | null;
+  let loadTempDocsErrorMessage: ErrorDetails | null;
   let intervalID: ReturnType<typeof setTimeout> | undefined = undefined;
 
   const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
@@ -66,7 +66,9 @@
     if (event.dataTransfer.items) {
       [...event.dataTransfer.items].forEach(async (item) => {
         if (freeTempDocuments === 0) {
-          tempDocErrorMessage = "You reached the maximal number of temporary documents.";
+          tempDocErrorMessage = getErrorDetails(
+            "You reached the maximal number of temporary documents."
+          );
           return;
         }
         if (item.kind === "file") {
@@ -83,7 +85,9 @@
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (freeTempDocuments === 0) {
-        tempDocErrorMessage = "You reached the maximal number of temporary documents.";
+        tempDocErrorMessage = getErrorDetails(
+          "You reached the maximal number of temporary documents."
+        );
         break;
       }
       await uploadFile(file);
@@ -100,7 +104,7 @@
           freeTempDocuments = freeTempDocuments - 1;
           resolve();
         } else if (response.error) {
-          tempDocErrorMessage = getErrorMessage(response.error);
+          tempDocErrorMessage = getErrorDetails(`Could not upload file`, response);
           resolve();
         }
       });
@@ -108,7 +112,7 @@
   };
 
   const getDocuments = async () => {
-    loadDocumentsErrorMessage = "";
+    loadDocumentsErrorMessage = null;
     if ($appStore.app.diff.docA_ID) {
       const responseDocA = await getDocument("A");
       if (responseDocA.ok) {
@@ -117,7 +121,10 @@
         if (responseDocA.error === "404") {
           appStore.setDiffDocA_ID(undefined);
         } else {
-          loadDocumentsErrorMessage = getErrorMessage(responseDocA.error);
+          loadDocumentsErrorMessage = getErrorDetails(
+            `Could not load first document.`,
+            responseDocA
+          );
         }
       }
     } else {
@@ -131,7 +138,10 @@
         if (responseDocB.error === "404") {
           appStore.setDiffDocB_ID(undefined);
         } else {
-          loadDocumentsErrorMessage = getErrorMessage(responseDocB.error);
+          loadDocumentsErrorMessage = getErrorDetails(
+            `Could not load second document.`,
+            responseDocB
+          );
         }
       }
     } else {
@@ -166,12 +176,12 @@
       tempDocuments = newTempDocuments;
       updateExpired();
     } else if (response.error) {
-      loadTempDocsErrorMessage = getErrorMessage(response.error);
+      loadTempDocsErrorMessage = getErrorDetails(`Could not load temporary document.`, response);
     }
   };
 
   const deleteTempDocument = async (id: number) => {
-    tempDocErrorMessage = "";
+    tempDocErrorMessage = null;
     const response = await request(`/api/tempdocuments/${id}`, "DELETE");
     if (response.ok) {
       if ($appStore.app.diff.docA_ID === `tempdocument${id}`) {
@@ -181,7 +191,7 @@
       }
       getTempDocuments();
     } else if (response.error) {
-      tempDocErrorMessage = getErrorMessage(response.error);
+      tempDocErrorMessage = getErrorDetails(`Could not delete temporary document.`, response);
     }
   };
 
@@ -307,7 +317,7 @@
             </Button>
           </div>
         </div>
-        <ErrorMessage message={loadDocumentsErrorMessage}></ErrorMessage>
+        <ErrorMessage error={loadDocumentsErrorMessage}></ErrorMessage>
         <div class="flex flex-col">
           {#if tempDocuments?.length > 0}
             <span class="mb-1">Temporary documents:</span>
@@ -398,8 +408,8 @@
               </p>
             </Dropzone>
           {/if}
-          <ErrorMessage message={tempDocErrorMessage}></ErrorMessage>
-          <ErrorMessage message={loadTempDocsErrorMessage}></ErrorMessage>
+          <ErrorMessage error={tempDocErrorMessage}></ErrorMessage>
+          <ErrorMessage error={loadTempDocsErrorMessage}></ErrorMessage>
         </div>
       </div>
     </div>

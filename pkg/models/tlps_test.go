@@ -27,6 +27,10 @@ func TestAsConditions(t *testing.T) {
 			`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
 			[]any{"WHITE", "GREEN"},
 		}, {
+			`{}`,
+			`(FALSE)`,
+			[]any{},
+		}, {
 			`{"A": [ "WHITE", "GREEN" ]}`,
 			`(((((documents.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))`,
 			[]any{"A", "WHITE", "GREEN"},

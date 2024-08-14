@@ -11,9 +11,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { Button, ButtonGroup } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
   import { push } from "svelte-spa-router";
   import { createEventDispatcher } from "svelte";
   import { SEARCHTYPES } from "$lib/Queries/query";
@@ -30,8 +30,8 @@
     return 0;
   });
   export let selectedIndex = -1;
-  let errorMessage = "";
-  let advancedQueryErrorMessage = "";
+  let errorMessage: ErrorDetails | null;
+  let advancedQueryErrorMessage: ErrorDetails | null;
   let globalQueryButtonColor = "primary";
   let defaultQueryButtonClass = "flex flex-col p-0 focus:text-black hover:text-black";
   let queryButtonClass = "bg-white hover:bg-gray-100";
@@ -55,7 +55,7 @@
     if (response.ok) {
       queries = response.content.filter((q: any) => q.kind !== SEARCHTYPES.EVENT);
     } else if (response.error) {
-      errorMessage = `Could not load user defined queries. ${getErrorMessage(response.error)}`;
+      errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
   });
 
@@ -95,6 +95,6 @@
       <span class="text-xs text-gray-400">No queries defined yet</span>
     {/if}
   </div>
-  <ErrorMessage message={advancedQueryErrorMessage}></ErrorMessage>
+  <ErrorMessage error={advancedQueryErrorMessage}></ErrorMessage>
 </div>
-<ErrorMessage message={errorMessage}></ErrorMessage>
+<ErrorMessage error={errorMessage}></ErrorMessage>

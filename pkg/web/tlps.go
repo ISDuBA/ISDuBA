@@ -51,7 +51,7 @@ func (c *Controller) tlps(ctx *gin.Context) models.PublishersTLPs {
 		return c.cfg.PublishersTLPs
 	}
 	tlps, ok := kct.CustomClaims.(models.PublishersTLPs)
-	if !ok || tlps == nil {
+	if !ok || len(tlps) == 0 {
 		return c.cfg.PublishersTLPs
 	}
 	return tlps
@@ -59,10 +59,8 @@ func (c *Controller) tlps(ctx *gin.Context) models.PublishersTLPs {
 
 // andTLPExpr adds a filter expressin to only fetch the permitted documents.
 func (c *Controller) andTLPExpr(ctx *gin.Context, expr *query.Expr) *query.Expr {
-	if tlps := c.tlps(ctx); len(tlps) > 0 {
-		return expr.And(tlps.AsExpr())
-	}
-	return expr
+	tlps := c.tlps(ctx)
+	return expr.And(tlps.AsExpr())
 }
 
 // hasAnyRole checks if at least one of the roles is fullfilled.

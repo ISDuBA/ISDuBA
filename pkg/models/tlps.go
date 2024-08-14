@@ -29,7 +29,7 @@ const (
 	TLPWhite TLP = "WHITE" // TLPWhite represents TLP:WHITE
 	TLPGreen TLP = "GREEN" // TLPGreen represents TLP:GREEN
 	TLPAmber TLP = "AMBER" // TLPAmber represents TLP:AMBER
-	TLPRed   TLP = "RED"   // bearbeiterTLPRed   represents TLP:RED
+	TLPRed   TLP = "RED"   // TLPRed   represents TLP:RED
 )
 
 // UnmarshalText implements [encoding.TextUnmarshaler].
