@@ -51,7 +51,7 @@ func (c *Controller) tlps(ctx *gin.Context) models.PublishersTLPs {
 		return c.cfg.PublishersTLPs
 	}
 	tlps, ok := kct.CustomClaims.(models.PublishersTLPs)
-	if !ok || tlps == nil {
+	if !ok || len(tlps) == 0 {
 		return c.cfg.PublishersTLPs
 	}
 	return tlps
