@@ -9,14 +9,30 @@
 -->
 
 <script lang="ts">
+  import type { ErrorDetails } from "$lib/Errors/error";
   import { Alert } from "flowbite-svelte";
-  export let message = "";
+  export let error: ErrorDetails | null;
+
+  let showDetails: boolean = false;
 </script>
 
-{#if message}
+{#if error}
   <div class="w-fit">
     <Alert color="red" dismissable>
-      <span class="text-lg"> {message}</span>
+      <span class="text-lg"> {error.message}</span>
+      {#if error.details}
+        <a href={"javascript:void(0);"} on:click={() => (showDetails = !showDetails)}>
+          {#if showDetails}
+            <i class="bx bx-chevron-up text-2xl"></i>
+          {:else}
+            <i class="bx bx-chevron-down text-2xl"></i>
+          {/if}
+        </a>
+        {#if showDetails}
+          <br />
+          <span class="text-lg">{error.details}</span>
+        {/if}
+      {/if}
     </Alert>
   </div>
 {/if}

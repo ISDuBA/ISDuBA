@@ -22,7 +22,7 @@
   import { onMount } from "svelte";
   import { request } from "$lib/utils";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorMessage } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { push } from "svelte-spa-router";
   import { Modal } from "flowbite-svelte";
   import { ADMIN } from "$lib/workflow";
@@ -36,7 +36,7 @@
 
   let queries: any[] = [];
   let orderBy = "";
-  let errorMessage = "";
+  let errorMessage: ErrorDetails | null;
   let querytoDelete: any = resetQueryToDelete();
   let hoveredAdminQuery: any;
   let hoveredUserQuery: any;
@@ -51,7 +51,7 @@
         return q1.num > q2.num;
       });
     } else if (response.error) {
-      errorMessage = `Could not load queries. ${getErrorMessage(response.error)}`;
+      errorMessage = getErrorDetails(`Could not load queries.`, response);
     }
     loading = false;
   };
@@ -59,7 +59,7 @@
   const deleteQuery = async () => {
     const response = await request(`/api/queries/${querytoDelete.id}`, "DELETE");
     if (response.error) {
-      errorMessage = `Could not delete query ${querytoDelete.name}. ${getErrorMessage(response.error)}`;
+      errorMessage = getErrorDetails(`Could not delete query ${querytoDelete.name}.`, response);
       querytoDelete = resetQueryToDelete();
       deleteModalOpen = false;
     }
@@ -81,15 +81,21 @@
         formData.append("num", `${query2.num}`);
         const response3 = await request(`/api/queries/${query1.id}`, "PUT", formData);
         if (response3.error) {
-          errorMessage = `An error occured while swapping order of queries`;
+          errorMessage = getErrorDetails(
+            `An error occured while swapping order of queries`,
+            response3
+          );
         }
       }
       if (response2.error) {
-        errorMessage = `An error occured while swapping order of queries`;
+        errorMessage = getErrorDetails(
+          `An error occured while swapping order of queries`,
+          response2
+        );
       }
     }
     if (response1.error) {
-      errorMessage = `An error occured while swapping order of queries`;
+      errorMessage = getErrorDetails(`An error occured while swapping order of queries`, response1);
     }
     loading = false;
     fetchQueries();
@@ -159,7 +165,7 @@
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>
-<ErrorMessage message={errorMessage}></ErrorMessage>
+<ErrorMessage error={errorMessage}></ErrorMessage>
 <Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
 {#if queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
