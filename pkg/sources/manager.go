@@ -627,7 +627,7 @@ func (su *SourceUpdater) updateDB() error {
 		return nil
 	}
 	var ob, cb string
-	if len(su.fields) > 0 {
+	if len(su.fields) > 1 {
 		ob, cb = "(", ")"
 	}
 	sql := fmt.Sprintf(
@@ -661,7 +661,7 @@ func (m *Manager) UpdateSource(sourceID int64, updates func(*SourceUpdater) erro
 	errCh := make(chan error)
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
-		if s != nil {
+		if s == nil {
 			errCh <- NoSuchEntryError("no such source")
 			return
 		}
