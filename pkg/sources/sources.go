@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -290,9 +291,20 @@ func (s *source) httpClient() *http.Client {
 	return &client
 }
 
+func (s *source) applyHeaders(req *http.Request) {
+	for _, header := range s.headers {
+		if k, v, ok := strings.Cut(header, ":"); ok {
+			req.Header.Add(k, v)
+		}
+	}
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Add("User-Agent", UserAgent)
+	}
+}
+
 // doRequest executes an HTTP request with the source specific parameters.
 func (s *source) doRequest(req *http.Request) (*http.Response, error) {
-	req.Header.Add("User-Agent", UserAgent)
+	s.applyHeaders(req)
 
 	// TODO: Implement me!
 	client := s.httpClient()
