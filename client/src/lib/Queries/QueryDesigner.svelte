@@ -316,7 +316,7 @@
 <SectionHeader title="Queries"></SectionHeader>
 <hr class="mb-6" />
 
-{#if loadQueryError}
+{#if loadQueryError !== null}
   <div class="w-3/4">
     <div class="flex h-1 flex-row">
       <div class="flex w-1/3 min-w-40 flex-row items-center gap-x-2">
