@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"slices"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -23,7 +22,8 @@ import (
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
 		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers, ` +
-			`strict_mode, insecure, signature_check, age, ignore_patterns FROM sources`
+			`strict_mode, insecure, signature_check, age, ignore_patterns ` +
+			`FROM sources`
 		feedsSQL = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
@@ -87,12 +87,11 @@ func (m *Manager) Boot(ctx context.Context) error {
 				}
 				f.url = parsed
 				// Add to list of active feeds.
-				idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sid })
-				if idx == -1 {
+				s := m.findSourceByID(sid)
+				if s == nil {
 					// Should really not happen! Considering a panic.
 					return fmt.Errorf("cannot find source id %d", sid)
 				}
-				s := m.sources[idx]
 				s.feeds = append(s.feeds, &f)
 				f.source = s
 			}

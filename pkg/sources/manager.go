@@ -348,7 +348,7 @@ func (m *Manager) Kill() {
 }
 
 func (m *Manager) removeSource(sourceID int64) error {
-	if !slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
+	if m.findSourceByID(sourceID) == nil {
 		return NoSuchEntryError("no such source")
 	}
 	const sql = `DELETE FROM sources WHERE id = $1`
@@ -420,7 +420,7 @@ func (m *Manager) AddSource(
 	insecure *bool,
 	signatureCheck *bool,
 	age *time.Duration,
-	ignorepatterns []*regexp.Regexp,
+	ignorePatterns []*regexp.Regexp,
 ) (int64, error) {
 	lpmd := m.PMD(url)
 	if !lpmd.Valid() {
@@ -438,10 +438,10 @@ func (m *Manager) AddSource(
 		insecure:       insecure,
 		signatureCheck: signatureCheck,
 		age:            age,
-		ignorePatterns: ignorepatterns,
+		ignorePatterns: ignorePatterns,
 	}
 	m.fns <- func(m *Manager) {
-		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
+		if m.findSourceByName(name) != nil {
 			errCh <- InvalidArgumentError("source already exists")
 			return
 		}
@@ -464,7 +464,7 @@ func (m *Manager) AddSource(
 					insecure,
 					signatureCheck,
 					age,
-					ignorepatterns,
+					ignorePatterns,
 				).Scan(&s.id)
 			}, 0,
 		); err != nil {
@@ -667,7 +667,7 @@ func (su *SourceUpdater) UpdateHeaders(headers []string) error {
 	return nil
 }
 
-// UpdateStrict requests an update on strictmode.
+// UpdateStrictMode requests an update on strictmode.
 func (su *SourceUpdater) UpdateStrictMode() error {
 	// ToDo
 	return nil
