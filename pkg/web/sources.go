@@ -14,6 +14,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -24,18 +25,18 @@ import (
 )
 
 type source struct {
-	ID             int64         `json:"id" form:"id"`
-	Name           string        `json:"name" form:"name" binding:"required,min=1"`
-	URL            string        `json:"url" form:"url" binding:"required,min=1"`
-	Active         *bool         `json:"active,omitempty" form:"active"`
-	Rate           *float64      `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots          *int          `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
-	Headers        []string      `json:"headers,omitempty" form:"headers"`
-	Strictmode     bool          `json:"strictmode,omitempty" form:"strictmode"`
-	Insecure       bool          `json:"insecure,omitempty" form:"insecure"`
-	Signaturecheck bool          `json:"signaturecheck,omitempty" form:"signaturecheck"`
-	Age            time.Duration `json:"age,omitempty" form:"age"`
-	Ignorepatterns []string      `json:"ignorepatterns,omitempty" form:"ignorepatterns"`
+	ID             int64          `json:"id" form:"id"`
+	Name           string         `json:"name" form:"name" binding:"required,min=1"`
+	URL            string         `json:"url" form:"url" binding:"required,min=1"`
+	Active         *bool          `json:"active,omitempty" form:"active"`
+	Rate           *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots          *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers        []string       `json:"headers,omitempty" form:"headers"`
+	StrictMode     *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
+	Insecure       *bool          `json:"insecure,omitempty" form:"insecure"`
+	SignatureCheck *bool          `json:"signature_check,omitempty" form:"signature_check"`
+	Age            *time.Duration `json:"age,omitempty" form:"age"`
+	IgnorePatterns []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
 }
 
 type feed struct {
@@ -56,11 +57,11 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		rate *float64,
 		slots *int,
 		headers []string,
-		strictmode bool,
-		insecure bool,
-		signaturecheck bool,
-		age time.Duration,
-		ignorepatterns []string,
+		strictMode *bool,
+		insecure *bool,
+		signatureCheck *bool,
+		age *time.Duration,
+		ignorePatterns []*regexp.Regexp,
 	) {
 		srcs = append(srcs, &source{
 			ID:             id,
@@ -70,14 +71,41 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 			Rate:           rate,
 			Slots:          slots,
 			Headers:        headers,
-			Strictmode:     strictmode,
+			StrictMode:     strictMode,
 			Insecure:       insecure,
-			Signaturecheck: signaturecheck,
+			SignatureCheck: signatureCheck,
 			Age:            age,
-			Ignorepatterns: ignorepatterns,
+			IgnorePatterns: asStrings(ignorePatterns),
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
+}
+
+func asStrings(s []*regexp.Regexp) []string {
+	if s == nil {
+		return nil
+	}
+	slice := make([]string, len(s))
+	for i, x := range s {
+		slice[i] = x.String()
+	}
+	return slice
+}
+
+func asRegexps(s []string) ([]*regexp.Regexp, error) {
+	if s == nil {
+		return nil, nil
+	}
+	slice := make([]*regexp.Regexp, len(s))
+	for i, x := range s {
+		re, err := regexp.Compile(x)
+		if err != nil {
+			return nil, sources.InvalidArgumentError(
+				fmt.Sprintf("ignore pattern %q is not a valid regexp: %v", x, err))
+		}
+		slice[i] = re
+	}
+	return slice, nil
 }
 
 func (c *Controller) createSource(ctx *gin.Context) {
@@ -95,18 +123,27 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
 		return
 	}
+	if err := validateHeaders(src.Headers); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ignorePatterns, err := asRegexps(src.IgnorePatterns)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	switch id, err := c.sm.AddSource(
 		src.Name,
 		src.URL,
 		src.Active,
 		src.Rate,
 		src.Slots,
-		validHeaders(src.Headers),
-		src.Strictmode,
+		src.Headers,
+		src.StrictMode,
 		src.Insecure,
-		src.Signaturecheck,
+		src.SignatureCheck,
 		src.Age,
-		src.Ignorepatterns,
+		ignorePatterns,
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})
@@ -195,7 +232,10 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		}
 		// headers
 		if headers, ok := ctx.GetPostFormArray("headers"); ok {
-			if err := su.UpdateHeaders(validHeaders(headers)); err != nil {
+			if err := validateHeaders(headers); err != nil {
+				return err
+			}
+			if err := su.UpdateHeaders(headers); err != nil {
 				return err
 			}
 		}
@@ -213,14 +253,14 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 	}
 }
 
-func validHeaders(headers []string) []string {
-	var valids []string
+func validateHeaders(headers []string) error {
 	for _, header := range headers {
-		if k, _, ok := strings.Cut(header, ":"); ok && strings.TrimSpace(k) != "" {
-			valids = append(valids, header)
+		if k, _, ok := strings.Cut(header, ":"); !ok || strings.TrimSpace(k) == "" {
+			return sources.InvalidArgumentError(
+				fmt.Sprintf("header %q is invalid", header))
 		}
 	}
-	return valids
+	return nil
 }
 
 func (c *Controller) viewFeeds(ctx *gin.Context) {

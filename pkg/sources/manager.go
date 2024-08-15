@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -238,17 +239,18 @@ func (m *Manager) AllSources(fn func(
 	rate *float64,
 	slots *int,
 	headers []string,
-	strictmode bool,
-	insecure bool,
-	signaturecheck bool,
-	age time.Duration,
-	ignorepatterns []string,
+	strictmode *bool,
+	insecure *bool,
+	signatureCheck *bool,
+	age *time.Duration,
+	ignorepatterns []*regexp.Regexp,
 )) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
 		for _, s := range m.sources {
-			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers, s.strictmode, s.insecure, s.signaturecheck, s.age, s.ignorepatterns)
+			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers,
+				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns)
 		}
 	}
 	<-done
@@ -414,11 +416,11 @@ func (m *Manager) AddSource(
 	rate *float64,
 	slots *int,
 	headers []string,
-	strictmode bool,
-	insecure bool,
-	signaturecheck bool,
-	age time.Duration,
-	ignorepatterns []string,
+	strictmode *bool,
+	insecure *bool,
+	signatureCheck *bool,
+	age *time.Duration,
+	ignorepatterns []*regexp.Regexp,
 ) (int64, error) {
 	lpmd := m.PMD(url)
 	if !lpmd.Valid() {
@@ -432,18 +434,20 @@ func (m *Manager) AddSource(
 		rate:           rate,
 		slots:          slots,
 		headers:        headers,
-		strictmode:     strictmode,
+		strictMode:     strictmode,
 		insecure:       insecure,
-		signaturecheck: signaturecheck,
+		signatureCheck: signatureCheck,
 		age:            age,
-		ignorepatterns: ignorepatterns,
+		ignorePatterns: ignorepatterns,
 	}
 	m.fns <- func(m *Manager) {
 		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
 			errCh <- InvalidArgumentError("source already exists")
 			return
 		}
-		const sql = `INSERT INTO sources (name, url, active, rate, slots, headers, strict_mode, insecure, signature_check, age, ignore_patterns) ` +
+		const sql = `INSERT INTO sources (` +
+			`name, url, active, rate, slots, headers, ` +
+			`strict_mode, insecure, signature_check, age, ignore_patterns) ` +
 			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ` +
 			`RETURNING id`
 		if err := m.db.Run(
@@ -458,7 +462,7 @@ func (m *Manager) AddSource(
 					headers,
 					strictmode,
 					insecure,
-					signaturecheck,
+					signatureCheck,
 					age,
 					ignorepatterns,
 				).Scan(&s.id)

@@ -6,8 +6,8 @@
 -- SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 -- Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-ALTER TABLE sources ADD strict_mode bool NULL;
-ALTER TABLE sources ADD insecure bool NULL;
-ALTER TABLE sources ADD signature_check bool NULL;
-ALTER TABLE sources ADD age bigint NULL;
+ALTER TABLE sources ADD COLUMN strict_mode     bool;
+ALTER TABLE sources ADD COLUMN insecure        bool;
+ALTER TABLE sources ADD COLUMN signature_check bool;
+ALTER TABLE sources ADD COLUMN age             interval;
 ALTER TABLE sources ADD COLUMN ignore_patterns text[];

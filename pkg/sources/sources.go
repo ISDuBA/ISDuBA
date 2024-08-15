@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -66,22 +67,22 @@ type feed struct {
 }
 
 type source struct {
-	id     int64
-	name   string
-	url    string
-	rate   *float64
-	slots  *int
-	active bool
+	id        int64
+	name      string
+	url       string
+	active    bool
+	feeds     []*feed
+	usedSlots int
 
-	feeds          []*feed
-	usedSlots      int
+	rate           *float64
 	limiter        *rate.Limiter
+	slots          *int
 	headers        []string
-	strictmode     bool
-	insecure       bool
-	signaturecheck bool
-	age            time.Duration
-	ignorepatterns []string
+	strictMode     *bool
+	insecure       *bool
+	signatureCheck *bool
+	age            *time.Duration
+	ignorePatterns []*regexp.Regexp
 }
 
 // refresh fetches the feed index and accordingly updates
