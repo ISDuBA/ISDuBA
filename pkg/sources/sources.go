@@ -15,7 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"sync"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -75,8 +75,8 @@ type source struct {
 
 	feeds     []*feed
 	usedSlots int
-	limiterMu sync.Mutex
 	limiter   *rate.Limiter
+	headers   []string
 }
 
 // refresh fetches the feed index and accordingly updates
@@ -150,7 +150,7 @@ func (f *feed) fetchIndex() ([]location, error) {
 	if !f.lastModified.IsZero() {
 		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
-	resp, err := f.source.doRequest(req)
+	resp, err := f.source.doRequestDirectly(req)
 	if err != nil {
 		return nil, err
 	}
@@ -265,22 +265,19 @@ func (f *feed) findWaiting() *location {
 }
 
 func (s *source) setRate(rate *float64) {
-	s.limiterMu.Lock()
 	s.rate = rate
 	s.limiter = nil
-	s.limiterMu.Unlock()
 }
 
 // wait establishes the request rate per source.
-func (s *source) wait(ctx context.Context) {
-	s.limiterMu.Lock()
-	defer s.limiterMu.Unlock()
-	if s.rate != nil {
-		if s.limiter == nil {
-			s.limiter = rate.NewLimiter(rate.Limit(*s.rate), 1)
-		}
-		s.limiter.Wait(ctx)
+func (s *source) wait() *rate.Limiter {
+	if s.rate == nil {
+		return nil
 	}
+	if s.limiter == nil {
+		s.limiter = rate.NewLimiter(rate.Limit(*s.rate), 1)
+	}
+	return s.limiter
 }
 
 func (s *source) httpClient() *http.Client {
@@ -289,27 +286,59 @@ func (s *source) httpClient() *http.Client {
 	return &client
 }
 
-// doRequest executes an HTTP request with the source specific parameters.
-func (s *source) doRequest(req *http.Request) (*http.Response, error) {
-	req.Header.Add("User-Agent", UserAgent)
-
-	// TODO: Implement me!
-	client := s.httpClient()
-	s.wait(context.Background())
-	return client.Do(req)
+func (s *source) applyHeaders(req *http.Request) {
+	for _, header := range s.headers {
+		if k, v, ok := strings.Cut(header, ":"); ok {
+			req.Header.Add(k, v)
+		}
+	}
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Add("User-Agent", UserAgent)
+	}
 }
 
-func (s *source) httpGet(url string) (*http.Response, error) {
+// doRequestDirectly executes an HTTP request with the source specific parameters.
+func (s *source) doRequestDirectly(req *http.Request) (*http.Response, error) {
+	s.applyHeaders(req)
+	if limiter := s.wait(); limiter != nil {
+		limiter.Wait(context.Background())
+	}
+	return s.httpClient().Do(req)
+}
+
+// doRequest executes an HTTP request with the source specific parameters.
+func (s *source) doRequest(m *Manager, req *http.Request) (*http.Response, error) {
+	// The manager owns the configuration.
+	// So we let the manager do the adjustment of the request.
+
+	var limiter *rate.Limiter
+
+	done := make(chan struct{})
+	m.fns <- func(_ *Manager) {
+		defer close(done)
+		s.applyHeaders(req)
+		limiter = s.wait()
+	}
+	<-done
+
+	if limiter != nil {
+		limiter.Wait(context.Background())
+	}
+
+	return s.httpClient().Do(req)
+}
+
+func (s *source) httpGet(m *Manager, url string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	return s.doRequest(req)
+	return s.doRequest(m, req)
 }
 
 // loadHash fetches text form of a hash from remote location.
-func (s *source) loadHash(url string) ([]byte, error) {
-	resp, err := s.httpGet(url)
+func (s *source) loadHash(m *Manager, url string) ([]byte, error) {
+	resp, err := s.httpGet(m, url)
 	if err != nil {
 		return nil, err
 	}

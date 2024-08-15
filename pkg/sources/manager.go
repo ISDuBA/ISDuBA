@@ -181,8 +181,10 @@ func (m *Manager) startDownloads() {
 			location.state = running
 			location.id = m.generateID()
 			started = true
+			// Funtion to be called when the download is finished.
+			done := m.downloadDone(f, location.id)
 			// Calling reciever by value is intended here!
-			go (*location).download(m, f, m.downloadDone(f, location.id))
+			go (*location).download(m, f, done)
 			return m.usedSlots < m.cfg.Sources.DownloadSlots
 		})
 		if !started {
@@ -235,12 +237,13 @@ func (m *Manager) AllSources(fn func(
 	active bool,
 	rate *float64,
 	slots *int,
+	headers []string,
 )) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
 		for _, s := range m.sources {
-			fn(s.id, s.name, s.url, s.active, s.rate, s.slots)
+			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers)
 		}
 	}
 	<-done
@@ -405,6 +408,7 @@ func (m *Manager) AddSource(
 	active *bool,
 	rate *float64,
 	slots *int,
+	headers []string,
 ) (int64, error) {
 	lpmd := m.PMD(url)
 	if !lpmd.Valid() {
@@ -412,19 +416,20 @@ func (m *Manager) AddSource(
 	}
 	errCh := make(chan error)
 	s := &source{
-		name:   name,
-		url:    url,
-		active: active != nil && *active,
-		rate:   rate,
-		slots:  slots,
+		name:    name,
+		url:     url,
+		active:  active != nil && *active,
+		rate:    rate,
+		slots:   slots,
+		headers: headers,
 	}
 	m.fns <- func(m *Manager) {
 		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
 			errCh <- InvalidArgumentError("source already exists")
 			return
 		}
-		const sql = `INSERT INTO sources (name, url, active, rate, slots) ` +
-			`VALUES ($1, $2, $3, $4, $5) ` +
+		const sql = `INSERT INTO sources (name, url, active, rate, slots, headers) ` +
+			`VALUES ($1, $2, $3, $4, $5, $6) ` +
 			`RETURNING id`
 		if err := m.db.Run(
 			context.Background(),
@@ -434,7 +439,9 @@ func (m *Manager) AddSource(
 					url,
 					active != nil && *active,
 					rate,
-					slots).Scan(&s.id)
+					slots,
+					headers,
+				).Scan(&s.id)
 			}, 0,
 		); err != nil {
 			errCh <- fmt.Errorf("adding source to database failed: %w", err)
@@ -619,6 +626,20 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 			su.manager.backgroundPing()
 		}
 	}, "active", active)
+	return nil
+}
+
+// UpdateHeaders requests a headers update.
+func (su *SourceUpdater) UpdateHeaders(headers []string) error {
+	if slices.Equal(headers, su.source.headers) {
+		return nil
+	}
+	if len(headers) == 0 {
+		headers = nil
+	} else {
+		headers = append(make([]string, 0, len(headers)), headers...)
+	}
+	su.addChange(func(s *source) { s.headers = headers }, "headers", headers)
 	return nil
 }
 

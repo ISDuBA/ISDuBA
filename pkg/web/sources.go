@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -23,12 +24,13 @@ import (
 )
 
 type source struct {
-	ID     int64    `json:"id" form:"id"`
-	Name   string   `json:"name" form:"name" binding:"required,min=1"`
-	URL    string   `json:"url" form:"url" binding:"required,min=1"`
-	Active *bool    `json:"active,omitempty" form:"active"`
-	Rate   *float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots  *int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	ID      int64    `json:"id" form:"id"`
+	Name    string   `json:"name" form:"name" binding:"required,min=1"`
+	URL     string   `json:"url" form:"url" binding:"required,min=1"`
+	Active  *bool    `json:"active,omitempty" form:"active"`
+	Rate    *float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots   *int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers []string `json:"headers,omitempty" form:"headers"`
 }
 
 type feed struct {
@@ -48,14 +50,16 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		active bool,
 		rate *float64,
 		slots *int,
+		headers []string,
 	) {
 		srcs = append(srcs, &source{
-			ID:     id,
-			Name:   name,
-			URL:    url,
-			Active: &active,
-			Rate:   rate,
-			Slots:  slots,
+			ID:      id,
+			Name:    name,
+			URL:     url,
+			Active:  &active,
+			Rate:    rate,
+			Slots:   slots,
+			Headers: headers,
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
@@ -82,6 +86,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.Active,
 		src.Rate,
 		src.Slots,
+		validHeaders(src.Headers),
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})
@@ -168,6 +173,12 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 				return err
 			}
 		}
+		// headers
+		if headers, ok := ctx.GetPostFormArray("headers"); ok {
+			if err := su.UpdateHeaders(validHeaders(headers)); err != nil {
+				return err
+			}
+		}
 		return nil
 	}); {
 	case err == nil:
@@ -180,6 +191,16 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+}
+
+func validHeaders(headers []string) []string {
+	var valids []string
+	for _, header := range headers {
+		if k, _, ok := strings.Cut(header, ":"); ok && strings.TrimSpace(k) != "" {
+			valids = append(valids, header)
+		}
+	}
+	return valids
 }
 
 func (c *Controller) viewFeeds(ctx *gin.Context) {
