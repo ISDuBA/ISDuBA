@@ -73,10 +73,15 @@ type source struct {
 	slots  *int
 	active bool
 
-	feeds     []*feed
-	usedSlots int
-	limiter   *rate.Limiter
-	headers   []string
+	feeds          []*feed
+	usedSlots      int
+	limiter        *rate.Limiter
+	headers        []string
+	strictmode     bool
+	insecure       bool
+	signaturecheck bool
+	age            time.Duration
+	ignorepatterns []string
 }
 
 // refresh fetches the feed index and accordingly updates

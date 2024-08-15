@@ -22,7 +22,7 @@ import (
 // Boot loads the sources from database.
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
-		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers FROM sources`
+		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers, strict_mode, insecure, signature_check, age, ignore_patterns FROM sources`
 		feedsSQL   = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(

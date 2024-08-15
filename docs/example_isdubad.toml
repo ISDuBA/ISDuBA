@@ -51,6 +51,9 @@
 # '*' = ["WHITE"]
 
 # [sources]
+# strictmode = true
+# insecure = false
+# signaturecheck = true
 # download_slots = 100
 # max_slots_per_source = 2
 # max_rate_per_source = 0

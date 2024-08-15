@@ -24,13 +24,18 @@ import (
 )
 
 type source struct {
-	ID      int64    `json:"id" form:"id"`
-	Name    string   `json:"name" form:"name" binding:"required,min=1"`
-	URL     string   `json:"url" form:"url" binding:"required,min=1"`
-	Active  *bool    `json:"active,omitempty" form:"active"`
-	Rate    *float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots   *int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
-	Headers []string `json:"headers,omitempty" form:"headers"`
+	ID             int64         `json:"id" form:"id"`
+	Name           string        `json:"name" form:"name" binding:"required,min=1"`
+	URL            string        `json:"url" form:"url" binding:"required,min=1"`
+	Active         *bool         `json:"active,omitempty" form:"active"`
+	Rate           *float64      `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots          *int          `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers        []string      `json:"headers,omitempty" form:"headers"`
+	Strictmode     bool          `json:"strictmode,omitempty" form:"strictmode"`
+	Insecure       bool          `json:"insecure,omitempty" form:"insecure"`
+	Signaturecheck bool          `json:"signaturecheck,omitempty" form:"signaturecheck"`
+	Age            time.Duration `json:"age,omitempty" form:"age"`
+	Ignorepatterns []string      `json:"ignorepatterns,omitempty" form:"ignorepatterns"`
 }
 
 type feed struct {
@@ -51,15 +56,25 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		rate *float64,
 		slots *int,
 		headers []string,
+		strictmode bool,
+		insecure bool,
+		signaturecheck bool,
+		age time.Duration,
+		ignorepatterns []string,
 	) {
 		srcs = append(srcs, &source{
-			ID:      id,
-			Name:    name,
-			URL:     url,
-			Active:  &active,
-			Rate:    rate,
-			Slots:   slots,
-			Headers: headers,
+			ID:             id,
+			Name:           name,
+			URL:            url,
+			Active:         &active,
+			Rate:           rate,
+			Slots:          slots,
+			Headers:        headers,
+			Strictmode:     strictmode,
+			Insecure:       insecure,
+			Signaturecheck: signaturecheck,
+			Age:            age,
+			Ignorepatterns: ignorepatterns,
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
@@ -87,6 +102,11 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.Rate,
 		src.Slots,
 		validHeaders(src.Headers),
+		src.Strictmode,
+		src.Insecure,
+		src.Signaturecheck,
+		src.Age,
+		src.Ignorepatterns,
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})

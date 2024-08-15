@@ -97,6 +97,9 @@ const (
 	defaultFeedImporter         = "feedimporter"
 	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
+	defaultStrictMode     = true
+	defaultInsecure       = false
+	defaultSignatureCheck = true
 )
 
 const (
@@ -182,6 +185,9 @@ type Sources struct {
 	PublishersTLPs    models.PublishersTLPs `toml:"publishers_tlps"`
 	FeedImporter      string                `toml:"feed_importer"`
 	DefaultMessage    string                `toml:"default_message"`
+	StrictMode        bool                  `toml:"strictmode"`
+	Insecure          bool                  `toml:"insecure"`
+	SignatureCheck    bool                  `toml:"signautrecheck"`
 }
 
 // Client are the config options for the client.
@@ -314,6 +320,9 @@ func Load(file string) (*Config, error) {
 			FeedImporter:      defaultFeedImporter,
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
 			DefaultMessage:    defaultMessageSourceManager,
+			StrictMode:        defaultStrictMode,
+			Insecure:          defaultInsecure,
+			SignatureCheck:    defaultSignatureCheck,
 		},
 		RemoteValidator: csaf.RemoteValidatorOptions{
 			URL:     defaultRemoteValidatorURL,
@@ -399,6 +408,9 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_FEED_LOG_LEVEL", storeFeedLogLevel(&cfg.Sources.FeedLogLevel)},
 		envStore{"ISDUBA_SOURCES_FEED_IMPORTER", storeString(&cfg.Sources.FeedImporter)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
+		envStore{"ISDUBA_SOURCES_STRICT_MODE", storeBool(&cfg.Sources.StrictMode)},
+		envStore{"ISDUBA_SOURCES_INSECURE", storeBool(&cfg.Sources.Insecure)},
+		envStore{"ISDUBA_SOURCES_SIGNATURE_CHECK", storeBool(&cfg.Sources.SignatureCheck)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_URL", storeString(&cfg.RemoteValidator.URL)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_Cache", storeString(&cfg.RemoteValidator.Cache)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},

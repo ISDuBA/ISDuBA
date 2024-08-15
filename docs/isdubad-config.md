@@ -97,6 +97,9 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
+- `strictmode`: Enables strict checking of sources. Defaults to `true`.
+- `insecure`: Enables insecure mode (e.g. allowing usage of HTTP). Defaults to `false`.
+- `signaturecheck`: . Defaults to `true`.
 - `download_slots`: The number of concurrent downloads from the sources. Defaults to `100`.
 - `max_slots_per_source`: The number of concurrent downloads per source. Defaults to `2`.
 - `max_rate_per_source`: The Number of requests per source per second. Defaults to `0` (unlimited).
