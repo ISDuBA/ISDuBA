@@ -185,9 +185,9 @@ type Sources struct {
 	PublishersTLPs    models.PublishersTLPs `toml:"publishers_tlps"`
 	FeedImporter      string                `toml:"feed_importer"`
 	DefaultMessage    string                `toml:"default_message"`
-	StrictMode        bool                  `toml:"strictmode"`
+	StrictMode        bool                  `toml:"strict_mode"`
 	Insecure          bool                  `toml:"insecure"`
-	SignatureCheck    bool                  `toml:"signautrecheck"`
+	SignatureCheck    bool                  `toml:"signature_check"`
 }
 
 // Client are the config options for the client.

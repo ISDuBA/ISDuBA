@@ -97,9 +97,9 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
-- `strictmode`: Enables strict checking of sources. Defaults to `true`.
-- `insecure`: Enables insecure mode (e.g. allowing usage of HTTP). Defaults to `false`.
-- `signaturecheck`: . Defaults to `true`.
+- `strict_mode`: Enables strict checking of sources. Defaults to `true`.
+- `insecure`: Enables insecure mode (Don't check TLS certficates of HTTPS transfer). Defaults to `false`.
+- `signature_check`: Failing OpenPGP signature check stops import of document. Defaults to `true`.
 - `download_slots`: The number of concurrent downloads from the sources. Defaults to `100`.
 - `max_slots_per_source`: The number of concurrent downloads per source. Defaults to `2`.
 - `max_rate_per_source`: The Number of requests per source per second. Defaults to `0` (unlimited).
@@ -165,6 +165,9 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_SOURCES_FEED_LOG_LEVEL`       | `sources feed_log_level`             |
 | `ISDUBA_SOURCES_FEED_IMPORTER`        | `sources feed_importer`              |
 | `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `sources default_message`            |
+| `ISDUBA_SOURCES_STRICT_MODE`          | `sources strict_mode`                |
+| `ISDUBA_SOURCES_INSECURE`             | `sources insecure`                   |
+| `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |
 | `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
 | `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |
