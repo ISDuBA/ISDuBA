@@ -181,8 +181,10 @@ func (m *Manager) startDownloads() {
 			location.state = running
 			location.id = m.generateID()
 			started = true
+			// Funtion to be called when the download is finished.
+			done := m.downloadDone(f, location.id)
 			// Calling reciever by value is intended here!
-			go (*location).download(m, f, m.downloadDone(f, location.id))
+			go (*location).download(m, f, done)
 			return m.usedSlots < m.cfg.Sources.DownloadSlots
 		})
 		if !started {

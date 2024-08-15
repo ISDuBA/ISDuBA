@@ -69,7 +69,7 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 			continue
 		}
 		u = base.ResolveReference(u)
-		res, err := source.httpGet(u.String())
+		res, err := source.httpGet(m, u.String())
 		if err != nil {
 			slog.Warn(
 				"Fetching public OpenPGP key failed",
@@ -114,8 +114,8 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 }
 
 // loadSignature loads an ascii armored OpenPGP signature file from a given url.
-func (s *source) loadSignature(u *url.URL) (*crypto.PGPSignature, []byte, error) {
-	resp, err := s.httpGet(u.String())
+func (s *source) loadSignature(m *Manager, u *url.URL) (*crypto.PGPSignature, []byte, error) {
+	resp, err := s.httpGet(m, u.String())
 	if err != nil {
 		return nil, nil, err
 	}

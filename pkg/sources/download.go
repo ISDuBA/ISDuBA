@@ -50,7 +50,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		}
 		if checksum != nil {
 			var err error
-			if remoteChecksum, err = f.source.loadHash(hashFile); err != nil {
+			if remoteChecksum, err = f.source.loadHash(m, hashFile); err != nil {
 				f.log(m, config.WarnFeedLogLevel, "fetching hash %q failed: %v", hashFile, err)
 			} else {
 				writers = append(writers, checksum)
@@ -65,7 +65,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			{".sha256", sha256.New},
 		} {
 			guess := l.doc.String() + h.ext
-			if rc, err := f.source.loadHash(guess); err == nil {
+			if rc, err := f.source.loadHash(m, guess); err == nil {
 				remoteChecksum, checksum = rc, h.cstr()
 				writers = append(writers, checksum)
 				break
@@ -74,7 +74,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	}
 
 	// Download the CSAF document.
-	resp, err := f.source.httpGet(l.doc.String())
+	resp, err := f.source.httpGet(m, l.doc.String())
 	if err != nil {
 		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %v", l.doc, err)
 		return
@@ -159,7 +159,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			goto skipSignatureCheck
 		}
 		var err error
-		if signature, signatureData, err = f.source.loadSignature(sign); err != nil {
+		if signature, signatureData, err = f.source.loadSignature(m, sign); err != nil {
 			f.log(m, config.ErrorFeedLogLevel,
 				"Loading OpenPGP signature for %q failed: %v", l.doc, err)
 		} else {
