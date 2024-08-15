@@ -239,6 +239,60 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 				return err
 			}
 		}
+		// Little helper function for the otional bool fields.
+		optBool := func(option string, update func(*bool) error) error {
+			value, ok := ctx.GetPostForm(option)
+			if !ok {
+				return nil
+			}
+			var b *bool
+			if value != "" {
+				v, err := strconv.ParseBool(value)
+				if err != nil {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("parsing %q failed: %v", option, err.Error()))
+				}
+				b = &v
+			}
+			return update(b)
+		}
+		// strictMode
+		if err := optBool("strict_mode", su.UpdateStrictMode); err != nil {
+			return err
+		}
+		// insecure
+		if err := optBool("insecure", su.UpdateInsecure); err != nil {
+			return err
+		}
+		// signatureCheck
+		if err := optBool("signature_check", su.UpdateSignatureCheck); err != nil {
+			return err
+		}
+		// age
+		if value, ok := ctx.GetPostForm("age"); ok {
+			var age *time.Duration
+			if value != "" {
+				d, err := time.ParseDuration(value)
+				if err != nil {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("parsing 'age' failed: %v", err.Error()))
+				}
+				age = &d
+			}
+			if err := su.UpdateAge(age); err != nil {
+				return err
+			}
+		}
+		// ignorePatterns
+		if patterns, ok := ctx.GetPostFormArray("ignore_patterns"); ok {
+			regexps, err := asRegexps(patterns)
+			if err != nil {
+				return err
+			}
+			if err := su.UpdateIgnorePatterns(regexps); err != nil {
+				return err
+			}
+		}
 		return nil
 	}); {
 	case err == nil:

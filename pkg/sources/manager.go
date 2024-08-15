@@ -653,47 +653,80 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 	return nil
 }
 
+// clone as slices.Clone sadly does not work that way.
+func clone[S ~[]E, E any](s S) S {
+	if len(s) == 0 {
+		return nil
+	}
+	return append(make(S, 0, len(s)), s...)
+}
+
 // UpdateHeaders requests a headers update.
 func (su *SourceUpdater) UpdateHeaders(headers []string) error {
 	if slices.Equal(headers, su.source.headers) {
 		return nil
 	}
-	if len(headers) == 0 {
-		headers = nil
-	} else {
-		headers = append(make([]string, 0, len(headers)), headers...)
-	}
+	headers = clone(headers)
 	su.addChange(func(s *source) { s.headers = headers }, "headers", headers)
 	return nil
 }
 
-// UpdateStrictMode requests an update on strictmode.
-func (su *SourceUpdater) UpdateStrictMode() error {
-	// ToDo
+// UpdateStrictMode requests an update on strictMode.
+func (su *SourceUpdater) UpdateStrictMode(strictMode *bool) error {
+	if su.source.strictMode == nil && strictMode == nil {
+		return nil
+	}
+	if su.source.strictMode != nil && strictMode != nil && *su.source.strictMode == *strictMode {
+		return nil
+	}
+	su.addChange(func(s *source) { s.strictMode = strictMode }, "strict_mode", strictMode)
 	return nil
 }
 
 // UpdateInsecure requests an update on insecure.
-func (su *SourceUpdater) UpdateInsecure() error {
-	// ToDo
+func (su *SourceUpdater) UpdateInsecure(insecure *bool) error {
+	if su.source.insecure == nil && insecure == nil {
+		return nil
+	}
+	if su.source.insecure != nil && insecure != nil && *su.source.insecure == *insecure {
+		return nil
+	}
+	su.addChange(func(s *source) { s.insecure = insecure }, "insecure", insecure)
 	return nil
 }
 
-// UpdateSignatureCheck requests an update.
-func (su *SourceUpdater) UpdateSignatureCheck() error {
-	// ToDo
+// UpdateSignatureCheck requests an update on signatureCheck.
+func (su *SourceUpdater) UpdateSignatureCheck(signatureCheck *bool) error {
+	if su.source.signatureCheck == nil && signatureCheck == nil {
+		return nil
+	}
+	if su.source.signatureCheck != nil && signatureCheck != nil && *su.source.signatureCheck == *signatureCheck {
+		return nil
+	}
+	su.addChange(func(s *source) { s.signatureCheck = signatureCheck }, "signature_check", signatureCheck)
 	return nil
 }
 
 // UpdateAge requests an update on age.
-func (su *SourceUpdater) UpdateAge() error {
-	// ToDo
+func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
+	if su.source.age == nil && age == nil {
+		return nil
+	}
+	if su.source.age != nil && age != nil && *su.source.age == *age {
+		return nil
+	}
+	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
 	return nil
 }
 
-// UpdateIgnorepatterns requests an update on ignorepatterns.
-func (su *SourceUpdater) UpdateIgnorepatterns() error {
-	// ToDo
+// UpdateIgnorePatterns requests an update on ignorepatterns.
+func (su *SourceUpdater) UpdateIgnorePatterns(ignorePatterns []*regexp.Regexp) error {
+	if slices.EqualFunc(su.source.ignorePatterns, ignorePatterns,
+		func(a, b *regexp.Regexp) bool { return a != nil && b != nil && a.String() == b.String() }) {
+		return nil
+	}
+	ignorePatterns = clone(ignorePatterns)
+	su.addChange(func(s *source) { s.setIgnorePatterns(ignorePatterns) }, "ignore_patterns", ignorePatterns)
 	return nil
 }
 

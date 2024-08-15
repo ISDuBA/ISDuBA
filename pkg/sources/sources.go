@@ -270,6 +270,75 @@ func (f *feed) findWaiting() *location {
 	return nil
 }
 
+// forceIndexRefresh forces an index refresh on all feeds of a source.
+func (s *source) forceIndexRefresh() {
+	past := time.Now().Add(-time.Minute)
+	for _, f := range s.feeds {
+		if !f.invalid.Load() {
+			f.nextCheck = past
+		}
+	}
+}
+
+// deleteTooOld removes locations from the feeds of the source
+// which are before the accepted age.
+func (s *source) deleteTooOld() {
+	if s.age == nil {
+		return
+	}
+	cut := time.Now().Add(-*s.age)
+	for _, f := range s.feeds {
+		if f.invalid.Load() {
+			continue
+		}
+		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+			return l.state == waiting && l.updated.Before(cut)
+		})
+	}
+}
+
+// ignore returns true if the given url should be ignored.
+func (s *source) ignore(u *url.URL) bool {
+	if len(s.ignorePatterns) == 0 {
+		return false
+	}
+	p := u.String()
+	for _, pattern := range s.ignorePatterns {
+		if pattern.MatchString(p) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *source) setAge(age *time.Duration) {
+	s.age = age
+	s.deleteTooOld()
+	s.forceIndexRefresh()
+}
+
+// deleteIgnore remove the location from the feeds of this source
+// which should be ignored.
+func (s *source) deleteIgnore() {
+	if len(s.ignorePatterns) == 0 {
+		return
+	}
+	for _, f := range s.feeds {
+		if f.invalid.Load() {
+			continue
+		}
+		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+			return l.state == waiting && s.ignore(l.doc)
+		})
+	}
+}
+
+func (s *source) setIgnorePatterns(ignorePatterns []*regexp.Regexp) {
+	s.ignorePatterns = ignorePatterns
+	s.deleteIgnore()
+	s.forceIndexRefresh()
+}
+
 func (s *source) setRate(rate *float64) {
 	s.rate = rate
 	s.limiter = nil
