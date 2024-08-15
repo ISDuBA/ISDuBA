@@ -197,6 +197,8 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 		case EventMode:
 			b.WriteString(commentsCountEvents)
 		}
+	case "event_state":
+		b.WriteString("events_log.state")
 	default:
 		b.WriteString(column)
 	}
