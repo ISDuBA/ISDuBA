@@ -56,7 +56,34 @@
     });
   };
 
+  let onConfigLoad: any;
+
+  let inactivityTime = () => {
+    let time: number;
+
+    const resetTimer = () => {
+      clearTimeout(time);
+      time = setTimeout(logout, Number(appStore.getIdleTimeout() / (1000 * 1000)));
+    };
+
+    document.onmousemove = resetTimer;
+    document.onkeydown = resetTimer;
+    onConfigLoad = resetTimer;
+
+    const logout = async () => {
+      appStore.setSessionExpired(true);
+      appStore.setSessionExpiredMessage("Idle logout");
+      sessionStorage.clear();
+      await $appStore.app.userManager?.signoutRedirect();
+    };
+  };
+
+  inactivityTime();
+
   loadConfig().then(() => {
+    if (onConfigLoad) {
+      onConfigLoad();
+    }
     let userManager = new UserManager(configuration.getConfiguration());
     userManager.events.addSilentRenewError(function (e) {
       appStore.setIsUserLoggedIn(false);
@@ -118,29 +145,6 @@
     if (!appStore.getUserManager()) return false;
     if (!checkUserForRoles()) return false;
     return appStore.getIsUserLoggedIn();
-  };
-
-  let inactivityTime = function () {
-    let time: number;
-    window.onload = resetTimer;
-    document.onmousemove = resetTimer;
-    document.onkeydown = resetTimer;
-
-    async function logout() {
-      appStore.setSessionExpired(true);
-      appStore.setSessionExpiredMessage("Idle logout");
-      sessionStorage.clear();
-      await $appStore.app.userManager?.signoutRedirect();
-    }
-
-    function resetTimer() {
-      clearTimeout(time);
-      time = setTimeout(logout, Number(appStore.getIdleTimeout() / (1000 * 1000)));
-    }
-  };
-
-  window.onload = () => {
-    inactivityTime();
   };
 
   const routes = {
