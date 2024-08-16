@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"slices"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,8 +21,10 @@ import (
 // Boot loads the sources from database.
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
-		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers FROM sources`
-		feedsSQL   = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
+		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers, ` +
+			`strict_mode, insecure, signature_check, age, ignore_patterns ` +
+			`FROM sources`
+		feedsSQL = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
 		ctx,
@@ -40,14 +41,29 @@ func (m *Manager) Boot(ctx context.Context) error {
 			}
 			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*source, error) {
 				var s source
-				return &s, row.Scan(
+				var patterns []string
+				if err := row.Scan(
 					&s.id,
 					&s.name,
 					&s.url,
 					&s.rate,
 					&s.slots,
 					&s.active,
-					&s.headers)
+					&s.headers,
+					&s.strictMode,
+					&s.insecure,
+					&s.signatureCheck,
+					&s.age,
+					&patterns,
+				); err != nil {
+					return nil, err
+				}
+				regexps, err := AsRegexps(patterns)
+				if err != nil {
+					return nil, err
+				}
+				s.ignorePatterns = regexps
+				return &s, nil
 			})
 			if err != nil {
 				return fmt.Errorf("collecting sources failed: %w", err)
@@ -80,12 +96,11 @@ func (m *Manager) Boot(ctx context.Context) error {
 				}
 				f.url = parsed
 				// Add to list of active feeds.
-				idx := slices.IndexFunc(m.sources, func(s *source) bool { return s.id == sid })
-				if idx == -1 {
+				s := m.findSourceByID(sid)
+				if s == nil {
 					// Should really not happen! Considering a panic.
 					return fmt.Errorf("cannot find source id %d", sid)
 				}
-				s := m.sources[idx]
 				s.feeds = append(s.feeds, &f)
 				f.source = s
 			}

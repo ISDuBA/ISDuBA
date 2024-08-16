@@ -11,9 +11,11 @@ package sources
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -66,17 +68,22 @@ type feed struct {
 }
 
 type source struct {
-	id     int64
-	name   string
-	url    string
-	rate   *float64
-	slots  *int
-	active bool
-
+	id        int64
+	name      string
+	url       string
+	active    bool
 	feeds     []*feed
 	usedSlots int
-	limiter   *rate.Limiter
-	headers   []string
+
+	rate           *float64
+	limiter        *rate.Limiter
+	slots          *int
+	headers        []string
+	strictMode     *bool
+	insecure       *bool
+	signatureCheck *bool
+	age            *time.Duration
+	ignorePatterns []*regexp.Regexp
 }
 
 // refresh fetches the feed index and accordingly updates
@@ -85,7 +92,7 @@ func (f *feed) refresh(m *Manager) error {
 
 	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
-	candidates, err := f.fetchIndex()
+	candidates, err := f.fetchIndex(m)
 	if err != nil {
 		return fmt.Errorf("fetching feed index failed: %w", err)
 	}
@@ -139,7 +146,7 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 }
 
 // fetchIndex fetches the content of the feed index.
-func (f *feed) fetchIndex() ([]location, error) {
+func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 	req, err := http.NewRequest(http.MethodGet, f.url.String(), nil)
 	if err != nil {
 		return nil, err
@@ -150,7 +157,7 @@ func (f *feed) fetchIndex() ([]location, error) {
 	if !f.lastModified.IsZero() {
 		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
-	resp, err := f.source.doRequestDirectly(req)
+	resp, err := f.source.doRequestDirectly(m, req)
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +271,75 @@ func (f *feed) findWaiting() *location {
 	return nil
 }
 
+// forceIndexRefresh forces an index refresh on all feeds of a source.
+func (s *source) forceIndexRefresh() {
+	past := time.Now().Add(-time.Minute)
+	for _, f := range s.feeds {
+		if !f.invalid.Load() {
+			f.nextCheck = past
+		}
+	}
+}
+
+// deleteTooOld removes locations from the feeds of the source
+// which are before the accepted age.
+func (s *source) deleteTooOld() {
+	if s.age == nil {
+		return
+	}
+	cut := time.Now().Add(-*s.age)
+	for _, f := range s.feeds {
+		if f.invalid.Load() {
+			continue
+		}
+		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+			return l.state == waiting && l.updated.Before(cut)
+		})
+	}
+}
+
+// ignore returns true if the given url should be ignored.
+func (s *source) ignore(u *url.URL) bool {
+	if len(s.ignorePatterns) == 0 {
+		return false
+	}
+	p := u.String()
+	for _, pattern := range s.ignorePatterns {
+		if pattern.MatchString(p) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *source) setAge(age *time.Duration) {
+	s.age = age
+	s.deleteTooOld()
+	s.forceIndexRefresh()
+}
+
+// deleteIgnore remove the location from the feeds of this source
+// which should be ignored.
+func (s *source) deleteIgnore() {
+	if len(s.ignorePatterns) == 0 {
+		return
+	}
+	for _, f := range s.feeds {
+		if f.invalid.Load() {
+			continue
+		}
+		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+			return l.state == waiting && s.ignore(l.doc)
+		})
+	}
+}
+
+func (s *source) setIgnorePatterns(ignorePatterns []*regexp.Regexp) {
+	s.ignorePatterns = ignorePatterns
+	s.deleteIgnore()
+	s.forceIndexRefresh()
+}
+
 func (s *source) setRate(rate *float64) {
 	s.rate = rate
 	s.limiter = nil
@@ -280,9 +356,21 @@ func (s *source) wait() *rate.Limiter {
 	return s.limiter
 }
 
-func (s *source) httpClient() *http.Client {
+func (s *source) httpClient(m *Manager) *http.Client {
 	client := http.Client{}
-	// TODO: Implement me!
+	var tlsConfig tls.Config
+
+	if s.insecure != nil {
+		tlsConfig.InsecureSkipVerify = *s.insecure
+	} else {
+		tlsConfig.InsecureSkipVerify = m.cfg.Sources.Insecure
+	}
+
+	// TODO: Add client certificates here!
+
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tlsConfig,
+	}
 	return &client
 }
 
@@ -298,12 +386,12 @@ func (s *source) applyHeaders(req *http.Request) {
 }
 
 // doRequestDirectly executes an HTTP request with the source specific parameters.
-func (s *source) doRequestDirectly(req *http.Request) (*http.Response, error) {
+func (s *source) doRequestDirectly(m *Manager, req *http.Request) (*http.Response, error) {
 	s.applyHeaders(req)
 	if limiter := s.wait(); limiter != nil {
 		limiter.Wait(context.Background())
 	}
-	return s.httpClient().Do(req)
+	return s.httpClient(m).Do(req)
 }
 
 // doRequest executes an HTTP request with the source specific parameters.
@@ -311,21 +399,22 @@ func (s *source) doRequest(m *Manager, req *http.Request) (*http.Response, error
 	// The manager owns the configuration.
 	// So we let the manager do the adjustment of the request.
 
-	var limiter *rate.Limiter
+	var (
+		limiter *rate.Limiter
+		client  *http.Client
+	)
 
-	done := make(chan struct{})
-	m.fns <- func(_ *Manager) {
-		defer close(done)
+	m.inManager(func(m *Manager) {
 		s.applyHeaders(req)
+		client = s.httpClient(m)
 		limiter = s.wait()
-	}
-	<-done
+	})
 
 	if limiter != nil {
 		limiter.Wait(context.Background())
 	}
 
-	return s.httpClient().Do(req)
+	return client.Do(req)
 }
 
 func (s *source) httpGet(m *Manager, url string) (*http.Response, error) {

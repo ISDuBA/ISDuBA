@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -238,12 +239,18 @@ func (m *Manager) AllSources(fn func(
 	rate *float64,
 	slots *int,
 	headers []string,
+	strictmode *bool,
+	insecure *bool,
+	signatureCheck *bool,
+	age *time.Duration,
+	ignorepatterns []*regexp.Regexp,
 )) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
 		for _, s := range m.sources {
-			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers)
+			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers,
+				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns)
 		}
 	}
 	<-done
@@ -341,7 +348,7 @@ func (m *Manager) Kill() {
 }
 
 func (m *Manager) removeSource(sourceID int64) error {
-	if !slices.ContainsFunc(m.sources, func(s *source) bool { return s.id == sourceID }) {
+	if m.findSourceByID(sourceID) == nil {
 		return NoSuchEntryError("no such source")
 	}
 	const sql = `DELETE FROM sources WHERE id = $1`
@@ -395,6 +402,15 @@ func (m *Manager) removeFeed(feedID int64) error {
 	return nil
 }
 
+func (m *Manager) inManager(fn func(*Manager)) {
+	done := make(chan struct{})
+	m.fns <- func(m *Manager) {
+		defer close(done)
+		fn(m)
+	}
+	<-done
+}
+
 func (m *Manager) asManager(fn func(*Manager, int64) error, id int64) error {
 	err := make(chan error)
 	m.fns <- func(m *Manager) { err <- fn(m, id) }
@@ -409,6 +425,11 @@ func (m *Manager) AddSource(
 	rate *float64,
 	slots *int,
 	headers []string,
+	strictmode *bool,
+	insecure *bool,
+	signatureCheck *bool,
+	age *time.Duration,
+	ignorePatterns []*regexp.Regexp,
 ) (int64, error) {
 	lpmd := m.PMD(url)
 	if !lpmd.Valid() {
@@ -416,20 +437,27 @@ func (m *Manager) AddSource(
 	}
 	errCh := make(chan error)
 	s := &source{
-		name:    name,
-		url:     url,
-		active:  active != nil && *active,
-		rate:    rate,
-		slots:   slots,
-		headers: headers,
+		name:           name,
+		url:            url,
+		active:         active != nil && *active,
+		rate:           rate,
+		slots:          slots,
+		headers:        headers,
+		strictMode:     strictmode,
+		insecure:       insecure,
+		signatureCheck: signatureCheck,
+		age:            age,
+		ignorePatterns: ignorePatterns,
 	}
 	m.fns <- func(m *Manager) {
-		if slices.ContainsFunc(m.sources, func(s *source) bool { return s.name == name }) {
+		if m.findSourceByName(name) != nil {
 			errCh <- InvalidArgumentError("source already exists")
 			return
 		}
-		const sql = `INSERT INTO sources (name, url, active, rate, slots, headers) ` +
-			`VALUES ($1, $2, $3, $4, $5, $6) ` +
+		const sql = `INSERT INTO sources (` +
+			`name, url, active, rate, slots, headers, ` +
+			`strict_mode, insecure, signature_check, age, ignore_patterns) ` +
+			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ` +
 			`RETURNING id`
 		if err := m.db.Run(
 			context.Background(),
@@ -441,6 +469,11 @@ func (m *Manager) AddSource(
 					rate,
 					slots,
 					headers,
+					strictmode,
+					insecure,
+					signatureCheck,
+					age,
+					ignorePatterns,
 				).Scan(&s.id)
 			}, 0,
 		); err != nil {
@@ -629,17 +662,80 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 	return nil
 }
 
+// clone as slices.Clone sadly does not work that way.
+func clone[S ~[]E, E any](s S) S {
+	if len(s) == 0 {
+		return nil
+	}
+	return append(make(S, 0, len(s)), s...)
+}
+
 // UpdateHeaders requests a headers update.
 func (su *SourceUpdater) UpdateHeaders(headers []string) error {
 	if slices.Equal(headers, su.source.headers) {
 		return nil
 	}
-	if len(headers) == 0 {
-		headers = nil
-	} else {
-		headers = append(make([]string, 0, len(headers)), headers...)
-	}
+	headers = clone(headers)
 	su.addChange(func(s *source) { s.headers = headers }, "headers", headers)
+	return nil
+}
+
+// UpdateStrictMode requests an update on strictMode.
+func (su *SourceUpdater) UpdateStrictMode(strictMode *bool) error {
+	if su.source.strictMode == nil && strictMode == nil {
+		return nil
+	}
+	if su.source.strictMode != nil && strictMode != nil && *su.source.strictMode == *strictMode {
+		return nil
+	}
+	su.addChange(func(s *source) { s.strictMode = strictMode }, "strict_mode", strictMode)
+	return nil
+}
+
+// UpdateInsecure requests an update on insecure.
+func (su *SourceUpdater) UpdateInsecure(insecure *bool) error {
+	if su.source.insecure == nil && insecure == nil {
+		return nil
+	}
+	if su.source.insecure != nil && insecure != nil && *su.source.insecure == *insecure {
+		return nil
+	}
+	su.addChange(func(s *source) { s.insecure = insecure }, "insecure", insecure)
+	return nil
+}
+
+// UpdateSignatureCheck requests an update on signatureCheck.
+func (su *SourceUpdater) UpdateSignatureCheck(signatureCheck *bool) error {
+	if su.source.signatureCheck == nil && signatureCheck == nil {
+		return nil
+	}
+	if su.source.signatureCheck != nil && signatureCheck != nil && *su.source.signatureCheck == *signatureCheck {
+		return nil
+	}
+	su.addChange(func(s *source) { s.signatureCheck = signatureCheck }, "signature_check", signatureCheck)
+	return nil
+}
+
+// UpdateAge requests an update on age.
+func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
+	if su.source.age == nil && age == nil {
+		return nil
+	}
+	if su.source.age != nil && age != nil && *su.source.age == *age {
+		return nil
+	}
+	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
+	return nil
+}
+
+// UpdateIgnorePatterns requests an update on ignorepatterns.
+func (su *SourceUpdater) UpdateIgnorePatterns(ignorePatterns []*regexp.Regexp) error {
+	if slices.EqualFunc(su.source.ignorePatterns, ignorePatterns,
+		func(a, b *regexp.Regexp) bool { return a != nil && b != nil && a.String() == b.String() }) {
+		return nil
+	}
+	ignorePatterns = clone(ignorePatterns)
+	su.addChange(func(s *source) { s.setIgnorePatterns(ignorePatterns) }, "ignore_patterns", ignorePatterns)
 	return nil
 }
 

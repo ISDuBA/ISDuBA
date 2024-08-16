@@ -38,20 +38,33 @@ func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
 		return nil
 	}
 	sameOrNewer := f.sameOrNewer()
+	// If we have a max age set calculate the cut time.
+	var cut time.Time
+	if f.source.age != nil {
+		cut = time.Now().Add(-*f.source.age)
+	}
 	// Extract the locations
 	entries := rolie.Feed.Entry
 	dls := make([]location, 0, len(entries))
+nextEntry:
 	for _, entry := range entries {
 		links := entry.Link
-		dl := location{
-			updated: time.Time(entry.Updated),
+		updated := time.Time(entry.Updated)
+		// Apply age filter
+		if f.source.age != nil && updated.Before(cut) {
+			continue
 		}
+		dl := location{updated: updated}
 		for j := range links {
 			link := &links[j]
 			switch link.Rel {
 			case "self":
 				if err := resolve(link.HRef, &dl.doc); err != nil {
 					return nil, err
+				}
+				// Apply ignore patterns
+				if f.source.ignore(dl.doc) {
+					continue nextEntry
 				}
 			case "signature":
 				if err := resolve(link.HRef, &dl.signature); err != nil {
@@ -85,6 +98,12 @@ func (f *feed) directoryLocations(r io.Reader) ([]location, error) {
 
 	sameOrNewer := f.sameOrNewer()
 
+	// If we have a max age set calculate the cut time.
+	var cut time.Time
+	if f.source.age != nil {
+		cut = time.Now().Add(-*f.source.age)
+	}
+
 	var dls []location
 
 	for lineNo := 1; ; lineNo++ {
@@ -105,6 +124,14 @@ func (f *feed) directoryLocations(r io.Reader) ([]location, error) {
 		}
 		if !doc.IsAbs() {
 			doc = f.url.ResolveReference(doc)
+		}
+		// Apply age filter
+		if f.source.age != nil && updated.Before(cut) {
+			continue
+		}
+		// Apply ignore patterns
+		if f.source.ignore(doc) {
+			continue
 		}
 		dl := location{
 			updated: updated,

@@ -14,6 +14,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -24,13 +25,18 @@ import (
 )
 
 type source struct {
-	ID      int64    `json:"id" form:"id"`
-	Name    string   `json:"name" form:"name" binding:"required,min=1"`
-	URL     string   `json:"url" form:"url" binding:"required,min=1"`
-	Active  *bool    `json:"active,omitempty" form:"active"`
-	Rate    *float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots   *int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
-	Headers []string `json:"headers,omitempty" form:"headers"`
+	ID             int64          `json:"id" form:"id"`
+	Name           string         `json:"name" form:"name" binding:"required,min=1"`
+	URL            string         `json:"url" form:"url" binding:"required,min=1"`
+	Active         *bool          `json:"active,omitempty" form:"active"`
+	Rate           *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots          *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers        []string       `json:"headers,omitempty" form:"headers"`
+	StrictMode     *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
+	Insecure       *bool          `json:"insecure,omitempty" form:"insecure"`
+	SignatureCheck *bool          `json:"signature_check,omitempty" form:"signature_check"`
+	Age            *time.Duration `json:"age,omitempty" form:"age"`
+	IgnorePatterns []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
 }
 
 type feed struct {
@@ -51,15 +57,25 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		rate *float64,
 		slots *int,
 		headers []string,
+		strictMode *bool,
+		insecure *bool,
+		signatureCheck *bool,
+		age *time.Duration,
+		ignorePatterns []*regexp.Regexp,
 	) {
 		srcs = append(srcs, &source{
-			ID:      id,
-			Name:    name,
-			URL:     url,
-			Active:  &active,
-			Rate:    rate,
-			Slots:   slots,
-			Headers: headers,
+			ID:             id,
+			Name:           name,
+			URL:            url,
+			Active:         &active,
+			Rate:           rate,
+			Slots:          slots,
+			Headers:        headers,
+			StrictMode:     strictMode,
+			Insecure:       insecure,
+			SignatureCheck: signatureCheck,
+			Age:            age,
+			IgnorePatterns: sources.AsStrings(ignorePatterns),
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
@@ -80,13 +96,27 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
 		return
 	}
+	if err := validateHeaders(src.Headers); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ignorePatterns, err := sources.AsRegexps(src.IgnorePatterns)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	switch id, err := c.sm.AddSource(
 		src.Name,
 		src.URL,
 		src.Active,
 		src.Rate,
 		src.Slots,
-		validHeaders(src.Headers),
+		src.Headers,
+		src.StrictMode,
+		src.Insecure,
+		src.SignatureCheck,
+		src.Age,
+		ignorePatterns,
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})
@@ -175,7 +205,64 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		}
 		// headers
 		if headers, ok := ctx.GetPostFormArray("headers"); ok {
-			if err := su.UpdateHeaders(validHeaders(headers)); err != nil {
+			if err := validateHeaders(headers); err != nil {
+				return err
+			}
+			if err := su.UpdateHeaders(headers); err != nil {
+				return err
+			}
+		}
+		// Little helper function for the otional bool fields.
+		optBool := func(option string, update func(*bool) error) error {
+			value, ok := ctx.GetPostForm(option)
+			if !ok {
+				return nil
+			}
+			var b *bool
+			if value != "" {
+				v, err := strconv.ParseBool(value)
+				if err != nil {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("parsing %q failed: %v", option, err.Error()))
+				}
+				b = &v
+			}
+			return update(b)
+		}
+		// strictMode
+		if err := optBool("strict_mode", su.UpdateStrictMode); err != nil {
+			return err
+		}
+		// insecure
+		if err := optBool("insecure", su.UpdateInsecure); err != nil {
+			return err
+		}
+		// signatureCheck
+		if err := optBool("signature_check", su.UpdateSignatureCheck); err != nil {
+			return err
+		}
+		// age
+		if value, ok := ctx.GetPostForm("age"); ok {
+			var age *time.Duration
+			if value != "" {
+				d, err := time.ParseDuration(value)
+				if err != nil {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("parsing 'age' failed: %v", err.Error()))
+				}
+				age = &d
+			}
+			if err := su.UpdateAge(age); err != nil {
+				return err
+			}
+		}
+		// ignorePatterns
+		if patterns, ok := ctx.GetPostFormArray("ignore_patterns"); ok {
+			regexps, err := sources.AsRegexps(patterns)
+			if err != nil {
+				return err
+			}
+			if err := su.UpdateIgnorePatterns(regexps); err != nil {
 				return err
 			}
 		}
@@ -193,14 +280,14 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 	}
 }
 
-func validHeaders(headers []string) []string {
-	var valids []string
+func validateHeaders(headers []string) error {
 	for _, header := range headers {
-		if k, _, ok := strings.Cut(header, ":"); ok && strings.TrimSpace(k) != "" {
-			valids = append(valids, header)
+		if k, _, ok := strings.Cut(header, ":"); !ok || strings.TrimSpace(k) == "" {
+			return sources.InvalidArgumentError(
+				fmt.Sprintf("header %q is invalid", header))
 		}
 	}
-	return valids
+	return nil
 }
 
 func (c *Controller) viewFeeds(ctx *gin.Context) {
