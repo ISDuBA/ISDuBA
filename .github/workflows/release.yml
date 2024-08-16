@@ -17,8 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
-      repository-projects: write
     env:
       SYFT_GOLANG_SEARCH_LOCAL_MOD_CACHE_LICENSES: true
       SYFT_GOLANG_SEARCH_REMOTE_LICENSES: true
