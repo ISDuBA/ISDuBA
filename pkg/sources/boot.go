@@ -41,7 +41,8 @@ func (m *Manager) Boot(ctx context.Context) error {
 			}
 			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*source, error) {
 				var s source
-				return &s, row.Scan(
+				var patterns []string
+				if err := row.Scan(
 					&s.id,
 					&s.name,
 					&s.url,
@@ -53,8 +54,16 @@ func (m *Manager) Boot(ctx context.Context) error {
 					&s.insecure,
 					&s.signatureCheck,
 					&s.age,
-					&s.ignorePatterns,
-				)
+					&patterns,
+				); err != nil {
+					return nil, err
+				}
+				regexps, err := AsRegexps(patterns)
+				if err != nil {
+					return nil, err
+				}
+				s.ignorePatterns = regexps
+				return &s, nil
 			})
 			if err != nil {
 				return fmt.Errorf("collecting sources failed: %w", err)

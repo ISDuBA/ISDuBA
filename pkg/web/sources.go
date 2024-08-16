@@ -75,37 +75,10 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 			Insecure:       insecure,
 			SignatureCheck: signatureCheck,
 			Age:            age,
-			IgnorePatterns: asStrings(ignorePatterns),
+			IgnorePatterns: sources.AsStrings(ignorePatterns),
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
-}
-
-func asStrings(s []*regexp.Regexp) []string {
-	if s == nil {
-		return nil
-	}
-	slice := make([]string, len(s))
-	for i, x := range s {
-		slice[i] = x.String()
-	}
-	return slice
-}
-
-func asRegexps(s []string) ([]*regexp.Regexp, error) {
-	if s == nil {
-		return nil, nil
-	}
-	slice := make([]*regexp.Regexp, len(s))
-	for i, x := range s {
-		re, err := regexp.Compile(x)
-		if err != nil {
-			return nil, sources.InvalidArgumentError(
-				fmt.Sprintf("ignore pattern %q is not a valid regexp: %v", x, err))
-		}
-		slice[i] = re
-	}
-	return slice, nil
 }
 
 func (c *Controller) createSource(ctx *gin.Context) {
@@ -127,7 +100,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ignorePatterns, err := asRegexps(src.IgnorePatterns)
+	ignorePatterns, err := sources.AsRegexps(src.IgnorePatterns)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -285,7 +258,7 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		}
 		// ignorePatterns
 		if patterns, ok := ctx.GetPostFormArray("ignore_patterns"); ok {
-			regexps, err := asRegexps(patterns)
+			regexps, err := sources.AsRegexps(patterns)
 			if err != nil {
 				return err
 			}

@@ -37,7 +37,19 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		writers        []io.Writer
 		checksum       hash.Hash
 		remoteChecksum []byte
+		strictMode     *bool
+		signatureCheck *bool
 	)
+
+	// The manager owns the configuration.
+	m.inManager(func(_ *Manager) {
+		strictMode = f.source.strictMode
+		signatureCheck = f.source.signatureCheck
+	})
+
+	// TODO: Handle the flags
+	_ = strictMode
+	_ = signatureCheck
 
 	// Loading the hash
 	if l.hash != nil { // ROLIE gave us an URL to hash file.

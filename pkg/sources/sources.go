@@ -11,6 +11,7 @@ package sources
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -91,7 +92,7 @@ func (f *feed) refresh(m *Manager) error {
 
 	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
-	candidates, err := f.fetchIndex()
+	candidates, err := f.fetchIndex(m)
 	if err != nil {
 		return fmt.Errorf("fetching feed index failed: %w", err)
 	}
@@ -145,7 +146,7 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 }
 
 // fetchIndex fetches the content of the feed index.
-func (f *feed) fetchIndex() ([]location, error) {
+func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 	req, err := http.NewRequest(http.MethodGet, f.url.String(), nil)
 	if err != nil {
 		return nil, err
@@ -156,7 +157,7 @@ func (f *feed) fetchIndex() ([]location, error) {
 	if !f.lastModified.IsZero() {
 		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
-	resp, err := f.source.doRequestDirectly(req)
+	resp, err := f.source.doRequestDirectly(m, req)
 	if err != nil {
 		return nil, err
 	}
@@ -355,9 +356,21 @@ func (s *source) wait() *rate.Limiter {
 	return s.limiter
 }
 
-func (s *source) httpClient() *http.Client {
+func (s *source) httpClient(m *Manager) *http.Client {
 	client := http.Client{}
-	// TODO: Implement me!
+	var tlsConfig tls.Config
+
+	if s.insecure != nil {
+		tlsConfig.InsecureSkipVerify = *s.insecure
+	} else {
+		tlsConfig.InsecureSkipVerify = m.cfg.Sources.Insecure
+	}
+
+	// TODO: Add client certificates here!
+
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tlsConfig,
+	}
 	return &client
 }
 
@@ -373,12 +386,12 @@ func (s *source) applyHeaders(req *http.Request) {
 }
 
 // doRequestDirectly executes an HTTP request with the source specific parameters.
-func (s *source) doRequestDirectly(req *http.Request) (*http.Response, error) {
+func (s *source) doRequestDirectly(m *Manager, req *http.Request) (*http.Response, error) {
 	s.applyHeaders(req)
 	if limiter := s.wait(); limiter != nil {
 		limiter.Wait(context.Background())
 	}
-	return s.httpClient().Do(req)
+	return s.httpClient(m).Do(req)
 }
 
 // doRequest executes an HTTP request with the source specific parameters.
@@ -386,21 +399,22 @@ func (s *source) doRequest(m *Manager, req *http.Request) (*http.Response, error
 	// The manager owns the configuration.
 	// So we let the manager do the adjustment of the request.
 
-	var limiter *rate.Limiter
+	var (
+		limiter *rate.Limiter
+		client  *http.Client
+	)
 
-	done := make(chan struct{})
-	m.fns <- func(_ *Manager) {
-		defer close(done)
+	m.inManager(func(m *Manager) {
 		s.applyHeaders(req)
+		client = s.httpClient(m)
 		limiter = s.wait()
-	}
-	<-done
+	})
 
 	if limiter != nil {
 		limiter.Wait(context.Background())
 	}
 
-	return s.httpClient().Do(req)
+	return client.Do(req)
 }
 
 func (s *source) httpGet(m *Manager, url string) (*http.Response, error) {

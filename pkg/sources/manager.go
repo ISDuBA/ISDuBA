@@ -402,6 +402,15 @@ func (m *Manager) removeFeed(feedID int64) error {
 	return nil
 }
 
+func (m *Manager) inManager(fn func(*Manager)) {
+	done := make(chan struct{})
+	m.fns <- func(m *Manager) {
+		defer close(done)
+		fn(m)
+	}
+	<-done
+}
+
 func (m *Manager) asManager(fn func(*Manager, int64) error, id int64) error {
 	err := make(chan error)
 	m.fns <- func(m *Manager) { err <- fn(m, id) }
