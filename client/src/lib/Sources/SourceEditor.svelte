@@ -278,8 +278,7 @@
   };
 
   onMount(async () => {
-    let id;
-    if (params) id = params.id;
+    let id = params?.id;
     if (id) {
       await getSource(Number(id));
       await fetchPMD();
