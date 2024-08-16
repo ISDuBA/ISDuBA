@@ -80,6 +80,8 @@
 
   let sources: Source[] = [];
 
+  let formClass = "max-w-[800pt]";
+
   let source: Source = {
     name: "",
     url: "",
@@ -317,6 +319,7 @@
     on:submit={async () => {
       await saveSource();
     }}
+    class={formClass}
   >
     <Label>Name</Label>
     <Input bind:value={source.name}></Input>
@@ -467,6 +470,7 @@
           calculateMissingFeeds();
         }
       }}
+      class={formClass}
     >
       <Label>URL</Label>
       <Input readonly bind:value={newFeed.url}></Input>
@@ -484,9 +488,9 @@
 {:else}
   <SectionHeader title="Add new source"></SectionHeader>
 
-  <StepIndicator size="h-1" currentStep={currentStep + 1} {steps} />
+  <StepIndicator size="h-1" class={formClass} currentStep={currentStep + 1} {steps} />
   {#if currentStep === 0}
-    <form on:submit={fetchPMD}>
+    <form on:submit={fetchPMD} class={formClass}>
       <Label>URL</Label>
       <Input bind:value={source.url}></Input>
       <Button type="submit" color="light">
@@ -497,6 +501,7 @@
   {/if}
   {#if currentStep === 1}
     <form
+      class={formClass}
       on:submit={async () => {
         if (await saveSource()) {
           currentStep = 2;
@@ -521,6 +526,7 @@
       on:submit={() => {
         saveFeeds(pmdFeeds);
       }}
+      class={formClass}
     >
       {#each pmdFeeds as feed}
         <Label>URL</Label>
