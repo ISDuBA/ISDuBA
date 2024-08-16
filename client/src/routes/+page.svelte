@@ -84,13 +84,15 @@
       onConfigLoad();
     }
     let userManager = new UserManager(configuration.getConfiguration());
-    userManager.events.addSilentRenewError(function (e) {
+    const sessionExpired = (e: any) => {
       appStore.setIsUserLoggedIn(false);
       appStore.setSessionExpiredMessage(e.message);
       appStore.setSessionExpired(true);
       userManager.removeUser();
       push("/login");
-    });
+    };
+    userManager.events.addSilentRenewError(sessionExpired);
+    userManager.events.addAccessTokenExpired(sessionExpired);
     userManager.getUser().then(async (user: User | null) => {
       if (!user) {
         userManager
