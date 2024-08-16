@@ -12,6 +12,7 @@ import { appStore } from "./store";
 import { push } from "svelte-spa-router";
 import type { User } from "oidc-client-ts";
 import type { HttpResponse } from "./types";
+import { jwtDecode } from "jwt-decode";
 
 export const request = async (
   path: string,
@@ -99,6 +100,7 @@ const getAccessToken = async () => {
   const userManager = appStore.getUserManager();
   return userManager.getUser().then(async (user: User) => {
     if (user) {
+      appStore.setTokenParsed(jwtDecode(user.access_token));
       return user.access_token;
     } else {
       await push("/login");
