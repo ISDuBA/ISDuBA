@@ -87,7 +87,7 @@
     let userManager = new UserManager(configuration.getConfiguration());
     const sessionExpired = (e: any) => {
       appStore.setIsUserLoggedIn(false);
-      appStore.setSessionExpiredMessage(e.message);
+      if (e) appStore.setSessionExpiredMessage(e.message);
       appStore.setSessionExpired(true);
       userManager.removeUser();
       push("/login");
