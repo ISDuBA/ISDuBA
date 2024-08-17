@@ -25,18 +25,21 @@ import (
 )
 
 type source struct {
-	ID             int64          `json:"id" form:"id"`
-	Name           string         `json:"name" form:"name" binding:"required,min=1"`
-	URL            string         `json:"url" form:"url" binding:"required,min=1"`
-	Active         *bool          `json:"active,omitempty" form:"active"`
-	Rate           *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots          *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
-	Headers        []string       `json:"headers,omitempty" form:"headers"`
-	StrictMode     *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
-	Insecure       *bool          `json:"insecure,omitempty" form:"insecure"`
-	SignatureCheck *bool          `json:"signature_check,omitempty" form:"signature_check"`
-	Age            *time.Duration `json:"age,omitempty" form:"age"`
-	IgnorePatterns []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
+	ID                   int64          `json:"id" form:"id"`
+	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
+	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
+	Active               *bool          `json:"active,omitempty" form:"active"`
+	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers              []string       `json:"headers,omitempty" form:"headers"`
+	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
+	Insecure             *bool          `json:"insecure,omitempty" form:"insecure"`
+	SignatureCheck       *bool          `json:"signature_check,omitempty" form:"signature_check"`
+	Age                  *time.Duration `json:"age,omitempty" form:"age"`
+	IgnorePatterns       []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
+	ClientCertPublic     *string        `json:"client_cert_public,omitempty" form:"client_cert_public"`
+	ClientCertPrivate    *string        `json:"client_cert_private,omitempty" form:"client_cert_private"`
+	ClientCertPassphrase *string        `json:"client_cert_passphrase,omitempty" form:"client_cert_passphrase"`
 }
 
 type feed struct {
@@ -48,7 +51,16 @@ type feed struct {
 }
 
 func (c *Controller) viewSources(ctx *gin.Context) {
-	var srcs []*source
+	var (
+		srcs      []*source
+		stars     = "***"
+		hasString = func(b bool) *string {
+			if b {
+				return &stars
+			}
+			return nil
+		}
+	)
 	c.sm.AllSources(func(
 		id int64,
 		name string,
@@ -62,20 +74,26 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		signatureCheck *bool,
 		age *time.Duration,
 		ignorePatterns []*regexp.Regexp,
+		hasClientCertPublic bool,
+		hasClientCertPrivate bool,
+		hasClientCertPassphrase bool,
 	) {
 		srcs = append(srcs, &source{
-			ID:             id,
-			Name:           name,
-			URL:            url,
-			Active:         &active,
-			Rate:           rate,
-			Slots:          slots,
-			Headers:        headers,
-			StrictMode:     strictMode,
-			Insecure:       insecure,
-			SignatureCheck: signatureCheck,
-			Age:            age,
-			IgnorePatterns: sources.AsStrings(ignorePatterns),
+			ID:                   id,
+			Name:                 name,
+			URL:                  url,
+			Active:               &active,
+			Rate:                 rate,
+			Slots:                slots,
+			Headers:              headers,
+			StrictMode:           strictMode,
+			Insecure:             insecure,
+			SignatureCheck:       signatureCheck,
+			Age:                  age,
+			IgnorePatterns:       sources.AsStrings(ignorePatterns),
+			ClientCertPublic:     hasString(hasClientCertPublic),
+			ClientCertPrivate:    hasString(hasClientCertPrivate),
+			ClientCertPassphrase: hasString(hasClientCertPassphrase),
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
@@ -117,6 +135,9 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.SignatureCheck,
 		src.Age,
 		ignorePatterns,
+		nil, // TODO
+		nil, // TODO
+		nil, // TODO
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})

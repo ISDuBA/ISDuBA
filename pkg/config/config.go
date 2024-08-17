@@ -100,6 +100,7 @@ const (
 	defaultStrictMode     = true
 	defaultInsecure       = false
 	defaultSignatureCheck = true
+	defaultAESKey         = ""
 )
 
 const (
@@ -188,6 +189,7 @@ type Sources struct {
 	StrictMode        bool                  `toml:"strict_mode"`
 	Insecure          bool                  `toml:"insecure"`
 	SignatureCheck    bool                  `toml:"signature_check"`
+	AESKey            string                `toml:"aes_key"`
 }
 
 // Client are the config options for the client.

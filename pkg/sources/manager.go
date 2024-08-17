@@ -59,6 +59,8 @@ type Manager struct {
 	fns  chan func(*Manager)
 	done bool
 
+	cipherKey []byte
+
 	sources []*source
 
 	pmdCache  *pmdCache
@@ -75,15 +77,20 @@ func NewManager(
 	cfg *config.Config,
 	db *database.DB,
 	val csaf.RemoteValidator,
-) *Manager {
+) (*Manager, error) {
+	cipherKey, err := createCipherKey(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("creating cipher failed: %w", err)
+	}
 	return &Manager{
 		cfg:       cfg,
 		db:        db,
 		fns:       make(chan func(*Manager)),
+		cipherKey: cipherKey,
 		pmdCache:  newPMDCache(),
 		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
 		val:       val,
-	}
+	}, nil
 }
 
 func (m *Manager) numActiveFeeds() int {
@@ -244,13 +251,20 @@ func (m *Manager) AllSources(fn func(
 	signatureCheck *bool,
 	age *time.Duration,
 	ignorepatterns []*regexp.Regexp,
+	hasClientCertPublic bool,
+	hasClientCertPrivate bool,
+	hasClientCertPassphrase bool,
 )) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
 		for _, s := range m.sources {
 			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers,
-				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns)
+				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns,
+				s.clientCertPublic != nil,
+				s.clientCertPrivate != nil,
+				s.clientCertPassphrase != nil,
+			)
 		}
 	}
 	<-done
@@ -425,11 +439,14 @@ func (m *Manager) AddSource(
 	rate *float64,
 	slots *int,
 	headers []string,
-	strictmode *bool,
+	strictMode *bool,
 	insecure *bool,
 	signatureCheck *bool,
 	age *time.Duration,
 	ignorePatterns []*regexp.Regexp,
+	clientCertPublic []byte,
+	clientCertPrivate []byte,
+	clientCertPassphrase []byte,
 ) (int64, error) {
 	lpmd := m.PMD(url)
 	if !lpmd.Valid() {
@@ -437,17 +454,32 @@ func (m *Manager) AddSource(
 	}
 	errCh := make(chan error)
 	s := &source{
-		name:           name,
-		url:            url,
-		active:         active != nil && *active,
-		rate:           rate,
-		slots:          slots,
-		headers:        headers,
-		strictMode:     strictmode,
-		insecure:       insecure,
-		signatureCheck: signatureCheck,
-		age:            age,
-		ignorePatterns: ignorePatterns,
+		name:                 name,
+		url:                  url,
+		active:               active != nil && *active,
+		rate:                 rate,
+		slots:                slots,
+		headers:              headers,
+		strictMode:           strictMode,
+		insecure:             insecure,
+		signatureCheck:       signatureCheck,
+		age:                  age,
+		ignorePatterns:       ignorePatterns,
+		clientCertPublic:     clientCertPublic,
+		clientCertPrivate:    alreadyDecrypted(clientCertPrivate),
+		clientCertPassphrase: alreadyDecrypted(clientCertPassphrase),
+	}
+	if clientCertPrivate != nil {
+		var err error
+		if clientCertPrivate, err = m.encrypt(clientCertPrivate); err != nil {
+			return 0, err
+		}
+	}
+	if clientCertPassphrase != nil {
+		var err error
+		if clientCertPassphrase, err = m.encrypt(clientCertPassphrase); err != nil {
+			return 0, err
+		}
 	}
 	m.fns <- func(m *Manager) {
 		if m.findSourceByName(name) != nil {
@@ -457,23 +489,18 @@ func (m *Manager) AddSource(
 		const sql = `INSERT INTO sources (` +
 			`name, url, active, rate, slots, headers, ` +
 			`strict_mode, insecure, signature_check, age, ignore_patterns) ` +
-			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ` +
+			`VALUES (` +
+			`$1, $2, $3, $4, $5, $6, ` +
+			`$7, $8, $9, $10, $11, ` +
+			`$12, $13, $14) ` +
 			`RETURNING id`
 		if err := m.db.Run(
 			context.Background(),
 			func(rctx context.Context, con *pgxpool.Conn) error {
 				return con.QueryRow(rctx, sql,
-					name,
-					url,
-					active != nil && *active,
-					rate,
-					slots,
-					headers,
-					strictmode,
-					insecure,
-					signatureCheck,
-					age,
-					ignorePatterns,
+					name, url, active != nil && *active, rate, slots, headers,
+					strictMode, insecure, signatureCheck, age, ignorePatterns,
+					clientCertPublic, clientCertPrivate, clientCertPassphrase,
 				).Scan(&s.id)
 			}, 0,
 		); err != nil {

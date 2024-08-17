@@ -22,7 +22,8 @@ import (
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
 		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers, ` +
-			`strict_mode, insecure, signature_check, age, ignore_patterns ` +
+			`strict_mode, insecure, signature_check, age, ignore_patterns, ` +
+			`client_cert_public, client_cert_private, client_cert_passphrase ` +
 			`FROM sources`
 		feedsSQL = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
@@ -40,21 +41,15 @@ func (m *Manager) Boot(ctx context.Context) error {
 				return fmt.Errorf("querying sources failed: %w", err)
 			}
 			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*source, error) {
-				var s source
-				var patterns []string
+				var (
+					s                                       source
+					patterns                                []string
+					clientCertPrivate, clientCertPassphrase []byte
+				)
 				if err := row.Scan(
-					&s.id,
-					&s.name,
-					&s.url,
-					&s.rate,
-					&s.slots,
-					&s.active,
-					&s.headers,
-					&s.strictMode,
-					&s.insecure,
-					&s.signatureCheck,
-					&s.age,
-					&patterns,
+					&s.id, &s.name, &s.url, &s.rate, &s.slots, &s.active, &s.headers,
+					&s.strictMode, &s.insecure, &s.signatureCheck, &s.age, &patterns,
+					&s.clientCertPublic, &clientCertPrivate, &clientCertPassphrase,
 				); err != nil {
 					return nil, err
 				}
@@ -63,6 +58,8 @@ func (m *Manager) Boot(ctx context.Context) error {
 					return nil, err
 				}
 				s.ignorePatterns = regexps
+				s.clientCertPrivate = m.decryptOnces(clientCertPrivate)
+				s.clientCertPassphrase = m.decryptOnces(clientCertPassphrase)
 				return &s, nil
 			})
 			if err != nil {
