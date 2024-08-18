@@ -28,7 +28,7 @@ type source struct {
 	ID                   int64          `json:"id" form:"id"`
 	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
 	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
-	Active               *bool          `json:"active,omitempty" form:"active"`
+	Active               bool           `json:"active" form:"active"`
 	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
 	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
 	Headers              []string       `json:"headers,omitempty" form:"headers"`
@@ -50,17 +50,17 @@ type feed struct {
 	LogLevel config.FeedLogLevel `json:"log_level"`
 }
 
+var stars = "***"
+
+func threeStars(b bool) *string {
+	if b {
+		return &stars
+	}
+	return nil
+}
+
 func (c *Controller) viewSources(ctx *gin.Context) {
-	var (
-		srcs      []*source
-		stars     = "***"
-		hasString = func(b bool) *string {
-			if b {
-				return &stars
-			}
-			return nil
-		}
-	)
+	var srcs []*source
 	c.sm.AllSources(func(
 		id int64,
 		name string,
@@ -82,7 +82,7 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 			ID:                   id,
 			Name:                 name,
 			URL:                  url,
-			Active:               &active,
+			Active:               active,
 			Rate:                 rate,
 			Slots:                slots,
 			Headers:              headers,
@@ -91,9 +91,9 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 			SignatureCheck:       signatureCheck,
 			Age:                  age,
 			IgnorePatterns:       sources.AsStrings(ignorePatterns),
-			ClientCertPublic:     hasString(hasClientCertPublic),
-			ClientCertPrivate:    hasString(hasClientCertPrivate),
-			ClientCertPassphrase: hasString(hasClientCertPassphrase),
+			ClientCertPublic:     threeStars(hasClientCertPublic),
+			ClientCertPrivate:    threeStars(hasClientCertPrivate),
+			ClientCertPassphrase: threeStars(hasClientCertPassphrase),
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
@@ -126,7 +126,6 @@ func (c *Controller) createSource(ctx *gin.Context) {
 	switch id, err := c.sm.AddSource(
 		src.Name,
 		src.URL,
-		src.Active,
 		src.Rate,
 		src.Slots,
 		src.Headers,
@@ -176,7 +175,7 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	switch err := c.sm.UpdateSource(input.SourceID, func(su *sources.SourceUpdater) error {
+	switch ur, err := c.sm.UpdateSource(input.SourceID, func(su *sources.SourceUpdater) error {
 		// name
 		if name, ok := ctx.GetPostForm("name"); ok {
 			if err := su.UpdateName(name); err != nil {
@@ -290,7 +289,7 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		return nil
 	}); {
 	case err == nil:
-		ctx.JSON(http.StatusOK, gin.H{"message": "source updated"})
+		ctx.JSON(http.StatusOK, gin.H{"message": ur.String()})
 	case errors.Is(err, sources.NoSuchEntryError("")):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 	case errors.Is(err, sources.InvalidArgumentError("")):

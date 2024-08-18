@@ -72,6 +72,31 @@ type Manager struct {
 	uniqueID  int64
 }
 
+// SourceUpdateResult is return by UpdateSource.
+type SourceUpdateResult int
+
+const (
+	// SourceUnchanged is returned if there was no change in the source.
+	SourceUnchanged SourceUpdateResult = iota
+	// SourceUpdated is returned if the source was updated.
+	SourceUpdated
+	// SourceDeactivated is returned if the source was deactivated during the update.
+	SourceDeactivated
+)
+
+func (sur SourceUpdateResult) String() string {
+	switch sur {
+	case SourceUnchanged:
+		return "unchanged"
+	case SourceUpdated:
+		return "updated"
+	case SourceDeactivated:
+		return "deactivated"
+	default:
+		return fmt.Sprintf("unknown update result: %d", sur)
+	}
+}
+
 // NewManager creates a new downloader.
 func NewManager(
 	cfg *config.Config,
@@ -435,7 +460,6 @@ func (m *Manager) asManager(fn func(*Manager, int64) error, id int64) error {
 func (m *Manager) AddSource(
 	name string,
 	url string,
-	active *bool,
 	rate *float64,
 	slots *int,
 	headers []string,
@@ -456,7 +480,6 @@ func (m *Manager) AddSource(
 	s := &source{
 		name:                 name,
 		url:                  url,
-		active:               active != nil && *active,
 		rate:                 rate,
 		slots:                slots,
 		headers:              headers,
@@ -487,7 +510,7 @@ func (m *Manager) AddSource(
 			return
 		}
 		const sql = `INSERT INTO sources (` +
-			`name, url, active, rate, slots, headers, ` +
+			`name, url, rate, slots, headers, ` +
 			`strict_mode, insecure, signature_check, age, ignore_patterns) ` +
 			`VALUES (` +
 			`$1, $2, $3, $4, $5, $6, ` +
@@ -498,7 +521,7 @@ func (m *Manager) AddSource(
 			context.Background(),
 			func(rctx context.Context, con *pgxpool.Conn) error {
 				return con.QueryRow(rctx, sql,
-					name, url, active != nil && *active, rate, slots, headers,
+					name, url, rate, slots, headers,
 					strictMode, insecure, signatureCheck, age, ignorePatterns,
 					clientCertPublic, clientCertPrivate, clientCertPassphrase,
 				).Scan(&s.id)
@@ -627,10 +650,14 @@ func (su *SourceUpdater) addChange(ch func(*source), field string, value any) {
 	}
 }
 
-func (su *SourceUpdater) applyChanges() {
+func (su *SourceUpdater) applyChanges() SourceUpdateResult {
+	if len(su.changes) == 0 {
+		return SourceUnchanged
+	}
 	for _, ch := range su.changes {
 		ch(su.source)
 	}
+	return SourceUpdated
 }
 
 // UpdateName requests a name update.
@@ -801,26 +828,33 @@ func placeholders(n int) string {
 }
 
 // UpdateSource passes an updater to manipulate a source for a given id to a given callback.
-func (m *Manager) UpdateSource(sourceID int64, updates func(*SourceUpdater) error) error {
-	errCh := make(chan error)
+func (m *Manager) UpdateSource(
+	sourceID int64,
+	updates func(*SourceUpdater) error,
+) (SourceUpdateResult, error) {
+	type result struct {
+		v   SourceUpdateResult
+		err error
+	}
+	resCh := make(chan result)
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
 		if s == nil {
-			errCh <- NoSuchEntryError("no such source")
+			resCh <- result{err: NoSuchEntryError("no such source")}
 			return
 		}
 		su := SourceUpdater{manager: m, source: s}
 		if err := updates(&su); err != nil {
-			errCh <- fmt.Errorf("updates failed: %w", err)
+			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
 			return
 		}
 		if err := su.updateDB(); err != nil {
-			errCh <- fmt.Errorf("updating database failed: %w", err)
+			resCh <- result{err: fmt.Errorf("updating database failed: %w", err)}
 			return
 		}
 		// Only apply changes if database updates went through.
-		su.applyChanges()
-		errCh <- nil
+		resCh <- result{v: su.applyChanges()}
 	}
-	return <-errCh
+	res := <-resCh
+	return res.v, res.err
 }
