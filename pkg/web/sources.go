@@ -9,6 +9,7 @@
 package web
 
 import (
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -99,6 +100,12 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
 }
 
+// hasBlock checks if input has a PEM block.
+func hasBlock(data []byte) bool {
+	block, _ := pem.Decode(data)
+	return block != nil
+}
+
 func (c *Controller) createSource(ctx *gin.Context) {
 	var src source
 	if err := ctx.ShouldBind(&src); err != nil {
@@ -123,6 +130,25 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	var clientCertPublic, clientCertPrivate, clientCertPassphrase []byte
+	if src.ClientCertPublic != nil {
+		clientCertPublic = []byte(*src.ClientCertPublic)
+		if !hasBlock(clientCertPublic) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "client_cert_public has no PEM block"})
+			return
+		}
+	}
+	if src.ClientCertPrivate != nil {
+		clientCertPrivate = []byte(*src.ClientCertPrivate)
+		if !hasBlock(clientCertPrivate) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "client_cert_private has no PEM block"})
+			return
+		}
+	}
+	if src.ClientCertPassphrase != nil {
+		clientCertPassphrase = []byte(*src.ClientCertPassphrase)
+	}
+
 	switch id, err := c.sm.AddSource(
 		src.Name,
 		src.URL,
@@ -134,9 +160,9 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.SignatureCheck,
 		src.Age,
 		ignorePatterns,
-		nil, // TODO
-		nil, // TODO
-		nil, // TODO
+		clientCertPublic,
+		clientCertPrivate,
+		clientCertPassphrase,
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})

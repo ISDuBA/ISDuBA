@@ -511,7 +511,8 @@ func (m *Manager) AddSource(
 		}
 		const sql = `INSERT INTO sources (` +
 			`name, url, rate, slots, headers, ` +
-			`strict_mode, insecure, signature_check, age, ignore_patterns) ` +
+			`strict_mode, insecure, signature_check, age, ignore_patterns, ` +
+			`client_cert_public, client_cert_private, client_cert_passphrase) ` +
 			`VALUES (` +
 			`$1, $2, $3, $4, $5, $6, ` +
 			`$7, $8, $9, $10, $11, ` +
