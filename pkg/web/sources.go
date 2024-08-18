@@ -312,6 +312,37 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 				return err
 			}
 		}
+		// client certificate update
+		optCert := func(option string, update func([]byte) error) error {
+			cert, ok := ctx.GetPostForm(option)
+			if !ok {
+				return nil
+			}
+			var data []byte
+			if cert != "" {
+				data = []byte(cert)
+				if !hasBlock(data) {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("%q has no PEM block", option))
+				}
+			}
+			return update(data)
+		}
+		if err := optCert("client_cert_public", su.UpdateClientCertPublic); err != nil {
+			return err
+		}
+		if err := optCert("client_cert_private", su.UpdateClientCertPrivate); err != nil {
+			return err
+		}
+		if passphrase, ok := ctx.GetPostForm("client_cert_passphrase"); ok {
+			var data []byte
+			if passphrase != "" {
+				data = []byte(passphrase)
+			}
+			if err := su.UpdateClientCertPassphrase(data); err != nil {
+				return err
+			}
+		}
 		return nil
 	}); {
 	case err == nil:

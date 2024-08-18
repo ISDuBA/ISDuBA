@@ -96,6 +96,9 @@ func (m *Manager) createCipher() (cipher.AEAD, error) {
 
 // encrypt encrypts data with the key of the manager.
 func (m *Manager) encrypt(data []byte) ([]byte, error) {
+	if data == nil {
+		return nil, nil
+	}
 	cipher, err := m.createCipher()
 	if err != nil {
 		return nil, err
@@ -110,6 +113,9 @@ func (m *Manager) encrypt(data []byte) ([]byte, error) {
 
 // decrypt decrypts data with the key of the manager.
 func (m *Manager) decrypt(data []byte) ([]byte, error) {
+	if data == nil {
+		return nil, nil
+	}
 	cipher, err := m.createCipher()
 	if err != nil {
 		return nil, err

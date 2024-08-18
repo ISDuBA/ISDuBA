@@ -75,18 +75,20 @@ type source struct {
 	feeds     []*feed
 	usedSlots int
 
-	rate                 *float64
-	limiter              *rate.Limiter
-	slots                *int
-	headers              []string
-	strictMode           *bool
-	insecure             *bool
-	signatureCheck       *bool
-	age                  *time.Duration
-	ignorePatterns       []*regexp.Regexp
+	rate           *float64
+	limiter        *rate.Limiter
+	slots          *int
+	headers        []string
+	strictMode     *bool
+	insecure       *bool
+	signatureCheck *bool
+	age            *time.Duration
+	ignorePatterns []*regexp.Regexp
+
 	clientCertPublic     []byte
 	clientCertPrivate    func() ([]byte, error)
 	clientCertPassphrase func() ([]byte, error)
+	tlsCertificates      []tls.Certificate
 }
 
 // refresh fetches the feed index and accordingly updates

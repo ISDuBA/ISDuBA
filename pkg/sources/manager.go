@@ -11,6 +11,7 @@ package sources
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"slices"
@@ -636,11 +637,12 @@ func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
 // SourceUpdater offers a protocol to update a source. Call the UpdateX
 // (with X in Name, Rate, ...) methods to update specfic fields.
 type SourceUpdater struct {
-	manager *Manager
-	source  *source
-	changes []func(*source)
-	fields  []string
-	values  []any
+	manager           *Manager
+	source            *source
+	clientCertUpdated bool
+	changes           []func(*source)
+	fields            []string
+	values            []any
 }
 
 func (su *SourceUpdater) addChange(ch func(*source), field string, value any) {
@@ -651,14 +653,13 @@ func (su *SourceUpdater) addChange(ch func(*source), field string, value any) {
 	}
 }
 
-func (su *SourceUpdater) applyChanges() SourceUpdateResult {
-	if len(su.changes) == 0 {
-		return SourceUnchanged
-	}
+func (su *SourceUpdater) applyChanges() bool {
 	for _, ch := range su.changes {
-		ch(su.source)
+		if ch != nil {
+			ch(su.source)
+		}
 	}
-	return SourceUpdated
+	return len(su.changes) > 0
 }
 
 // UpdateName requests a name update.
@@ -794,6 +795,68 @@ func (su *SourceUpdater) UpdateIgnorePatterns(ignorePatterns []*regexp.Regexp) e
 	return nil
 }
 
+// UpdateClientCertPublic requests an update ob client cert public part.
+func (su *SourceUpdater) UpdateClientCertPublic(data []byte) error {
+	if data == nil && su.source.clientCertPublic == nil {
+		return nil
+	}
+	if data != nil && su.source.clientCertPublic != nil && slices.Equal(data, su.source.clientCertPublic) {
+		return nil
+	}
+	data = clone(data)
+	su.addChange(func(s *source) {
+		su.clientCertUpdated = true
+		s.clientCertPublic = data
+	}, "client_cert_public", data)
+	return nil
+}
+
+// UpdateClientCertPrivate requests an update ob client cert private part.
+func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
+	orig, err := su.source.clientCertPrivate()
+	if err != nil {
+		return err
+	}
+	if data == nil && orig == nil {
+		return nil
+	}
+	if data != nil && orig != nil && slices.Equal(data, orig) {
+		return nil
+	}
+	encrypted, err := su.manager.encrypt(clone(data))
+	if err != nil {
+		return err
+	}
+	su.addChange(func(s *source) {
+		su.clientCertUpdated = true
+		s.clientCertPrivate = alreadyDecrypted(data)
+	}, "client_cert_private", encrypted)
+	return nil
+}
+
+// UpdateClientCertPassphrase requests an update ob client cert private part.
+func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
+	orig, err := su.source.clientCertPassphrase()
+	if err != nil {
+		return err
+	}
+	if data == nil && orig == nil {
+		return nil
+	}
+	if data != nil && orig != nil && slices.Equal(data, orig) {
+		return nil
+	}
+	encrypted, err := su.manager.encrypt(clone(data))
+	if err != nil {
+		return err
+	}
+	su.addChange(func(s *source) {
+		su.clientCertUpdated = true
+		s.clientCertPassphrase = alreadyDecrypted(data)
+	}, "client_cert_passphrase", encrypted)
+	return nil
+}
+
 func (su *SourceUpdater) updateDB() error {
 	if len(su.fields) == 0 {
 		return nil
@@ -854,7 +917,26 @@ func (m *Manager) UpdateSource(
 			return
 		}
 		// Only apply changes if database updates went through.
-		resCh <- result{v: su.applyChanges()}
+		if !su.applyChanges() {
+			resCh <- result{v: SourceUnchanged}
+			return
+		}
+		if su.clientCertUpdated {
+			if err := s.updateCertificate(); err != nil {
+				slog.Warn("updating client cert failed", "warn", err)
+				if s.active {
+					s.active = false
+					x := SourceUpdater{manager: m, source: s}
+					x.addChange(nil, "active", false)
+					if err := x.updateDB(); err != nil {
+						slog.Error("deactivating source failed", "err", err)
+					}
+					resCh <- result{v: SourceDeactivated}
+					return
+				}
+			}
+		}
+		resCh <- result{v: SourceUpdated}
 	}
 	res := <-resCh
 	return res.v, res.err
