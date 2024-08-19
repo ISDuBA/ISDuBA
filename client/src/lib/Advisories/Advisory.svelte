@@ -306,6 +306,8 @@
     if (!params.position) {
       const topElement = window.document.getElementById("top");
       topElement?.scrollIntoView();
+      appStore.setSelectedProduct("");
+      appStore.setSelectedCVE("");
     }
   }
   $: ssvcStyle = ssvc ? `color: white; background-color: ${ssvc.color};` : "";

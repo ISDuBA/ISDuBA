@@ -23,15 +23,22 @@
   export let position = "";
   export let basePath = "";
 
+  const updateUI = async () => {
+    // This is a hack
+    setTimeout(() => {
+      if (position.startsWith("product-")) {
+        appStore.setProductTreeSectionVisible();
+        appStore.setSelectedProduct(position.replace("product-", ""));
+      }
+      if (position.startsWith("cve-")) {
+        appStore.setSelectedCVE(position.replace("cve-", ""));
+        appStore.setVulnerabilitiesSectionVisible();
+      }
+    }, 300);
+  };
+
   $: if (position && position != "") {
-    if (position.startsWith("product-")) {
-      appStore.setProductTreeSectionVisible();
-      appStore.setSelectedProduct(position.replace("product-", ""));
-    }
-    if (position.startsWith("cve-")) {
-      appStore.setSelectedCVE(position.replace("cve-", ""));
-      appStore.setVulnerabilitiesSectionVisible();
-    }
+    updateUI();
   }
 
   $: aliases = $appStore.webview.doc?.aliases;
