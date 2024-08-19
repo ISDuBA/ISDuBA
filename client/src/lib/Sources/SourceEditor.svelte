@@ -20,7 +20,9 @@
     TableBodyCell,
     Spinner,
     Modal,
-    Select
+    Select,
+    Table,
+    TableBodyRow
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { tdClass } from "$lib/Table/defaults";
@@ -56,6 +58,7 @@
   let saveError: ErrorDetails | null;
   let loadError: ErrorDetails | null;
   let feedError: ErrorDetails | null;
+  let logError: ErrorDetails | null;
   let pmd: CSAFProviderMetadata;
   let pmdFeeds: Feed[] = [];
   let missingFeeds: Feed[] = [];
@@ -63,7 +66,7 @@
 
   let newFeed: Feed | null;
 
-  let logs: any;
+  let logs: any[] = [];
 
   let logLevels = [
     { value: LogLevel.error, name: "Error" },
@@ -74,6 +77,7 @@
 
   let loadingFeeds: boolean = false;
   let loadingPMD: boolean = false;
+  let loadingLogs: boolean = false;
 
   let currentStep = 0;
   let steps: string[] = ["Source URL", "Source Config", "Feed Selection"];
@@ -252,11 +256,13 @@
   };
 
   const fetchFeedLogs = async (id: number) => {
+    loadingLogs = true;
     const resp = await request(`/api/sources/feeds/${id}/log`, "GET");
+    loadingLogs = false;
     if (resp.ok) {
       logs = resp.content;
     } else if (resp.error) {
-      feedError = getErrorDetails(`Could not load feed logs`, resp);
+      logError = getErrorDetails(`Could not load feed logs`, resp);
     }
   };
 
@@ -310,30 +316,60 @@
 
 {#if params?.id}
   <SectionHeader title={source.name}></SectionHeader>
-  <div class:hidden={!loadingPMD} class:mb-4={true}>
-    Loading ...
-    <Spinner color="gray" size="4"></Spinner>
-  </div>
-  <form
-    on:submit={async () => {
-      await saveSource();
-    }}
-    class={formClass}
-  >
-    <Label>Name</Label>
-    <Input bind:value={source.name}></Input>
-    <Checkbox bind:checked={source.active}>Active</Checkbox>
-    <Label>Rate</Label>
-    <Input bind:value={source.rate}></Input>
-    <Label>Slots</Label>
-    <Input bind:value={source.slots}></Input>
-    <Button type="submit" color="light">
-      <i class="bx bxs-save me-2"></i>
-      <span>Update source</span>
-    </Button>
-  </form>
+  <div class="flex">
+    <div class="flex-auto">
+      <Table class="2xl:w-max" noborder>
+        <TableBodyRow>
+          <TableBodyCell>URL</TableBodyCell>
+          <TableBodyCell>{source.url}</TableBodyCell>
+        </TableBodyRow>
+        {#if pmd}
+          <TableBodyRow>
+            <TableBodyCell>Canonical URL</TableBodyCell>
+            <TableBodyCell>{pmd.canonical_url}</TableBodyCell>
+          </TableBodyRow>
+          <TableBodyRow>
+            <TableBodyCell>Publisher Name</TableBodyCell>
+            <TableBodyCell>{pmd.publisher.name}</TableBodyCell>
+          </TableBodyRow>
+          <TableBodyRow>
+            <TableBodyCell>Publisher Contact</TableBodyCell>
+            <TableBodyCell>{pmd.publisher.contact_details}</TableBodyCell>
+          </TableBodyRow>
+          <TableBodyRow>
+            <TableBodyCell>Issuing Authority</TableBodyCell>
+            <TableBodyCell>{pmd.publisher.issuing_authority}</TableBodyCell>
+          </TableBodyRow>
+        {/if}
+      </Table>
+      <div class:hidden={!loadingPMD} class:mb-4={true}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+    </div>
 
-  <pre>{#if pmd}{JSON.stringify(pmd, null, 2)}{/if}</pre>
+    <div class="flex-auto">
+      <form
+        on:submit={async () => {
+          await saveSource();
+        }}
+        class={formClass}
+      >
+        <Label>Name</Label>
+        <Input bind:value={source.name}></Input>
+        <Checkbox bind:checked={source.active}>Active</Checkbox>
+        <Label>Rate</Label>
+        <Input bind:value={source.rate}></Input>
+        <Label>Slots</Label>
+        <Input bind:value={source.slots}></Input>
+        <br />
+        <Button type="submit" color="light">
+          <i class="bx bxs-save me-2"></i>
+          <span>Update source</span>
+        </Button>
+      </form>
+    </div>
+  </div>
   <CustomTable
     title="Feeds"
     headers={[
@@ -477,13 +513,44 @@
       <Select items={logLevels} bind:value={newFeed.log_level} />
       <Label>Label</Label>
       <Input bind:value={newFeed.label}></Input>
+      <br />
       <Button type="submit" color="light">
         <i class="bx bxs-save me-2"></i>
         <span>Save feed</span>
       </Button>
     </form>{/if}
-
-  <pre>{#if logs}{JSON.stringify(logs, null, 2)}{/if}</pre>
+  <CustomTable
+    title="Logs"
+    headers={[
+      {
+        label: "Time",
+        attribute: "time"
+      },
+      {
+        label: "level",
+        attribute: "level"
+      },
+      {
+        label: "Message",
+        attribute: "msg"
+      }
+    ]}
+  >
+    {#each logs as log, index (index)}
+      <tr>
+        <TableBodyCell {tdClass}>{log.time}</TableBodyCell>
+        <TableBodyCell {tdClass}>{log.level}</TableBodyCell>
+        <TableBodyCell {tdClass}>{log.msg}</TableBodyCell>
+      </tr>
+    {/each}
+    <div slot="bottom">
+      <div class:hidden={!loadingLogs} class:mb-4={true}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+      <ErrorMessage error={logError}></ErrorMessage>
+    </div>
+  </CustomTable>
 {:else}
   <SectionHeader title="Add new source"></SectionHeader>
 
@@ -492,6 +559,7 @@
     <form on:submit={fetchPMD} class={formClass}>
       <Label>URL</Label>
       <Input bind:value={source.url}></Input>
+      <br />
       <Button type="submit" color="light">
         <i class="bx bx-check me-2"></i>
         <span>Check URL</span>
@@ -514,6 +582,7 @@
       <Input bind:value={source.rate}></Input>
       <Label>Slots</Label>
       <Input bind:value={source.slots}></Input>
+      <br />
       <Button type="submit" color="light">
         <i class="bx bxs-save me-2"></i>
         <span>Save source</span>
@@ -535,6 +604,7 @@
         <Label>Label</Label>
         <Input bind:value={feed.label}></Input>
         <Checkbox bind:checked={feed.enable}>Enable</Checkbox>
+        <br />
       {/each}
       <Button type="submit" color="light">
         <i class="bx bxs-save me-2"></i>
