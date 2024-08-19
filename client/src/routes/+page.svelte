@@ -59,7 +59,7 @@
   let onConfigLoad: any;
 
   let inactivityTime = () => {
-    let time: number;
+    let time: ReturnType<typeof setTimeout>;
 
     const resetTimer = () => {
       clearTimeout(time);

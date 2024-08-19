@@ -99,7 +99,7 @@
         {/if}
       </div>
     </Card>
-    {#if $appStore.app.isUserLoggedIn}
+    {#if $appStore.app.isUserLoggedIn && !$appStore.app.sessionExpired}
       <div class="mt-4 flex w-full flex-row gap-4">
         <div class="flex flex-grow flex-col">
           <span class="text-xl">User:</span>
