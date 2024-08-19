@@ -176,6 +176,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_SOURCES_STRICT_MODE`          | `sources strict_mode`                |
 | `ISDUBA_SOURCES_INSECURE`             | `sources insecure`                   |
 | `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |
+| `ISDUBA_SOURCES_AES_KEY`              | `sources aes_key`                    |
 | `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
 | `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |
