@@ -86,8 +86,8 @@ type source struct {
 	ignorePatterns []*regexp.Regexp
 
 	clientCertPublic     []byte
-	clientCertPrivate    func() ([]byte, error)
-	clientCertPassphrase func() ([]byte, error)
+	clientCertPrivate    []byte
+	clientCertPassphrase []byte
 	tlsCertificates      []tls.Certificate
 }
 
@@ -371,7 +371,9 @@ func (s *source) httpClient(m *Manager) *http.Client {
 		tlsConfig.InsecureSkipVerify = m.cfg.Sources.Insecure
 	}
 
-	// TODO: Add client certificates here!
+	if len(s.tlsCertificates) > 0 {
+		tlsConfig.Certificates = s.tlsCertificates
+	}
 
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tlsConfig,

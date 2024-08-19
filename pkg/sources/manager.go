@@ -490,8 +490,8 @@ func (m *Manager) AddSource(
 		age:                  age,
 		ignorePatterns:       ignorePatterns,
 		clientCertPublic:     clientCertPublic,
-		clientCertPrivate:    alreadyDecrypted(clientCertPrivate),
-		clientCertPassphrase: alreadyDecrypted(clientCertPassphrase),
+		clientCertPrivate:    clientCertPrivate,
+		clientCertPassphrase: clientCertPassphrase,
 	}
 	if clientCertPrivate != nil {
 		var err error
@@ -813,10 +813,7 @@ func (su *SourceUpdater) UpdateClientCertPublic(data []byte) error {
 
 // UpdateClientCertPrivate requests an update ob client cert private part.
 func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
-	orig, err := su.source.clientCertPrivate()
-	if err != nil {
-		return err
-	}
+	orig := su.source.clientCertPrivate
 	if data == nil && orig == nil {
 		return nil
 	}
@@ -829,17 +826,14 @@ func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
 	}
 	su.addChange(func(s *source) {
 		su.clientCertUpdated = true
-		s.clientCertPrivate = alreadyDecrypted(data)
+		s.clientCertPrivate = data
 	}, "client_cert_private", encrypted)
 	return nil
 }
 
 // UpdateClientCertPassphrase requests an update ob client cert private part.
 func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
-	orig, err := su.source.clientCertPassphrase()
-	if err != nil {
-		return err
-	}
+	orig := su.source.clientCertPassphrase
 	if data == nil && orig == nil {
 		return nil
 	}
@@ -852,7 +846,7 @@ func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
 	}
 	su.addChange(func(s *source) {
 		su.clientCertUpdated = true
-		s.clientCertPassphrase = alreadyDecrypted(data)
+		s.clientCertPassphrase = data
 	}, "client_cert_passphrase", encrypted)
 	return nil
 }

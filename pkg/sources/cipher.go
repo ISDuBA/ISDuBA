@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 )
@@ -122,17 +121,4 @@ func (m *Manager) decrypt(data []byte) ([]byte, error) {
 	}
 	nonce, cipherText := data[:cipher.NonceSize()], data[cipher.NonceSize():]
 	return cipher.Open(nil, nonce, cipherText, nil)
-}
-
-func alreadyDecrypted(data []byte) func() ([]byte, error) {
-	return func() ([]byte, error) { return data, nil }
-}
-
-func (m *Manager) decryptOnces(data []byte) func() ([]byte, error) {
-	if data == nil {
-		return func() ([]byte, error) { return nil, nil }
-	}
-	return sync.OnceValues(func() ([]byte, error) {
-		return m.decrypt(data)
-	})
 }

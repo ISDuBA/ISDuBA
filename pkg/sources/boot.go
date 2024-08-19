@@ -30,7 +30,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 	if err := m.db.Run(
 		ctx,
 		func(rctx context.Context, con *pgxpool.Conn) error {
-			tx, err := con.BeginTx(rctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+			tx, err := con.Begin(rctx)
 			if err != nil {
 				return fmt.Errorf("starting transaction failed: %w", err)
 			}
@@ -40,6 +40,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("querying sources failed: %w", err)
 			}
+			var bads []int64
 			m.sources, err = pgx.CollectRows(srows, func(row pgx.CollectableRow) (*source, error) {
 				var (
 					s                                       source
@@ -58,13 +59,40 @@ func (m *Manager) Boot(ctx context.Context) error {
 					return nil, err
 				}
 				s.ignorePatterns = regexps
-				s.clientCertPrivate = m.decryptOnces(clientCertPrivate)
-				s.clientCertPassphrase = m.decryptOnces(clientCertPassphrase)
+
+				var bad bool
+				if s.clientCertPrivate, err = m.decrypt(clientCertPrivate); err != nil {
+					bad = true
+				}
+				if s.clientCertPassphrase, err = m.decrypt(clientCertPassphrase); err != nil {
+					bad = true
+				}
+				if !bad {
+					if err := s.updateCertificate(); err != nil {
+						bad = true
+					}
+				}
+				if bad && s.active {
+					s.active = false
+					bads = append(bads, s.id)
+				}
 				return &s, nil
 			})
 			if err != nil {
 				return fmt.Errorf("collecting sources failed: %w", err)
 			}
+			// If we have sources with bad crypto deactivate these.
+			if len(bads) > 0 {
+				const deactivateSQL = `UPDATE sources SET active = FALSE WHERE id = $1`
+				batch := &pgx.Batch{}
+				for _, id := range bads {
+					batch.Queue(deactivateSQL, id)
+				}
+				if err := tx.SendBatch(ctx, batch).Close(); err != nil {
+					return fmt.Errorf("deactivating bad sources failed: %w", err)
+				}
+			}
+
 			// Collect feeds.
 			frows, err := tx.Query(rctx, feedsSQL)
 			if err != nil {

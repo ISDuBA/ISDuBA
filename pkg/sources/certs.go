@@ -16,28 +16,19 @@ import (
 )
 
 func (s *source) updateCertificate() error {
-	private, err := s.clientCertPrivate()
-	if err != nil {
-		s.tlsCertificates = nil
-		return err
-	}
-	if s.clientCertPublic == nil || private == nil {
+	if s.clientCertPublic == nil || s.clientCertPrivate == nil {
 		s.tlsCertificates = nil
 		return nil
 	}
-	passphrase, err := s.clientCertPassphrase()
-	if err != nil {
-		s.tlsCertificates = nil
-		return err
-	}
-	if passphrase != nil {
+	private := s.clientCertPrivate
+	if s.clientCertPassphrase != nil {
 		block, _ := pem.Decode(private)
 		if block == nil {
 			s.tlsCertificates = nil
 			return errors.New("private key has no PEM block")
 		}
 		//lint:ignore SA1019 This is insecure by design.
-		keyDER, err := x509.DecryptPEMBlock(block, passphrase)
+		keyDER, err := x509.DecryptPEMBlock(block, s.clientCertPassphrase)
 		if err != nil {
 			s.tlsCertificates = nil
 			return err
