@@ -13,4 +13,10 @@ export type Source = {
   active?: boolean;
   rate?: number;
   slots?: number;
+  headers: string[];
+  strict_mode?: boolean;
+  insecure?: boolean;
+  signature_check?: boolean;
+  age?: number;
+  ignore_patterns: string[];
 };

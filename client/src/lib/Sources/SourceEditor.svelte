@@ -22,7 +22,8 @@
     Modal,
     Select,
     Table,
-    TableBodyRow
+    TableBodyRow,
+    NumberInput
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { tdClass } from "$lib/Table/defaults";
@@ -86,18 +87,22 @@
 
   let formClass = "max-w-[800pt]";
 
+  let headers: [string, string][] = [["", ""]];
   let source: Source = {
     name: "",
     url: "",
     active: true,
     rate: 1,
-    slots: 2
+    slots: 2,
+    headers: [""],
+    ignore_patterns: [""]
   };
 
   const saveSource = async (): Promise<boolean> => {
     let method = "POST";
     let path = `/api/sources`;
     const formData = new FormData();
+    formatHeaders();
     if (source.id) {
       method = "PUT";
       path += `/${source.id}`;
@@ -115,9 +120,33 @@
     if (source.slots && source.slots !== 0) {
       formData.append("slots", source.slots.toString());
     }
+    if (source.strict_mode !== undefined) {
+      formData.append("strict_mode", source.strict_mode.toString());
+    }
+    if (source.insecure !== undefined) {
+      formData.append("insecure", source.insecure.toString());
+    }
+    if (source.signature_check !== undefined) {
+      formData.append("signature_check", source.signature_check.toString());
+    }
+    if (source.age != undefined && source.age !== 0) {
+      formData.append("age", source.age.toString());
+    }
+    for (const header of source.headers) {
+      if (header != "") {
+        formData.append("headers", header);
+      }
+    }
+    for (const pattern of source.ignore_patterns) {
+      if (pattern != "") {
+        formData.append("ignore_patterns", pattern);
+      }
+    }
     const resp = await request(path, method, formData);
     if (resp.ok) {
-      source.id = resp.content.id;
+      if (resp.content.id) {
+        source.id = resp.content.id;
+      }
       saveError = null;
       return true;
     } else if (resp.error) {
@@ -276,9 +305,68 @@
     let found = sources.find((s) => s.id === id);
     if (found) {
       source = found;
+      if (!source.headers) {
+        source.headers = [];
+      }
+      parseHeaders();
+      if (!source.ignore_patterns) {
+        source.ignore_patterns = [""];
+      }
       loadError = null;
     } else {
       loadError = getErrorDetails(`Could not find source`);
+    }
+  };
+
+  const onChangedHeaders = () => {
+    const lastIndex = headers.length - 1;
+    if (
+      (headers[lastIndex][0].length > 0 && headers[lastIndex][1].length > 0) ||
+      (lastIndex - 1 >= 0 &&
+        headers[lastIndex - 1][0].length > 0 &&
+        headers[lastIndex - 1][1].length > 0)
+    ) {
+      headers.push(["", ""]);
+      headers = headers;
+    }
+  };
+
+  const onChangedIgnorePatterns = () => {
+    if (source.ignore_patterns.at(-1) !== "") {
+      source.ignore_patterns.push("");
+    }
+  };
+
+  const removeHeader = (index: number) => {
+    if (headers.length === 1)
+      headers = [
+        ["", ""],
+        ["", ""]
+      ];
+    headers = headers.toSpliced(index, 1);
+  };
+
+  const removePattern = (index: number) => {
+    if (source.ignore_patterns.length === 1) source.ignore_patterns = [""];
+    source.ignore_patterns = source.ignore_patterns.toSpliced(index, 1);
+  };
+
+  const parseHeaders = () => {
+    headers = [];
+    for (const header of source.headers) {
+      let h = header.split(":");
+      headers.push([h[0], h[1]]);
+    }
+    if (headers.length === 0) {
+      headers.push(["", ""]);
+    }
+    onChangedHeaders();
+  };
+
+  const formatHeaders = () => {
+    source.headers = [];
+    for (const header of headers) {
+      if (header[0] !== "" && header[1] !== "") source.headers.push(`${header[0]}:${header[1]}`);
     }
   };
 
@@ -361,6 +449,57 @@
         <Input bind:value={source.rate}></Input>
         <Label>Slots</Label>
         <Input bind:value={source.slots}></Input>
+        <Label>HTTP headers</Label>
+        <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
+          {#each headers as header, index (index)}
+            <Label>
+              <span class="text-gray-500">Key</span>
+              <Input on:change={onChangedHeaders} bind:value={header[0]} />
+            </Label>
+            <Label>
+              <span class="text-gray-500">Value</span>
+              <Input on:change={onChangedHeaders} bind:value={header[1]} />
+            </Label>
+            {#if headers.length > 1}
+              <Button
+                on:click={() => removeHeader(index)}
+                title="Remove key-value-pair"
+                class="mb-3 w-fit p-1"
+                color="light"
+              >
+                <i class="bx bx-x"></i>
+              </Button>
+            {:else}
+              <div></div>
+            {/if}
+          {/each}
+        </div>
+        <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
+        <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
+        <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
+        <Label>Age</Label>
+        <NumberInput bind:value={source.age}></NumberInput>
+        <Label>Ignore patterns</Label>
+        <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
+          {#each source.ignore_patterns as pattern, index (index)}
+            <Label>
+              <Input on:change={onChangedIgnorePatterns} bind:value={pattern} />
+            </Label>
+            {#if source.ignore_patterns.length > 1}
+              <Button
+                on:click={() => removePattern(index)}
+                title="Remove pattern"
+                class="mb-3 w-fit p-1"
+                color="light"
+              >
+                <i class="bx bx-x"></i>
+              </Button>
+            {:else}
+              <div></div>
+            {/if}
+          {/each}
+        </div>
+
         <br />
         <Button type="submit" color="light">
           <i class="bx bxs-save me-2"></i>
@@ -559,6 +698,10 @@
       <Label>URL</Label>
       <Input bind:value={source.url}></Input>
       <br />
+      <div class:hidden={!loadingPMD} class:mb-4={true}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
       <Button type="submit" color="light">
         <i class="bx bx-check me-2"></i>
         <span>Check URL</span>
@@ -581,6 +724,57 @@
       <Input bind:value={source.rate}></Input>
       <Label>Slots</Label>
       <Input bind:value={source.slots}></Input>
+
+      <Label>HTTP headers</Label>
+      <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
+        {#each headers as header, index (index)}
+          <Label>
+            <span class="text-gray-500">Key</span>
+            <Input on:change={onChangedHeaders} bind:value={header[0]} />
+          </Label>
+          <Label>
+            <span class="text-gray-500">Value</span>
+            <Input on:change={onChangedHeaders} bind:value={header[1]} />
+          </Label>
+          {#if headers.length > 1}
+            <Button
+              on:click={() => removeHeader(index)}
+              title="Remove key-value-pair"
+              class="mb-3 w-fit p-1"
+              color="light"
+            >
+              <i class="bx bx-x"></i>
+            </Button>
+          {:else}
+            <div></div>
+          {/if}
+        {/each}
+      </div>
+      <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
+      <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
+      <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
+      <Label>Age</Label>
+      <NumberInput bind:value={source.age}></NumberInput>
+      <Label>Ignore patterns</Label>
+      <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
+        {#each source.ignore_patterns as pattern, index (index)}
+          <Label>
+            <Input on:change={onChangedIgnorePatterns} bind:value={pattern} />
+          </Label>
+          {#if source.ignore_patterns.length > 1}
+            <Button
+              on:click={() => removePattern(index)}
+              title="Remove pattern"
+              class="mb-3 w-fit p-1"
+              color="light"
+            >
+              <i class="bx bx-x"></i>
+            </Button>
+          {:else}
+            <div></div>
+          {/if}
+        {/each}
+      </div>
       <br />
       <Button type="submit" color="light">
         <i class="bx bxs-save me-2"></i>
