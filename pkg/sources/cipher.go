@@ -48,7 +48,7 @@ func createCipherKey(cfg *config.Config) ([]byte, error) {
 			return nil, fmt.Errorf("cannot read random key: %w", err)
 		}
 		fmt.Printf(writeKeyMsg, hex.EncodeToString(key))
-	case aesKey[1] == '@':
+	case aesKey[0] == '@':
 		fname := aesKey[1:]
 		if key, err = loadKeyFromFile(fname); err != nil {
 			return nil, fmt.Errorf("loading key from file %q failed: %w", fname, err)
