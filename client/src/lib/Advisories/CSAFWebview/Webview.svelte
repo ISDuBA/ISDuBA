@@ -96,7 +96,7 @@
           appStore.setVulnerabilitiesSectionInvisible();
         }}
       >
-        <Vulnerabilities />
+        <Vulnerabilities {basePath} />
       </Collapsible>
     {/if}
   {/if}
