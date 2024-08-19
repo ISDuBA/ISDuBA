@@ -66,6 +66,7 @@
 #                      To suggest new CSAF sources, \
 #                      please contact your CSAF source manager \
 #                      or your administrator."""
+# aes_key = ""
 
 # [remote_validator]
 # url = ""
