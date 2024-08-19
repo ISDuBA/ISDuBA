@@ -23,7 +23,7 @@ import (
 )
 
 const writeKeyMsg = `================================================================
-No [sources] aes_key in configuration found. Using
+No [sources] aes_key in configuration found. Using newly generated:
 %s
 Store this under
   [sources]
