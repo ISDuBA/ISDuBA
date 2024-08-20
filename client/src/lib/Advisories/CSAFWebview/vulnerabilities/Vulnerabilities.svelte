@@ -11,10 +11,11 @@
   import { appStore } from "$lib/store";
   import Vulnerability from "./vulnerability/Vulnerability.svelte";
   $: vulnerabilities = $appStore.webview.doc?.vulnerabilities;
+  export let basePath = "";
 </script>
 
 <div>
   {#each vulnerabilities as vulnerability, index}
-    <Vulnerability {vulnerability} index={index + 1} />
+    <Vulnerability {vulnerability} index={index + 1} {basePath} />
   {/each}
 </div>

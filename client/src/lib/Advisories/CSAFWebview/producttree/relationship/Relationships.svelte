@@ -12,8 +12,9 @@
   import type { Relationship } from "$lib/types";
   import Relation from "./Relation.svelte";
   export let relationships: Relationship[];
+  export let basePath = "";
 </script>
 
 {#each relationships as relation}
-  <Relation {relation} />
+  <Relation {basePath} {relation} />
 {/each}
