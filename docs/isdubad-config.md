@@ -109,6 +109,14 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `feed_importer`: Name of the user that is doing the feed imports. Defaults to `feedimporter`.
 - `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }`
 - `default_message`: The message that should be displayed inside the source manager.
+- `aes_key`: A crypto token in form of 64 character long hex string used to encrypt security sensitive\
+   fields in the database like passphrasses and private keys. Defaults to "".\
+   If an empty token is given, the server will generate a new one every time it starts.\
+   You can store the generated token in the config file to re-gain access to the encrypted data.\
+   Alternatively you can put the token in a separate file and store the path to this file\
+   in this option prefixed by `@`.\
+   You can generate a token yourself e.g. by entering this command:\
+   `dd if=/dev/urandom bs=32 count=1 status=none | xxd -p -c 32`
 
 ### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
 
@@ -168,6 +176,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_SOURCES_STRICT_MODE`          | `sources strict_mode`                |
 | `ISDUBA_SOURCES_INSECURE`             | `sources insecure`                   |
 | `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |
+| `ISDUBA_SOURCES_AES_KEY`              | `sources aes_key`                    |
 | `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
 | `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |

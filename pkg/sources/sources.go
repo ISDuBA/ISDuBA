@@ -84,6 +84,11 @@ type source struct {
 	signatureCheck *bool
 	age            *time.Duration
 	ignorePatterns []*regexp.Regexp
+
+	clientCertPublic     []byte
+	clientCertPrivate    []byte
+	clientCertPassphrase []byte
+	tlsCertificates      []tls.Certificate
 }
 
 // refresh fetches the feed index and accordingly updates
@@ -366,7 +371,9 @@ func (s *source) httpClient(m *Manager) *http.Client {
 		tlsConfig.InsecureSkipVerify = m.cfg.Sources.Insecure
 	}
 
-	// TODO: Add client certificates here!
+	if len(s.tlsCertificates) > 0 {
+		tlsConfig.Certificates = s.tlsCertificates
+	}
 
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tlsConfig,

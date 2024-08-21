@@ -9,6 +9,7 @@
 package web
 
 import (
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -25,18 +26,21 @@ import (
 )
 
 type source struct {
-	ID             int64          `json:"id" form:"id"`
-	Name           string         `json:"name" form:"name" binding:"required,min=1"`
-	URL            string         `json:"url" form:"url" binding:"required,min=1"`
-	Active         *bool          `json:"active,omitempty" form:"active"`
-	Rate           *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots          *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
-	Headers        []string       `json:"headers,omitempty" form:"headers"`
-	StrictMode     *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
-	Insecure       *bool          `json:"insecure,omitempty" form:"insecure"`
-	SignatureCheck *bool          `json:"signature_check,omitempty" form:"signature_check"`
-	Age            *time.Duration `json:"age,omitempty" form:"age"`
-	IgnorePatterns []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
+	ID                   int64          `json:"id" form:"id"`
+	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
+	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
+	Active               bool           `json:"active" form:"active"`
+	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers              []string       `json:"headers,omitempty" form:"headers"`
+	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
+	Insecure             *bool          `json:"insecure,omitempty" form:"insecure"`
+	SignatureCheck       *bool          `json:"signature_check,omitempty" form:"signature_check"`
+	Age                  *time.Duration `json:"age,omitempty" form:"age"`
+	IgnorePatterns       []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
+	ClientCertPublic     *string        `json:"client_cert_public,omitempty" form:"client_cert_public"`
+	ClientCertPrivate    *string        `json:"client_cert_private,omitempty" form:"client_cert_private"`
+	ClientCertPassphrase *string        `json:"client_cert_passphrase,omitempty" form:"client_cert_passphrase"`
 }
 
 type feed struct {
@@ -45,6 +49,15 @@ type feed struct {
 	URL      string              `json:"url"`
 	Rolie    bool                `json:"rolie"`
 	LogLevel config.FeedLogLevel `json:"log_level"`
+}
+
+var stars = "***"
+
+func threeStars(b bool) *string {
+	if b {
+		return &stars
+	}
+	return nil
 }
 
 func (c *Controller) viewSources(ctx *gin.Context) {
@@ -62,23 +75,35 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		signatureCheck *bool,
 		age *time.Duration,
 		ignorePatterns []*regexp.Regexp,
+		hasClientCertPublic bool,
+		hasClientCertPrivate bool,
+		hasClientCertPassphrase bool,
 	) {
 		srcs = append(srcs, &source{
-			ID:             id,
-			Name:           name,
-			URL:            url,
-			Active:         &active,
-			Rate:           rate,
-			Slots:          slots,
-			Headers:        headers,
-			StrictMode:     strictMode,
-			Insecure:       insecure,
-			SignatureCheck: signatureCheck,
-			Age:            age,
-			IgnorePatterns: sources.AsStrings(ignorePatterns),
+			ID:                   id,
+			Name:                 name,
+			URL:                  url,
+			Active:               active,
+			Rate:                 rate,
+			Slots:                slots,
+			Headers:              headers,
+			StrictMode:           strictMode,
+			Insecure:             insecure,
+			SignatureCheck:       signatureCheck,
+			Age:                  age,
+			IgnorePatterns:       sources.AsStrings(ignorePatterns),
+			ClientCertPublic:     threeStars(hasClientCertPublic),
+			ClientCertPrivate:    threeStars(hasClientCertPrivate),
+			ClientCertPassphrase: threeStars(hasClientCertPassphrase),
 		})
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
+}
+
+// hasBlock checks if input has a PEM block.
+func hasBlock(data []byte) bool {
+	block, _ := pem.Decode(data)
+	return block != nil
 }
 
 func (c *Controller) createSource(ctx *gin.Context) {
@@ -105,10 +130,28 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	var clientCertPublic, clientCertPrivate, clientCertPassphrase []byte
+	if src.ClientCertPublic != nil {
+		clientCertPublic = []byte(*src.ClientCertPublic)
+		if !hasBlock(clientCertPublic) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "client_cert_public has no PEM block"})
+			return
+		}
+	}
+	if src.ClientCertPrivate != nil {
+		clientCertPrivate = []byte(*src.ClientCertPrivate)
+		if !hasBlock(clientCertPrivate) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "client_cert_private has no PEM block"})
+			return
+		}
+	}
+	if src.ClientCertPassphrase != nil {
+		clientCertPassphrase = []byte(*src.ClientCertPassphrase)
+	}
+
 	switch id, err := c.sm.AddSource(
 		src.Name,
 		src.URL,
-		src.Active,
 		src.Rate,
 		src.Slots,
 		src.Headers,
@@ -117,6 +160,9 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.SignatureCheck,
 		src.Age,
 		ignorePatterns,
+		clientCertPublic,
+		clientCertPrivate,
+		clientCertPassphrase,
 	); {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, gin.H{"id": id})
@@ -155,7 +201,7 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	switch err := c.sm.UpdateSource(input.SourceID, func(su *sources.SourceUpdater) error {
+	switch ur, err := c.sm.UpdateSource(input.SourceID, func(su *sources.SourceUpdater) error {
 		// name
 		if name, ok := ctx.GetPostForm("name"); ok {
 			if err := su.UpdateName(name); err != nil {
@@ -266,10 +312,41 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 				return err
 			}
 		}
+		// client certificate update
+		optCert := func(option string, update func([]byte) error) error {
+			cert, ok := ctx.GetPostForm(option)
+			if !ok {
+				return nil
+			}
+			var data []byte
+			if cert != "" {
+				data = []byte(cert)
+				if !hasBlock(data) {
+					return sources.InvalidArgumentError(
+						fmt.Sprintf("%q has no PEM block", option))
+				}
+			}
+			return update(data)
+		}
+		if err := optCert("client_cert_public", su.UpdateClientCertPublic); err != nil {
+			return err
+		}
+		if err := optCert("client_cert_private", su.UpdateClientCertPrivate); err != nil {
+			return err
+		}
+		if passphrase, ok := ctx.GetPostForm("client_cert_passphrase"); ok {
+			var data []byte
+			if passphrase != "" {
+				data = []byte(passphrase)
+			}
+			if err := su.UpdateClientCertPassphrase(data); err != nil {
+				return err
+			}
+		}
 		return nil
 	}); {
 	case err == nil:
-		ctx.JSON(http.StatusOK, gin.H{"message": "source updated"})
+		ctx.JSON(http.StatusOK, gin.H{"message": ur.String()})
 	case errors.Is(err, sources.NoSuchEntryError("")):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 	case errors.Is(err, sources.InvalidArgumentError("")):
