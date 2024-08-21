@@ -29,6 +29,7 @@ RUN go mod download && go mod verify
 
 COPY cmd cmd
 COPY pkg pkg
+COPY internal internal
 COPY Makefile Makefile
 
 ARG BUILD_VERSION

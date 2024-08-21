@@ -135,7 +135,6 @@
         label += `${feed.summary} `;
       }
       label += feed.tlp_label;
-      label += feed.url;
     }
     return label;
   };

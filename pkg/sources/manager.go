@@ -11,6 +11,7 @@ package sources
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"slices"
@@ -59,6 +60,8 @@ type Manager struct {
 	fns  chan func(*Manager)
 	done bool
 
+	cipherKey []byte
+
 	sources []*source
 
 	pmdCache  *pmdCache
@@ -70,20 +73,50 @@ type Manager struct {
 	uniqueID  int64
 }
 
+// SourceUpdateResult is return by UpdateSource.
+type SourceUpdateResult int
+
+const (
+	// SourceUnchanged is returned if there was no change in the source.
+	SourceUnchanged SourceUpdateResult = iota
+	// SourceUpdated is returned if the source was updated.
+	SourceUpdated
+	// SourceDeactivated is returned if the source was deactivated during the update.
+	SourceDeactivated
+)
+
+func (sur SourceUpdateResult) String() string {
+	switch sur {
+	case SourceUnchanged:
+		return "unchanged"
+	case SourceUpdated:
+		return "updated"
+	case SourceDeactivated:
+		return "deactivated"
+	default:
+		return fmt.Sprintf("unknown update result: %d", sur)
+	}
+}
+
 // NewManager creates a new downloader.
 func NewManager(
 	cfg *config.Config,
 	db *database.DB,
 	val csaf.RemoteValidator,
-) *Manager {
+) (*Manager, error) {
+	cipherKey, err := createCipherKey(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("creating cipher failed: %w", err)
+	}
 	return &Manager{
 		cfg:       cfg,
 		db:        db,
 		fns:       make(chan func(*Manager)),
+		cipherKey: cipherKey,
 		pmdCache:  newPMDCache(),
 		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
 		val:       val,
-	}
+	}, nil
 }
 
 func (m *Manager) numActiveFeeds() int {
@@ -244,13 +277,20 @@ func (m *Manager) AllSources(fn func(
 	signatureCheck *bool,
 	age *time.Duration,
 	ignorepatterns []*regexp.Regexp,
+	hasClientCertPublic bool,
+	hasClientCertPrivate bool,
+	hasClientCertPassphrase bool,
 )) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
 		for _, s := range m.sources {
 			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers,
-				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns)
+				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns,
+				s.clientCertPublic != nil,
+				s.clientCertPrivate != nil,
+				s.clientCertPassphrase != nil,
+			)
 		}
 	}
 	<-done
@@ -421,15 +461,17 @@ func (m *Manager) asManager(fn func(*Manager, int64) error, id int64) error {
 func (m *Manager) AddSource(
 	name string,
 	url string,
-	active *bool,
 	rate *float64,
 	slots *int,
 	headers []string,
-	strictmode *bool,
+	strictMode *bool,
 	insecure *bool,
 	signatureCheck *bool,
 	age *time.Duration,
 	ignorePatterns []*regexp.Regexp,
+	clientCertPublic []byte,
+	clientCertPrivate []byte,
+	clientCertPassphrase []byte,
 ) (int64, error) {
 	lpmd := m.PMD(url)
 	if !lpmd.Valid() {
@@ -437,17 +479,31 @@ func (m *Manager) AddSource(
 	}
 	errCh := make(chan error)
 	s := &source{
-		name:           name,
-		url:            url,
-		active:         active != nil && *active,
-		rate:           rate,
-		slots:          slots,
-		headers:        headers,
-		strictMode:     strictmode,
-		insecure:       insecure,
-		signatureCheck: signatureCheck,
-		age:            age,
-		ignorePatterns: ignorePatterns,
+		name:                 name,
+		url:                  url,
+		rate:                 rate,
+		slots:                slots,
+		headers:              headers,
+		strictMode:           strictMode,
+		insecure:             insecure,
+		signatureCheck:       signatureCheck,
+		age:                  age,
+		ignorePatterns:       ignorePatterns,
+		clientCertPublic:     clientCertPublic,
+		clientCertPrivate:    clientCertPrivate,
+		clientCertPassphrase: clientCertPassphrase,
+	}
+	if clientCertPrivate != nil {
+		var err error
+		if clientCertPrivate, err = m.encrypt(clientCertPrivate); err != nil {
+			return 0, err
+		}
+	}
+	if clientCertPassphrase != nil {
+		var err error
+		if clientCertPassphrase, err = m.encrypt(clientCertPassphrase); err != nil {
+			return 0, err
+		}
 	}
 	m.fns <- func(m *Manager) {
 		if m.findSourceByName(name) != nil {
@@ -455,25 +511,21 @@ func (m *Manager) AddSource(
 			return
 		}
 		const sql = `INSERT INTO sources (` +
-			`name, url, active, rate, slots, headers, ` +
-			`strict_mode, insecure, signature_check, age, ignore_patterns) ` +
-			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ` +
+			`name, url, rate, slots, headers, ` +
+			`strict_mode, insecure, signature_check, age, ignore_patterns, ` +
+			`client_cert_public, client_cert_private, client_cert_passphrase) ` +
+			`VALUES (` +
+			`$1, $2, $3, $4, $5, $6, ` +
+			`$7, $8, $9, $10, $11, ` +
+			`$12, $13, $14) ` +
 			`RETURNING id`
 		if err := m.db.Run(
 			context.Background(),
 			func(rctx context.Context, con *pgxpool.Conn) error {
 				return con.QueryRow(rctx, sql,
-					name,
-					url,
-					active != nil && *active,
-					rate,
-					slots,
-					headers,
-					strictmode,
-					insecure,
-					signatureCheck,
-					age,
-					ignorePatterns,
+					name, url, rate, slots, headers,
+					strictMode, insecure, signatureCheck, age, ignorePatterns,
+					clientCertPublic, clientCertPrivate, clientCertPassphrase,
 				).Scan(&s.id)
 			}, 0,
 		); err != nil {
@@ -585,11 +637,12 @@ func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
 // SourceUpdater offers a protocol to update a source. Call the UpdateX
 // (with X in Name, Rate, ...) methods to update specfic fields.
 type SourceUpdater struct {
-	manager *Manager
-	source  *source
-	changes []func(*source)
-	fields  []string
-	values  []any
+	manager           *Manager
+	source            *source
+	clientCertUpdated bool
+	changes           []func(*source)
+	fields            []string
+	values            []any
 }
 
 func (su *SourceUpdater) addChange(ch func(*source), field string, value any) {
@@ -600,10 +653,13 @@ func (su *SourceUpdater) addChange(ch func(*source), field string, value any) {
 	}
 }
 
-func (su *SourceUpdater) applyChanges() {
+func (su *SourceUpdater) applyChanges() bool {
 	for _, ch := range su.changes {
-		ch(su.source)
+		if ch != nil {
+			ch(su.source)
+		}
 	}
+	return len(su.changes) > 0
 }
 
 // UpdateName requests a name update.
@@ -739,6 +795,62 @@ func (su *SourceUpdater) UpdateIgnorePatterns(ignorePatterns []*regexp.Regexp) e
 	return nil
 }
 
+// UpdateClientCertPublic requests an update ob client cert public part.
+func (su *SourceUpdater) UpdateClientCertPublic(data []byte) error {
+	if data == nil && su.source.clientCertPublic == nil {
+		return nil
+	}
+	if data != nil && su.source.clientCertPublic != nil && slices.Equal(data, su.source.clientCertPublic) {
+		return nil
+	}
+	data = clone(data)
+	su.addChange(func(s *source) {
+		su.clientCertUpdated = true
+		s.clientCertPublic = data
+	}, "client_cert_public", data)
+	return nil
+}
+
+// UpdateClientCertPrivate requests an update ob client cert private part.
+func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
+	orig := su.source.clientCertPrivate
+	if data == nil && orig == nil {
+		return nil
+	}
+	if data != nil && orig != nil && slices.Equal(data, orig) {
+		return nil
+	}
+	encrypted, err := su.manager.encrypt(clone(data))
+	if err != nil {
+		return err
+	}
+	su.addChange(func(s *source) {
+		su.clientCertUpdated = true
+		s.clientCertPrivate = data
+	}, "client_cert_private", encrypted)
+	return nil
+}
+
+// UpdateClientCertPassphrase requests an update ob client cert private part.
+func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
+	orig := su.source.clientCertPassphrase
+	if data == nil && orig == nil {
+		return nil
+	}
+	if data != nil && orig != nil && slices.Equal(data, orig) {
+		return nil
+	}
+	encrypted, err := su.manager.encrypt(clone(data))
+	if err != nil {
+		return err
+	}
+	su.addChange(func(s *source) {
+		su.clientCertUpdated = true
+		s.clientCertPassphrase = data
+	}, "client_cert_passphrase", encrypted)
+	return nil
+}
+
 func (su *SourceUpdater) updateDB() error {
 	if len(su.fields) == 0 {
 		return nil
@@ -774,26 +886,52 @@ func placeholders(n int) string {
 }
 
 // UpdateSource passes an updater to manipulate a source for a given id to a given callback.
-func (m *Manager) UpdateSource(sourceID int64, updates func(*SourceUpdater) error) error {
-	errCh := make(chan error)
+func (m *Manager) UpdateSource(
+	sourceID int64,
+	updates func(*SourceUpdater) error,
+) (SourceUpdateResult, error) {
+	type result struct {
+		v   SourceUpdateResult
+		err error
+	}
+	resCh := make(chan result)
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
 		if s == nil {
-			errCh <- NoSuchEntryError("no such source")
+			resCh <- result{err: NoSuchEntryError("no such source")}
 			return
 		}
 		su := SourceUpdater{manager: m, source: s}
 		if err := updates(&su); err != nil {
-			errCh <- fmt.Errorf("updates failed: %w", err)
+			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
 			return
 		}
 		if err := su.updateDB(); err != nil {
-			errCh <- fmt.Errorf("updating database failed: %w", err)
+			resCh <- result{err: fmt.Errorf("updating database failed: %w", err)}
 			return
 		}
 		// Only apply changes if database updates went through.
-		su.applyChanges()
-		errCh <- nil
+		if !su.applyChanges() {
+			resCh <- result{v: SourceUnchanged}
+			return
+		}
+		if su.clientCertUpdated {
+			if err := s.updateCertificate(); err != nil {
+				slog.Warn("updating client cert failed", "warn", err)
+				if s.active {
+					s.active = false
+					x := SourceUpdater{manager: m, source: s}
+					x.addChange(nil, "active", false)
+					if err := x.updateDB(); err != nil {
+						slog.Error("deactivating source failed", "err", err)
+					}
+					resCh <- result{v: SourceDeactivated}
+					return
+				}
+			}
+		}
+		resCh <- result{v: SourceUpdated}
 	}
-	return <-errCh
+	res := <-resCh
+	return res.v, res.err
 }

@@ -68,7 +68,10 @@ func run(cfg *config.Config) error {
 	}
 
 	// Setup the source manager.
-	sm := sources.NewManager(cfg, db, val)
+	sm, err := sources.NewManager(cfg, db, val)
+	if err != nil {
+		return fmt.Errorf("creating source manager failed: %w", err)
+	}
 	if err := sm.Boot(ctx); err != nil {
 		return fmt.Errorf("booting source manager failed: %w", err)
 	}

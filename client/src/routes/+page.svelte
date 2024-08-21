@@ -158,7 +158,7 @@
     "/login": wrap({
       component: Login
     }),
-    "/advisories/:publisherNamespace/:trackingID/documents/:id": wrap({
+    "/advisories/:publisherNamespace/:trackingID/documents/:id/:position?": wrap({
       component: Advisory,
       userData: loginRequired,
       conditions: [loginCondition]
