@@ -754,7 +754,6 @@
     >
       <Label>Name</Label>
       <Input bind:value={source.name}></Input>
-      <Checkbox bind:checked={source.active}>Active</Checkbox>
       <Label>Rate</Label>
       <Input bind:value={source.rate}></Input>
       <Label>Slots</Label>
