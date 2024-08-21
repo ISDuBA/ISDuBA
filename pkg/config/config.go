@@ -415,7 +415,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_SIGNATURE_CHECK", storeBool(&cfg.Sources.SignatureCheck)},
 		envStore{"ISDUBA_SOURCES_AES_KEY", storeString(&cfg.Sources.AESKey)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_URL", storeString(&cfg.RemoteValidator.URL)},
-		envStore{"ISDUBA_REMOTE_VALIDATOR_Cache", storeString(&cfg.RemoteValidator.Cache)},
+		envStore{"ISDUBA_REMOTE_VALIDATOR_CACHE", storeString(&cfg.RemoteValidator.Cache)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_REALM", storeString(&cfg.Client.KeycloakRealm)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},
