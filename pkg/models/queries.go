@@ -22,4 +22,6 @@ type StoredQuery struct {
 	Num         int64            `json:"num"`
 	Columns     []string         `json:"columns"`
 	Orders      *[]string        `json:"orders,omitempty"`
+	Dashboard   bool             `json:"dashboard"`
+	Role        *string          `json:"role,omitempty"`
 }
