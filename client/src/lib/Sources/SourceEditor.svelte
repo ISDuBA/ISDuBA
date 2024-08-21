@@ -23,7 +23,8 @@
     Select,
     Table,
     TableBodyRow,
-    NumberInput
+    NumberInput,
+    Fileupload
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { tdClass } from "$lib/Table/defaults";
@@ -69,6 +70,9 @@
 
   let logs: any[] = [];
 
+  let privateCert: FileList | undefined;
+  let publicCert: FileList | undefined;
+
   let logLevels = [
     { value: LogLevel.error, name: "Error" },
     { value: LogLevel.info, name: "Info" },
@@ -103,6 +107,7 @@
     let path = `/api/sources`;
     const formData = new FormData();
     formatHeaders();
+    await loadCerts();
     if (source.id) {
       method = "PUT";
       path += `/${source.id}`;
@@ -131,6 +136,15 @@
     }
     if (source.age != undefined && source.age !== 0) {
       formData.append("age", source.age.toString());
+    }
+    if (source.client_cert_public) {
+      formData.append("client_cert_public", source.client_cert_public);
+    }
+    if (source.client_cert_private) {
+      formData.append("client_cert_private", source.client_cert_private);
+    }
+    if (source.client_cert_passphrase && source.client_cert_passphrase !== "***") {
+      formData.append("client_cert_passphrase", source.client_cert_passphrase);
     }
     for (const header of source.headers) {
       if (header != "") {
@@ -312,6 +326,12 @@
       if (!source.ignore_patterns) {
         source.ignore_patterns = [""];
       }
+      if (source.client_cert_private === "***") {
+        source.client_cert_private = undefined;
+      }
+      if (source.client_cert_public === "***") {
+        source.client_cert_public = undefined;
+      }
       loadError = null;
     } else {
       loadError = getErrorDetails(`Could not find source`);
@@ -367,6 +387,15 @@
     source.headers = [];
     for (const header of headers) {
       if (header[0] !== "" && header[1] !== "") source.headers.push(`${header[0]}:${header[1]}`);
+    }
+  };
+
+  const loadCerts = async () => {
+    if (privateCert) {
+      source.client_cert_private = await privateCert.item(0)?.text();
+    }
+    if (publicCert) {
+      source.client_cert_public = await publicCert.item(0)?.text();
     }
   };
 
@@ -477,6 +506,12 @@
         <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
         <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
         <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
+        <Label>Private cert</Label>
+        <Fileupload bind:files={privateCert}></Fileupload>
+        <Label>Public cert</Label>
+        <Fileupload bind:files={publicCert}></Fileupload>
+        <Label>Client cert passphrase</Label>
+        <Input bind:value={source.client_cert_passphrase} />
         <Label>Age</Label>
         <NumberInput bind:value={source.age}></NumberInput>
         <Label>Ignore patterns</Label>
@@ -753,6 +788,12 @@
       <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
       <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
       <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
+      <Label>Private cert</Label>
+      <Fileupload bind:files={privateCert}></Fileupload>
+      <Label>Public cert</Label>
+      <Fileupload bind:files={publicCert}></Fileupload>
+      <Label>Client cert passphrase</Label>
+      <Input bind:value={source.client_cert_passphrase} />
       <Label>Age</Label>
       <NumberInput bind:value={source.age}></NumberInput>
       <Label>Ignore patterns</Label>

@@ -19,4 +19,7 @@ export type Source = {
   signature_check?: boolean;
   age?: number;
   ignore_patterns: string[];
+  client_cert_public?: string;
+  client_cert_private?: string;
+  client_cert_passphrase?: string;
 };
