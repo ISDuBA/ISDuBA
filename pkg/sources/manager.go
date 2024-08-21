@@ -820,10 +820,11 @@ func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
 	if data != nil && orig != nil && slices.Equal(data, orig) {
 		return nil
 	}
-	encrypted, err := su.manager.encrypt(clone(data))
+	encrypted, err := su.manager.encrypt(data)
 	if err != nil {
 		return err
 	}
+	data = clone(data)
 	su.addChange(func(s *source) {
 		su.clientCertUpdated = true
 		s.clientCertPrivate = data
@@ -840,10 +841,11 @@ func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
 	if data != nil && orig != nil && slices.Equal(data, orig) {
 		return nil
 	}
-	encrypted, err := su.manager.encrypt(clone(data))
+	encrypted, err := su.manager.encrypt(data)
 	if err != nil {
 		return err
 	}
+	data = clone(data)
 	su.addChange(func(s *source) {
 		su.clientCertUpdated = true
 		s.clientCertPassphrase = data
