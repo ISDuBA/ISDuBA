@@ -375,6 +375,10 @@ func (s *source) httpClient(m *Manager) *http.Client {
 		tlsConfig.Certificates = s.tlsCertificates
 	}
 
+	if m.cfg.Sources.Timeout > 0 {
+		client.Timeout = m.cfg.Keycloak.Timeout
+	}
+
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tlsConfig,
 	}

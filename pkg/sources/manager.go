@@ -631,7 +631,7 @@ func (m *Manager) downloadDone(f *feed, id int64) func() {
 
 // PMD returns the provider metadata from the given url.
 func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
-	return m.pmdCache.pmd(url)
+	return m.pmdCache.pmd(m, url)
 }
 
 // SourceUpdater offers a protocol to update a source. Call the UpdateX
