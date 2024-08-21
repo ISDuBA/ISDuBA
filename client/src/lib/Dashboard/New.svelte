@@ -20,6 +20,7 @@
   import { getPublisher } from "$lib/utils";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
+  export let storedQuery: any;
   let documents: any[] = [];
   let newDocumentsError: ErrorDetails | null;
 
@@ -33,12 +34,10 @@
   };
 
   const loadDocuments = async () => {
-    const columns =
-      "cvss_v3_score cvss_v2_score comments critical id recent title publisher ssvc state tracking_id";
-    const query = "$state new workflow =";
-    const sort = "-recent";
+    const columns = storedQuery.columns?.join(" ") ?? "";
+    const orders = storedQuery.orders?.join(" ") ?? "";
     const response = await request(
-      `/api/documents?columns=${columns}&advisories=true&query=${query}&limit=6&orders=${sort}`,
+      `/api/documents?columns=${columns}&advisories=true&query=${storedQuery.query}&limit=6&orders=${orders}`,
       "GET"
     );
     if (response.ok) {
@@ -59,7 +58,7 @@
 
 {#if $appStore.app.isUserLoggedIn}
   <div class="flex w-1/2 max-w-[50%] flex-col gap-4">
-    <SectionHeader title="New advisories"></SectionHeader>
+    <SectionHeader title={storedQuery.name}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if documents?.length && documents.length > 0}
         {#each documents as doc}

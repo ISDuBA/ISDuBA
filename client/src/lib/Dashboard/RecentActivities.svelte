@@ -19,8 +19,9 @@
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
-  const recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me involved`;
-  const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
+
+  export let storedQuery: any;
+
   const documentQueryBase = `/api/documents?columns=id title publisher tracking_id ssvc`;
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
   let activityCount = 0;
@@ -96,24 +97,16 @@
   };
 
   const fetchActivities = async () => {
-    const activitiesResponse = await request(recentActivityQuery, "GET");
+    const columns = storedQuery.columns.join(" ");
+    const orders = storedQuery.orders.join("");
+    const searchParams = `columns=${columns}&query=${storedQuery.query}&limit=6&orders=${orders}`;
+    const activitiesResponse = await request(`/api/events?${searchParams}`, "GET");
     if (activitiesResponse.ok) {
       const activities = await activitiesResponse.content;
       activityCount = activities.count;
       return activities.events || [];
     } else if (activitiesResponse.error) {
       loadActivityError = getErrorDetails(`Could not load Activities.`, activitiesResponse);
-      return [];
-    }
-  };
-
-  const fetchMentions = async () => {
-    const mentionsResponse = await request(mentionedQuery, "GET");
-    if (mentionsResponse.ok) {
-      const mentions = await mentionsResponse.content;
-      return mentions.events || [];
-    } else if (mentionsResponse.error) {
-      loadMentionsError = getErrorDetails(`Could not load Activities.`, mentionsResponse);
       return [];
     }
   };
@@ -145,19 +138,16 @@
 
   const transformDataToActivities = async () => {
     const activities = await fetchActivities();
-    const mentions = await fetchMentions();
     let idsActivities = [];
-    let idsMentions = [];
     let documentIDs: any[] = [];
     let documents = [];
-    if (activities.length > 0) {
+    if (
+      activities.length > 0 &&
+      storedQuery.columns.includes("id") &&
+      storedQuery.columns.includes("comments_id")
+    ) {
       idsActivities = pluck(activities, ["id", "comments_id"]);
       documentIDs = getDocumentIDs(idsActivities);
-    }
-    if (mentions.length > 0) {
-      idsMentions = pluck(mentions, ["id", "comments_id"]);
-      const mentionDocumentIDs = getDocumentIDs(idsMentions);
-      documentIDs = documentIDs.concat(mentionDocumentIDs);
     }
     documentIDs = [...new Set(documentIDs)];
     if (documentIDs.length > 0) {
@@ -170,7 +160,7 @@
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
-      a.mention = false;
+      a.mention = a.message && a.message.includes($appStore.app.tokenParsed?.preferred_username);
       a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
       a.documentURL = documentsById[a.id]
         ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
@@ -181,20 +171,7 @@
       return a;
     });
 
-    const mentionsAggregated = aggregateNewest(mentions);
-    let recentMentions = Object.values(mentionsAggregated);
-    recentMentions = recentMentions.map((a: any) => {
-      a.mention = true;
-      a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
-      a.documentURL = documentsById[a.id]
-        ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
-        : "";
-      return a;
-    });
-    const activitiesAggregatedByMentions = aggregateByMentions([
-      ...recentActivities,
-      ...recentMentions
-    ]);
+    const activitiesAggregatedByMentions = aggregateByMentions(recentActivities);
     resultingActivities = sortByTime(aggregateByChange(activitiesAggregatedByMentions));
   };
 
@@ -205,7 +182,7 @@
 
 {#if $appStore.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor())}
   <div class="flex w-1/2 max-w-[50%] flex-col gap-4">
-    <SectionHeader title="Recent activities"></SectionHeader>
+    <SectionHeader title={storedQuery.name}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if resultingActivities}
         {#if resultingActivities.length > 0}

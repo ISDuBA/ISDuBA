@@ -18,8 +18,8 @@
     Img,
     RadioButton,
     ButtonGroup,
-    MultiSelect,
-    Label
+    Label,
+    Select
   } from "flowbite-svelte";
   import { request } from "$lib/utils";
   import {
@@ -133,7 +133,7 @@
     formData.append("name", currentSearch.name);
     formData.append("global", `${currentSearch.global}`);
     formData.append("dashboard", `${currentSearch.dashboard}`);
-    formData.append("roles", `${currentSearch.roles}`);
+    formData.append("role", `${currentSearch.roles}`);
     if (currentSearch.description.length > 0) {
       formData.append("description", currentSearch.description);
     }
@@ -437,7 +437,7 @@
     <div class="mb-6">
       {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
         <Label class="mb-1" for="roles">Roles:</Label>
-        <MultiSelect id="roles" items={roles} bind:value={currentSearch.roles}></MultiSelect>
+        <Select id="roles" items={roles} bind:value={currentSearch.roles}></Select>
       {/if}
     </div>
     <div class="flex flex-row">
