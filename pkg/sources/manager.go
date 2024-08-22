@@ -515,9 +515,9 @@ func (m *Manager) AddSource(
 			`strict_mode, insecure, signature_check, age, ignore_patterns, ` +
 			`client_cert_public, client_cert_private, client_cert_passphrase) ` +
 			`VALUES (` +
-			`$1, $2, $3, $4, $5, $6, ` +
-			`$7, $8, $9, $10, $11, ` +
-			`$12, $13, $14) ` +
+			`$1, $2, $3, $4, $5, ` +
+			`$6, $7, $8, $9, $10, ` +
+			`$11, $12, $13) ` +
 			`RETURNING id`
 		if err := m.db.Run(
 			context.Background(),
@@ -631,7 +631,7 @@ func (m *Manager) downloadDone(f *feed, id int64) func() {
 
 // PMD returns the provider metadata from the given url.
 func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
-	return m.pmdCache.pmd(url)
+	return m.pmdCache.pmd(m, url)
 }
 
 // SourceUpdater offers a protocol to update a source. Call the UpdateX
@@ -820,10 +820,11 @@ func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
 	if data != nil && orig != nil && slices.Equal(data, orig) {
 		return nil
 	}
-	encrypted, err := su.manager.encrypt(clone(data))
+	encrypted, err := su.manager.encrypt(data)
 	if err != nil {
 		return err
 	}
+	data = clone(data)
 	su.addChange(func(s *source) {
 		su.clientCertUpdated = true
 		s.clientCertPrivate = data
@@ -840,10 +841,11 @@ func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
 	if data != nil && orig != nil && slices.Equal(data, orig) {
 		return nil
 	}
-	encrypted, err := su.manager.encrypt(clone(data))
+	encrypted, err := su.manager.encrypt(data)
 	if err != nil {
 		return err
 	}
+	data = clone(data)
 	su.addChange(func(s *source) {
 		su.clientCertUpdated = true
 		s.clientCertPassphrase = data

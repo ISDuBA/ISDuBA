@@ -93,7 +93,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 - `files_total`: Max number of files hold in temp storage. Defaults to `10`.
 - `files_user`: Max number of files hold in temp storage per user. Defaults to `2`.
-- `storage_duration`: Ensured storage duration in temp storage. Defaults to `"30m"` minutes.
+- `storage_duration`: Ensured storage duration in temp storage. Defaults to `"30m"`.
 
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
@@ -103,9 +103,9 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `download_slots`: The number of concurrent downloads from the sources. Defaults to `100`.
 - `max_slots_per_source`: The number of concurrent downloads per source. Defaults to `2`.
 - `max_rate_per_source`: The Number of requests per source per second. Defaults to `0` (unlimited).
-- `openpgp_caching`: Determines how long OpenPGP keys are kept for signature checking. Defaults to `24h`.
-- `feed_refresh`: Duration between re-asking source for a new updated feed index. Defaults to `15m`.
-- `feed_log_level`: The log level per feed. Valid values are `debug`, `info`, `warn`, `error`. Defaults to `info`.
+- `openpgp_caching`: Determines how long OpenPGP keys are kept for signature checking. Defaults to `"24h"`.
+- `feed_refresh`: Duration between re-asking source for a new updated feed index. Defaults to `"15m"`.
+- `feed_log_level`: The log level per feed. Valid values are `debug`, `info`, `warn`, `error`. Defaults to `"info"`.
 - `feed_importer`: Name of the user that is doing the feed imports. Defaults to `feedimporter`.
 - `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }`
 - `default_message`: The message that should be displayed inside the source manager.
@@ -117,6 +117,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
    in this option prefixed by `@`.\
    You can generate a token yourself e.g. by entering this command:\
    `dd if=/dev/urandom bs=32 count=1 status=none | xxd -p -c 32`
+- `timeout`: How long should be waited for HTTP responses in sources manager? Defaults to `"30s"`.
 
 ### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
 
@@ -127,10 +128,10 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 ### <a name="section_client"></a> Section `[client]` Client configuration
 
 - `keycloak_url`: The URL where the Keycloak server is located. Defaults to same as `keycloak.url`.
-- `keycloak_realm`: The name of the Keycloak realm. Defaults to "isduba".
-- `keycloak_client_id`: The public client identifier. Defaults to "auth".
-- `update_interval`: Specifies how often the token should be renewed. Defaults to "5m".
-- `idle_timeout`: When the user should be logged out after inactivity. Defaults to "30m".
+- `keycloak_realm`: The name of the Keycloak realm. Defaults to `"isduba"`.
+- `keycloak_client_id`: The public client identifier. Defaults to `"auth"`.
+- `update_interval`: Specifies how often the token should be renewed. Defaults to `"5m"`.
+- `idle_timeout`: When the user should be logged out after inactivity. Defaults to `"30m"`.
 
 ## <a name="env_vars"></a>Environment variables
 
@@ -177,6 +178,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_SOURCES_INSECURE`             | `sources insecure`                   |
 | `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |
 | `ISDUBA_SOURCES_AES_KEY`              | `sources aes_key`                    |
+| `ISDUBA_SOURCES_TIMEOUT`              | `sources timeout`                    |
 | `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
 | `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |

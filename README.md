@@ -14,7 +14,7 @@
 
 A web application
 for downloading and evaluating security advisories in CSAF 2.0 format.
-Mainly ISDuBa wants to support teams that are responsible for
+Mainly ISDuBA wants to support teams that are responsible for
 the IT security of a group of products.
 
 ISDuBA uses the following components:

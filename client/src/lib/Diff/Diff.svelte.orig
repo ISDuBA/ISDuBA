@@ -34,10 +34,17 @@
   $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
   $: diffDocuments, getDiff();
+<<<<<<< HEAD
+  $: aID = $appStore.app.diff.docA_ID;
+  $: aID, compare();
+  $: bID = $appStore.app.diff.docB_ID;
+  $: bID, compare();
+=======
   $: docA_ID = $appStore.app.diff.docA_ID;
   $: docA_ID, compare();
   $: docB_ID = $appStore.app.diff.docB_ID;
   $: docB_ID, compare();
+>>>>>>> fdb436cf392207950a47fae8f669951f570ed4a2
 
   const compare = async () => {
     if ($appStore.app.diff.docA_ID && $appStore.app.diff.docB_ID) {
