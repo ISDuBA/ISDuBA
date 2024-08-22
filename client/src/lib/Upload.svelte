@@ -11,10 +11,10 @@
 <script lang="ts">
   import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   export let label;
-  export let upload = (files: any) => {
+  export let upload = (files: FileList) => {
     console.log(files);
   };
-  let files: any;
+  let files: FileList;
 </script>
 
 <Card size="lg" class="h-96">

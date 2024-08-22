@@ -159,3 +159,9 @@
 {/await}
 <ErrorMessage error={sourcesError}></ErrorMessage>
 <ErrorMessage error={messageError}></ErrorMessage>
+
+<br />
+<Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
+  <i class="bx bx-upload"></i>
+  <span>Upload documents</span>
+</Button>
