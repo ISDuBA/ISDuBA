@@ -14,6 +14,33 @@ import type { User } from "oidc-client-ts";
 import type { HttpResponse } from "./types";
 import { jwtDecode } from "jwt-decode";
 
+const requestData = async (
+  abortController: AbortController | undefined,
+  path: string,
+  token: any,
+  requestMethod: string,
+  formData?: FormData | string
+) => {
+  if (abortController) {
+    return fetch(path, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      method: requestMethod,
+      body: formData,
+      signal: abortController.signal
+    });
+  } else {
+    return await fetch(path, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      method: requestMethod,
+      body: formData
+    });
+  }
+};
+
 export const request = async (
   path: string,
   requestMethod: string,
@@ -22,25 +49,7 @@ export const request = async (
 ): Promise<HttpResponse> => {
   try {
     const token = await getAccessToken();
-    let response;
-    if (abortController) {
-      response = await fetch(path, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        method: requestMethod,
-        body: formData,
-        signal: abortController.signal
-      });
-    } else {
-      response = await fetch(path, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        method: requestMethod,
-        body: formData
-      });
-    }
+    const response = await requestData(abortController, path, token, requestMethod, formData);
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
     let json;
@@ -55,12 +64,7 @@ export const request = async (
         };
       }
     }
-    let content;
-    if (contentType && isJson) {
-      content = json;
-    } else {
-      content = await response.text();
-    }
+    const content = contentType && isJson ? json : await response.text();
     if (response.ok) {
       return { content: content, ok: true };
     }
