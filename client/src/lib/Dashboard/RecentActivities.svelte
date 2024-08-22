@@ -13,7 +13,7 @@
   import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
   import { Badge } from "flowbite-svelte";

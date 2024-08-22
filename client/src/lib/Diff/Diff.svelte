@@ -13,7 +13,7 @@
   import DiffEntry from "./DiffEntry.svelte";
   import type { JsonDiffResult } from "./Diff";
   import LazyEntry from "./LazyEntry.svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { appStore } from "$lib/store";

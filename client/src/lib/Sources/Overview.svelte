@@ -15,7 +15,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import { tdClass } from "$lib/Table/defaults";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import { onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import type { Source } from "$lib/Sources/source";

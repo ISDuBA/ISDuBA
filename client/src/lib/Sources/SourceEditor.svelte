@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import type { Source } from "$lib/Sources/source";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import {
     Checkbox,
     Input,

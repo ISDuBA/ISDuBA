@@ -13,7 +13,7 @@
   import { TableBodyCell } from "flowbite-svelte";
   import { appStore } from "$lib/store";
   import CommentTextArea from "./CommentTextArea.svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import { marked } from "marked";
   import DOMPurify from "dompurify";
   import { createEventDispatcher } from "svelte";
