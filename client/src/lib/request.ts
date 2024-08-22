@@ -76,14 +76,6 @@ export const request = async (
     if (contentType && isJson) {
       return { error: `${response.status}`, content: json.error, ok: false };
     }
-    switch (response.status) {
-      case 400:
-      case 403:
-      case 500:
-        return { error: `${response.status}`, content: content, ok: false };
-      default:
-      // do nothing and return later
-    }
     return { error: `${response.status}`, content: content, ok: false };
   } catch (error: any) {
     if (/fetch/.test(error)) {
