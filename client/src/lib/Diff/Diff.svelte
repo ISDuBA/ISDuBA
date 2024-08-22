@@ -35,9 +35,8 @@
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
   $: diffDocuments, getDiff();
   $: docA_ID = $appStore.app.diff.docA_ID;
-  $: docA_ID, compare();
   $: docB_ID = $appStore.app.diff.docB_ID;
-  $: docB_ID, compare();
+  $: docA_ID, docB_ID, compare();
 
   const compare = async () => {
     if ($appStore.app.diff.docA_ID && $appStore.app.diff.docB_ID) {

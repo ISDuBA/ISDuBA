@@ -43,8 +43,9 @@
     }
   };
 
-  $: $appStore.app.diff.docA_ID, getDocuments();
-  $: $appStore.app.diff.docB_ID, getDocuments();
+  $: docA_ID = $appStore.app.diff.docA_ID;
+  $: docB_ID = $appStore.app.diff.docB_ID;
+  $: docA_ID, docB_ID, getDocuments();
   $: isDiffBoxOpen = $appStore.app.diff.isDiffBoxOpen;
   $: if (isDiffBoxOpen) {
     getTempDocuments();
