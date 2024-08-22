@@ -54,11 +54,13 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	defer done()
 
 	var (
-		strictMode     bool                     // All checks must be fullfilled
+		strictMode     bool                     // All checks have to be fulfilled.
 		signatureCheck bool                     // Take signature check seriously.
 		filename       string                   // We need it later to check it against the tracking id.
-		writers        []io.Writer              // Enables to decode JSON and calculating the check sum at once.
-		checks         []func(*dlStatus, *feed) // List of check to pass.
+		writers        []io.Writer              // Enables to decode JSON and calculating the checksum at once.
+		checks         []func(*dlStatus, *feed) // List of checks to pass.
+		data           bytes.Buffer             // The raw data will be stored in the database.
+		signatureData  []byte                   // The signature will be stored in the database.
 	)
 
 	// The manager owns the configuration so extract the parameters beforehand.
@@ -140,8 +142,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		checks = append(checks, check)
 	}
 
-	// We need the raw data later to be stored in the database.
-	var data bytes.Buffer
+	// Keep the raw data in data.
 	writers = append(writers, &data)
 
 	// Download the CSAF document.
@@ -213,8 +214,6 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	}
 
 	// Check signatures
-	var signatureData []byte // We are goint to store it in the database.
-
 	keys, err := m.openPGPKeys(f.source)
 	if err != nil {
 		f.log(m, config.ErrorFeedLogLevel, "Loading OpenPGP keys failed: %v", err)
