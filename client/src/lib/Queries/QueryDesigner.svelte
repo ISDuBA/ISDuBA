@@ -11,7 +11,7 @@
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Input, Spinner, Button, Checkbox, Img, RadioButton, ButtonGroup } from "flowbite-svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import {
     COLUMNS,
     ORDERDIRECTIONS,

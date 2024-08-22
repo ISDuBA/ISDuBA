@@ -28,14 +28,14 @@
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher, searchColumnName } from "$lib/Table/defaults";
   import { Spinner } from "flowbite-svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
-  import { getPublisher } from "$lib/utils";
+  import { getPublisher } from "$lib/publisher";
 
   let openRow: number | null;
   let abortController: AbortController;
