@@ -12,7 +12,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Upload from "$lib/Upload.svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
 
   let uploadError: ErrorDetails | null;
 

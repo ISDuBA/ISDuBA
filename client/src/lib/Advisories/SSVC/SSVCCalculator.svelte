@@ -18,7 +18,7 @@
     type SSVCOption
   } from "./SSVCCalculator";
   import { createEventDispatcher, onMount } from "svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import ComplexDecision from "./ComplexDecision.svelte";
