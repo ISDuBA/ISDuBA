@@ -124,7 +124,7 @@ interface Search {
   description: string;
   global: boolean;
   dashboard: boolean;
-  roles: Role[];
+  role: Role | undefined;
 }
 
 const generateQueryString = (currentSearch: Search) => {

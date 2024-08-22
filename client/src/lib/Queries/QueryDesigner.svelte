@@ -54,13 +54,15 @@
 
   let columnList: any;
 
-  // Prop items of MultiSelect doesn't accept simple strings
-  const roles = [EDITOR, REVIEWER, AUDITOR, IMPORTER, SOURCE_MANAGER, ADMIN].map((r) => {
-    return {
-      name: r,
-      value: r
-    };
-  });
+  // Prop items of (Multi-)Select doesn't accept simple strings
+  const roles = [{ name: "<no role>", value: "" }].concat(
+    [EDITOR, REVIEWER, AUDITOR, IMPORTER, SOURCE_MANAGER, ADMIN].map((r) => {
+      return {
+        name: r,
+        value: r
+      };
+    })
+  );
 
   const unsetMessages = () => {
     queryCount = null;
@@ -107,7 +109,7 @@
       description: "",
       global: false,
       dashboard: false,
-      roles: []
+      role: undefined
     };
   };
 
@@ -133,8 +135,8 @@
     formData.append("name", currentSearch.name);
     formData.append("global", `${currentSearch.global}`);
     formData.append("dashboard", `${currentSearch.dashboard}`);
-    if (currentSearch.roles) {
-      formData.append("role", `${currentSearch.roles}`);
+    if (currentSearch.role) {
+      formData.append("role", `${currentSearch.role}`);
     } else {
       formData.append("role", "");
     }
@@ -251,7 +253,7 @@
       description: result.description || "",
       global: result.global,
       dashboard: result.dashboard,
-      roles: result.roles
+      role: result.role
     };
   };
 
@@ -441,7 +443,7 @@
     <div class="mb-6">
       {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
         <Label class="mb-1" for="roles">Roles:</Label>
-        <Select id="roles" items={roles} bind:value={currentSearch.roles}></Select>
+        <Select id="roles" items={roles} bind:value={currentSearch.role}></Select>
       {/if}
     </div>
     <div class="flex flex-row">
