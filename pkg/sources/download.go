@@ -19,14 +19,33 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
+	"github.com/csaf-poc/csaf_distribution/v3/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// dlStatus tracks the results of the different validation checks per download.
+type dlStatus int
+
+const (
+	allSucceeded   dlStatus = 0
+	downloadFailed dlStatus = 1 << iota
+	filenameFailed
+	schemaValidationFailed
+	remoteValidationFailed
+	checksumFailed
+	signatureFailed
+)
+
+func (ds *dlStatus) set(mask dlStatus) {
+	*ds |= mask
+}
 
 // download fetches the files of a document and stores
 // them into the database.
@@ -34,41 +53,61 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	defer done()
 
 	var (
-		writers        []io.Writer
-		checksum       hash.Hash
-		remoteChecksum []byte
-		strictMode     *bool
-		signatureCheck *bool
+		strictMode     bool                     // All checks must be fullfilled
+		signatureCheck bool                     // Take signature check seriously.
+		filename       string                   // We need it later to check it against the tracking id.
+		writers        []io.Writer              // Enables to decode JSON and calculating the check sum at once.
+		checks         []func(*dlStatus, *feed) // List of check to pass.
 	)
 
-	// The manager owns the configuration.
-	m.inManager(func(_ *Manager) {
-		strictMode = f.source.strictMode
-		signatureCheck = f.source.signatureCheck
+	// The manager owns the configuration so extract the parameters beforehand.
+	m.inManager(func(m *Manager) {
+		strictMode = f.source.useStrictMode(m)
+		signatureCheck = f.source.checkSignature(m)
 	})
 
-	// TODO: Handle the flags
-	_ = strictMode
-	_ = signatureCheck
+	// checks is a list of checks to have to be passed in strict mode.
+	checks = []func(ds *dlStatus, f *feed){
+		// Ignore advisories with none conforming file names.
+		func(ds *dlStatus, f *feed) {
+			if filename = filepath.Base(l.doc.String()); !util.ConformingFileName(filename) {
+				ds.set(filenameFailed)
+				f.log(m, config.WarnFeedLogLevel, "File name %q is not conforming", filename)
+			}
+		},
+	}
 
 	// Loading the hash
 	if l.hash != nil { // ROLIE gave us an URL to hash file.
+		var checksum hash.Hash
 		hashFile := l.hash.String()
 		switch lc := strings.ToLower(hashFile); {
-		case strings.HasSuffix(lc, ".sha256"):
-			checksum = sha256.New()
 		case strings.HasSuffix(lc, ".sha512"):
 			checksum = sha512.New()
+		case strings.HasSuffix(lc, ".sha256"):
+			checksum = sha256.New()
 		}
 		if checksum != nil {
-			var err error
-			if remoteChecksum, err = f.source.loadHash(m, hashFile); err != nil {
-				f.log(m, config.WarnFeedLogLevel, "fetching hash %q failed: %v", hashFile, err)
+			var check func(*dlStatus, *feed)
+			if remoteChecksum, err := f.source.loadHash(m, hashFile); err != nil {
+				check = func(ds *dlStatus, f *feed) {
+					ds.set(checksumFailed)
+					f.log(m, config.WarnFeedLogLevel, "Fetching hash %q failed: %v", hashFile, err)
+				}
 			} else {
 				writers = append(writers, checksum)
+				check = func(ds *dlStatus, f *feed) {
+					if !bytes.Equal(checksum.Sum(nil), remoteChecksum) {
+						ds.set(checksumFailed)
+						f.log(m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
+					}
+				}
 			}
+			checks = append(checks, check)
 		}
-	} else if !f.rolie { // If we are directory based, do some guessing:
+	} else if !f.rolie { // If we are directory based, do some guessing
+		var checksum hash.Hash
+		var remoteChecksum []byte
 		for _, h := range []struct {
 			ext  string
 			cstr func() hash.Hash
@@ -79,11 +118,30 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			guess := l.doc.String() + h.ext
 			if rc, err := f.source.loadHash(m, guess); err == nil {
 				remoteChecksum, checksum = rc, h.cstr()
-				writers = append(writers, checksum)
 				break
 			}
 		}
+		var check func(*dlStatus, *feed)
+		if checksum != nil { // We found a hash
+			writers = append(writers, checksum)
+			check = func(ds *dlStatus, f *feed) {
+				if !bytes.Equal(checksum.Sum(nil), remoteChecksum) {
+					ds.set(checksumFailed)
+					f.log(m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
+				}
+			}
+		} else { // We didn't found a hash.
+			check = func(ds *dlStatus, f *feed) {
+				ds.set(checksumFailed)
+				f.log(m, config.WarnFeedLogLevel, "Fetching hash for %q failed", l.doc)
+			}
+		}
+		checks = append(checks, check)
 	}
+
+	// We need the raw data later to be stored in the database.
+	var data bytes.Buffer
+	writers = append(writers, &data)
 
 	// Download the CSAF document.
 	resp, err := f.source.httpGet(m, l.doc.String())
@@ -96,100 +154,116 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			l.doc, http.StatusText(resp.StatusCode), resp.StatusCode)
 		return
 	}
-	defer resp.Body.Close()
-
-	var data bytes.Buffer
-	writers = append(writers, &data)
-
-	// Prevent over-sized downloads.
-	limited := io.LimitReader(resp.Body, int64(m.cfg.General.AdvisoryUploadLimit))
-
-	tee := io.TeeReader(limited, io.MultiWriter(writers...))
 
 	// Decode document into JSON.
 	var doc any
-	if err := json.NewDecoder(tee).Decode(&doc); err != nil {
+	if err := func() error {
+		defer resp.Body.Close()
+		// Prevent over-sized downloads.
+		limited := io.LimitReader(resp.Body, int64(m.cfg.General.AdvisoryUploadLimit))
+		tee := io.TeeReader(limited, io.MultiWriter(writers...))
+		return json.NewDecoder(tee).Decode(&doc)
+	}(); err != nil {
+		// If it is not JSON there is no way to carry on.
 		f.log(m, config.ErrorFeedLogLevel, "decoding document %q failed: %v", l.doc, err)
 		return
 	}
 
-	// Compare checksums.
-	if remoteChecksum != nil {
-		if !bytes.Equal(checksum.Sum(nil), remoteChecksum) {
-			f.log(m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
-			return
+	// Check if the tracking id matches the filename.
+	checks = append(checks, func(ds *dlStatus, f *feed) {
+		expr := util.NewPathEval()
+		if err := util.IDMatchesFilename(expr, doc, filename); err != nil {
+			ds.set(filenameFailed)
+			f.log(m, config.ErrorFeedLogLevel, "Tracking ID in %q is not conforming: %v", l.doc, err)
 		}
-	}
+	})
 
 	// Check document against schema.
-	if errors, err := csaf.ValidateCSAF(doc); err != nil || len(errors) > 0 {
-		if err != nil {
-			f.log(m, config.ErrorFeedLogLevel,
-				"Schema validation of document %q failed: %v", l.doc, err)
-		} else {
-			f.log(m, config.ErrorFeedLogLevel,
-				"Schema validation of document %q has %d errors", l.doc, len(errors))
+	checks = append(checks, func(ds *dlStatus, f *feed) {
+		if errors, err := csaf.ValidateCSAF(doc); err != nil || len(errors) > 0 {
+			ds.set(schemaValidationFailed)
+			if err != nil {
+				f.log(m, config.ErrorFeedLogLevel,
+					"Schema validation of document %q failed: %v", l.doc, err)
+			} else {
+				f.log(m, config.ErrorFeedLogLevel,
+					"Schema validation of document %q has %d errors", l.doc, len(errors))
+			}
+			return
 		}
-		return
-	}
+	})
 
 	// Check against remote validator if configured.
 	if m.val != nil {
-		rvr, err := m.val.Validate(doc)
-		if err != nil {
-			slog.Error("Remote validation failed", "err", err, "url", l.doc)
-			f.log(m, config.ErrorFeedLogLevel,
-				"Remote validation of document %q failed: %v", l.doc, err)
-			return
-		}
-		if !rvr.Valid {
-			// XXX: Maybe we should tell more details here?!
-			f.log(m, config.ErrorFeedLogLevel,
-				"Remote validator classifies document %q as invalid", l.doc)
-			return
-		}
+		checks = append(checks, func(ds *dlStatus, f *feed) {
+			switch rvr, err := m.val.Validate(doc); {
+			case err != nil:
+				ds.set(remoteValidationFailed)
+				slog.Error("Remote validation failed", "err", err, "url", l.doc)
+				f.log(m, config.ErrorFeedLogLevel,
+					"Remote validation of document %q failed: %v", l.doc, err)
+			case !rvr.Valid:
+				// XXX: Maybe we should tell more details here?!
+				ds.set(remoteValidationFailed)
+				f.log(m, config.ErrorFeedLogLevel,
+					"Remote validator classifies document %q as invalid", l.doc)
+			}
+		})
 	}
 
 	// Check signatures
-	var signature *crypto.PGPSignature
-	var signatureData []byte
+	var signatureData []byte // We are goint to store it in the database.
 
 	keys, err := m.openPGPKeys(f.source)
 	if err != nil {
-		f.log(m, config.ErrorFeedLogLevel,
-			"OpenPGP signature for %q failed: %v", l.doc, err)
+		f.log(m, config.ErrorFeedLogLevel, "Loading OpenPGP keys failed: %v", err)
 	} else if keys.CountEntities() > 0 {
 		// Only check signature if we have something in the key ring.
-		var sign *url.URL
-		switch {
-		case l.signature != nil: // from ROLIE feed.
-			sign = l.signature
-		case !f.rolie: // If we are directory based, do some guessing:
-			guess := l.doc.String() + ".asc"
-			sign, _ = url.Parse(guess)
-		default:
-			goto skipSignatureCheck
-		}
-		var err error
-		if signature, signatureData, err = f.source.loadSignature(m, sign); err != nil {
-			f.log(m, config.ErrorFeedLogLevel,
-				"Loading OpenPGP signature for %q failed: %v", l.doc, err)
-		} else {
-			pm := crypto.NewPlainMessage(data.Bytes())
-			if err := keys.VerifyDetached(pm, signature, crypto.GetUnixTime()); err != nil {
-				f.log(m, config.ErrorFeedLogLevel,
-					"Verifying OpenPGP signature of %q failed: %v", l.doc, err)
-				// TODO: Survive failed signature check.
+		checks = append(checks, func(ds *dlStatus, f *feed) {
+			var sign *url.URL
+			switch {
+			case l.signature != nil: // from ROLIE feed.
+				sign = l.signature
+			case !f.rolie: // If we are directory based, do some guessing:
+				guess := l.doc.String() + ".asc"
+				sign, _ = url.Parse(guess)
+			default:
+				// XXX: Should not happen.
 				return
 			}
+			var err error
+			var signature *crypto.PGPSignature
+			if signature, signatureData, err = f.source.loadSignature(m, sign); err != nil {
+				if signatureCheck {
+					ds.set(schemaValidationFailed)
+					f.log(m, config.ErrorFeedLogLevel,
+						"Loading OpenPGP signature for %q failed: %v", l.doc, err)
+				}
+			} else {
+				pm := crypto.NewPlainMessage(data.Bytes())
+				if err := keys.VerifyDetached(pm, signature, crypto.GetUnixTime()); err != nil {
+					if signatureCheck {
+						ds.set(schemaValidationFailed)
+						f.log(m, config.ErrorFeedLogLevel,
+							"Verifying OpenPGP signature of %q failed: %v", l.doc, err)
+					}
+				}
+			}
+		})
+	}
+
+	// Run the checks.
+	status := allSucceeded
+	for _, check := range checks {
+		check(&status, f)
+		if strictMode && status != allSucceeded {
+			return
 		}
 	}
-skipSignatureCheck:
 
 	// TODO: store signature data in database.
 	_ = signatureData
 
-	// TODO: Filename check. (???)
 	// TODO: Statistics
 
 	var importer *string
