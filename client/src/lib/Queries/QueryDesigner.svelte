@@ -297,7 +297,7 @@
     }
     if (params) id = params.id;
     if (id) {
-      const response = await request(`/api/queries/`, "GET");
+      const response = await request(`/api/queries`, "GET");
       if (response.ok) {
         const result = await response.content;
         const thisQuery = result.find((q: any) => {
