@@ -18,12 +18,8 @@
   import { SEARCHTYPES } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
-  let queries: any[];
-  $: filteredQueries = queries
-    ? queries.filter(
-        (query) => query.dashboard === true && appStore.getRoles().includes(query.role)
-      )
-    : [];
+  let filteredQueries: any[] = [];
+
   $: advisoryQueries = filteredQueries.filter((query: any) =>
     [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)
   );
@@ -44,7 +40,15 @@
   };
 
   onMount(async () => {
-    queries = await fetchStoredQueries();
+    const allQueries = await fetchStoredQueries();
+    const userDashboardQueries = allQueries.filter(
+      (query) =>
+        query.dashboard === true && query.definer === $appStore.app.tokenParsed?.preferred_username
+    );
+    const globalDashboardQueries = allQueries.filter(
+      (query) => query.dashboard === true && appStore.getRoles().includes(query.role)
+    );
+    filteredQueries = [...userDashboardQueries, ...globalDashboardQueries];
   });
 </script>
 
