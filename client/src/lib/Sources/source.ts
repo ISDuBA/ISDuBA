@@ -17,7 +17,7 @@ export type Source = {
   strict_mode?: boolean;
   insecure?: boolean;
   signature_check?: boolean;
-  age?: number;
+  age?: string;
   ignore_patterns: string[];
   client_cert_public?: string;
   client_cert_private?: string;

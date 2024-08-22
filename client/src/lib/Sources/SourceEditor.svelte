@@ -23,7 +23,6 @@
     Select,
     Table,
     TableBodyRow,
-    NumberInput,
     Fileupload
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
@@ -134,7 +133,7 @@
     if (source.signature_check !== undefined) {
       formData.append("signature_check", source.signature_check.toString());
     }
-    if (source.age != undefined && source.age !== 0) {
+    if (source.age != undefined && source.age !== "") {
       formData.append("age", source.age.toString());
     }
     if (source.client_cert_public) {
@@ -513,7 +512,7 @@
         <Label>Client cert passphrase</Label>
         <Input bind:value={source.client_cert_passphrase} />
         <Label>Age</Label>
-        <NumberInput bind:value={source.age}></NumberInput>
+        <Input placeholder="17520h" bind:value={source.age}></Input>
         <Label>Ignore patterns</Label>
         <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
           {#each source.ignore_patterns as pattern, index (index)}
@@ -794,7 +793,7 @@
       <Label>Client cert passphrase</Label>
       <Input bind:value={source.client_cert_passphrase} />
       <Label>Age</Label>
-      <NumberInput bind:value={source.age}></NumberInput>
+      <Input placeholder="17520h" bind:value={source.age}></Input>
       <Label>Ignore patterns</Label>
       <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
         {#each source.ignore_patterns as pattern, index (index)}
