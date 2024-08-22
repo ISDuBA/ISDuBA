@@ -245,7 +245,7 @@
 
   const loadFourCVEs = async () => {
     const response = await request(
-      `/api/documents?advisories=true&columns=four_cves&query=$id ${params.id} integer =`,
+      `/api/documents?advisories=false&columns=four_cves&query=$id ${params.id} integer =`,
       "GET"
     );
     if (response.ok) {
