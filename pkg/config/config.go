@@ -88,19 +88,20 @@ const (
 )
 
 const (
-	defaultDownloadSlots        = 100
-	defaultMaxSlotsPerSource    = 2
-	defaultMaxRatePerSlot       = 0
-	defaultOpenPGPCaching       = 24 * time.Hour
-	defaultFeedRefresh          = 15 * time.Minute
-	defaultFeedLogLevel         = InfoFeedLogLevel
-	defaultFeedImporter         = "feedimporter"
-	defaultMessageSourceManager = "Missing something? To suggest new CSAF sources, " +
+	defaultSourcesDownloadSlots     = 100
+	defaultSourcesMaxSlotsPerSource = 2
+	defaultSourcesMaxRatePerSlot    = 0
+	defaultSourcesOpenPGPCaching    = 24 * time.Hour
+	defaultSourcesFeedRefresh       = 15 * time.Minute
+	defaultSourcesTimeout           = 30 * time.Second
+	defaultSourcesFeedLogLevel      = InfoFeedLogLevel
+	defaultSourcesFeedImporter      = "feedimporter"
+	defaultSourcesDefaultMessage    = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
-	defaultStrictMode     = true
-	defaultInsecure       = false
-	defaultSignatureCheck = true
-	defaultAESKey         = ""
+	defaultSourcesStrictMode     = true
+	defaultSourcesInsecure       = false
+	defaultSourcesSignatureCheck = true
+	defaultSourcesAESKey         = ""
 )
 
 const (
@@ -182,6 +183,7 @@ type Sources struct {
 	MaxRatePerSource  float64               `toml:"max_rate_per_source"`
 	OpenPGPCaching    time.Duration         `toml:"openpgp_caching"`
 	FeedRefresh       time.Duration         `toml:"feed_refresh"`
+	Timeout           time.Duration         `toml:"timeout"`
 	FeedLogLevel      FeedLogLevel          `tomt:"feed_log_level"`
 	PublishersTLPs    models.PublishersTLPs `toml:"publishers_tlps"`
 	FeedImporter      string                `toml:"feed_importer"`
@@ -313,18 +315,18 @@ func Load(file string) (*Config, error) {
 			StorageDuration: defaultTempStorageDuration,
 		},
 		Sources: Sources{
-			DownloadSlots:     defaultDownloadSlots,
-			MaxSlotsPerSource: defaultMaxSlotsPerSource,
-			MaxRatePerSource:  defaultMaxRatePerSlot,
-			OpenPGPCaching:    defaultOpenPGPCaching,
-			FeedRefresh:       defaultFeedRefresh,
-			FeedLogLevel:      defaultFeedLogLevel,
-			FeedImporter:      defaultFeedImporter,
+			DownloadSlots:     defaultSourcesDownloadSlots,
+			MaxSlotsPerSource: defaultSourcesMaxSlotsPerSource,
+			MaxRatePerSource:  defaultSourcesMaxRatePerSlot,
+			OpenPGPCaching:    defaultSourcesOpenPGPCaching,
+			FeedRefresh:       defaultSourcesFeedRefresh,
+			FeedLogLevel:      defaultSourcesFeedLogLevel,
+			FeedImporter:      defaultSourcesFeedImporter,
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
-			DefaultMessage:    defaultMessageSourceManager,
-			StrictMode:        defaultStrictMode,
-			Insecure:          defaultInsecure,
-			SignatureCheck:    defaultSignatureCheck,
+			DefaultMessage:    defaultSourcesDefaultMessage,
+			StrictMode:        defaultSourcesStrictMode,
+			Insecure:          defaultSourcesInsecure,
+			SignatureCheck:    defaultSourcesSignatureCheck,
 		},
 		RemoteValidator: csaf.RemoteValidatorOptions{
 			URL:     defaultRemoteValidatorURL,
@@ -413,9 +415,10 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_STRICT_MODE", storeBool(&cfg.Sources.StrictMode)},
 		envStore{"ISDUBA_SOURCES_INSECURE", storeBool(&cfg.Sources.Insecure)},
 		envStore{"ISDUBA_SOURCES_SIGNATURE_CHECK", storeBool(&cfg.Sources.SignatureCheck)},
+		envStore{"ISDUBA_SOURCES_TIMEOUT", storeDuration(&cfg.Sources.Timeout)},
 		envStore{"ISDUBA_SOURCES_AES_KEY", storeString(&cfg.Sources.AESKey)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_URL", storeString(&cfg.RemoteValidator.URL)},
-		envStore{"ISDUBA_REMOTE_VALIDATOR_Cache", storeString(&cfg.RemoteValidator.Cache)},
+		envStore{"ISDUBA_REMOTE_VALIDATOR_CACHE", storeString(&cfg.RemoteValidator.Cache)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_REALM", storeString(&cfg.Client.KeycloakRealm)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},

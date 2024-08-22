@@ -30,7 +30,8 @@
 
   $: $appStore.app.diff.docA_ID, getDocuments();
   $: $appStore.app.diff.docB_ID, getDocuments();
-  $: if ($appStore.app.diff.isDiffBoxOpen) {
+  $: isDiffBoxOpen = $appStore.app.diff.isDiffBoxOpen;
+  $: if (isDiffBoxOpen) {
     getTempDocuments();
     getDocuments();
   }

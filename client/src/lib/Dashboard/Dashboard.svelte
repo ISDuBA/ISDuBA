@@ -53,7 +53,7 @@
 </svelte:head>
 
 {#if $appStore.app.isUserLoggedIn}
-  <div class="mb-8 mt-8 flex gap-x-10 gap-y-4">
+  <div class="mb-8 mt-8 flex flex-wrap gap-10">
     {#each advisoryQueries as query}
       <New storedQuery={query}></New>
     {/each}

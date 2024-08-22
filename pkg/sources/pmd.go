@@ -33,7 +33,7 @@ func newPMDCache() *pmdCache {
 	}
 }
 
-func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
+func (pc *pmdCache) pmd(m *Manager, url string) *csaf.LoadedProviderMetadata {
 
 	if lpmd, ok := pc.Get(url); ok {
 		return lpmd
@@ -41,10 +41,17 @@ func (pc *pmdCache) pmd(url string) *csaf.LoadedProviderMetadata {
 
 	header := http.Header{}
 	header.Add("User-Agent", UserAgent)
+
+	baseClient := &http.Client{}
+	if m.cfg.Sources.Timeout > 0 {
+		baseClient.Timeout = m.cfg.Sources.Timeout
+	}
+
 	client := util.Client(&util.HeaderClient{
-		Client: &http.Client{},
+		Client: baseClient,
 		Header: header,
 	})
+
 	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
 		client = &util.LoggingClient{
 			Client: client,

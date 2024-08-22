@@ -375,6 +375,10 @@ func (s *source) httpClient(m *Manager) *http.Client {
 		tlsConfig.Certificates = s.tlsCertificates
 	}
 
+	if m.cfg.Sources.Timeout > 0 {
+		client.Timeout = m.cfg.Sources.Timeout
+	}
+
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tlsConfig,
 	}
@@ -395,10 +399,11 @@ func (s *source) applyHeaders(req *http.Request) {
 // doRequestDirectly executes an HTTP request with the source specific parameters.
 func (s *source) doRequestDirectly(m *Manager, req *http.Request) (*http.Response, error) {
 	s.applyHeaders(req)
+	client := s.httpClient(m)
 	if limiter := s.wait(); limiter != nil {
 		limiter.Wait(context.Background())
 	}
-	return s.httpClient(m).Do(req)
+	return client.Do(req)
 }
 
 // doRequest executes an HTTP request with the source specific parameters.
