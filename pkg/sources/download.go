@@ -256,9 +256,12 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	status := allSucceeded
 	for _, check := range checks {
 		check(&status, f)
-		if strictMode && status != allSucceeded {
-			return
-		}
+	}
+
+	if strictMode && status != allSucceeded {
+		// Don't import, only write the stats.
+		// TODO: Implement me!
+		return
 	}
 
 	// TODO: store signature data in database.

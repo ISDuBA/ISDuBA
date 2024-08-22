@@ -227,6 +227,20 @@ var (
 	})
 )
 
+// ChainInTx executes a list of in transaction functions.
+func ChainInTx(
+	inTxs ...func(context.Context, pgx.Tx, int64) error,
+) func(context.Context, pgx.Tx, int64) error {
+	return func(ctx context.Context, tx pgx.Tx, docID int64) error {
+		for _, inTx := range inTxs {
+			if err := inTx(ctx, tx, docID); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 // ImportDocument imports a given advisory into the database.
 func ImportDocument(
 	ctx context.Context,
