@@ -34,10 +34,16 @@
   };
 
   const loadDocuments = async () => {
-    const columns = storedQuery.columns?.join(" ") ?? "";
     const orders = storedQuery.orders?.join(" ") ?? "";
+    let fetchColumns = [...(storedQuery.columns ?? [])];
+    let requiredColumns = ["id", "tracking_id", "publisher"];
+    for (let c of requiredColumns) {
+      if (!fetchColumns.includes(c)) {
+        fetchColumns.push(c);
+      }
+    }
     const response = await request(
-      `/api/documents?columns=${columns}&advisories=true&query=${storedQuery.query}&limit=6&orders=${orders}`,
+      `/api/documents?columns=${fetchColumns.join(" ")}&advisories=true&query=${storedQuery.query}&limit=6&orders=${orders}`,
       "GET"
     );
     if (response.ok) {

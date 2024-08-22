@@ -506,8 +506,10 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 
 			// Check role
 			if role, ok := ctx.GetPostForm("role"); ok {
-				if role != "" {
-					add(sq.Role == nil || role != *sq.Role, "name", role)
+				if role == "" {
+					add(sq.Role != nil, "role", nil)
+				} else {
+					add(sq.Role == nil || role != *sq.Role, "role", role)
 				}
 			}
 

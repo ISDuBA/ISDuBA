@@ -133,7 +133,11 @@
     formData.append("name", currentSearch.name);
     formData.append("global", `${currentSearch.global}`);
     formData.append("dashboard", `${currentSearch.dashboard}`);
-    formData.append("role", `${currentSearch.roles}`);
+    if (currentSearch.roles) {
+      formData.append("role", `${currentSearch.roles}`);
+    } else {
+      formData.append("role", "");
+    }
     if (currentSearch.description.length > 0) {
       formData.append("description", currentSearch.description);
     }
