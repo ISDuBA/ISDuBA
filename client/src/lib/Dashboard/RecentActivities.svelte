@@ -97,9 +97,9 @@
   };
 
   const fetchActivities = async () => {
-    const columns = storedQuery.columns.join(" ");
-    const orders = storedQuery.orders.join("");
-    const searchParams = `columns=${columns}&query=${storedQuery.query}&limit=6&orders=${orders}`;
+    const columns = `${storedQuery.columns ? "columns=" + storedQuery.columns.join(" ") : ""}`;
+    const orders = `${storedQuery.orders ? "&orders=" + storedQuery.orders.join(" ") : ""}`;
+    const searchParams = `${columns}&query=${storedQuery.query}&limit=6${orders}`;
     const activitiesResponse = await request(`/api/events?${searchParams}`, "GET");
     if (activitiesResponse.ok) {
       const activities = await activitiesResponse.content;
