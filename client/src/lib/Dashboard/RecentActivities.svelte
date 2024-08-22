@@ -201,7 +201,7 @@
                 {:else if activity.event === "add_ssvc"}
                   {activity.actor} added a SSVC "{activity.ssvc}""
                 {:else if activity.event === "import_document"}
-                  {activity.actor} added imported a document
+                  {activity.actor} imported a document
                 {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
                   {activity.actor} changed a SSVC to "{activity.ssvc}"
                 {:else if activity.event === "change_comment"}
