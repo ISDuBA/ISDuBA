@@ -33,6 +33,7 @@ import (
 // dlStatus tracks the results of the different validation checks per download.
 type dlStatus int
 
+// Defines a set of status codes for the download operation using bit flags.
 const (
 	allSucceeded   dlStatus = 0
 	downloadFailed dlStatus = 1 << iota
