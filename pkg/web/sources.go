@@ -81,7 +81,7 @@ func threeStars(b bool) *string {
 }
 
 func (c *Controller) viewSources(ctx *gin.Context) {
-	var srcs []*source
+	srcs := []*source{}
 	c.sm.AllSources(func(
 		id int64,
 		name string,
