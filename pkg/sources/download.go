@@ -142,7 +142,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		checks = append(checks, check)
 	}
 
-	// Keep the raw data in data.
+	// Keep the raw data.
 	writers = append(writers, &data)
 
 	// Download the CSAF document.
@@ -235,7 +235,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			var signature *crypto.PGPSignature
 			if signature, signatureData, err = f.source.loadSignature(m, sign); err != nil {
 				if signatureCheck {
-					ds.set(schemaValidationFailed)
+					ds.set(signatureFailed)
 					f.log(m, config.ErrorFeedLogLevel,
 						"Loading OpenPGP signature for %q failed: %v", l.doc, err)
 				}
@@ -243,7 +243,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 				pm := crypto.NewPlainMessage(data.Bytes())
 				if err := keys.VerifyDetached(pm, signature, crypto.GetUnixTime()); err != nil {
 					if signatureCheck {
-						ds.set(schemaValidationFailed)
+						ds.set(signatureFailed)
 						f.log(m, config.ErrorFeedLogLevel,
 							"Verifying OpenPGP signature of %q failed: %v", l.doc, err)
 					}
