@@ -107,36 +107,3 @@ const getAccessToken = async () => {
     }
   });
 };
-
-export const getPublisher = (publisher: string, width?: number) => {
-  if (width && width > 1280) return publisher;
-  switch (publisher) {
-    case "Red Hat Product Security":
-      return "RH";
-    case "Siemens ProductCERT":
-      return "SI";
-    case "Bundesamt für Sicherheit in der Informationstechnik":
-      return "BSI";
-    case "SICK PSIRT":
-      return "SCK";
-    default:
-      return publisher;
-  }
-};
-
-export const getRelativeTime = (date: Date, inFuture = true) => {
-  const now = Date.now();
-  const unixMillisec = date.getTime();
-  const passedTime = inFuture ? unixMillisec - now : now - unixMillisec;
-  let period = "";
-  if (passedTime < 60000) {
-    period = "<1 min";
-  } else if (passedTime < 3600000) {
-    period = `${Math.floor(passedTime / 60000)} min`;
-  } else if (passedTime < 86400000) {
-    period = `${Math.floor(passedTime / 3600000)} hours`;
-  } else {
-    period = `${Math.floor(passedTime / 86400000)} days`;
-  }
-  return period;
-};

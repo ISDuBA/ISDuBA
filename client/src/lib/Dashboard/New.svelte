@@ -17,7 +17,7 @@
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Activity from "./Activity.svelte";
-  import { getPublisher } from "$lib/utils";
+  import { getPublisher } from "$lib/publisher";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
   let documents: any[] = [];

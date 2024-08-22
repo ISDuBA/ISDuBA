@@ -35,7 +35,7 @@
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
-  import { getPublisher } from "$lib/utils";
+  import { getPublisher } from "$lib/publisher";
 
   let openRow: number | null;
   let abortController: AbortController;
