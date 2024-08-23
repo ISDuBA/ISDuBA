@@ -14,6 +14,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"hash"
 	"io"
 	"log/slog"
@@ -27,6 +28,7 @@ import (
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/csaf-poc/csaf_distribution/v3/util"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -44,8 +46,32 @@ const (
 	signatureFailed
 )
 
-func (ds *dlStatus) set(mask dlStatus) {
-	*ds |= mask
+func (ds *dlStatus) set(mask dlStatus) { *ds |= mask }
+
+func (ds dlStatus) has(mask dlStatus) bool { return ds&mask == mask }
+
+func (ds dlStatus) toInserter(i *inserter) {
+	i.add("download_failed", ds.has(downloadFailed))
+	i.add("filename_failed", ds.has(filenameFailed))
+	i.add("schema_failed", ds.has(schemaValidationFailed))
+	i.add("remote_failed", ds.has(remoteValidationFailed))
+	i.add("checksum_failed", ds.has(checksumFailed))
+	i.add("signature_failed", ds.has(signatureFailed))
+}
+
+type inserter struct {
+	keys   []string
+	values []any
+}
+
+func (i *inserter) add(key string, value any) {
+	i.keys = append(i.keys, key)
+	i.values = append(i.values, value)
+}
+
+func (i *inserter) sql(table string) string {
+	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		table, strings.Join(i.keys, ","), placeholders(len(i.values)))
 }
 
 // download fetches the files of a document and stores
@@ -256,29 +282,56 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	status := allSucceeded
 	for _, check := range checks {
 		check(&status, f)
-		if strictMode && status != allSucceeded {
-			return
-		}
 	}
 
-	// TODO: store signature data in database.
-	_ = signatureData
+	if strictMode && status != allSucceeded {
+		// Don't import, only write the stats.
+		if err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
+			var i inserter
+			status.toInserter(&i)
+			sql := i.sql("downloads")
+			_, err := conn.Exec(ctx, sql, i.values...)
+			return err
+		}, 0); err != nil {
+			f.log(m, config.ErrorFeedLogLevel, "storing stats of %q failed: %v", l.doc, err)
+		}
+		return
+	}
 
-	// TODO: Statistics
+	// Store stats in database.
+	storeStats := func(ctx context.Context, tx pgx.Tx, docID int64) error {
+		var i inserter
+		i.add("documents_id", docID)
+		if !f.invalid.Load() {
+			i.add("feeds_id", f.id)
+		}
+		status.toInserter(&i)
+		sql := i.sql("downloads")
+		_, err := tx.Exec(ctx, sql, i.values...)
+		return err
+	}
+
+	// Store signature data in database.
+	storeSignature := func(ctx context.Context, tx pgx.Tx, docID int64) error {
+		const insertSQL = `UPDATE documents ` +
+			`SET (signature, filename) = ($1, $2)` +
+			`WHERE id = $3`
+		_, err := tx.Exec(ctx, insertSQL, signatureData, filename, docID)
+		return err
+	}
 
 	var importer *string
 	if !m.cfg.General.AnonymousEventLogging {
 		importer = &m.cfg.Sources.FeedImporter
 	}
 
-	ctx := context.Background()
-	if err := m.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
+	if err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
 		_, err := models.ImportDocumentData(
 			ctx, conn,
 			doc, data.Bytes(),
 			importer,
 			m.cfg.Sources.PublishersTLPs,
-			f.storeLastChanges(&l),
+			models.ChainInTx(storeStats, storeSignature, f.storeLastChanges(&l)),
 			false)
 		return err
 	}, 0); err != nil {
