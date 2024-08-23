@@ -69,8 +69,9 @@ func (i *inserter) add(key string, value any) {
 	i.values = append(i.values, value)
 }
 
-func (i *inserter) sql(tmpl string) string {
-	return fmt.Sprintf(tmpl, strings.Join(i.keys, ","), placeholders(len(i.values)))
+func (i *inserter) sql(table string) string {
+	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		table, strings.Join(i.keys, ","), placeholders(len(i.values)))
 }
 
 // download fetches the files of a document and stores
@@ -288,7 +289,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		if err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
 			var i inserter
 			status.toInserter(&i)
-			sql := i.sql(`INSERT INTO downloads (%s) VALUES (%s)`)
+			sql := i.sql("downloads")
 			_, err := conn.Exec(ctx, sql, i.values...)
 			return err
 		}, 0); err != nil {
@@ -305,7 +306,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			i.add("feeds_id", f.id)
 		}
 		status.toInserter(&i)
-		sql := i.sql(`INSERT INTO downloads (%s) VALUES (%s)`)
+		sql := i.sql("downloads")
 		_, err := tx.Exec(ctx, sql, i.values...)
 		return err
 	}
