@@ -30,11 +30,11 @@
   import { jwtDecode } from "jwt-decode";
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
   import QueryOverview from "$lib/Queries/Overview.svelte";
-  import Test from "$lib/Test.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import SourceEditor from "$lib/Sources/SourceEditor.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import type { HttpResponse } from "$lib/types";
+  import DocumentUpload from "$lib/Sources/DocumentUpload.svelte";
 
   let loadConfigError: ErrorDetails | null;
 
@@ -208,13 +208,13 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/sources/:id": wrap({
-      component: SourceEditor,
+    "/sources/upload": wrap({
+      component: DocumentUpload,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/test": wrap({
-      component: Test,
+    "/sources/:id": wrap({
+      component: SourceEditor,
       userData: loginRequired,
       conditions: [loginCondition]
     }),

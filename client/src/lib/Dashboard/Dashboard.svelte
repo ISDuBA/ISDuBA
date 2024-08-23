@@ -13,7 +13,7 @@
   import { onMount } from "svelte";
   import New from "./New.svelte";
   import RecentActivities from "./RecentActivities.svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { SEARCHTYPES } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";

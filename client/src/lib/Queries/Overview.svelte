@@ -12,7 +12,7 @@
   import { tablePadding, tdClass } from "$lib/Table/defaults";
   import { Button, Table, TableHead, TableHeadCell, TableBodyCell, Spinner } from "flowbite-svelte";
   import { onMount } from "svelte";
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { push } from "svelte-spa-router";

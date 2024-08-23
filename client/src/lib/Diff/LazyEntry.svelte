@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { request } from "$lib/utils";
+  import { request } from "$lib/request";
   import DiffEntry from "./DiffEntry.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { Button } from "flowbite-svelte";

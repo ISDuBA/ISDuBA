@@ -14,6 +14,33 @@ import type { User } from "oidc-client-ts";
 import type { HttpResponse } from "./types";
 import { jwtDecode } from "jwt-decode";
 
+const requestData = async (
+  abortController: AbortController | undefined,
+  path: string,
+  token: any,
+  requestMethod: string,
+  formData?: FormData | string
+) => {
+  if (abortController) {
+    return fetch(path, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      method: requestMethod,
+      body: formData,
+      signal: abortController.signal
+    });
+  } else {
+    return await fetch(path, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      method: requestMethod,
+      body: formData
+    });
+  }
+};
+
 export const request = async (
   path: string,
   requestMethod: string,
@@ -22,25 +49,7 @@ export const request = async (
 ): Promise<HttpResponse> => {
   try {
     const token = await getAccessToken();
-    let response;
-    if (abortController) {
-      response = await fetch(path, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        method: requestMethod,
-        body: formData,
-        signal: abortController.signal
-      });
-    } else {
-      response = await fetch(path, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        method: requestMethod,
-        body: formData
-      });
-    }
+    const response = await requestData(abortController, path, token, requestMethod, formData);
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
     let json;
@@ -55,12 +64,7 @@ export const request = async (
         };
       }
     }
-    let content;
-    if (contentType && isJson) {
-      content = json;
-    } else {
-      content = await response.text();
-    }
+    const content = contentType && isJson ? json : await response.text();
     if (response.ok) {
       return { content: content, ok: true };
     }
@@ -71,14 +75,6 @@ export const request = async (
     }
     if (contentType && isJson) {
       return { error: `${response.status}`, content: json.error, ok: false };
-    }
-    switch (response.status) {
-      case 400:
-      case 403:
-      case 500:
-        return { error: `${response.status}`, content: content, ok: false };
-      default:
-      // do nothing and return later
     }
     return { error: `${response.status}`, content: content, ok: false };
   } catch (error: any) {
@@ -106,37 +102,4 @@ const getAccessToken = async () => {
       await push("/login");
     }
   });
-};
-
-export const getPublisher = (publisher: string, width?: number) => {
-  if (width && width > 1280) return publisher;
-  switch (publisher) {
-    case "Red Hat Product Security":
-      return "RH";
-    case "Siemens ProductCERT":
-      return "SI";
-    case "Bundesamt für Sicherheit in der Informationstechnik":
-      return "BSI";
-    case "SICK PSIRT":
-      return "SCK";
-    default:
-      return publisher;
-  }
-};
-
-export const getRelativeTime = (date: Date, inFuture = true) => {
-  const now = Date.now();
-  const unixMillisec = date.getTime();
-  const passedTime = inFuture ? unixMillisec - now : now - unixMillisec;
-  let period = "";
-  if (passedTime < 60000) {
-    period = "<1 min";
-  } else if (passedTime < 3600000) {
-    period = `${Math.floor(passedTime / 60000)} min`;
-  } else if (passedTime < 86400000) {
-    period = `${Math.floor(passedTime / 3600000)} hours`;
-  } else {
-    period = `${Math.floor(passedTime / 86400000)} days`;
-  }
-  return period;
 };

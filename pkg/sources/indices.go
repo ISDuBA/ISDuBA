@@ -55,6 +55,8 @@ nextEntry:
 			continue
 		}
 		dl := location{updated: updated}
+		sha512 := false
+	nextLink:
 		for j := range links {
 			link := &links[j]
 			switch link.Rel {
@@ -71,12 +73,21 @@ nextEntry:
 					return nil, err
 				}
 			case "hash":
-				if h := strings.ToLower(link.HRef); strings.HasSuffix(h, ".sha256") ||
-					strings.HasSuffix(h, ".sha512") {
+				if sha512 {
+					// If we already have SHA512 don't bother with others.
+					continue nextLink
+				}
+				switch href := strings.ToLower(link.HRef); {
+				case strings.HasSuffix(href, ".sha512"):
 					if err := resolve(link.HRef, &dl.hash); err != nil {
 						return nil, err
 					}
-				} else {
+					sha512 = true
+				case strings.HasSuffix(href, ".sha256"):
+					if err := resolve(link.HRef, &dl.hash); err != nil {
+						return nil, err
+					}
+				default:
 					slog.Warn("unknown hash format", "href", link.HRef)
 				}
 			}

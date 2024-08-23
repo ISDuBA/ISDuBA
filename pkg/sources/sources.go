@@ -449,6 +449,22 @@ func (s *source) loadHash(m *Manager, url string) ([]byte, error) {
 	return util.HashFromReader(resp.Body)
 }
 
+// checkSignature tells if the signature check should be taken seriously.
+func (s *source) checkSignature(m *Manager) bool {
+	if s.signatureCheck != nil {
+		return *s.signatureCheck
+	}
+	return m.cfg.Sources.SignatureCheck
+}
+
+// useStrictMode tells if the check results should be taken seriously.
+func (s *source) useStrictMode(m *Manager) bool {
+	if s.strictMode != nil {
+		return *s.strictMode
+	}
+	return m.cfg.Sources.StrictMode
+}
+
 // storeLastChanges is intented to be called in the transaction storing the
 // importing the document after is was successful. It helps to remember the
 // last changes per location so we don't need to download them all again and again.
