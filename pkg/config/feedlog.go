@@ -15,7 +15,7 @@ import (
 )
 
 // FeedLogLevel represents a log level in feeds.
-type FeedLogLevel int
+type FeedLogLevel int32
 
 const (
 	// DebugFeedLogLevel represents the debug log level in feeds.

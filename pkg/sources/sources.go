@@ -55,7 +55,7 @@ type feed struct {
 	label    string
 	url      *url.URL
 	rolie    bool
-	logLevel config.FeedLogLevel
+	logLevel atomic.Int32
 
 	invalid atomic.Bool
 

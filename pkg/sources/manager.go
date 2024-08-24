@@ -312,7 +312,7 @@ func (m *Manager) Feeds(sourceID int64, fn func(
 			return
 		}
 		for _, f := range s.feeds {
-			fn(f.id, f.label, f.url, f.rolie, f.logLevel)
+			fn(f.id, f.label, f.url, f.rolie, config.FeedLogLevel(f.logLevel.Load()))
 		}
 		errCh <- nil
 	}
@@ -333,7 +333,7 @@ func (m *Manager) Feed(feedID int64, fn func(
 			errCh <- NoSuchEntryError("no such feed")
 			return
 		}
-		fn(f.label, f.url, f.rolie, f.logLevel)
+		fn(f.label, f.url, f.rolie, config.FeedLogLevel(f.logLevel.Load()))
 		errCh <- nil
 	}
 	return <-errCh
@@ -585,14 +585,15 @@ func (m *Manager) AddFeed(
 			errCh <- fmt.Errorf("inserting feed failed: %w", err)
 			return
 		}
-		s.feeds = append(s.feeds, &feed{
-			id:       feedID,
-			label:    label,
-			url:      url,
-			rolie:    rolie,
-			source:   s,
-			logLevel: logLevel,
-		})
+		f := &feed{
+			id:     feedID,
+			label:  label,
+			url:    url,
+			rolie:  rolie,
+			source: s,
+		}
+		f.logLevel.Store(int32(logLevel))
+		s.feeds = append(s.feeds, f)
 		if s.active {
 			m.backgroundPing()
 		}
