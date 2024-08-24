@@ -230,7 +230,7 @@ func (m *Manager) startDownloads() {
 // compactDone removes the locations the feeds which are downloaded.
 func (m *Manager) compactDone() {
 	m.allFeeds(func(f *feed) bool {
-		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+		f.queue = slices.DeleteFunc(f.queue, func(l location) bool {
 			return l.state == done
 		})
 		return true

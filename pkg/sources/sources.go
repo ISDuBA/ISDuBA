@@ -60,7 +60,7 @@ type feed struct {
 	invalid atomic.Bool
 
 	nextCheck time.Time
-	locations []location
+	queue     []location
 	source    *source
 
 	lastETag     string
@@ -103,7 +103,7 @@ func (f *feed) refresh(m *Manager) error {
 	}
 	if candidates == nil {
 		f.log(m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
-		f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.locations))
+		f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 		return nil
 	}
 
@@ -121,19 +121,19 @@ func (f *feed) refresh(m *Manager) error {
 	f.removeOutdatedWaiting(candidates)
 
 	// Merge candidates into list of locations.
-	f.locations = append(f.locations, candidates...)
-	slices.SortFunc(f.locations, func(a, b location) int {
+	f.queue = append(f.queue, candidates...)
+	slices.SortFunc(f.queue, func(a, b location) int {
 		return a.updated.Compare(b.updated)
 	})
 
-	f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.locations))
+	f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 	return nil
 }
 
 // removeOutdatedWaiting removes locations with urls from queue which
 // have newer update candidates.
 func (f *feed) removeOutdatedWaiting(candidates []location) {
-	if len(f.locations) == 0 {
+	if len(f.queue) == 0 {
 		return
 	}
 	urls := make(map[string]time.Time, len(candidates))
@@ -141,7 +141,7 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 		cand := &candidates[i]
 		urls[cand.doc.String()] = cand.updated
 	}
-	f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+	f.queue = slices.DeleteFunc(f.queue, func(l location) bool {
 		if l.state == waiting {
 			updated, ok := urls[l.doc.String()]
 			return ok && updated.After(l.updated)
@@ -242,8 +242,8 @@ func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, 
 func (f *feed) sameOrNewer() func(*location) bool {
 	// XXX: Maybe this extra indexing could be replaced by something
 	// which uses the fact that the locations are already sorted by updated?!
-	have := make(map[string]time.Time, len(f.locations))
-	for _, location := range f.locations {
+	have := make(map[string]time.Time, len(f.queue))
+	for _, location := range f.queue {
 		url := location.doc.String()
 		if t, ok := have[url]; !ok || location.updated.After(t) {
 			have[url] = location.updated
@@ -257,8 +257,8 @@ func (f *feed) sameOrNewer() func(*location) bool {
 
 // findLocationByID looks for location with a given id.
 func (f *feed) findLocationByID(id int64) *location {
-	for i := len(f.locations) - 1; i >= 0; i-- {
-		if location := &f.locations[i]; location.id == id {
+	for i := len(f.queue) - 1; i >= 0; i-- {
+		if location := &f.queue[i]; location.id == id {
 			return location
 		}
 	}
@@ -268,8 +268,8 @@ func (f *feed) findLocationByID(id int64) *location {
 // findWaiting looks for a location ready to download.
 func (f *feed) findWaiting() *location {
 	// Backwards because the new ones are at the end.
-	for i := len(f.locations) - 1; i >= 0; i-- {
-		if location := &f.locations[i]; location.state == waiting {
+	for i := len(f.queue) - 1; i >= 0; i-- {
+		if location := &f.queue[i]; location.state == waiting {
 			return location
 		}
 	}
@@ -297,7 +297,7 @@ func (s *source) deleteTooOld() {
 		if f.invalid.Load() {
 			continue
 		}
-		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+		f.queue = slices.DeleteFunc(f.queue, func(l location) bool {
 			return l.state == waiting && l.updated.Before(cut)
 		})
 	}
@@ -333,7 +333,7 @@ func (s *source) deleteIgnore() {
 		if f.invalid.Load() {
 			continue
 		}
-		f.locations = slices.DeleteFunc(f.locations, func(l location) bool {
+		f.queue = slices.DeleteFunc(f.queue, func(l location) bool {
 			return l.state == waiting && s.ignore(l.doc)
 		})
 	}
