@@ -466,6 +466,16 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 	}
 }
 
+func (c *Controller) updateFeed(ctx *gin.Context) {
+	var input struct {
+		FeedID int64 `uri:"id"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+}
+
 func (c *Controller) viewFeed(ctx *gin.Context) {
 	var input struct {
 		FeedID int64 `uri:"id"`
