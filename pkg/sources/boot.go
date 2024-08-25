@@ -14,6 +14,7 @@ import (
 	"log/slog"
 	"net/url"
 
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -101,9 +102,10 @@ func (m *Manager) Boot(ctx context.Context) error {
 			defer frows.Close()
 			for frows.Next() {
 				var (
-					f   feed
-					sid int64
-					raw string
+					f        feed
+					sid      int64
+					raw      string
+					logLevel config.FeedLogLevel
 				)
 				if err := frows.Scan(
 					&f.id,
@@ -111,7 +113,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 					&sid,
 					&raw,
 					&f.rolie,
-					&f.logLevel,
+					&logLevel,
 				); err != nil {
 					return err
 				}
@@ -120,6 +122,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 					return fmt.Errorf("invalid URL: %w", err)
 				}
 				f.url = parsed
+				f.logLevel.Store(int32(logLevel))
 				// Add to list of active feeds.
 				s := m.findSourceByID(sid)
 				if s == nil {
