@@ -635,6 +635,10 @@ func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
 	return m.pmdCache.pmd(m, url)
 }
 
+// updater collects updates so that only the first update on
+// a field is done, only updates which change things are
+// registered and applies the updates only in case that persisting
+// them first has worked.
 type updater[T any] struct {
 	updatable T
 	manager   *Manager
