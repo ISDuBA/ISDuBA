@@ -1,0 +1,29 @@
+There are two use cases about forwarding documents
+to a different application.
+
+
+## Use Case FW1: other specialised system
+
+There is a specialised system that is separate from ISDuBA.
+It also manages CSAF documents.
+Those documents are a subset of all documents that get into the ISDuBA system.
+
+They shall be forwarded automatically and
+can happen right after a wanted document is within ISDuBA.
+
+
+## Use case FW2: manually send to asset matching
+
+Once a document is considered a base for further action,
+an ISDuBA user shall be able to manually forward it to a different
+system for asset matching.
+
+
+## technical considerations
+
+Each receiving point (or //target//) is an HTTP based endpoint
+secured by TLS and optionally by a client certificate or
+an HTTP header with an API token for access.
+
+* The number of recieving systems is small and changes rarely.
+* It is okay for the //source-manager// role to manage.
