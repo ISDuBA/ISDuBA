@@ -13,6 +13,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Upload from "$lib/Upload.svelte";
   import { request } from "$lib/request";
+  import { push } from "svelte-spa-router";
 
   let uploadError: ErrorDetails | null;
 
@@ -23,8 +24,10 @@
       const resp = await request(`/api/documents`, "POST", formData);
       if (resp.error) {
         uploadError = getErrorDetails(`Could not upload file`, resp);
+        return;
       }
     }
+    push(`/sources`);
   };
 </script>
 
