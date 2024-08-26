@@ -21,9 +21,9 @@ system for asset matching.
 
 ## technical considerations
 
-Each receiving point (or //target//) is an HTTP based endpoint
+Each receiving point (or _target_) is an HTTP based endpoint
 secured by TLS and optionally by a client certificate or
 an HTTP header with an API token for access.
 
 * The number of recieving systems is small and changes rarely.
-* It is okay for the //source-manager// role to manage.
+* It is okay for the _source-manager_ role to manage.
