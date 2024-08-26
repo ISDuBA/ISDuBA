@@ -953,7 +953,7 @@ type FeedUpdater struct {
 	updater[*feed]
 }
 
-// UpdateLogLevel requests an update on the log level.
+// UpdateLogLevel requests an update on the log level of the feed.
 func (fu *FeedUpdater) UpdateLogLevel(level config.FeedLogLevel) error {
 	if config.FeedLogLevel(fu.updatable.logLevel.Load()) == level {
 		return nil
@@ -962,7 +962,7 @@ func (fu *FeedUpdater) UpdateLogLevel(level config.FeedLogLevel) error {
 	return nil
 }
 
-// UpdateLabel requests an update on the log level.
+// UpdateLabel requests an update on the label of the feed.
 func (fu *FeedUpdater) UpdateLabel(label string) error {
 	if fu.updatable.label == label {
 		return nil
