@@ -984,7 +984,7 @@ func (m *Manager) UpdateFeed(
 	resCh := make(chan result)
 	m.fns <- func(m *Manager) {
 		f := m.findFeedByID(feedID)
-		if f != nil {
+		if f == nil {
 			resCh <- result{err: NoSuchEntryError("no such feed")}
 			return
 		}
