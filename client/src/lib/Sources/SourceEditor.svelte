@@ -67,7 +67,7 @@
   let missingFeeds: Feed[] = [];
   let feeds: Feed[] = [];
 
-  let newFeed: Feed | null;
+  let feedEdit: Feed | null;
 
   let logs: any[] = [];
 
@@ -220,10 +220,21 @@
         continue;
       }
       const formData = new FormData();
-      formData.append("url", feed.url);
+
+      let path = `/api/sources`;
+      let method = "POST";
+
+      if (feed.id) {
+        method = "PUT";
+        path += `/feeds/${feed.id}`;
+      } else {
+        path += `/${source.id}/feeds`;
+        formData.append("url", feed.url);
+      }
       formData.append("label", feed.label);
       formData.append("log_level", feed.log_level);
-      const resp = await request(`/api/sources/${source.id}/feeds`, "POST", formData);
+
+      const resp = await request(path, method, formData);
       if (resp.ok) {
         if (!params?.id) {
           push(`/sources/${source.id}`);
@@ -585,18 +596,30 @@
         <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
         <td>
           <Button
+            on:click={() => {
+              feedEdit = feed;
+            }}
+            title={`Edit feed "${feed.label}"`}
+            class="border-0 p-2"
+            color="light"
+          >
+            <i class="bx bx-edit text-xl"></i>
+          </Button>
+        </td>
+        <td>
+          <Button
             on:click={(event) => {
               event.stopPropagation();
-              modalCallback = () => {
+              modalCallback = async () => {
                 if (feed.id) {
-                  deleteFeed(feed.id);
+                  await deleteFeed(feed.id);
                 }
               };
-              modalMessage = "Are you sure you want to delete this source?";
-              modalTitle = `Source ${source.name}`;
+              modalMessage = "Are you sure you want to delete this feed?";
+              modalTitle = `Feed ${feed.label}`;
               modalOpen = true;
             }}
-            title={`Delete source "${source.name}"`}
+            title={`Delete feed "${feed.label}"`}
             class="border-0 p-2"
             color="light"
           >
@@ -639,31 +662,13 @@
       <tr
         class="cursor-pointer"
         on:click={() => {
-          newFeed = feed;
+          feedEdit = feed;
         }}
       >
         <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
         <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
         <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
         <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
-        <td>
-          <Button
-            on:click={(event) => {
-              event.stopPropagation();
-              modalCallback = () => {
-                console.log("TODO");
-              };
-              modalMessage = "Are you sure you want to delete this source?";
-              modalTitle = `Source ${source.name}`;
-              modalOpen = true;
-            }}
-            title={`Delete source "${source.name}"`}
-            class="border-0 p-2"
-            color="light"
-          >
-            <i class="bx bx-trash text-xl text-red-500"></i>
-          </Button>
-        </td>
       </tr>
     {/each}
     <div slot="bottom">
@@ -674,12 +679,13 @@
       <ErrorMessage error={feedError}></ErrorMessage>
     </div>
   </CustomTable>
-  {#if newFeed}
+  {#if feedEdit}
     <form
       on:submit={async () => {
-        if (newFeed) {
-          await saveFeeds([newFeed]);
-          newFeed = null;
+        if (feedEdit) {
+          feedEdit.enable = true;
+          await saveFeeds([feedEdit]);
+          feedEdit = null;
           await fetchFeeds();
           calculateMissingFeeds();
         }
@@ -687,11 +693,11 @@
       class={formClass}
     >
       <Label>URL</Label>
-      <Input readonly bind:value={newFeed.url}></Input>
+      <Input readonly bind:value={feedEdit.url}></Input>
       <Label>Log level</Label>
-      <Select items={logLevels} bind:value={newFeed.log_level} />
+      <Select items={logLevels} bind:value={feedEdit.log_level} />
       <Label>Label</Label>
-      <Input bind:value={newFeed.label}></Input>
+      <Input bind:value={feedEdit.label}></Input>
       <br />
       <Button type="submit" color="light">
         <i class="bx bxs-save me-2"></i>
