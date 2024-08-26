@@ -635,37 +635,79 @@ func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
 	return m.pmdCache.pmd(m, url)
 }
 
+// updater collects updates so that only the first update on
+// a field is done, only updates which change things are
+// registered and applies the updates only in case that persisting
+// them first has worked.
+type updater[T any] struct {
+	updatable T
+	manager   *Manager
+	changes   []func(T)
+	fields    []string
+	values    []any
+}
+
+func (u *updater[T]) addChange(ch func(T), field string, value any) {
+	if !slices.Contains(u.fields, field) {
+		u.changes = append(u.changes, ch)
+		u.fields = append(u.fields, field)
+		u.values = append(u.values, value)
+	}
+}
+
+func (u *updater[T]) applyChanges() bool {
+	for _, ch := range u.changes {
+		if ch != nil {
+			ch(u.updatable)
+		}
+	}
+	return len(u.changes) > 0
+}
+
+func (u *updater[T]) updateDB(table string, id int64) error {
+	if len(u.fields) == 0 {
+		return nil
+	}
+	var ob, cb string
+	if len(u.fields) > 1 {
+		ob, cb = "(", ")"
+	}
+	sql := fmt.Sprintf(
+		"UPDATE %[6]s SET %[1]s%[3]s%[2]s = %[1]s%[4]s%[2]s WHERE id = %[5]d",
+		ob, cb,
+		strings.Join(u.fields, ","),
+		placeholders(len(u.values)),
+		id, table)
+	return u.manager.db.Run(
+		context.Background(),
+		func(ctx context.Context, conn *pgxpool.Conn) error {
+			_, err := conn.Exec(ctx, sql, u.values...)
+			return err
+		}, 0)
+}
+
+func placeholders(n int) string {
+	var b strings.Builder
+	for i := range n {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		b.WriteByte('$')
+		b.WriteString(strconv.Itoa(i + 1))
+	}
+	return b.String()
+}
+
 // SourceUpdater offers a protocol to update a source. Call the UpdateX
 // (with X in Name, Rate, ...) methods to update specfic fields.
 type SourceUpdater struct {
-	manager           *Manager
-	source            *source
+	updater[*source]
 	clientCertUpdated bool
-	changes           []func(*source)
-	fields            []string
-	values            []any
-}
-
-func (su *SourceUpdater) addChange(ch func(*source), field string, value any) {
-	if !slices.Contains(su.fields, field) {
-		su.changes = append(su.changes, ch)
-		su.fields = append(su.fields, field)
-		su.values = append(su.values, value)
-	}
-}
-
-func (su *SourceUpdater) applyChanges() bool {
-	for _, ch := range su.changes {
-		if ch != nil {
-			ch(su.source)
-		}
-	}
-	return len(su.changes) > 0
 }
 
 // UpdateName requests a name update.
 func (su *SourceUpdater) UpdateName(name string) error {
-	if name == su.source.name {
+	if name == su.updatable.name {
 		return nil
 	}
 	if name == "" || su.manager.findSourceByName(name) != nil {
@@ -677,10 +719,10 @@ func (su *SourceUpdater) UpdateName(name string) error {
 
 // UpdateRate requests a rate update.
 func (su *SourceUpdater) UpdateRate(rate *float64) error {
-	if rate == nil && su.source.rate == nil {
+	if rate == nil && su.updatable.rate == nil {
 		return nil
 	}
-	if rate != nil && su.source.rate != nil && *rate == *su.source.rate {
+	if rate != nil && su.updatable.rate != nil && *rate == *su.updatable.rate {
 		return nil
 	}
 	if rate != nil && (*rate <= 0 || *rate > su.manager.cfg.Sources.MaxRatePerSource) {
@@ -692,10 +734,10 @@ func (su *SourceUpdater) UpdateRate(rate *float64) error {
 
 // UpdateSlots requests a slots update.
 func (su *SourceUpdater) UpdateSlots(slots *int) error {
-	if slots == nil && su.source.slots == nil {
+	if slots == nil && su.updatable.slots == nil {
 		return nil
 	}
-	if slots != nil && su.source.slots != nil && *slots == *su.source.slots {
+	if slots != nil && su.updatable.slots != nil && *slots == *su.updatable.slots {
 		return nil
 	}
 	if slots != nil && (*slots < 1 || *slots > su.manager.cfg.Sources.MaxSlotsPerSource) {
@@ -707,7 +749,7 @@ func (su *SourceUpdater) UpdateSlots(slots *int) error {
 
 // UpdateActive requests an active update.
 func (su *SourceUpdater) UpdateActive(active bool) error {
-	if active == su.source.active {
+	if active == su.updatable.active {
 		return nil
 	}
 	su.addChange(func(s *source) {
@@ -729,7 +771,7 @@ func clone[S ~[]E, E any](s S) S {
 
 // UpdateHeaders requests a headers update.
 func (su *SourceUpdater) UpdateHeaders(headers []string) error {
-	if slices.Equal(headers, su.source.headers) {
+	if slices.Equal(headers, su.updatable.headers) {
 		return nil
 	}
 	headers = clone(headers)
@@ -739,10 +781,10 @@ func (su *SourceUpdater) UpdateHeaders(headers []string) error {
 
 // UpdateStrictMode requests an update on strictMode.
 func (su *SourceUpdater) UpdateStrictMode(strictMode *bool) error {
-	if su.source.strictMode == nil && strictMode == nil {
+	if su.updatable.strictMode == nil && strictMode == nil {
 		return nil
 	}
-	if su.source.strictMode != nil && strictMode != nil && *su.source.strictMode == *strictMode {
+	if su.updatable.strictMode != nil && strictMode != nil && *su.updatable.strictMode == *strictMode {
 		return nil
 	}
 	su.addChange(func(s *source) { s.strictMode = strictMode }, "strict_mode", strictMode)
@@ -751,10 +793,10 @@ func (su *SourceUpdater) UpdateStrictMode(strictMode *bool) error {
 
 // UpdateInsecure requests an update on insecure.
 func (su *SourceUpdater) UpdateInsecure(insecure *bool) error {
-	if su.source.insecure == nil && insecure == nil {
+	if su.updatable.insecure == nil && insecure == nil {
 		return nil
 	}
-	if su.source.insecure != nil && insecure != nil && *su.source.insecure == *insecure {
+	if su.updatable.insecure != nil && insecure != nil && *su.updatable.insecure == *insecure {
 		return nil
 	}
 	su.addChange(func(s *source) { s.insecure = insecure }, "insecure", insecure)
@@ -763,10 +805,10 @@ func (su *SourceUpdater) UpdateInsecure(insecure *bool) error {
 
 // UpdateSignatureCheck requests an update on signatureCheck.
 func (su *SourceUpdater) UpdateSignatureCheck(signatureCheck *bool) error {
-	if su.source.signatureCheck == nil && signatureCheck == nil {
+	if su.updatable.signatureCheck == nil && signatureCheck == nil {
 		return nil
 	}
-	if su.source.signatureCheck != nil && signatureCheck != nil && *su.source.signatureCheck == *signatureCheck {
+	if su.updatable.signatureCheck != nil && signatureCheck != nil && *su.updatable.signatureCheck == *signatureCheck {
 		return nil
 	}
 	su.addChange(func(s *source) { s.signatureCheck = signatureCheck }, "signature_check", signatureCheck)
@@ -775,10 +817,10 @@ func (su *SourceUpdater) UpdateSignatureCheck(signatureCheck *bool) error {
 
 // UpdateAge requests an update on age.
 func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
-	if su.source.age == nil && age == nil {
+	if su.updatable.age == nil && age == nil {
 		return nil
 	}
-	if su.source.age != nil && age != nil && *su.source.age == *age {
+	if su.updatable.age != nil && age != nil && *su.updatable.age == *age {
 		return nil
 	}
 	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
@@ -787,7 +829,7 @@ func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
 
 // UpdateIgnorePatterns requests an update on ignorepatterns.
 func (su *SourceUpdater) UpdateIgnorePatterns(ignorePatterns []*regexp.Regexp) error {
-	if slices.EqualFunc(su.source.ignorePatterns, ignorePatterns,
+	if slices.EqualFunc(su.updatable.ignorePatterns, ignorePatterns,
 		func(a, b *regexp.Regexp) bool { return a != nil && b != nil && a.String() == b.String() }) {
 		return nil
 	}
@@ -798,10 +840,10 @@ func (su *SourceUpdater) UpdateIgnorePatterns(ignorePatterns []*regexp.Regexp) e
 
 // UpdateClientCertPublic requests an update ob client cert public part.
 func (su *SourceUpdater) UpdateClientCertPublic(data []byte) error {
-	if data == nil && su.source.clientCertPublic == nil {
+	if data == nil && su.updatable.clientCertPublic == nil {
 		return nil
 	}
-	if data != nil && su.source.clientCertPublic != nil && slices.Equal(data, su.source.clientCertPublic) {
+	if data != nil && su.updatable.clientCertPublic != nil && slices.Equal(data, su.updatable.clientCertPublic) {
 		return nil
 	}
 	data = clone(data)
@@ -814,7 +856,7 @@ func (su *SourceUpdater) UpdateClientCertPublic(data []byte) error {
 
 // UpdateClientCertPrivate requests an update ob client cert private part.
 func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
-	orig := su.source.clientCertPrivate
+	orig := su.updatable.clientCertPrivate
 	if data == nil && orig == nil {
 		return nil
 	}
@@ -835,7 +877,7 @@ func (su *SourceUpdater) UpdateClientCertPrivate(data []byte) error {
 
 // UpdateClientCertPassphrase requests an update ob client cert private part.
 func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
-	orig := su.source.clientCertPassphrase
+	orig := su.updatable.clientCertPassphrase
 	if data == nil && orig == nil {
 		return nil
 	}
@@ -854,41 +896,7 @@ func (su *SourceUpdater) UpdateClientCertPassphrase(data []byte) error {
 	return nil
 }
 
-func (su *SourceUpdater) updateDB() error {
-	if len(su.fields) == 0 {
-		return nil
-	}
-	var ob, cb string
-	if len(su.fields) > 1 {
-		ob, cb = "(", ")"
-	}
-	sql := fmt.Sprintf(
-		"UPDATE sources SET %[1]s%[3]s%[2]s = %[1]s%[4]s%[2]s WHERE id = %[5]d",
-		ob, cb,
-		strings.Join(su.fields, ","),
-		placeholders(len(su.values)),
-		su.source.id)
-	return su.manager.db.Run(
-		context.Background(),
-		func(ctx context.Context, conn *pgxpool.Conn) error {
-			_, err := conn.Exec(ctx, sql, su.values...)
-			return err
-		}, 0)
-}
-
-func placeholders(n int) string {
-	var b strings.Builder
-	for i := range n {
-		if i > 0 {
-			b.WriteByte(',')
-		}
-		b.WriteByte('$')
-		b.WriteString(strconv.Itoa(i + 1))
-	}
-	return b.String()
-}
-
-// UpdateSource passes an updater to manipulate a source for a given id to a given callback.
+// UpdateSource passes an updater to manipulate a source with a given id to a given callback.
 func (m *Manager) UpdateSource(
 	sourceID int64,
 	updates func(*SourceUpdater) error,
@@ -904,12 +912,12 @@ func (m *Manager) UpdateSource(
 			resCh <- result{err: NoSuchEntryError("no such source")}
 			return
 		}
-		su := SourceUpdater{manager: m, source: s}
+		su := SourceUpdater{updater: updater[*source]{updatable: s, manager: m}}
 		if err := updates(&su); err != nil {
 			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
 			return
 		}
-		if err := su.updateDB(); err != nil {
+		if err := su.updateDB("sources", s.id); err != nil {
 			resCh <- result{err: fmt.Errorf("updating database failed: %w", err)}
 			return
 		}
@@ -923,9 +931,9 @@ func (m *Manager) UpdateSource(
 				slog.Warn("updating client cert failed", "warn", err)
 				if s.active {
 					s.active = false
-					x := SourceUpdater{manager: m, source: s}
+					x := SourceUpdater{updater: updater[*source]{updatable: s, manager: m}}
 					x.addChange(nil, "active", false)
-					if err := x.updateDB(); err != nil {
+					if err := x.updateDB("sources", s.id); err != nil {
 						slog.Error("deactivating source failed", "err", err)
 					}
 					resCh <- result{v: SourceDeactivated}
@@ -937,4 +945,65 @@ func (m *Manager) UpdateSource(
 	}
 	res := <-resCh
 	return res.v, res.err
+}
+
+// FeedUpdater offers a protocol to update a source. Call the UpdateX
+// (with X in LogLevel, Label) methods to update specfic fields.
+type FeedUpdater struct {
+	updater[*feed]
+}
+
+// UpdateLogLevel requests an update on the log level.
+func (fu *FeedUpdater) UpdateLogLevel(level config.FeedLogLevel) error {
+	if config.FeedLogLevel(fu.updatable.logLevel.Load()) == level {
+		return nil
+	}
+	fu.addChange(func(f *feed) { f.logLevel.Store(int32(level)) }, "log_lvl", level)
+	return nil
+}
+
+// UpdateLabel requests an update on the log level.
+func (fu *FeedUpdater) UpdateLabel(label string) error {
+	if fu.updatable.label == label {
+		return nil
+	}
+	if label == "" || slices.ContainsFunc(fu.updatable.source.feeds, func(f *feed) bool {
+		return f.label == label
+	}) {
+		return InvalidArgumentError("invalid label")
+	}
+	fu.addChange(func(f *feed) { f.label = label }, "label", label)
+	return nil
+}
+
+// UpdateFeed passes an updater to manipulate a feed with a given id to a given callback.
+func (m *Manager) UpdateFeed(
+	feedID int64,
+	updates func(*FeedUpdater) error,
+) (bool, error) {
+	type result struct {
+		updated bool
+		err     error
+	}
+	resCh := make(chan result)
+	m.fns <- func(m *Manager) {
+		f := m.findFeedByID(feedID)
+		if f == nil {
+			resCh <- result{err: NoSuchEntryError("no such feed")}
+			return
+		}
+		fu := FeedUpdater{updater: updater[*feed]{updatable: f, manager: m}}
+		if err := updates(&fu); err != nil {
+			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
+			return
+		}
+		if err := fu.updateDB("feeds", f.id); err != nil {
+			resCh <- result{err: fmt.Errorf("updating database failed: %w", err)}
+			return
+		}
+		// Only apply changes if database updates went through.
+		resCh <- result{updated: fu.applyChanges()}
+	}
+	res := <-resCh
+	return res.updated, res.err
 }
