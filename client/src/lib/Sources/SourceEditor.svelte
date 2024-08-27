@@ -445,126 +445,137 @@
       ></SourceForm>
     </div>
   </div>
-  <CustomTable
-    title="Feeds"
-    headers={[
-      {
-        label: "Label",
-        attribute: "label"
-      },
-      {
-        label: "URL",
-        attribute: "url"
-      },
-      {
-        label: "Rolie",
-        attribute: "rolie"
-      },
-      {
-        label: "Log level",
-        attribute: "log_level"
-      }
-    ]}
-  >
-    {#each feeds as feed, index (index)}
-      <tr
-        on:click={() => {
-          if (feed.id) {
-            fetchFeedLogs(feed.id);
+  <div class="flex">
+    <div class="w-1/2 flex-auto">
+      <CustomTable
+        title="Feeds"
+        headers={[
+          {
+            label: "Label",
+            attribute: "label"
+          },
+          {
+            label: "URL",
+            attribute: "url"
+          },
+          {
+            label: "Rolie",
+            attribute: "rolie"
+          },
+          {
+            label: "Log level",
+            attribute: "log_level"
           }
-        }}
-        class="cursor-pointer"
+        ]}
       >
-        <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
-        <td>
-          <Button
+        {#each feeds as feed, index (index)}
+          <tr
+            on:click={() => {
+              if (feed.id) {
+                fetchFeedLogs(feed.id);
+              }
+            }}
+            class="cursor-pointer"
+          >
+            <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
+            <td>
+              <Button
+                on:click={() => {
+                  feedEdit = feed;
+                }}
+                title={`Edit feed "${feed.label}"`}
+                class="border-0 p-2"
+                color="light"
+              >
+                <i class="bx bx-edit text-xl"></i>
+              </Button>
+            </td>
+            <td>
+              <Button
+                on:click={(event) => {
+                  event.stopPropagation();
+                  modalCallback = async () => {
+                    if (feed.id) {
+                      await deleteFeed(feed.id);
+                    }
+                  };
+                  modalMessage = "Are you sure you want to delete this feed?";
+                  modalTitle = `Feed ${feed.label}`;
+                  modalOpen = true;
+                }}
+                title={`Delete feed "${feed.label}"`}
+                class="border-0 p-2"
+                color="light"
+              >
+                <i class="bx bx-trash text-xl text-red-500"></i>
+              </Button>
+            </td>
+          </tr>
+        {/each}
+        <div slot="bottom">
+          <div class:hidden={!loadingFeeds} class:mb-4={true}>
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+          <ErrorMessage error={feedError}></ErrorMessage>
+        </div>
+      </CustomTable>
+    </div>
+
+    <div class="w-1/2 flex-auto">
+      <CustomTable
+        title="Missing feeds"
+        headers={[
+          {
+            label: "Label",
+            attribute: "label"
+          },
+          {
+            label: "URL",
+            attribute: "url"
+          },
+          {
+            label: "Rolie",
+            attribute: "rolie"
+          },
+          {
+            label: "Log level",
+            attribute: "log_level"
+          }
+        ]}
+      >
+        {#each missingFeeds as feed, index (index)}
+          <tr
+            class="cursor-pointer"
             on:click={() => {
               feedEdit = feed;
             }}
-            title={`Edit feed "${feed.label}"`}
-            class="border-0 p-2"
-            color="light"
           >
-            <i class="bx bx-edit text-xl"></i>
-          </Button>
-        </td>
-        <td>
-          <Button
-            on:click={(event) => {
-              event.stopPropagation();
-              modalCallback = async () => {
-                if (feed.id) {
-                  await deleteFeed(feed.id);
-                }
-              };
-              modalMessage = "Are you sure you want to delete this feed?";
-              modalTitle = `Feed ${feed.label}`;
-              modalOpen = true;
-            }}
-            title={`Delete feed "${feed.label}"`}
-            class="border-0 p-2"
-            color="light"
-          >
-            <i class="bx bx-trash text-xl text-red-500"></i>
-          </Button>
-        </td>
-      </tr>
-    {/each}
-    <div slot="bottom">
-      <div class:hidden={!loadingFeeds} class:mb-4={true}>
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
-      </div>
-      <ErrorMessage error={feedError}></ErrorMessage>
+            <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
+          </tr>
+        {/each}
+        <div slot="bottom">
+          <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+          <ErrorMessage error={feedError}></ErrorMessage>
+        </div>
+      </CustomTable>
     </div>
-  </CustomTable>
-
-  <CustomTable
-    title="Missing feeds"
-    headers={[
-      {
-        label: "Label",
-        attribute: "label"
-      },
-      {
-        label: "URL",
-        attribute: "url"
-      },
-      {
-        label: "Rolie",
-        attribute: "rolie"
-      },
-      {
-        label: "Log level",
-        attribute: "log_level"
-      }
-    ]}
-  >
-    {#each missingFeeds as feed, index (index)}
-      <tr
-        class="cursor-pointer"
-        on:click={() => {
-          feedEdit = feed;
-        }}
-      >
-        <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
-      </tr>
-    {/each}
-    <div slot="bottom">
-      <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
-      </div>
-      <ErrorMessage error={feedError}></ErrorMessage>
-    </div>
-  </CustomTable>
+  </div>
   {#if feedEdit}
+    <SectionHeader title={feedEdit.enable ? "New feed" : "Edit feed"}>
+      <div slot="right">
+        <slot name="header-right"></slot>
+      </div>
+    </SectionHeader>
     <form
       on:submit={async () => {
         if (feedEdit) {
@@ -589,6 +600,7 @@
         <span>Save feed</span>
       </Button>
     </form>{/if}
+  <br />
   <CustomTable
     title="Logs"
     headers={[
