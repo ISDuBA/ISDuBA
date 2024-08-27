@@ -19,7 +19,7 @@ import (
 
 // log writes a log message into the logs of a feed.
 func (f *feed) log(m *Manager, level config.FeedLogLevel, format string, args ...any) {
-	if f.invalid.Load() || level < f.logLevel {
+	if f.invalid.Load() || level < config.FeedLogLevel(f.logLevel.Load()) {
 		return
 	}
 	message := fmt.Sprintf(format, args...)

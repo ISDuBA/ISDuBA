@@ -466,6 +466,52 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 	}
 }
 
+func (c *Controller) updateFeed(ctx *gin.Context) {
+	var input struct {
+		FeedID int64 `uri:"id"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	switch updated, err := c.sm.UpdateFeed(input.FeedID, func(fu *sources.FeedUpdater) error {
+		// label
+		if label, ok := ctx.GetPostForm("label"); ok {
+			if err := fu.UpdateLabel(label); err != nil {
+				return err
+			}
+		}
+		// log_level
+		if lvl, ok := ctx.GetPostForm("log_level"); ok {
+			level, err := config.ParseFeedLogLevel(lvl)
+			if err != nil {
+				return sources.InvalidArgumentError(
+					fmt.Sprintf("'log_level is invalid: %v", err))
+			}
+			if err := fu.UpdateLogLevel(level); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); {
+	case err == nil:
+		var msg string
+		if updated {
+			msg = "updated"
+		} else {
+			msg = "not updated"
+		}
+		ctx.JSON(http.StatusOK, gin.H{"message": msg})
+	case errors.Is(err, sources.NoSuchEntryError("")):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	case errors.Is(err, sources.InvalidArgumentError("")):
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	default:
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}
+
 func (c *Controller) viewFeed(ctx *gin.Context) {
 	var input struct {
 		FeedID int64 `uri:"id"`

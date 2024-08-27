@@ -20,7 +20,7 @@ func (w *Web) Configure() {
 	// If there is a fighting env var, warn the user.
 	if ginMode, ok := os.LookupEnv("GIN_MODE"); ok && ginMode != w.GinMode {
 		slog.Warn(
-			"GIN_MODE ev var conflicts configuration. The configuration always wins.",
+			"GIN_MODE env var conflicts configuration. The configuration always wins.",
 			"env", ginMode,
 			"cfg", w.GinMode)
 	}

@@ -22,10 +22,7 @@
     Modal,
     Select,
     Table,
-    TableBodyRow,
-    Fileupload,
-    AccordionItem,
-    Accordion
+    TableBodyRow
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { tdClass } from "$lib/Table/defaults";
@@ -35,6 +32,7 @@
   import type { CSAFProviderMetadata, DirectoryURL, ROLIEFeed } from "$lib/provider";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { onMount } from "svelte";
+  import SourceForm from "./SourceForm.svelte";
   export let params: any = null;
 
   enum LogLevel {
@@ -67,12 +65,9 @@
   let missingFeeds: Feed[] = [];
   let feeds: Feed[] = [];
 
-  let newFeed: Feed | null;
+  let feedEdit: Feed | null;
 
   let logs: any[] = [];
-
-  let privateCert: FileList | undefined;
-  let publicCert: FileList | undefined;
 
   let logLevels = [
     { value: LogLevel.error, name: "Error" },
@@ -96,9 +91,10 @@
   let source: Source = {
     name: "",
     url: "",
-    active: true,
+    active: false,
     rate: 1,
     slots: 2,
+    strict_mode: true,
     headers: [""],
     ignore_patterns: [""]
   };
@@ -107,8 +103,6 @@
     let method = "POST";
     let path = `/api/sources`;
     const formData = new FormData();
-    formatHeaders();
-    await loadCerts();
     if (source.id) {
       method = "PUT";
       path += `/${source.id}`;
@@ -220,10 +214,21 @@
         continue;
       }
       const formData = new FormData();
-      formData.append("url", feed.url);
+
+      let path = `/api/sources`;
+      let method = "POST";
+
+      if (feed.id) {
+        method = "PUT";
+        path += `/feeds/${feed.id}`;
+      } else {
+        path += `/${source.id}/feeds`;
+        formData.append("url", feed.url);
+      }
       formData.append("label", feed.label);
       formData.append("log_level", feed.log_level);
-      const resp = await request(`/api/sources/${source.id}/feeds`, "POST", formData);
+
+      const resp = await request(path, method, formData);
       if (resp.ok) {
         if (!params?.id) {
           push(`/sources/${source.id}`);
@@ -352,26 +357,6 @@
     }
   };
 
-  const onChangedIgnorePatterns = () => {
-    if (source.ignore_patterns.at(-1) !== "") {
-      source.ignore_patterns.push("");
-    }
-  };
-
-  const removeHeader = (index: number) => {
-    if (headers.length === 1)
-      headers = [
-        ["", ""],
-        ["", ""]
-      ];
-    headers = headers.toSpliced(index, 1);
-  };
-
-  const removePattern = (index: number) => {
-    if (source.ignore_patterns.length === 1) source.ignore_patterns = [""];
-    source.ignore_patterns = source.ignore_patterns.toSpliced(index, 1);
-  };
-
   const parseHeaders = () => {
     headers = [];
     for (const header of source.headers) {
@@ -382,22 +367,6 @@
       headers.push(["", ""]);
     }
     onChangedHeaders();
-  };
-
-  const formatHeaders = () => {
-    source.headers = [];
-    for (const header of headers) {
-      if (header[0] !== "" && header[1] !== "") source.headers.push(`${header[0]}:${header[1]}`);
-    }
-  };
-
-  const loadCerts = async () => {
-    if (privateCert) {
-      source.client_cert_private = await privateCert.item(0)?.text();
-    }
-    if (publicCert) {
-      source.client_cert_public = await publicCert.item(0)?.text();
-    }
   };
 
   onMount(async () => {
@@ -466,220 +435,153 @@
     </div>
 
     <div class="flex-auto">
-      <form
-        on:submit={async () => {
+      <SourceForm
+        {source}
+        formSubmit={async () => {
           await saveSource();
         }}
-        class={formClass}
-      >
-        <Label>Name</Label>
-        <Input bind:value={source.name}></Input>
-        <Checkbox bind:checked={source.active}>Active</Checkbox>
-        <br />
-        <Accordion>
-          <AccordionItem
-            ><span slot="header">Advanced options</span>
-            <Label>Rate</Label>
-            <Input bind:value={source.rate}></Input>
-            <Label>Slots</Label>
-            <Input bind:value={source.slots}></Input>
-            <Label>HTTP headers</Label>
-            <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
-              {#each headers as header, index (index)}
-                <Label>
-                  <span class="text-gray-500">Key</span>
-                  <Input on:change={onChangedHeaders} bind:value={header[0]} />
-                </Label>
-                <Label>
-                  <span class="text-gray-500">Value</span>
-                  <Input on:change={onChangedHeaders} bind:value={header[1]} />
-                </Label>
-                {#if headers.length > 1}
-                  <Button
-                    on:click={() => removeHeader(index)}
-                    title="Remove key-value-pair"
-                    class="mb-3 w-fit p-1"
-                    color="light"
-                  >
-                    <i class="bx bx-x"></i>
-                  </Button>
-                {:else}
-                  <div></div>
-                {/if}
-              {/each}
-            </div>
-            <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
-            <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
-            <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
-            <Label>Private cert</Label>
-            <Fileupload bind:files={privateCert}></Fileupload>
-            <Label>Public cert</Label>
-            <Fileupload bind:files={publicCert}></Fileupload>
-            <Label>Client cert passphrase</Label>
-            <Input bind:value={source.client_cert_passphrase} />
-            <Label>Age</Label>
-            <Input placeholder="17520h" bind:value={source.age}></Input>
-            <Label>Ignore patterns</Label>
-            <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
-              {#each source.ignore_patterns as pattern, index (index)}
-                <Label>
-                  <Input on:change={onChangedIgnorePatterns} bind:value={pattern} />
-                </Label>
-                {#if source.ignore_patterns.length > 1}
-                  <Button
-                    on:click={() => removePattern(index)}
-                    title="Remove pattern"
-                    class="mb-3 w-fit p-1"
-                    color="light"
-                  >
-                    <i class="bx bx-x"></i>
-                  </Button>
-                {:else}
-                  <div></div>
-                {/if}
-              {/each}
-            </div>
-          </AccordionItem>
-        </Accordion>
-        <br />
-        <Button type="submit" color="light">
-          <i class="bx bxs-save me-2"></i>
-          <span>Update source</span>
-        </Button>
-      </form>
+        {formClass}
+        enableActive={true}
+      ></SourceForm>
     </div>
   </div>
-  <CustomTable
-    title="Feeds"
-    headers={[
-      {
-        label: "Label",
-        attribute: "label"
-      },
-      {
-        label: "URL",
-        attribute: "url"
-      },
-      {
-        label: "Rolie",
-        attribute: "rolie"
-      },
-      {
-        label: "Log level",
-        attribute: "log_level"
-      }
-    ]}
-  >
-    {#each feeds as feed, index (index)}
-      <tr
-        on:click={() => {
-          if (feed.id) {
-            fetchFeedLogs(feed.id);
+  <div class="flex">
+    <div class="w-1/2 flex-auto">
+      <CustomTable
+        title="Feeds"
+        headers={[
+          {
+            label: "Label",
+            attribute: "label"
+          },
+          {
+            label: "URL",
+            attribute: "url"
+          },
+          {
+            label: "Rolie",
+            attribute: "rolie"
+          },
+          {
+            label: "Log level",
+            attribute: "log_level"
           }
-        }}
-        class="cursor-pointer"
+        ]}
       >
-        <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
-        <td>
-          <Button
-            on:click={(event) => {
-              event.stopPropagation();
-              modalCallback = () => {
-                if (feed.id) {
-                  deleteFeed(feed.id);
-                }
-              };
-              modalMessage = "Are you sure you want to delete this source?";
-              modalTitle = `Source ${source.name}`;
-              modalOpen = true;
+        {#each feeds as feed, index (index)}
+          <tr
+            on:click={() => {
+              if (feed.id) {
+                fetchFeedLogs(feed.id);
+              }
             }}
-            title={`Delete source "${source.name}"`}
-            class="border-0 p-2"
-            color="light"
+            class="cursor-pointer"
           >
-            <i class="bx bx-trash text-xl text-red-500"></i>
-          </Button>
-        </td>
-      </tr>
-    {/each}
-    <div slot="bottom">
-      <div class:hidden={!loadingFeeds} class:mb-4={true}>
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
-      </div>
-      <ErrorMessage error={feedError}></ErrorMessage>
+            <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
+            <td>
+              <Button
+                on:click={() => {
+                  feedEdit = feed;
+                }}
+                title={`Edit feed "${feed.label}"`}
+                class="border-0 p-2"
+                color="light"
+              >
+                <i class="bx bx-edit text-xl"></i>
+              </Button>
+            </td>
+            <td>
+              <Button
+                on:click={(event) => {
+                  event.stopPropagation();
+                  modalCallback = async () => {
+                    if (feed.id) {
+                      await deleteFeed(feed.id);
+                    }
+                  };
+                  modalMessage = "Are you sure you want to delete this feed?";
+                  modalTitle = `Feed ${feed.label}`;
+                  modalOpen = true;
+                }}
+                title={`Delete feed "${feed.label}"`}
+                class="border-0 p-2"
+                color="light"
+              >
+                <i class="bx bx-trash text-xl text-red-500"></i>
+              </Button>
+            </td>
+          </tr>
+        {/each}
+        <div slot="bottom">
+          <div class:hidden={!loadingFeeds} class:mb-4={true}>
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+          <ErrorMessage error={feedError}></ErrorMessage>
+        </div>
+      </CustomTable>
     </div>
-  </CustomTable>
 
-  <CustomTable
-    title="Missing feeds"
-    headers={[
-      {
-        label: "Label",
-        attribute: "label"
-      },
-      {
-        label: "URL",
-        attribute: "url"
-      },
-      {
-        label: "Rolie",
-        attribute: "rolie"
-      },
-      {
-        label: "Log level",
-        attribute: "log_level"
-      }
-    ]}
-  >
-    {#each missingFeeds as feed, index (index)}
-      <tr
-        class="cursor-pointer"
-        on:click={() => {
-          newFeed = feed;
-        }}
+    <div class="w-1/2 flex-auto">
+      <CustomTable
+        title="Missing feeds"
+        headers={[
+          {
+            label: "Label",
+            attribute: "label"
+          },
+          {
+            label: "URL",
+            attribute: "url"
+          },
+          {
+            label: "Rolie",
+            attribute: "rolie"
+          },
+          {
+            label: "Log level",
+            attribute: "log_level"
+          }
+        ]}
       >
-        <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
-        <td>
-          <Button
-            on:click={(event) => {
-              event.stopPropagation();
-              modalCallback = () => {
-                console.log("TODO");
-              };
-              modalMessage = "Are you sure you want to delete this source?";
-              modalTitle = `Source ${source.name}`;
-              modalOpen = true;
+        {#each missingFeeds as feed, index (index)}
+          <tr
+            class="cursor-pointer"
+            on:click={() => {
+              feedEdit = feed;
             }}
-            title={`Delete source "${source.name}"`}
-            class="border-0 p-2"
-            color="light"
           >
-            <i class="bx bx-trash text-xl text-red-500"></i>
-          </Button>
-        </td>
-      </tr>
-    {/each}
-    <div slot="bottom">
-      <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
-      </div>
-      <ErrorMessage error={feedError}></ErrorMessage>
+            <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
+            <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
+          </tr>
+        {/each}
+        <div slot="bottom">
+          <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+          <ErrorMessage error={feedError}></ErrorMessage>
+        </div>
+      </CustomTable>
     </div>
-  </CustomTable>
-  {#if newFeed}
+  </div>
+  {#if feedEdit}
+    <SectionHeader title={feedEdit.enable ? "New feed" : "Edit feed"}>
+      <div slot="right">
+        <slot name="header-right"></slot>
+      </div>
+    </SectionHeader>
     <form
       on:submit={async () => {
-        if (newFeed) {
-          await saveFeeds([newFeed]);
-          newFeed = null;
+        if (feedEdit) {
+          feedEdit.enable = true;
+          await saveFeeds([feedEdit]);
+          feedEdit = null;
           await fetchFeeds();
           calculateMissingFeeds();
         }
@@ -687,17 +589,18 @@
       class={formClass}
     >
       <Label>URL</Label>
-      <Input readonly bind:value={newFeed.url}></Input>
+      <Input readonly bind:value={feedEdit.url}></Input>
       <Label>Log level</Label>
-      <Select items={logLevels} bind:value={newFeed.log_level} />
+      <Select items={logLevels} bind:value={feedEdit.log_level} />
       <Label>Label</Label>
-      <Input bind:value={newFeed.label}></Input>
+      <Input bind:value={feedEdit.label}></Input>
       <br />
       <Button type="submit" color="light">
         <i class="bx bxs-save me-2"></i>
         <span>Save feed</span>
       </Button>
     </form>{/if}
+  <br />
   <CustomTable
     title="Logs"
     headers={[
@@ -750,88 +653,15 @@
     </form>
   {/if}
   {#if currentStep === 1}
-    <form
-      class={formClass}
-      on:submit={async () => {
+    <SourceForm
+      {formClass}
+      {source}
+      formSubmit={async () => {
         if (await saveSource()) {
           currentStep = 2;
         }
       }}
-    >
-      <Label>Name</Label>
-      <Input bind:value={source.name}></Input>
-      <Accordion>
-        <AccordionItem
-          ><span slot="header">Advanced options</span>
-          <Label>Rate</Label>
-          <Input bind:value={source.rate}></Input>
-          <Label>Slots</Label>
-          <Input bind:value={source.slots}></Input>
-
-          <Label>HTTP headers</Label>
-          <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
-            {#each headers as header, index (index)}
-              <Label>
-                <span class="text-gray-500">Key</span>
-                <Input on:change={onChangedHeaders} bind:value={header[0]} />
-              </Label>
-              <Label>
-                <span class="text-gray-500">Value</span>
-                <Input on:change={onChangedHeaders} bind:value={header[1]} />
-              </Label>
-              {#if headers.length > 1}
-                <Button
-                  on:click={() => removeHeader(index)}
-                  title="Remove key-value-pair"
-                  class="mb-3 w-fit p-1"
-                  color="light"
-                >
-                  <i class="bx bx-x"></i>
-                </Button>
-              {:else}
-                <div></div>
-              {/if}
-            {/each}
-          </div>
-          <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
-          <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
-          <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
-          <Label>Private cert</Label>
-          <Fileupload bind:files={privateCert}></Fileupload>
-          <Label>Public cert</Label>
-          <Fileupload bind:files={publicCert}></Fileupload>
-          <Label>Client cert passphrase</Label>
-          <Input bind:value={source.client_cert_passphrase} />
-          <Label>Age</Label>
-          <Input placeholder="17520h" bind:value={source.age}></Input>
-          <Label>Ignore patterns</Label>
-          <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
-            {#each source.ignore_patterns as pattern, index (index)}
-              <Label>
-                <Input on:change={onChangedIgnorePatterns} bind:value={pattern} />
-              </Label>
-              {#if source.ignore_patterns.length > 1}
-                <Button
-                  on:click={() => removePattern(index)}
-                  title="Remove pattern"
-                  class="mb-3 w-fit p-1"
-                  color="light"
-                >
-                  <i class="bx bx-x"></i>
-                </Button>
-              {:else}
-                <div></div>
-              {/if}
-            {/each}
-          </div>
-        </AccordionItem>
-      </Accordion>
-      <br />
-      <Button type="submit" color="light">
-        <i class="bx bxs-save me-2"></i>
-        <span>Save source</span>
-      </Button>
-    </form>
+    ></SourceForm>
   {/if}
   {#if currentStep === 2}
     <form
