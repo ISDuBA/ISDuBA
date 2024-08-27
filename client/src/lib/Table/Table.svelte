@@ -156,11 +156,10 @@
     savePosition();
   }
 
-  $: (() => {
-    loadAdvisories;
+  $: if (loadAdvisories || !loadAdvisories) {
     restorePosition();
     savePosition();
-  })();
+  }
 
   $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
@@ -524,9 +523,11 @@
                   {/if}
                   <button
                     on:click|stopPropagation={(e) => {
-                      $appStore.app.diff.docA_ID
-                        ? appStore.setDiffDocB_ID(item.id)
-                        : appStore.setDiffDocA_ID(item.id);
+                      if ($appStore.app.diff.docA_ID) {
+                        appStore.setDiffDocB_ID(item.id);
+                      } else {
+                        appStore.setDiffDocA_ID(item.id);
+                      }
                       appStore.openDiffBox();
                       e.preventDefault();
                     }}
