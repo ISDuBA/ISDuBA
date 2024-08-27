@@ -43,10 +43,16 @@
     const allQueries = await fetchStoredQueries();
     const userDashboardQueries = allQueries.filter(
       (query) =>
-        query.dashboard === true && query.definer === $appStore.app.tokenParsed?.preferred_username
+        query.dashboard &&
+        query.definer === $appStore.app.tokenParsed?.preferred_username &&
+        !query.global
     );
     const globalDashboardQueries = allQueries.filter(
-      (query) => query.dashboard === true && appStore.getRoles().includes(query.role)
+      (query) =>
+        query.dashboard &&
+        query.global &&
+        appStore.getRoles().includes(query.role) &&
+        !userDashboardQueries.find((q) => q.id === query.id)
     );
     filteredQueries = [...userDashboardQueries, ...globalDashboardQueries];
   });
