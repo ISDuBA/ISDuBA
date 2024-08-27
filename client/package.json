@@ -21,7 +21,7 @@
     "@sveltejs/adapter-auto": "^3.2.4",
     "@sveltejs/adapter-static": "^3.0.2",
     "@sveltejs/kit": "^2.5.22",
-    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "@types/eslint": "8.56.10",
     "@types/qs": "^6.9.15",
     "@types/sortablejs": "^1.15.8",
