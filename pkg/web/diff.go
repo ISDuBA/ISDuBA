@@ -67,18 +67,17 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 
 	// Do we need to load docs from database?
 	if len(fromDB) > 0 {
+		tlps := c.tlps(ctx)
+		if len(tlps) == 0 {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			return
+		}
+		tlpExpr := tlps.AsExpr()
 		if err := c.db.Run(
 			ctx.Request.Context(),
 			func(rctx context.Context, conn *pgxpool.Conn) error {
-				var tlpExpr *query.Expr
-				if tlps := c.tlps(ctx); len(tlps) > 0 {
-					tlpExpr = tlps.AsExpr()
-				}
 				for _, f := range fromDB {
-					expr := query.FieldEqInt("id", f.id)
-					if tlpExpr != nil {
-						expr = expr.And(tlpExpr)
-					}
+					expr := query.FieldEqInt("id", f.id).And(tlpExpr)
 					var b query.SQLBuilder
 					b.CreateWhere(expr)
 					fetchSQL := `SELECT original FROM documents WHERE ` + b.WhereClause
