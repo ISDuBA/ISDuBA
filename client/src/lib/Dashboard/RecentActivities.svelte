@@ -216,19 +216,19 @@
                 <div>
                   <i class="bx bxs-quote-alt-left"></i>
                   <span class="italic"
-                    >{activity.message?.length < 30
+                    >{activity.message && activity.message?.length < 30
                       ? activity.message
-                      : activity.message?.substring(0, 30)}</span
+                      : (activity.message?.substring(0, 30) ?? "Message undefined")}</span
                   >
                 </div>
               {:else}
                 <div>
-                  {activity.documentTitle}
+                  {activity.documentTitle ?? "Title undefined"}
                 </div>
               {/if}
               <span class="text-gray-400" slot="bottom-left">
                 {activity.event === "add_comment" || activity.event == "change_comment"
-                  ? `${activity.documentTitle}`
+                  ? `${activity.documentTitle ?? "Title undefined"}`
                   : ""}
               </span>
             </Activity>

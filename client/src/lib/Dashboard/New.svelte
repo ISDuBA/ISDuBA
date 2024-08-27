@@ -88,16 +88,18 @@
             <span slot="top-right" class="ml-auto" title={doc.publisher}
               >{getPublisher(doc.publisher)}</span
             >
-            <div class="text-black">{doc.title}</div>
+            <div class="text-black">{doc.title ?? "Title: undefined"}</div>
             <div
               slot="bottom-left"
               title={`Number of comments`}
               class="flex items-center gap-4 text-gray-500"
             >
-              <div class="flex items-center gap-1">
-                <i class="bx bx-comment"></i>
-                <span>{doc.comments}</span>
-              </div>
+              {#if doc.comments}
+                <div class="flex items-center gap-1">
+                  <i class="bx bx-comment"></i>
+                  <span>{doc.comments}</span>
+                </div>
+              {/if}
               {#if doc.ssvc}
                 <span title="SSVC" class="rounded border border-solid border-gray-400 px-1"
                   >{convertVectorToLabel(doc.ssvc).label}</span
