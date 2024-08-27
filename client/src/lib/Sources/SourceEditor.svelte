@@ -22,10 +22,7 @@
     Modal,
     Select,
     Table,
-    TableBodyRow,
-    Fileupload,
-    AccordionItem,
-    Accordion
+    TableBodyRow
   } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { tdClass } from "$lib/Table/defaults";
@@ -35,6 +32,7 @@
   import type { CSAFProviderMetadata, DirectoryURL, ROLIEFeed } from "$lib/provider";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { onMount } from "svelte";
+  import SourceForm from "./SourceForm.svelte";
   export let params: any = null;
 
   enum LogLevel {
@@ -71,9 +69,6 @@
 
   let logs: any[] = [];
 
-  let privateCert: FileList | undefined;
-  let publicCert: FileList | undefined;
-
   let logLevels = [
     { value: LogLevel.error, name: "Error" },
     { value: LogLevel.info, name: "Info" },
@@ -96,9 +91,10 @@
   let source: Source = {
     name: "",
     url: "",
-    active: true,
+    active: false,
     rate: 1,
     slots: 2,
+    strict_mode: true,
     headers: [""],
     ignore_patterns: [""]
   };
@@ -107,8 +103,6 @@
     let method = "POST";
     let path = `/api/sources`;
     const formData = new FormData();
-    formatHeaders();
-    await loadCerts();
     if (source.id) {
       method = "PUT";
       path += `/${source.id}`;
@@ -363,26 +357,6 @@
     }
   };
 
-  const onChangedIgnorePatterns = () => {
-    if (source.ignore_patterns.at(-1) !== "") {
-      source.ignore_patterns.push("");
-    }
-  };
-
-  const removeHeader = (index: number) => {
-    if (headers.length === 1)
-      headers = [
-        ["", ""],
-        ["", ""]
-      ];
-    headers = headers.toSpliced(index, 1);
-  };
-
-  const removePattern = (index: number) => {
-    if (source.ignore_patterns.length === 1) source.ignore_patterns = [""];
-    source.ignore_patterns = source.ignore_patterns.toSpliced(index, 1);
-  };
-
   const parseHeaders = () => {
     headers = [];
     for (const header of source.headers) {
@@ -393,22 +367,6 @@
       headers.push(["", ""]);
     }
     onChangedHeaders();
-  };
-
-  const formatHeaders = () => {
-    source.headers = [];
-    for (const header of headers) {
-      if (header[0] !== "" && header[1] !== "") source.headers.push(`${header[0]}:${header[1]}`);
-    }
-  };
-
-  const loadCerts = async () => {
-    if (privateCert) {
-      source.client_cert_private = await privateCert.item(0)?.text();
-    }
-    if (publicCert) {
-      source.client_cert_public = await publicCert.item(0)?.text();
-    }
   };
 
   onMount(async () => {
@@ -477,87 +435,14 @@
     </div>
 
     <div class="flex-auto">
-      <form
-        on:submit={async () => {
+      <SourceForm
+        {source}
+        formSubmit={async () => {
           await saveSource();
         }}
-        class={formClass}
-      >
-        <Label>Name</Label>
-        <Input bind:value={source.name}></Input>
-        <Checkbox bind:checked={source.active}>Active</Checkbox>
-        <br />
-        <Accordion>
-          <AccordionItem
-            ><span slot="header">Advanced options</span>
-            <Label>Rate</Label>
-            <Input bind:value={source.rate}></Input>
-            <Label>Slots</Label>
-            <Input bind:value={source.slots}></Input>
-            <Label>HTTP headers</Label>
-            <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
-              {#each headers as header, index (index)}
-                <Label>
-                  <span class="text-gray-500">Key</span>
-                  <Input on:change={onChangedHeaders} bind:value={header[0]} />
-                </Label>
-                <Label>
-                  <span class="text-gray-500">Value</span>
-                  <Input on:change={onChangedHeaders} bind:value={header[1]} />
-                </Label>
-                {#if headers.length > 1}
-                  <Button
-                    on:click={() => removeHeader(index)}
-                    title="Remove key-value-pair"
-                    class="mb-3 w-fit p-1"
-                    color="light"
-                  >
-                    <i class="bx bx-x"></i>
-                  </Button>
-                {:else}
-                  <div></div>
-                {/if}
-              {/each}
-            </div>
-            <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
-            <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
-            <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
-            <Label>Private cert</Label>
-            <Fileupload bind:files={privateCert}></Fileupload>
-            <Label>Public cert</Label>
-            <Fileupload bind:files={publicCert}></Fileupload>
-            <Label>Client cert passphrase</Label>
-            <Input bind:value={source.client_cert_passphrase} />
-            <Label>Age</Label>
-            <Input placeholder="17520h" bind:value={source.age}></Input>
-            <Label>Ignore patterns</Label>
-            <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
-              {#each source.ignore_patterns as pattern, index (index)}
-                <Label>
-                  <Input on:change={onChangedIgnorePatterns} bind:value={pattern} />
-                </Label>
-                {#if source.ignore_patterns.length > 1}
-                  <Button
-                    on:click={() => removePattern(index)}
-                    title="Remove pattern"
-                    class="mb-3 w-fit p-1"
-                    color="light"
-                  >
-                    <i class="bx bx-x"></i>
-                  </Button>
-                {:else}
-                  <div></div>
-                {/if}
-              {/each}
-            </div>
-          </AccordionItem>
-        </Accordion>
-        <br />
-        <Button type="submit" color="light">
-          <i class="bx bxs-save me-2"></i>
-          <span>Update source</span>
-        </Button>
-      </form>
+        {formClass}
+        enableActive={true}
+      ></SourceForm>
     </div>
   </div>
   <CustomTable
@@ -756,88 +641,15 @@
     </form>
   {/if}
   {#if currentStep === 1}
-    <form
-      class={formClass}
-      on:submit={async () => {
+    <SourceForm
+      {formClass}
+      {source}
+      formSubmit={async () => {
         if (await saveSource()) {
           currentStep = 2;
         }
       }}
-    >
-      <Label>Name</Label>
-      <Input bind:value={source.name}></Input>
-      <Accordion>
-        <AccordionItem
-          ><span slot="header">Advanced options</span>
-          <Label>Rate</Label>
-          <Input bind:value={source.rate}></Input>
-          <Label>Slots</Label>
-          <Input bind:value={source.slots}></Input>
-
-          <Label>HTTP headers</Label>
-          <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
-            {#each headers as header, index (index)}
-              <Label>
-                <span class="text-gray-500">Key</span>
-                <Input on:change={onChangedHeaders} bind:value={header[0]} />
-              </Label>
-              <Label>
-                <span class="text-gray-500">Value</span>
-                <Input on:change={onChangedHeaders} bind:value={header[1]} />
-              </Label>
-              {#if headers.length > 1}
-                <Button
-                  on:click={() => removeHeader(index)}
-                  title="Remove key-value-pair"
-                  class="mb-3 w-fit p-1"
-                  color="light"
-                >
-                  <i class="bx bx-x"></i>
-                </Button>
-              {:else}
-                <div></div>
-              {/if}
-            {/each}
-          </div>
-          <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
-          <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
-          <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
-          <Label>Private cert</Label>
-          <Fileupload bind:files={privateCert}></Fileupload>
-          <Label>Public cert</Label>
-          <Fileupload bind:files={publicCert}></Fileupload>
-          <Label>Client cert passphrase</Label>
-          <Input bind:value={source.client_cert_passphrase} />
-          <Label>Age</Label>
-          <Input placeholder="17520h" bind:value={source.age}></Input>
-          <Label>Ignore patterns</Label>
-          <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
-            {#each source.ignore_patterns as pattern, index (index)}
-              <Label>
-                <Input on:change={onChangedIgnorePatterns} bind:value={pattern} />
-              </Label>
-              {#if source.ignore_patterns.length > 1}
-                <Button
-                  on:click={() => removePattern(index)}
-                  title="Remove pattern"
-                  class="mb-3 w-fit p-1"
-                  color="light"
-                >
-                  <i class="bx bx-x"></i>
-                </Button>
-              {:else}
-                <div></div>
-              {/if}
-            {/each}
-          </div>
-        </AccordionItem>
-      </Accordion>
-      <br />
-      <Button type="submit" color="light">
-        <i class="bx bxs-save me-2"></i>
-        <span>Save source</span>
-      </Button>
-    </form>
+    ></SourceForm>
   {/if}
   {#if currentStep === 2}
     <form
