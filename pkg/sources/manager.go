@@ -492,37 +492,34 @@ func (m *Manager) FeedLog(
 
 	counter := int64(-1)
 
-	errCh := make(chan error)
-	m.fns <- func(m *Manager) {
-		errCh <- m.db.Run(
-			context.Background(),
-			func(ctx context.Context, con *pgxpool.Conn) error {
-				if count {
-					if err := con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter); err != nil {
-						return fmt.Errorf("counting feed logs failed: %w", err)
-					}
+	err := m.db.Run(
+		context.Background(),
+		func(ctx context.Context, con *pgxpool.Conn) error {
+			if count {
+				if err := con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter); err != nil {
+					return fmt.Errorf("counting feed logs failed: %w", err)
 				}
-				rows, err := con.Query(ctx, selSQL, args...)
-				if err != nil {
-					return fmt.Errorf("querying feed logs failed: %w", err)
+			}
+			rows, err := con.Query(ctx, selSQL, args...)
+			if err != nil {
+				return fmt.Errorf("querying feed logs failed: %w", err)
+			}
+			defer rows.Close()
+			var (
+				t   time.Time
+				lvl config.FeedLogLevel
+				msg string
+			)
+			for rows.Next() {
+				if err := rows.Scan(&t, &lvl, &msg); err != nil {
+					return fmt.Errorf("scanning log failed: %w", err)
 				}
-				defer rows.Close()
-				var (
-					t   time.Time
-					lvl config.FeedLogLevel
-					msg string
-				)
-				for rows.Next() {
-					if err := rows.Scan(&t, &lvl, &msg); err != nil {
-						return fmt.Errorf("scanning log failed: %w", err)
-					}
-					fn(t, lvl, msg)
-				}
-				return rows.Err()
-			}, 0,
-		)
-	}
-	return counter, <-errCh
+				fn(t, lvl, msg)
+			}
+			return rows.Err()
+		}, 0,
+	)
+	return counter, err
 }
 
 // ping wakes up the manager.
