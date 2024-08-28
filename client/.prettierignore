@@ -12,3 +12,5 @@ package-lock.json
 yarn.lock
 \.svelte-kit
 build/
+coverage/
+test-results/
