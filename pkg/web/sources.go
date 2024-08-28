@@ -45,21 +45,22 @@ func (sa sourceAge) MarshalText() ([]byte, error) {
 }
 
 type source struct {
-	ID                   int64      `json:"id" form:"id"`
-	Name                 string     `json:"name" form:"name" binding:"required,min=1"`
-	URL                  string     `json:"url" form:"url" binding:"required,min=1"`
-	Active               bool       `json:"active" form:"active"`
-	Rate                 *float64   `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots                *int       `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
-	Headers              []string   `json:"headers,omitempty" form:"headers"`
-	StrictMode           *bool      `json:"strict_mode,omitempty" form:"strict_mode"`
-	Insecure             *bool      `json:"insecure,omitempty" form:"insecure"`
-	SignatureCheck       *bool      `json:"signature_check,omitempty" form:"signature_check"`
-	Age                  *sourceAge `json:"age,omitempty" form:"age"`
-	IgnorePatterns       []string   `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
-	ClientCertPublic     *string    `json:"client_cert_public,omitempty" form:"client_cert_public"`
-	ClientCertPrivate    *string    `json:"client_cert_private,omitempty" form:"client_cert_private"`
-	ClientCertPassphrase *string    `json:"client_cert_passphrase,omitempty" form:"client_cert_passphrase"`
+	ID                   int64          `json:"id" form:"id"`
+	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
+	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
+	Active               bool           `json:"active" form:"active"`
+	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers              []string       `json:"headers,omitempty" form:"headers"`
+	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
+	Insecure             *bool          `json:"insecure,omitempty" form:"insecure"`
+	SignatureCheck       *bool          `json:"signature_check,omitempty" form:"signature_check"`
+	Age                  *sourceAge     `json:"age,omitempty" form:"age"`
+	IgnorePatterns       []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
+	ClientCertPublic     *string        `json:"client_cert_public,omitempty" form:"client_cert_public"`
+	ClientCertPrivate    *string        `json:"client_cert_private,omitempty" form:"client_cert_private"`
+	ClientCertPassphrase *string        `json:"client_cert_passphrase,omitempty" form:"client_cert_passphrase"`
+	Stats                *sources.Stats `json:"stats,omitempty"`
 }
 
 type feed struct {
@@ -100,14 +101,22 @@ func newSource(si *sources.SourceInfo) *source {
 		ClientCertPublic:     threeStars(si.HasClientCertPublic),
 		ClientCertPrivate:    threeStars(si.HasClientCertPrivate),
 		ClientCertPassphrase: threeStars(si.HasClientCertPassphrase),
+		Stats:                si.Stats,
 	}
 }
 
 func (c *Controller) viewSources(ctx *gin.Context) {
+	var stats bool
+	if st := ctx.Query("stats"); st != "" {
+		var ok bool
+		if stats, ok = parse(ctx, strconv.ParseBool, st); !ok {
+			return
+		}
+	}
 	srcs := []*source{}
 	c.sm.AllSources(func(si *sources.SourceInfo) {
 		srcs = append(srcs, newSource(si))
-	})
+	}, stats)
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
 }
 
@@ -217,7 +226,14 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	si := c.sm.ViewSource(input.ID)
+	var stats bool
+	if st := ctx.Query("stats"); st != "" {
+		var ok bool
+		if stats, ok = parse(ctx, strconv.ParseBool, st); !ok {
+			return
+		}
+	}
+	si := c.sm.ViewSource(input.ID, stats)
 	if si == nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return

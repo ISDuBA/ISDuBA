@@ -85,6 +85,12 @@ const (
 	SourceDeactivated
 )
 
+// Stats are some statistics about feeds and sources.
+type Stats struct {
+	Downloading int `json:"downloading"`
+	Waiting     int `json:"waiting"`
+}
+
 // SourceInfo are infos about a source.
 type SourceInfo struct {
 	ID                      int64
@@ -102,6 +108,7 @@ type SourceInfo struct {
 	HasClientCertPublic     bool
 	HasClientCertPrivate    bool
 	HasClientCertPassphrase bool
+	Stats                   *Stats
 }
 
 func (sur SourceUpdateResult) String() string {
@@ -283,13 +290,18 @@ func (m *Manager) Run(ctx context.Context) {
 }
 
 // ViewSource returns infos about a source.
-func (m *Manager) ViewSource(id int64) *SourceInfo {
+func (m *Manager) ViewSource(id int64, stats bool) *SourceInfo {
 	siCh := make(chan *SourceInfo)
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(id)
 		if s == nil {
 			siCh <- nil
 			return
+		}
+		var st *Stats
+		if stats {
+			st = new(Stats)
+			s.addStats(st)
 		}
 		siCh <- &SourceInfo{
 			ID:                      s.id,
@@ -307,18 +319,24 @@ func (m *Manager) ViewSource(id int64) *SourceInfo {
 			HasClientCertPublic:     s.clientCertPublic != nil,
 			HasClientCertPrivate:    s.clientCertPrivate != nil,
 			HasClientCertPassphrase: s.clientCertPassphrase != nil,
+			Stats:                   st,
 		}
 	}
 	return <-siCh
 }
 
 // AllSources iterates over all sources.
-func (m *Manager) AllSources(fn func(*SourceInfo)) {
+func (m *Manager) AllSources(fn func(*SourceInfo), stats bool) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
 		si := new(SourceInfo)
 		for _, s := range m.sources {
+			var st *Stats
+			if stats {
+				st = new(Stats)
+				s.addStats(st)
+			}
 			*si = SourceInfo{
 				ID:                      s.id,
 				Name:                    s.name,
@@ -335,6 +353,7 @@ func (m *Manager) AllSources(fn func(*SourceInfo)) {
 				HasClientCertPublic:     s.clientCertPublic != nil,
 				HasClientCertPrivate:    s.clientCertPrivate != nil,
 				HasClientCertPassphrase: s.clientCertPassphrase != nil,
+				Stats:                   st,
 			}
 			fn(si)
 		}

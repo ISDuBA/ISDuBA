@@ -276,6 +276,25 @@ func (f *feed) findWaiting() *location {
 	return nil
 }
 
+func (f *feed) addStats(st *Stats) {
+	for i := range f.queue {
+		switch f.queue[i].state {
+		case waiting:
+			st.Waiting++
+		case running:
+			st.Downloading++
+		}
+	}
+}
+
+func (s *source) addStats(st *Stats) {
+	for _, f := range s.feeds {
+		if !f.invalid.Load() {
+			f.addStats(st)
+		}
+	}
+}
+
 // forceIndexRefresh forces an index refresh on all feeds of a source.
 func (s *source) forceIndexRefresh() {
 	past := time.Now().Add(-time.Minute)
