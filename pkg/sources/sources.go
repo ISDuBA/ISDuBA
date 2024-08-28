@@ -231,7 +231,7 @@ func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, 
 
 	// XXX: This could be optimized by passing ranges to Delete.
 	for i := len(remove) - 1; i >= 0; i-- {
-		candidates = slices.Delete(candidates, remove[i], remove[i])
+		candidates = slices.Delete(candidates, remove[i], remove[i]+1)
 	}
 
 	return candidates, nil
