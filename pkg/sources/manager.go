@@ -85,6 +85,25 @@ const (
 	SourceDeactivated
 )
 
+// SourceInfo are infos about a source.
+type SourceInfo struct {
+	ID                      int64
+	Name                    string
+	URL                     string
+	Active                  bool
+	Rate                    *float64
+	Slots                   *int
+	Headers                 []string
+	StrictMode              *bool
+	Insecure                *bool
+	SignatureCheck          *bool
+	Age                     *time.Duration
+	IgnorePatterns          []*regexp.Regexp
+	HasClientCertPublic     bool
+	HasClientCertPrivate    bool
+	HasClientCertPassphrase bool
+}
+
 func (sur SourceUpdateResult) String() string {
 	switch sur {
 	case SourceUnchanged:
@@ -263,34 +282,61 @@ func (m *Manager) Run(ctx context.Context) {
 	}
 }
 
+// ViewSource returns infos about a source.
+func (m *Manager) ViewSource(id int64) *SourceInfo {
+	siCh := make(chan *SourceInfo)
+	m.fns <- func(m *Manager) {
+		s := m.findSourceByID(id)
+		if s == nil {
+			siCh <- nil
+			return
+		}
+		siCh <- &SourceInfo{
+			ID:                      s.id,
+			Name:                    s.name,
+			URL:                     s.url,
+			Active:                  s.active,
+			Rate:                    s.rate,
+			Slots:                   s.slots,
+			Headers:                 s.headers,
+			StrictMode:              s.strictMode,
+			Insecure:                s.insecure,
+			SignatureCheck:          s.signatureCheck,
+			Age:                     s.age,
+			IgnorePatterns:          s.ignorePatterns,
+			HasClientCertPublic:     s.clientCertPublic != nil,
+			HasClientCertPrivate:    s.clientCertPrivate != nil,
+			HasClientCertPassphrase: s.clientCertPassphrase != nil,
+		}
+	}
+	return <-siCh
+}
+
 // AllSources iterates over all sources.
-func (m *Manager) AllSources(fn func(
-	id int64,
-	name string,
-	url string,
-	active bool,
-	rate *float64,
-	slots *int,
-	headers []string,
-	strictmode *bool,
-	insecure *bool,
-	signatureCheck *bool,
-	age *time.Duration,
-	ignorepatterns []*regexp.Regexp,
-	hasClientCertPublic bool,
-	hasClientCertPrivate bool,
-	hasClientCertPassphrase bool,
-)) {
+func (m *Manager) AllSources(fn func(*SourceInfo)) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
+		si := new(SourceInfo)
 		for _, s := range m.sources {
-			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers,
-				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns,
-				s.clientCertPublic != nil,
-				s.clientCertPrivate != nil,
-				s.clientCertPassphrase != nil,
-			)
+			*si = SourceInfo{
+				ID:                      s.id,
+				Name:                    s.name,
+				URL:                     s.url,
+				Active:                  s.active,
+				Rate:                    s.rate,
+				Slots:                   s.slots,
+				Headers:                 s.headers,
+				StrictMode:              s.strictMode,
+				Insecure:                s.insecure,
+				SignatureCheck:          s.signatureCheck,
+				Age:                     s.age,
+				IgnorePatterns:          s.ignorePatterns,
+				HasClientCertPublic:     s.clientCertPublic != nil,
+				HasClientCertPrivate:    s.clientCertPrivate != nil,
+				HasClientCertPassphrase: s.clientCertPassphrase != nil,
+			}
+			fn(si)
 		}
 	}
 	<-done

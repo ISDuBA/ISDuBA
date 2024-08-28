@@ -15,7 +15,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -80,46 +79,34 @@ func threeStars(b bool) *string {
 	return nil
 }
 
+func newSource(si *sources.SourceInfo) *source {
+	var sa *sourceAge
+	if si.Age != nil {
+		sa = &sourceAge{*si.Age}
+	}
+	return &source{
+		ID:                   si.ID,
+		Name:                 si.Name,
+		URL:                  si.URL,
+		Active:               si.Active,
+		Rate:                 si.Rate,
+		Slots:                si.Slots,
+		Headers:              si.Headers,
+		StrictMode:           si.StrictMode,
+		Insecure:             si.Insecure,
+		SignatureCheck:       si.SignatureCheck,
+		Age:                  sa,
+		IgnorePatterns:       sources.AsStrings(si.IgnorePatterns),
+		ClientCertPublic:     threeStars(si.HasClientCertPublic),
+		ClientCertPrivate:    threeStars(si.HasClientCertPrivate),
+		ClientCertPassphrase: threeStars(si.HasClientCertPassphrase),
+	}
+}
+
 func (c *Controller) viewSources(ctx *gin.Context) {
 	srcs := []*source{}
-	c.sm.AllSources(func(
-		id int64,
-		name string,
-		url string,
-		active bool,
-		rate *float64,
-		slots *int,
-		headers []string,
-		strictMode *bool,
-		insecure *bool,
-		signatureCheck *bool,
-		age *time.Duration,
-		ignorePatterns []*regexp.Regexp,
-		hasClientCertPublic bool,
-		hasClientCertPrivate bool,
-		hasClientCertPassphrase bool,
-	) {
-		var sa *sourceAge
-		if age != nil {
-			sa = &sourceAge{*age}
-		}
-		srcs = append(srcs, &source{
-			ID:                   id,
-			Name:                 name,
-			URL:                  url,
-			Active:               active,
-			Rate:                 rate,
-			Slots:                slots,
-			Headers:              headers,
-			StrictMode:           strictMode,
-			Insecure:             insecure,
-			SignatureCheck:       signatureCheck,
-			Age:                  sa,
-			IgnorePatterns:       sources.AsStrings(ignorePatterns),
-			ClientCertPublic:     threeStars(hasClientCertPublic),
-			ClientCertPrivate:    threeStars(hasClientCertPrivate),
-			ClientCertPassphrase: threeStars(hasClientCertPassphrase),
-		})
+	c.sm.AllSources(func(si *sources.SourceInfo) {
+		srcs = append(srcs, newSource(si))
 	})
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
 }
@@ -220,6 +207,22 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+}
+
+func (c *Controller) viewSource(ctx *gin.Context) {
+	var input struct {
+		ID int64 `uri:"id" binding:"required"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	si := c.sm.ViewSource(input.ID)
+	if si == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, newSource(si))
 }
 
 func (c *Controller) updateSource(ctx *gin.Context) {
