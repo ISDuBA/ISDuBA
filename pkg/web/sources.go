@@ -574,23 +574,66 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 		Level   config.FeedLogLevel `json:"level"`
 		Message string              `json:"msg"`
 	}
+	var (
+		limit, offset int64 = -1, -1
+		logLevels     []config.FeedLogLevel
+		count, ok     bool
+	)
+
+	if ofs := ctx.Query("offset"); ofs != "" {
+		if offset, ok = parse(ctx, toInt64, ofs); !ok {
+			return
+		}
+	}
+
+	if lim := ctx.Query("limit"); lim != "" {
+		if limit, ok = parse(ctx, toInt64, lim); !ok {
+			return
+		}
+	}
+
+	if cnt := ctx.Query("count"); cnt != "" {
+		if count, ok = parse(ctx, strconv.ParseBool, cnt); !ok {
+			return
+		}
+	}
+
+	if lvls := ctx.Query("levels"); lvls != "" {
+		for _, lvl := range strings.Fields(lvls) {
+			logLevel, ok := parse(ctx, config.ParseFeedLogLevel, lvl)
+			if !ok {
+				return
+			}
+			logLevels = append(logLevels, logLevel)
+		}
+	}
+
 	entries := []entry{}
-	if err := c.sm.FeedLog(input.FeedID, func(
-		t time.Time,
-		lvl config.FeedLogLevel,
-		msg string,
-	) {
-		entries = append(entries, entry{
-			Time:    t,
-			Level:   lvl,
-			Message: msg,
-		})
-	}); err != nil {
+	counter, err := c.sm.FeedLog(
+		input.FeedID,
+		func(
+			t time.Time,
+			lvl config.FeedLogLevel,
+			msg string) {
+			entries = append(entries, entry{
+				Time:    t,
+				Level:   lvl,
+				Message: msg,
+			})
+		},
+		limit, offset, logLevels, count,
+	)
+
+	if err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, entries)
+	h := gin.H{"entries": entries}
+	if count {
+		h["count"] = counter
+	}
+	ctx.JSON(http.StatusOK, h)
 }
 
 // defaultMessage returns the default message.
