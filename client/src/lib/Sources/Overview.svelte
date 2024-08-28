@@ -18,7 +18,7 @@
   import { request } from "$lib/request";
   import { onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import type { Source } from "$lib/Sources/source";
+  import { type Source, fetchSources } from "$lib/Sources/source";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
@@ -43,16 +43,13 @@
 
   const getSources = async () => {
     loadingSources = true;
-    const resp = await request(`/api/sources`, "GET");
+    const result = await fetchSources(true);
     loadingSources = false;
-    if (resp.ok) {
-      if (resp.content.sources) {
-        sources = resp.content.sources;
-      } else {
-        sources = [];
-      }
-    } else if (resp.error) {
-      sourcesError = getErrorDetails(`Could not get sources`, resp);
+    if (result.ok) {
+      sources = result.value;
+    } else {
+      sources = [];
+      sourcesError = result.error;
     }
   };
 
@@ -103,6 +100,14 @@
     {
       label: "Active",
       attribute: "active"
+    },
+    {
+      label: "Downloading",
+      attribute: "downloading"
+    },
+    {
+      label: "Waiting",
+      attribute: "waiting"
     }
   ]}
 >
@@ -118,6 +123,8 @@
       <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
       <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
       <TableBodyCell {tdClass}>{source.active}</TableBodyCell>
+      <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
+      <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
       <td>
         <Button
           on:click={(event) => {

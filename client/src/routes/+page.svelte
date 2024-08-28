@@ -35,6 +35,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import type { HttpResponse } from "$lib/types";
   import DocumentUpload from "$lib/Sources/DocumentUpload.svelte";
+  import SourceCreator from "$lib/Sources/SourceCreator.svelte";
 
   let loadConfigError: ErrorDetails | null;
 
@@ -204,7 +205,12 @@
       conditions: [loginCondition]
     }),
     "/sources/new": wrap({
-      component: SourceEditor,
+      component: SourceCreator,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/sources/new/:domain": wrap({
+      component: SourceCreator,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
