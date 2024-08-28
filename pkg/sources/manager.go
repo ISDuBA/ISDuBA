@@ -340,19 +340,77 @@ func (m *Manager) Feed(feedID int64, fn func(
 }
 
 // FeedLog sends the log of the feed with the given id to the given function.
-func (m *Manager) FeedLog(feedID int64, fn func(
-	t time.Time,
-	lvl config.FeedLogLevel,
-	msg string,
-)) error {
+func (m *Manager) FeedLog(
+	feedID int64,
+	fn func(
+		t time.Time,
+		lvl config.FeedLogLevel,
+		msg string),
+	limit, offset int64,
+	logLevels []config.FeedLogLevel,
+	count bool,
+) (int64, error) {
+	const (
+		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
+		selectSQL = `SELECT time, lvl::text, msg FROM feed_logs WHERE `
+	)
+
+	var cond strings.Builder
+	cond.WriteString(`feeds_id = $1`)
+
+	args := []any{feedID}
+	if len(logLevels) > 0 {
+		cond.WriteString(` AND (`)
+		for i, lvl := range logLevels {
+			if i > 0 {
+				cond.WriteString(` OR `)
+			}
+			cond.WriteString(`lvl = $`)
+			cond.WriteString(strconv.Itoa(len(args) + 1))
+			args = append(args, lvl)
+		}
+		cond.WriteByte(')')
+	}
+
+	var cntSQL string
+	var cntArgs []any
+
+	if count {
+		// Counting ignores limit, offset and order.
+		cntSQL = countSQL + cond.String()
+		cntArgs = args
+		slog.Debug("feed log count", "stmt", cntSQL)
+	}
+
+	cond.WriteString(` ORDER by time DESC`)
+
+	if offset >= 0 {
+		cond.WriteString(` OFFSET $`)
+		cond.WriteString(strconv.Itoa(len(args) + 1))
+		args = append(args, offset)
+	}
+	if limit >= 0 {
+		cond.WriteString(` LIMIT $`)
+		cond.WriteString(strconv.Itoa(len(args) + 1))
+		args = append(args, limit)
+	}
+
+	selSQL := selectSQL + cond.String()
+	slog.Debug("feed log select", "stmt", selSQL)
+
+	counter := int64(-1)
+
 	errCh := make(chan error)
 	m.fns <- func(m *Manager) {
-		const sql = `SELECT time, lvl::text, msg FROM feed_logs WHERE feeds_id = $1 ` +
-			`ORDER by time DESC`
 		errCh <- m.db.Run(
 			context.Background(),
 			func(ctx context.Context, con *pgxpool.Conn) error {
-				rows, err := con.Query(ctx, sql, feedID)
+				if count {
+					if err := con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter); err != nil {
+						return fmt.Errorf("counting feed logs failed: %w", err)
+					}
+				}
+				rows, err := con.Query(ctx, selSQL, args...)
 				if err != nil {
 					return fmt.Errorf("querying feed logs failed: %w", err)
 				}
@@ -372,7 +430,7 @@ func (m *Manager) FeedLog(feedID int64, fn func(
 			}, 0,
 		)
 	}
-	return <-errCh
+	return counter, <-errCh
 }
 
 // ping wakes up the manager.
