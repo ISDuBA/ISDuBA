@@ -40,6 +40,8 @@ client/.eslintcache
 client/vite.config.js.timestamp-*
 client/vite.config.ts.timestamp-*
 client/.env
+client/coverage
+client/test-results
 build/
 dist/
 /web/

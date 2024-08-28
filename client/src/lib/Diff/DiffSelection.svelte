@@ -45,7 +45,7 @@
 
   $: docA_ID = $appStore.app.diff.docA_ID;
   $: docB_ID = $appStore.app.diff.docB_ID;
-  $: docA_ID, docB_ID, getDocuments();
+  $: if (docA_ID || docB_ID) getDocuments();
   $: isDiffBoxOpen = $appStore.app.diff.isDiffBoxOpen;
   $: if (isDiffBoxOpen) {
     getTempDocuments();
@@ -377,9 +377,11 @@
                         </Button>
                         <button
                           on:click|stopPropagation={(e) => {
-                            $appStore.app.diff.docA_ID
-                              ? appStore.setDiffDocB_ID(tempDocID)
-                              : appStore.setDiffDocA_ID(tempDocID);
+                            if ($appStore.app.diff.docA_ID) {
+                              appStore.setDiffDocB_ID(tempDocID);
+                            } else {
+                              appStore.setDiffDocA_ID(tempDocID);
+                            }
                             e.preventDefault();
                           }}
                           class:invisible={!$appStore.app.diff.isDiffBoxOpen}
