@@ -276,29 +276,13 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 
 	// remove queries that should only be viewable by other roles
 	queries = slices.DeleteFunc(queries, func(query *models.StoredQuery) bool {
-		return c.notOwnRoleQuery(ctx, query)
-	})
-	ctx.JSON(http.StatusOK, queries)
-}
-
-// notOwnRoleQuery returns whether a given query should not be viewable by the user
-func (c *Controller) notOwnRoleQuery(ctx *gin.Context, query *models.StoredQuery) bool {
-
-	// If user created query, always allow
-	if !query.Global {
-		return false
-	}
-	// if query has a role
-	if query.Role != nil {
-		// if user has admin role or the role of query
-		if c.hasAnyRole(ctx, *query.Role, models.Admin) {
+		if !query.Global || query.Role == nil {
 			return false
 		}
-		// if query has a role but not one the user has
-		return true
-	}
-	// if query has no role
-	return false
+		return !c.hasAnyRole(ctx, *query.Role, models.Admin)
+	})
+
+	ctx.JSON(http.StatusOK, queries)
 }
 
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
