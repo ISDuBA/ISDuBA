@@ -273,7 +273,31 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// remove queries that should only be viewable by other roles
+	queries = c.onlyOwnRoleQueries(ctx, queries)
 	ctx.JSON(http.StatusOK, queries)
+}
+
+// onlyOwnRoleQueries deletes queries from a list that do not match the given role
+func (c *Controller) onlyOwnRoleQueries(ctx *gin.Context, queries []*models.StoredQuery) []*models.StoredQuery {
+
+	// New list of queries, store allowed queries here
+	var sanitizedQueries []*models.StoredQuery
+
+	// Iterate over all queries
+	for _, query := range queries {
+		// If user created query, always allow
+		if !query.Global {
+			sanitizedQueries = append(sanitizedQueries, query)
+			continue
+		}
+		// If global, only allow if user is admin or correct role
+		if c.hasAnyRole(ctx, *query.Role, "admin") {
+			sanitizedQueries = append(sanitizedQueries, query)
+		}
+	}
+	return sanitizedQueries
 }
 
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
