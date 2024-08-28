@@ -111,6 +111,16 @@ type SourceInfo struct {
 	Stats                   *Stats
 }
 
+// FeedInfo are infos about a feed.
+type FeedInfo struct {
+	ID    int64
+	Label string
+	URL   *url.URL
+	Rolie bool
+	Lvl   config.FeedLogLevel
+	Stats *Stats
+}
+
 func (sur SourceUpdateResult) String() string {
 	switch sur {
 	case SourceUnchanged:
@@ -325,8 +335,8 @@ func (m *Manager) ViewSource(id int64, stats bool) *SourceInfo {
 	return <-siCh
 }
 
-// AllSources iterates over all sources.
-func (m *Manager) AllSources(fn func(*SourceInfo), stats bool) {
+// Sources iterates over all sources and passes infos to a given function.
+func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
@@ -362,13 +372,7 @@ func (m *Manager) AllSources(fn func(*SourceInfo), stats bool) {
 }
 
 // Feeds passes the fields of the feeds of a given source to a given function.
-func (m *Manager) Feeds(sourceID int64, fn func(
-	id int64,
-	label string,
-	url *url.URL,
-	rolie bool,
-	lvl config.FeedLogLevel,
-)) error {
+func (m *Manager) Feeds(sourceID int64, fn func(*FeedInfo), stats bool) error {
 	errCh := make(chan error)
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
@@ -376,32 +380,55 @@ func (m *Manager) Feeds(sourceID int64, fn func(
 			errCh <- NoSuchEntryError("no such source")
 			return
 		}
+		fi := new(FeedInfo)
 		for _, f := range s.feeds {
-			fn(f.id, f.label, f.url, f.rolie, config.FeedLogLevel(f.logLevel.Load()))
+			if f.invalid.Load() {
+				continue
+			}
+			var st *Stats
+			if stats {
+				st = new(Stats)
+				f.addStats(st)
+			}
+			*fi = FeedInfo{
+				ID:    f.id,
+				Label: f.label,
+				URL:   f.url,
+				Rolie: f.rolie,
+				Lvl:   config.FeedLogLevel(f.logLevel.Load()),
+				Stats: st,
+			}
+			fn(fi)
 		}
 		errCh <- nil
 	}
 	return <-errCh
 }
 
-// Feed passes the fields of feed to a given function.
-func (m *Manager) Feed(feedID int64, fn func(
-	label string,
-	url *url.URL,
-	rolie bool,
-	lvl config.FeedLogLevel,
-)) error {
-	errCh := make(chan error)
+// Feed returns the infos of a feed.
+func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
+	fiCh := make(chan *FeedInfo)
 	m.fns <- func(m *Manager) {
 		f := m.findFeedByID(feedID)
-		if f == nil {
-			errCh <- NoSuchEntryError("no such feed")
+		if f == nil || f.invalid.Load() {
+			fiCh <- nil
 			return
 		}
-		fn(f.label, f.url, f.rolie, config.FeedLogLevel(f.logLevel.Load()))
-		errCh <- nil
+		var st *Stats
+		if stats {
+			st = new(Stats)
+			f.addStats(st)
+		}
+		fiCh <- &FeedInfo{
+			ID:    f.id,
+			Label: f.label,
+			URL:   f.url,
+			Rolie: f.rolie,
+			Lvl:   config.FeedLogLevel(f.logLevel.Load()),
+			Stats: st,
+		}
 	}
-	return <-errCh
+	return <-fiCh
 }
 
 // FeedLog sends the log of the feed with the given id to the given function.

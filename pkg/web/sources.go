@@ -69,6 +69,7 @@ type feed struct {
 	URL      string              `json:"url"`
 	Rolie    bool                `json:"rolie"`
 	LogLevel config.FeedLogLevel `json:"log_level"`
+	Stats    *sources.Stats      `json:"stats,omitempty"`
 }
 
 var stars = "***"
@@ -105,16 +106,32 @@ func newSource(si *sources.SourceInfo) *source {
 	}
 }
 
+func newFeed(fi *sources.FeedInfo) *feed {
+	return &feed{
+		ID:       fi.ID,
+		Label:    fi.Label,
+		URL:      fi.URL.String(),
+		Rolie:    fi.Rolie,
+		LogLevel: fi.Lvl,
+		Stats:    fi.Stats,
+	}
+}
+
+func showStats(ctx *gin.Context) (bool, bool) {
+	st := ctx.Query("stats")
+	if st == "" {
+		return false, true
+	}
+	return parse(ctx, strconv.ParseBool, st)
+}
+
 func (c *Controller) viewSources(ctx *gin.Context) {
-	var stats bool
-	if st := ctx.Query("stats"); st != "" {
-		var ok bool
-		if stats, ok = parse(ctx, strconv.ParseBool, st); !ok {
-			return
-		}
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
 	}
 	srcs := []*source{}
-	c.sm.AllSources(func(si *sources.SourceInfo) {
+	c.sm.Sources(func(si *sources.SourceInfo) {
 		srcs = append(srcs, newSource(si))
 	}, stats)
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
@@ -226,12 +243,9 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var stats bool
-	if st := ctx.Query("stats"); st != "" {
-		var ok bool
-		if stats, ok = parse(ctx, strconv.ParseBool, st); !ok {
-			return
-		}
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
 	}
 	si := c.sm.ViewSource(input.ID, stats)
 	if si == nil {
@@ -423,22 +437,14 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
+	}
 	feeds := []*feed{}
-	switch err := c.sm.Feeds(input.SourceID, func(
-		id int64,
-		label string,
-		url *url.URL,
-		rolie bool,
-		lvl config.FeedLogLevel,
-	) {
-		feeds = append(feeds, &feed{
-			ID:       id,
-			Label:    label,
-			URL:      url.String(),
-			Rolie:    rolie,
-			LogLevel: lvl,
-		})
-	}); {
+	switch err := c.sm.Feeds(input.SourceID, func(fi *sources.FeedInfo) {
+		feeds = append(feeds, newFeed(fi))
+	}, stats); {
 	case err == nil:
 		ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
 	case errors.Is(err, sources.NoSuchEntryError("")):
@@ -539,26 +545,16 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	f := feed{ID: input.FeedID}
-	switch err := c.sm.Feed(input.FeedID, func(
-		label string,
-		url *url.URL,
-		rolie bool,
-		lvl config.FeedLogLevel,
-	) {
-		f.Label = label
-		f.URL = url.String()
-		f.Rolie = rolie
-		f.LogLevel = lvl
-	}); {
-	case err == nil:
-		ctx.JSON(http.StatusOK, &f)
-	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	default:
-		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
 	}
+	fi := c.sm.Feed(input.FeedID, stats)
+	if fi == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "feed not found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, newFeed(fi))
 }
 
 func (c *Controller) deleteFeed(ctx *gin.Context) {
