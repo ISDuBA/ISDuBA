@@ -305,10 +305,10 @@
 
   const fetchFeedLogs = async (id: number) => {
     loadingLogs = true;
-    const resp = await request(`/api/sources/feeds/${id}/log`, "GET");
+    const resp = await request(`/api/sources/feeds/${id}/log?limit=10`, "GET");
     loadingLogs = false;
     if (resp.ok) {
-      logs = resp.content;
+      logs = resp.content.entries;
     } else if (resp.error) {
       logError = getErrorDetails(`Could not load feed logs`, resp);
     }
