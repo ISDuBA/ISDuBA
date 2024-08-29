@@ -195,12 +195,7 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 // in the database with a same or newer update time.
 func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, error) {
 
-	var remove []int
-
-	batch := pgx.Batch{}
-
-	const sql = `SELECT EXISTS(SELECT 1 FROM changes ` +
-		`WHERE url = $1 AND feeds_id = $2 AND time >= $3)`
+	var remove [][2]int
 
 	exists := func(idx int) func(pgx.Row) error {
 		return func(row pgx.Row) error {
@@ -209,11 +204,20 @@ func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, 
 				return fmt.Errorf("looking for same or newer in db failed: %w", err)
 			}
 			if have {
-				remove = append(remove, idx)
+				if n := len(remove); n > 0 && remove[n-1][1] == idx-1 {
+					remove[n-1][1] = idx
+				} else {
+					remove = append(remove, [2]int{idx, idx})
+				}
 			}
 			return nil
 		}
 	}
+
+	const sql = `SELECT EXISTS(SELECT 1 FROM changes ` +
+		`WHERE url = $1 AND feeds_id = $2 AND time >= $3)`
+
+	batch := pgx.Batch{}
 
 	for i := range candidates {
 		cand := &candidates[i]
@@ -229,9 +233,8 @@ func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, 
 		return nil, fmt.Errorf("sending same or newer batch failed: %w", err)
 	}
 
-	// XXX: This could be optimized by passing ranges to Delete.
 	for i := len(remove) - 1; i >= 0; i-- {
-		candidates = slices.Delete(candidates, remove[i], remove[i])
+		candidates = slices.Delete(candidates, remove[i][0], remove[i][1]+1)
 	}
 
 	return candidates, nil
@@ -274,6 +277,25 @@ func (f *feed) findWaiting() *location {
 		}
 	}
 	return nil
+}
+
+func (f *feed) addStats(st *Stats) {
+	for i := range f.queue {
+		switch f.queue[i].state {
+		case waiting:
+			st.Waiting++
+		case running:
+			st.Downloading++
+		}
+	}
+}
+
+func (s *source) addStats(st *Stats) {
+	for _, f := range s.feeds {
+		if !f.invalid.Load() {
+			f.addStats(st)
+		}
+	}
 }
 
 // forceIndexRefresh forces an index refresh on all feeds of a source.
