@@ -299,8 +299,8 @@ func (m *Manager) Run(ctx context.Context) {
 	}
 }
 
-// ViewSource returns infos about a source.
-func (m *Manager) ViewSource(id int64, stats bool) *SourceInfo {
+// Source returns infos about a source.
+func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 	siCh := make(chan *SourceInfo)
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(id)

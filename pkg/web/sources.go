@@ -247,7 +247,7 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-	si := c.sm.ViewSource(input.ID, stats)
+	si := c.sm.Source(input.ID, stats)
 	if si == nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
