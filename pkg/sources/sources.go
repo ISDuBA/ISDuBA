@@ -76,7 +76,7 @@ type source struct {
 	active    bool
 	feeds     []*feed
 	usedSlots int
-	status    string
+	status    []string
 
 	rate           *float64
 	limiter        *rate.Limiter
