@@ -93,6 +93,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Sources - Add source</title>
+</svelte:head>
+
 <SectionHeader title="Add new CSAF trusted provider"></SectionHeader>
 {#if params?.domain}
   <SourceForm bind:this={sourceForm} {formClass} {source}></SourceForm>
