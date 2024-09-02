@@ -82,7 +82,7 @@
 
   const loadSourceInfo = async (id: number) => {
     loadingSource = true;
-    let result = await fetchSource(Number(id));
+    let result = await fetchSource(Number(id), true);
     if (result.ok) {
       source = result.value;
     } else {
@@ -182,6 +182,16 @@
         <TableBodyRow>
           <TableBodyCell>Issuing Authority</TableBodyCell>
           <TableBodyCell>{pmd.publisher.issuing_authority}</TableBodyCell>
+        </TableBodyRow>
+      {/if}
+      {#if source.stats}
+        <TableBodyRow>
+          <TableBodyCell>Downloading</TableBodyCell>
+          <TableBodyCell>{source.stats.downloading}</TableBodyCell>
+        </TableBodyRow>
+        <TableBodyRow>
+          <TableBodyCell>Waiting</TableBodyCell>
+          <TableBodyCell>{source.stats.waiting}</TableBodyCell>
         </TableBodyRow>
       {/if}
     </Table>
