@@ -47,10 +47,10 @@
   let isSSVCediting = false;
   let position = "";
   $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
-    if (appStore.isReviewer() && [NEW, READ, ARCHIVED].includes(advisoryState)) {
-      isCommentingAllowed = false;
+    if (appStore.isReviewer() && [REVIEW].includes(advisoryState)) {
+      isCommentingAllowed = true;
     } else {
-      isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+      isCommentingAllowed = appStore.isEditor();
     }
   } else {
     isCommentingAllowed = false;
