@@ -98,10 +98,12 @@
 </script>
 
 <form class={formClass}>
+  <Label>Name</Label>
+  <Input class="mb-3" bind:value={source.name}></Input>
   {#if enableActive}
-    <Checkbox bind:checked={source.active}>Active</Checkbox>
+    <Checkbox class="mb-3" bind:checked={source.active}>Active</Checkbox>
   {/if}
-  <Accordion class="mb-3">
+  <Accordion>
     <AccordionItem
       ><span slot="header">Credentials</span>
       <Label>Private cert</Label>
@@ -236,7 +238,5 @@
       {/each}
     </AccordionItem>
   </Accordion>
-  <Label>Name</Label>
-  <Input bind:value={source.name}></Input>
   <br />
 </form>
