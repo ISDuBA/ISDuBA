@@ -21,7 +21,7 @@
     saveFeeds,
     fetchFeedLogs
   } from "$lib/Sources/source";
-  import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
+  import { Button, Spinner, Modal, List, Label, DescriptionList, Select } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
@@ -67,6 +67,9 @@
     headers: [""],
     ignore_patterns: [""]
   };
+
+  let limitLogs = 10;
+  let pageLogs = 0;
 
   const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
   const ddClass: string = "break-words font-semibold ml-2 mb-1";
@@ -132,13 +135,12 @@
     if (!feed.id) {
       return;
     }
-    let result = await fetchFeedLogs(feed.id, 10, 10);
+    let result = await fetchFeedLogs(feed.id, limitLogs, pageLogs);
     if (result.ok) {
       logs = result.value;
     } else {
       loadFeedError = result.error;
     }
-    console.log(logs);
   };
 
   onMount(async () => {
@@ -250,5 +252,18 @@
 <ErrorMessage error={loadSourceError}></ErrorMessage>
 <ErrorMessage error={loadPmdError}></ErrorMessage>
 <ErrorMessage error={loadFeedError}></ErrorMessage>
-
+<Label class="mr-3 text-nowrap">Logs per page</Label>
+<Select
+  size="sm"
+  id="pagecount"
+  class="mt-2 h-7 w-24 p-1 leading-3"
+  items={[
+    { name: "10", value: 10 },
+    { name: "25", value: 25 },
+    { name: "50", value: 50 },
+    { name: "100", value: 100 }
+  ]}
+  bind:value={limitLogs}
+  on:change={() => {}}
+></Select>
 <FeedLogViewer {logs}></FeedLogViewer>
