@@ -18,7 +18,7 @@
     "prepare": "cd .. && husky client/.husky"
   },
   "devDependencies": {
-    "@playwright/test": "^1.45.3",
+    "@playwright/test": "^1.46.1",
     "@sveltejs/adapter-auto": "^3.2.4",
     "@sveltejs/adapter-static": "^3.0.2",
     "@sveltejs/kit": "^2.5.22",
