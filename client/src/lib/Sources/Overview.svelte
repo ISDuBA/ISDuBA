@@ -87,7 +87,7 @@
   </div>
 </Modal>
 <SectionHeader title="Sources"></SectionHeader>
-{#if appStore.isEditor() || appStore.isReviewer()}
+{#if appStore.isEditor() || appStore.isSourceManager()}
   <CustomTable
     title="CSAF Provider"
     headers={[
