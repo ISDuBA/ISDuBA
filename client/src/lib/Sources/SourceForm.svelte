@@ -149,7 +149,7 @@
     </AccordionItem>
     <AccordionItem
       ><span slot="header">Advanced options</span>
-      <div class="mb-3 grid w-full items-end gap-x-2 gap-y-4 md:grid-cols-3">
+      <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-3">
         <div>
           <Label>Age</Label>
           <Input placeholder="17520h" bind:value={source.age}></Input>
@@ -195,22 +195,21 @@
 
       <Label>HTTP headers</Label>
       {#each headers as header, index (index)}
-        <div
-          class="mb-3 grid w-full grid-cols-[1fr_auto] items-end gap-x-3 sm:grid-cols-[1fr_1fr_auto] sm:gap-0"
-        >
-          <Label class="order-1 col-span-2 sm:col-span-1">
+        <div class="mb-3 grid w-full grid-cols-[1fr_auto] sm:grid-cols-[1fr_1fr_auto]">
+          <Label class="col-span-2 col-start-1 row-start-1 sm:col-span-1">
             <span class="text-gray-500">Key</span>
+            <span class="text-gray-500 sm:collapse">- Value</span>
           </Label>
           <Input
-            class="order-2 col-span-2 mb-3 sm:order-3 sm:col-span-1 sm:mb-0 sm:rounded-none sm:rounded-l-lg"
+            class="col-span-2 row-start-2 rounded-none rounded-t-lg sm:col-span-1 sm:rounded-l-lg sm:rounded-tr-none"
             on:input={onChangedHeaders}
             bind:value={header[0]}
           />
-          <Label class="order-3 col-span-2 sm:order-2">
+          <Label class="collapse col-span-2 col-start-1 row-start-1 sm:visible sm:col-start-2">
             <span class="text-gray-500">Value</span>
           </Label>
           <Input
-            class="order-4 sm:rounded-none sm:border-l-0"
+            class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-l-0 sm:border-t"
             on:input={onChangedHeaders}
             bind:value={header[1]}
           />
@@ -218,7 +217,7 @@
             <Button
               on:click={() => removeHeader(index)}
               title="Remove key-value-pair"
-              class="order-5 h-full w-fit p-1 sm:rounded-none sm:rounded-r-lg sm:border-l-0"
+              class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
               color="light"
             >
               <i class="bx bx-x"></i>
@@ -226,7 +225,7 @@
           {:else}
             <Button
               title="Remove key-value-pair"
-              class="order-5 h-full w-fit p-1 sm:rounded-none sm:rounded-r-lg sm:border-l-0"
+              class=" row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
               color="light"
               disabled={true}
             >
