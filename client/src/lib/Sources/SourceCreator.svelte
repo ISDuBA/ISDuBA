@@ -19,7 +19,15 @@
     saveFeeds
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Input, Label, Button, Spinner } from "flowbite-svelte";
+  import {
+    Input,
+    Label,
+    Button,
+    Spinner,
+    Table,
+    TableBodyCell,
+    TableBodyRow
+  } from "flowbite-svelte";
   import SourceForm from "./SourceForm.svelte";
   import type { CSAFProviderMetadata } from "$lib/provider";
   import { push } from "svelte-spa-router";
@@ -121,6 +129,31 @@
 
 <SectionHeader title="Add new CSAF trusted provider"></SectionHeader>
 {#if params?.domain}
+  <Table class="2xl:w-max" noborder>
+    <TableBodyRow>
+      <TableBodyCell>Domain/PMD</TableBodyCell>
+      <TableBodyCell>{source.url}</TableBodyCell>
+    </TableBodyRow>
+    {#if pmd}
+      <TableBodyRow>
+        <TableBodyCell>Canonical URL</TableBodyCell>
+        <TableBodyCell>{pmd.canonical_url}</TableBodyCell>
+      </TableBodyRow>
+      <TableBodyRow>
+        <TableBodyCell>Publisher Name</TableBodyCell>
+        <TableBodyCell>{pmd.publisher.name}</TableBodyCell>
+      </TableBodyRow>
+      <TableBodyRow>
+        <TableBodyCell>Publisher Contact</TableBodyCell>
+        <TableBodyCell>{pmd.publisher.contact_details}</TableBodyCell>
+      </TableBodyRow>
+      <TableBodyRow>
+        <TableBodyCell>Issuing Authority</TableBodyCell>
+        <TableBodyCell>{pmd.publisher.issuing_authority}</TableBodyCell>
+      </TableBodyRow>
+    {/if}
+  </Table>
+
   <SourceForm bind:this={sourceForm} {formClass} {source}></SourceForm>
   <FeedView feeds={pmdFeeds}></FeedView>
 
