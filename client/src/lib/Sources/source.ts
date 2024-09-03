@@ -47,6 +47,7 @@ type Feed = {
   label: string;
   rolie: boolean;
   log_level: LogLevel;
+  edit?: boolean;
 };
 
 const logLevels = [

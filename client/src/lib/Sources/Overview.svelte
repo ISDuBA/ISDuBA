@@ -96,7 +96,7 @@
         attribute: "name"
       },
       {
-        label: "URL",
+        label: "Domain/PMD",
         attribute: "url"
       },
       {

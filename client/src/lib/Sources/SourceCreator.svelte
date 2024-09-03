@@ -35,6 +35,18 @@
   let sourceForm: any;
   let updateSourceForm: any;
 
+  let validUrl: boolean | null = null;
+  let urlColor: "red" | "green" | "base" = "base";
+  $: if (validUrl !== undefined) {
+    if (validUrl === null) {
+      urlColor = "base";
+    } else if (validUrl) {
+      urlColor = "green";
+    } else {
+      urlColor = "red";
+    }
+  }
+
   let source: Source = {
     name: "",
     url: "",
@@ -66,6 +78,16 @@
       }
     } else {
       errorMessage = result.error;
+    }
+  };
+
+  const checkUrl = async () => {
+    validUrl = null;
+    let result = await fetchPMD(source.url);
+    if (result.ok) {
+      validUrl = true;
+    } else {
+      validUrl = false;
     }
   };
 
@@ -108,8 +130,8 @@
   </Button>
 {:else}
   <form on:submit={loadPMD} class={formClass}>
-    <Label>URL</Label>
-    <Input bind:value={source.url}></Input>
+    <Label>Domain/PMD</Label>
+    <Input bind:value={source.url} on:input={checkUrl} color={urlColor}></Input>
     <br />
     <div class:hidden={!loadingPMD} class:mb-4={true}>
       Loading ...
