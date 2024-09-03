@@ -18,7 +18,8 @@
     fetchFeeds,
     calculateMissingFeeds,
     parseFeeds,
-    saveFeeds
+    saveFeeds,
+    fetchFeedLogs
   } from "$lib/Sources/source";
   import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -28,6 +29,7 @@
   import { onMount } from "svelte";
   import SourceForm from "./SourceForm.svelte";
   import FeedView from "./FeedView.svelte";
+  import FeedLogViewer from "./FeedLogViewer.svelte";
   export let params: any = null;
 
   let modalOpen: boolean = false;
@@ -47,6 +49,8 @@
   let loadingFeeds: boolean = false;
   let loadingSource: boolean = false;
   let loadingPMD: boolean = false;
+
+  let logs: any[] = [];
 
   let formClass = "max-w-[800pt]";
 
@@ -122,6 +126,19 @@
     } else {
       saveFeedError = result.error;
     }
+  };
+
+  const clickFeed = async (feed: Feed) => {
+    if (!feed.id) {
+      return;
+    }
+    let result = await fetchFeedLogs(feed.id, 10, 10);
+    if (result.ok) {
+      logs = result.value;
+    } else {
+      loadFeedError = result.error;
+    }
+    console.log(logs);
   };
 
   onMount(async () => {
@@ -221,7 +238,7 @@
   </div>
 </div>
 
-<FeedView {feeds} {updateFeed} edit={true}></FeedView>
+<FeedView {feeds} {clickFeed} {updateFeed} edit={true}></FeedView>
 <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
@@ -233,3 +250,5 @@
 <ErrorMessage error={loadSourceError}></ErrorMessage>
 <ErrorMessage error={loadPmdError}></ErrorMessage>
 <ErrorMessage error={loadFeedError}></ErrorMessage>
+
+<FeedLogViewer {logs}></FeedLogViewer>

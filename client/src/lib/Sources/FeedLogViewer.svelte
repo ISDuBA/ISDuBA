@@ -12,12 +12,10 @@
   import { TableBodyCell, Spinner } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import type { ErrorDetails } from "$lib/Errors/error";
 
-  let logs: any[] = [];
+  export let logs: any[] = [];
+  // TODO: Display loading spinner
   let loadingLogs: boolean = false;
-  let logError: ErrorDetails | null;
 </script>
 
 <CustomTable
@@ -49,6 +47,5 @@
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
-    <ErrorMessage error={logError}></ErrorMessage>
   </div>
 </CustomTable>

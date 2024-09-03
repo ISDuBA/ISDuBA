@@ -18,6 +18,7 @@
   export let edit: boolean = false;
 
   export let updateFeed = async (_feed: Feed) => {};
+  export let clickFeed = async (_feed: Feed) => {};
 
   let headers = [
     {
@@ -47,7 +48,7 @@
 
 <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
   {#each feeds as feed, index (index)}
-    <tr>
+    <tr on:click={async () => await clickFeed(feed)}>
       <TableBodyCell {tdClass}
         ><Checkbox
           bind:checked={feed.enable}

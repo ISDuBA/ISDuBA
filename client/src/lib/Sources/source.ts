@@ -320,13 +320,12 @@ const fetchFeedLogs = async (
   id: number,
   offset: number,
   limit: number
-): Promise<any | ErrorDetails> => {
-  const resp = await request(`/api/sources/feeds/${id}/log?limit=${limit}$offset=${offset}`, "GET");
+): Promise<Result<any[], ErrorDetails>> => {
+  const resp = await request(`/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}`, "GET");
   if (resp.ok) {
-    return resp.content;
-  } else if (resp.error) {
-    return getErrorDetails(`Could not load feed logs`, resp);
+    return { ok: true, value: resp.content.entries };
   }
+  return { ok: false, error: getErrorDetails(`Could not load feed logs`, resp) };
 };
 
 const isSameFeed = (a: Feed, b: Feed) => a.url === b.url && a.rolie === b.rolie;
