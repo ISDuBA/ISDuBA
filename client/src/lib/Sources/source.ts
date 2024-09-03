@@ -168,9 +168,16 @@ const parseFeeds = (pmd: CSAFProviderMetadata): Feed[] => {
   return feeds;
 };
 
-const saveFeeds = async (source: Source, feeds: Feed[]): Promise<Result<null, ErrorDetails>> => {
+const saveFeeds = async (
+  source: Source,
+  feeds: Feed[]
+): Promise<Result<number[], ErrorDetails>> => {
+  const ids: number[] = [];
   for (const feed of feeds) {
     if (!feed.enable) {
+      if (feed.id) {
+        deleteFeed(feed.id);
+      }
       continue;
     }
     const formData = new FormData();
@@ -194,9 +201,11 @@ const saveFeeds = async (source: Source, feeds: Feed[]): Promise<Result<null, Er
         ok: false,
         error: getErrorDetails(`Could not save feed.`, resp)
       };
+    } else {
+      ids.push(resp.content.id);
     }
   }
-  return { ok: true, value: null };
+  return { ok: true, value: ids };
 };
 
 const getSourceName = async (pmd: CSAFProviderMetadata): Promise<string> => {

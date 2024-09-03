@@ -49,7 +49,14 @@
   {#each feeds as feed, index (index)}
     <tr>
       <TableBodyCell {tdClass}
-        ><Checkbox bind:checked={feed.enable} on:input={async () => await updateFeed(feed)}
+        ><Checkbox
+          bind:checked={feed.enable}
+          on:change={async () => {
+            await updateFeed(feed);
+            if (!feed.enable) {
+              feed.id = undefined;
+            }
+          }}
         ></Checkbox></TableBodyCell
       >
       <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>

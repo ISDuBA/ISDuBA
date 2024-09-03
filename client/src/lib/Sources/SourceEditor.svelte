@@ -114,7 +114,9 @@
 
   const updateFeed = async (feed: Feed) => {
     let result = await saveFeeds(source, [feed]);
-    if (!result.ok) {
+    if (result.ok) {
+      feed.id = result.value[0];
+    } else {
       saveFeedError = result.error;
     }
   };
