@@ -20,7 +20,7 @@
     parseFeeds,
     saveFeeds
   } from "$lib/Sources/source";
-  import { Button, TableBodyCell, Spinner, Modal, Table, TableBodyRow } from "flowbite-svelte";
+  import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
@@ -63,6 +63,9 @@
     headers: [""],
     ignore_patterns: [""]
   };
+
+  const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
+  const ddClass: string = "break-words font-semibold ml-2 mb-1";
 
   const loadSourceInfo = async (id: number) => {
     loadingSource = true;
@@ -160,49 +163,52 @@
 </Modal>
 
 <SectionHeader title={source.name}></SectionHeader>
-<div class="flex">
-  <div class="flex-auto">
-    <Table class="2xl:w-max" noborder>
-      <TableBodyRow>
-        <TableBodyCell>Domain/PMD</TableBodyCell>
-        <TableBodyCell>{source.url}</TableBodyCell>
-      </TableBodyRow>
+<div class="mb-3 grid w-full grid-cols-1 justify-stretch gap-10 lg:grid-cols-2">
+  <div class="w-full">
+    <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
+      <div>
+        <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
+        <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
+      </div>
       {#if pmd}
-        <TableBodyRow>
-          <TableBodyCell>Canonical URL</TableBodyCell>
-          <TableBodyCell>{pmd.canonical_url}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell>Publisher Name</TableBodyCell>
-          <TableBodyCell>{pmd.publisher.name}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell>Publisher Contact</TableBodyCell>
-          <TableBodyCell>{pmd.publisher.contact_details}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell>Issuing Authority</TableBodyCell>
-          <TableBodyCell>{pmd.publisher.issuing_authority}</TableBodyCell>
-        </TableBodyRow>
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+        </div>
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
+        </div>
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
+        </div>
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+        </div>
       {/if}
-      {#if source.stats}
-        <TableBodyRow>
-          <TableBodyCell>Downloading</TableBodyCell>
-          <TableBodyCell>{source.stats.downloading}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell>Waiting</TableBodyCell>
-          <TableBodyCell>{source.stats.waiting}</TableBodyCell>
-        </TableBodyRow>
-      {/if}
-    </Table>
+    </List>
+    {#if source.stats}
+      <h4 class="mt-3">Statistics</h4>
+      <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Total downloading</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
+        </div>
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Total waiting</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
+        </div>
+      </List>
+    {/if}
     <div class:hidden={!loadingPMD} class:mb-4={true}>
       Loading PMD ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
   </div>
 
-  <div class="flex-auto">
+  <div class="w-full flex-auto">
     <div class:hidden={!loadingSource} class:mb-4={true}>
       Loading source configuration ...
       <Spinner color="gray" size="4"></Spinner>
