@@ -149,23 +149,23 @@
     </AccordionItem>
     <AccordionItem
       ><span slot="header">Advanced options</span>
-      <div class="mb-3 inline-flex w-full gap-2">
-        <div class="grow">
+      <div class="mb-3 grid w-full items-end gap-x-2 gap-y-4 md:grid-cols-3">
+        <div>
           <Label>Age</Label>
           <Input placeholder="17520h" bind:value={source.age}></Input>
         </div>
-        <div class="grow">
+        <div>
           <Label>Rate</Label>
           <Input bind:value={source.rate}></Input>
         </div>
-        <div class="grow">
+        <div>
           <Label>Slots</Label>
           <Input bind:value={source.slots}></Input>
         </div>
       </div>
 
       <Label>Options</Label>
-      <div class="mb-3 inline-flex w-full gap-4">
+      <div class="mb-3 flex w-full gap-4">
         <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
         <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
         <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
@@ -194,30 +194,47 @@
       {/each}
 
       <Label>HTTP headers</Label>
-      <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
-        {#each headers as header, index (index)}
-          <Label>
+      {#each headers as header, index (index)}
+        <div
+          class="mb-3 grid w-full grid-cols-[1fr_auto] items-end gap-x-3 sm:grid-cols-[1fr_1fr_auto] sm:gap-0"
+        >
+          <Label class="order-1 col-span-2 sm:col-span-1">
             <span class="text-gray-500">Key</span>
-            <Input on:input={onChangedHeaders} bind:value={header[0]} />
           </Label>
-          <Label>
+          <Input
+            class="order-2 col-span-2 mb-3 sm:order-3 sm:col-span-1 sm:mb-0 sm:rounded-none sm:rounded-l-lg"
+            on:input={onChangedHeaders}
+            bind:value={header[0]}
+          />
+          <Label class="order-3 col-span-2 sm:order-2">
             <span class="text-gray-500">Value</span>
-            <Input on:input={onChangedHeaders} bind:value={header[1]} />
           </Label>
+          <Input
+            class="order-4 sm:rounded-none sm:border-l-0"
+            on:input={onChangedHeaders}
+            bind:value={header[1]}
+          />
           {#if headers.length > 1}
             <Button
               on:click={() => removeHeader(index)}
               title="Remove key-value-pair"
-              class="mb-3 w-fit p-1"
+              class="order-5 h-full w-fit p-1 sm:rounded-none sm:rounded-r-lg sm:border-l-0"
               color="light"
             >
               <i class="bx bx-x"></i>
             </Button>
           {:else}
-            <div></div>
+            <Button
+              title="Remove key-value-pair"
+              class="order-5 h-full w-fit p-1 sm:rounded-none sm:rounded-r-lg sm:border-l-0"
+              color="light"
+              disabled={true}
+            >
+              <i class="bx bx-x"></i>
+            </Button>
           {/if}
-        {/each}
-      </div>
+        </div>
+      {/each}
     </AccordionItem>
   </Accordion>
   <Label>Name</Label>
