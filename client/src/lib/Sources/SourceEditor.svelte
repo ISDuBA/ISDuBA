@@ -89,7 +89,7 @@
       return;
     }
     loadingFeeds = true;
-    let result = await fetchFeeds(source.id);
+    let result = await fetchFeeds(source.id, true);
     if (result.ok) {
       feeds = result.value;
       feeds.map((f) => {

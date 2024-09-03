@@ -10,17 +10,14 @@
 
 <script lang="ts">
   import { type Feed, logLevels } from "$lib/Sources/source";
-  import { Checkbox, Select, Input, TableBodyCell, Button } from "flowbite-svelte";
+  import { Checkbox, Select, Input, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
 
   export let feeds: Feed[] = [];
   export let edit: boolean = false;
-</script>
 
-<CustomTable
-  title="Feeds"
-  headers={[
+  let headers = [
     {
       label: "Active",
       attribute: "enable"
@@ -37,8 +34,16 @@
       label: "Label",
       attribute: "label"
     }
-  ]}
->
+  ];
+
+  let headersEdit = [
+    ...headers,
+    { label: "Downloading", attribute: "downloading" },
+    { label: "Waiting", attribute: "waiting" }
+  ];
+</script>
+
+<CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
   {#each feeds as feed, index (index)}
     <tr>
       <TableBodyCell {tdClass}><Checkbox bind:checked={feed.enable}></Checkbox></TableBodyCell>
@@ -48,30 +53,8 @@
       >
       <TableBodyCell {tdClass}><Input bind:value={feed.label}></Input></TableBodyCell>
       {#if edit}
-        <td>
-          <Button
-            on:click={() => {
-              console.log("TODO");
-            }}
-            title={`Edit feed "${feed.label}"`}
-            class="border-0 p-2"
-            color="light"
-          >
-            <i class="bx bx-edit text-xl"></i>
-          </Button>
-        </td>
-        <td>
-          <Button
-            on:click={(event) => {
-              console.log(event);
-            }}
-            title={`Delete feed "${feed.label}"`}
-            class="border-0 p-2"
-            color="light"
-          >
-            <i class="bx bx-trash text-xl text-red-500"></i>
-          </Button>
-        </td>
+        <TableBodyCell {tdClass}>{feed.stats?.downloading}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.stats?.waiting}</TableBodyCell>
       {/if}
     </tr>
   {/each}

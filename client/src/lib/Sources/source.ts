@@ -48,6 +48,10 @@ type Feed = {
   rolie: boolean;
   log_level: LogLevel;
   edit?: boolean;
+  stats?: {
+    downloading: number;
+    waiting: number;
+  };
 };
 
 const logLevels = [
@@ -269,8 +273,11 @@ const fetchSources = async (
   };
 };
 
-const fetchFeeds = async (id: number): Promise<Result<Feed[], ErrorDetails>> => {
-  const resp = await request(`/api/sources/${id}/feeds`, "GET");
+const fetchFeeds = async (
+  id: number,
+  showStats: boolean = false
+): Promise<Result<Feed[], ErrorDetails>> => {
+  const resp = await request(`/api/sources/${id}/feeds?stats=${showStats}`, "GET");
   if (resp.ok) {
     if (resp.content.feeds) {
       return {
