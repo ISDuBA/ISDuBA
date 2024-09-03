@@ -10,11 +10,12 @@
 
 <script lang="ts">
   import { type Feed, logLevels } from "$lib/Sources/source";
-  import { Checkbox, Select, Input, TableBodyCell } from "flowbite-svelte";
+  import { Checkbox, Select, Input, TableBodyCell, Button } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
 
   export let feeds: Feed[] = [];
+  export let edit: boolean = false;
 </script>
 
 <CustomTable
@@ -46,6 +47,32 @@
         ><Select items={logLevels} bind:value={feed.log_level} /></TableBodyCell
       >
       <TableBodyCell {tdClass}><Input bind:value={feed.label}></Input></TableBodyCell>
+      {#if edit}
+        <td>
+          <Button
+            on:click={() => {
+              console.log("TODO");
+            }}
+            title={`Edit feed "${feed.label}"`}
+            class="border-0 p-2"
+            color="light"
+          >
+            <i class="bx bx-edit text-xl"></i>
+          </Button>
+        </td>
+        <td>
+          <Button
+            on:click={(event) => {
+              console.log(event);
+            }}
+            title={`Delete feed "${feed.label}"`}
+            class="border-0 p-2"
+            color="light"
+          >
+            <i class="bx bx-trash text-xl text-red-500"></i>
+          </Button>
+        </td>
+      {/if}
     </tr>
   {/each}
 </CustomTable>

@@ -15,24 +15,11 @@
     fetchPMD,
     fetchSource,
     saveSource,
-    deleteFeed,
     fetchFeeds,
-    logLevels,
-    calculateMissingFeeds
+    calculateMissingFeeds,
+    parseFeeds
   } from "$lib/Sources/source";
-  import {
-    Input,
-    Label,
-    Button,
-    TableBodyCell,
-    Spinner,
-    Modal,
-    Select,
-    Table,
-    TableBodyRow
-  } from "flowbite-svelte";
-  import { tdClass } from "$lib/Table/defaults";
-  import CustomTable from "$lib/Table/CustomTable.svelte";
+  import { Button, TableBodyCell, Spinner, Modal, Table, TableBodyRow } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
@@ -40,7 +27,6 @@
   import { onMount } from "svelte";
   import SourceForm from "./SourceForm.svelte";
   import FeedView from "./FeedView.svelte";
-  import { push } from "svelte-spa-router";
   export let params: any = null;
 
   let modalOpen: boolean = false;
@@ -54,11 +40,7 @@
   let loadPmdError: ErrorDetails | null;
   let feedError: ErrorDetails | null;
   let pmd: CSAFProviderMetadata;
-  let pmdFeeds: Feed[] = [];
-  let missingFeeds: Feed[] = [];
   let feeds: Feed[] = [];
-
-  let feedEdit: Feed | null;
 
   let loadingFeeds: boolean = false;
   let loadingSource: boolean = false;
@@ -110,6 +92,9 @@
     let result = await fetchFeeds(source.id);
     if (result.ok) {
       feeds = result.value;
+      feeds.map((f) => {
+        f.enable = true;
+      });
     } else {
       loadFeedError = result.error;
     }
@@ -131,7 +116,11 @@
       await loadSourceInfo(Number(id));
       await loadPMD();
       await loadFeeds();
-      missingFeeds = calculateMissingFeeds(pmdFeeds, feeds);
+      let missingFeeds = calculateMissingFeeds(parseFeeds(pmd), feeds);
+      missingFeeds.map((f) => {
+        f.enable = false;
+      });
+      feeds.push(...missingFeeds);
 
       updateSourceForm = sourceForm.updateSource;
     }
@@ -213,162 +202,13 @@
     </Button>
   </div>
 </div>
-<div class="flex">
-  <div class="w-1/2 flex-auto">
-    <CustomTable
-      title="Feeds"
-      headers={[
-        {
-          label: "Label",
-          attribute: "label"
-        },
-        {
-          label: "Domain/PMD",
-          attribute: "url"
-        },
-        {
-          label: "Rolie",
-          attribute: "rolie"
-        },
-        {
-          label: "Log level",
-          attribute: "log_level"
-        }
-      ]}
-    >
-      {#each feeds as feed, index (index)}
-        <tr
-          on:click={() => {
-            if (feed.id) {
-              push(`/sources/feed/${feed.id}`);
-            }
-          }}
-          class="cursor-pointer"
-        >
-          <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-          <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
-          <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
-          <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
-          <td>
-            <Button
-              on:click={() => {
-                feedEdit = feed;
-              }}
-              title={`Edit feed "${feed.label}"`}
-              class="border-0 p-2"
-              color="light"
-            >
-              <i class="bx bx-edit text-xl"></i>
-            </Button>
-          </td>
-          <td>
-            <Button
-              on:click={(event) => {
-                event.stopPropagation();
-                modalCallback = async () => {
-                  if (feed.id) {
-                    await deleteFeed(feed.id);
-                  }
-                };
-                modalMessage = "Are you sure you want to delete this feed?";
-                modalTitle = `Feed ${feed.label}`;
-                modalOpen = true;
-              }}
-              title={`Delete feed "${feed.label}"`}
-              class="border-0 p-2"
-              color="light"
-            >
-              <i class="bx bx-trash text-xl text-red-500"></i>
-            </Button>
-          </td>
-        </tr>
-      {/each}
-      <div slot="bottom">
-        <div class:hidden={!loadingFeeds} class:mb-4={true}>
-          Loading ...
-          <Spinner color="gray" size="4"></Spinner>
-        </div>
-        <ErrorMessage error={feedError}></ErrorMessage>
-      </div>
-    </CustomTable>
-  </div>
 
-  <div class="w-1/2 flex-auto">
-    <CustomTable
-      title="Missing feeds"
-      headers={[
-        {
-          label: "Label",
-          attribute: "label"
-        },
-        {
-          label: "Domain/PMD",
-          attribute: "url"
-        },
-        {
-          label: "Rolie",
-          attribute: "rolie"
-        },
-        {
-          label: "Log level",
-          attribute: "log_level"
-        }
-      ]}
-    >
-      {#each missingFeeds as feed, index (index)}
-        <tr
-          class="cursor-pointer"
-          on:click={() => {
-            feedEdit = feed;
-          }}
-        >
-          <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-          <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
-          <TableBodyCell {tdClass}>{feed.rolie}</TableBodyCell>
-          <TableBodyCell {tdClass}>{feed.log_level}</TableBodyCell>
-        </tr>
-      {/each}
-      <div slot="bottom">
-        <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
-          Loading ...
-          <Spinner color="gray" size="4"></Spinner>
-        </div>
-        <ErrorMessage error={feedError}></ErrorMessage>
-      </div>
-    </CustomTable>
-  </div>
+<FeedView {feeds} edit={true}></FeedView>
+<div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
+  Loading ...
+  <Spinner color="gray" size="4"></Spinner>
 </div>
-<!-- TODO: Move into feed viewer -->
-{#if feedEdit}
-  <SectionHeader title={feedEdit.enable ? "New feed" : "Edit feed"}>
-    <div slot="right">
-      <slot name="header-right"></slot>
-    </div>
-  </SectionHeader>
-  <form
-    on:submit={async () => {
-      if (feedEdit) {
-        feedEdit.enable = true;
-        feedEdit = null;
-      }
-    }}
-    class={formClass}
-  >
-    <Label>URL</Label>
-    <Input readonly bind:value={feedEdit.url}></Input>
-    <Label>Log level</Label>
-    <Select items={logLevels} bind:value={feedEdit.log_level} />
-    <Label>Label</Label>
-    <Input bind:value={feedEdit.label}></Input>
-    <br />
-    <Button type="submit" color="light">
-      <i class="bx bxs-save me-2"></i>
-      <span>Save feed</span>
-    </Button>
-  </form>{/if}
-<br />
-
-<FeedView feeds={pmdFeeds}></FeedView>
+<ErrorMessage error={feedError}></ErrorMessage>
 
 <ErrorMessage error={saveSourceError}></ErrorMessage>
 <ErrorMessage error={loadSourceError}></ErrorMessage>
