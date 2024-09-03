@@ -17,7 +17,8 @@
     saveSource,
     fetchFeeds,
     calculateMissingFeeds,
-    parseFeeds
+    parseFeeds,
+    saveFeeds
   } from "$lib/Sources/source";
   import { Button, TableBodyCell, Spinner, Modal, Table, TableBodyRow } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -37,6 +38,7 @@
   let saveSourceError: ErrorDetails | null;
   let loadSourceError: ErrorDetails | null;
   let loadFeedError: ErrorDetails | null;
+  let saveFeedError: ErrorDetails | null;
   let loadPmdError: ErrorDetails | null;
   let feedError: ErrorDetails | null;
   let pmd: CSAFProviderMetadata;
@@ -110,6 +112,13 @@
     }
   };
 
+  const updateFeed = async (feed: Feed) => {
+    let result = await saveFeeds(source, [feed]);
+    if (!result.ok) {
+      saveFeedError = result.error;
+    }
+  };
+
   onMount(async () => {
     let id = params?.id;
     if (id) {
@@ -121,6 +130,7 @@
         f.enable = false;
       });
       feeds.push(...missingFeeds);
+      feeds = feeds;
 
       updateSourceForm = sourceForm.updateSource;
     }
@@ -203,12 +213,13 @@
   </div>
 </div>
 
-<FeedView {feeds} edit={true}></FeedView>
+<FeedView {feeds} {updateFeed} edit={true}></FeedView>
 <div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>
 <ErrorMessage error={feedError}></ErrorMessage>
+<ErrorMessage error={saveFeedError}></ErrorMessage>
 
 <ErrorMessage error={saveSourceError}></ErrorMessage>
 <ErrorMessage error={loadSourceError}></ErrorMessage>

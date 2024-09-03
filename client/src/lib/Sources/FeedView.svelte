@@ -17,6 +17,8 @@
   export let feeds: Feed[] = [];
   export let edit: boolean = false;
 
+  export let updateFeed = async (_feed: Feed) => {};
+
   let headers = [
     {
       label: "Active",
@@ -46,15 +48,29 @@
 <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
   {#each feeds as feed, index (index)}
     <tr>
-      <TableBodyCell {tdClass}><Checkbox bind:checked={feed.enable}></Checkbox></TableBodyCell>
+      <TableBodyCell {tdClass}
+        ><Checkbox bind:checked={feed.enable} on:input={async () => await updateFeed(feed)}
+        ></Checkbox></TableBodyCell
+      >
       <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
       <TableBodyCell {tdClass}
-        ><Select items={logLevels} bind:value={feed.log_level} /></TableBodyCell
+        ><Select
+          items={logLevels}
+          bind:value={feed.log_level}
+          on:input={async () => await updateFeed(feed)}
+        /></TableBodyCell
       >
-      <TableBodyCell {tdClass}><Input bind:value={feed.label}></Input></TableBodyCell>
+      {#if edit && !feed.enable}
+        <TableBodyCell {tdClass}>N/A</TableBodyCell>
+      {:else}
+        <TableBodyCell {tdClass}
+          ><Input bind:value={feed.label} on:input={async () => await updateFeed(feed)}
+          ></Input></TableBodyCell
+        >
+      {/if}
       {#if edit}
-        <TableBodyCell {tdClass}>{feed.stats?.downloading}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.stats?.waiting}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.stats?.downloading ?? 0}</TableBodyCell>
+        <TableBodyCell {tdClass}>{feed.stats?.waiting ?? 0}</TableBodyCell>
       {/if}
     </tr>
   {/each}
