@@ -48,7 +48,7 @@
 
 <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
   {#each feeds as feed, index (index)}
-    <tr on:click={async () => await clickFeed(feed)}>
+    <tr>
       <TableBodyCell {tdClass}
         ><Checkbox
           bind:checked={feed.enable}
@@ -60,7 +60,9 @@
           }}
         ></Checkbox></TableBodyCell
       >
-      <TableBodyCell {tdClass}>{feed.url}</TableBodyCell>
+      <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}
+        >{feed.url}</TableBodyCell
+      >
       <TableBodyCell {tdClass}
         ><Select
           items={logLevels}

@@ -36,6 +36,7 @@
   import type { HttpResponse } from "$lib/types";
   import DocumentUpload from "$lib/Sources/DocumentUpload.svelte";
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
+  import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
 
   let loadConfigError: ErrorDetails | null;
 
@@ -211,6 +212,11 @@
     }),
     "/sources/new/:domain": wrap({
       component: SourceCreator,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/sources/logs/:id": wrap({
+      component: FeedLogViewer,
       userData: loginRequired,
       conditions: [loginCondition]
     }),

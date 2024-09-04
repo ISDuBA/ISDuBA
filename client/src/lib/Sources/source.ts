@@ -282,6 +282,23 @@ const fetchSources = async (
   };
 };
 
+const fetchFeed = async (
+  id: number,
+  showStats: boolean = false
+): Promise<Result<Feed, ErrorDetails>> => {
+  const resp = await request(`/api/sources/feeds/${id}?stats=${showStats}`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load feed`, resp)
+  };
+};
+
 const fetchFeeds = async (
   id: number,
   showStats: boolean = false
@@ -359,6 +376,7 @@ export {
   parseHeaders,
   parseFeeds,
   deleteFeed,
+  fetchFeed,
   fetchFeeds,
   fetchSources,
   saveFeeds,
