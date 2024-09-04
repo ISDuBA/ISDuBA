@@ -317,6 +317,7 @@
           currentSearch.name = proposeName(result, currentSearch.name);
           if (!isRoleIncluded(appStore.getRoles(), [ADMIN])) {
             currentSearch.global = false;
+            currentSearch.role = undefined;
           }
         }
       } else if (response.error) {
@@ -444,8 +445,6 @@
       {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
         <Label class="mb-1" for="roles">Roles:</Label>
         <Select id="roles" items={roles} bind:value={currentSearch.role}></Select>
-      {:else if currentSearch.role}
-        <Label class="mb-1" for="roles">Role: {currentSearch.role}</Label>
       {/if}
     </div>
     <div class="flex flex-row">

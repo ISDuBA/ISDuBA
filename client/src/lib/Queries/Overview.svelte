@@ -10,7 +10,15 @@
 
 <script lang="ts">
   import { tablePadding, tdClass } from "$lib/Table/defaults";
-  import { Button, Table, TableHead, TableHeadCell, TableBodyCell, Spinner } from "flowbite-svelte";
+  import {
+    Button,
+    Table,
+    TableHead,
+    TableHeadCell,
+    TableBodyCell,
+    Spinner,
+    Checkbox
+  } from "flowbite-svelte";
   import { onMount } from "svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -180,6 +188,9 @@
                 class:bx-caret-down={orderBy == "-description"}
               ></i>
             </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div title={"Show on your personal dashboard"}>Pers. Dashb.</div>
+            </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <tbody bind:this={columnList}>
@@ -199,6 +210,9 @@
                   <span class="columnName">{query.name ?? "-"}</span>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <Checkbox></Checkbox>
+                </TableBodyCell>
                 <td>
                   <button
                     title={`clone ${query.name}`}
@@ -244,6 +258,9 @@
                 class:bx-caret-down={orderBy == "-description"}
               ></i>
             </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div title={"Show on your personal dashboard"}>Pers. Dashb.</div>
+            </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <tbody bind:this={columnListAdmin}>
@@ -269,6 +286,9 @@
                   <span>{query.name ?? "-"}</span>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <Checkbox></Checkbox>
+                </TableBodyCell>
                 <td>
                   <button
                     title={`clone ${query.name}`}
