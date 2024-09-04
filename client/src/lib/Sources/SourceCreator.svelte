@@ -89,15 +89,7 @@
     }
   };
 
-  const checkUrl = async () => {
-    validUrl = null;
-    let result = await fetchPMD(source.url);
-    if (result.ok) {
-      validUrl = true;
-    } else {
-      validUrl = false;
-    }
-  };
+  const checkUrl = async () => {};
 
   const saveAll = async () => {
     updateSourceForm();
