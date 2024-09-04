@@ -67,7 +67,7 @@
         ><Select
           items={logLevels}
           bind:value={feed.log_level}
-          on:input={async () => await updateFeed(feed)}
+          on:change={async () => await updateFeed(feed)}
         /></TableBodyCell
       >
       {#if edit && !feed.enable}

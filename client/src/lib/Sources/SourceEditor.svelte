@@ -116,10 +116,21 @@
     }
   };
 
+  const isDuplicateFeedLabel = (feed: Feed): boolean => {
+    let found = feeds.filter((f) => f.id !== feed.id && f.label === feed.label);
+    return found.length === 0 ? false : true;
+  };
+
   const updateFeed = async (feed: Feed) => {
+    if (isDuplicateFeedLabel(feed) || feed.label.length === 0) {
+      return;
+    }
     let result = await saveFeeds(source, [feed]);
     if (result.ok) {
-      feed.id = result.value[0];
+      let id = result.value[0];
+      if (id) {
+        feed.id = id;
+      }
     } else {
       saveFeedError = result.error;
     }
