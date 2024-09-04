@@ -53,7 +53,7 @@
   "dependencies": {
     "@types/dompurify": "^3.0.5",
     "boxicons": "^2.1.4",
-    "dompurify": "^3.0.9",
+    "dompurify": "^3.1.6",
     "jwt-decode": "^4.0.0",
     "marked": "^14.0.0",
     "oidc-client-ts": "^3.0.1",
