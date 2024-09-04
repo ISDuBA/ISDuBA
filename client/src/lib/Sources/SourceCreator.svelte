@@ -82,7 +82,7 @@
       } else {
         pmd = result.value;
         source.name = await getSourceName(pmd);
-        pmdFeeds = parseFeeds(pmd);
+        pmdFeeds = parseFeeds(pmd, []);
       }
     } else {
       errorMessage = result.error;

@@ -130,7 +130,7 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   }
 };
 
-const parseFeeds = (pmd: CSAFProviderMetadata): Feed[] => {
+const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => {
   const feeds: Feed[] = [];
 
   const dist = pmd.distributions ?? [];
@@ -154,7 +154,12 @@ const parseFeeds = (pmd: CSAFProviderMetadata): Feed[] => {
       }
     }
     if (entry.directory_url) {
-      const label = entry.directory_url.split("/").pop() ?? "Specify label";
+      const splitUrl = entry.directory_url.split("/");
+      let label = splitUrl.pop() ?? "Default label";
+      // If the url ends with '/'
+      if (label.length === 0) {
+        label = splitUrl.pop() ?? "Default label";
+      }
       feeds.push({
         url: entry.directory_url,
         label: label,
@@ -162,6 +167,13 @@ const parseFeeds = (pmd: CSAFProviderMetadata): Feed[] => {
         rolie: false,
         enable: true
       });
+    }
+    const existingLabels = new Set(currentFeeds.map((f) => f.label));
+    for (const feed of feeds) {
+      while (existingLabels.has(feed.label)) {
+        feed.label += "#";
+      }
+      existingLabels.add(feed.label);
     }
   }
 
