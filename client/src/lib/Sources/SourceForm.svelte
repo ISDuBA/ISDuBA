@@ -20,9 +20,12 @@
     Label
   } from "flowbite-svelte";
   export let formClass: string = "";
-  export let formSubmit = async () => {};
   export let source: Source;
   export let enableActive: boolean = false;
+  export const updateSource = async () => {
+    formatHeaders();
+    await loadCerts();
+  };
 
   let headers: [string, string][] = [["", ""]];
   let privateCert: FileList | undefined;
@@ -94,88 +97,146 @@
   };
 </script>
 
-<form
-  class={formClass}
-  on:submit={async () => {
-    await loadCerts();
-    formatHeaders();
-    await formSubmit();
-  }}
->
+<form class={formClass}>
   <Label>Name</Label>
-  <Input bind:value={source.name}></Input>
+  <Input class="mb-3" bind:value={source.name}></Input>
   {#if enableActive}
-    <Checkbox bind:checked={source.active}>Active</Checkbox>
+    <Checkbox class="mb-3" bind:checked={source.active}>Active</Checkbox>
   {/if}
   <Accordion>
     <AccordionItem
+      ><span slot="header">Credentials</span>
+      <Label>Private cert</Label>
+      <div class="mb-3 inline-flex w-full">
+        <Fileupload class="rounded-none rounded-l-lg" bind:files={privateCert}></Fileupload>
+        <Button
+          on:click={() => {
+            source.client_cert_private = null;
+          }}
+          title="Remove private cert"
+          class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
+          color="light"
+        >
+          <i class="bx bx-x"></i>
+        </Button>
+      </div>
+      <Label>Public cert</Label>
+      <div class="mb-3 inline-flex w-full">
+        <Fileupload class="rounded-none rounded-l-lg" bind:files={publicCert}></Fileupload>
+        <Button
+          on:click={() => {
+            source.client_cert_public = null;
+          }}
+          title="Remove public cert"
+          class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
+          color="light"
+        >
+          <i class="bx bx-x"></i>
+        </Button>
+      </div>
+      <Label>Client cert passphrase</Label>
+      <div class="mb-3 inline-flex w-full">
+        <Input class="rounded-none rounded-l-lg" bind:value={source.client_cert_passphrase} />
+        <Button
+          on:click={() => {
+            source.client_cert_passphrase = null;
+          }}
+          title="Remove passphrase"
+          class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
+          color="light"
+        >
+          <i class="bx bx-x"></i>
+        </Button>
+      </div>
+    </AccordionItem>
+    <AccordionItem
       ><span slot="header">Advanced options</span>
-      <Label>Rate</Label>
-      <Input bind:value={source.rate}></Input>
-      <Label>Slots</Label>
-      <Input bind:value={source.slots}></Input>
+      <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-3">
+        <div>
+          <Label>Age</Label>
+          <Input placeholder="17520h" bind:value={source.age}></Input>
+        </div>
+        <div>
+          <Label>Rate</Label>
+          <Input bind:value={source.rate}></Input>
+        </div>
+        <div>
+          <Label>Slots</Label>
+          <Input bind:value={source.slots}></Input>
+        </div>
+      </div>
+
+      <Label>Options</Label>
+      <div class="mb-3 flex w-full gap-4">
+        <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
+        <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
+        <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
+      </div>
+
+      <Label>Ignore patterns</Label>
+      {#each source.ignore_patterns as pattern, index (index)}
+        <div class="mb-3 inline-flex w-full">
+          <Label class="grow">
+            <Input
+              class="rounded-none rounded-l-lg"
+              on:input={onChangedIgnorePatterns}
+              bind:value={pattern}
+            />
+          </Label>
+          <Button
+            on:click={() => removePattern(index)}
+            title="Remove pattern"
+            class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
+            color="light"
+            disabled={source.ignore_patterns.length <= 1}
+          >
+            <i class="bx bx-x"></i>
+          </Button>
+        </div>
+      {/each}
 
       <Label>HTTP headers</Label>
-      <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-3">
-        {#each headers as header, index (index)}
-          <Label>
+      {#each headers as header, index (index)}
+        <div class="mb-3 grid w-full grid-cols-[1fr_auto] sm:grid-cols-[1fr_1fr_auto]">
+          <Label class="col-span-2 col-start-1 row-start-1 sm:col-span-1">
             <span class="text-gray-500">Key</span>
-            <Input on:change={onChangedHeaders} bind:value={header[0]} />
+            <span class="text-gray-500 sm:collapse">- Value</span>
           </Label>
-          <Label>
+          <Input
+            class="col-span-2 row-start-2 rounded-none rounded-t-lg sm:col-span-1 sm:rounded-l-lg sm:rounded-tr-none"
+            on:input={onChangedHeaders}
+            bind:value={header[0]}
+          />
+          <Label class="collapse col-span-2 col-start-1 row-start-1 sm:visible sm:col-start-2">
             <span class="text-gray-500">Value</span>
-            <Input on:change={onChangedHeaders} bind:value={header[1]} />
           </Label>
+          <Input
+            class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-l-0 sm:border-t"
+            on:input={onChangedHeaders}
+            bind:value={header[1]}
+          />
           {#if headers.length > 1}
             <Button
               on:click={() => removeHeader(index)}
               title="Remove key-value-pair"
-              class="mb-3 w-fit p-1"
+              class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
               color="light"
             >
               <i class="bx bx-x"></i>
             </Button>
           {:else}
-            <div></div>
-          {/if}
-        {/each}
-      </div>
-      <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
-      <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
-      <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
-      <Label>Private cert</Label>
-      <Fileupload bind:files={privateCert}></Fileupload>
-      <Label>Public cert</Label>
-      <Fileupload bind:files={publicCert}></Fileupload>
-      <Label>Client cert passphrase</Label>
-      <Input bind:value={source.client_cert_passphrase} />
-      <Label>Age</Label>
-      <Input placeholder="17520h" bind:value={source.age}></Input>
-      <Label>Ignore patterns</Label>
-      <div class="mb-3 grid items-end gap-x-2 gap-y-4 md:grid-cols-2">
-        {#each source.ignore_patterns as pattern, index (index)}
-          <Label>
-            <Input on:change={onChangedIgnorePatterns} bind:value={pattern} />
-          </Label>
-          {#if source.ignore_patterns.length > 1}
             <Button
-              on:click={() => removePattern(index)}
-              title="Remove pattern"
-              class="mb-3 w-fit p-1"
+              title="Remove key-value-pair"
+              class=" row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
               color="light"
+              disabled={true}
             >
               <i class="bx bx-x"></i>
             </Button>
-          {:else}
-            <div></div>
           {/if}
-        {/each}
-      </div>
+        </div>
+      {/each}
     </AccordionItem>
   </Accordion>
   <br />
-  <Button type="submit" color="light">
-    <i class="bx bxs-save me-2"></i>
-    <span>Save source</span>
-  </Button>
 </form>
