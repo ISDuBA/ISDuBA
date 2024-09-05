@@ -94,7 +94,6 @@ type source struct {
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
 func (f *feed) refresh(m *Manager) error {
-
 	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
 	candidates, err := f.fetchIndex(m)
@@ -152,7 +151,11 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 
 // fetchIndex fetches the content of the feed index.
 func (f *feed) fetchIndex(m *Manager) ([]location, error) {
-	req, err := http.NewRequest(http.MethodGet, f.url.String(), nil)
+	url := f.url.String()
+	if !f.rolie {
+		url += "changes.csv"
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +197,6 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 // removeOlder takes a list of locations and removes the items which are already
 // in the database with a same or newer update time.
 func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, error) {
-
 	var remove [][2]int
 
 	exists := func(idx int) func(pgx.Row) error {
