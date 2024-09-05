@@ -115,6 +115,7 @@
       saveSourceError = result.error;
       return;
     }
+    await loadSourceInfo(source.id ?? 0);
   };
 
   const deleteSource = async () => {
