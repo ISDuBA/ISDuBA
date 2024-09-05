@@ -17,7 +17,8 @@
     Checkbox,
     Fileupload,
     Input,
-    Label
+    Label,
+    NumberInput
   } from "flowbite-svelte";
   export let formClass: string = "";
   export let source: Source;
@@ -182,11 +183,11 @@
         </div>
         <div>
           <Label>Rate</Label>
-          <Input on:input={inputChange} bind:value={source.rate}></Input>
+          <NumberInput placeholder={1} on:input={inputChange} bind:value={source.rate}></NumberInput>
         </div>
         <div>
           <Label>Slots</Label>
-          <Input on:input={inputChange} bind:value={source.slots}></Input>
+          <NumberInput placeholder={2} on:input={inputChange} bind:value={source.slots}></NumberInput>
         </div>
       </div>
 
