@@ -231,14 +231,19 @@
         </div>
       </List>
     {/if}
-    <div class:hidden={!loadingPMD} class:mb-4={true}>
+
+    <div class:invisible={!loadingPMD} class={!loadingPMD ? "loadingFadeIn" : ""} class:mb-4={true}>
       Loading PMD ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
   </div>
 
   <div class="w-full flex-auto">
-    <div class:hidden={!loadingSource} class:mb-4={true}>
+    <div
+      class:invisible={!loadingSource}
+      class={!loadingSource ? "loadingFadeIn" : ""}
+      class:mb-4={true}
+    >
       Loading source configuration ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
@@ -267,7 +272,11 @@
 </div>
 
 <FeedView {feeds} {clickFeed} {updateFeed} edit={true}></FeedView>
-<div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
+<div
+  class:invisible={!loadingFeeds && !loadingPMD}
+  class={!loadingFeeds && !loadingPMD ? "loadingFadeIn" : ""}
+  class:mb-4={true}
+>
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>

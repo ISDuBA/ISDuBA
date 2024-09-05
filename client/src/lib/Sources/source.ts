@@ -348,11 +348,15 @@ const deleteFeed = async (id: number): Promise<Result<null, ErrorDetails>> => {
 const fetchFeedLogs = async (
   id: number,
   offset: number,
-  limit: number
-): Promise<Result<any[], ErrorDetails>> => {
-  const resp = await request(`/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}`, "GET");
+  limit: number,
+  count: boolean = false
+): Promise<Result<[any[], number], ErrorDetails>> => {
+  const resp = await request(
+    `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}`,
+    "GET"
+  );
   if (resp.ok) {
-    return { ok: true, value: resp.content.entries };
+    return { ok: true, value: [resp.content.entries, resp.content.count ?? 0] };
   }
   return { ok: false, error: getErrorDetails(`Could not load feed logs`, resp) };
 };

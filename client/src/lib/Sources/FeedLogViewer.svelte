@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { TableBodyCell, Spinner, Label, Select } from "flowbite-svelte";
+  import { TableBodyCell, Spinner, Label, Select, PaginationItem } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
@@ -29,6 +29,11 @@
 
   let offset = 0;
   let limit = 10;
+  let count = 0;
+  let currentPage = 1;
+  let numberOfPages = 1000;
+
+  $: numberOfPages = Math.ceil(count / limit);
 
   const loadFeed = async (id: number) => {
     let result = await fetchFeed(id);
@@ -39,6 +44,34 @@
     }
   };
 
+  const previous = async () => {
+    if (offset - limit >= 0) {
+      offset = offset - limit > 0 ? offset - limit : 0;
+      currentPage -= 1;
+    }
+    await loadLogs();
+  };
+
+  const next = async () => {
+    if (offset + limit <= count) {
+      offset = offset + limit;
+      currentPage += 1;
+    }
+    await loadLogs();
+  };
+
+  const first = async () => {
+    offset = 0;
+    currentPage = 1;
+    await loadLogs();
+  };
+
+  const last = async () => {
+    offset = (numberOfPages - 1) * limit;
+    currentPage = numberOfPages;
+    await loadLogs();
+  };
+
   const loadLogs = async () => {
     if (!feed) {
       return;
@@ -47,10 +80,10 @@
       return;
     }
     loadingLogs = true;
-    let result = await fetchFeedLogs(feed.id, offset, limit);
+    let result = await fetchFeedLogs(feed.id, offset, limit, true);
     loadingLogs = false;
     if (result.ok) {
-      logs = result.value;
+      [logs, count] = result.value;
     } else {
       loadLogsError = result.error;
     }
@@ -67,22 +100,61 @@
 
 {#if feed}
   <SectionHeader title={feed.label}></SectionHeader>
+
   <Label class="mr-3 text-nowrap">Logs per page</Label>
-  <Select
-    size="sm"
-    id="pagecount"
-    class="mt-2 h-7 w-24 p-1 leading-3"
-    items={[
-      { name: "10", value: 10 },
-      { name: "25", value: 25 },
-      { name: "50", value: 50 },
-      { name: "100", value: 100 }
-    ]}
-    bind:value={limit}
-    on:change={async () => {
-      await loadLogs();
-    }}
-  ></Select>
+
+  <div class="mx-3 flex flex-row">
+    <div>
+      <Select
+        size="sm"
+        id="pagecount"
+        class="mt-2 h-7 w-24 p-1 leading-3"
+        items={[
+          { name: "10", value: 10 },
+          { name: "25", value: 25 },
+          { name: "50", value: 50 },
+          { name: "100", value: 100 }
+        ]}
+        bind:value={limit}
+        on:change={async () => {
+          await loadLogs();
+        }}
+      ></Select>
+    </div>
+    <div class:invisible={currentPage === 1} class:flex={true} class:mr-3={true}>
+      <PaginationItem on:click={first}>
+        <i class="bx bx-arrow-to-left"></i>
+      </PaginationItem>
+      <PaginationItem on:click={previous}>
+        <i class="bx bx-chevrons-left"></i>
+      </PaginationItem>
+    </div>
+
+    <div class="flex items-center">
+      <input
+        class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right`}
+        on:change={() => {
+          if (!parseInt("" + currentPage)) currentPage = 1;
+          currentPage = Math.floor(currentPage);
+          if (currentPage < 1) currentPage = 1;
+          if (currentPage > numberOfPages) currentPage = numberOfPages;
+          offset = (currentPage - 1) * limit;
+          loadLogs();
+        }}
+        bind:value={currentPage}
+      />
+      <span class="ml-2 mr-3 text-nowrap">of {numberOfPages} pages</span>
+    </div>
+    <div class:invisible={currentPage === numberOfPages} class:flex={true}>
+      <PaginationItem on:click={next}>
+        <i class="bx bx-chevrons-right"></i>
+      </PaginationItem>
+      <PaginationItem on:click={last}>
+        <i class="bx bx-arrow-to-right"></i>
+      </PaginationItem>
+    </div>
+  </div>
+
   <CustomTable
     title="Logs"
     headers={[
@@ -108,7 +180,11 @@
       </tr>
     {/each}
     <div slot="bottom">
-      <div class:hidden={!loadingLogs} class:mb-4={true}>
+      <div
+        class:invisible={!loadingLogs}
+        class={loadingLogs ? "loadingFadeIn" : ""}
+        class:mb-4={true}
+      >
         Loading ...
         <Spinner color="gray" size="4"></Spinner>
       </div>
