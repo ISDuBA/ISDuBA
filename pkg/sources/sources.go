@@ -13,6 +13,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -151,11 +152,15 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 
 // fetchIndex fetches the content of the feed index.
 func (f *feed) fetchIndex(m *Manager) ([]location, error) {
-	url := f.url.String()
+	indexURL := f.url.String()
 	if !f.rolie {
-		url += "changes.csv"
+		var err error
+		if indexURL, err = url.JoinPath(indexURL, "changes.csv"); err != nil {
+			return nil, err
+		}
 	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	slog.Debug("fetching index", "url", indexURL, "rolie", f.rolie)
+	req, err := http.NewRequest(http.MethodGet, indexURL, nil)
 	if err != nil {
 		return nil, err
 	}
