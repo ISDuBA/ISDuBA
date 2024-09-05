@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, Spinner, TableBodyCell, Modal } from "flowbite-svelte";
+  import { Button, Spinner, TableBodyCell } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { push } from "svelte-spa-router";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -23,11 +23,6 @@
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
-
-  let modalOpen: boolean = false;
-  let modalMessage = "";
-  let modalTitle = "";
-  let modalCallback: any;
 
   let loadingSources: boolean = false;
 
@@ -54,14 +49,6 @@
     }
   };
 
-  const deleteSource = async (id: number) => {
-    const resp = await request(`/api/sources/${id}`, "DELETE");
-    if (resp.error) {
-      sourcesError = getErrorDetails(`Could not delete source`, resp);
-    }
-    await getSources();
-  };
-
   onMount(() => {
     getSources();
   });
@@ -71,21 +58,6 @@
   <title>Sources</title>
 </svelte:head>
 
-<Modal size="xs" title={modalTitle} bind:open={modalOpen} autoclose outsideclose>
-  <div class="text-center">
-    <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-      {modalMessage}
-    </h3>
-    <Button
-      on:click={() => {
-        modalCallback();
-      }}
-      color="red"
-      class="me-2">Yes, I'm sure</Button
-    >
-    <Button color="alternative">No, cancel</Button>
-  </div>
-</Modal>
 <SectionHeader title="Sources"></SectionHeader>
 {#if appStore.isEditor() || appStore.isSourceManager()}
   <CustomTable
@@ -129,26 +101,6 @@
         <TableBodyCell {tdClass}>{source.active}</TableBodyCell>
         <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
         <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
-        <td>
-          <Button
-            on:click={(event) => {
-              event.stopPropagation();
-              modalCallback = () => {
-                if (source.id) {
-                  deleteSource(source.id);
-                }
-              };
-              modalMessage = "Are you sure you want to delete this source?";
-              modalTitle = `Source ${source.name}`;
-              modalOpen = true;
-            }}
-            title={`Delete source "${source.name}"`}
-            class="border-0 p-2"
-            color="light"
-          >
-            <i class="bx bx-trash text-xl text-red-500"></i>
-          </Button>
-        </td>
       </tr>
     {/each}
     <div slot="bottom">
