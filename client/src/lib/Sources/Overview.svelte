@@ -126,7 +126,9 @@
       >
         <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
         <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
-        <TableBodyCell {tdClass}>{source.active}</TableBodyCell>
+        <TableBodyCell {tdClass}
+          ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+        >
         <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
         <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
         <td>
