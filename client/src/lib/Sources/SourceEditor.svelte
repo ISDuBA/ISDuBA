@@ -22,11 +22,12 @@
   } from "$lib/Sources/source";
   import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { type ErrorDetails } from "$lib/Errors/error";
+  import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { onMount } from "svelte";
   import SourceForm from "./SourceForm.svelte";
+  import { request } from "$lib/request";
   import FeedView from "./FeedView.svelte";
   import { push } from "svelte-spa-router";
   export let params: any = null;
@@ -113,6 +114,15 @@
     if (!result.ok) {
       saveSourceError = result.error;
       return;
+    }
+  };
+
+  const deleteSource = async () => {
+    const resp = await request(`/api/sources/${source.id}`, "DELETE");
+    if (resp.error) {
+      saveSourceError = getErrorDetails(`Could not delete source`, resp);
+    } else {
+      push(`/sources`);
     }
   };
 
@@ -236,6 +246,22 @@
     <Button on:click={updateSource} color="light">
       <i class="bx bxs-save me-2"></i>
       <span>Save source</span>
+    </Button>
+    <Button
+      on:click={(event) => {
+        event.stopPropagation();
+        modalCallback = () => {
+          deleteSource();
+        };
+        modalMessage = "Are you sure you want to delete this source?";
+        modalTitle = `Source ${source.name}`;
+        modalOpen = true;
+      }}
+      title={`Delete source "${source.name}"`}
+      color="light"
+    >
+      <i class="bx bx-trash me-2 text-red-500"></i>
+      <span>Delete source</span>
     </Button>
   </div>
 </div>
