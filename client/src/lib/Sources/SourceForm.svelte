@@ -27,11 +27,13 @@
     await loadCerts();
   };
 
+  export let inputChange = () => {};
+
   let headers: [string, string][] = [["", ""]];
   let privateCert: FileList | undefined;
   let publicCert: FileList | undefined;
 
-  const onChangedHeaders = () => {
+  const onChangedHeaders = (e: Event | undefined) => {
     const lastIndex = headers.length - 1;
     if (
       (headers[lastIndex][0].length > 0 && headers[lastIndex][1].length > 0) ||
@@ -42,12 +44,16 @@
       headers.push(["", ""]);
       headers = headers;
     }
+    if (e) {
+      inputChange();
+    }
   };
 
   const onChangedIgnorePatterns = () => {
     if (source.ignore_patterns.at(-1) !== "") {
       source.ignore_patterns.push("");
     }
+    inputChange();
   };
 
   const removeHeader = (index: number) => {
@@ -57,11 +63,13 @@
         ["", ""]
       ];
     headers = headers.toSpliced(index, 1);
+    inputChange();
   };
 
   const removePattern = (index: number) => {
     if (source.ignore_patterns.length === 1) source.ignore_patterns = [""];
     source.ignore_patterns = source.ignore_patterns.toSpliced(index, 1);
+    inputChange();
   };
 
   $: if (source.headers) {
@@ -77,7 +85,7 @@
     if (headers.length === 0) {
       headers.push(["", ""]);
     }
-    onChangedHeaders();
+    onChangedHeaders(undefined);
   };
 
   const formatHeaders = () => {
@@ -99,19 +107,25 @@
 
 <form class={formClass}>
   <Label>Name</Label>
-  <Input class="mb-3" bind:value={source.name}></Input>
+  <Input class="mb-3" on:input={inputChange} bind:value={source.name}></Input>
   {#if enableActive}
-    <Checkbox class="mb-3" bind:checked={source.active}>Active</Checkbox>
+    <Checkbox class="mb-3" on:change={inputChange} bind:checked={source.active}>Active</Checkbox>
   {/if}
   <Accordion>
     <AccordionItem
       ><span slot="header">Credentials</span>
       <Label>Private cert</Label>
       <div class="mb-3 inline-flex w-full">
-        <Fileupload class="rounded-none rounded-l-lg" bind:files={privateCert}></Fileupload>
+        <Fileupload
+          class="rounded-none rounded-l-lg"
+          on:change={inputChange}
+          bind:files={privateCert}
+        ></Fileupload>
         <Button
           on:click={() => {
             source.client_cert_private = null;
+            privateCert = undefined;
+            inputChange();
           }}
           title="Remove private cert"
           class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
@@ -122,10 +136,16 @@
       </div>
       <Label>Public cert</Label>
       <div class="mb-3 inline-flex w-full">
-        <Fileupload class="rounded-none rounded-l-lg" bind:files={publicCert}></Fileupload>
+        <Fileupload
+          class="rounded-none rounded-l-lg"
+          on:change={inputChange}
+          bind:files={publicCert}
+        ></Fileupload>
         <Button
           on:click={() => {
             source.client_cert_public = null;
+            publicCert = undefined;
+            inputChange();
           }}
           title="Remove public cert"
           class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
@@ -136,7 +156,11 @@
       </div>
       <Label>Client cert passphrase</Label>
       <div class="mb-3 inline-flex w-full">
-        <Input class="rounded-none rounded-l-lg" bind:value={source.client_cert_passphrase} />
+        <Input
+          class="rounded-none rounded-l-lg"
+          on:input={inputChange}
+          bind:value={source.client_cert_passphrase}
+        />
         <Button
           on:click={() => {
             source.client_cert_passphrase = null;
@@ -154,23 +178,25 @@
       <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-3">
         <div>
           <Label>Age</Label>
-          <Input placeholder="17520h" bind:value={source.age}></Input>
+          <Input placeholder="17520h" on:input={inputChange} bind:value={source.age}></Input>
         </div>
         <div>
           <Label>Rate</Label>
-          <Input bind:value={source.rate}></Input>
+          <Input on:input={inputChange} bind:value={source.rate}></Input>
         </div>
         <div>
           <Label>Slots</Label>
-          <Input bind:value={source.slots}></Input>
+          <Input on:input={inputChange} bind:value={source.slots}></Input>
         </div>
       </div>
 
       <Label>Options</Label>
       <div class="mb-3 flex w-full gap-4">
-        <Checkbox bind:checked={source.strict_mode}>Strict mode</Checkbox>
-        <Checkbox bind:checked={source.insecure}>Insecure</Checkbox>
-        <Checkbox bind:checked={source.signature_check}>Signature check</Checkbox>
+        <Checkbox on:change={inputChange} bind:checked={source.strict_mode}>Strict mode</Checkbox>
+        <Checkbox on:change={inputChange} bind:checked={source.insecure}>Insecure</Checkbox>
+        <Checkbox on:change={inputChange} bind:checked={source.signature_check}
+          >Signature check</Checkbox
+        >
       </div>
 
       <Label>Ignore patterns</Label>
