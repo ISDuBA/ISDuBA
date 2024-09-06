@@ -651,7 +651,6 @@ func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 		`usr,` +
 		`id ` +
 		`FROM default_query_exclusion WHERE usr = $1 `
-
 	var ignored []int
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -718,8 +717,8 @@ func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			return conn.QueryRow(rctx, insertSQL,
-			usr,
-			queryID,
+				usr,
+				queryID,
 			).Scan(&insertedUser, &insertedID)
 		}, 0,
 	); err != nil {
