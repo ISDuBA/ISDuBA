@@ -654,7 +654,7 @@ func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, selectSQL, usr).Scan(
+			return conn.QueryRow(rctx, selectSQL, user).Scan(
 				&ignored,
 			)
 		}, 0,
@@ -684,7 +684,7 @@ func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			// Admins are allowed to delete globals.
 			var err error
-			tag, err = conn.Exec(rctx, deleteSQL, usr)
+			tag, err = conn.Exec(rctx, deleteSQL, user)
 			return err
 		}, 0,
 	); err != nil {
@@ -715,7 +715,7 @@ func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			return conn.QueryRow(rctx, insertSQL,
-				usr,
+				user,
 				queryID,
 			).Scan(&insertedUser, &insertedID)
 		}, 0,
@@ -731,7 +731,7 @@ func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, gin.H{
-		"usr": insertedUser,
+		"user": insertedUser,
 		"id":  insertedID,
 	})
 }
