@@ -32,6 +32,8 @@
   import { push } from "svelte-spa-router";
   export let params: any = null;
 
+  let sourceEdited: boolean = false;
+
   let modalOpen: boolean = false;
   let modalMessage = "";
   let modalTitle = "";
@@ -74,6 +76,7 @@
     let result = await fetchSource(Number(id), true);
     if (result.ok) {
       source = result.value;
+      sourceEdited = false;
     } else {
       loadSourceError = result.error;
     }
@@ -115,6 +118,7 @@
       saveSourceError = result.error;
       return;
     }
+    await loadSourceInfo(source.id ?? 0);
   };
 
   const deleteSource = async () => {
@@ -144,6 +148,10 @@
     } else {
       saveFeedError = result.error;
     }
+  };
+
+  const inputChange = () => {
+    sourceEdited = true;
   };
 
   const clickFeed = async (feed: Feed) => {
@@ -242,8 +250,9 @@
       Loading source configuration ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
-    <SourceForm bind:this={sourceForm} {source} {formClass} enableActive={true}></SourceForm>
-    <Button on:click={updateSource} color="light">
+    <SourceForm bind:this={sourceForm} {inputChange} {source} {formClass} enableActive={true}
+    ></SourceForm>
+    <Button disabled={!sourceEdited} on:click={updateSource} color="light">
       <i class="bx bxs-save me-2"></i>
       <span>Save source</span>
     </Button>
