@@ -16,7 +16,7 @@ ALTER TABLE stored_queries
 
 CREATE TABLE default_query_exclusion (
     "user" text   NOT NULL,
-    id  int  NOT NULL REFERENCES stored_queries(id) ON DELETE CASCADE
+    id  int  NOT NULL REFERENCES stored_queries(id) ON DELETE CASCADE,
     UNIQUE ("user", id)
 );
 
