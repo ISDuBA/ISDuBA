@@ -676,7 +676,6 @@ func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 	// For which user do we want to delete the ignored default queries?
 	usr := c.currentUser(ctx).String
 
-
 	var deleteSQL = `DELETE FROM default_query_exclusion WHERE usr = $1 `
 
 	var tag pgconn.CommandTag
