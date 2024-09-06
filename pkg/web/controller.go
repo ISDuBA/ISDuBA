@@ -118,6 +118,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/queries/:query", authAll, c.fetchStoredQuery)
 	api.PUT("/queries/:query", authAll, c.updateStoredQuery)
 	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
+	api.GET("/queries/:ignore", authAll, c.getDefaultQueryExclusion)
+	api.POST("/queries/:ignore", authAll, c.insertDefaultQueryExclusion)
+	api.DELETE("/queries/:ignore", authAll, c.deleteDefaultQueryExclusion)
 
 	// Events
 	api.GET("/events", authEdReAu, c.overviewEvents)

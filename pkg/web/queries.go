@@ -641,3 +641,100 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "changed"})
 	}
 }
+
+func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
+
+	// For which user do we want to get the ignored default queries?
+	usr := c.currentUser(ctx).String
+
+	const selectSQL = `SELECT ` +
+		`usr,` +
+		`id ` +
+		`FROM default_query_exclusion WHERE usr = $1 `
+
+	var ignored []int
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, selectSQL, usr).Scan(
+				&ignored,
+			)
+		}, 0,
+	); err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		default:
+			slog.Error("database error", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	ctx.JSON(http.StatusOK, &ignored)
+}
+
+func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
+	// For which user do we want to delete the ignored default queries?
+	usr := c.currentUser(ctx).String
+
+
+	var deleteSQL = `DELETE FROM default_query_exclusion WHERE usr = $1 `
+
+	var tag pgconn.CommandTag
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			// Admins are allowed to delete globals.
+			var err error
+			tag, err = conn.Exec(rctx, deleteSQL, usr)
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if tag.RowsAffected() != 0 {
+		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "entry not found"})
+	}
+}
+
+func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
+	queryID, ok := parse(ctx, toInt64, ctx.Param("queries"))
+	if !ok {
+		return
+	}
+	usr := c.currentUser(ctx).String
+	var insertSQL = `INSERT INTO default_query_exclusion VALUES ($1, $2)`
+
+	var insertedUser string
+	var insertedID []int
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, insertSQL,
+			usr,
+			queryID,
+			).Scan(&insertedUser, &insertedID)
+		}, 0,
+	); err != nil {
+		var pgErr *pgconn.PgError
+		// Unique constraint violation
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+			return
+		}
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusCreated, gin.H{
+		"usr": insertedUser,
+		"id":  insertedID,
+	})
+}

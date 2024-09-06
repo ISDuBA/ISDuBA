@@ -13,3 +13,10 @@ CREATE TYPE stored_queries_roles AS ENUM (
 ALTER TABLE stored_queries
     ADD COLUMN dashboard bool NOT NULL DEFAULT FALSE,
     ADD COLUMN role stored_queries_roles;
+
+CREATE TABLE default_query_exclusion (
+    usr text   NOT NULL,
+    id  int[]  NOT NULL
+);
+
+GRANT INSERT, DELETE, SELECT, UPDATE ON default_query_exclusion TO {{ .User | sanitize }};
