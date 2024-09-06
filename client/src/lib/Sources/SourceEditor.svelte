@@ -69,6 +69,8 @@
     ignore_patterns: [""]
   };
 
+  let oldSource = structuredClone(source);
+
   const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
   const ddClass: string = "break-words font-semibold ml-2 mb-1";
 
@@ -80,6 +82,8 @@
       if (fillAgeDataFromSource) {
         fillAgeDataFromSource(source);
       }
+      await updateSourceForm();
+      oldSource = structuredClone(source);
       sourceEdited = false;
     } else {
       loadSourceError = result.error;
@@ -154,8 +158,29 @@
     }
   };
 
-  const inputChange = () => {
-    sourceEdited = true;
+  const sourceEqual = (a: Source, b: Source) => {
+    let tmpA = structuredClone(a);
+    let tmpB = structuredClone(b);
+
+    tmpA.stats = undefined;
+    tmpB.stats = undefined;
+
+    if (!tmpA.headers) {
+      tmpA.headers = [];
+    }
+    if (!tmpB.headers) {
+      tmpB.headers = [];
+    }
+    return JSON.stringify(tmpA) === JSON.stringify(tmpB);
+  };
+
+  const inputChange = async () => {
+    await updateSourceForm();
+    if (sourceEqual(oldSource, source)) {
+      sourceEdited = false;
+    } else {
+      sourceEdited = true;
+    }
   };
 
   const clickFeed = async (feed: Feed) => {
@@ -166,6 +191,8 @@
   };
 
   onMount(async () => {
+    updateSourceForm = sourceForm.updateSource;
+    fillAgeDataFromSource = sourceForm.fillAgeDataFromSource;
     let id = params?.id;
     if (id) {
       await loadSourceInfo(Number(id));
@@ -177,9 +204,6 @@
       });
       feeds.push(...missingFeeds);
       feeds = feeds;
-
-      updateSourceForm = sourceForm.updateSource;
-      fillAgeDataFromSource = sourceForm.fillAgeDataFromSource;
       fillAgeDataFromSource(source);
     }
   });
