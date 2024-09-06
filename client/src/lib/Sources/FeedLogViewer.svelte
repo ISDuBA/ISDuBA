@@ -117,6 +117,8 @@
         ]}
         bind:value={limit}
         on:change={async () => {
+          offset = 0;
+          currentPage = 1;
           await loadLogs();
         }}
       ></Select>

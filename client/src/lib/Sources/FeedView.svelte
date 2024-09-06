@@ -60,9 +60,14 @@
           }}
         ></Checkbox></TableBodyCell
       >
-      <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}
-        >{feed.url}</TableBodyCell
-      >
+      <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+        {#if edit}
+          <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>{feed.url}</a
+          >
+        {:else}
+          {feed.url}
+        {/if}
+      </TableBodyCell>
       <TableBodyCell {tdClass}
         ><Select
           items={logLevels}
