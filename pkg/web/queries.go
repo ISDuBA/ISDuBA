@@ -732,6 +732,6 @@ func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusCreated, gin.H{
 		"user": insertedUser,
-		"id":  insertedID,
+		"id":   insertedID,
 	})
 }
