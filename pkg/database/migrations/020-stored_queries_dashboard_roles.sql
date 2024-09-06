@@ -15,8 +15,9 @@ ALTER TABLE stored_queries
     ADD COLUMN role stored_queries_roles;
 
 CREATE TABLE default_query_exclusion (
-    usr text   NOT NULL,
-    id  int[]  NOT NULL
+    "user" text   NOT NULL,
+    id  int  NOT NULL REFERENCES stored_queries(id) ON DELETE CASCADE
+    UNIQUE ("user", id)
 );
 
 GRANT INSERT, DELETE, SELECT, UPDATE ON default_query_exclusion TO {{ .User | sanitize }};

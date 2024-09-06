@@ -645,12 +645,11 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 
 	// For which user do we want to get the ignored default queries?
-	usr := c.currentUser(ctx).String
+	user := c.currentUser(ctx).String
 
 	const selectSQL = `SELECT ` +
-		`usr,` +
 		`id ` +
-		`FROM default_query_exclusion WHERE usr = $1 `
+		`FROM default_query_exclusion WHERE user = $1 `
 	var ignored []int
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -674,9 +673,9 @@ func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 
 func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 	// For which user do we want to delete the ignored default queries?
-	usr := c.currentUser(ctx).String
+	user := c.currentUser(ctx).String
 
-	var deleteSQL = `DELETE FROM default_query_exclusion WHERE usr = $1 `
+	var deleteSQL = `DELETE FROM default_query_exclusion WHERE "user" = $1 `
 
 	var tag pgconn.CommandTag
 
@@ -702,11 +701,11 @@ func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 }
 
 func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
-	queryID, ok := parse(ctx, toInt64, ctx.Param("queries"))
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
 		return
 	}
-	usr := c.currentUser(ctx).String
+	user := c.currentUser(ctx).String
 	var insertSQL = `INSERT INTO default_query_exclusion VALUES ($1, $2)`
 
 	var insertedUser string
