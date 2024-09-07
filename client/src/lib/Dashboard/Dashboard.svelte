@@ -19,6 +19,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
   let filteredQueries: any[] = [];
+  let loadIgnoredError: ErrorDetails | null;
 
   $: advisoryQueries = filteredQueries.filter((query: any) =>
     [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)
@@ -39,20 +40,34 @@
     return [];
   };
 
+  const fetchIgnored = async () => {
+    loadIgnoredError = null;
+    const response = await request(`/api/queries/ignore`, "GET");
+    if (response.ok) {
+      return response.content;
+    } else if (response.error) {
+      loadIgnoredError = getErrorDetails(`Could not load queries.`, response);
+      return undefined;
+    }
+  };
+
   onMount(async () => {
     const allQueries = await fetchStoredQueries();
+    const ignoredQueries = await fetchIgnored();
     const userDashboardQueries = allQueries.filter(
       (query) =>
         query.dashboard &&
         query.definer === $appStore.app.tokenParsed?.preferred_username &&
-        !query.global
+        !query.global &&
+        (!ignoredQueries || !ignoredQueries.includes(query.id))
     );
     const globalDashboardQueries = allQueries.filter(
       (query) =>
         query.dashboard &&
         query.global &&
-        appStore.getRoles().includes(query.role) &&
-        !userDashboardQueries.find((q) => q.id === query.id)
+        (appStore.getRoles().includes(query.role) || !query.role) &&
+        !userDashboardQueries.find((q) => q.id === query.id) &&
+        (!ignoredQueries || !ignoredQueries.includes(query.id))
     );
     filteredQueries = [...userDashboardQueries, ...globalDashboardQueries];
   });
@@ -72,4 +87,5 @@
     {/each}
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
+  <ErrorMessage error={loadIgnoredError}></ErrorMessage>
 {/if}
