@@ -649,14 +649,21 @@ func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 
 	const selectSQL = `SELECT ` +
 		`id ` +
-		`FROM default_query_exclusion WHERE user = $1 `
+		`FROM default_query_exclusion WHERE "user" = $1`
 	var ignored []int
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, selectSQL, user).Scan(
-				&ignored,
-			)
+			rows, _ := conn.Query(rctx, selectSQL, user)
+			var err error
+			ignored, err = pgx.CollectRows(
+				rows,
+				func(row pgx.CollectableRow) (int, error) {
+					var id int
+					err := row.Scan(&id)
+					return id, err
+				})
+			return err
 		}, 0,
 	); err != nil {
 		switch {
@@ -672,10 +679,15 @@ func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
+		return
+	}
+
 	// For which user do we want to delete the ignored default queries?
 	user := c.currentUser(ctx).String
 
-	var deleteSQL = `DELETE FROM default_query_exclusion WHERE "user" = $1 `
+	var deleteSQL = `DELETE FROM default_query_exclusion WHERE "user" = $1 AND id = $2`
 
 	var tag pgconn.CommandTag
 
@@ -684,7 +696,7 @@ func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			// Admins are allowed to delete globals.
 			var err error
-			tag, err = conn.Exec(rctx, deleteSQL, user)
+			tag, err = conn.Exec(rctx, deleteSQL, user, queryID)
 			return err
 		}, 0,
 	); err != nil {
@@ -706,10 +718,10 @@ func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
 		return
 	}
 	user := c.currentUser(ctx).String
-	var insertSQL = `INSERT INTO default_query_exclusion VALUES ($1, $2)`
+	var insertSQL = `INSERT INTO default_query_exclusion ("user", id) VALUES ($1, $2) RETURNING "user", id`
 
 	var insertedUser string
-	var insertedID []int
+	var insertedID int64
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
