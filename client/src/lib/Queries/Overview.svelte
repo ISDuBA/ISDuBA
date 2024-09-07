@@ -49,8 +49,10 @@
   };
 
   let queries: Query[] = [];
+  let ignoredQueries: number[] = [];
   let orderBy = "";
   let errorMessage: ErrorDetails | null;
+  let ignoreErrorMessage: ErrorDetails | null;
   let querytoDelete: any = resetQueryToDelete();
   let loading = false;
   let columnList: any;
@@ -68,6 +70,30 @@
       errorMessage = getErrorDetails(`Could not load queries.`, response);
     }
     loading = false;
+  };
+
+  const fetchIgnored = async () => {
+    const response = await request(`/api/queries/ignore`, "GET");
+    if (response.ok) {
+      ignoredQueries = response.content;
+    } else if (response.error) {
+      errorMessage = getErrorDetails(`Could not load queries.`, response);
+    }
+  };
+
+  const changeIgnored = async (id: number, isChecked: boolean) => {
+    ignoreErrorMessage = null;
+    const method = isChecked ? "DELETE" : "POST";
+    const response = await request(`/api/queries/ignore/${id}`, method);
+    if (response.ok) {
+      if (isChecked) {
+        ignoredQueries = ignoredQueries.filter((i) => i !== id);
+      } else {
+        ignoredQueries.push(id);
+      }
+    } else if (response.error) {
+      errorMessage = getErrorDetails(`Could not change option.`, response);
+    }
   };
 
   const deleteQuery = async () => {
@@ -108,6 +134,7 @@
 
   onMount(() => {
     fetchQueries();
+    fetchIgnored();
   });
   $: userQueries = queries.filter((q: Query) => {
     return !q.global;
@@ -164,6 +191,7 @@
   <Spinner color="gray" size="4"></Spinner>
 </div>
 <ErrorMessage error={errorMessage}></ErrorMessage>
+<ErrorMessage error={ignoreErrorMessage}></ErrorMessage>
 <Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
 {#if queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
@@ -211,7 +239,17 @@
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox></Checkbox>
+                  <Checkbox
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      // @ts-expect-error Cannot use TS:
+                      // https://github.com/sveltejs/language-tools/blob/master/docs/preprocessors/typescript.md#can-i-use-typescript-syntax-inside-the-templatemustache-tags
+                      // But without ignore we would get an error.
+                      changeIgnored(query.id, event.target?.checked);
+                    }}
+                    disabled={!ignoredQueries}
+                    checked={!ignoredQueries.includes(query.id)}
+                  ></Checkbox>
                 </TableBodyCell>
                 <td>
                   <button
@@ -287,7 +325,17 @@
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox></Checkbox>
+                  <Checkbox
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      // @ts-expect-error Cannot use TS:
+                      // https://github.com/sveltejs/language-tools/blob/master/docs/preprocessors/typescript.md#can-i-use-typescript-syntax-inside-the-templatemustache-tags
+                      // But without ignore we would get an error.
+                      changeIgnored(query.id, event.target?.checked);
+                    }}
+                    disabled={!ignoredQueries}
+                    checked={!ignoredQueries.includes(query.id)}
+                  ></Checkbox>
                 </TableBodyCell>
                 <td>
                   <button
