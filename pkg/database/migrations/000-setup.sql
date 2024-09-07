@@ -428,8 +428,8 @@ GRANT INSERT, DELETE, SELECT, UPDATE ON downloads               TO {{ .User | sa
 DO $$
 DECLARE
     default_definer constant varchar = 'system-default';
-    default_advisory_columns text array default Array['cvss_v3_score', 'cvss_v2_score', 'comments', 'critical', 'id', 'recent', 'title', 'publisher', 'ssvc', 'state', 'tracking_id'];
-    default_event_columns text array default Array['cvss_v3_score', 'cvss_v2_score', 'comments', 'critical', 'id', 'recent', 'title', 'publisher', 'ssvc', 'state', 'tracking_id', 'event', 'event_state', 'time', 'actor', 'comments_id'];
+    default_advisory_columns text array default Array['cvss_v3_score', 'cvss_v2_score', 'comments', 'critical', 'id', 'recent', 'versions', 'title', 'publisher', 'ssvc', 'state', 'tracking_id'];
+    default_event_columns text array default Array['cvss_v3_score', 'cvss_v2_score', 'comments', 'critical', 'id', 'title', 'publisher', 'ssvc', 'tracking_id', 'event', 'event_state', 'time', 'actor', 'comments_id'];
 BEGIN
     INSERT INTO stored_queries (definer, global, name, description, query, columns, orders, dashboard, role) VALUES(default_definer, true, 'Default-editor-global', 'Recently imported advisories', '$state new workflow =', default_advisory_columns, '{"-recent"}', true, 'editor');
     INSERT INTO stored_queries (definer, global, name, description, query, columns, orders, dashboard, role) VALUES(default_definer, true, 'Default-reviewer-global', 'Recently evaluated advisories', '$state review workflow =', default_advisory_columns, '{"-critical"}', true, 'reviewer');
