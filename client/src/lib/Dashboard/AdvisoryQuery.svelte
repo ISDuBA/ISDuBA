@@ -66,54 +66,58 @@
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title={storedQuery.name}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
-      {#if documents?.length && documents.length > 0}
-        {#each documents as doc}
-          <Activity on:click={() => openDocument(doc)}>
-            <div slot="top-left">
-              {#if doc.critical}
-                <div>
-                  {#if doc.cvss_v3_score && doc.cvss_v3_score === doc.critical}
-                    <span>CVSS v3:</span>
-                  {:else if doc.cvss_v2_score && doc.cvss_v2_score === doc.critical}
-                    <span>CVSS v2:</span>
-                  {:else}
-                    <span>Critical:</span>
-                  {/if}
-                  <span class:text-red-500={Number(doc.critical) > 5.0}>
-                    {doc.critical}
-                  </span>
-                </div>
-              {/if}
-            </div>
-            <span slot="top-right" class="ml-auto" title={doc.publisher}
-              >{getPublisher(doc.publisher)}</span
-            >
-            <div class="text-black">{doc.title ?? "Title: undefined"}</div>
-            <div
-              slot="bottom-left"
-              title={`Number of comments`}
-              class="flex items-center gap-4 text-gray-500"
-            >
-              {#if doc.comments}
-                <div class="flex items-center gap-1">
-                  <i class="bx bx-comment"></i>
-                  <span>{doc.comments}</span>
-                </div>
-              {/if}
-              {#if doc.ssvc}
-                <span title="SSVC" class="rounded border border-solid border-gray-400 px-1"
-                  >{convertVectorToLabel(doc.ssvc).label}</span
-                >
-              {/if}
-              <div></div>
-            </div>
-            <div slot="bottom-right" class="text-gray-500">
-              {#if doc.isNewAdvisory === false}
-                <span>New version</span>
-              {/if}
-            </div>
-          </Activity>
-        {/each}
+      {#if documents}
+        {#if documents.length > 0}
+          {#each documents as doc}
+            <Activity on:click={() => openDocument(doc)}>
+              <div slot="top-left">
+                {#if doc.critical}
+                  <div>
+                    {#if doc.cvss_v3_score && doc.cvss_v3_score === doc.critical}
+                      <span>CVSS v3:</span>
+                    {:else if doc.cvss_v2_score && doc.cvss_v2_score === doc.critical}
+                      <span>CVSS v2:</span>
+                    {:else}
+                      <span>Critical:</span>
+                    {/if}
+                    <span class:text-red-500={Number(doc.critical) > 5.0}>
+                      {doc.critical}
+                    </span>
+                  </div>
+                {/if}
+              </div>
+              <span slot="top-right" class="ml-auto" title={doc.publisher}
+                >{getPublisher(doc.publisher)}</span
+              >
+              <div class="text-black">{doc.title ?? "Title: undefined"}</div>
+              <div
+                slot="bottom-left"
+                title={`Number of comments`}
+                class="flex items-center gap-4 text-gray-500"
+              >
+                {#if doc.comments}
+                  <div class="flex items-center gap-1">
+                    <i class="bx bx-comment"></i>
+                    <span>{doc.comments}</span>
+                  </div>
+                {/if}
+                {#if doc.ssvc}
+                  <span title="SSVC" class="rounded border border-solid border-gray-400 px-1"
+                    >{convertVectorToLabel(doc.ssvc).label}</span
+                  >
+                {/if}
+                <div></div>
+              </div>
+              <div slot="bottom-right" class="text-gray-500">
+                {#if doc.isNewAdvisory === false}
+                  <span>New version</span>
+                {/if}
+              </div>
+            </Activity>
+          {/each}
+        {:else}
+          <div class="text-black">No matching advisories found.</div>
+        {/if}
       {/if}
     </div>
     <ErrorMessage error={newDocumentsError}></ErrorMessage>
