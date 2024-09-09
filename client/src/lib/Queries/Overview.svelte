@@ -29,7 +29,7 @@
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import Sortable from "sortablejs";
-  import { saveStoredQuery, type Query } from "./query";
+  import { createStoredQuery, updateStoredQuery, type Query } from "./query";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
@@ -84,6 +84,18 @@
       }
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not change option.`, response);
+    }
+  };
+
+  const changeDashboard = async (id: number, isChecked: boolean) => {
+    unsetErrors();
+    const queryToUpdate = queries.filter((q) => q.id === id)[0];
+    if (queryToUpdate) {
+      queryToUpdate.dashboard = isChecked;
+      const response = await updateStoredQuery(queryToUpdate);
+      if (!response.ok && response.error) {
+        ignorePersonalErrorMessage = getErrorDetails(`Could not change option.`, response);
+      }
     }
   };
 
@@ -176,7 +188,7 @@
       const queryToClone = firstTwoQueries[i];
       if (queryToClone) {
         queryToClone.global = false;
-        const response = await saveStoredQuery(queryToClone);
+        const response = await createStoredQuery(queryToClone);
         if (!response.ok && response.error) {
           cloneErrorMessage = getErrorDetails(`Failed to clone queries.`, response);
         }
@@ -286,10 +298,9 @@
                       // @ts-expect-error Cannot use TS:
                       // https://github.com/sveltejs/language-tools/blob/master/docs/preprocessors/typescript.md#can-i-use-typescript-syntax-inside-the-templatemustache-tags
                       // But without ignore we would get an error.
-                      changeIgnored(query.id, event.target?.checked);
+                      changeDashboard(query.id, event.target?.checked);
                     }}
-                    disabled={!ignoredQueries}
-                    checked={!ignoredQueries.includes(query.id)}
+                    checked={query.dashboard}
                   ></Checkbox>
                 </TableBodyCell>
                 <td>

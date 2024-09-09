@@ -162,8 +162,19 @@ const generateQueryString = (currentSearch: Search) => {
   return encodeURI(queryURL);
 };
 
-const saveStoredQuery = (query: Query) => {
+const createStoredQuery = (query: Query) => {
+  return saveStoredQuery(query, "POST");
+};
+
+const updateStoredQuery = (query: Query) => {
+  return saveStoredQuery(query, "PUT");
+};
+
+const saveStoredQuery = (query: Query, method: string) => {
   const formData = new FormData();
+  if (method === "PUT") {
+    formData.append("num", `${query.num}`);
+  }
   formData.append("kind", query.kind);
   formData.append("name", query.name);
   formData.append("global", `${query.global}`);
@@ -183,12 +194,14 @@ const saveStoredQuery = (query: Query) => {
   if (query.orders) {
     formData.append("orders", query.orders.join(" "));
   }
-  return request("/api/queries", "POST", formData);
+  const path = method === "PUT" ? `/${query.id}` : "";
+  return request(`/api/queries${path}`, method, formData);
 };
 
 export {
   generateQueryString,
-  saveStoredQuery,
+  createStoredQuery,
+  updateStoredQuery,
   COLUMNS,
   ORDERDIRECTIONS,
   SEARCHTYPES,
