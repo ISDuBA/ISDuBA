@@ -40,7 +40,8 @@
   let ignoredQueries: number[] = [];
   let orderBy = "";
   let errorMessage: ErrorDetails | null;
-  let ignoreErrorMessage: ErrorDetails | null;
+  let ignorePersonalErrorMessage: ErrorDetails | null;
+  let ignoreGlobalErrorMessage: ErrorDetails | null;
   let cloneErrorMessage: ErrorDetails | null;
   let querytoDelete: any = resetQueryToDelete();
   let loading = false;
@@ -72,7 +73,7 @@
   };
 
   const changeIgnored = async (id: number, isChecked: boolean) => {
-    ignoreErrorMessage = null;
+    unsetErrors();
     const method = isChecked ? "DELETE" : "POST";
     const response = await request(`/api/queries/ignore/${id}`, method);
     if (response.ok) {
@@ -87,6 +88,7 @@
   };
 
   const deleteQuery = async () => {
+    unsetErrors();
     const response = await request(`/api/queries/${querytoDelete.id}`, "DELETE");
     if (response.error) {
       errorMessage = getErrorDetails(`Could not delete query ${querytoDelete.name}.`, response);
@@ -141,6 +143,13 @@
         clonedQueriesAlready = true;
       }
     });
+  };
+
+  const unsetErrors = () => {
+    ignoreGlobalErrorMessage = null;
+    ignorePersonalErrorMessage = null;
+    errorMessage = null;
+    cloneErrorMessage = null;
   };
 
   const fetchData = async () => {
@@ -224,7 +233,6 @@
   <Spinner color="gray" size="4"></Spinner>
 </div>
 <ErrorMessage error={errorMessage}></ErrorMessage>
-<ErrorMessage error={ignoreErrorMessage}></ErrorMessage>
 <Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
 {#if queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
@@ -307,6 +315,7 @@
           </tbody>
         </Table>
       </div>
+      <ErrorMessage error={ignorePersonalErrorMessage}></ErrorMessage>
     </div>
     <div class="mb-12 w-fit">
       <span class="text-2xl">Global</span>
@@ -396,6 +405,7 @@
           </tbody>
         </Table>
       </div>
+      <ErrorMessage error={ignoreGlobalErrorMessage}></ErrorMessage>
       <Button on:click={cloneDashboardQueries} disabled={clonedQueriesAlready} color="light"
         >Clone the global dashboard queries for me</Button
       >
