@@ -15,7 +15,7 @@
 We save in the `stored_queries` table if a query is a basis for
 a dashboard display.
 
-Optionally an entry has a role associcated.
+Optionally an entry has a role associated.
 If there is no role, it is aimed for all roles.
 
 It is indicated if a query is global and thus only editable for admins.
@@ -36,23 +36,23 @@ Alternatives considered (and not implemented):
 
 ### client does the selection
 
-The client will select the first two eligable queries
+The client will select the first two eligible queries
 and display the first two before displaying a brief stats section.
 
 The first is to be displayed left and aims to show which new documents
 have been incoming.
 
 The second it to be displayed right and aims to show which changes
-were done within our application to data that was alread in.
+were done within our application to data that was already in.
 
-Then the client displays the other eligable queries below.
+Then the client displays the other eligible queries below.
 
 
-#### calculating eligable queries
+#### calculating eligible queries
 
 Take all personal queries that for the dashboard.
 
-Behind them take all global queries for the dasboard that
+Behind them take all global queries for the dashboard that
 are configured for the leading role and are not deselected
 via the ignored table.
 
