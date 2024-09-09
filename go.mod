@@ -16,7 +16,7 @@ require (
 	github.com/csaf-poc/csaf_distribution/v3 v3.0.0
 	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
-	github.com/jackc/pgx/v5 v5.6.0
+	github.com/jackc/pgx/v5 v5.7.0
 	github.com/samber/slog-gin v1.13.4
 	github.com/sergi/go-diff v1.3.1
 	golang.org/x/oauth2 v0.22.0
