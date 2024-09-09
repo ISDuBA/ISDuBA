@@ -11,8 +11,8 @@
     "notes": [
       {
         "category": "summary",
-        "title": "Technical summary",
-        "text": "Auto generated CSAF document"
+        "title": "Test document summary",
+        "text": "Auto generated test CSAF document"
       }
     ],
     "publisher": {
@@ -20,7 +20,7 @@
       "name": "ACME Inc.",
       "namespace": "https://www.example.com"
     },
-    "title": "Product backdoor identified",
+    "title": "Test CSAF document",
     "tracking": {
       "current_release_date": "2024-09-06T12:16:41Z",
       "generator": {
@@ -168,4 +168,3 @@
     }
   ]
 }
-
