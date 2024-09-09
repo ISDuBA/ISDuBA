@@ -6,6 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+import { request } from "$lib/request";
 import type { Role } from "$lib/workflow";
 
 const COLUMNS = {
@@ -127,6 +128,23 @@ interface Search {
   role: Role | undefined;
 }
 
+type Query = {
+  [key: string]: boolean | string | string[] | number | undefined;
+  advisories: boolean;
+  columns: string[];
+  definer: string;
+  global: boolean;
+  id: number;
+  name: string;
+  kind: SEARCHTYPES;
+  num: number;
+  orders: string[] | undefined;
+  query: string;
+  description: string | undefined;
+  dashboard: boolean;
+  role: Role;
+};
+
 const generateQueryString = (currentSearch: Search) => {
   const chosenColumns = currentSearch.columns.filter((c: any) => {
     return c.visible === true;
@@ -144,12 +162,36 @@ const generateQueryString = (currentSearch: Search) => {
   return encodeURI(queryURL);
 };
 
+const saveStoredQuery = (query: Query) => {
+  const formData = new FormData();
+  formData.append("kind", query.kind);
+  formData.append("name", query.name);
+  formData.append("global", `${query.global}`);
+  formData.append("dashboard", `${query.dashboard}`);
+  if (query.role) {
+    formData.append("role", `${query.role}`);
+  } else {
+    formData.append("role", "");
+  }
+  if (query.description && query.description.length > 0) {
+    formData.append("description", query.description);
+  }
+  if (query.query.length > 0) {
+    formData.append("query", query.query);
+  }
+  formData.append("columns", query.columns.join(" "));
+  if (query.orders) {
+    formData.append("orders", query.orders.join(" "));
+  }
+  return request("/api/queries", "POST", formData);
+};
+
 export {
   generateQueryString,
+  saveStoredQuery,
   COLUMNS,
   ORDERDIRECTIONS,
   SEARCHTYPES,
-  SEARCHPAGECOLUMNS,
-  type Column,
-  type Search
+  SEARCHPAGECOLUMNS
 };
+export type { Column, Query, Search };

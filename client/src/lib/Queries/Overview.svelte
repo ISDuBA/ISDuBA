@@ -29,23 +29,11 @@
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import Sortable from "sortablejs";
+  import { saveStoredQuery, type Query } from "./query";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
     return { name: "", id: -1 };
-  };
-
-  type Query = {
-    advisories: boolean;
-    columns: string[];
-    definer: string;
-    global: boolean;
-    id: number;
-    name: string;
-    num: number;
-    orders: string[] | undefined;
-    query: string;
-    description: string | undefined;
   };
 
   let queries: Query[] = [];
@@ -53,10 +41,12 @@
   let orderBy = "";
   let errorMessage: ErrorDetails | null;
   let ignoreErrorMessage: ErrorDetails | null;
+  let cloneErrorMessage: ErrorDetails | null;
   let querytoDelete: any = resetQueryToDelete();
   let loading = false;
   let columnList: any;
   let columnListAdmin: any;
+  let clonedQueriesAlready = true;
 
   const fetchQueries = async () => {
     loading = true;
@@ -103,7 +93,7 @@
       querytoDelete = resetQueryToDelete();
       deleteModalOpen = false;
     }
-    fetchQueries();
+    fetchData();
   };
 
   const updateQueryOrder = async (queries: Query[]) => {
@@ -132,9 +122,35 @@
     }
   };
 
-  onMount(() => {
-    fetchQueries();
+  const checkIfCloned = () => {
+    const personalQueries = queries.filter((q) => !q.global);
+    const globalDashboardQueries = queries.filter((q) => q.dashboard && q.global);
+    const firstTwoQueries = globalDashboardQueries.slice(0, 2);
+    clonedQueriesAlready = false;
+    firstTwoQueries.forEach((globalQuery: Query) => {
+      const foundQuery = personalQueries.find((persQuery: Query) => {
+        const keys = Object.keys(globalQuery);
+        keys.forEach((key) => {
+          if (persQuery[key] !== globalQuery[key]) {
+            return false;
+          }
+        });
+        return true;
+      });
+      if (foundQuery) {
+        clonedQueriesAlready = true;
+      }
+    });
+  };
+
+  const fetchData = async () => {
+    await fetchQueries();
     fetchIgnored();
+    checkIfCloned();
+  };
+
+  onMount(() => {
+    fetchData();
   });
   $: userQueries = queries.filter((q: Query) => {
     return !q.global;
@@ -142,6 +158,23 @@
   $: adminQueries = queries.filter((q: Query) => {
     return q.global;
   });
+
+  const cloneDashboardQueries = async () => {
+    cloneErrorMessage = null;
+    const globalDashboardQueries = queries.filter((q) => q.dashboard && q.global);
+    const firstTwoQueries = globalDashboardQueries.slice(0, 2);
+    for (let i = 0; i < 2; i++) {
+      const queryToClone = firstTwoQueries[i];
+      if (queryToClone) {
+        queryToClone.global = false;
+        const response = await saveStoredQuery(queryToClone);
+        if (!response.ok && response.error) {
+          cloneErrorMessage = getErrorDetails(`Failed to clone queries.`, response);
+        }
+      }
+    }
+    fetchData();
+  };
 
   const elementDragEventUserQuery = () => {
     updateQueryOrder(userQueries);
@@ -278,7 +311,7 @@
     <div class="mb-12 w-fit">
       <span class="text-2xl">Global</span>
       <hr class="mb-6" />
-      <div class="max-h-[66vh] overflow-auto">
+      <div class="mb-2 max-h-[66vh] overflow-auto">
         <Table hoverable={true} noborder={true}>
           <TableHead>
             <TableHeadCell padding={tablePadding}></TableHeadCell>
@@ -363,6 +396,10 @@
           </tbody>
         </Table>
       </div>
+      <Button on:click={cloneDashboardQueries} disabled={clonedQueriesAlready} color="light"
+        >Clone the global dashboard queries for me</Button
+      >
+      <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
     </div>
   </div>
 {/if}
