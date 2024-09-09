@@ -234,7 +234,7 @@
             </Activity>
           {/each}
         {:else}
-          No recent activities on advisories you are involved in.
+          <div class="text-gray-600">No recent activities on advisories you are involved in.</div>
         {/if}
       {/if}
       {#if activityCount > 10}<div class="">…There are more activities</div>{/if}

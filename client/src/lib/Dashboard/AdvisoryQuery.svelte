@@ -116,7 +116,7 @@
             </Activity>
           {/each}
         {:else}
-          <div class="text-black">No matching advisories found.</div>
+          <div class="text-gray-600">No matching advisories found.</div>
         {/if}
       {/if}
     </div>
