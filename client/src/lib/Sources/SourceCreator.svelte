@@ -43,7 +43,7 @@
   let sourceForm: any;
   let updateSourceForm: any;
 
-  let validUrl: boolean | null = false;
+  let validUrl: boolean | null = null;
   let urlColor: "red" | "green" | "base" = "base";
   $: if (validUrl !== undefined) {
     if (validUrl === null) {
@@ -89,31 +89,7 @@
     }
   };
 
-  const checkUrl = async () => {
-    if (source.url.startsWith("https://") && source.url.endsWith("provider-metadata.json")) {
-      validUrl = null;
-      return;
-    }
-    try {
-      new URL(source.url);
-      validUrl = false;
-      return;
-    } catch {
-      let domain = source.url;
-      if (domain.charAt(domain.length - 1) == ".") {
-        domain = domain.slice(0, -1);
-      }
-      let split = source.url.split(".");
-
-      let first = split.pop() ?? [];
-      let second = split.pop() ?? [];
-      if (first.length < 2 || second.length < 1) {
-        validUrl = false;
-        return;
-      }
-      validUrl = null;
-    }
-  };
+  const checkUrl = async () => {};
 
   const saveAll = async () => {
     updateSourceForm();
@@ -186,7 +162,7 @@
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
-    <Button type="submit" color="light" disabled={validUrl === false}>
+    <Button type="submit" color="light">
       <i class="bx bx-check me-2"></i>
       <span>Search and load provider metadata</span>
     </Button>
