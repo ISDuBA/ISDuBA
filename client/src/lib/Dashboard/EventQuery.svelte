@@ -111,6 +111,18 @@
     }
   };
 
+  const fetchMentions = async () => {
+    const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
+    const mentionsResponse = await request(mentionedQuery, "GET");
+    if (mentionsResponse.ok) {
+      const mentions = await mentionsResponse.content;
+      return mentions.events || [];
+    } else if (mentionsResponse.error) {
+      loadMentionsError = getErrorDetails(`Could not load Activities.`, mentionsResponse);
+      return [];
+    }
+  };
+
   const getDocumentIDs = (arr: any) => {
     return arr.map((a: any) => {
       return a[0];
@@ -138,7 +150,9 @@
 
   const transformDataToActivities = async () => {
     const activities = await fetchActivities();
+    const mentions = await fetchMentions();
     let idsActivities = [];
+    let idsMentions = [];
     let documentIDs: any[] = [];
     let documents = [];
     if (
@@ -149,6 +163,12 @@
       idsActivities = pluck(activities, ["id", "comments_id"]);
       documentIDs = getDocumentIDs(idsActivities);
     }
+    if (mentions.length > 0) {
+      idsMentions = pluck(mentions, ["id", "comments_id"]);
+      const mentionDocumentIDs = getDocumentIDs(idsMentions);
+      documentIDs = documentIDs.concat(mentionDocumentIDs);
+    }
+
     documentIDs = [...new Set(documentIDs)];
     if (documentIDs.length > 0) {
       documents = await fetchDocuments(documentIDs);
@@ -157,6 +177,7 @@
       o[n.id] = n;
       return o;
     }, {});
+
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
@@ -171,7 +192,20 @@
       return a;
     });
 
-    const activitiesAggregatedByMentions = aggregateByMentions(recentActivities);
+    const mentionsAggregated = aggregateNewest(mentions);
+    let recentMentions = Object.values(mentionsAggregated);
+    recentMentions = recentMentions.map((a: any) => {
+      a.mention = true;
+      a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
+      a.documentURL = documentsById[a.id]
+        ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
+        : "";
+      return a;
+    });
+    const activitiesAggregatedByMentions = aggregateByMentions([
+      ...recentActivities,
+      ...recentMentions
+    ]);
     resultingActivities = sortByTime(aggregateByChange(activitiesAggregatedByMentions));
   };
 
