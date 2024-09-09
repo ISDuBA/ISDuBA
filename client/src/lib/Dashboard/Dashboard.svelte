@@ -11,8 +11,8 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
-  import New from "./New.svelte";
-  import RecentActivities from "./RecentActivities.svelte";
+  import AdvisoryQuery from "./AdvisoryQuery.svelte";
+  import EventQuery from "./EventQuery.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { SEARCHTYPES } from "$lib/Queries/query";
@@ -80,10 +80,10 @@
 {#if $appStore.app.isUserLoggedIn}
   <div class="mb-8 mt-8 flex flex-wrap gap-10">
     {#each advisoryQueries as query}
-      <New storedQuery={query}></New>
+      <AdvisoryQuery storedQuery={query}></AdvisoryQuery>
     {/each}
     {#each eventQueries as query}
-      <RecentActivities storedQuery={query}></RecentActivities>
+      <EventQuery storedQuery={query}></EventQuery>
     {/each}
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
