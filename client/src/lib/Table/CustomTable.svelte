@@ -16,6 +16,7 @@
   type TableHeader = {
     label: string;
     attribute: string | undefined;
+    class?: string;
     clickCallBack?: () => void;
   };
   export let title: string | undefined;
@@ -34,7 +35,7 @@
   <Table hoverable={true} noborder={true}>
     <TableHead>
       {#each headers as header}
-        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+        <TableHeadCell class={header.class ?? ""} padding={tablePadding} on:click={() => {}}>
           <span>{header.label}</span>
           <i
             class:bx={true}

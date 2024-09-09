@@ -31,11 +31,13 @@
     },
     {
       label: "Log level",
-      attribute: "log_level"
+      attribute: "log_level",
+      class: "min-w-32"
     },
     {
       label: "Label",
-      attribute: "label"
+      attribute: "label",
+      class: "min-w-32"
     }
   ];
 
@@ -51,6 +53,7 @@
     <tr>
       <TableBodyCell {tdClass}
         ><Checkbox
+          class="m-auto"
           bind:checked={feed.enable}
           on:change={async () => {
             await updateFeed(feed);
