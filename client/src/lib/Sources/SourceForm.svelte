@@ -17,7 +17,8 @@
     Checkbox,
     Fileupload,
     Input,
-    Label
+    Label,
+    Select
   } from "flowbite-svelte";
   export let formClass: string = "";
   export let source: Source;
@@ -29,9 +30,67 @@
 
   export let inputChange = () => {};
 
+  enum AgeUnit {
+    hours = "h",
+    days = "d",
+    weeks = "w"
+  }
+
+  const ageUnits = [
+    { value: AgeUnit.hours, name: "hours" },
+    { value: AgeUnit.days, name: "days" },
+    { value: AgeUnit.weeks, name: "weeks" }
+  ];
+
   let headers: [string, string][] = [["", ""]];
   let privateCert: FileList | undefined;
   let publicCert: FileList | undefined;
+
+  let ageUnit: AgeUnit = AgeUnit.hours;
+  let ageNumber: number | undefined;
+  $: {
+    let baseNumber: number | undefined = undefined;
+    let baseUnit: AgeUnit = ageUnit;
+    if (source.age) {
+      let num: number = +(source.age ?? "").replace(/h$/, "").replace(/h0m0s$/, "");
+      if (Number.isInteger(num)) {
+        if (num && num % (24 * 7) === 0) {
+          baseNumber = num / (24 * 7);
+          baseUnit = AgeUnit.weeks;
+        } else if (num && num % 24 === 0) {
+          baseNumber = num / 24;
+          baseUnit = AgeUnit.days;
+        } else {
+          baseNumber = num;
+          baseUnit = AgeUnit.hours;
+        }
+      } else {
+        throw Error(
+          "Expected source.age to have the format '<number>h' or '<number>h0m0s', actual value was '" +
+            source.age +
+            "'."
+        );
+      }
+    }
+    ageNumber = baseNumber;
+    ageUnit = baseUnit;
+  }
+
+  const onChangedAge = () => {
+    if (!ageNumber && ageNumber !== 0) {
+      source.age = undefined;
+    } else {
+      let num = ageNumber;
+      if (ageUnit !== AgeUnit.hours) {
+        num *= 24;
+      }
+      if (ageUnit === AgeUnit.weeks) {
+        num *= 7;
+      }
+      source.age = num.toString() + "h";
+    }
+    inputChange();
+  };
 
   const onChangedHeaders = (e: Event | undefined) => {
     const lastIndex = headers.length - 1;
@@ -175,10 +234,23 @@
     </AccordionItem>
     <AccordionItem
       ><span slot="header">Advanced options</span>
-      <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-3">
+      <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-[minmax(175px,1fr)_1fr_1fr]">
         <div>
           <Label>Age</Label>
-          <Input placeholder="17520h" on:input={inputChange} bind:value={source.age}></Input>
+          <div class="inline-flex w-full">
+            <Input
+              class="rounded-none rounded-l-lg"
+              placeholder="17520"
+              on:input={onChangedAge}
+              bind:value={ageNumber}
+            ></Input>
+            <Select
+              class="rounded-none rounded-r-lg border-l-0"
+              items={ageUnits}
+              bind:value={ageUnit}
+              on:change={onChangedAge}
+            />
+          </div>
         </div>
         <div>
           <Label>Rate</Label>
