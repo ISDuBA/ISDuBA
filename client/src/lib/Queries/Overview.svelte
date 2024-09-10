@@ -29,7 +29,7 @@
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import Sortable from "sortablejs";
-  import { createStoredQuery, updateStoredQuery, type Query } from "./query";
+  import { createStoredQuery, proposeName, updateStoredQuery, type Query } from "./query";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
@@ -47,7 +47,6 @@
   let loading = false;
   let columnList: any;
   let columnListAdmin: any;
-  let clonedQueriesAlready = true;
 
   const fetchQueries = async () => {
     loading = true;
@@ -136,27 +135,6 @@
     }
   };
 
-  const checkIfCloned = () => {
-    const personalQueries = queries.filter((q) => !q.global);
-    const globalDashboardQueries = queries.filter((q) => q.dashboard && q.global);
-    const firstTwoQueries = globalDashboardQueries.slice(0, 2);
-    clonedQueriesAlready = false;
-    firstTwoQueries.forEach((globalQuery: Query) => {
-      const foundQuery = personalQueries.find((persQuery: Query) => {
-        const keys = Object.keys(globalQuery);
-        keys.forEach((key) => {
-          if (persQuery[key] !== globalQuery[key]) {
-            return false;
-          }
-        });
-        return true;
-      });
-      if (foundQuery) {
-        clonedQueriesAlready = true;
-      }
-    });
-  };
-
   const unsetErrors = () => {
     ignoreGlobalErrorMessage = null;
     ignorePersonalErrorMessage = null;
@@ -165,9 +143,8 @@
   };
 
   const fetchData = async () => {
-    await fetchQueries();
+    fetchQueries();
     fetchIgnored();
-    checkIfCloned();
   };
 
   onMount(() => {
@@ -188,6 +165,7 @@
       const queryToClone = firstTwoQueries[i];
       if (queryToClone) {
         queryToClone.global = false;
+        queryToClone.name = proposeName(queries, queryToClone.name);
         const response = await createStoredQuery(queryToClone);
         if (!response.ok && response.error) {
           cloneErrorMessage = getErrorDetails(`Failed to clone queries.`, response);
@@ -449,11 +427,8 @@
             ><i class="bx bx-plus"></i>New query</Button
           >
         {/if}
-        <Button
-          class="w-fit"
-          on:click={cloneDashboardQueries}
-          disabled={clonedQueriesAlready}
-          color="light">Clone global queries for my role</Button
+        <Button class="w-fit" on:click={cloneDashboardQueries} color="light"
+          >Clone global queries for my role</Button
         >
         <ErrorMessage error={ignoreGlobalErrorMessage}></ErrorMessage>
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
