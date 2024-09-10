@@ -16,7 +16,7 @@
 
 <button
   on:click={() => dispatch("click")}
-  class="flex flex-col justify-between rounded-md border border-solid border-gray-300 px-4 py-2 shadow-md"
+  class="flex flex-col justify-between rounded-md border border-solid border-gray-300 px-4 py-2 shadow-md hover:bg-gray-100"
 >
   <div class="mb-2 flex w-full flex-row justify-between text-left text-xs">
     <div>
