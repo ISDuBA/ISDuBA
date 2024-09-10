@@ -19,6 +19,7 @@
   import Activity from "./Activity.svelte";
   import { getPublisher } from "$lib/publisher";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import { Button } from "flowbite-svelte";
 
   export let storedQuery: any;
   let documents: any[] = [];
@@ -70,6 +71,10 @@
 
   const openDocument = (doc: any) => {
     push(`/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`);
+  };
+
+  const showMore = () => {
+    push(`/search?query=${storedQuery.id}`);
   };
 </script>
 
@@ -138,6 +143,9 @@
               </div>
             </Activity>
           {/each}
+          <Button on:click={showMore} size="xs" color="light" class="h-6 w-fit rounded-md"
+            >More...</Button
+          >
         {:else}
           <div class="text-gray-600">No matching advisories found.</div>
         {/if}

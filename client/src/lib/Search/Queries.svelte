@@ -30,6 +30,7 @@
     return 0;
   });
   export let selectedIndex = -1;
+  export let queryString: any;
   let ignoredQueries: Query[] = [];
   let errorMessage: ErrorDetails | null;
   let advancedQueryErrorMessage: ErrorDetails | null;
@@ -68,6 +69,13 @@
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
     fetchIgnored();
+    if (queryString?.query) {
+      // Need to wait until sortedQueries is filled.
+      setTimeout(() => {
+        const index = sortedQueries.findIndex((q) => q.id === Number(queryString.query));
+        selectQuery(index);
+      }, 100);
+    }
   });
 
   const selectQuery = (index: number) => {
