@@ -432,7 +432,7 @@
         </div>
       {/if}
       <div class="flex flex-row items-center gap-x-2">
-        <span>Show on dashboard:</span>
+        <span>Dashboard:</span>
         <Checkbox
           checked={currentSearch.dashboard}
           on:change={() => {

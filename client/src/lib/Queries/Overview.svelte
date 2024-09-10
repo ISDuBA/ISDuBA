@@ -74,13 +74,13 @@
 
   const changeIgnored = async (id: number, isChecked: boolean) => {
     unsetErrors();
-    const method = isChecked ? "DELETE" : "POST";
+    const method = isChecked ? "POST" : "DELETE";
     const response = await request(`/api/queries/ignore/${id}`, method);
     if (response.ok) {
       if (isChecked) {
-        ignoredQueries = ignoredQueries.filter((i) => i !== id);
-      } else {
         ignoredQueries.push(id);
+      } else {
+        ignoredQueries = ignoredQueries.filter((i) => i !== id);
       }
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not change option.`, response);
@@ -269,7 +269,10 @@
               ></i>
             </TableHeadCell>
             <TableHeadCell padding={tablePadding} on:click={() => {}}>
-              <div title={"Show on your personal dashboard"}>Pers. Dashb.</div>
+              <div>Dashboard</div>
+            </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div>Hide</div>
             </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
@@ -300,6 +303,17 @@
                       changeDashboard(query.id, event.target?.checked);
                     }}
                     checked={query.dashboard}
+                  ></Checkbox>
+                </TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <Checkbox
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      // @ts-expect-error Cannot use TS (see explanation above)
+                      changeIgnored(query.id, event.target?.checked);
+                    }}
+                    disabled={!ignoredQueries}
+                    checked={ignoredQueries.includes(query.id)}
                   ></Checkbox>
                 </TableBodyCell>
                 <td>
@@ -350,7 +364,10 @@
               ></i>
             </TableHeadCell>
             <TableHeadCell padding={tablePadding} on:click={() => {}}>
-              <div title={"Show on your personal dashboard"}>Pers. Dashb.</div>
+              <div>Dashboard</div>
+            </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div title={"Show on your personal dashboard"}>Hide</div>
             </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
@@ -381,13 +398,23 @@
                   <Checkbox
                     on:click={(event) => {
                       event.stopPropagation();
-                      // @ts-expect-error Cannot use TS:
-                      // https://github.com/sveltejs/language-tools/blob/master/docs/preprocessors/typescript.md#can-i-use-typescript-syntax-inside-the-templatemustache-tags
-                      // But without ignore we would get an error.
+                      // @ts-expect-error Cannot use TS (see explanation above)
+                      changeDashboard(query.id, event.target?.checked);
+                    }}
+                    checked={query.dashboard}
+                    class={appStore.isAdmin() ? "" : "text-gray-300"}
+                    disabled={!appStore.isAdmin()}
+                  ></Checkbox>
+                </TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <Checkbox
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      // @ts-expect-error Cannot use TS (see explanation above)
                       changeIgnored(query.id, event.target?.checked);
                     }}
                     disabled={!ignoredQueries}
-                    checked={!ignoredQueries.includes(query.id)}
+                    checked={ignoredQueries.includes(query.id)}
                   ></Checkbox>
                 </TableBodyCell>
                 <td>
@@ -426,7 +453,7 @@
           class="w-fit"
           on:click={cloneDashboardQueries}
           disabled={clonedQueriesAlready}
-          color="light">Clone the global dashboard queries for me</Button
+          color="light">Clone global queries for my role</Button
         >
         <ErrorMessage error={ignoreGlobalErrorMessage}></ErrorMessage>
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
