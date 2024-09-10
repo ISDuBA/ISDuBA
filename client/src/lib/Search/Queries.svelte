@@ -16,7 +16,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { push } from "svelte-spa-router";
   import { createEventDispatcher } from "svelte";
-  import { SEARCHTYPES } from "$lib/Queries/query";
+  import { SEARCHTYPES, type Query } from "$lib/Queries/query";
 
   const dispatch = createEventDispatcher();
 
@@ -30,6 +30,7 @@
     return 0;
   });
   export let selectedIndex = -1;
+  let ignoredQueries: Query[] = [];
   let errorMessage: ErrorDetails | null;
   let advancedQueryErrorMessage: ErrorDetails | null;
   let globalQueryButtonColor = "primary";
@@ -50,6 +51,15 @@
     return `${defaultQueryButtonClass} ${addition}`;
   };
 
+  const fetchIgnored = async () => {
+    const response = await request(`/api/queries/ignore`, "GET");
+    if (response.ok) {
+      ignoredQueries = response.content;
+    } else if (response.error) {
+      errorMessage = getErrorDetails(`Could not load queries.`, response);
+    }
+  };
+
   onMount(async () => {
     const response = await request("/api/queries", "GET");
     if (response.ok) {
@@ -57,6 +67,7 @@
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
+    fetchIgnored();
   });
 
   const selectQuery = (index: number) => {
@@ -73,13 +84,15 @@
   <div class="flex items-center gap-x-4">
     <ButtonGroup class="flex-wrap">
       {#each sortedQueries as query, index}
-        <Button
-          size="xs"
-          on:click={() => selectQuery(index)}
-          class={getClass(query.global, index === selectedIndex)}
-        >
-          <span title={query.description} class="p-2">{query.name}</span>
-        </Button>
+        {#if !ignoredQueries.includes(query.id)}
+          <Button
+            size="xs"
+            on:click={() => selectQuery(index)}
+            class={getClass(query.global, index === selectedIndex)}
+          >
+            <span title={query.description} class="p-2">{query.name}</span>
+          </Button>
+        {/if}
       {/each}
       <Button
         title="Configure queries"
