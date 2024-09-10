@@ -245,10 +245,9 @@
   <Spinner color="gray" size="4"></Spinner>
 </div>
 <ErrorMessage error={errorMessage}></ErrorMessage>
-<Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
 {#if queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
-    <div class="mb-12 w-fit">
+    <div class="mb-2 w-fit">
       <span class="text-2xl">Personal</span>
       <hr class="mb-6" />
       <div class="max-h-[66vh] overflow-auto">
@@ -326,9 +325,10 @@
           </tbody>
         </Table>
       </div>
+      <Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
       <ErrorMessage error={ignorePersonalErrorMessage}></ErrorMessage>
     </div>
-    <div class="mb-12 w-fit">
+    <div class="mb-2 w-fit">
       <span class="text-2xl">Global</span>
       <hr class="mb-6" />
       <div class="mb-2 max-h-[66vh] overflow-auto">
@@ -416,11 +416,21 @@
           </tbody>
         </Table>
       </div>
-      <ErrorMessage error={ignoreGlobalErrorMessage}></ErrorMessage>
-      <Button on:click={cloneDashboardQueries} disabled={clonedQueriesAlready} color="light"
-        >Clone the global dashboard queries for me</Button
-      >
-      <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
+      <div class="flex flex-col">
+        {#if appStore.isAdmin()}
+          <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
+            ><i class="bx bx-plus"></i>New query</Button
+          >
+        {/if}
+        <Button
+          class="w-fit"
+          on:click={cloneDashboardQueries}
+          disabled={clonedQueriesAlready}
+          color="light">Clone the global dashboard queries for me</Button
+        >
+        <ErrorMessage error={ignoreGlobalErrorMessage}></ErrorMessage>
+        <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
+      </div>
     </div>
   </div>
 {/if}
