@@ -27,7 +27,7 @@ test("Login page has link to github page", async ({ page }) => {
 
 test("Login page has Login button", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("Button", { name: "Login" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 });
 
 test("Login page has expected field Server URL", async ({ page }) => {
