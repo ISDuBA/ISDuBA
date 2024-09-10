@@ -21,6 +21,19 @@
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
 
   export let storedQuery: any;
+  const ignoredColumns = [
+    "documentURL",
+    "id",
+    "event_state",
+    "actor",
+    "documentTitle",
+    "title",
+    "event",
+    "time",
+    "message",
+    "mention",
+    "comments_id"
+  ];
 
   const documentQueryBase = `/api/documents?columns=id title publisher tracking_id ssvc`;
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
@@ -265,6 +278,17 @@
                   ? `${activity.documentTitle ?? "Title undefined"}`
                   : ""}
               </span>
+              <div slot="bottom-bottom">
+                {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}
+                  <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
+                    {#each Object.keys(activity).sort() as key}
+                      {#if !ignoredColumns.includes(key) && activity[key] !== undefined && activity[key] !== null}
+                        <div>{key}: {activity[key]}</div>
+                      {/if}
+                    {/each}
+                  </div>
+                {/if}
+              </div>
             </Activity>
           {/each}
         {:else}

@@ -23,6 +23,17 @@
   export let storedQuery: any;
   let documents: any[] = [];
   let newDocumentsError: ErrorDetails | null;
+  const ignoredColumns = [
+    "id",
+    "title",
+    "comments",
+    "critical",
+    "cvss_v3_score",
+    "cvss_v2_score",
+    "publisher",
+    "tracking_id",
+    "state"
+  ];
 
   const compareCrit = (a: any, b: any) => {
     if (!b.critical || a.critical > b.critical) {
@@ -90,6 +101,7 @@
                 >{getPublisher(doc.publisher)}</span
               >
               <div class="text-black">{doc.title ?? "Title: undefined"}</div>
+              <div class="text-sm text-gray-700">{doc.tracking_id}</div>
               <div
                 slot="bottom-left"
                 title={`Number of comments`}
@@ -111,6 +123,17 @@
               <div slot="bottom-right" class="text-gray-500">
                 {#if doc.isNewAdvisory === false}
                   <span>New version</span>
+                {/if}
+              </div>
+              <div slot="bottom-bottom">
+                {#if Object.keys(doc).filter((k) => !ignoredColumns.includes(k)).length > 0}
+                  <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
+                    {#each Object.keys(doc).sort() as key}
+                      {#if !ignoredColumns.includes(key) && doc[key] !== undefined && doc[key] !== null}
+                        <div>{key}: {doc[key]}</div>
+                      {/if}
+                    {/each}
+                  </div>
                 {/if}
               </div>
             </Activity>
