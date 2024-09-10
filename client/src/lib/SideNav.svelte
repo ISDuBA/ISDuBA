@@ -87,12 +87,7 @@
                 <i class="bx bx-git-repo-forked"></i>
               </svelte:fragment>
             </SidebarItem>
-            <SidebarItem
-              class="px-6 py-2.5"
-              label="Statistics"
-              href="javascript: void(0)"
-              nonActiveClass={notactivated}
-            >
+            <SidebarItem class="px-6 py-2.5" label="Statistics" href="/#/statistics">
               <svelte:fragment slot="icon">
                 <i class="bx bx-bar-chart-square"></i>
               </svelte:fragment>

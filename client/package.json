@@ -52,6 +52,7 @@
   "type": "module",
   "dependencies": {
     "@types/dompurify": "^3.0.5",
+    "apexcharts": "^3.53.0",
     "boxicons": "^2.1.4",
     "dompurify": "^3.1.6",
     "jwt-decode": "^4.0.0",
