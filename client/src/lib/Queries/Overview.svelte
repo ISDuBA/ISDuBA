@@ -162,6 +162,8 @@
 
   const cloneDashboardQueries = async () => {
     cloneErrorMessage = null;
+    const idsOfClonesQueries = [];
+    let failed = false;
     for (let i = 0; i < firstTwoQueries.length; i++) {
       const queryToClone = firstTwoQueries[i];
       if (queryToClone) {
@@ -170,7 +172,33 @@
         const response = await createStoredQuery(queryToClone);
         if (!response.ok && response.error) {
           cloneErrorMessage = getErrorDetails(`Failed to clone queries.`, response);
+          failed = true;
+        } else {
+          idsOfClonesQueries.push(response.content.id);
         }
+      }
+    }
+    if (!failed) {
+      type Order = {
+        id: number;
+        order: number;
+      };
+      let orders: Order[] = [];
+      let count = 0;
+      for (let i = 0; i < idsOfClonesQueries.length; i++) {
+        orders.push({ id: idsOfClonesQueries[i], order: count });
+        count++;
+      }
+      for (let i = 0; i < userQueries.length; i++) {
+        orders.push({
+          id: userQueries[i].id,
+          order: count
+        });
+        count++;
+      }
+      let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
+      if (!response.ok && response.error) {
+        cloneErrorMessage = getErrorDetails(`Could not update query order.`, response);
       }
     }
     fetchData();
