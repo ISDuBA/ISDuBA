@@ -48,6 +48,9 @@
   let columnList: any;
   let columnListAdmin: any;
 
+  $: globalDashboardQueries = queries.filter((q) => q.dashboard && q.global);
+  $: firstTwoQueries = globalDashboardQueries.slice(0, 2);
+
   const fetchQueries = async () => {
     loading = true;
     const response = await request("/api/queries", "GET");
@@ -159,9 +162,7 @@
 
   const cloneDashboardQueries = async () => {
     cloneErrorMessage = null;
-    const globalDashboardQueries = queries.filter((q) => q.dashboard && q.global);
-    const firstTwoQueries = globalDashboardQueries.slice(0, 2);
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < firstTwoQueries.length; i++) {
       const queryToClone = firstTwoQueries[i];
       if (queryToClone) {
         queryToClone.global = false;
@@ -321,7 +322,14 @@
       <ErrorMessage error={ignorePersonalErrorMessage}></ErrorMessage>
     </div>
     <div class="mb-2 w-fit">
-      <span class="text-2xl">Global</span>
+      <div class="mb-1 flex items-center gap-4">
+        <span class="text-2xl">Global</span>
+        {#if !appStore.isAdmin()}
+          <Button class="h-fit p-1 text-xs" on:click={cloneDashboardQueries} color="light"
+            >Clone global queries for my role</Button
+          >
+        {/if}
+      </div>
       <hr class="mb-6" />
       <div class="mb-2 max-h-[66vh] overflow-auto">
         <Table hoverable={true} noborder={true}>
@@ -396,12 +404,14 @@
                   ></Checkbox>
                 </TableBodyCell>
                 <td>
-                  <button
-                    title={`clone ${query.name}`}
-                    on:click|stopPropagation={() => {
-                      push(`/queries/new?clone=${query.id}`);
-                    }}><i class="bx bx-copy"></i></button
-                  >
+                  {#if !firstTwoQueries.find((q) => q.id === query.id || appStore.isAdmin())}
+                    <button
+                      title={`clone ${query.name}`}
+                      on:click|stopPropagation={() => {
+                        push(`/queries/new?clone=${query.id}`);
+                      }}><i class="bx bx-copy"></i></button
+                    >
+                  {/if}
                   {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
                     <button
                       on:click|stopPropagation={() => {
@@ -427,9 +437,6 @@
             ><i class="bx bx-plus"></i>New query</Button
           >
         {/if}
-        <Button class="w-fit" on:click={cloneDashboardQueries} color="light"
-          >Clone global queries for my role</Button
-        >
         <ErrorMessage error={ignoreGlobalErrorMessage}></ErrorMessage>
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
       </div>
