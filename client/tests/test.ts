@@ -8,7 +8,32 @@
 
 import { expect, test } from "@playwright/test";
 
-test("index page has expected h1", async ({ page }) => {
+test("Login page has expected heading ISDuBA", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Welcome to SvelteKit" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ISDuBA" })).toBeVisible();
+});
+
+test("Login page has expected title 'Login'", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle(/Login/);
+});
+
+test("Login page has link to github page", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Visit the ISDuBA project on Github" })).toBeVisible();
+});
+
+test("Login page has Login button", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("Button", {name: "Login" })).toBeVisible();
+});
+
+test("Login page has expected field Server URL", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("Server URL")).toBeVisible();
+});
+
+test("Login page has expected field Realm", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("Realm")).toBeVisible();
 });
