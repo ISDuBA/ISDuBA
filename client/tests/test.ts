@@ -20,12 +20,14 @@ test("Login page has expected title 'Login'", async ({ page }) => {
 
 test("Login page has link to github page", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Visit the ISDuBA project on Github" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Visit the ISDuBA project on Github" })
+  ).toBeVisible();
 });
 
 test("Login page has Login button", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("Button", {name: "Login" })).toBeVisible();
+  await expect(page.getByRole("Button", { name: "Login" })).toBeVisible();
 });
 
 test("Login page has expected field Server URL", async ({ page }) => {
