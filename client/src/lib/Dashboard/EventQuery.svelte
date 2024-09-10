@@ -229,7 +229,7 @@
 
 {#if $appStore.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor())}
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
-    <SectionHeader title={storedQuery.name}></SectionHeader>
+    <SectionHeader title={storedQuery.description}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if resultingActivities}
         {#if resultingActivities.length > 0}
