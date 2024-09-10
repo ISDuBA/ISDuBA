@@ -95,7 +95,7 @@
                 title={`Number of comments`}
                 class="flex items-center gap-4 text-gray-500"
               >
-                {#if doc.comments}
+                {#if doc.comments !== undefined}
                   <div class="flex items-center gap-1">
                     <i class="bx bx-comment"></i>
                     <span>{doc.comments}</span>
