@@ -29,7 +29,7 @@
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import Sortable from "sortablejs";
-  import { createStoredQuery, proposeName, updateStoredQuery, type Query } from "./query";
+  import { updateStoredQuery, type Query } from "./query";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
@@ -47,9 +47,6 @@
   let loading = false;
   let columnList: any;
   let columnListAdmin: any;
-
-  $: globalDashboardQueries = queries.filter((q) => q.dashboard && q.global);
-  $: firstTwoQueries = globalDashboardQueries.slice(0, 2);
 
   const fetchQueries = async () => {
     loading = true;
@@ -159,50 +156,6 @@
   $: adminQueries = queries.filter((q: Query) => {
     return q.global;
   });
-
-  const cloneDashboardQueries = async () => {
-    cloneErrorMessage = null;
-    const idsOfClonesQueries = [];
-    let failed = false;
-    for (let i = 0; i < firstTwoQueries.length; i++) {
-      const queryToClone = firstTwoQueries[i];
-      if (queryToClone) {
-        queryToClone.global = false;
-        queryToClone.name = proposeName(queries, queryToClone.name);
-        const response = await createStoredQuery(queryToClone);
-        if (!response.ok && response.error) {
-          cloneErrorMessage = getErrorDetails(`Failed to clone queries.`, response);
-          failed = true;
-        } else {
-          idsOfClonesQueries.push(response.content.id);
-        }
-      }
-    }
-    if (!failed) {
-      type Order = {
-        id: number;
-        order: number;
-      };
-      let orders: Order[] = [];
-      let count = 0;
-      for (let i = 0; i < idsOfClonesQueries.length; i++) {
-        orders.push({ id: idsOfClonesQueries[i], order: count });
-        count++;
-      }
-      for (let i = 0; i < userQueries.length; i++) {
-        orders.push({
-          id: userQueries[i].id,
-          order: count
-        });
-        count++;
-      }
-      let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
-      if (!response.ok && response.error) {
-        cloneErrorMessage = getErrorDetails(`Could not update query order.`, response);
-      }
-    }
-    fetchData();
-  };
 
   const elementDragEventUserQuery = () => {
     updateQueryOrder(userQueries);
@@ -350,14 +303,7 @@
       <ErrorMessage error={ignorePersonalErrorMessage}></ErrorMessage>
     </div>
     <div class="mb-2 w-fit">
-      <div class="mb-1 flex items-center gap-4">
-        <span class="text-2xl">Global</span>
-        {#if !appStore.isAdmin()}
-          <Button class="h-fit p-1 text-xs" on:click={cloneDashboardQueries} color="light"
-            >Clone global queries for my role</Button
-          >
-        {/if}
-      </div>
+      <span class="mb-1 text-2xl">Global</span>
       <hr class="mb-6" />
       <div class="mb-2 max-h-[66vh] overflow-auto">
         <Table hoverable={true} noborder={true}>
@@ -432,14 +378,12 @@
                   ></Checkbox>
                 </TableBodyCell>
                 <td>
-                  {#if !firstTwoQueries.find((q) => q.id === query.id || appStore.isAdmin())}
-                    <button
-                      title={`clone ${query.name}`}
-                      on:click|stopPropagation={() => {
-                        push(`/queries/new?clone=${query.id}`);
-                      }}><i class="bx bx-copy"></i></button
-                    >
-                  {/if}
+                  <button
+                    title={`clone ${query.name}`}
+                    on:click|stopPropagation={() => {
+                      push(`/queries/new?clone=${query.id}`);
+                    }}><i class="bx bx-copy"></i></button
+                  >
                   {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
                     <button
                       on:click|stopPropagation={() => {
