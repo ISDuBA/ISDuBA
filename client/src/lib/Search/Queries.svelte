@@ -62,13 +62,13 @@
   };
 
   onMount(async () => {
+    fetchIgnored();
     const response = await request("/api/queries", "GET");
     if (response.ok) {
       queries = response.content.filter((q: any) => q.kind !== SEARCHTYPES.EVENT);
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
-    fetchIgnored();
     if (queryString?.query) {
       // Need to wait until sortedQueries is filled.
       setTimeout(() => {
