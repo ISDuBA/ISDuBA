@@ -20,12 +20,42 @@
     Label,
     Select
   } from "flowbite-svelte";
+  import { onMount } from "svelte";
   export let formClass: string = "";
   export let source: Source;
   export let enableActive: boolean = false;
   export const updateSource = async () => {
     formatHeaders();
     await loadCerts();
+  };
+
+  export const fillAgeDataFromSource = (useSource: Source) => {
+    ageUnit = AgeUnit.hours;
+    let baseNumber: number | undefined = undefined;
+    let baseUnit: AgeUnit = ageUnit;
+    if (useSource.age && !["0s", "0h"].includes(useSource.age)) {
+      let [numStr, ...r]: string[] = (useSource.age ?? "").split("h");
+      let num: number = +numStr;
+      if (!(Number.isInteger(num) && !/[1-9]/.test(r.join(``)))) {
+        throw Error(
+          "Expected age to be given exclusively in hours, actual value was '" + useSource.age + "'."
+        );
+      }
+      if (num && num % (24 * 7) === 0) {
+        baseNumber = num / (24 * 7);
+        baseUnit = AgeUnit.weeks;
+      } else if (num && num % 24 === 0) {
+        baseNumber = num / 24;
+        baseUnit = AgeUnit.days;
+      } else {
+        baseNumber = num;
+        baseUnit = AgeUnit.hours;
+      }
+    } else if (useSource.age && ["0s", "0h"].includes(useSource.age)) {
+      baseNumber = 0;
+    }
+    ageNumber = baseNumber;
+    ageUnit = baseUnit;
   };
 
   export let inputChange = () => {};
@@ -46,39 +76,17 @@
   let privateCert: FileList | undefined;
   let publicCert: FileList | undefined;
 
-  let ageUnit: AgeUnit = AgeUnit.hours;
+  let ageUnit: AgeUnit;
   let ageNumber: number | undefined;
-  $: {
-    let baseNumber: number | undefined = undefined;
-    let baseUnit: AgeUnit = ageUnit;
-    if (source.age) {
-      let num: number = +(source.age ?? "").replace(/h$/, "").replace(/h0m0s$/, "");
-      if (Number.isInteger(num)) {
-        if (num && num % (24 * 7) === 0) {
-          baseNumber = num / (24 * 7);
-          baseUnit = AgeUnit.weeks;
-        } else if (num && num % 24 === 0) {
-          baseNumber = num / 24;
-          baseUnit = AgeUnit.days;
-        } else {
-          baseNumber = num;
-          baseUnit = AgeUnit.hours;
-        }
-      } else {
-        throw Error(
-          "Expected source.age to have the format '<number>h' or '<number>h0m0s', actual value was '" +
-            source.age +
-            "'."
-        );
-      }
-    }
-    ageNumber = baseNumber;
-    ageUnit = baseUnit;
-  }
+  let previousAgeNumber: number | undefined;
+
+  onMount(() => {
+    fillAgeDataFromSource(source);
+  });
 
   const onChangedAge = () => {
     if (!ageNumber && ageNumber !== 0) {
-      source.age = undefined;
+      source.age = "";
     } else {
       let num = ageNumber;
       if (ageUnit !== AgeUnit.hours) {
@@ -89,7 +97,10 @@
       }
       source.age = num.toString() + "h";
     }
-    inputChange();
+    if (ageNumber || previousAgeNumber !== ageNumber) {
+      inputChange();
+      previousAgeNumber = ageNumber;
+    }
   };
 
   const onChangedHeaders = (e: Event | undefined) => {
@@ -234,12 +245,14 @@
     </AccordionItem>
     <AccordionItem
       ><span slot="header">Advanced options</span>
-      <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-[minmax(175px,1fr)_1fr_1fr]">
+      <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-[minmax(190px,1fr)_1fr_1fr]">
         <div>
           <Label>Age</Label>
           <div class="inline-flex w-full">
             <Input
               class="rounded-none rounded-l-lg"
+              type="number"
+              min="0"
               placeholder="17520"
               on:input={onChangedAge}
               bind:value={ageNumber}

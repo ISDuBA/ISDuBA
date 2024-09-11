@@ -56,6 +56,7 @@
 
   let sourceForm: any;
   let updateSourceForm: any;
+  let fillAgeDataFromSource: (source: Source) => void;
 
   let source: Source = {
     name: "",
@@ -76,6 +77,9 @@
     let result = await fetchSource(Number(id), true);
     if (result.ok) {
       source = result.value;
+      if (fillAgeDataFromSource) {
+        fillAgeDataFromSource(source);
+      }
       sourceEdited = false;
     } else {
       loadSourceError = result.error;
@@ -175,6 +179,8 @@
       feeds = feeds;
 
       updateSourceForm = sourceForm.updateSource;
+      fillAgeDataFromSource = sourceForm.fillAgeDataFromSource;
+      fillAgeDataFromSource(source);
     }
   });
 </script>

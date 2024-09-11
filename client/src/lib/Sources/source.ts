@@ -91,7 +91,7 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   if (source.signature_check !== undefined) {
     formData.append("signature_check", source.signature_check.toString());
   }
-  if (source.age != undefined && source.age !== "") {
+  if (source.age != undefined) {
     formData.append("age", source.age.toString());
   }
   if (source.client_cert_public) {
