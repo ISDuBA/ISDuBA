@@ -314,7 +314,7 @@
 <hr class="mb-6" />
 
 {#if loadQueryError !== null}
-  <div class="w-3/4">
+  <div class="md:w-3/4">
     <div class="flex flex-col">
       <div class="flex flex-row">
         <div class="flex w-1/3 min-w-40 flex-row items-center gap-x-2">
@@ -413,14 +413,8 @@
         <Select id="roles" items={roles} bind:value={currentSearch.role}></Select>
       {/if}
     </div>
-    <div class="flex flex-row">
-      <div class="flex w-1/3 min-w-40 -flex-row items-baseline gap-x-3">
-        <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>
-        <small class:text-red-500={noColumnSelected} class:text-gray-400={!noColumnSelected}
-          >Select at least 1 column</small
-        >
-      </div>
-      <ButtonGroup class="ml-6">
+    <div class="mb-2">
+      <ButtonGroup>
         <RadioButton
           class="h-8"
           on:change={toggleSearchType}
@@ -443,7 +437,10 @@
         >
       </ButtonGroup>
     </div>
-    <div class="mt-4">
+    <small class:text-red-500={noColumnSelected} class:text-gray-400={!noColumnSelected}
+      >Select at least 1 column</small
+    >
+    <div class="mt-2">
       <div class="mb-2 flex flex-row">
         <div class="ml-6 w-1/3 min-w-40">Column</div>
         <div class="w-1/4 min-w-28">Visible</div>
