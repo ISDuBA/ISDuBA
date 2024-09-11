@@ -13,6 +13,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -94,7 +95,6 @@ type source struct {
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
 func (f *feed) refresh(m *Manager) error {
-
 	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
 	candidates, err := f.fetchIndex(m)
@@ -152,7 +152,15 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 
 // fetchIndex fetches the content of the feed index.
 func (f *feed) fetchIndex(m *Manager) ([]location, error) {
-	req, err := http.NewRequest(http.MethodGet, f.url.String(), nil)
+	indexURL := f.url.String()
+	if !f.rolie {
+		var err error
+		if indexURL, err = url.JoinPath(indexURL, "changes.csv"); err != nil {
+			return nil, err
+		}
+	}
+	slog.Debug("fetching index", "url", indexURL, "rolie", f.rolie)
+	req, err := http.NewRequest(http.MethodGet, indexURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -194,13 +202,7 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 // removeOlder takes a list of locations and removes the items which are already
 // in the database with a same or newer update time.
 func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, error) {
-
-	var remove []int
-
-	batch := pgx.Batch{}
-
-	const sql = `SELECT EXISTS(SELECT 1 FROM changes ` +
-		`WHERE url = $1 AND feeds_id = $2 AND time >= $3)`
+	var remove [][2]int
 
 	exists := func(idx int) func(pgx.Row) error {
 		return func(row pgx.Row) error {
@@ -209,11 +211,20 @@ func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, 
 				return fmt.Errorf("looking for same or newer in db failed: %w", err)
 			}
 			if have {
-				remove = append(remove, idx)
+				if n := len(remove); n > 0 && remove[n-1][1] == idx-1 {
+					remove[n-1][1] = idx
+				} else {
+					remove = append(remove, [2]int{idx, idx})
+				}
 			}
 			return nil
 		}
 	}
+
+	const sql = `SELECT EXISTS(SELECT 1 FROM changes ` +
+		`WHERE url = $1 AND feeds_id = $2 AND time >= $3)`
+
+	batch := pgx.Batch{}
 
 	for i := range candidates {
 		cand := &candidates[i]
@@ -229,9 +240,8 @@ func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, 
 		return nil, fmt.Errorf("sending same or newer batch failed: %w", err)
 	}
 
-	// XXX: This could be optimized by passing ranges to Delete.
 	for i := len(remove) - 1; i >= 0; i-- {
-		candidates = slices.Delete(candidates, remove[i], remove[i])
+		candidates = slices.Delete(candidates, remove[i][0], remove[i][1]+1)
 	}
 
 	return candidates, nil
@@ -274,6 +284,25 @@ func (f *feed) findWaiting() *location {
 		}
 	}
 	return nil
+}
+
+func (f *feed) addStats(st *Stats) {
+	for i := range f.queue {
+		switch f.queue[i].state {
+		case waiting:
+			st.Waiting++
+		case running:
+			st.Downloading++
+		}
+	}
+}
+
+func (s *source) addStats(st *Stats) {
+	for _, f := range s.feeds {
+		if !f.invalid.Load() {
+			f.addStats(st)
+		}
+	}
 }
 
 // forceIndexRefresh forces an index refresh on all feeds of a source.
@@ -444,8 +473,10 @@ func (s *source) loadHash(m *Manager, url string) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s (%d)", http.StatusText(resp.StatusCode), resp.StatusCode)
+		return nil, fmt.Errorf("%s (%d)",
+			http.StatusText(resp.StatusCode), resp.StatusCode)
 	}
+	defer resp.Body.Close()
 	return util.HashFromReader(resp.Body)
 }
 
@@ -466,7 +497,7 @@ func (s *source) useStrictMode(m *Manager) bool {
 }
 
 // storeLastChanges is intented to be called in the transaction storing the
-// importing the document after is was successful. It helps to remember the
+// imported document after is was successful. It helps to remember the
 // last changes per location so we don't need to download them all again and again.
 func (f *feed) storeLastChanges(l *location) func(context.Context, pgx.Tx, int64) error {
 	return func(ctx context.Context, tx pgx.Tx, _ int64) error {

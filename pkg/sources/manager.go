@@ -85,6 +85,42 @@ const (
 	SourceDeactivated
 )
 
+// Stats are some statistics about feeds and sources.
+type Stats struct {
+	Downloading int `json:"downloading"`
+	Waiting     int `json:"waiting"`
+}
+
+// SourceInfo are infos about a source.
+type SourceInfo struct {
+	ID                      int64
+	Name                    string
+	URL                     string
+	Active                  bool
+	Rate                    *float64
+	Slots                   *int
+	Headers                 []string
+	StrictMode              *bool
+	Insecure                *bool
+	SignatureCheck          *bool
+	Age                     *time.Duration
+	IgnorePatterns          []*regexp.Regexp
+	HasClientCertPublic     bool
+	HasClientCertPrivate    bool
+	HasClientCertPassphrase bool
+	Stats                   *Stats
+}
+
+// FeedInfo are infos about a feed.
+type FeedInfo struct {
+	ID    int64
+	Label string
+	URL   *url.URL
+	Rolie bool
+	Lvl   config.FeedLogLevel
+	Stats *Stats
+}
+
 func (sur SourceUpdateResult) String() string {
 	switch sur {
 	case SourceUnchanged:
@@ -263,47 +299,80 @@ func (m *Manager) Run(ctx context.Context) {
 	}
 }
 
-// AllSources iterates over all sources.
-func (m *Manager) AllSources(fn func(
-	id int64,
-	name string,
-	url string,
-	active bool,
-	rate *float64,
-	slots *int,
-	headers []string,
-	strictmode *bool,
-	insecure *bool,
-	signatureCheck *bool,
-	age *time.Duration,
-	ignorepatterns []*regexp.Regexp,
-	hasClientCertPublic bool,
-	hasClientCertPrivate bool,
-	hasClientCertPassphrase bool,
-)) {
+// Source returns infos about a source.
+func (m *Manager) Source(id int64, stats bool) *SourceInfo {
+	siCh := make(chan *SourceInfo)
+	m.fns <- func(m *Manager) {
+		s := m.findSourceByID(id)
+		if s == nil {
+			siCh <- nil
+			return
+		}
+		var st *Stats
+		if stats {
+			st = new(Stats)
+			s.addStats(st)
+		}
+		siCh <- &SourceInfo{
+			ID:                      s.id,
+			Name:                    s.name,
+			URL:                     s.url,
+			Active:                  s.active,
+			Rate:                    s.rate,
+			Slots:                   s.slots,
+			Headers:                 s.headers,
+			StrictMode:              s.strictMode,
+			Insecure:                s.insecure,
+			SignatureCheck:          s.signatureCheck,
+			Age:                     s.age,
+			IgnorePatterns:          s.ignorePatterns,
+			HasClientCertPublic:     s.clientCertPublic != nil,
+			HasClientCertPrivate:    s.clientCertPrivate != nil,
+			HasClientCertPassphrase: s.clientCertPassphrase != nil,
+			Stats:                   st,
+		}
+	}
+	return <-siCh
+}
+
+// Sources iterates over all sources and passes infos to a given function.
+func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager) {
 		defer close(done)
+		si := new(SourceInfo)
 		for _, s := range m.sources {
-			fn(s.id, s.name, s.url, s.active, s.rate, s.slots, s.headers,
-				s.strictMode, s.insecure, s.signatureCheck, s.age, s.ignorePatterns,
-				s.clientCertPublic != nil,
-				s.clientCertPrivate != nil,
-				s.clientCertPassphrase != nil,
-			)
+			var st *Stats
+			if stats {
+				st = new(Stats)
+				s.addStats(st)
+			}
+			*si = SourceInfo{
+				ID:                      s.id,
+				Name:                    s.name,
+				URL:                     s.url,
+				Active:                  s.active,
+				Rate:                    s.rate,
+				Slots:                   s.slots,
+				Headers:                 s.headers,
+				StrictMode:              s.strictMode,
+				Insecure:                s.insecure,
+				SignatureCheck:          s.signatureCheck,
+				Age:                     s.age,
+				IgnorePatterns:          s.ignorePatterns,
+				HasClientCertPublic:     s.clientCertPublic != nil,
+				HasClientCertPrivate:    s.clientCertPrivate != nil,
+				HasClientCertPassphrase: s.clientCertPassphrase != nil,
+				Stats:                   st,
+			}
+			fn(si)
 		}
 	}
 	<-done
 }
 
 // Feeds passes the fields of the feeds of a given source to a given function.
-func (m *Manager) Feeds(sourceID int64, fn func(
-	id int64,
-	label string,
-	url *url.URL,
-	rolie bool,
-	lvl config.FeedLogLevel,
-)) error {
+func (m *Manager) Feeds(sourceID int64, fn func(*FeedInfo), stats bool) error {
 	errCh := make(chan error)
 	m.fns <- func(m *Manager) {
 		s := m.findSourceByID(sourceID)
@@ -311,68 +380,146 @@ func (m *Manager) Feeds(sourceID int64, fn func(
 			errCh <- NoSuchEntryError("no such source")
 			return
 		}
+		fi := new(FeedInfo)
 		for _, f := range s.feeds {
-			fn(f.id, f.label, f.url, f.rolie, config.FeedLogLevel(f.logLevel.Load()))
+			if f.invalid.Load() {
+				continue
+			}
+			var st *Stats
+			if stats {
+				st = new(Stats)
+				f.addStats(st)
+			}
+			*fi = FeedInfo{
+				ID:    f.id,
+				Label: f.label,
+				URL:   f.url,
+				Rolie: f.rolie,
+				Lvl:   config.FeedLogLevel(f.logLevel.Load()),
+				Stats: st,
+			}
+			fn(fi)
 		}
 		errCh <- nil
 	}
 	return <-errCh
 }
 
-// Feed passes the fields of feed to a given function.
-func (m *Manager) Feed(feedID int64, fn func(
-	label string,
-	url *url.URL,
-	rolie bool,
-	lvl config.FeedLogLevel,
-)) error {
-	errCh := make(chan error)
+// Feed returns the infos of a feed.
+func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
+	fiCh := make(chan *FeedInfo)
 	m.fns <- func(m *Manager) {
 		f := m.findFeedByID(feedID)
-		if f == nil {
-			errCh <- NoSuchEntryError("no such feed")
+		if f == nil || f.invalid.Load() {
+			fiCh <- nil
 			return
 		}
-		fn(f.label, f.url, f.rolie, config.FeedLogLevel(f.logLevel.Load()))
-		errCh <- nil
+		var st *Stats
+		if stats {
+			st = new(Stats)
+			f.addStats(st)
+		}
+		fiCh <- &FeedInfo{
+			ID:    f.id,
+			Label: f.label,
+			URL:   f.url,
+			Rolie: f.rolie,
+			Lvl:   config.FeedLogLevel(f.logLevel.Load()),
+			Stats: st,
+		}
 	}
-	return <-errCh
+	return <-fiCh
 }
 
 // FeedLog sends the log of the feed with the given id to the given function.
-func (m *Manager) FeedLog(feedID int64, fn func(
-	t time.Time,
-	lvl config.FeedLogLevel,
-	msg string,
-)) error {
-	errCh := make(chan error)
-	m.fns <- func(m *Manager) {
-		const sql = `SELECT time, lvl::text, msg FROM feed_logs WHERE feeds_id = $1 ` +
-			`ORDER by time DESC`
-		errCh <- m.db.Run(
-			context.Background(),
-			func(ctx context.Context, con *pgxpool.Conn) error {
-				rows, err := con.Query(ctx, sql, feedID)
-				if err != nil {
-					return fmt.Errorf("querying feed logs failed: %w", err)
-				}
-				defer rows.Close()
-				var (
-					t   time.Time
-					lvl config.FeedLogLevel
-					msg string
-				)
-				for rows.Next() {
-					if err := rows.Scan(&t, &lvl, &msg); err != nil {
-						return fmt.Errorf("scanning log failed: %w", err)
-					}
-					fn(t, lvl, msg)
-				}
-				return rows.Err()
-			}, 0,
-		)
+func (m *Manager) FeedLog(
+	feedID int64,
+	fn func(
+		t time.Time,
+		lvl config.FeedLogLevel,
+		msg string),
+	limit, offset int64,
+	logLevels []config.FeedLogLevel,
+	count bool,
+) (int64, error) {
+	const (
+		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
+		selectSQL = `SELECT time, lvl::text, msg FROM feed_logs WHERE `
+	)
+
+	var cond strings.Builder
+	cond.WriteString(`feeds_id = $1`)
+
+	args := []any{feedID}
+	if len(logLevels) > 0 {
+		cond.WriteString(` AND (`)
+		for i, lvl := range logLevels {
+			if i > 0 {
+				cond.WriteString(` OR `)
+			}
+			cond.WriteString(`lvl = $`)
+			cond.WriteString(strconv.Itoa(len(args) + 1))
+			args = append(args, lvl)
+		}
+		cond.WriteByte(')')
 	}
-	return <-errCh
+
+	var cntSQL string
+	var cntArgs []any
+
+	if count {
+		// Counting ignores limit, offset and order.
+		cntSQL = countSQL + cond.String()
+		cntArgs = args
+		slog.Debug("feed log count", "stmt", cntSQL)
+	}
+
+	cond.WriteString(` ORDER by time DESC`)
+
+	if offset >= 0 {
+		cond.WriteString(` OFFSET $`)
+		cond.WriteString(strconv.Itoa(len(args) + 1))
+		args = append(args, offset)
+	}
+	if limit >= 0 {
+		cond.WriteString(` LIMIT $`)
+		cond.WriteString(strconv.Itoa(len(args) + 1))
+		args = append(args, limit)
+	}
+
+	selSQL := selectSQL + cond.String()
+	slog.Debug("feed log select", "stmt", selSQL)
+
+	counter := int64(-1)
+
+	err := m.db.Run(
+		context.Background(),
+		func(ctx context.Context, con *pgxpool.Conn) error {
+			if count {
+				if err := con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter); err != nil {
+					return fmt.Errorf("counting feed logs failed: %w", err)
+				}
+			}
+			rows, err := con.Query(ctx, selSQL, args...)
+			if err != nil {
+				return fmt.Errorf("querying feed logs failed: %w", err)
+			}
+			defer rows.Close()
+			var (
+				t   time.Time
+				lvl config.FeedLogLevel
+				msg string
+			)
+			for rows.Next() {
+				if err := rows.Scan(&t, &lvl, &msg); err != nil {
+					return fmt.Errorf("scanning log failed: %w", err)
+				}
+				fn(t, lvl, msg)
+			}
+			return rows.Err()
+		}, 0,
+	)
+	return counter, err
 }
 
 // ping wakes up the manager.

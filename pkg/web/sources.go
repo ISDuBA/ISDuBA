@@ -15,7 +15,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -46,21 +45,22 @@ func (sa sourceAge) MarshalText() ([]byte, error) {
 }
 
 type source struct {
-	ID                   int64      `json:"id" form:"id"`
-	Name                 string     `json:"name" form:"name" binding:"required,min=1"`
-	URL                  string     `json:"url" form:"url" binding:"required,min=1"`
-	Active               bool       `json:"active" form:"active"`
-	Rate                 *float64   `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots                *int       `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
-	Headers              []string   `json:"headers,omitempty" form:"headers"`
-	StrictMode           *bool      `json:"strict_mode,omitempty" form:"strict_mode"`
-	Insecure             *bool      `json:"insecure,omitempty" form:"insecure"`
-	SignatureCheck       *bool      `json:"signature_check,omitempty" form:"signature_check"`
-	Age                  *sourceAge `json:"age,omitempty" form:"age"`
-	IgnorePatterns       []string   `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
-	ClientCertPublic     *string    `json:"client_cert_public,omitempty" form:"client_cert_public"`
-	ClientCertPrivate    *string    `json:"client_cert_private,omitempty" form:"client_cert_private"`
-	ClientCertPassphrase *string    `json:"client_cert_passphrase,omitempty" form:"client_cert_passphrase"`
+	ID                   int64          `json:"id" form:"id"`
+	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
+	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
+	Active               bool           `json:"active" form:"active"`
+	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Headers              []string       `json:"headers,omitempty" form:"headers"`
+	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
+	Insecure             *bool          `json:"insecure,omitempty" form:"insecure"`
+	SignatureCheck       *bool          `json:"signature_check,omitempty" form:"signature_check"`
+	Age                  *sourceAge     `json:"age,omitempty" form:"age"`
+	IgnorePatterns       []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
+	ClientCertPublic     *string        `json:"client_cert_public,omitempty" form:"client_cert_public"`
+	ClientCertPrivate    *string        `json:"client_cert_private,omitempty" form:"client_cert_private"`
+	ClientCertPassphrase *string        `json:"client_cert_passphrase,omitempty" form:"client_cert_passphrase"`
+	Stats                *sources.Stats `json:"stats,omitempty"`
 }
 
 type feed struct {
@@ -69,6 +69,7 @@ type feed struct {
 	URL      string              `json:"url"`
 	Rolie    bool                `json:"rolie"`
 	LogLevel config.FeedLogLevel `json:"log_level"`
+	Stats    *sources.Stats      `json:"stats,omitempty"`
 }
 
 var stars = "***"
@@ -80,47 +81,59 @@ func threeStars(b bool) *string {
 	return nil
 }
 
+func newSource(si *sources.SourceInfo) *source {
+	var sa *sourceAge
+	if si.Age != nil {
+		sa = &sourceAge{*si.Age}
+	}
+	return &source{
+		ID:                   si.ID,
+		Name:                 si.Name,
+		URL:                  si.URL,
+		Active:               si.Active,
+		Rate:                 si.Rate,
+		Slots:                si.Slots,
+		Headers:              si.Headers,
+		StrictMode:           si.StrictMode,
+		Insecure:             si.Insecure,
+		SignatureCheck:       si.SignatureCheck,
+		Age:                  sa,
+		IgnorePatterns:       sources.AsStrings(si.IgnorePatterns),
+		ClientCertPublic:     threeStars(si.HasClientCertPublic),
+		ClientCertPrivate:    threeStars(si.HasClientCertPrivate),
+		ClientCertPassphrase: threeStars(si.HasClientCertPassphrase),
+		Stats:                si.Stats,
+	}
+}
+
+func newFeed(fi *sources.FeedInfo) *feed {
+	return &feed{
+		ID:       fi.ID,
+		Label:    fi.Label,
+		URL:      fi.URL.String(),
+		Rolie:    fi.Rolie,
+		LogLevel: fi.Lvl,
+		Stats:    fi.Stats,
+	}
+}
+
+func showStats(ctx *gin.Context) (bool, bool) {
+	st := ctx.Query("stats")
+	if st == "" {
+		return false, true
+	}
+	return parse(ctx, strconv.ParseBool, st)
+}
+
 func (c *Controller) viewSources(ctx *gin.Context) {
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
+	}
 	srcs := []*source{}
-	c.sm.AllSources(func(
-		id int64,
-		name string,
-		url string,
-		active bool,
-		rate *float64,
-		slots *int,
-		headers []string,
-		strictMode *bool,
-		insecure *bool,
-		signatureCheck *bool,
-		age *time.Duration,
-		ignorePatterns []*regexp.Regexp,
-		hasClientCertPublic bool,
-		hasClientCertPrivate bool,
-		hasClientCertPassphrase bool,
-	) {
-		var sa *sourceAge
-		if age != nil {
-			sa = &sourceAge{*age}
-		}
-		srcs = append(srcs, &source{
-			ID:                   id,
-			Name:                 name,
-			URL:                  url,
-			Active:               active,
-			Rate:                 rate,
-			Slots:                slots,
-			Headers:              headers,
-			StrictMode:           strictMode,
-			Insecure:             insecure,
-			SignatureCheck:       signatureCheck,
-			Age:                  sa,
-			IgnorePatterns:       sources.AsStrings(ignorePatterns),
-			ClientCertPublic:     threeStars(hasClientCertPublic),
-			ClientCertPrivate:    threeStars(hasClientCertPrivate),
-			ClientCertPassphrase: threeStars(hasClientCertPassphrase),
-		})
-	})
+	c.sm.Sources(func(si *sources.SourceInfo) {
+		srcs = append(srcs, newSource(si))
+	}, stats)
 	ctx.JSON(http.StatusOK, gin.H{"sources": srcs})
 }
 
@@ -220,6 +233,26 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+}
+
+func (c *Controller) viewSource(ctx *gin.Context) {
+	var input struct {
+		ID int64 `uri:"id" binding:"required"`
+	}
+	if err := ctx.ShouldBindUri(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
+	}
+	si := c.sm.Source(input.ID, stats)
+	if si == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, newSource(si))
 }
 
 func (c *Controller) updateSource(ctx *gin.Context) {
@@ -404,22 +437,14 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
+	}
 	feeds := []*feed{}
-	switch err := c.sm.Feeds(input.SourceID, func(
-		id int64,
-		label string,
-		url *url.URL,
-		rolie bool,
-		lvl config.FeedLogLevel,
-	) {
-		feeds = append(feeds, &feed{
-			ID:       id,
-			Label:    label,
-			URL:      url.String(),
-			Rolie:    rolie,
-			LogLevel: lvl,
-		})
-	}); {
+	switch err := c.sm.Feeds(input.SourceID, func(fi *sources.FeedInfo) {
+		feeds = append(feeds, newFeed(fi))
+	}, stats); {
 	case err == nil:
 		ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
 	case errors.Is(err, sources.NoSuchEntryError("")):
@@ -520,26 +545,16 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	f := feed{ID: input.FeedID}
-	switch err := c.sm.Feed(input.FeedID, func(
-		label string,
-		url *url.URL,
-		rolie bool,
-		lvl config.FeedLogLevel,
-	) {
-		f.Label = label
-		f.URL = url.String()
-		f.Rolie = rolie
-		f.LogLevel = lvl
-	}); {
-	case err == nil:
-		ctx.JSON(http.StatusOK, &f)
-	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	default:
-		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	stats, ok := showStats(ctx)
+	if !ok {
+		return
 	}
+	fi := c.sm.Feed(input.FeedID, stats)
+	if fi == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "feed not found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, newFeed(fi))
 }
 
 func (c *Controller) deleteFeed(ctx *gin.Context) {
@@ -574,23 +589,66 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 		Level   config.FeedLogLevel `json:"level"`
 		Message string              `json:"msg"`
 	}
+	var (
+		limit, offset int64 = -1, -1
+		logLevels     []config.FeedLogLevel
+		count, ok     bool
+	)
+
+	if ofs := ctx.Query("offset"); ofs != "" {
+		if offset, ok = parse(ctx, toInt64, ofs); !ok {
+			return
+		}
+	}
+
+	if lim := ctx.Query("limit"); lim != "" {
+		if limit, ok = parse(ctx, toInt64, lim); !ok {
+			return
+		}
+	}
+
+	if cnt := ctx.Query("count"); cnt != "" {
+		if count, ok = parse(ctx, strconv.ParseBool, cnt); !ok {
+			return
+		}
+	}
+
+	if lvls := ctx.Query("levels"); lvls != "" {
+		for _, lvl := range strings.Fields(lvls) {
+			logLevel, ok := parse(ctx, config.ParseFeedLogLevel, lvl)
+			if !ok {
+				return
+			}
+			logLevels = append(logLevels, logLevel)
+		}
+	}
+
 	entries := []entry{}
-	if err := c.sm.FeedLog(input.FeedID, func(
-		t time.Time,
-		lvl config.FeedLogLevel,
-		msg string,
-	) {
-		entries = append(entries, entry{
-			Time:    t,
-			Level:   lvl,
-			Message: msg,
-		})
-	}); err != nil {
+	counter, err := c.sm.FeedLog(
+		input.FeedID,
+		func(
+			t time.Time,
+			lvl config.FeedLogLevel,
+			msg string) {
+			entries = append(entries, entry{
+				Time:    t,
+				Level:   lvl,
+				Message: msg,
+			})
+		},
+		limit, offset, logLevels, count,
+	)
+
+	if err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, entries)
+	h := gin.H{"entries": entries}
+	if count {
+		h["count"] = counter
+	}
+	ctx.JSON(http.StatusOK, h)
 }
 
 // defaultMessage returns the default message.
