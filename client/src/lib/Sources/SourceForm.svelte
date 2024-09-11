@@ -254,11 +254,23 @@
         </div>
         <div>
           <Label>Rate</Label>
-          <Input on:input={inputChange} bind:value={source.rate}></Input>
+          <input
+            type="number"
+            placeholder="1"
+            on:input={inputChange}
+            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"
+            bind:value={source.rate}
+          />
         </div>
         <div>
           <Label>Slots</Label>
-          <Input on:input={inputChange} bind:value={source.slots}></Input>
+          <input
+            type="number"
+            placeholder="2"
+            on:input={inputChange}
+            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"
+            bind:value={source.slots}
+          />
         </div>
       </div>
 

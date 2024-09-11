@@ -58,9 +58,9 @@
   let source: Source = {
     name: "",
     url: "",
+    rate: undefined,
+    slots: undefined,
     active: false,
-    rate: 1,
-    slots: 2,
     strict_mode: true,
     headers: [""],
     ignore_patterns: [""]

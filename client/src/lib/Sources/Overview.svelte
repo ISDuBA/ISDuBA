@@ -154,7 +154,11 @@
       </tr>
     {/each}
     <div slot="bottom">
-      <div class:hidden={!loadingSources} class:mb-4={true}>
+      <div
+        class:invisible={!loadingSources}
+        class={loadingSources ? "loadingFadeIn" : ""}
+        class:mb-4={true}
+      >
         Loading ...
         <Spinner color="gray" size="4"></Spinner>
       </div>
