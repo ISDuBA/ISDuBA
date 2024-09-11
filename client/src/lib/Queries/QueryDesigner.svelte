@@ -310,26 +310,29 @@
   <div class="md:w-3/4">
     <div class="flex flex-col">
       <div class="flex flex-row flex-wrap gap-4">
-        <div class="flex w-1/3 min-w-40 flex-col gap-x-2">
-          <Label class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : ""}
-            >Name:</Label
-          >
-          <Input
-            on:input={() => {
-              wasNameEdited = true;
-            }}
-            bind:value={currentSearch.name}
-          />
+        <div class="flex w-1/3 min-w-56 flex-col gap-x-2">
+          <div>
+            <Label class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : ""}
+              >Name:</Label
+            >
+            <Input
+              on:input={() => {
+                wasNameEdited = true;
+              }}
+              bind:value={currentSearch.name}
+            />
+          </div>
+          <div class="mb-2">
+            <small
+              class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : "text-gray-400"}
+              >Required</small
+            >
+          </div>
         </div>
-        <div class="flex w-1/3 min-w-96 flex-col gap-x-2">
+        <div class="mb-4 flex w-1/3 min-w-56 flex-col gap-x-2 md:mb-0 md:min-w-96">
           <Label>Description:</Label>
           <Input bind:value={currentSearch.description} />
         </div>
-      </div>
-      <div class="mb-4">
-        <small class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : "text-gray-400"}
-          >Required</small
-        >
       </div>
     </div>
     <div class="mb-4 flex gap-4">
@@ -389,8 +392,8 @@
     >
     <div class="mt-2">
       <div class="mb-2 flex flex-row">
-        <div class="ml-6 w-1/3 min-w-40">Column</div>
-        <div class="w-1/4 min-w-28">Visible</div>
+        <div class="me-2 ml-6 w-1/3 min-w-40">Column</div>
+        <div class="me-2 w-1/4 md:min-w-28">Visible</div>
         <div class="text-nowrap">Order</div>
       </div>
       <section bind:this={columnList}>
@@ -403,12 +406,12 @@
             on:focus={() => {}}
           >
             <div class:w-6={true} class:flex={true} class:flex-col={true}>
-              <button class="h-4">
-                <Img src="grid-dots-vertical-rounded.svg" class="h-4 min-h-2 min-w-2 invert-[.5]" />
+              <button>
+                <Img src="grid-dots-vertical-rounded.svg" class="h-auto w-5 invert-[.5]" />
               </button>
             </div>
-            <div class="columnName w-1/3 min-w-40">{col.name}</div>
-            <div class="w-1/4 min-w-28">
+            <div class="columnName me-2 w-1/3 min-w-40">{col.name}</div>
+            <div class="me-2 w-1/4 md:min-w-28">
               <Checkbox
                 on:change={() => {
                   setVisible(index);
@@ -437,12 +440,17 @@
         {/each}
       </section>
     </div>
-    <div class="mt-6 w-full min-w-96">
+    <div class="mt-6 w-full">
       <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
       <div class="flex flex-row">
         <Input bind:value={currentSearch.query} />
       </div>
-      <div class="mt-3 flex flex-row">
+      {#if saveErrorMessage}
+        <div class="mt-2 flex md:justify-end">
+          <ErrorMessage error={saveErrorMessage}></ErrorMessage>
+        </div>
+      {/if}
+      <div class="mt-3 flex flex-row flex-wrap">
         {#if loading}
           <div class="loadingFadeIn mr-4 mt-3">
             Loading ...
@@ -457,7 +465,7 @@
         {#if errorMessage}
           <span class="text-red-600">{errorMessage}</span>
         {/if}
-        <div class="my-2 ml-auto flex flex-row gap-3">
+        <div class="my-2 ml-auto flex flex-row flex-wrap gap-3">
           {#if !loading}
             <Button on:click={testQuery} color="light"
               ><i class="bx bx-test-tube me-2"></i> Test query</Button
@@ -489,9 +497,6 @@
           >
         </div>
       </div>
-      {#if saveErrorMessage}
-        <ErrorMessage error={saveErrorMessage}></ErrorMessage>
-      {/if}
     </div>
   </div>
 {:else}
