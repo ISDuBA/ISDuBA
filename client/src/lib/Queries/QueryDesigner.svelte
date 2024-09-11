@@ -42,8 +42,7 @@
   import Sortable from "sortablejs";
 
   export let params: any = null;
-  let editName = false;
-  let editDescription = false;
+  let wasNameEdited = false;
   let queryCount: any = null;
   let loading = false;
   let errorMessage: ErrorDetails | null;
@@ -51,7 +50,6 @@
   let loadQueryError: ErrorDetails | null;
   let loadedData: any = null;
   let abortController: AbortController;
-  let placeholder = "";
 
   let columnList: any;
 
@@ -105,7 +103,7 @@
       searchType: SEARCHTYPES.ADVISORY,
       columns: columns,
       orderBy: [],
-      name: "New Query",
+      name: "",
       query: "",
       description: "",
       global: false,
@@ -203,12 +201,6 @@
     }
   };
 
-  const shorten = (text: string) => {
-    if (!text) return "";
-    if (text.length < 20) return text;
-    return `${text.substring(0, 20)}...`;
-  };
-
   const generateQueryFrom = (result: any): Search => {
     let searchType = SEARCHTYPES.DOCUMENT;
     let columns = [];
@@ -266,6 +258,7 @@
     let id;
     if (queryString?.clone) {
       id = queryString?.clone;
+      wasNameEdited = true;
     }
     if (params) id = params.id;
     if (id) {
@@ -316,73 +309,27 @@
 {#if loadQueryError !== null}
   <div class="md:w-3/4">
     <div class="flex flex-col">
-      <div class="flex flex-row">
-        <div class="flex w-1/3 min-w-40 flex-row items-center gap-x-2">
-          <span class={currentSearch.name === "" ? "text-red-500" : ""}>Name:</span>
-          <button
-            on:click={() => {
-              editName = !editName;
-            }}
+      <div class="flex flex-row flex-wrap gap-4">
+        <div class="flex w-1/3 min-w-40 flex-col gap-x-2">
+          <Label class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : ""}
+            >Name:</Label
           >
-            {#if editName}
-              <Input
-                autofocus
-                {placeholder}
-                bind:value={currentSearch.name}
-                on:keyup={(e) => {
-                  if (e.key === "Enter") editName = false;
-                  if (e.key === "Escape") editName = false;
-                  e.preventDefault();
-                }}
-                on:blur={() => {
-                  editName = false;
-                }}
-                on:click={(e) => e.stopPropagation()}
-              />
-            {:else}
-              <div class="flex flex-row items-center" title={currentSearch.name}>
-                <h5 class="font-medium text-gray-500 dark:text-gray-400">
-                  {shorten(currentSearch.name)}
-                </h5>
-                <i class="bx bx-edit-alt ml-1"></i>
-              </div>
-            {/if}
-          </button>
+          <Input
+            on:input={() => {
+              wasNameEdited = true;
+            }}
+            bind:value={currentSearch.name}
+          />
         </div>
-        <div class="ml-6 flex w-1/3 min-w-96 flex-row items-center gap-x-2">
-          <span>Description:</span>
-          <button
-            on:click={() => {
-              editDescription = !editDescription;
-            }}
-          >
-            {#if editDescription}
-              <Input
-                autofocus
-                bind:value={currentSearch.description}
-                on:keyup={(e) => {
-                  if (e.key === "Enter") editDescription = false;
-                  if (e.key === "Escape") editDescription = false;
-                  e.preventDefault();
-                }}
-                on:blur={() => {
-                  editDescription = false;
-                }}
-                on:click={(e) => e.stopPropagation()}
-              />
-            {:else}
-              <div class="flex flex-row items-center" title={currentSearch.description}>
-                <h5 class="font-medium text-gray-500 dark:text-gray-400">
-                  {shorten(currentSearch.description)}
-                </h5>
-                <i class="bx bx-edit-alt ml-1"></i>
-              </div>
-            {/if}
-          </button>
+        <div class="flex w-1/3 min-w-96 flex-col gap-x-2">
+          <Label>Description:</Label>
+          <Input bind:value={currentSearch.description} />
         </div>
       </div>
       <div class="mb-4">
-        <small class={currentSearch.name === "" ? "text-red-500" : "text-gray-400"}>Required</small>
+        <small class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : "text-gray-400"}
+          >Required</small
+        >
       </div>
     </div>
     <div class="mb-4 flex gap-4">
