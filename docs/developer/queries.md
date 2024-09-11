@@ -59,6 +59,8 @@ via the ignored table.
 
 #### editing user interface
 
+##### Idea of special clone button
+
 A special button ala "Clone the global dashboard queries for me"
 will copy the two global queries, mark the copies as
 for the dashboard, puts them into the first position
@@ -68,5 +70,12 @@ This button avoids the problem that if only the second
 global query is cloned, it would be the first to be displayed
 under the calculation rule above.
 
-
+The idea was discarded for the reason that an
+admin add new queries and re-order all queries so that
+the default queries were not at the first two positions. If the user
+then clones the first two global queries these maybe are not the
+pre-defined ones. We could mark these queries as pre-defined by
+using another attribute in the SQL table or using a
+naming convention but that would make things more complicate
+than necessary.
 
