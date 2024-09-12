@@ -17,11 +17,14 @@
   import Queries from "./Queries.svelte";
   import DiffSelection from "$lib/Diff/DiffSelection.svelte";
   import { appStore } from "$lib/store";
+  import { querystring } from "svelte-spa-router";
+  import { parse } from "qs";
 
   let searchTerm: string | null;
   let advisoryTable: any;
   let advancedSearch = false;
   let selectedCustomQuery: any;
+  let queryString: any;
   // let searchqueryTimer: any = null;
 
   const resetQuery = () => {
@@ -92,7 +95,11 @@
     sessionStorage.setItem("documentSearchTerm", "");
   };
 
-  onMount(async () => {});
+  onMount(async () => {
+    if ($querystring) {
+      queryString = parse($querystring);
+    }
+  });
 </script>
 
 <svelte:head>
@@ -113,6 +120,7 @@
     await tick();
     advisoryTable.fetchData();
   }}
+  {queryString}
   bind:selectedIndex={selectedCustomQuery}
 ></Queries>
 <div class="mb-3 flex">
