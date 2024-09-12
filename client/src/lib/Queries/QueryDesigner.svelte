@@ -10,7 +10,17 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Input, Spinner, Button, Checkbox, Img, RadioButton, ButtonGroup } from "flowbite-svelte";
+  import {
+    Input,
+    Spinner,
+    Button,
+    Checkbox,
+    Img,
+    RadioButton,
+    ButtonGroup,
+    Label,
+    Select
+  } from "flowbite-svelte";
   import { request } from "$lib/request";
   import {
     COLUMNS,
@@ -18,7 +28,8 @@
     SEARCHTYPES,
     generateQueryString,
     type Search,
-    type Column
+    type Column,
+    proposeName
   } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
@@ -26,7 +37,7 @@
   import { push, querystring } from "svelte-spa-router";
   import { parse } from "qs";
   import { appStore } from "$lib/store";
-  import { ADMIN } from "$lib/workflow";
+  import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import Sortable from "sortablejs";
 
@@ -43,6 +54,16 @@
   let placeholder = "";
 
   let columnList: any;
+
+  // Prop items of (Multi-)Select doesn't accept simple strings
+  const roles = [{ name: "<no role>", value: "" }].concat(
+    [EDITOR, REVIEWER, AUDITOR, IMPORTER, SOURCE_MANAGER, ADMIN].map((r) => {
+      return {
+        name: r,
+        value: r
+      };
+    })
+  );
 
   const unsetMessages = () => {
     queryCount = null;
@@ -87,7 +108,9 @@
       name: "New Query",
       query: "",
       description: "",
-      global: false
+      global: false,
+      dashboard: false,
+      role: undefined
     };
   };
 
@@ -112,6 +135,12 @@
     formData.append("kind", currentSearch.searchType);
     formData.append("name", currentSearch.name);
     formData.append("global", `${currentSearch.global}`);
+    formData.append("dashboard", `${currentSearch.dashboard}`);
+    if (currentSearch.role) {
+      formData.append("role", `${currentSearch.role}`);
+    } else {
+      formData.append("role", "");
+    }
     if (currentSearch.description.length > 0) {
       formData.append("description", currentSearch.description);
     }
@@ -223,43 +252,10 @@
       name: result.name,
       query: result.query,
       description: result.description || "",
-      global: result.global
+      global: result.global,
+      dashboard: result.dashboard,
+      role: result.role
     };
-  };
-
-  /**
-   * Takes the list of existing queries, looks for already given clones and returns a proper name.
-   * Expamples:
-   *
-   * For non existing clones
-   *
-   * Monat -> Monat (1)
-   * Monat (1) -> Monat (1) (1)
-   *
-   * Say there is already a clone
-   *
-   * Monat and Monat (1) -> Monat (2)
-   * Monat (1) and Monat (1) (1) -> Monat (1) (2)
-   * Monat (1) (2) and Monat (1) (1) -> Monat (1) (3)
-   *
-   * And so on.
-   *
-   * @param result list of queries
-   * @param name name of the query
-   */
-  const proposeName = (result: any, name: string) => {
-    const clones = result
-      .filter((r: any) => {
-        const re = new RegExp(name.replaceAll("(", "\\(").replaceAll(")", "\\)") + " \\(\\d+\\)");
-        return re.test(r.name);
-      })
-      .map((r: any) => {
-        return r.name;
-      })
-      .sort((a: string, b: string) => a.localeCompare(b, "en", { numeric: true }));
-    if (clones.length === 0) return `${name} (1)`;
-    const highestIndex = parseInt(clones[clones.length - 1].split(name + " (")[1]);
-    return `${name} (${highestIndex + 1})`;
   };
 
   onMount(async () => {
@@ -273,7 +269,7 @@
     }
     if (params) id = params.id;
     if (id) {
-      const response = await request(`/api/queries/`, "GET");
+      const response = await request(`/api/queries`, "GET");
       if (response.ok) {
         const result = await response.content;
         const thisQuery = result.find((q: any) => {
@@ -287,6 +283,7 @@
           currentSearch.name = proposeName(result, currentSearch.name);
           if (!isRoleIncluded(appStore.getRoles(), [ADMIN])) {
             currentSearch.global = false;
+            currentSearch.role = undefined;
           }
         }
       } else if (response.error) {
@@ -318,88 +315,104 @@
 
 {#if loadQueryError !== null}
   <div class="w-3/4">
-    <div class="flex h-1 flex-row">
-      <div class="flex w-1/3 min-w-40 flex-row items-center gap-x-2">
-        <span class={currentSearch.name === "" ? "text-red-500" : ""}>Name:</span>
-        <button
-          on:click={() => {
-            editName = !editName;
-          }}
-        >
-          {#if editName}
-            <Input
-              autofocus
-              {placeholder}
-              bind:value={currentSearch.name}
-              on:keyup={(e) => {
-                if (e.key === "Enter") editName = false;
-                if (e.key === "Escape") editName = false;
-                e.preventDefault();
-              }}
-              on:blur={() => {
-                editName = false;
-              }}
-              on:click={(e) => e.stopPropagation()}
-            />
-          {:else}
-            <div class="flex flex-row items-center" title={currentSearch.name}>
-              <h5 class="font-medium text-gray-500 dark:text-gray-400">
-                {shorten(currentSearch.name)}
-              </h5>
-              <i class="bx bx-edit-alt ml-1"></i>
-            </div>
-          {/if}
-        </button>
+    <div class="flex flex-col">
+      <div class="flex flex-row">
+        <div class="flex w-1/3 min-w-40 flex-row items-center gap-x-2">
+          <span class={currentSearch.name === "" ? "text-red-500" : ""}>Name:</span>
+          <button
+            on:click={() => {
+              editName = !editName;
+            }}
+          >
+            {#if editName}
+              <Input
+                autofocus
+                {placeholder}
+                bind:value={currentSearch.name}
+                on:keyup={(e) => {
+                  if (e.key === "Enter") editName = false;
+                  if (e.key === "Escape") editName = false;
+                  e.preventDefault();
+                }}
+                on:blur={() => {
+                  editName = false;
+                }}
+                on:click={(e) => e.stopPropagation()}
+              />
+            {:else}
+              <div class="flex flex-row items-center" title={currentSearch.name}>
+                <h5 class="font-medium text-gray-500 dark:text-gray-400">
+                  {shorten(currentSearch.name)}
+                </h5>
+                <i class="bx bx-edit-alt ml-1"></i>
+              </div>
+            {/if}
+          </button>
+        </div>
+        <div class="ml-6 flex w-1/3 min-w-96 flex-row items-center gap-x-2">
+          <span>Description:</span>
+          <button
+            on:click={() => {
+              editDescription = !editDescription;
+            }}
+          >
+            {#if editDescription}
+              <Input
+                autofocus
+                bind:value={currentSearch.description}
+                on:keyup={(e) => {
+                  if (e.key === "Enter") editDescription = false;
+                  if (e.key === "Escape") editDescription = false;
+                  e.preventDefault();
+                }}
+                on:blur={() => {
+                  editDescription = false;
+                }}
+                on:click={(e) => e.stopPropagation()}
+              />
+            {:else}
+              <div class="flex flex-row items-center" title={currentSearch.description}>
+                <h5 class="font-medium text-gray-500 dark:text-gray-400">
+                  {shorten(currentSearch.description)}
+                </h5>
+                <i class="bx bx-edit-alt ml-1"></i>
+              </div>
+            {/if}
+          </button>
+        </div>
       </div>
-      <div class="ml-6 flex w-1/3 min-w-96 flex-row items-center gap-x-2">
-        <span>Description:</span>
-        <button
-          on:click={() => {
-            editDescription = !editDescription;
-          }}
-        >
-          {#if editDescription}
-            <Input
-              autofocus
-              bind:value={currentSearch.description}
-              on:keyup={(e) => {
-                if (e.key === "Enter") editDescription = false;
-                if (e.key === "Escape") editDescription = false;
-                e.preventDefault();
-              }}
-              on:blur={() => {
-                editDescription = false;
-              }}
-              on:click={(e) => e.stopPropagation()}
-            />
-          {:else}
-            <div class="flex flex-row items-center" title={currentSearch.description}>
-              <h5 class="font-medium text-gray-500 dark:text-gray-400">
-                {shorten(currentSearch.description)}
-              </h5>
-              <i class="bx bx-edit-alt ml-1"></i>
-            </div>
-          {/if}
-        </button>
-      </div>
-      <div>
-        {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
-          <div class="flex h-1 flex-row items-center gap-x-3">
-            <span>Global:</span>
-            <Checkbox
-              checked={currentSearch.global}
-              on:change={() => {
-                currentSearch.global = !currentSearch.global;
-              }}
-            ></Checkbox>
-          </div>
-        {/if}
+      <div class="mb-4">
+        <small class={currentSearch.name === "" ? "text-red-500" : "text-gray-400"}>Required</small>
       </div>
     </div>
-    <div class="my-2">
-      <small class={currentSearch.name === "" ? "text-red-500" : "text-gray-400"}>Required</small>
+    <div class="mb-4 flex gap-4">
+      {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
+        <div class="flex flex-row items-center gap-x-2">
+          <span>Global:</span>
+          <Checkbox
+            checked={currentSearch.global}
+            on:change={() => {
+              currentSearch.global = !currentSearch.global;
+            }}
+          ></Checkbox>
+        </div>
+      {/if}
+      <div class="flex flex-row items-center gap-x-2">
+        <span>Dashboard:</span>
+        <Checkbox
+          checked={currentSearch.dashboard}
+          on:change={() => {
+            currentSearch.dashboard = !currentSearch.dashboard;
+          }}
+        ></Checkbox>
+      </div>
     </div>
-    <hr class="mb-4 w-4/5 min-w-96" />
+    <div class="mb-6">
+      {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
+        <Label class="mb-1" for="roles">Roles:</Label>
+        <Select id="roles" items={roles} bind:value={currentSearch.role}></Select>
+      {/if}
+    </div>
     <div class="flex flex-row">
       <div class="flex w-1/3 min-w-40 -flex-row items-baseline gap-x-3">
         <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Searching</h5>

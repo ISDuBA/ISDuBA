@@ -227,8 +227,10 @@
           <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
         </div>
         <div>
-          <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+          {#if pmd.publisher.issuing_authority}
+            <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+          {/if}
         </div>
       {/if}
     </List>

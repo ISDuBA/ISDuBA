@@ -6,6 +6,9 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+import { request } from "$lib/request";
+import type { Role } from "$lib/workflow";
+
 const COLUMNS = {
   ADVISORY: [
     "critical",
@@ -121,7 +124,26 @@ interface Search {
   query: string;
   description: string;
   global: boolean;
+  dashboard: boolean;
+  role: Role | undefined;
 }
+
+type Query = {
+  [key: string]: boolean | string | string[] | number | undefined;
+  advisories: boolean;
+  columns: string[];
+  definer: string;
+  global: boolean;
+  id: number;
+  name: string;
+  kind: SEARCHTYPES;
+  num: number;
+  orders: string[] | undefined;
+  query: string;
+  description: string | undefined;
+  dashboard: boolean;
+  role: Role;
+};
 
 const generateQueryString = (currentSearch: Search) => {
   const chosenColumns = currentSearch.columns.filter((c: any) => {
@@ -140,12 +162,85 @@ const generateQueryString = (currentSearch: Search) => {
   return encodeURI(queryURL);
 };
 
+const createStoredQuery = (query: Query) => {
+  return saveStoredQuery(query, "POST");
+};
+
+const updateStoredQuery = (query: Query) => {
+  return saveStoredQuery(query, "PUT");
+};
+
+const saveStoredQuery = (query: Query, method: string) => {
+  const formData = new FormData();
+  if (method === "PUT") {
+    formData.append("num", `${query.num}`);
+  }
+  formData.append("kind", query.kind);
+  formData.append("name", query.name);
+  formData.append("global", `${query.global}`);
+  formData.append("dashboard", `${query.dashboard}`);
+  if (query.role) {
+    formData.append("role", `${query.role}`);
+  } else {
+    formData.append("role", "");
+  }
+  if (query.description && query.description.length > 0) {
+    formData.append("description", query.description);
+  }
+  if (query.query.length > 0) {
+    formData.append("query", query.query);
+  }
+  formData.append("columns", query.columns.join(" "));
+  if (query.orders) {
+    formData.append("orders", query.orders.join(" "));
+  }
+  const path = method === "PUT" ? `/${query.id}` : "";
+  return request(`/api/queries${path}`, method, formData);
+};
+
+/**
+ * Takes the list of existing queries, looks for already given clones and returns a proper name.
+ * Expamples:
+ *
+ * For non existing clones
+ *
+ * Monat -> Monat (1)
+ * Monat (1) -> Monat (1) (1)
+ *
+ * Say there is already a clone
+ *
+ * Monat and Monat (1) -> Monat (2)
+ * Monat (1) and Monat (1) (1) -> Monat (1) (2)
+ * Monat (1) (2) and Monat (1) (1) -> Monat (1) (3)
+ *
+ * And so on.
+ *
+ * @param queries list of queries
+ * @param name name of the query
+ */
+const proposeName = (queries: Query[], name: string) => {
+  const clones = queries
+    .filter((r: any) => {
+      const re = new RegExp(name.replaceAll("(", "\\(").replaceAll(")", "\\)") + " \\(\\d+\\)");
+      return re.test(r.name);
+    })
+    .map((r: any) => {
+      return r.name;
+    })
+    .sort((a: string, b: string) => a.localeCompare(b, "en", { numeric: true }));
+  if (clones.length === 0) return `${name} (1)`;
+  const highestIndex = parseInt(clones[clones.length - 1].split(name + " (")[1]);
+  return `${name} (${highestIndex + 1})`;
+};
+
 export {
   generateQueryString,
+  createStoredQuery,
+  proposeName,
+  updateStoredQuery,
   COLUMNS,
   ORDERDIRECTIONS,
   SEARCHTYPES,
-  SEARCHPAGECOLUMNS,
-  type Column,
-  type Search
+  SEARCHPAGECOLUMNS
 };
+export type { Column, Query, Search };
