@@ -41,16 +41,27 @@
           "Expected age to be given exclusively in hours, actual value was '" + useSource.age + "'."
         );
       }
-      if (num && num % (24 * 7) === 0) {
-        baseNumber = num / (24 * 7);
-        baseUnit = AgeUnit.weeks;
-      } else if (num && num % 24 === 0) {
-        baseNumber = num / 24;
-        baseUnit = AgeUnit.days;
-      } else {
-        baseNumber = num;
-        baseUnit = AgeUnit.hours;
+      if (num) {
+        for (let i = ageUnits.length - 1; i >= 0; i--) {
+          let unit = ageUnits[i].value;
+          let len = ageUnitLengths[unit];
+          if (num % len === 0) {
+            baseNumber = num / len;
+            baseUnit = unit;
+            break;
+          }
+        }
       }
+      // if (num && num % (24 * 7) === 0) {
+      //   baseNumber = num / (24 * 7);
+      //   baseUnit = AgeUnit.weeks;
+      // } else if (num && num % 24 === 0) {
+      //   baseNumber = num / 24;
+      //   baseUnit = AgeUnit.days;
+      // } else {
+      //   baseNumber = num;
+      //   baseUnit = AgeUnit.hours;
+      // }
     } else if (useSource.age && ["0s", "0h"].includes(useSource.age)) {
       baseNumber = 0;
     }
@@ -63,14 +74,26 @@
   enum AgeUnit {
     hours = "h",
     days = "d",
-    weeks = "w"
+    weeks = "w",
+    months = "m",
+    years = "y"
   }
 
-  const ageUnits = [
+  const ageUnits: { value: AgeUnit; name: string }[] = [
     { value: AgeUnit.hours, name: "hours" },
     { value: AgeUnit.days, name: "days" },
-    { value: AgeUnit.weeks, name: "weeks" }
+    { value: AgeUnit.weeks, name: "weeks" },
+    { value: AgeUnit.months, name: "months" },
+    { value: AgeUnit.years, name: "years" }
   ];
+
+  const ageUnitLengths: { [unit in AgeUnit]: number } = {
+    h: 1,
+    d: 24,
+    w: 24 * 7,
+    m: 24 * 30,
+    y: 24 * 365
+  };
 
   let headers: [string, string][] = [["", ""]];
   let privateCert: FileList | undefined;
@@ -89,12 +112,7 @@
       source.age = "";
     } else {
       let num = ageNumber;
-      if (ageUnit !== AgeUnit.hours) {
-        num *= 24;
-      }
-      if (ageUnit === AgeUnit.weeks) {
-        num *= 7;
-      }
+      num *= ageUnitLengths[ageUnit];
       source.age = num.toString() + "h";
     }
     if (ageNumber || previousAgeNumber !== ageNumber) {
