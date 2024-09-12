@@ -10,15 +10,8 @@
 
 <script lang="ts">
   import { tablePadding, tdClass } from "$lib/Table/defaults";
-  import {
-    Button,
-    Table,
-    TableHead,
-    TableHeadCell,
-    TableBodyCell,
-    Spinner,
-    Checkbox
-  } from "flowbite-svelte";
+  import { Button, Table, TableHead, TableHeadCell, TableBodyCell, Spinner } from "flowbite-svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount } from "svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -254,7 +247,7 @@
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
                       event.stopPropagation();
                       // @ts-expect-error Cannot use TS:
@@ -263,10 +256,10 @@
                       changeDashboard(query.id, event.target?.checked);
                     }}
                     checked={query.dashboard}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
                       event.stopPropagation();
                       // @ts-expect-error Cannot use TS (see explanation above)
@@ -274,7 +267,7 @@
                     }}
                     disabled={!ignoredQueries}
                     checked={ignoredQueries.includes(query.id)}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <td>
                   <button
@@ -291,7 +284,7 @@
                       };
                       deleteModalOpen = true;
                     }}
-                    title={`delete ${query.name}`}><i class="bx bx-trash text-red-500"></i></button
+                    title={`delete ${query.name}`}><i class="bx bx-trash text-red-600"></i></button
                   >
                 </td>
               </tr>
@@ -355,7 +348,7 @@
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
                       event.stopPropagation();
                       // @ts-expect-error Cannot use TS (see explanation above)
@@ -364,10 +357,10 @@
                     checked={query.dashboard}
                     class={appStore.isAdmin() ? "" : "text-gray-300"}
                     disabled={!appStore.isAdmin()}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
                       event.stopPropagation();
                       // @ts-expect-error Cannot use TS (see explanation above)
@@ -375,7 +368,7 @@
                     }}
                     disabled={!ignoredQueries}
                     checked={ignoredQueries.includes(query.id)}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <td>
                   <button

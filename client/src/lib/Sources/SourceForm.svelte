@@ -14,12 +14,12 @@
     Accordion,
     AccordionItem,
     Button,
-    Checkbox,
     Fileupload,
     Input,
     Label,
     Select
   } from "flowbite-svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount } from "svelte";
   export let formClass: string = "";
   export let source: Source;
@@ -187,7 +187,7 @@
   <Label>Name</Label>
   <Input class="mb-3" on:input={inputChange} bind:value={source.name}></Input>
   {#if enableActive}
-    <Checkbox class="mb-3" on:change={inputChange} bind:checked={source.active}>Active</Checkbox>
+    <CCheckbox class="mb-3" on:change={inputChange} bind:checked={source.active}>Active</CCheckbox>
   {/if}
   <Accordion>
     <AccordionItem
@@ -280,7 +280,7 @@
             placeholder="1"
             on:input={inputChange}
             min="1"
-            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"
+            class="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-500 dark:focus:ring-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
             bind:value={source.rate}
           />
         </div>
@@ -291,7 +291,7 @@
             placeholder="2"
             min="1"
             on:input={inputChange}
-            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"
+            class="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-500 dark:focus:ring-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
             bind:value={source.slots}
           />
         </div>
@@ -299,10 +299,10 @@
 
       <Label>Options</Label>
       <div class="mb-3 flex w-full gap-4">
-        <Checkbox on:change={inputChange} bind:checked={source.strict_mode}>Strict mode</Checkbox>
-        <Checkbox on:change={inputChange} bind:checked={source.insecure}>Insecure</Checkbox>
-        <Checkbox on:change={inputChange} bind:checked={source.signature_check}
-          >Signature check</Checkbox
+        <CCheckbox on:change={inputChange} bind:checked={source.strict_mode}>Strict mode</CCheckbox>
+        <CCheckbox on:change={inputChange} bind:checked={source.insecure}>Insecure</CCheckbox>
+        <CCheckbox on:change={inputChange} bind:checked={source.signature_check}
+          >Signature check</CCheckbox
         >
       </div>
 
