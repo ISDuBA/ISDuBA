@@ -46,6 +46,7 @@
     dispatch("change", event);
   }}
   on:click={(event) => {
+    event.stopPropagation();
     dispatch("click", event);
   }}
 ></Checkbox>

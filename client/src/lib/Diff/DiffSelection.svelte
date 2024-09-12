@@ -28,6 +28,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onDestroy, onMount } from "svelte";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   const getRelativeTime = (date: Date) => {
     const now = Date.now();
@@ -364,17 +365,14 @@
                     <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
                     <TableBodyCell {tdClass}>
                       <div class="flex items-center">
-                        <Button
-                          on:click={(e) => {
-                            e.preventDefault();
+                        <CIconButton
+                          on:click={() => {
                             deleteTempDocument(document.file.id);
                           }}
-                          class="border-0 p-2"
-                          color="light"
+                          color="red"
                           title={`delete ${doc.title}`}
-                        >
-                          <i class="bx bx-trash text-lg text-red-500"></i>
-                        </Button>
+                          icon="trash"
+                        ></CIconButton>
                         <button
                           on:click|stopPropagation={(e) => {
                             if ($appStore.app.diff.docA_ID) {
