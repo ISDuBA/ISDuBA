@@ -87,7 +87,7 @@
 
   const saveAll = async () => {
     updateSourceForm();
-    if (source.age == "") {
+    if (source.age === "") {
       source.age = undefined;
     }
     let result = await saveSource(source);
