@@ -30,7 +30,7 @@
   };
 
   export const fillAgeDataFromSource = (useSource: Source) => {
-    ageUnit = AgeUnit.hours;
+    ageUnit = AgeUnit.years;
     let baseNumber: number | undefined = undefined;
     let baseUnit: AgeUnit = ageUnit;
     if (useSource.age && !["0s", "0h"].includes(useSource.age)) {
@@ -52,16 +52,6 @@
           }
         }
       }
-      // if (num && num % (24 * 7) === 0) {
-      //   baseNumber = num / (24 * 7);
-      //   baseUnit = AgeUnit.weeks;
-      // } else if (num && num % 24 === 0) {
-      //   baseNumber = num / 24;
-      //   baseUnit = AgeUnit.days;
-      // } else {
-      //   baseNumber = num;
-      //   baseUnit = AgeUnit.hours;
-      // }
     } else if (useSource.age && ["0s", "0h"].includes(useSource.age)) {
       baseNumber = 0;
     }
@@ -271,7 +261,7 @@
               class="rounded-none rounded-l-lg"
               type="number"
               min="0"
-              placeholder="17520"
+              placeholder="2"
               on:input={onChangedAge}
               bind:value={ageNumber}
             ></Input>
