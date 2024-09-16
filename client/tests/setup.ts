@@ -19,8 +19,8 @@ setup("authenticate and upload document", async ({ page }) => {
   // Perform authentication steps. Replace these actions with your own.
   await page.goto("/");
   await page.getByRole("button", { name: "Login" }).click();
-  await page.getByLabel("Username or email").fill("joe");
-  await page.getByLabel("Password", { exact: true }).fill("joe");
+  await page.getByLabel("Username or email").fill("test-user");
+  await page.getByLabel("Password", { exact: true }).fill("test-user");
   await page.getByRole("button", { name: "Sign In" }).click();
   // Wait until the page receives the cookies.
   //
