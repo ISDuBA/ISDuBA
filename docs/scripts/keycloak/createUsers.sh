@@ -82,3 +82,15 @@ if [ "${#user[@]}" -eq 7 ]; then
   ./assignUserToRoleAndGroup.sh --name "${user[0]}" --group "${user[5]}" --role "${user[6]}" --noLogin
 fi
 done < $file
+
+# test-user with all privileges etc.
+./createUser.sh "test-user" "test-FirstName" "test-LastName" "test-Email@example.com" "test-user" false
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "editor" --group "all"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "reviewer"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "admin"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "auditor"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "source-manager"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "importer"
+
+
+
