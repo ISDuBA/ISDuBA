@@ -99,12 +99,8 @@
   let searchPadding: any[] = [];
   let searchPaddingRight: any[] = [];
 
-  let cvePadding: any[] = [];
-  let cvePaddingRight: any[] = [];
-
   $: if (columns !== undefined) {
     [searchPadding, searchPaddingRight] = getTablePadding(columns, "title");
-    [cvePadding, cvePaddingRight] = getTablePadding(columns, "four_cves");
   }
 
   const calcSSVC = (documents: any) => {
@@ -478,14 +474,24 @@
                           <!-- svelte-ignore a11y-click-events-have-key-events -->
                           <!-- svelte-ignore a11y-no-static-element-interactions -->
                           {#if item[column].length > 1}
-                            <div class="mr-2 flex">
+                            <div
+                              class="mr-2 flex items-center"
+                              on:mouseenter={() => (anchorLink = null)}
+                              on:click|stopPropagation={() => toggleRow(i)}
+                            >
                               <div class="flex-grow">
                                 {item[column][0]}
+                                {#if openRow === i}
+                                  <div>
+                                    {#each item.four_cves as cve, i}
+                                      {#if i !== 0}
+                                        <p>{cve}</p>
+                                      {/if}
+                                    {/each}
+                                  </div>
+                                {/if}
                               </div>
-                              <span
-                                on:mouseenter={() => (anchorLink = null)}
-                                on:click|stopPropagation={() => toggleRow(i)}
-                              >
+                              <span>
                                 {#if openRow === i}
                                   <i class="bx bx-minus"></i>
                                 {:else}
@@ -552,27 +558,6 @@
                   </button>
                 </TableBodyCell>
               </tr>
-              {#if openRow === i}
-                <TableBodyRow>
-                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
-                  {#each cvePadding as _}
-                    <TableBodyCell {tdClass}></TableBodyCell>
-                  {/each}
-                  <TableBodyCell {tdClass}>
-                    <div>
-                      {#each item.four_cves as cve, i}
-                        {#if i !== 0}
-                          <div>{cve}</div>
-                        {/if}
-                      {/each}
-                    </div>
-                  </TableBodyCell>
-                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
-                  {#each cvePaddingRight as _}
-                    <TableBodyCell {tdClass}></TableBodyCell>
-                  {/each}
-                </TableBodyRow>
-              {/if}
               {#if item[searchColumnName]}
                 <TableBodyRow class="border border-y-indigo-500/100 bg-white">
                   <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
