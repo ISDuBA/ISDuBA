@@ -32,9 +32,6 @@ jobs:
       - name: "Install Deps"
         run: npm install
 
-      - name: "Install playwright"
-        run: npx playwright install
-
       - name: "NPM lint"
         run: npm run lint
 

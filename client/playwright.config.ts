@@ -6,9 +6,34 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import type { PlaywrightTestConfig } from "@playwright/test";
+import { type PlaywrightTestConfig, devices } from "@playwright/test";
 
 const config: PlaywrightTestConfig = {
+  projects: [
+    // Setup project
+
+    { name: "setup", testMatch: /setup\.ts/, teardown: "cleanup" },
+    { name: "cleanup", testMatch: /teardown\.ts/ },
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Use prepared auth state.
+        storageState: "playwright/.auth/user.json"
+      },
+      dependencies: ["setup"]
+    },
+
+    {
+      name: "firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        // Use prepared auth state.
+        storageState: "playwright/.auth/user.json"
+      },
+      dependencies: ["setup"]
+    }
+  ],
   webServer: {
     command: "npm run build && npm run preview",
     port: 4173
