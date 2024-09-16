@@ -63,8 +63,17 @@ func (c *Controller) andTLPExpr(ctx *gin.Context, expr *query.Expr) *query.Expr 
 	return expr.And(tlps.AsExpr())
 }
 
+// rolesAsStrings converts a slice of roles to a slice of strings.
+func rolesAsStrings(roles []models.WorkflowRole) []string {
+	s := make([]string, len(roles))
+	for i, r := range roles {
+		s[i] = string(r)
+	}
+	return s
+}
+
 // hasAnyRole checks if at least one of the roles is fullfilled.
-func (c *Controller) hasAnyRole(ctx *gin.Context, roles ...string) bool {
+func (c *Controller) hasAnyRole(ctx *gin.Context, roles ...models.WorkflowRole) bool {
 	token, ok := ctx.Get("token")
 	if !ok {
 		return false
@@ -73,5 +82,5 @@ func (c *Controller) hasAnyRole(ctx *gin.Context, roles ...string) bool {
 	if !ok || kct == nil {
 		return false
 	}
-	return kct.RealmAccess.ContainsAny(roles)
+	return kct.RealmAccess.ContainsAny(rolesAsStrings(roles))
 }
