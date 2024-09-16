@@ -19,15 +19,7 @@
     saveFeeds
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import {
-    Input,
-    Label,
-    Button,
-    Spinner,
-    Table,
-    TableBodyCell,
-    TableBodyRow
-  } from "flowbite-svelte";
+  import { Input, Label, Button, Spinner, List, DescriptionList } from "flowbite-svelte";
   import SourceForm from "./SourceForm.svelte";
   import type { CSAFProviderMetadata } from "$lib/provider";
   import { push } from "svelte-spa-router";
@@ -58,15 +50,17 @@
   let source: Source = {
     name: "",
     url: "",
+    rate: undefined,
+    slots: undefined,
     active: false,
-    rate: 1,
-    slots: 2,
     strict_mode: true,
     headers: [""],
     ignore_patterns: [""]
   };
 
   let formClass = "max-w-[800pt]";
+  const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
+  const ddClass: string = "break-words font-semibold ml-2 mb-1";
   let loadingPMD: boolean = false;
 
   let pmd: CSAFProviderMetadata | null = null;
@@ -93,6 +87,9 @@
 
   const saveAll = async () => {
     updateSourceForm();
+    if (source.age === "") {
+      source.age = undefined;
+    }
     let result = await saveSource(source);
     if (!result.ok) {
       errorMessage = result.error;
@@ -121,30 +118,32 @@
 
 <SectionHeader title="Add new CSAF trusted provider"></SectionHeader>
 {#if params?.domain}
-  <Table class="2xl:w-max" noborder>
-    <TableBodyRow>
-      <TableBodyCell>Domain/PMD</TableBodyCell>
-      <TableBodyCell>{source.url}</TableBodyCell>
-    </TableBodyRow>
+  <List tag="dl" class="divide-y divide-gray-200 text-sm 2xl:w-max">
+    <div>
+      <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
+      <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
+    </div>
     {#if pmd}
-      <TableBodyRow>
-        <TableBodyCell>Canonical URL</TableBodyCell>
-        <TableBodyCell>{pmd.canonical_url}</TableBodyCell>
-      </TableBodyRow>
-      <TableBodyRow>
-        <TableBodyCell>Publisher Name</TableBodyCell>
-        <TableBodyCell>{pmd.publisher.name}</TableBodyCell>
-      </TableBodyRow>
-      <TableBodyRow>
-        <TableBodyCell>Publisher Contact</TableBodyCell>
-        <TableBodyCell>{pmd.publisher.contact_details}</TableBodyCell>
-      </TableBodyRow>
-      <TableBodyRow>
-        <TableBodyCell>Issuing Authority</TableBodyCell>
-        <TableBodyCell>{pmd.publisher.issuing_authority}</TableBodyCell>
-      </TableBodyRow>
+      <div>
+        <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
+        <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+      </div>
+      <div>
+        <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
+        <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
+      </div>
+      <div>
+        <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
+        <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
+      </div>
+      <div>
+        {#if pmd.publisher.issuing_authority}
+          <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+        {/if}
+      </div>
     {/if}
-  </Table>
+  </List>
 
   <SourceForm bind:this={sourceForm} {formClass} {source}></SourceForm>
   <FeedView feeds={pmdFeeds}></FeedView>

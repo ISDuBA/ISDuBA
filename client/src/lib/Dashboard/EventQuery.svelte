@@ -19,8 +19,22 @@
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
-  const recentActivityQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <= $actor me != me involved`;
-  const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
+
+  export let storedQuery: any;
+  const ignoredColumns = [
+    "documentURL",
+    "id",
+    "event_state",
+    "actor",
+    "documentTitle",
+    "title",
+    "event",
+    "time",
+    "message",
+    "mention",
+    "comments_id"
+  ];
+
   const documentQueryBase = `/api/documents?columns=id title publisher tracking_id ssvc`;
   const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
   let activityCount = 0;
@@ -96,7 +110,10 @@
   };
 
   const fetchActivities = async () => {
-    const activitiesResponse = await request(recentActivityQuery, "GET");
+    const columns = `${storedQuery.columns ? "columns=" + storedQuery.columns.join(" ") : ""}`;
+    const orders = `${storedQuery.orders ? "&orders=" + storedQuery.orders.join(" ") : ""}`;
+    const searchParams = `${columns}&query=${storedQuery.query}&limit=6${orders}`;
+    const activitiesResponse = await request(`/api/events?${searchParams}`, "GET");
     if (activitiesResponse.ok) {
       const activities = await activitiesResponse.content;
       activityCount = activities.count;
@@ -108,6 +125,7 @@
   };
 
   const fetchMentions = async () => {
+    const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
     const mentionsResponse = await request(mentionedQuery, "GET");
     if (mentionsResponse.ok) {
       const mentions = await mentionsResponse.content;
@@ -150,7 +168,11 @@
     let idsMentions = [];
     let documentIDs: any[] = [];
     let documents = [];
-    if (activities.length > 0) {
+    if (
+      activities.length > 0 &&
+      storedQuery.columns.includes("id") &&
+      storedQuery.columns.includes("comments_id")
+    ) {
       idsActivities = pluck(activities, ["id", "comments_id"]);
       documentIDs = getDocumentIDs(idsActivities);
     }
@@ -159,6 +181,7 @@
       const mentionDocumentIDs = getDocumentIDs(idsMentions);
       documentIDs = documentIDs.concat(mentionDocumentIDs);
     }
+
     documentIDs = [...new Set(documentIDs)];
     if (documentIDs.length > 0) {
       documents = await fetchDocuments(documentIDs);
@@ -167,10 +190,11 @@
       o[n.id] = n;
       return o;
     }, {});
+
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
-      a.mention = false;
+      a.mention = a.message && a.message.includes($appStore.app.tokenParsed?.preferred_username);
       a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
       a.documentURL = documentsById[a.id]
         ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
@@ -205,7 +229,7 @@
 
 {#if $appStore.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor())}
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
-    <SectionHeader title="Recent activities"></SectionHeader>
+    <SectionHeader title={storedQuery.description}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if resultingActivities}
         {#if resultingActivities.length > 0}
@@ -224,7 +248,7 @@
                 {:else if activity.event === "add_ssvc"}
                   {activity.actor} added a SSVC "{activity.ssvc}""
                 {:else if activity.event === "import_document"}
-                  {activity.actor} added imported a document
+                  {activity.actor} imported a document
                 {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
                   {activity.actor} changed a SSVC to "{activity.ssvc}"
                 {:else if activity.event === "change_comment"}
@@ -239,25 +263,36 @@
                 <div>
                   <i class="bx bxs-quote-alt-left"></i>
                   <span class="italic"
-                    >{activity.message?.length < 30
+                    >{activity.message && activity.message?.length < 30
                       ? activity.message
-                      : activity.message?.substring(0, 30)}</span
+                      : (activity.message?.substring(0, 30) ?? "Message undefined")}</span
                   >
                 </div>
               {:else}
                 <div>
-                  {activity.documentTitle}
+                  {activity.documentTitle ?? "Title undefined"}
                 </div>
               {/if}
               <span class="text-gray-400" slot="bottom-left">
                 {activity.event === "add_comment" || activity.event == "change_comment"
-                  ? `${activity.documentTitle}`
+                  ? `${activity.documentTitle ?? "Title undefined"}`
                   : ""}
               </span>
+              <div slot="bottom-bottom">
+                {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}
+                  <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
+                    {#each Object.keys(activity).sort() as key}
+                      {#if !ignoredColumns.includes(key) && activity[key] !== undefined && activity[key] !== null}
+                        <div>{key}: {activity[key]}</div>
+                      {/if}
+                    {/each}
+                  </div>
+                {/if}
+              </div>
             </Activity>
           {/each}
         {:else}
-          No recent activities on advisories you are involved in.
+          <div class="text-gray-600">No recent activities on advisories you are involved in.</div>
         {/if}
       {/if}
       {#if activityCount > 10}<div class="">…There are more activities</div>{/if}

@@ -47,6 +47,18 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		}
 	}
 
+	// Dashboard flag
+	if dashboard, ok := ctx.GetPostForm("dashboard"); ok {
+		if sq.Dashboard, ok = parse(ctx, strconv.ParseBool, dashboard); !ok {
+			return
+		}
+	}
+
+	// Role
+	if role := ctx.PostForm("role"); role != "" {
+		sq.Role = &role
+	}
+
 	// Global flag
 	if global, ok := ctx.GetPostForm("global"); ok {
 		if sq.Global, ok = parse(ctx, strconv.ParseBool, global); !ok {
@@ -116,8 +128,10 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		`description,` +
 		`query,` +
 		`columns,` +
-		`orders` +
-		`) VALUES ($1::stored_queries_kind, $2, $3, $4, $5, $6, $7, $8)` +
+		`orders,` +
+		`dashboard,` +
+		`role ` +
+		`) VALUES ($1::stored_queries_kind, $2, $3, $4, $5, $6, $7, $8, $9, $10)` +
 		`RETURNING id, num`
 
 	var queryID, queryNum int64
@@ -134,6 +148,8 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 				sq.Query,
 				sq.Columns,
 				sq.Orders,
+				sq.Dashboard,
+				sq.Role,
 			).Scan(&queryID, &queryNum)
 		}, 0,
 	); err != nil {
@@ -214,7 +230,9 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 		`query,` +
 		`num,` +
 		`columns,` +
-		`orders ` +
+		`orders,` +
+		`dashboard,` +
+		`role ` +
 		`FROM stored_queries WHERE ` +
 		`definer = $1 OR global ` +
 		`ORDER BY global desc, definer, num`
@@ -229,22 +247,24 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 			var err error
 			queries, err = pgx.CollectRows(rows,
 				func(row pgx.CollectableRow) (*models.StoredQuery, error) {
-					var query models.StoredQuery
+					var storedQuery models.StoredQuery
 					if err := row.Scan(
-						&query.ID,
-						&query.Kind,
-						&query.Definer,
-						&query.Global,
-						&query.Name,
-						&query.Description,
-						&query.Query,
-						&query.Num,
-						&query.Columns,
-						&query.Orders,
+						&storedQuery.ID,
+						&storedQuery.Kind,
+						&storedQuery.Definer,
+						&storedQuery.Global,
+						&storedQuery.Name,
+						&storedQuery.Description,
+						&storedQuery.Query,
+						&storedQuery.Num,
+						&storedQuery.Columns,
+						&storedQuery.Orders,
+						&storedQuery.Dashboard,
+						&storedQuery.Role,
 					); err != nil {
 						return nil, err
 					}
-					return &query, nil
+					return &storedQuery, nil
 				})
 			return err
 		}, 0,
@@ -253,6 +273,15 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// remove queries that should only be viewable by other roles
+	queries = slices.DeleteFunc(queries, func(query *models.StoredQuery) bool {
+		if !query.Global || query.Role == nil {
+			return false
+		}
+		return !c.hasAnyRole(ctx, *query.Role, models.Admin)
+	})
+
 	ctx.JSON(http.StatusOK, queries)
 }
 
@@ -313,11 +342,13 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 		`query,` +
 		`num,` +
 		`columns,` +
-		`orders ` +
+		`orders,` +
+		`dashboard,` +
+		`role ` +
 		`FROM stored_queries WHERE id = $1 AND ` +
 		`(global OR definer = $2)`
 
-	query := models.StoredQuery{
+	storedQuery := models.StoredQuery{
 		ID: queryID,
 	}
 	if err := c.db.Run(
@@ -325,15 +356,17 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			definer := ctx.GetString("uid")
 			return conn.QueryRow(rctx, selectSQL, queryID, definer).Scan(
-				&query.Kind,
-				&query.Definer,
-				&query.Global,
-				&query.Name,
-				&query.Description,
-				&query.Query,
-				&query.Num,
-				&query.Columns,
-				&query.Orders,
+				&storedQuery.Kind,
+				&storedQuery.Definer,
+				&storedQuery.Global,
+				&storedQuery.Name,
+				&storedQuery.Description,
+				&storedQuery.Query,
+				&storedQuery.Num,
+				&storedQuery.Columns,
+				&storedQuery.Orders,
+				&storedQuery.Dashboard,
+				&storedQuery.Role,
 			)
 		}, 0,
 	); err != nil {
@@ -346,7 +379,7 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 		}
 		return
 	}
-	ctx.JSON(http.StatusOK, &query)
+	ctx.JSON(http.StatusOK, &storedQuery)
 }
 
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
@@ -364,7 +397,9 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			`query,` +
 			`num,` +
 			`columns,` +
-			`orders ` +
+			`orders,` +
+			`dashboard,` +
+			`role ` +
 			`FROM stored_queries WHERE id = $1 AND `
 		selectNoAdminSQL = selectSQLPrefix +
 			`definer = $2`
@@ -404,6 +439,8 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				&sq.Num,
 				&sq.Columns,
 				&sq.Orders,
+				&sq.Dashboard,
+				&sq.Role,
 			); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
 					notFound = true
@@ -464,6 +501,25 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					return nil
 				}
 				add(!slices.Equal(columns, sq.Columns), "columns", columns)
+			}
+
+			// Check dashboard
+			if dash, ok := ctx.GetPostForm("dashboard"); ok {
+				dashboard, err := strconv.ParseBool(dash)
+				if err != nil {
+					bad = "bad 'global' value: " + err.Error()
+					return nil
+				}
+				add(dashboard != sq.Dashboard, "dashboard", dashboard)
+			}
+
+			// Check role
+			if role, ok := ctx.GetPostForm("role"); ok {
+				if role == "" {
+					add(sq.Role != nil, "role", nil)
+				} else {
+					add(sq.Role == nil || role != *sq.Role, "role", role)
+				}
 			}
 
 			// Check global
@@ -584,4 +640,110 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 	default:
 		ctx.JSON(http.StatusOK, gin.H{"message": "changed"})
 	}
+}
+
+func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
+
+	// For which user do we want to get the ignored default queries?
+	user := c.currentUser(ctx).String
+
+	const selectSQL = `SELECT ` +
+		`id ` +
+		`FROM default_query_exclusion WHERE "user" = $1`
+	var ignored []int
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			rows, _ := conn.Query(rctx, selectSQL, user)
+			var err error
+			ignored, err = pgx.CollectRows(
+				rows,
+				func(row pgx.CollectableRow) (int, error) {
+					var id int
+					err := row.Scan(&id)
+					return id, err
+				})
+			return err
+		}, 0,
+	); err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		default:
+			slog.Error("database error", "err", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	ctx.JSON(http.StatusOK, &ignored)
+}
+
+func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
+		return
+	}
+
+	// For which user do we want to delete the ignored default queries?
+	user := c.currentUser(ctx).String
+
+	var deleteSQL = `DELETE FROM default_query_exclusion WHERE "user" = $1 AND id = $2`
+
+	var tag pgconn.CommandTag
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			// Admins are allowed to delete globals.
+			var err error
+			tag, err = conn.Exec(rctx, deleteSQL, user, queryID)
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if tag.RowsAffected() != 0 {
+		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "entry not found"})
+	}
+}
+
+func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
+	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
+	if !ok {
+		return
+	}
+	user := c.currentUser(ctx).String
+	var insertSQL = `INSERT INTO default_query_exclusion ("user", id) VALUES ($1, $2) RETURNING "user", id`
+
+	var insertedUser string
+	var insertedID int64
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, insertSQL,
+				user,
+				queryID,
+			).Scan(&insertedUser, &insertedID)
+		}, 0,
+	); err != nil {
+		var pgErr *pgconn.PgError
+		// Unique constraint violation
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+			return
+		}
+		slog.Error("database error", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusCreated, gin.H{
+		"user": insertedUser,
+		"id":   insertedID,
+	})
 }
