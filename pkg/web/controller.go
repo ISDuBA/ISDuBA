@@ -75,8 +75,8 @@ func (c *Controller) Bind() http.Handler {
 
 	kcCfg := c.cfg.Keycloak.Config(extractTLPs)
 
-	authRoles := func(roles ...string) gin.HandlerFunc {
-		return ginkeycloak.Auth(ginkeycloak.RoleCheck(roles...), kcCfg)
+	authRoles := func(roles ...models.WorkflowRole) gin.HandlerFunc {
+		return ginkeycloak.Auth(ginkeycloak.RoleCheck(rolesAsStrings(roles)...), kcCfg)
 	}
 
 	var (

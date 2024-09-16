@@ -56,7 +56,11 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
 	// Role
 	if role := ctx.PostForm("role"); role != "" {
-		sq.Role = &role
+		wfr, ok := parse(ctx, models.ParseWorkflowRole, role)
+		if !ok {
+			return
+		}
+		sq.Role = &wfr
 	}
 
 	// Global flag
@@ -518,7 +522,12 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				if role == "" {
 					add(sq.Role != nil, "role", nil)
 				} else {
-					add(sq.Role == nil || role != *sq.Role, "role", role)
+					wfr, err := models.ParseWorkflowRole(role)
+					if err != nil {
+						bad = "bad 'role' value: " + err.Error()
+						return nil
+					}
+					add(sq.Role == nil || wfr != *sq.Role, "role", role)
 				}
 			}
 
