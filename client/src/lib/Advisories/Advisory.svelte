@@ -92,7 +92,6 @@
       ({ document } = result);
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
-      console.log("NEW DOCMODEL", docModel);
     } else if (response.error) {
       loadDocumentError = getErrorDetails(`Could not load document.`, response);
     }
