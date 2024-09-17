@@ -49,4 +49,8 @@
     event.stopPropagation();
     dispatch("click", event);
   }}
-></Checkbox>
+>
+  <span class="ps-2">
+    <slot></slot>
+  </span>
+</Checkbox>
