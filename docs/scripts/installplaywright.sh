@@ -25,4 +25,6 @@ npm install
 echo "Successfully installed client dependencies."
 
 sudo npx playwright install --with-deps
+# needs to be rerun for browsers
+npx playwright install
 echo "Successfully installed playwright."
