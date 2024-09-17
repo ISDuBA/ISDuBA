@@ -18,7 +18,9 @@
   import Activity from "./Activity.svelte";
   import { Badge } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
-  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import { getRelativeTime } from "./activity";
+  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
 
   export let storedQuery: any;
   const ignoredColumns = [
@@ -32,7 +34,12 @@
     "time",
     "message",
     "mention",
-    "comments_id"
+    "comments_id",
+    "ssvc",
+    "ssvcLabel",
+    "comments",
+    "versions",
+    "tracking_id"
   ];
 
   const documentQueryBase = `/api/documents?columns=id title publisher tracking_id ssvc`;
@@ -42,20 +49,6 @@
   let loadActivityError: ErrorDetails | null;
   let loadMentionsError: ErrorDetails | null;
   let loadDocumentsError: ErrorDetails | null;
-
-  const getRelativeTime = (date: Date) => {
-    const now = Date.now();
-    const passedTime = now - date.getTime();
-    if (passedTime < 60000) {
-      return "<1 min ago";
-    } else if (passedTime < 3600000) {
-      return `${Math.floor(passedTime / 60000)} min ago`;
-    } else if (passedTime < 86400000) {
-      return `${Math.floor(passedTime / 3600000)} hours ago`;
-    } else {
-      return `${Math.floor(passedTime / 86400000)} days ago`;
-    }
-  };
 
   const aggregateNewest = (events: any) => {
     return events.reduce((o: any, n: any) => {
@@ -201,7 +194,7 @@
         : "";
       if (a.event === "add_ssvc" || a.event === "change_ssvc" || a.event === "change_sscv")
         a.ssvc = documentsById[a.id] ? documentsById[a.id]["ssvc"] : "";
-      if (a.ssvc) a.ssvc = convertVectorToLabel(a.ssvc).label;
+      if (a.ssvc) a.ssvcLabel = convertVectorToSSVCObject(a.ssvc).label;
       return a;
     });
 
@@ -239,29 +232,32 @@
                 push(activity.documentURL);
               }}
             >
-              <span slot="top-right">{getRelativeTime(new Date(activity.time))}</span>
+              <div slot="top-right">
+                <span title={`Time of event: ${activity.time}`}
+                  >{getRelativeTime(new Date(activity.time))}</span
+                >
+              </div>
               <span slot="top-left">
                 {#if activity.mention}
                   {activity.actor} mentioned you
                 {:else if activity.event === "add_comment"}
                   {activity.actor} added a comment
                 {:else if activity.event === "add_ssvc"}
-                  {activity.actor} added a SSVC "{activity.ssvc}""
+                  {activity.actor} added a SSVC "{activity.ssvcLabel}""
                 {:else if activity.event === "import_document"}
                   {activity.actor} imported a document
                 {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
-                  {activity.actor} changed a SSVC to "{activity.ssvc}"
+                  {activity.actor} changed a SSVC to "{activity.ssvcLabel}"
                 {:else if activity.event === "change_comment"}
                   {activity.actor} changed a comment
                 {:else if activity.event === "state_change"}
-                  {activity.actor} changed the state to <Badge color="dark"
+                  {activity.actor} changed the state to <Badge color="dark" title="Workflow state"
                     >{activity.event_state}</Badge
                   >
                 {/if}
               </span>
               {#if activity.event === "add_comment" || activity.event == "change_comment"}
                 <div>
-                  <i class="bx bxs-quote-alt-left"></i>
                   <span class="italic"
                     >{activity.message && activity.message?.length < 30
                       ? activity.message
@@ -269,8 +265,11 @@
                   >
                 </div>
               {:else}
-                <div>
+                <div title="Title">
                   {activity.documentTitle ?? "Title undefined"}
+                </div>
+                <div class="text-sm text-gray-700" title="Tracking ID">
+                  {activity.tracking_id ?? "Trackind ID undefined"}
                 </div>
               {/if}
               <span class="text-gray-400" slot="bottom-left">
@@ -279,6 +278,23 @@
                   : ""}
               </span>
               <div slot="bottom-bottom">
+                <div class="flex items-center gap-4 text-xs text-gray-500">
+                  {#if activity.comments !== undefined}
+                    <div class="flex items-center gap-1" title="Comments">
+                      <i class="bx bx-comment"></i>
+                      <span>{activity.comments}</span>
+                    </div>
+                  {/if}
+                  {#if activity.versions !== undefined}
+                    <div class="flex items-center gap-1" title="Versions">
+                      <i class="bx bx-collection"></i>
+                      <span>{activity.versions}</span>
+                    </div>
+                  {/if}
+                  {#if activity.ssvc !== undefined}
+                    <SsvcBadge vector={activity.ssvc}></SsvcBadge>
+                  {/if}
+                </div>
                 {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}
                   <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
                     {#each Object.keys(activity).sort() as key}
@@ -292,10 +308,10 @@
             </Activity>
           {/each}
         {:else}
-          <div class="text-gray-600">No recent activities on advisories you are involved in.</div>
+          <div class="text-gray-600">No matching events found.</div>
         {/if}
       {/if}
-      {#if activityCount > 10}<div class="">…There are more activities</div>{/if}
+      {#if activityCount > 10}<div class="">…There are more events</div>{/if}
     </div>
     <ErrorMessage error={loadActivityError}></ErrorMessage>
     <ErrorMessage error={loadMentionsError}></ErrorMessage>

@@ -43,6 +43,12 @@ export type SSVCDecisionTree = {
   version: string;
 };
 
+export interface SSVCObject {
+  vector: string;
+  color: string;
+  label: string;
+}
+
 export function parseDecisionTree() {
   const json: SSVCDecisionTree = decisionTree;
   const addedPoints: string[] = [];
@@ -88,8 +94,9 @@ export function createIsoTimeStringForSSVC() {
   return `${iso.split(".")[0]}Z`;
 }
 
-export function convertVectorToLabel(vector: string): any {
+export function convertVectorToSSVCObject(vector: string): SSVCObject {
   const { mainDecisions, decisionPoints } = parseDecisionTree();
+  console.log(vector);
   const keyPairs = vector.split("/").slice(1, -2);
   let selectedOption: SSVCOption | undefined;
   const keyOfSelectedOption = keyPairs[keyPairs.length - 1].split(":")[1];
@@ -103,7 +110,7 @@ export function convertVectorToLabel(vector: string): any {
   }
   return {
     vector: vector,
-    label: selectedOption?.label,
-    color: selectedOption?.color
+    label: selectedOption?.label ?? "",
+    color: selectedOption?.color ?? ""
   };
 }
