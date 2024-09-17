@@ -36,6 +36,7 @@
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { getPublisher } from "$lib/publisher";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   let openRow: number | null;
   let abortController: AbortController;
@@ -511,15 +512,15 @@
                 {/each}
                 <TableBodyCell {tdClass}>
                   {#if isAdmin}
-                    <button
-                      on:click|stopPropagation={(e) => {
+                    <CIconButton
+                      on:click={() => {
                         documentToDelete = item;
                         deleteModalOpen = true;
-                        e.preventDefault();
                       }}
                       title={`delete ${item.tracking_id}`}
-                      ><i class="bx bx-trash text-red-500"></i></button
-                    >
+                      icon="trash"
+                      color="red"
+                    ></CIconButton>
                   {/if}
                   <button
                     on:click|stopPropagation={(e) => {

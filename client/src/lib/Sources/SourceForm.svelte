@@ -14,12 +14,12 @@
     Accordion,
     AccordionItem,
     Button,
-    Checkbox,
     Fileupload,
     Input,
     Label,
     Select
   } from "flowbite-svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount } from "svelte";
   export let formClass: string = "";
   export let source: Source;
@@ -187,7 +187,7 @@
   <Label>Name</Label>
   <Input class="mb-3" on:input={inputChange} bind:value={source.name}></Input>
   {#if enableActive}
-    <Checkbox class="mb-3" on:change={inputChange} bind:checked={source.active}>Active</Checkbox>
+    <CCheckbox class="mb-3" on:change={inputChange} bind:checked={source.active}>Active</CCheckbox>
   {/if}
   <Accordion>
     <AccordionItem
@@ -299,10 +299,10 @@
 
       <Label>Options</Label>
       <div class="mb-3 flex w-full gap-4">
-        <Checkbox on:change={inputChange} bind:checked={source.strict_mode}>Strict mode</Checkbox>
-        <Checkbox on:change={inputChange} bind:checked={source.insecure}>Insecure</Checkbox>
-        <Checkbox on:change={inputChange} bind:checked={source.signature_check}
-          >Signature check</Checkbox
+        <CCheckbox on:change={inputChange} bind:checked={source.strict_mode}>Strict mode</CCheckbox>
+        <CCheckbox on:change={inputChange} bind:checked={source.insecure}>Insecure</CCheckbox>
+        <CCheckbox on:change={inputChange} bind:checked={source.signature_check}
+          >Signature check</CCheckbox
         >
       </div>
 

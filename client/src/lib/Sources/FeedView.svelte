@@ -10,7 +10,8 @@
 
 <script lang="ts">
   import { type Feed, logLevels } from "$lib/Sources/source";
-  import { Checkbox, Select, Input, TableBodyCell } from "flowbite-svelte";
+  import { Select, Input, TableBodyCell } from "flowbite-svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
 
@@ -52,7 +53,7 @@
   {#each feeds as feed, index (index)}
     <tr>
       <TableBodyCell {tdClass}
-        ><Checkbox
+        ><CCheckbox
           class="m-auto"
           bind:checked={feed.enable}
           on:change={async () => {
@@ -61,7 +62,7 @@
               feed.id = undefined;
             }
           }}
-        ></Checkbox></TableBodyCell
+        ></CCheckbox></TableBodyCell
       >
       <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
         {#if edit}

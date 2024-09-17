@@ -14,13 +14,13 @@
     Input,
     Spinner,
     Button,
-    Checkbox,
     Img,
     RadioButton,
     ButtonGroup,
     Label,
     Select
   } from "flowbite-svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { request } from "$lib/request";
   import {
     COLUMNS,
@@ -339,22 +339,22 @@
       {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
         <div class="flex flex-row items-center gap-x-2">
           <span>Global:</span>
-          <Checkbox
+          <CCheckbox
             checked={currentSearch.global}
             on:change={() => {
               currentSearch.global = !currentSearch.global;
             }}
-          ></Checkbox>
+          ></CCheckbox>
         </div>
       {/if}
       <div class="flex flex-row items-center gap-x-2">
         <span>Dashboard:</span>
-        <Checkbox
+        <CCheckbox
           checked={currentSearch.dashboard}
           on:change={() => {
             currentSearch.dashboard = !currentSearch.dashboard;
           }}
-        ></Checkbox>
+        ></CCheckbox>
       </div>
     </div>
     <div class="mb-6">
@@ -412,12 +412,12 @@
             </div>
             <div class="columnName me-2 w-1/3 min-w-40">{col.name}</div>
             <div class="me-2 w-1/4 md:min-w-28">
-              <Checkbox
+              <CCheckbox
                 on:change={() => {
                   setVisible(index);
                 }}
                 checked={currentSearch.columns[index].visible}
-              ></Checkbox>
+              ></CCheckbox>
             </div>
             <button
               on:click={() => {

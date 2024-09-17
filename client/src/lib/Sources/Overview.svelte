@@ -20,6 +20,7 @@
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { type Source, fetchSources } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
@@ -132,9 +133,8 @@
         <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
         <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
         <td>
-          <Button
-            on:click={(event) => {
-              event.stopPropagation();
+          <CIconButton
+            on:click={() => {
               modalCallback = () => {
                 if (source.id) {
                   deleteSource(source.id);
@@ -145,11 +145,9 @@
               modalOpen = true;
             }}
             title={`Delete source "${source.name}"`}
-            class="border-0 p-2"
-            color="light"
-          >
-            <i class="bx bx-trash text-xl text-red-500"></i>
-          </Button>
+            color="red"
+            icon="trash"
+          ></CIconButton>
         </td>
       </tr>
     {/each}

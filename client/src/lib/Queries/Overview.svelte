@@ -10,15 +10,8 @@
 
 <script lang="ts">
   import { tablePadding, tdClass } from "$lib/Table/defaults";
-  import {
-    Button,
-    Table,
-    TableHead,
-    TableHeadCell,
-    TableBodyCell,
-    Spinner,
-    Checkbox
-  } from "flowbite-svelte";
+  import { Button, Table, TableHead, TableHeadCell, TableBodyCell, Spinner } from "flowbite-svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount } from "svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -30,6 +23,7 @@
   import { appStore } from "$lib/store";
   import Sortable from "sortablejs";
   import { updateStoredQuery, type Query } from "./query";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
@@ -254,45 +248,46 @@
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
-                      event.stopPropagation();
                       // @ts-expect-error Cannot use TS:
                       // https://github.com/sveltejs/language-tools/blob/master/docs/preprocessors/typescript.md#can-i-use-typescript-syntax-inside-the-templatemustache-tags
                       // But without ignore we would get an error.
-                      changeDashboard(query.id, event.target?.checked);
+                      changeDashboard(query.id, event.explicitOriginalTarget?.checked);
                     }}
                     checked={query.dashboard}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
-                      event.stopPropagation();
                       // @ts-expect-error Cannot use TS (see explanation above)
-                      changeIgnored(query.id, event.target?.checked);
+                      changeIgnored(query.id, event.explicitOriginalTarget?.checked);
                     }}
                     disabled={!ignoredQueries}
                     checked={ignoredQueries.includes(query.id)}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <td>
-                  <button
+                  <CIconButton
                     title={`clone ${query.name}`}
-                    on:click|stopPropagation={() => {
+                    icon="copy"
+                    on:click={() => {
                       push(`/queries/new?clone=${query.id}`);
-                    }}><i class="bx bx-copy"></i></button
-                  >
-                  <button
-                    on:click|stopPropagation={() => {
+                    }}
+                  ></CIconButton>
+                  <CIconButton
+                    on:click={() => {
                       querytoDelete = {
                         name: query.name,
                         id: query.id
                       };
                       deleteModalOpen = true;
                     }}
-                    title={`delete ${query.name}`}><i class="bx bx-trash text-red-500"></i></button
-                  >
+                    title={`delete ${query.name}`}
+                    icon="trash"
+                    color="red"
+                  ></CIconButton>
                 </td>
               </tr>
             {/each}
@@ -355,38 +350,38 @@
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
-                      event.stopPropagation();
+                      console.log(event);
                       // @ts-expect-error Cannot use TS (see explanation above)
-                      changeDashboard(query.id, event.target?.checked);
+                      changeDashboard(query.id, event.explicitOriginalTarget?.checked);
                     }}
                     checked={query.dashboard}
                     class={appStore.isAdmin() ? "" : "text-gray-300"}
                     disabled={!appStore.isAdmin()}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <Checkbox
+                  <CCheckbox
                     on:click={(event) => {
-                      event.stopPropagation();
                       // @ts-expect-error Cannot use TS (see explanation above)
-                      changeIgnored(query.id, event.target?.checked);
+                      changeIgnored(query.id, event.explicitOriginalTarget?.checked);
                     }}
                     disabled={!ignoredQueries}
                     checked={ignoredQueries.includes(query.id)}
-                  ></Checkbox>
+                  ></CCheckbox>
                 </TableBodyCell>
                 <td>
-                  <button
+                  <CIconButton
                     title={`clone ${query.name}`}
-                    on:click|stopPropagation={() => {
+                    icon="copy"
+                    on:click={() => {
                       push(`/queries/new?clone=${query.id}`);
-                    }}><i class="bx bx-copy"></i></button
-                  >
+                    }}
+                  ></CIconButton>
                   {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
-                    <button
-                      on:click|stopPropagation={() => {
+                    <CIconButton
+                      on:click={() => {
                         querytoDelete = {
                           name: query.name,
                           id: query.id
@@ -394,8 +389,9 @@
                         deleteModalOpen = true;
                       }}
                       title={`delete ${query.name}`}
-                      ><i class="bx bx-trash text-red-500"></i></button
-                    >
+                      icon="trash"
+                      color="red"
+                    ></CIconButton>
                   {/if}
                 </td>
               </tr>
