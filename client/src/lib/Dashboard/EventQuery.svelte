@@ -291,7 +291,7 @@
                       <span>{activity.versions}</span>
                     </div>
                   {/if}
-                  {#if activity.ssvc !== undefined}
+                  {#if activity.ssvc}
                     <SsvcBadge vector={activity.ssvc}></SsvcBadge>
                   {/if}
                 </div>
