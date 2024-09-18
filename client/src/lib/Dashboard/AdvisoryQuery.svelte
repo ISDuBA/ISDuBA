@@ -18,8 +18,9 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Activity from "./Activity.svelte";
   import { getPublisher } from "$lib/publisher";
-  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { Button } from "flowbite-svelte";
+  import { getRelativeTime } from "./activity";
+  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
 
   export let storedQuery: any;
   let documents: any[] = [];
@@ -33,7 +34,10 @@
     "cvss_v2_score",
     "publisher",
     "tracking_id",
-    "state"
+    "state",
+    "versions",
+    "ssvc",
+    "recent"
   ];
 
   const compareCrit = (a: any, b: any) => {
@@ -105,29 +109,34 @@
               <span slot="top-right" class="ml-auto" title={doc.publisher}
                 >{getPublisher(doc.publisher)}</span
               >
-              <div class="text-black">{doc.title ?? "Title: undefined"}</div>
-              <div class="text-sm text-gray-700">{doc.tracking_id}</div>
+              <div class="text-black" title="Title">{doc.title ?? "Title: undefined"}</div>
+              <div class="text-sm text-gray-700" title="Tracking ID">{doc.tracking_id}</div>
               <div
                 slot="bottom-left"
                 title={`Number of comments`}
                 class="flex items-center gap-4 text-gray-500"
               >
                 {#if doc.comments !== undefined}
-                  <div class="flex items-center gap-1">
+                  <div class="flex items-center gap-1" title="Comments">
                     <i class="bx bx-comment"></i>
                     <span>{doc.comments}</span>
                   </div>
                 {/if}
-                {#if doc.ssvc}
-                  <span title="SSVC" class="rounded border border-solid border-gray-400 px-1"
-                    >{convertVectorToLabel(doc.ssvc).label}</span
-                  >
+                {#if doc.versions !== undefined}
+                  <div class="flex items-center gap-1" title="Versions">
+                    <i class="bx bx-collection"></i>
+                    <span>{doc.versions}</span>
+                  </div>
                 {/if}
-                <div></div>
+                {#if doc.ssvc}
+                  <SsvcBadge vector={doc.ssvc}></SsvcBadge>
+                {/if}
               </div>
               <div slot="bottom-right" class="text-gray-500">
-                {#if doc.isNewAdvisory === false}
-                  <span>New version</span>
+                {#if doc.recent !== undefined}
+                  <span title={`Last change: ${doc.recent}`}
+                    >{getRelativeTime(new Date(doc.recent))}</span
+                  >
                 {/if}
               </div>
               <div slot="bottom-bottom">

@@ -31,7 +31,7 @@
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
+  import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
@@ -107,7 +107,7 @@
   const calcSSVC = (documents: any) => {
     if (!documents) return [];
     documents.map((d: any) => {
-      if (d["ssvc"]) d["ssvc"] = convertVectorToLabel(d["ssvc"]);
+      if (d["ssvc"]) d["ssvc"] = convertVectorToSSVCObject(d["ssvc"]);
     });
     return documents;
   };
