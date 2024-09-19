@@ -349,7 +349,8 @@
         <span class="text-2xl">Global</span>
         {#if !appStore.isAdmin()}
           <Button class="h-fit p-1 text-xs" on:click={cloneDashboardQueries} color="light"
-            >Clone global queries for my role</Button
+            >Clone global dashboard queries for my role and hide cloned queries (<span>*</span
+            >)</Button
           >
         {/if}
       </div>
@@ -400,7 +401,11 @@
                   {/if}
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>
-                  <span>{query.name ?? "-"}</span>
+                  <span>{query.name ?? "-"}</span><span
+                    >{!appStore.isAdmin() && firstTwoQueries.find((q) => q.id === query.id)
+                      ? "*"
+                      : ""}</span
+                  >
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
                 <TableBodyCell {tdClass}>
