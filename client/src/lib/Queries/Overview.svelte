@@ -146,6 +146,7 @@
     cloneErrorMessage = null;
     const idsOfClonesQueries = [];
     let failed = false;
+    // Clone the special queries
     for (let i = 0; i < firstTwoQueries.length; i++) {
       const queryToClone = firstTwoQueries[i];
       if (queryToClone) {
@@ -161,6 +162,17 @@
       }
     }
     if (!failed) {
+      // Hide the special queries as they are now replaced
+      for (let i = 0; i < firstTwoQueries.length; i++) {
+        if (!ignoredQueries.includes(firstTwoQueries[i].id)) {
+          ({ ignoredQueries, errorMessage = cloneErrorMessage } = await setIgnored(
+            firstTwoQueries[i].id,
+            true,
+            ignoredQueries
+          ));
+        }
+      }
+      // Place the cloned queries at the top
       type Order = {
         id: number;
         order: number;
