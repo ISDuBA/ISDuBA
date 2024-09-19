@@ -27,6 +27,7 @@
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
+  import validator from "validator";
 
   export let params: any = null;
 
@@ -88,25 +89,11 @@
       validUrl = null;
       return;
     }
-    try {
-      new URL(source.url);
-      validUrl = false;
-      return;
-    } catch {
-      let domain = source.url;
-      if (domain.charAt(domain.length - 1) == ".") {
-        domain = domain.slice(0, -1);
-      }
-      let split = source.url.split(".");
-
-      let first = split.pop() ?? [];
-      let second = split.pop() ?? [];
-      if (first.length < 2 || second.length < 1) {
-        validUrl = false;
-        return;
-      }
+    if (validator.isFQDN(source.url)) {
       validUrl = null;
+      return;
     }
+    validUrl = false;
   };
 
   const saveAll = async () => {
