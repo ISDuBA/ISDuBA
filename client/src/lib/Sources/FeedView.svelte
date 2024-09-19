@@ -56,7 +56,7 @@
   let loadConfigError: ErrorDetails | null;
 
   onMount(async () => {
-    const resp = await getLogLevels();
+    const resp = await getLogLevels(!edit);
     if (resp.ok) {
       logLevels = resp.value;
     } else {

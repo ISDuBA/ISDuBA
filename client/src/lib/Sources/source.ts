@@ -217,7 +217,11 @@ const saveFeeds = async (
       formData.append("url", feed.url);
     }
     formData.append("label", feed.label);
-    formData.append("log_level", feed.log_level);
+    if (feed.log_level === LogLevel.default) {
+      formData.append("log_level", "");
+    } else {
+      formData.append("log_level", feed.log_level);
+    }
 
     const resp = await request(path, method, formData);
     if (resp.error) {
@@ -330,9 +334,16 @@ const capitalize = (s: string) => {
   return s && s[0].toUpperCase() + s.slice(1);
 };
 
-const getLogLevels = async (): Promise<
-  Result<{ value: LogLevel; name: string }[], ErrorDetails>
-> => {
+const getLogLevels = async (
+  enableDefault: boolean = false
+): Promise<Result<{ value: LogLevel; name: string }[], ErrorDetails>> => {
+  if (!enableDefault) {
+    const levels = [...logLevels].filter((item) => item.value !== LogLevel.default);
+    return {
+      ok: true,
+      value: levels
+    };
+  }
   const resp = await fetchSourceDefaultConfig();
   if (resp.ok) {
     const defaultLogLevel = {
