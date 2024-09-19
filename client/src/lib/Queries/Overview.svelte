@@ -22,7 +22,7 @@
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import Sortable from "sortablejs";
-  import { updateStoredQuery, type Query } from "./query";
+  import { fetchIgnored, setIgnored, updateStoredQuery, type Query } from "./query";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   let deleteModalOpen = false;
 
@@ -56,28 +56,9 @@
     loading = false;
   };
 
-  const fetchIgnored = async () => {
-    const response = await request(`/api/queries/ignore`, "GET");
-    if (response.ok) {
-      ignoredQueries = response.content;
-    } else if (response.error) {
-      errorMessage = getErrorDetails(`Could not load queries.`, response);
-    }
-  };
-
   const changeIgnored = async (id: number, isChecked: boolean) => {
     unsetErrors();
-    const method = isChecked ? "POST" : "DELETE";
-    const response = await request(`/api/queries/ignore/${id}`, method);
-    if (response.ok) {
-      if (isChecked) {
-        ignoredQueries.push(id);
-      } else {
-        ignoredQueries = ignoredQueries.filter((i) => i !== id);
-      }
-    } else if (response.error) {
-      errorMessage = getErrorDetails(`Could not change option.`, response);
-    }
+    ({ ignoredQueries, errorMessage } = await setIgnored(id, isChecked, ignoredQueries));
   };
 
   const changeDashboard = async (id: number, isChecked: boolean) => {
@@ -138,7 +119,7 @@
 
   const fetchData = async () => {
     fetchQueries();
-    fetchIgnored();
+    ({ ignoredQueries, errorMessage } = await fetchIgnored());
   };
 
   onMount(() => {
@@ -352,7 +333,6 @@
                 <TableBodyCell {tdClass}>
                   <CCheckbox
                     on:click={(event) => {
-                      console.log(event);
                       // @ts-expect-error Cannot use TS (see explanation above)
                       changeDashboard(query.id, event.explicitOriginalTarget?.checked);
                     }}

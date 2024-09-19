@@ -6,6 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
+import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 import { request } from "$lib/request";
 import type { Role } from "$lib/workflow";
 
@@ -254,10 +255,40 @@ const proposeName = (queries: Query[], name: string) => {
   return `${name} (${highestIndex + 1})`;
 };
 
+const setIgnored = async (id: number, isChecked: boolean, ignoredQueries: number[]) => {
+  let errorMessage: ErrorDetails | null = null;
+  const method = isChecked ? "POST" : "DELETE";
+  const response = await request(`/api/queries/ignore/${id}`, method);
+  if (response.ok) {
+    if (isChecked) {
+      ignoredQueries.push(id);
+    } else {
+      ignoredQueries = ignoredQueries.filter((i) => i !== id);
+    }
+  } else if (response.error) {
+    errorMessage = getErrorDetails(`Could not change option.`, response);
+  }
+  return { ignoredQueries, errorMessage };
+};
+
+const fetchIgnored = async () => {
+  let errorMessage: ErrorDetails | null = null;
+  let ignoredQueries: number[] = [];
+  const response = await request(`/api/queries/ignore`, "GET");
+  if (response.ok) {
+    ignoredQueries = response.content;
+  } else if (response.error) {
+    errorMessage = getErrorDetails(`Could not load queries.`, response);
+  }
+  return { ignoredQueries, errorMessage };
+};
+
 export {
   generateQueryString,
   createStoredQuery,
+  fetchIgnored,
   proposeName,
+  setIgnored,
   updateStoredQuery,
   COLUMNS,
   ORDERDIRECTIONS,
