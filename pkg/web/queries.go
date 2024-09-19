@@ -64,7 +64,8 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	}
 
 	// Global flag
-	if global, ok := ctx.GetPostForm("global"); ok {
+	if global := ctx.PostForm("global"); global != "" {
+		var ok bool
 		if sq.Global, ok = parse(ctx, strconv.ParseBool, global); !ok {
 			return
 		}
@@ -508,10 +509,10 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			}
 
 			// Check dashboard
-			if dash, ok := ctx.GetPostForm("dashboard"); ok {
+			if dash := ctx.PostForm("dashboard"); dash != "" {
 				dashboard, err := strconv.ParseBool(dash)
 				if err != nil {
-					bad = "bad 'global' value: " + err.Error()
+					bad = "bad 'dashboard' value: " + err.Error()
 					return nil
 				}
 				add(dashboard != sq.Dashboard, "dashboard", dashboard)
@@ -532,7 +533,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			}
 
 			// Check global
-			if glb, ok := ctx.GetPostForm("global"); ok {
+			if glb := ctx.PostForm("global"); glb != "" {
 				global, err := strconv.ParseBool(glb)
 				if err != nil {
 					bad = "bad 'global' value: " + err.Error()
