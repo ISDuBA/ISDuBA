@@ -20,11 +20,6 @@
 
   let filteredQueries: any[] = [];
   let loadIgnoredError: ErrorDetails | null;
-
-  $: advisoryQueries = filteredQueries.filter((query: any) =>
-    [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)
-  );
-  $: eventQueries = filteredQueries.filter((query: any) => query.kind === SEARCHTYPES.EVENT);
   let loadQueryError: ErrorDetails | null;
 
   const fetchStoredQueries = async (): Promise<any[]> => {
@@ -77,12 +72,13 @@
 </svelte:head>
 
 {#if $appStore.app.isUserLoggedIn}
-  <div class="mb-8 mt-8 flex flex-wrap gap-10">
-    {#each advisoryQueries as query}
-      <AdvisoryQuery storedQuery={query}></AdvisoryQuery>
-    {/each}
-    {#each eventQueries as query}
-      <EventQuery storedQuery={query}></EventQuery>
+  <div class="mb-8 mt-8 flex flex-row flex-wrap gap-10">
+    {#each filteredQueries as query}
+      {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)}
+        <AdvisoryQuery storedQuery={query}></AdvisoryQuery>
+      {:else}
+        <EventQuery storedQuery={query}></EventQuery>
+      {/if}
     {/each}
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
