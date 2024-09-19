@@ -37,6 +37,7 @@
   import { appStore } from "$lib/store";
   import { getPublisher } from "$lib/publisher";
   import CIconButton from "$lib/Components/CIconButton.svelte";
+  import { SEARCHTYPES } from "$lib/Queries/query";
 
   let openRow: number | null;
   let abortController: AbortController;
@@ -55,7 +56,7 @@
   export let columns: string[];
   export let query: string = "";
   export let searchTerm: string = "";
-  export let loadAdvisories: boolean;
+  export let tableType: SEARCHTYPES;
   export let orderBy = "title";
   export let defaultOrderBy = "";
 
@@ -114,12 +115,12 @@
 
   const savePosition = () => {
     let position = [offset, currentPage, limit, orderBy];
-    sessionStorage.setItem("tablePosition" + query + loadAdvisories, JSON.stringify(position));
+    sessionStorage.setItem("tablePosition" + query + tableType, JSON.stringify(position));
   };
 
   let postitionRestored: boolean = false;
   const restorePosition = () => {
-    let position = sessionStorage.getItem("tablePosition" + query + loadAdvisories);
+    let position = sessionStorage.getItem("tablePosition" + query + tableType);
     if (position) {
       [offset, currentPage, limit, orderBy] = JSON.parse(position);
     } else {
@@ -153,7 +154,7 @@
     savePosition();
   }
 
-  $: if (loadAdvisories || !loadAdvisories) {
+  $: if (tableType || !tableType) {
     restorePosition();
     savePosition();
   }
@@ -179,10 +180,19 @@
         fetchColumns.push(c);
       }
     }
+    let documentURL = "";
 
-    const documentURL = encodeURI(
-      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
-    );
+    if (tableType === SEARCHTYPES.EVENT) {
+      documentURL = encodeURI(
+        `/api/events?${queryParam}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      );
+    } else {
+      const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
+      documentURL = encodeURI(
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      );
+    }
+
     error = null;
     loading = true;
     if (!requestOngoing) {
@@ -193,7 +203,12 @@
     }
     const response = await request(documentURL, "GET");
     if (response.ok) {
-      ({ count, documents } = response.content);
+      if (tableType === SEARCHTYPES.EVENT) {
+        count = response.content.count;
+        documents = response.content.events;
+      } else {
+        ({ count, documents } = response.content);
+      }
       documents = calcSSVC(documents) || [];
     } else if (response.error) {
       error =
@@ -257,7 +272,7 @@
 
   const deleteDocument = async () => {
     let url = "";
-    if (loadAdvisories) {
+    if (tableType === SEARCHTYPES.ADVISORY) {
       url = encodeURI(
         `/api/advisory/${documentToDelete.publisher}/${documentToDelete.tracking_id}`
       );
@@ -267,7 +282,7 @@
     const response = await request(url, "DELETE");
     if (response.error) {
       error = getErrorDetails(
-        `Could not delete ${loadAdvisories ? "advisory" : "document"}`,
+        `Could not delete ${tableType === SEARCHTYPES.ADVISORY ? "advisory" : "document"}`,
         response
       );
     }
@@ -283,7 +298,9 @@
 <Modal size="xs" title={documentToDelete.title} bind:open={deleteModalOpen} autoclose outsideclose>
   <div class="text-center">
     <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-      Are you sure you want to delete this {loadAdvisories ? "advisory" : "document"}?
+      Are you sure you want to delete this {tableType === SEARCHTYPES.ADVISORY
+        ? "advisory"
+        : "document"}?
     </h3>
     <Button
       on:click={() => {
@@ -303,7 +320,7 @@
         <Label class="mr-3 text-nowrap"
           >{query
             ? "Matches per page"
-            : loadAdvisories
+            : tableType === SEARCHTYPES.ADVISORY
               ? "Advisories per page"
               : "Documents per page"}</Label
         >
@@ -363,10 +380,12 @@
       <div class="mr-3 text-nowrap">
         {#if query}
           {count} matches found
-        {:else if loadAdvisories}
+        {:else if tableType === SEARCHTYPES.ADVISORY}
           {count} advisories in total
-        {:else}
+        {:else if tableType === SEARCHTYPES.DOCUMENT}
           {count} documents in total
+        {:else}
+          {count} events in total
         {/if}
       </div>
     {/if}
