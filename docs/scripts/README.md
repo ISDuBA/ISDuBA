@@ -34,4 +34,8 @@ where OPTIONS:
 ```
 
 ## [setup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/setup.sh)
-This script will call all other scripts (with the exception of installall.) (you can use this if you already cloned the repository)
+This script will call other scripts to finish the setup. Use this if you already cloned the repository.
+
+## [playwright_tests.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/playwright_tests.sh)
+This script will execute the playwright tests, by first starting keycloak, the backend and the frontend and then running npx playwright test.
+Note that sudo privileges are needed so the keycloak can be started.
