@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import type { Source } from "$lib/Sources/source";
+  import { type Source, fetchSourceDefaultConfig } from "$lib/Sources/source";
   import {
     Accordion,
     AccordionItem,
@@ -93,7 +93,21 @@
   let ageNumber: number | undefined;
   let previousAgeNumber: number | undefined;
 
-  onMount(() => {
+  let ratePlaceholder = 0;
+  let slotPlaceholder = 2;
+
+  let agePlaceholder = 2;
+
+  const loadSourceDefaults = async () => {
+    const resp = await fetchSourceDefaultConfig();
+    if (resp.ok) {
+      ratePlaceholder = resp.value.rate;
+      slotPlaceholder = resp.value.slots;
+    }
+  };
+
+  onMount(async () => {
+    await loadSourceDefaults();
     fillAgeDataFromSource(source);
   });
 
@@ -261,7 +275,7 @@
               class="rounded-none rounded-l-lg"
               type="number"
               min="0"
-              placeholder="2"
+              placeholder={agePlaceholder.toString()}
               on:input={onChangedAge}
               bind:value={ageNumber}
             ></Input>
@@ -277,7 +291,7 @@
           <Label>Rate</Label>
           <input
             type="number"
-            placeholder="1"
+            placeholder={ratePlaceholder.toString()}
             on:input={inputChange}
             min="1"
             class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"
@@ -288,7 +302,7 @@
           <Label>Slots</Label>
           <input
             type="number"
-            placeholder="2"
+            placeholder={slotPlaceholder.toString()}
             min="1"
             on:input={inputChange}
             class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"

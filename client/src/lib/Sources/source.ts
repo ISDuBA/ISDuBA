@@ -33,7 +33,17 @@ type Source = {
   };
 };
 
+type SourceConfig = {
+  slots: number;
+  rate: number;
+  log_level: LogLevel;
+  strict_mode: boolean;
+  insecure: boolean;
+  signature_check: boolean;
+};
+
 enum LogLevel {
+  default = "default",
   debug = "debug",
   info = "info",
   warn = "warn",
@@ -55,6 +65,7 @@ type Feed = {
 };
 
 const logLevels = [
+  { value: LogLevel.default, name: "Default" },
   { value: LogLevel.error, name: "Error" },
   { value: LogLevel.info, name: "Info" },
   { value: LogLevel.warn, name: "Warn" },
@@ -147,7 +158,7 @@ const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => 
         feeds.push({
           url: feed.url,
           label: label,
-          log_level: LogLevel.error,
+          log_level: LogLevel.default,
           rolie: true,
           enable: true
         });
@@ -163,7 +174,7 @@ const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => 
       feeds.push({
         url: entry.directory_url,
         label: label,
-        log_level: LogLevel.error,
+        log_level: LogLevel.default,
         rolie: false,
         enable: true
       });
@@ -300,6 +311,49 @@ const fetchSources = async (
   };
 };
 
+const fetchSourceDefaultConfig = async (): Promise<Result<SourceConfig, ErrorDetails>> => {
+  const resp = await request(`/api/sources/default`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load source default config`, resp)
+  };
+};
+
+const capitalize = (s: string) => {
+  return s && s[0].toUpperCase() + s.slice(1);
+};
+
+const getLogLevels = async (): Promise<
+  Result<{ value: LogLevel; name: string }[], ErrorDetails>
+> => {
+  const resp = await fetchSourceDefaultConfig();
+  if (resp.ok) {
+    const defaultLogLevel = {
+      name: `Default (${capitalize(resp.value.log_level)})`,
+      value: LogLevel.default
+    };
+    const levels = [...logLevels];
+    const target = levels.find((i) => i.value === LogLevel.default) ?? defaultLogLevel;
+    Object.assign(target, defaultLogLevel);
+
+    levels.map((i) =>
+      i.name === "Default" ? { name: `Default (${defaultLogLevel})`, value: i.value } : i
+    );
+    return {
+      ok: true,
+      value: levels
+    };
+  } else {
+    return resp;
+  }
+};
+
 const fetchFeed = async (
   id: number,
   showStats: boolean = false
@@ -391,6 +445,8 @@ export {
   type Feed,
   saveSource,
   fetchSource,
+  fetchSourceDefaultConfig,
+  getLogLevels,
   fetchPMD,
   getSourceName,
   calculateMissingFeeds,
@@ -401,6 +457,5 @@ export {
   fetchFeed,
   fetchFeeds,
   fetchSources,
-  saveFeeds,
-  logLevels
+  saveFeeds
 };

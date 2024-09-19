@@ -9,11 +9,14 @@
 -->
 
 <script lang="ts">
-  import { type Feed, logLevels } from "$lib/Sources/source";
+  import { type Feed, getLogLevels, LogLevel } from "$lib/Sources/source";
   import { Select, Input, TableBodyCell } from "flowbite-svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
+  import { onMount } from "svelte";
   import { tdClass } from "$lib/Table/defaults";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import type { ErrorDetails } from "$lib/Errors/error";
 
   export let feeds: Feed[] = [];
   export let edit: boolean = false;
@@ -47,50 +50,67 @@
     { label: "Downloading", attribute: "downloading" },
     { label: "Waiting", attribute: "waiting" }
   ];
+
+  let logLevels: { value: LogLevel; name: string }[] = [];
+
+  let loadConfigError: ErrorDetails | null;
+
+  onMount(async () => {
+    const resp = await getLogLevels();
+    if (resp.ok) {
+      logLevels = resp.value;
+    } else {
+      loadConfigError = resp.error;
+    }
+  });
 </script>
 
-<CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
-  {#each feeds as feed, index (index)}
-    <tr>
-      <TableBodyCell {tdClass}
-        ><CCheckbox
-          class="m-auto"
-          bind:checked={feed.enable}
-          on:change={async () => {
-            await updateFeed(feed);
-            if (!feed.enable) {
-              feed.id = undefined;
-            }
-          }}
-        ></CCheckbox></TableBodyCell
-      >
-      <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-        {#if edit}
-          <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>{feed.url}</a
-          >
-        {:else}
-          {feed.url}
-        {/if}
-      </TableBodyCell>
-      <TableBodyCell {tdClass}
-        ><Select
-          items={logLevels}
-          bind:value={feed.log_level}
-          on:change={async () => await updateFeed(feed)}
-        /></TableBodyCell
-      >
-      {#if edit && !feed.enable}
-        <TableBodyCell {tdClass}>N/A</TableBodyCell>
-      {:else}
+{#if logLevels}
+  <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
+    {#each feeds as feed, index (index)}
+      <tr>
         <TableBodyCell {tdClass}
-          ><Input bind:value={feed.label} on:input={async () => await updateFeed(feed)}
-          ></Input></TableBodyCell
+          ><CCheckbox
+            class="m-auto"
+            bind:checked={feed.enable}
+            on:change={async () => {
+              await updateFeed(feed);
+              if (!feed.enable) {
+                feed.id = undefined;
+              }
+            }}
+          ></CCheckbox></TableBodyCell
         >
-      {/if}
-      {#if edit}
-        <TableBodyCell {tdClass}>{feed.stats?.downloading ?? 0}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.stats?.waiting ?? 0}</TableBodyCell>
-      {/if}
-    </tr>
-  {/each}
-</CustomTable>
+        <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+          {#if edit}
+            <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}
+              >{feed.url}</a
+            >
+          {:else}
+            {feed.url}
+          {/if}
+        </TableBodyCell>
+        <TableBodyCell {tdClass}
+          ><Select
+            items={logLevels}
+            bind:value={feed.log_level}
+            on:change={async () => await updateFeed(feed)}
+          /></TableBodyCell
+        >
+        {#if edit && !feed.enable}
+          <TableBodyCell {tdClass}>N/A</TableBodyCell>
+        {:else}
+          <TableBodyCell {tdClass}
+            ><Input bind:value={feed.label} on:input={async () => await updateFeed(feed)}
+            ></Input></TableBodyCell
+          >
+        {/if}
+        {#if edit}
+          <TableBodyCell {tdClass}>{feed.stats?.downloading ?? 0}</TableBodyCell>
+          <TableBodyCell {tdClass}>{feed.stats?.waiting ?? 0}</TableBodyCell>
+        {/if}
+      </tr>
+    {/each}
+  </CustomTable>
+{/if}
+<ErrorMessage error={loadConfigError}></ErrorMessage>

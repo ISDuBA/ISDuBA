@@ -629,7 +629,8 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 		func(
 			t time.Time,
 			lvl config.FeedLogLevel,
-			msg string) {
+			msg string,
+		) {
 			entries = append(entries, entry{
 				Time:    t,
 				Level:   lvl,
@@ -638,7 +639,6 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 		},
 		limit, offset, logLevels, count,
 	)
-
 	if err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -654,6 +654,19 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 // defaultMessage returns the default message.
 func (c *Controller) defaultMessage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
+}
+
+// defaultSourceConfig returns the default source configuration.
+func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
+	cfg := c.cfg.Sources
+	ctx.JSON(http.StatusOK, gin.H{
+		"slots":           cfg.DownloadSlots,
+		"rate":            cfg.MaxRatePerSource,
+		"log_level":       cfg.FeedLogLevel,
+		"strict_mode":     cfg.StrictMode,
+		"insecure":        cfg.Insecure,
+		"signature_check": cfg.SignatureCheck,
+	})
 }
 
 func (c *Controller) pmd(ctx *gin.Context) {
