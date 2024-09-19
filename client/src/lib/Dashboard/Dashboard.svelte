@@ -65,11 +65,10 @@
       (query) =>
         query.dashboard &&
         query.global &&
-        (appStore.getRoles().includes(query.role) || !query.role) &&
         !userDashboardQueries.find((q) => q.id === query.id) &&
         (!ignoredQueries || !ignoredQueries.includes(query.id))
     );
-    filteredQueries = [...userDashboardQueries, ...globalDashboardQueries];
+    filteredQueries = [...userDashboardQueries, ...globalDashboardQueries.slice(0, 2)];
   });
 </script>
 
