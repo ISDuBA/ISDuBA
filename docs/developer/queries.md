@@ -33,6 +33,18 @@ Alternatives considered (and not implemented):
     in the search list at the same time as the personal
     modified cloned queries.)
 
+### Default dashboard queries
+
+To support users to fulfill their role in a good way we store some queries
+in `stored_queries` as part of the migrations. Since we don't know the names of
+the accounts the admins will be using we add `system-default` as `definer` of the
+these queries.
+
+If some admin would decide to save these queries as non-global it could happen
+that the queries would be lost because in this case they would belong to
+`system-default`. If there would be no such user as admin this meant that no
+one could ever set the queries to global again. Therefore, we prevent
+setting the default queries to non-global.
 
 ### client does the selection
 
