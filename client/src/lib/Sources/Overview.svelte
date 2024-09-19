@@ -16,7 +16,7 @@
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import { tdClass } from "$lib/Table/defaults";
   import { request } from "$lib/request";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { type Source, fetchSources } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
@@ -43,6 +43,10 @@
     return new Map<string, [string]>();
   }
 
+  let sourceUpdate = setInterval(async () => {
+    getSources();
+  }, 2 * 1000);
+
   const getSources = async () => {
     loadingSources = true;
     const result = await fetchSources(true);
@@ -63,8 +67,12 @@
     await getSources();
   };
 
-  onMount(() => {
+  onMount(async () => {
     getSources();
+  });
+
+  onDestroy(() => {
+    clearInterval(sourceUpdate);
   });
 </script>
 
