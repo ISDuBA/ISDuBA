@@ -92,18 +92,9 @@
             <Activity on:click={() => openDocument(doc)}>
               <div slot="top-left">
                 {#if doc.critical}
-                  <div>
-                    {#if doc.cvss_v3_score && doc.cvss_v3_score === doc.critical}
-                      <span>CVSS v3:</span>
-                    {:else if doc.cvss_v2_score && doc.cvss_v2_score === doc.critical}
-                      <span>CVSS v2:</span>
-                    {:else}
-                      <span>Critical:</span>
-                    {/if}
-                    <span class:text-red-500={Number(doc.critical) > 5.0}>
-                      {doc.critical}
-                    </span>
-                  </div>
+                  <span class:text-red-500={Number(doc.critical) > 5.0}>
+                    {doc.critical}
+                  </span>
                 {/if}
               </div>
               <span slot="top-right" class="ml-auto">{getPublisher(doc.publisher)}</span>
