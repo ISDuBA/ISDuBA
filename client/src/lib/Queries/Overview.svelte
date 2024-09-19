@@ -430,7 +430,7 @@
                   ></CCheckbox>
                 </TableBodyCell>
                 <td>
-                  {#if !firstTwoQueries.find((q) => q.id === query.id || appStore.isAdmin())}
+                  {#if !firstTwoQueries.find((q) => q.id === query.id) || appStore.isAdmin()}
                     <CIconButton
                       title={`clone ${query.name}`}
                       icon="copy"
