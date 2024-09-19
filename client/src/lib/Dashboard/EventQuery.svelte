@@ -237,9 +237,7 @@
               }}
             >
               <div slot="top-right">
-                <span title={`Time of event: ${activity.time}`}
-                  >{getRelativeTime(new Date(activity.time))}</span
-                >
+                <span>{getRelativeTime(new Date(activity.time))}</span>
               </div>
               <span slot="top-left">
                 {#if activity.mention}
@@ -255,7 +253,7 @@
                 {:else if activity.event === "change_comment"}
                   {activity.actor} changed a comment
                 {:else if activity.event === "state_change"}
-                  {activity.actor} changed the state to <Badge color="dark" title="Workflow state"
+                  {activity.actor} changed the state to <Badge color="dark"
                     >{activity.event_state}</Badge
                   >
                 {/if}
@@ -269,10 +267,10 @@
                   >
                 </div>
               {:else}
-                <div title="Title">
+                <div>
                   {activity.documentTitle ?? "Title undefined"}
                 </div>
-                <div class="text-sm text-gray-700" title="Tracking ID">
+                <div class="text-sm text-gray-700">
                   {activity.tracking_id ?? "Trackind ID undefined"}
                 </div>
               {/if}
@@ -284,13 +282,13 @@
               <div slot="bottom-bottom">
                 <div class="flex items-center gap-4 text-xs text-gray-500">
                   {#if activity.comments !== undefined}
-                    <div class="flex items-center gap-1" title="Comments">
+                    <div class="flex items-center gap-1">
                       <i class="bx bx-comment"></i>
                       <span>{activity.comments}</span>
                     </div>
                   {/if}
                   {#if activity.versions !== undefined}
-                    <div class="flex items-center gap-1" title="Versions">
+                    <div class="flex items-center gap-1">
                       <i class="bx bx-collection"></i>
                       <span>{activity.versions}</span>
                     </div>

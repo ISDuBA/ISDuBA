@@ -106,24 +106,18 @@
                   </div>
                 {/if}
               </div>
-              <span slot="top-right" class="ml-auto" title={doc.publisher}
-                >{getPublisher(doc.publisher)}</span
-              >
-              <div class="text-black" title="Title">{doc.title ?? "Title: undefined"}</div>
-              <div class="text-sm text-gray-700" title="Tracking ID">{doc.tracking_id}</div>
-              <div
-                slot="bottom-left"
-                title={`Number of comments`}
-                class="flex items-center gap-4 text-gray-500"
-              >
+              <span slot="top-right" class="ml-auto">{getPublisher(doc.publisher)}</span>
+              <div class="text-black">{doc.title ?? "Title: undefined"}</div>
+              <div class="text-sm text-gray-700">{doc.tracking_id}</div>
+              <div slot="bottom-left" class="flex items-center gap-4 text-gray-500">
                 {#if doc.comments !== undefined}
-                  <div class="flex items-center gap-1" title="Comments">
+                  <div class="flex items-center gap-1">
                     <i class="bx bx-comment"></i>
                     <span>{doc.comments}</span>
                   </div>
                 {/if}
                 {#if doc.versions !== undefined}
-                  <div class="flex items-center gap-1" title="Versions">
+                  <div class="flex items-center gap-1">
                     <i class="bx bx-collection"></i>
                     <span>{doc.versions}</span>
                   </div>
@@ -134,9 +128,7 @@
               </div>
               <div slot="bottom-right" class="text-gray-500">
                 {#if doc.recent !== undefined}
-                  <span title={`Last change: ${doc.recent}`}
-                    >{getRelativeTime(new Date(doc.recent))}</span
-                  >
+                  <span>{getRelativeTime(new Date(doc.recent))}</span>
                 {/if}
               </div>
               <div slot="bottom-bottom">
