@@ -322,7 +322,9 @@
             ? "Matches per page"
             : tableType === SEARCHTYPES.ADVISORY
               ? "Advisories per page"
-              : "Documents per page"}</Label
+              : tableType === SEARCHTYPES.DOCUMENT
+                ? "Documents per page"
+                : "Events per page"}</Label
         >
         <Select
           size="sm"
@@ -531,12 +533,12 @@
                         ></TableBodyCell
                       >
                     {:else}
-                      <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
+                      <TableBodyCell {tdClass}>{item[column] ?? ""}</TableBodyCell>
                     {/if}
                   {/if}
                 {/each}
                 <TableBodyCell {tdClass}>
-                  {#if isAdmin}
+                  {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
                     <CIconButton
                       on:click={() => {
                         documentToDelete = item;
