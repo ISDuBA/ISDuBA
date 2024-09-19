@@ -30,7 +30,7 @@
   <div class="mb-3 flex-grow text-left">
     <slot></slot>
   </div>
-  <div class="flex flex-row justify-between text-left text-xs">
+  <div class="flex w-full flex-row justify-between text-left text-xs">
     <div>
       <slot name="bottom-left"></slot>
     </div>
