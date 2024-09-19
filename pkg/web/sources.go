@@ -666,6 +666,7 @@ func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 		"strict_mode":     cfg.StrictMode,
 		"insecure":        cfg.Insecure,
 		"signature_check": cfg.SignatureCheck,
+		"age":             sourceAge{cfg.Age},
 	})
 }
 

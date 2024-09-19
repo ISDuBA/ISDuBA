@@ -29,31 +29,40 @@
     await loadCerts();
   };
 
+  const parseAge = (age?: string): [number | undefined, AgeUnit] => {
+    let baseNumber: number | undefined = undefined;
+    let baseUnit: AgeUnit = ageUnit;
+    let [numStr, ...r]: string[] = (age ?? "").split("h");
+    let num: number = +numStr;
+    if (!(Number.isInteger(num) && !/[1-9]/.test(r.join(``)))) {
+      throw Error("Expected age to be given exclusively in hours, actual value was '" + age + "'.");
+    }
+    if (num) {
+      for (let i = ageUnits.length - 1; i >= 0; i--) {
+        let unit = ageUnits[i].value;
+        let len = ageUnitLengths[unit];
+        if (num % len === 0) {
+          baseNumber = num / len;
+          baseUnit = unit;
+          break;
+        }
+      }
+    }
+    return [baseNumber, baseUnit];
+  };
+
   export const fillAgeDataFromSource = (useSource: Source) => {
     ageUnit = AgeUnit.years;
     let baseNumber: number | undefined = undefined;
     let baseUnit: AgeUnit = ageUnit;
     if (useSource.age && !["0s", "0h"].includes(useSource.age)) {
-      let [numStr, ...r]: string[] = (useSource.age ?? "").split("h");
-      let num: number = +numStr;
-      if (!(Number.isInteger(num) && !/[1-9]/.test(r.join(``)))) {
-        throw Error(
-          "Expected age to be given exclusively in hours, actual value was '" + useSource.age + "'."
-        );
-      }
-      if (num) {
-        for (let i = ageUnits.length - 1; i >= 0; i--) {
-          let unit = ageUnits[i].value;
-          let len = ageUnitLengths[unit];
-          if (num % len === 0) {
-            baseNumber = num / len;
-            baseUnit = unit;
-            break;
-          }
-        }
-      }
+      [baseNumber, baseUnit] = parseAge(source.age);
     } else if (useSource.age && ["0s", "0h"].includes(useSource.age)) {
       baseNumber = 0;
+    } else {
+      let placeholder: number | undefined;
+      [placeholder, baseUnit] = parseAge(ageDefaultDuration);
+      agePlaceholder = placeholder ?? 0;
     }
     ageNumber = baseNumber;
     ageUnit = baseUnit;
@@ -96,6 +105,7 @@
   let ratePlaceholder = 0;
   let slotPlaceholder = 2;
 
+  let ageDefaultDuration = "1h";
   let agePlaceholder = 2;
 
   const loadSourceDefaults = async () => {
@@ -103,6 +113,7 @@
     if (resp.ok) {
       ratePlaceholder = resp.value.rate;
       slotPlaceholder = resp.value.slots;
+      ageDefaultDuration = resp.value.age;
     }
   };
 

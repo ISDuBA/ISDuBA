@@ -40,6 +40,7 @@ type SourceConfig = {
   strict_mode: boolean;
   insecure: boolean;
   signature_check: boolean;
+  age: string;
 };
 
 enum LogLevel {

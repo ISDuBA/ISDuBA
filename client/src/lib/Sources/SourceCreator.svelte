@@ -16,7 +16,8 @@
     getSourceName,
     parseFeeds,
     saveSource,
-    saveFeeds
+    saveFeeds,
+    fetchSourceDefaultConfig
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Input, Label, Button, Spinner, List, DescriptionList } from "flowbite-svelte";
@@ -53,7 +54,6 @@
     rate: undefined,
     slots: undefined,
     active: false,
-    strict_mode: true,
     headers: [""],
     ignore_patterns: [""]
   };
@@ -102,7 +102,17 @@
     push(`/sources/`);
   };
 
+  const loadSourceDefaults = async () => {
+    const resp = await fetchSourceDefaultConfig();
+    if (resp.ok) {
+      source.insecure = resp.value.insecure;
+      source.strict_mode = resp.value.strict_mode;
+      source.signature_check = resp.value.signature_check;
+    }
+  };
+
   onMount(async () => {
+    await loadSourceDefaults();
     let domain = params?.domain;
     if (domain) {
       source.url = domain;
