@@ -8,7 +8,7 @@
 
 import { expect, test } from "@playwright/test";
 
-test("Diff toolbox is working", async ({ page }) => {
+test("Advisory view is working", async ({ page }) => {
   await page.goto("/#/search");
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search" }).click();
