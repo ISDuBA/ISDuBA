@@ -24,5 +24,7 @@ jobs:
       run:  |
         cd docs/scripts
         ./setup.sh
-        ./playwright_tests.sh
+        ./start_all.sh
+        cd ../../client
+        npx playwright test
       shell: bash

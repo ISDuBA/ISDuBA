@@ -36,6 +36,6 @@ where OPTIONS:
 ## [setup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/setup.sh)
 This script will call other scripts to finish the setup. Use this if you already cloned the repository.
 
-## [playwright_tests.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/playwright_tests.sh)
-This script will execute the playwright tests, by first starting keycloak, the backend and the frontend and then running npx playwright test.
+## [start_all.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/start_all.sh)
+This script will start the backend, client and keycloak-server set up by the setup scripts.
 Note that sudo privileges are needed so the keycloak can be started.
