@@ -14,7 +14,12 @@
     createIsoTimeStringForSSVC,
     getDecision,
     parseDecisionTree,
+    type SSVCAction,
     type SSVCDecision,
+    type SSVCDecisionChild,
+    type SSVCDecisionChildCombinationItem,
+    type SSVCDecisionCombination,
+    type SSVCObject,
     type SSVCOption
   } from "./SSVCCalculator";
   import { createEventDispatcher, onMount } from "svelte";
@@ -28,19 +33,20 @@
   export let disabled = false;
   export let documentID: string;
   export let allowEditing: any;
-  let startedCalculation = false;
   export let isEditing = false;
+  export let vectorInput = "";
+
+  let startedCalculation = false;
   let isComplex = false;
   let currentStep = 0;
   let steps: string[] = [];
   let mainDecisions: SSVCDecision[] = [];
-  let decisionPoints: any[] = [];
-  let decisionsTable: any[] = [];
-  let userDecisions: any = {};
+  let decisionPoints: SSVCDecision[] = [];
+  let decisionsTable: SSVCDecisionCombination[] = [];
+  let userDecisions: SSVCDecisionCombination;
   const vectorBeginning = "SSVCv2/";
   let vector: string;
-  export let vectorInput = "";
-  let result: any;
+  let result: SSVCObject | null = null;
   let saveSSVCError: ErrorDetails | null;
   $: resultStyle = result?.color ? `color: ${result.color}` : "";
 
@@ -85,11 +91,15 @@
     }
   }
 
-  function doesContainChildCombo(selectedOptions: any, childCombos: any[]): boolean {
-    const test = childCombos.find((combos: any[]) => {
+  /** Checks if `childCombos` contains `selectedOptions` */
+  function doesContainChildCombo(
+    selectedOptions: SSVCDecisionCombination,
+    childCombos: SSVCDecisionChildCombinationItem[][]
+  ): boolean {
+    const doesContainCombo = childCombos.find((combos: SSVCDecisionChildCombinationItem[]) => {
       let count = 0;
       for (const option in selectedOptions) {
-        const result = combos.find((combo: any) => {
+        const result = combos.find((combo: SSVCDecisionChildCombinationItem) => {
           return (
             combo.child_label === option &&
             combo.child_option_labels.includes(selectedOptions[option])
@@ -99,12 +109,13 @@
       }
       return count === Object.keys(selectedOptions).length;
     });
-    return !!test;
+    return !!doesContainCombo;
   }
 
+  /** Finds out the selected option of a complex decision and then calls selectOption for further processing. */
   function calculateComplexOption() {
-    const selectedChildOptions: any = {};
-    mainDecisions[currentStep].children?.forEach((child: any) => {
+    const selectedChildOptions: SSVCDecisionCombination = {};
+    mainDecisions[currentStep].children?.forEach((child: SSVCDecisionChild) => {
       const checkedRadioButton: any = document.querySelector(
         `input[name="${child.label}"]:checked`
       );
@@ -115,6 +126,7 @@
     let selectedOption: SSVCOption | null = null;
     mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
       if (option.child_combinations) {
+        console.log(selectedChildOptions);
         if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
           selectedOption = option;
         }
@@ -147,11 +159,12 @@
     extendVector(
       `${mainDecisions[currentStep].key}:${option?.key}/${createIsoTimeStringForSSVC()}/`
     );
-    const resultText: any = Object.values(finalDecision)[0];
+    const resultText: SSVCAction = Object.values(finalDecision)[0];
     const color = getOption(mainDecisions[currentStep], resultText)?.color;
     result = {
-      text: resultText,
-      color: color
+      vector: vector,
+      label: resultText,
+      color: color || "#000"
     };
   }
 
@@ -159,6 +172,8 @@
     saveSSVCError = null;
   }
 
+  /** Removes part of the vector representing the last decision and removes the decision from the array
+      containing all made decisions. */
   function stepBack() {
     if (currentStep === steps.length - 1) {
       // Delete ISO string and "/"
@@ -204,6 +219,7 @@
     delete userDecisions[keyOfLastDecision];
   }
 
+  /** Save SSVC vector to the backend. */
   async function saveSSVC(vector: string) {
     await allowEditing();
     resetError();
@@ -352,7 +368,7 @@
         {:else if result}
           <Label
             >Result:
-            <span style={resultStyle}>{result.text}</span>
+            <span style={resultStyle}>{result.label}</span>
           </Label>
           <Label class="text-xs text-gray-400">{vector}</Label>
         {/if}
