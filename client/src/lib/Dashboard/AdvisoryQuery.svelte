@@ -18,13 +18,14 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Activity from "./Activity.svelte";
   import { getPublisher } from "$lib/publisher";
-  import { Button } from "flowbite-svelte";
+  import { Button, Spinner } from "flowbite-svelte";
   import { getRelativeTime } from "./activity";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
 
   export let storedQuery: any;
-  let documents: any[] = [];
+  let documents: any[] | null = null;
   let newDocumentsError: ErrorDetails | null;
+  let isLoading = false;
   const ignoredColumns = [
     "id",
     "title",
@@ -70,7 +71,9 @@
   };
 
   onMount(async () => {
+    isLoading = true;
     await loadDocuments();
+    isLoading = false;
   });
 
   const openDocument = (doc: any) => {
@@ -86,6 +89,12 @@
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title={storedQuery.description}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
+      {#if isLoading}
+        <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
+          Loading ...
+          <Spinner color="gray" size="4"></Spinner>
+        </div>
+      {/if}
       {#if documents}
         {#if documents.length > 0}
           {#each documents as doc}

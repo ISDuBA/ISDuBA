@@ -16,7 +16,7 @@
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
-  import { Badge, Button } from "flowbite-svelte";
+  import { Badge, Button, Spinner } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { getRelativeTime } from "./activity";
@@ -47,6 +47,7 @@
   let loadActivityError: ErrorDetails | null;
   let loadCommentsError: ErrorDetails | null;
   let loadDocumentsError: ErrorDetails | null;
+  let isLoading = false;
 
   const aggregateNewest = (events: any) => {
     return events.reduce((o: any, n: any) => {
@@ -130,7 +131,9 @@
   };
 
   onMount(async () => {
-    transformDataToActivities();
+    isLoading = true;
+    await transformDataToActivities();
+    isLoading = false;
   });
 
   const showMore = () => {
@@ -142,6 +145,12 @@
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title={storedQuery.description}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
+      {#if isLoading}
+        <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
+          Loading ...
+          <Spinner color="gray" size="4"></Spinner>
+        </div>
+      {/if}
       {#if resultingActivities}
         {#if resultingActivities.length > 0}
           {#each resultingActivities as activity}
@@ -193,7 +202,7 @@
                   ? `${activity.title ?? "Title undefined"}`
                   : ""}
               </span>
-              <div slot="bottom-bottom">
+              <div slot="bottom-bottom" class="mt-2">
                 <div class="flex items-center gap-4 text-xs text-gray-500">
                   {#if activity.comments !== undefined}
                     <div class="flex items-center gap-1">
