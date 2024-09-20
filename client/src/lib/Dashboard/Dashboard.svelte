@@ -61,7 +61,6 @@
         query.dashboard &&
         query.global &&
         query.definer === "system-default" &&
-        !userDashboardQueries.find((q) => q.id === query.id) &&
         (!ignoredQueries || !ignoredQueries.includes(query.id))
     );
     filteredQueries = [...userDashboardQueries, ...globalDashboardQueries.slice(0, 2)];

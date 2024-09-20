@@ -31,11 +31,13 @@
   let querytoDelete: any = resetQueryToDelete();
   let loading = false;
 
-  $: globalDashboardQueries = queries?.filter((q) => q.dashboard && q.global);
-  $: globalSearchQueries = queries?.filter((q) => !q.dashboard && q.global);
-  $: globalRelevantQueries = globalDashboardQueries
-    ?.filter((q) => q.definer === "system-default")
+  $: globalRelevantQueries = queries
+    ?.filter((q) => q.definer === "system-default" && q.global && q.dashboard)
     .slice(0, 2);
+  $: globalDashboardQueries = queries?.filter(
+    (q) => q.dashboard && q.global && !globalRelevantQueries?.map((q) => q.id).includes(q.id)
+  );
+  $: globalSearchQueries = queries?.filter((q) => !q.dashboard && q.global);
   $: userQueries = queries?.filter((q: Query) => {
     return !q.global;
   });
@@ -174,6 +176,7 @@
 {#if queries && queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
     <QueryTable
+      {ignoredQueries}
       isAllowedToEdit={true}
       queries={userQueries}
       title="Personal"
@@ -187,6 +190,7 @@
 
     {#if !appStore.isAdmin()}
       <QueryTable
+        {ignoredQueries}
         isAllowedToClone={false}
         queries={globalRelevantQueries}
         title="Global relevant dashboard queries"
@@ -201,6 +205,7 @@
       </QueryTable>
 
       <QueryTable
+        {ignoredQueries}
         queries={globalDashboardQueries}
         title="Global dashboard queries (not displayed)"
         on:fetchData={fetchData}
@@ -208,6 +213,7 @@
       ></QueryTable>
 
       <QueryTable
+        {ignoredQueries}
         queries={globalSearchQueries}
         title="Global search queries"
         on:fetchData={fetchData}
@@ -215,6 +221,7 @@
       ></QueryTable>
     {:else}
       <QueryTable
+        {ignoredQueries}
         queries={adminQueries}
         title="Global"
         isAllowedToEdit={appStore.isAdmin()}

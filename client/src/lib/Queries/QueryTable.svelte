@@ -23,7 +23,7 @@
 
   export let title = "";
   export let queries: Query[] | undefined = [];
-  export let ignoredQueries: number[] = [];
+  export let ignoredQueries: number[] | null = null;
   export let isAllowedToEdit = false;
   export let isAllowedToClone = true;
 
@@ -85,13 +85,15 @@
   };
 
   const changeIgnored = async (id: number, isChecked: boolean) => {
-    unsetErrors();
-    ({ ignoredQueries, errorMessage: ignoreErrorMessage } = await setIgnored(
-      id,
-      isChecked,
-      ignoredQueries
-    ));
-    if (ignoreErrorMessage !== null) dispatch("fetchData");
+    if (ignoredQueries) {
+      unsetErrors();
+      ({ ignoredQueries, errorMessage: ignoreErrorMessage } = await setIgnored(
+        id,
+        isChecked,
+        ignoredQueries
+      ));
+      if (ignoreErrorMessage !== null) dispatch("fetchData");
+    }
   };
 
   const changeDashboard = async (id: number, isChecked: boolean) => {
@@ -179,8 +181,8 @@
                     // @ts-expect-error Cannot use TS (see explanation above)
                     changeIgnored(query.id, event.explicitOriginalTarget?.checked);
                   }}
-                  disabled={!ignoredQueries || !isAllowedToEdit}
-                  checked={ignoredQueries.includes(query.id)}
+                  disabled={!ignoredQueries}
+                  checked={ignoredQueries !== null && ignoredQueries.includes(query.id)}
                 ></CCheckbox>
               </TableBodyCell>
               <td>
