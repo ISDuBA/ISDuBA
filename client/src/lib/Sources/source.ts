@@ -67,10 +67,10 @@ type Feed = {
 
 const logLevels = [
   { value: LogLevel.default, name: "Default" },
-  { value: LogLevel.error, name: "Error" },
+  { value: LogLevel.error, name: "Errors only" },
   { value: LogLevel.info, name: "Info" },
-  { value: LogLevel.warn, name: "Warn" },
-  { value: LogLevel.debug, name: "Debug" }
+  { value: LogLevel.warn, name: "Errors and warnings" },
+  { value: LogLevel.debug, name: "Debug (verbose)" }
 ];
 
 const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>> => {
