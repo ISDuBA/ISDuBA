@@ -23,9 +23,7 @@ func (f *feed) log(m *Manager, level config.FeedLogLevel, format string, args ..
 		return
 	}
 	message := fmt.Sprintf(format, args...)
-	const sql = `INSERT INTO feed_logs (feeds_id, lvl, msg) ` +
-		`SELECT $1, $2, $3 FROM feeds ` +
-		`WHERE EXISTS(SELECT 1 FROM feeds WHERE id = $1)`
+	const sql = `INSERT INTO feed_logs (feeds_id, lvl, msg) VALUES ($1, $2, $3)`
 	if err := m.db.Run(
 		context.Background(),
 		func(ctx context.Context, con *pgxpool.Conn) error {

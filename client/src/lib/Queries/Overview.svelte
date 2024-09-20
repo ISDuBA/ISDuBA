@@ -11,6 +11,7 @@
 <script lang="ts">
   import { tablePadding, tdClass } from "$lib/Table/defaults";
   import { Button, Table, TableHead, TableHeadCell, TableBodyCell, Spinner } from "flowbite-svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount } from "svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -21,28 +22,21 @@
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import Sortable from "sortablejs";
+  import { updateStoredQuery, type Query } from "./query";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
     return { name: "", id: -1 };
   };
 
-  type Query = {
-    advisories: boolean;
-    columns: string[];
-    definer: string;
-    global: boolean;
-    id: number;
-    name: string;
-    num: number;
-    orders: string[] | undefined;
-    query: string;
-    description: string | undefined;
-  };
-
   let queries: Query[] = [];
+  let ignoredQueries: number[] = [];
   let orderBy = "";
   let errorMessage: ErrorDetails | null;
+  let ignorePersonalErrorMessage: ErrorDetails | null;
+  let ignoreGlobalErrorMessage: ErrorDetails | null;
+  let cloneErrorMessage: ErrorDetails | null;
   let querytoDelete: any = resetQueryToDelete();
   let loading = false;
   let columnList: any;
@@ -62,14 +56,51 @@
     loading = false;
   };
 
+  const fetchIgnored = async () => {
+    const response = await request(`/api/queries/ignore`, "GET");
+    if (response.ok) {
+      ignoredQueries = response.content;
+    } else if (response.error) {
+      errorMessage = getErrorDetails(`Could not load queries.`, response);
+    }
+  };
+
+  const changeIgnored = async (id: number, isChecked: boolean) => {
+    unsetErrors();
+    const method = isChecked ? "POST" : "DELETE";
+    const response = await request(`/api/queries/ignore/${id}`, method);
+    if (response.ok) {
+      if (isChecked) {
+        ignoredQueries.push(id);
+      } else {
+        ignoredQueries = ignoredQueries.filter((i) => i !== id);
+      }
+    } else if (response.error) {
+      errorMessage = getErrorDetails(`Could not change option.`, response);
+    }
+  };
+
+  const changeDashboard = async (id: number, isChecked: boolean) => {
+    unsetErrors();
+    const queryToUpdate = queries.filter((q) => q.id === id)[0];
+    if (queryToUpdate) {
+      queryToUpdate.dashboard = isChecked;
+      const response = await updateStoredQuery(queryToUpdate);
+      if (!response.ok && response.error) {
+        ignorePersonalErrorMessage = getErrorDetails(`Could not change option.`, response);
+      }
+    }
+  };
+
   const deleteQuery = async () => {
+    unsetErrors();
     const response = await request(`/api/queries/${querytoDelete.id}`, "DELETE");
     if (response.error) {
       errorMessage = getErrorDetails(`Could not delete query ${querytoDelete.name}.`, response);
       querytoDelete = resetQueryToDelete();
       deleteModalOpen = false;
     }
-    fetchQueries();
+    fetchData();
   };
 
   const updateQueryOrder = async (queries: Query[]) => {
@@ -98,8 +129,20 @@
     }
   };
 
-  onMount(() => {
+  const unsetErrors = () => {
+    ignoreGlobalErrorMessage = null;
+    ignorePersonalErrorMessage = null;
+    errorMessage = null;
+    cloneErrorMessage = null;
+  };
+
+  const fetchData = async () => {
     fetchQueries();
+    fetchIgnored();
+  };
+
+  onMount(() => {
+    fetchData();
   });
   $: userQueries = queries.filter((q: Query) => {
     return !q.global;
@@ -156,10 +199,9 @@
   <Spinner color="gray" size="4"></Spinner>
 </div>
 <ErrorMessage error={errorMessage}></ErrorMessage>
-<Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
 {#if queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
-    <div class="mb-12 w-fit">
+    <div class="mb-2 w-fit">
       <span class="text-2xl">Personal</span>
       <hr class="mb-6" />
       <div class="max-h-[66vh] overflow-auto">
@@ -180,6 +222,12 @@
                 class:bx-caret-down={orderBy == "-description"}
               ></i>
             </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div>Dashboard</div>
+            </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div>Hide</div>
+            </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <tbody bind:this={columnList}>
@@ -199,34 +247,60 @@
                   <span class="columnName">{query.name ?? "-"}</span>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <CCheckbox
+                    on:click={(event) => {
+                      // @ts-expect-error Cannot use TS:
+                      // https://github.com/sveltejs/language-tools/blob/master/docs/preprocessors/typescript.md#can-i-use-typescript-syntax-inside-the-templatemustache-tags
+                      // But without ignore we would get an error.
+                      changeDashboard(query.id, event.explicitOriginalTarget?.checked);
+                    }}
+                    checked={query.dashboard}
+                  ></CCheckbox>
+                </TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <CCheckbox
+                    on:click={(event) => {
+                      // @ts-expect-error Cannot use TS (see explanation above)
+                      changeIgnored(query.id, event.explicitOriginalTarget?.checked);
+                    }}
+                    disabled={!ignoredQueries}
+                    checked={ignoredQueries.includes(query.id)}
+                  ></CCheckbox>
+                </TableBodyCell>
                 <td>
-                  <button
+                  <CIconButton
                     title={`clone ${query.name}`}
-                    on:click|stopPropagation={() => {
+                    icon="copy"
+                    on:click={() => {
                       push(`/queries/new?clone=${query.id}`);
-                    }}><i class="bx bx-copy"></i></button
-                  >
-                  <button
-                    on:click|stopPropagation={() => {
+                    }}
+                  ></CIconButton>
+                  <CIconButton
+                    on:click={() => {
                       querytoDelete = {
                         name: query.name,
                         id: query.id
                       };
                       deleteModalOpen = true;
                     }}
-                    title={`delete ${query.name}`}><i class="bx bx-trash text-red-500"></i></button
-                  >
+                    title={`delete ${query.name}`}
+                    icon="trash"
+                    color="red"
+                  ></CIconButton>
                 </td>
               </tr>
             {/each}
           </tbody>
         </Table>
       </div>
+      <Button class="mb-6 mt-3" href="/#/queries/new"><i class="bx bx-plus"></i>New query</Button>
+      <ErrorMessage error={ignorePersonalErrorMessage}></ErrorMessage>
     </div>
-    <div class="mb-12 w-fit">
-      <span class="text-2xl">Global</span>
+    <div class="mb-2 w-fit">
+      <span class="mb-1 text-2xl">Global</span>
       <hr class="mb-6" />
-      <div class="max-h-[66vh] overflow-auto">
+      <div class="mb-2 max-h-[66vh] overflow-auto">
         <Table hoverable={true} noborder={true}>
           <TableHead>
             <TableHeadCell padding={tablePadding}></TableHeadCell>
@@ -243,6 +317,12 @@
                 class:bx-caret-up={orderBy == "description"}
                 class:bx-caret-down={orderBy == "-description"}
               ></i>
+            </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div>Dashboard</div>
+            </TableHeadCell>
+            <TableHeadCell padding={tablePadding} on:click={() => {}}>
+              <div title={"Show on your personal dashboard"}>Hide</div>
             </TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
@@ -269,16 +349,39 @@
                   <span>{query.name ?? "-"}</span>
                 </TableBodyCell>
                 <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <CCheckbox
+                    on:click={(event) => {
+                      console.log(event);
+                      // @ts-expect-error Cannot use TS (see explanation above)
+                      changeDashboard(query.id, event.explicitOriginalTarget?.checked);
+                    }}
+                    checked={query.dashboard}
+                    class={appStore.isAdmin() ? "" : "text-gray-300"}
+                    disabled={!appStore.isAdmin()}
+                  ></CCheckbox>
+                </TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <CCheckbox
+                    on:click={(event) => {
+                      // @ts-expect-error Cannot use TS (see explanation above)
+                      changeIgnored(query.id, event.explicitOriginalTarget?.checked);
+                    }}
+                    disabled={!ignoredQueries}
+                    checked={ignoredQueries.includes(query.id)}
+                  ></CCheckbox>
+                </TableBodyCell>
                 <td>
-                  <button
+                  <CIconButton
                     title={`clone ${query.name}`}
-                    on:click|stopPropagation={() => {
+                    icon="copy"
+                    on:click={() => {
                       push(`/queries/new?clone=${query.id}`);
-                    }}><i class="bx bx-copy"></i></button
-                  >
+                    }}
+                  ></CIconButton>
                   {#if !(query.global && !isRoleIncluded(appStore.getRoles(), [ADMIN]))}
-                    <button
-                      on:click|stopPropagation={() => {
+                    <CIconButton
+                      on:click={() => {
                         querytoDelete = {
                           name: query.name,
                           id: query.id
@@ -286,14 +389,24 @@
                         deleteModalOpen = true;
                       }}
                       title={`delete ${query.name}`}
-                      ><i class="bx bx-trash text-red-500"></i></button
-                    >
+                      icon="trash"
+                      color="red"
+                    ></CIconButton>
                   {/if}
                 </td>
               </tr>
             {/each}
           </tbody>
         </Table>
+      </div>
+      <div class="flex flex-col">
+        {#if appStore.isAdmin()}
+          <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
+            ><i class="bx bx-plus"></i>New query</Button
+          >
+        {/if}
+        <ErrorMessage error={ignoreGlobalErrorMessage}></ErrorMessage>
+        <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
       </div>
     </div>
   </div>

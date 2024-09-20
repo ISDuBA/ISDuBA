@@ -13,6 +13,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -97,7 +98,6 @@ type source struct {
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
 func (f *feed) refresh(m *Manager) error {
-
 	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
 	candidates, err := f.fetchIndex(m)
@@ -155,7 +155,15 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 
 // fetchIndex fetches the content of the feed index.
 func (f *feed) fetchIndex(m *Manager) ([]location, error) {
-	req, err := http.NewRequest(http.MethodGet, f.url.String(), nil)
+	indexURL := f.url.String()
+	if !f.rolie {
+		var err error
+		if indexURL, err = url.JoinPath(indexURL, "changes.csv"); err != nil {
+			return nil, err
+		}
+	}
+	slog.Debug("fetching index", "url", indexURL, "rolie", f.rolie)
+	req, err := http.NewRequest(http.MethodGet, indexURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +205,6 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 // removeOlder takes a list of locations and removes the items which are already
 // in the database with a same or newer update time.
 func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, error) {
-
 	var remove [][2]int
 
 	exists := func(idx int) func(pgx.Row) error {
@@ -469,8 +476,10 @@ func (s *source) loadHash(m *Manager, url string) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s (%d)", http.StatusText(resp.StatusCode), resp.StatusCode)
+		return nil, fmt.Errorf("%s (%d)",
+			http.StatusText(resp.StatusCode), resp.StatusCode)
 	}
+	defer resp.Body.Close()
 	return util.HashFromReader(resp.Body)
 }
 
@@ -491,7 +500,7 @@ func (s *source) useStrictMode(m *Manager) bool {
 }
 
 // storeLastChanges is intented to be called in the transaction storing the
-// importing the document after is was successful. It helps to remember the
+// imported document after is was successful. It helps to remember the
 // last changes per location so we don't need to download them all again and again.
 func (f *feed) storeLastChanges(l *location) func(context.Context, pgx.Tx, int64) error {
 	return func(ctx context.Context, tx pgx.Tx, _ int64) error {

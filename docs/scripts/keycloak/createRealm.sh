@@ -20,7 +20,7 @@ sudo /opt/keycloak/bin/kcadm.sh get realms/isduba/clients/$id
 
 sudo /opt/keycloak/bin/kcadm.sh update clients/$id --target-realm=isduba \
   --set rootUrl=http://localhost:5173/ \
-  --set 'redirectUris=["http://localhost:5173/*"]' \
+  --set 'redirectUris=["*"]' \
   --set 'attributes={
     "oidc.ciba.grant.enabled" : "false",
     "post.logout.redirect.uris" : "+",

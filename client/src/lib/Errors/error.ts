@@ -18,7 +18,7 @@ const ERRORMESSAGES: any = {
   "400": `The request sent could not be understood.`,
   "401": `You are unauthorized. Please re-login.`,
   "403": `You are not allowed to do this. ${contactAdmin}`,
-  "404": `Content not found. ${contactAdmin}`,
+  "404": `Content not found. Maybe it was deleted in the meantime.`,
   "783": `The response from the server is not parsable. ${contactAdmin}`
 };
 
@@ -38,7 +38,7 @@ export type ErrorDetails = {
 export const getErrorDetails = (message: string, response?: HttpResponse): ErrorDetails => {
   const errorDetails: ErrorDetails = { message: message, details: undefined };
   if (response?.error) {
-    errorDetails.details = `${response.error}: ${getErrorMessage(response.error)}${response.content ? "\n" + response.content : ""}`;
+    errorDetails.message += ` ${response.error}: ${getErrorMessage(response.error)}${response.content ? "\n" + response.content : ""}`;
   }
   return errorDetails;
 };

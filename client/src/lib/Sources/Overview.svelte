@@ -18,7 +18,9 @@
   import { request } from "$lib/request";
   import { onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import type { Source } from "$lib/Sources/source";
+  import { type Source, fetchSources } from "$lib/Sources/source";
+  import { appStore } from "$lib/store";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
@@ -43,16 +45,13 @@
 
   const getSources = async () => {
     loadingSources = true;
-    const resp = await request(`/api/sources`, "GET");
+    const result = await fetchSources(true);
     loadingSources = false;
-    if (resp.ok) {
-      if (resp.content.sources) {
-        sources = resp.content.sources;
-      } else {
-        sources = [];
-      }
-    } else if (resp.error) {
-      sourcesError = getErrorDetails(`Could not get sources`, resp);
+    if (result.ok) {
+      sources = result.value;
+    } else {
+      sources = [];
+      sourcesError = result.error;
     }
   };
 
@@ -89,69 +88,86 @@
   </div>
 </Modal>
 <SectionHeader title="Sources"></SectionHeader>
-<CustomTable
-  title="Sources"
-  headers={[
-    {
-      label: "Name",
-      attribute: "name"
-    },
-    {
-      label: "URL",
-      attribute: "url"
-    },
-    {
-      label: "Active",
-      attribute: "active"
-    }
-  ]}
->
-  {#each sources as source, index (index)}
-    <tr
-      on:click={() => {
-        push(`/sources/${source.id}`);
-      }}
-      on:blur={() => {}}
-      on:focus={() => {}}
-      class="cursor-pointer"
-    >
-      <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
-      <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
-      <TableBodyCell {tdClass}>{source.active}</TableBodyCell>
-      <td>
-        <Button
-          on:click={(event) => {
-            event.stopPropagation();
-            modalCallback = () => {
-              if (source.id) {
-                deleteSource(source.id);
-              }
-            };
-            modalMessage = "Are you sure you want to delete this source?";
-            modalTitle = `Source ${source.name}`;
-            modalOpen = true;
-          }}
-          title={`Delete source "${source.name}"`}
-          class="border-0 p-2"
-          color="light"
+{#if appStore.isEditor() || appStore.isSourceManager()}
+  <CustomTable
+    title="CSAF Provider"
+    headers={[
+      {
+        label: "Name",
+        attribute: "name"
+      },
+      {
+        label: "Domain/PMD",
+        attribute: "url"
+      },
+      {
+        label: "Active",
+        attribute: "active"
+      },
+      {
+        label: "Downloading",
+        attribute: "downloading"
+      },
+      {
+        label: "Waiting",
+        attribute: "waiting"
+      }
+    ]}
+  >
+    {#each sources as source, index (index)}
+      <tr
+        on:click={() => {
+          if (appStore.isSourceManager()) {
+            push(`/sources/${source.id}`);
+          }
+        }}
+        on:blur={() => {}}
+        on:focus={() => {}}
+        class={appStore.isSourceManager() ? "cursor-pointer" : ""}
+      >
+        <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
+        <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
+        <TableBodyCell {tdClass}
+          ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
         >
-          <i class="bx bx-trash text-xl text-red-500"></i>
-        </Button>
-      </td>
-    </tr>
-  {/each}
-  <div slot="bottom">
-    <div class:hidden={!loadingSources} class:mb-4={true}>
-      Loading ...
-      <Spinner color="gray" size="4"></Spinner>
+        <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
+        <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
+        <td>
+          <CIconButton
+            on:click={() => {
+              modalCallback = () => {
+                if (source.id) {
+                  deleteSource(source.id);
+                }
+              };
+              modalMessage = "Are you sure you want to delete this source?";
+              modalTitle = `Source ${source.name}`;
+              modalOpen = true;
+            }}
+            title={`Delete source "${source.name}"`}
+            color="red"
+            icon="trash"
+          ></CIconButton>
+        </td>
+      </tr>
+    {/each}
+    <div slot="bottom">
+      <div
+        class:invisible={!loadingSources}
+        class={loadingSources ? "loadingFadeIn" : ""}
+        class:mb-4={true}
+      >
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+      <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+        <i class="bx bx-plus"></i>
+        <span>Add source</span>
+      </Button>
+      <ErrorMessage error={sourcesError}></ErrorMessage>
     </div>
-    <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-      <i class="bx bx-plus"></i>
-      <span>Add source</span>
-    </Button>
-    <ErrorMessage error={sourcesError}></ErrorMessage>
-  </div>
-</CustomTable>
+  </CustomTable>
+{/if}
 {#await getMessage() then resp}
   {#if resp.message}
     {resp.message}
@@ -161,7 +177,9 @@
 <ErrorMessage error={messageError}></ErrorMessage>
 
 <br />
-<Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
-  <i class="bx bx-upload"></i>
-  <span>Upload documents</span>
-</Button>
+{#if appStore.isImporter()}
+  <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
+    <i class="bx bx-upload"></i>
+    <span>Upload documents</span>
+  </Button>
+{/if}

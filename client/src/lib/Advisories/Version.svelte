@@ -165,7 +165,7 @@
             </Button>
           {/each}
         {/if}
-        {#if advisoryVersions.length > 1}
+        {#if (appStore.isEditor() || appStore.isReviewer()) && advisoryVersions.length > 1}
           <Button color="light" class="flex h-8 gap-x-2 px-3" on:click={toggleDiffBoxActivated}>
             <i class="bx bx-transfer"></i>
             <span class="text-nowrap">{diffModeActivated ? "Hide" : "Show"} changes</span>

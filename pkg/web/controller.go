@@ -75,8 +75,8 @@ func (c *Controller) Bind() http.Handler {
 
 	kcCfg := c.cfg.Keycloak.Config(extractTLPs)
 
-	authRoles := func(roles ...string) gin.HandlerFunc {
-		return ginkeycloak.Auth(ginkeycloak.RoleCheck(roles...), kcCfg)
+	authRoles := func(roles ...models.WorkflowRole) gin.HandlerFunc {
+		return ginkeycloak.Auth(ginkeycloak.RoleCheck(rolesAsStrings(roles)...), kcCfg)
 	}
 
 	var (
@@ -118,6 +118,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/queries/:query", authAll, c.fetchStoredQuery)
 	api.PUT("/queries/:query", authAll, c.updateStoredQuery)
 	api.DELETE("/queries/:query", authAll, c.deleteStoredQuery)
+	api.GET("/queries/ignore", authAll, c.getDefaultQueryExclusion)
+	api.POST("/queries/ignore/:query", authAll, c.insertDefaultQueryExclusion)
+	api.DELETE("/queries/ignore/:query", authAll, c.deleteDefaultQueryExclusion)
 
 	// Events
 	api.GET("/events", authEdReAu, c.overviewEvents)

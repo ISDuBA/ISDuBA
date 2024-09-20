@@ -34,4 +34,8 @@ where OPTIONS:
 ```
 
 ## [setup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/setup.sh)
-This script will call all other scripts (with the exception of installall.) (you can use this if you already cloned the repository)
+This script will call other scripts to finish the setup. Use this if you already cloned the repository.
+
+## [start_all.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/start_all.sh)
+This script will start the backend, client and keycloak-server set up by the setup scripts.
+Note that sudo privileges are needed so the keycloak can be started.

@@ -8,7 +8,9 @@
 
 package models
 
-import "github.com/ISDuBA/ISDuBA/pkg/database/query"
+import (
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+)
 
 // StoredQuery represents a stored query.
 type StoredQuery struct {
@@ -22,4 +24,6 @@ type StoredQuery struct {
 	Num         int64            `json:"num"`
 	Columns     []string         `json:"columns"`
 	Orders      *[]string        `json:"orders,omitempty"`
+	Dashboard   bool             `json:"dashboard"`
+	Role        *WorkflowRole    `json:"role,omitempty"`
 }

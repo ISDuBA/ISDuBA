@@ -8,7 +8,11 @@
 
 package models
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 // Workflow is a state of an advisory.
 type Workflow string
@@ -23,20 +27,23 @@ const (
 	DeleteWorkflow    Workflow = "delete"    // DeleteWorkflow represents 'delete'.
 )
 
+// WorkflowRole is a role in the workflow.
+type WorkflowRole string
+
 // The different roles
 const (
-	Admin         = "admin"          // Admin role
-	Importer      = "importer"       // Importer role
-	Editor        = "editor"         // Editor role
-	Reviewer      = "reviewer"       // Reviewer role
-	Auditor       = "auditor"        // Auditor role
-	SourceManager = "source-manager" // Source Manager role
+	Admin         WorkflowRole = "admin"          // Admin role
+	Importer      WorkflowRole = "importer"       // Importer role
+	Editor        WorkflowRole = "editor"         // Editor role
+	Reviewer      WorkflowRole = "reviewer"       // Reviewer role
+	Auditor       WorkflowRole = "auditor"        // Auditor role
+	SourceManager WorkflowRole = "source-manager" // Source Manager role
 )
 
 // Transitions is a matrix to tell who is allowed to change between certain states.
 // Please call "go generate ./..." in the root dir to update docs/workflow.svg
 // if you change this.
-var Transitions = map[[2]Workflow][]string{
+var Transitions = map[[2]Workflow][]WorkflowRole{
 	{"", NewWorkflow}:                     {Importer}, // Forward
 	{NewWorkflow, ReadWorkflow}:           {Editor},
 	{ReadWorkflow, AssessingWorkflow}:     {Editor},
@@ -63,6 +70,44 @@ var Transitions = map[[2]Workflow][]string{
 	{DeleteWorkflow, ""}:                  {Admin},
 }
 
+// ParseWorkflowRole parses a workflow role from a string.
+func ParseWorkflowRole(s string) (WorkflowRole, error) {
+	switch r := WorkflowRole(strings.ToLower(s)); r {
+	case Admin, Importer, Editor, Reviewer, Auditor, SourceManager:
+		return r, nil
+	default:
+		return "", fmt.Errorf("unknown workflow role %q", s)
+	}
+}
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (wfr *WorkflowRole) UnmarshalText(text []byte) error {
+	x, err := ParseWorkflowRole(string(text))
+	if err != nil {
+		return err
+	}
+	*wfr = x
+	return nil
+}
+
+// Scan implements [sql.Scanner].
+func (wfr *WorkflowRole) Scan(src any) error {
+	if s, ok := src.(string); ok {
+		x, err := ParseWorkflowRole(s)
+		if err != nil {
+			return err
+		}
+		*wfr = x
+		return nil
+	}
+	return errors.New("unsupported type")
+}
+
+// MarshalText implements [encoding.TextMarshaler].
+func (wfr WorkflowRole) MarshalText() ([]byte, error) {
+	return []byte(wfr), nil
+}
+
 // Valid returns true is the workflow represents a valid state.
 func (wf Workflow) Valid() bool {
 	switch wf {
@@ -85,11 +130,6 @@ func (wf *Workflow) UnmarshalText(text []byte) error {
 
 // TransitionsRoles return a list of roles that are allowed to do the requested
 // transition.
-func (wf Workflow) TransitionsRoles(other Workflow) []string {
+func (wf Workflow) TransitionsRoles(other Workflow) []WorkflowRole {
 	return Transitions[[2]Workflow{wf, other}]
-}
-
-// CommentingAllowed returns true if commenting is allowed.
-func (wf Workflow) CommentingAllowed() bool {
-	return wf == ReadWorkflow || wf == AssessingWorkflow
 }
