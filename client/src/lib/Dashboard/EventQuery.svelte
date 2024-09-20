@@ -42,12 +42,10 @@
     "tracking_id"
   ];
 
-  const documentQueryBase = `/api/documents?columns=id title publisher tracking_id ssvc`;
-  const pluck = (arr: any, keys: any) => arr.map((i: any) => keys.map((k: any) => i[k]));
   let activityCount = 0;
   let resultingActivities: any;
   let loadActivityError: ErrorDetails | null;
-  let loadMentionsError: ErrorDetails | null;
+  let loadCommentsError: ErrorDetails | null;
   let loadDocumentsError: ErrorDetails | null;
 
   const aggregateNewest = (events: any) => {
@@ -57,23 +55,6 @@
       if (o[key].time < n.time) o[key] = n; // replace older events of the same type with the newest one
       return o;
     }, {});
-  };
-
-  const sortByTime = (events: any) => {
-    return events.sort((a: any, b: any) => {
-      return a.time < b.time;
-    });
-  };
-
-  const aggregateByMentions = (events: any) => {
-    return Object.values(
-      events.reduce((o: any, n: any) => {
-        const key = `${n.actor}|${n.comments_id}|${n.event}|${n.id}`; // create natural key (actor, comment, event, document) to identify event
-        if (!o[key]) o[key] = n; // if not already aggregated add event
-        if (!o[key].mention) o[key] = n; // aggregate nonmentions with mentioned one
-        return o;
-      }, {})
-    );
   };
 
   const aggregateByChange = (events: any) => {
@@ -112,107 +93,40 @@
       activityCount = activities.count;
       return activities.events || [];
     } else if (activitiesResponse.error) {
-      loadActivityError = getErrorDetails(`Could not load Activities.`, activitiesResponse);
+      loadActivityError = getErrorDetails(`Could not load events.`, activitiesResponse);
       return [];
     }
   };
 
-  const fetchMentions = async () => {
-    const mentionedQuery = `/api/events?limit=10&count=true&query=$event import_document events != now 168h duration - $time <=  me mentioned  and`;
-    const mentionsResponse = await request(mentionedQuery, "GET");
-    if (mentionsResponse.ok) {
-      const mentions = await mentionsResponse.content;
-      return mentions.events || [];
-    } else if (mentionsResponse.error) {
-      loadMentionsError = getErrorDetails(`Could not load Activities.`, mentionsResponse);
-      return [];
-    }
-  };
-
-  const getDocumentIDs = (arr: any) => {
-    return arr.map((a: any) => {
-      return a[0];
-    });
-  };
-
-  const fetchDocuments = async (documentIDs: number[]) => {
-    const query = documentIDs.map((id: number) => {
-      return `$id ${id} integer = `;
-    });
-    const ors = documentIDs.map(() => {
-      return "or ";
-    });
-    ors.shift(); // we need one less or than ids
-    const documentQuery = `${documentQueryBase}&query=${query.join("")}${ors.join("")}`;
-    const result = await request(documentQuery, "GET");
-    if (result.ok) {
-      const content = result.content;
-      return content.documents;
-    } else if (result.error) {
-      loadDocumentsError = getErrorDetails(`Could not load Documents.`, result);
-      return [];
+  const loadComments = async (activities: any[]) => {
+    loadCommentsError = null;
+    for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
+      if (activity.comments_id) {
+        const response = await request(`api/comments/post/${activity.comments_id}`, "GET");
+        if (response.ok) {
+          activity.message = response.content.message;
+        } else if (loadCommentsError !== null) {
+          loadCommentsError = getErrorDetails("Could not load comment.", response);
+        }
+      }
     }
   };
 
   const transformDataToActivities = async () => {
-    const activities = await fetchActivities();
-    const mentions = await fetchMentions();
-    let idsActivities = [];
-    let idsMentions = [];
-    let documentIDs: any[] = [];
-    let documents = [];
-    if (
-      activities.length > 0 &&
-      storedQuery.columns.includes("id") &&
-      storedQuery.columns.includes("comments_id")
-    ) {
-      idsActivities = pluck(activities, ["id", "comments_id"]);
-      documentIDs = getDocumentIDs(idsActivities);
-    }
-    if (mentions.length > 0) {
-      idsMentions = pluck(mentions, ["id", "comments_id"]);
-      const mentionDocumentIDs = getDocumentIDs(idsMentions);
-      documentIDs = documentIDs.concat(mentionDocumentIDs);
-    }
-
-    documentIDs = [...new Set(documentIDs)];
-    if (documentIDs.length > 0) {
-      documents = await fetchDocuments(documentIDs);
-    }
-    const documentsById = documents.reduce((o: any, n: any) => {
-      o[n.id] = n;
-      return o;
-    }, {});
-
+    let activities = await fetchActivities();
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
       a.mention = a.message && a.message.includes($appStore.app.tokenParsed?.preferred_username);
-      a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
-      a.documentURL = documentsById[a.id]
-        ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
-        : "";
-      if (a.event === "add_ssvc" || a.event === "change_ssvc" || a.event === "change_sscv")
-        a.ssvc = documentsById[a.id] ? documentsById[a.id]["ssvc"] : "";
       if (a.ssvc) a.ssvcLabel = convertVectorToSSVCObject(a.ssvc).label;
+      if (a.tracking_id && a.publisher) {
+        a.documentURL = `/advisories/${a.publisher}/${a.tracking_id}/documents/${a.id}`;
+      }
       return a;
     });
-
-    const mentionsAggregated = aggregateNewest(mentions);
-    let recentMentions = Object.values(mentionsAggregated);
-    recentMentions = recentMentions.map((a: any) => {
-      a.mention = true;
-      a.documentTitle = documentsById[a.id] ? documentsById[a.id]["title"] : "";
-      a.documentURL = documentsById[a.id]
-        ? `/advisories/${documentsById[a.id]["publisher"]}/${documentsById[a.id]["tracking_id"]}/documents/${a.id}`
-        : "";
-      return a;
-    });
-    const activitiesAggregatedByMentions = aggregateByMentions([
-      ...recentActivities,
-      ...recentMentions
-    ]);
-    resultingActivities = sortByTime(aggregateByChange(activitiesAggregatedByMentions));
+    await loadComments(activities);
+    resultingActivities = aggregateByChange(recentActivities);
   };
 
   onMount(async () => {
@@ -233,7 +147,7 @@
           {#each resultingActivities as activity}
             <Activity
               on:click={() => {
-                push(activity.documentURL);
+                if (activity.documentURL) push(activity.documentURL);
               }}
             >
               <div slot="top-right">
@@ -268,7 +182,7 @@
                 </div>
               {:else}
                 <div>
-                  {activity.documentTitle ?? "Title undefined"}
+                  {activity.title ?? "Title undefined"}
                 </div>
                 <div class="text-sm text-gray-700">
                   {activity.tracking_id ?? "Trackind ID undefined"}
@@ -276,7 +190,7 @@
               {/if}
               <span class="text-gray-400" slot="bottom-left">
                 {activity.event === "add_comment" || activity.event == "change_comment"
-                  ? `${activity.documentTitle ?? "Title undefined"}`
+                  ? `${activity.title ?? "Title undefined"}`
                   : ""}
               </span>
               <div slot="bottom-bottom">
@@ -319,7 +233,7 @@
       {#if activityCount > 10}<div class="">…There are more events</div>{/if}
     </div>
     <ErrorMessage error={loadActivityError}></ErrorMessage>
-    <ErrorMessage error={loadMentionsError}></ErrorMessage>
+    <ErrorMessage error={loadCommentsError}></ErrorMessage>
     <ErrorMessage error={loadDocumentsError}></ErrorMessage>
   </div>
 {/if}
