@@ -316,18 +316,27 @@ const fetchSources = async (
   };
 };
 
+let defaultConfigCache: Promise<Result<SourceConfig, ErrorDetails>>;
+
 const fetchSourceDefaultConfig = async (): Promise<Result<SourceConfig, ErrorDetails>> => {
-  const resp = await request(`/api/sources/default`, "GET");
-  if (resp.ok) {
-    return {
-      ok: true,
-      value: resp.content
-    };
+  if (defaultConfigCache) {
+    return defaultConfigCache;
   }
-  return {
-    ok: false,
-    error: getErrorDetails(`Could not load source default config`, resp)
+  const fetchRequest = async (): Promise<Result<SourceConfig, ErrorDetails>> => {
+    const resp = await request(`/api/sources/default`, "GET");
+    if (resp.ok) {
+      return {
+        ok: true,
+        value: resp.content
+      };
+    }
+    return {
+      ok: false,
+      error: getErrorDetails(`Could not load source default config`, resp)
+    };
   };
+  defaultConfigCache = fetchRequest();
+  return defaultConfigCache;
 };
 
 const capitalize = (s: string) => {
