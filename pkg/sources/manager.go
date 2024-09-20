@@ -970,6 +970,9 @@ func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
 	if su.updatable.age != nil && age != nil && *su.updatable.age == *age {
 		return nil
 	}
+	if age != nil && (*age > su.manager.cfg.Sources.MaxAge && su.manager.cfg.Sources.MaxAge != 0) {
+		return InvalidArgumentError("invalid age value")
+	}
 	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
 	return nil
 }

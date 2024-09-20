@@ -30,6 +30,9 @@
   };
 
   const parseAge = (age?: string): [number | undefined, AgeUnit] => {
+    if (age === "0s") {
+      age = "0h";
+    }
     let baseNumber: number | undefined = undefined;
     let baseUnit: AgeUnit = ageUnit;
     let [numStr, ...r]: string[] = (age ?? "").split("h");
