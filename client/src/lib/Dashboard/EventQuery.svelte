@@ -183,10 +183,8 @@
               </span>
               {#if activity.event === "add_comment" || activity.event == "change_comment"}
                 <div>
-                  <span class="italic"
-                    >{activity.message && activity.message?.length < 30
-                      ? activity.message
-                      : (activity.message?.substring(0, 30) ?? "Message undefined")}</span
+                  <span class="block overflow-hidden text-ellipsis text-nowrap italic"
+                    >{activity.message ?? "Message undefined"}</span
                   >
                 </div>
               {:else}
