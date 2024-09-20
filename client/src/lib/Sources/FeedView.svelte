@@ -42,11 +42,7 @@
     }
   ];
 
-  let headersEdit = [
-    ...headers,
-    { label: "Downloading", attribute: "downloading" },
-    { label: "Waiting", attribute: "waiting" }
-  ];
+  let headersEdit = [...headers, { label: "Loading/Queued", attribute: "stats" }];
 </script>
 
 <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
@@ -88,8 +84,9 @@
         >
       {/if}
       {#if edit}
-        <TableBodyCell {tdClass}>{feed.stats?.downloading ?? 0}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.stats?.waiting ?? 0}</TableBodyCell>
+        <TableBodyCell {tdClass}
+          >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
+        >
       {/if}
     </tr>
   {/each}

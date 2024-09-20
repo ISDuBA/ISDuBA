@@ -256,14 +256,14 @@
       {/if}
     </List>
     {#if source.stats}
-      <h4 class="mt-3">Statistics</h4>
-      <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
+      <h4 class="mt-3">Status</h4>
+      <List tag="dl" class="flex w-full flex-wrap text-sm">
         <div>
-          <DescriptionList tag="dt" {dtClass}>Total downloading</DescriptionList>
+          <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
         </div>
-        <div>
-          <DescriptionList tag="dt" {dtClass}>Total waiting</DescriptionList>
+        <div class="pl-4">
+          <DescriptionList tag="dt" {dtClass}>Queued</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
         </div>
       </List>
