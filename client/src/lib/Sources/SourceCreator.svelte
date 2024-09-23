@@ -110,7 +110,7 @@
     if (!feedResult.ok) {
       errorMessage = feedResult.error;
     }
-    push(`/sources/`);
+    push(`/sources/${result.value.id}`);
   };
 
   onMount(async () => {

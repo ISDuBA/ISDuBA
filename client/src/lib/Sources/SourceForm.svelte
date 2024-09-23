@@ -93,6 +93,8 @@
   let ageNumber: number | undefined;
   let previousAgeNumber: number | undefined;
 
+  let displayActiveHighlight: boolean = true;
+
   onMount(() => {
     fillAgeDataFromSource(source);
   });
@@ -186,9 +188,18 @@
 <form class={formClass}>
   <Label>Name</Label>
   <Input class="mb-3" on:input={inputChange} bind:value={source.name}></Input>
-  {#if enableActive}
-    <CCheckbox class="mb-3" on:change={inputChange} bind:checked={source.active}>Active</CCheckbox>
-  {/if}
+  <div class={!source.active && displayActiveHighlight ? "backgroundHighlight" : ""}>
+    {#if enableActive}
+      <CCheckbox
+        class="mb-3"
+        on:change={() => {
+          displayActiveHighlight = false;
+          inputChange();
+        }}
+        bind:checked={source.active}>Active</CCheckbox
+      >
+    {/if}
+  </div>
   <Accordion>
     <AccordionItem
       ><span slot="header">Credentials</span>
@@ -373,3 +384,22 @@
   </Accordion>
   <br />
 </form>
+
+<style>
+  @keyframes fadeIt {
+    0% {
+      background-color: #ffffff;
+    }
+    50% {
+      background-color: #048dd9;
+    }
+    100% {
+      background-color: #ffffff;
+    }
+  }
+
+  .backgroundHighlight {
+    background-image: none !important;
+    animation: fadeIt 0.75s 2 ease-in-out 0.5s;
+  }
+</style>
