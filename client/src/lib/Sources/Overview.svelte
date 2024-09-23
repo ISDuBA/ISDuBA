@@ -39,7 +39,7 @@
 
   let sourceUpdate = setInterval(async () => {
     getSources();
-  }, 2 * 1000);
+  }, 30 * 1000);
 
   const getSources = async () => {
     loadingSources = true;

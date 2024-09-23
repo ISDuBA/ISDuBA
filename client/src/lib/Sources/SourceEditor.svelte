@@ -89,7 +89,7 @@
       }
     }
     feeds = feeds;
-  }, 2 * 1000);
+  }, 30 * 1000);
 
   const loadSourceInfo = async (id: number) => {
     loadingSource = true;
