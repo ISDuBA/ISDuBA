@@ -171,6 +171,27 @@
     if (!tmpB.headers) {
       tmpB.headers = [];
     }
+
+    if (tmpA.insecure === undefined) {
+      tmpA.insecure = false;
+    }
+    if (tmpB.insecure === undefined) {
+      tmpB.insecure = false;
+    }
+
+    if (tmpA.signature_check === undefined) {
+      tmpA.signature_check = false;
+    }
+    if (tmpB.signature_check === undefined) {
+      tmpB.signature_check = false;
+    }
+
+    if (tmpA.strict_mode === undefined) {
+      tmpA.strict_mode = false;
+    }
+    if (tmpB.strict_mode === undefined) {
+      tmpB.strict_mode = false;
+    }
     return JSON.stringify(tmpA) === JSON.stringify(tmpB);
   };
 
