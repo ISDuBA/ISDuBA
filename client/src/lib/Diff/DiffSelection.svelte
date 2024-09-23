@@ -79,6 +79,11 @@
     clearInterval(intervalID);
   });
 
+  const resetTempDocsErrorMessages = () => {
+    tempDocErrorMessage = null;
+    loadTempDocsErrorMessage = null;
+  };
+
   const dropHandle = (event: any) => {
     event.preventDefault();
     if (event.dataTransfer.items) {
@@ -114,6 +119,7 @@
   };
 
   const uploadFile = (file: File): Promise<void> => {
+    resetTempDocsErrorMessages();
     return new Promise((resolve) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -175,6 +181,7 @@
   };
 
   const getTempDocuments = async () => {
+    loadTempDocsErrorMessage = null;
     const response = await request("/api/tempdocuments", "GET");
     if (response.ok) {
       const result = await response.content;
@@ -199,7 +206,7 @@
   };
 
   const deleteTempDocument = async (id: number) => {
-    tempDocErrorMessage = null;
+    resetTempDocsErrorMessages();
     const response = await request(`/api/tempdocuments/${id}`, "DELETE");
     if (response.ok) {
       if ($appStore.app.diff.docA_ID === `tempdocument${id}`) {
