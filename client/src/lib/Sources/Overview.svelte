@@ -20,7 +20,6 @@
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { type Source, fetchSources } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
-  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
