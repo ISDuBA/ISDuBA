@@ -36,33 +36,9 @@ sudo /opt/keycloak/bin/kc.sh start-dev --health-enabled=true &
 echo "Waiting for keycloak to start..."
 until curl --silent --head -fsS http://localhost:9000/health/ready
 do
-  sleep 1
+  sleep 5
 done
 keycloak=$!
 
 echo "keycloak is running:"
 echo $keycloak
-
-npx playwright test
-
-
-echo "shutting down client, server and keycloak..."
-if [ ! -z "$isdubad" ]; then
-  if ps -p $isdubad; then
-    kill $isdubad
-  fi
-fi
-
-if [ ! -z "$client" ]; then
-  if ps -p $client; then
-    kill $client
-  fi
-fi
-
-if [ ! -z "$keycloak" ]; then
-  if ps -p $keycloak; then
-    kill $keycloak
-  fi
-fi
-
-echo "Tests done"

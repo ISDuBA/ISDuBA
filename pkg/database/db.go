@@ -38,12 +38,8 @@ func NewDB(ctx context.Context, cfg *config.Database) (*DB, error) {
 }
 
 // Close closes the connection pool.
-func (db *DB) Close(context.Context) error {
-	if pool := db.pool; pool != nil {
-		db.pool = nil
-		pool.Close()
-	}
-	return nil
+func (db *DB) Close(context.Context) {
+	db.pool.Close()
 }
 
 // Run a function hands over a database connection from the connection pool.

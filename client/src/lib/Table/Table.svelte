@@ -31,12 +31,13 @@
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { getPublisher } from "$lib/publisher";
   import CIconButton from "$lib/Components/CIconButton.svelte";
+  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import { SEARCHTYPES } from "$lib/Queries/query";
 
   let openRow: number | null;
   let abortController: AbortController;
@@ -55,7 +56,7 @@
   export let columns: string[];
   export let query: string = "";
   export let searchTerm: string = "";
-  export let loadAdvisories: boolean;
+  export let tableType: SEARCHTYPES;
   export let orderBy = "title";
   export let defaultOrderBy = "";
 
@@ -104,22 +105,14 @@
     [searchPadding, searchPaddingRight] = getTablePadding(columns, "title");
   }
 
-  const calcSSVC = (documents: any) => {
-    if (!documents) return [];
-    documents.map((d: any) => {
-      if (d["ssvc"]) d["ssvc"] = convertVectorToSSVCObject(d["ssvc"]);
-    });
-    return documents;
-  };
-
   const savePosition = () => {
     let position = [offset, currentPage, limit, orderBy];
-    sessionStorage.setItem("tablePosition" + query + loadAdvisories, JSON.stringify(position));
+    sessionStorage.setItem("tablePosition" + query + tableType, JSON.stringify(position));
   };
 
   let postitionRestored: boolean = false;
   const restorePosition = () => {
-    let position = sessionStorage.getItem("tablePosition" + query + loadAdvisories);
+    let position = sessionStorage.getItem("tablePosition" + query + tableType);
     if (position) {
       [offset, currentPage, limit, orderBy] = JSON.parse(position);
     } else {
@@ -153,7 +146,7 @@
     savePosition();
   }
 
-  $: if (loadAdvisories || !loadAdvisories) {
+  $: if (tableType || !tableType) {
     restorePosition();
     savePosition();
   }
@@ -179,10 +172,19 @@
         fetchColumns.push(c);
       }
     }
+    let documentURL = "";
 
-    const documentURL = encodeURI(
-      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
-    );
+    if (tableType === SEARCHTYPES.EVENT) {
+      documentURL = encodeURI(
+        `/api/events?${queryParam}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      );
+    } else {
+      const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
+      documentURL = encodeURI(
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      );
+    }
+
     error = null;
     loading = true;
     if (!requestOngoing) {
@@ -194,7 +196,12 @@
     const response = await request(documentURL, "GET");
     if (response.ok) {
       ({ count, documents } = response.content);
-      documents = calcSSVC(documents) || [];
+      if (tableType === SEARCHTYPES.EVENT) {
+        count = response.content.count;
+        documents = response.content.events;
+      } else {
+        ({ count, documents } = response.content);
+      }
     } else if (response.error) {
       error =
         response.error === "400"
@@ -257,7 +264,7 @@
 
   const deleteDocument = async () => {
     let url = "";
-    if (loadAdvisories) {
+    if (tableType === SEARCHTYPES.ADVISORY) {
       url = encodeURI(
         `/api/advisory/${documentToDelete.publisher}/${documentToDelete.tracking_id}`
       );
@@ -267,7 +274,7 @@
     const response = await request(url, "DELETE");
     if (response.error) {
       error = getErrorDetails(
-        `Could not delete ${loadAdvisories ? "advisory" : "document"}`,
+        `Could not delete ${tableType === SEARCHTYPES.ADVISORY ? "advisory" : "document"}`,
         response
       );
     }
@@ -283,7 +290,9 @@
 <Modal size="xs" title={documentToDelete.title} bind:open={deleteModalOpen} autoclose outsideclose>
   <div class="text-center">
     <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-      Are you sure you want to delete this {loadAdvisories ? "advisory" : "document"}?
+      Are you sure you want to delete this {tableType === SEARCHTYPES.ADVISORY
+        ? "advisory"
+        : "document"}?
     </h3>
     <Button
       on:click={() => {
@@ -303,9 +312,11 @@
         <Label class="mr-3 text-nowrap"
           >{query
             ? "Matches per page"
-            : loadAdvisories
+            : tableType === SEARCHTYPES.ADVISORY
               ? "Advisories per page"
-              : "Documents per page"}</Label
+              : tableType === SEARCHTYPES.DOCUMENT
+                ? "Documents per page"
+                : "Events per page"}</Label
         >
         <Select
           size="sm"
@@ -363,10 +374,12 @@
       <div class="mr-3 text-nowrap">
         {#if query}
           {count} matches found
-        {:else if loadAdvisories}
+        {:else if tableType === SEARCHTYPES.ADVISORY}
           {count} advisories in total
-        {:else}
+        {:else if tableType === SEARCHTYPES.DOCUMENT}
           {count} documents in total
+        {:else}
+          {count} events in total
         {/if}
       </div>
     {/if}
@@ -428,11 +441,11 @@
                         ></TableBodyCell
                       >
                     {:else if column === "ssvc"}
-                      <TableBodyCell {tdClass}
-                        ><span style={item[column] ? `color:${item[column].color}` : ""}
-                          >{item[column]?.label || ""}</span
-                        ></TableBodyCell
-                      >
+                      <TableBodyCell {tdClass}>
+                        {#if item[column]}
+                          <SsvcBadge vector={item[column]}></SsvcBadge>
+                        {/if}
+                      </TableBodyCell>
                     {:else if column === "state"}
                       <TableBodyCell {tdClass}
                         ><i
@@ -512,12 +525,12 @@
                         ></TableBodyCell
                       >
                     {:else}
-                      <TableBodyCell {tdClass}>{item[column]}</TableBodyCell>
+                      <TableBodyCell {tdClass}>{item[column] ?? ""}</TableBodyCell>
                     {/if}
                   {/if}
                 {/each}
                 <TableBodyCell {tdClass}>
-                  {#if isAdmin}
+                  {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
                     <CIconButton
                       on:click={() => {
                         documentToDelete = item;

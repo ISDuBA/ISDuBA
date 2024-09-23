@@ -25,7 +25,7 @@
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import SourceForm from "./SourceForm.svelte";
   import { request } from "$lib/request";
   import FeedView from "./FeedView.svelte";
@@ -69,8 +69,27 @@
     ignore_patterns: [""]
   };
 
+  let oldSource = structuredClone(source);
+
   const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
   const ddClass: string = "break-words font-semibold ml-2 mb-1";
+
+  let updateStats = setInterval(async () => {
+    let result = await fetchSource(source.id ?? 0, true);
+    if (result.ok) {
+      source.stats = result.value.stats;
+    }
+    let feedResult = await fetchFeeds(source.id ?? 0, true);
+    if (feedResult.ok) {
+      for (let feed of feedResult.value) {
+        const find = feeds.find((i) => i.id === feed.id);
+        if (find) {
+          find.stats = feed.stats;
+        }
+      }
+    }
+    feeds = feeds;
+  }, 30 * 1000);
 
   const loadSourceInfo = async (id: number) => {
     loadingSource = true;
@@ -80,6 +99,8 @@
       if (fillAgeDataFromSource) {
         fillAgeDataFromSource(source);
       }
+      await updateSourceForm();
+      oldSource = structuredClone(source);
       sourceEdited = false;
     } else {
       loadSourceError = result.error;
@@ -154,8 +175,50 @@
     }
   };
 
-  const inputChange = () => {
-    sourceEdited = true;
+  const sourceEqual = (a: Source, b: Source) => {
+    let tmpA = structuredClone(a);
+    let tmpB = structuredClone(b);
+
+    tmpA.stats = undefined;
+    tmpB.stats = undefined;
+
+    if (!tmpA.headers) {
+      tmpA.headers = [];
+    }
+    if (!tmpB.headers) {
+      tmpB.headers = [];
+    }
+
+    if (tmpA.insecure === undefined) {
+      tmpA.insecure = false;
+    }
+    if (tmpB.insecure === undefined) {
+      tmpB.insecure = false;
+    }
+
+    if (tmpA.signature_check === undefined) {
+      tmpA.signature_check = false;
+    }
+    if (tmpB.signature_check === undefined) {
+      tmpB.signature_check = false;
+    }
+
+    if (tmpA.strict_mode === undefined) {
+      tmpA.strict_mode = false;
+    }
+    if (tmpB.strict_mode === undefined) {
+      tmpB.strict_mode = false;
+    }
+    return JSON.stringify(tmpA) === JSON.stringify(tmpB);
+  };
+
+  const inputChange = async () => {
+    await updateSourceForm();
+    if (sourceEqual(oldSource, source)) {
+      sourceEdited = false;
+    } else {
+      sourceEdited = true;
+    }
   };
 
   const clickFeed = async (feed: Feed) => {
@@ -166,6 +229,8 @@
   };
 
   onMount(async () => {
+    updateSourceForm = sourceForm.updateSource;
+    fillAgeDataFromSource = sourceForm.fillAgeDataFromSource;
     let id = params?.id;
     if (id) {
       await loadSourceInfo(Number(id));
@@ -177,11 +242,12 @@
       });
       feeds.push(...missingFeeds);
       feeds = feeds;
-
-      updateSourceForm = sourceForm.updateSource;
-      fillAgeDataFromSource = sourceForm.fillAgeDataFromSource;
       fillAgeDataFromSource(source);
     }
+  });
+
+  onDestroy(() => {
+    clearInterval(updateStats);
   });
 </script>
 
@@ -235,18 +301,20 @@
       {/if}
     </List>
     {#if source.stats}
-      <h4 class="mt-3">Statistics</h4>
-      <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
+      <h4 class="mt-3">Status</h4>
+      <List tag="dl" class="flex w-full flex-wrap text-sm">
         <div>
-          <DescriptionList tag="dt" {dtClass}>Total downloading</DescriptionList>
+          <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
         </div>
-        <div>
-          <DescriptionList tag="dt" {dtClass}>Total waiting</DescriptionList>
+        <div class="pl-4">
+          <DescriptionList tag="dt" {dtClass}>Queued</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
         </div>
       </List>
     {/if}
+    <ErrorMessage error={loadSourceError}></ErrorMessage>
+    <ErrorMessage error={loadPmdError}></ErrorMessage>
 
     <div class:invisible={!loadingPMD} class={!loadingPMD ? "loadingFadeIn" : ""} class:mb-4={true}>
       Loading PMD ...
@@ -285,6 +353,7 @@
       <i class="bx bx-trash me-2 text-red-500"></i>
       <span>Delete source</span>
     </Button>
+    <ErrorMessage error={saveSourceError}></ErrorMessage>
   </div>
 </div>
 
@@ -297,10 +366,6 @@
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>
+<ErrorMessage error={loadFeedError}></ErrorMessage>
 <ErrorMessage error={feedError}></ErrorMessage>
 <ErrorMessage error={saveFeedError}></ErrorMessage>
-
-<ErrorMessage error={saveSourceError}></ErrorMessage>
-<ErrorMessage error={loadSourceError}></ErrorMessage>
-<ErrorMessage error={loadPmdError}></ErrorMessage>
-<ErrorMessage error={loadFeedError}></ErrorMessage>

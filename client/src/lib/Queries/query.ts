@@ -109,6 +109,27 @@ const SEARCHPAGECOLUMNS = {
     "current_release_date",
     "version",
     "comments"
+  ],
+  EVENT: [
+    "critical",
+    "id",
+    "tracking_id",
+    "version",
+    "publisher",
+    "current_release_date",
+    "initial_release_date",
+    "title",
+    "tlp",
+    "cvss_v2_score",
+    "cvss_v3_score",
+    "ssvc",
+    "four_cves",
+    "comments",
+    "event",
+    "event_state",
+    "time",
+    "actor",
+    "comments_id"
   ]
 };
 interface Column {

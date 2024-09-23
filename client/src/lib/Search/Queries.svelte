@@ -16,7 +16,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { push } from "svelte-spa-router";
   import { createEventDispatcher } from "svelte";
-  import { SEARCHTYPES, type Query } from "$lib/Queries/query";
+  import { type Query } from "$lib/Queries/query";
 
   const dispatch = createEventDispatcher();
 
@@ -65,7 +65,7 @@
     fetchIgnored();
     const response = await request("/api/queries", "GET");
     if (response.ok) {
-      queries = response.content.filter((q: any) => q.kind !== SEARCHTYPES.EVENT);
+      queries = response.content;
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
