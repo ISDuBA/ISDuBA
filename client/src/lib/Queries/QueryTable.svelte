@@ -92,7 +92,7 @@
         isChecked,
         ignoredQueries
       ));
-      if (ignoreErrorMessage !== null) dispatch("fetchData");
+      if (ignoreErrorMessage === null) dispatch("fetchData");
     }
   };
 
