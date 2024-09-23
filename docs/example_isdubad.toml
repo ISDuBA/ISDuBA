@@ -57,6 +57,7 @@
 # download_slots = 100
 # max_slots_per_source = 2
 # max_rate_per_source = 0
+# age = "17520h"
 # openpgp_caching = "24h"
 # feed_refresh = "15m"
 # feed_log_level = "info"

@@ -26,8 +26,9 @@
   import FeedView from "./FeedView.svelte";
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import type { ErrorDetails } from "$lib/Errors/error";
   import validator from "validator";
+  import { request } from "$lib/request";
+  import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
 
   export let params: any = null;
 
@@ -113,12 +114,26 @@
     push(`/sources/`);
   };
 
+  async function getDefault(): Promise<Partial<Source>> {
+    const response = await request("api/sources/createdefaults", "GET");
+    console.log(response);
+    if (response.ok) {
+      return response.content.data;
+    }
+    console.warn(getErrorDetails(`Couldn't load creation defaults`, response));
+    return {};
+  }
+
   onMount(async () => {
     let domain = params?.domain;
     if (domain) {
       source.url = domain;
+      Object.assign(source, await getDefault());
+      source = source;
+      console.log(`OnMount`, source);
       await loadPMD();
       updateSourceForm = sourceForm.updateSource;
+      sourceForm.fillAgeDataFromSource();
     }
   });
 </script>

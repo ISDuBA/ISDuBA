@@ -25,11 +25,13 @@
   export let source: Source;
   export let enableActive: boolean = false;
   export const updateSource = async () => {
+    console.log(`updateSource`);
     formatHeaders();
     await loadCerts();
   };
 
   export const fillAgeDataFromSource = (useSource: Source) => {
+    console.log(`fillAgeDataFromSource`);
     ageUnit = AgeUnit.years;
     let baseNumber: number | undefined = undefined;
     let baseUnit: AgeUnit = ageUnit;
@@ -94,10 +96,12 @@
   let previousAgeNumber: number | undefined;
 
   onMount(() => {
+    console.log(`onMount2`);
     fillAgeDataFromSource(source);
   });
 
   const onChangedAge = () => {
+    console.log(`onChangedAge`);
     if (!ageNumber && ageNumber !== 0) {
       source.age = "";
     } else {

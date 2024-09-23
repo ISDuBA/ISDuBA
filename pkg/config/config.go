@@ -91,6 +91,7 @@ const (
 	defaultSourcesDownloadSlots     = 100
 	defaultSourcesMaxSlotsPerSource = 2
 	defaultSourcesMaxRatePerSlot    = 0
+	defaultSourcesAge               = 365 * 24 * time.Hour
 	defaultSourcesOpenPGPCaching    = 24 * time.Hour
 	defaultSourcesFeedRefresh       = 15 * time.Minute
 	defaultSourcesTimeout           = 30 * time.Second
@@ -181,6 +182,7 @@ type Sources struct {
 	DownloadSlots     int                   `toml:"download_slots"`
 	MaxSlotsPerSource int                   `toml:"max_slots_per_source"`
 	MaxRatePerSource  float64               `toml:"max_rate_per_source"`
+	Age               time.Duration         `toml:"age"`
 	OpenPGPCaching    time.Duration         `toml:"openpgp_caching"`
 	FeedRefresh       time.Duration         `toml:"feed_refresh"`
 	Timeout           time.Duration         `toml:"timeout"`
@@ -318,6 +320,7 @@ func Load(file string) (*Config, error) {
 			DownloadSlots:     defaultSourcesDownloadSlots,
 			MaxSlotsPerSource: defaultSourcesMaxSlotsPerSource,
 			MaxRatePerSource:  defaultSourcesMaxRatePerSlot,
+			Age:               defaultSourcesAge,
 			OpenPGPCaching:    defaultSourcesOpenPGPCaching,
 			FeedRefresh:       defaultSourcesFeedRefresh,
 			FeedLogLevel:      defaultSourcesFeedLogLevel,
@@ -407,6 +410,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_DOWNLOAD_SLOTS", storeInt(&cfg.Sources.DownloadSlots)},
 		envStore{"ISDUBA_SOURCES_MAX_SLOTS_PER_SOURCE", storeInt(&cfg.Sources.MaxSlotsPerSource)},
 		envStore{"ISDUBA_SOURCES_MAX_RATE_PER_SOURCE", storeFloat64(&cfg.Sources.MaxRatePerSource)},
+		envStore{"ISDUBA_SOURCES_AGE", storeDuration(&cfg.Sources.Age)},
 		envStore{"ISDUBA_SOURCES_OPENPGP_CACHING", storeDuration(&cfg.Sources.OpenPGPCaching)},
 		envStore{"ISDUBA_SOURCES_FEED_REFRESH", storeDuration(&cfg.Sources.FeedRefresh)},
 		envStore{"ISDUBA_SOURCES_FEED_LOG_LEVEL", storeFeedLogLevel(&cfg.Sources.FeedLogLevel)},

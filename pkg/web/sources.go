@@ -656,6 +656,21 @@ func (c *Controller) defaultMessage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
 }
 
+// defaultMessage returns the defaults for sourche adding.
+func (c *Controller) createDefaults(ctx *gin.Context) {
+	type createDefaultData struct {
+		Age   string  `json:"age,omitempty" form:"age"`
+		Rate  float64 `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
+		Slots int     `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"data": createDefaultData{
+		Age:   c.cfg.Sources.Age.String(),
+		Rate:  c.cfg.Sources.MaxRatePerSource,
+		Slots: c.cfg.Sources.DownloadSlots,
+	}})
+}
+
 func (c *Controller) pmd(ctx *gin.Context) {
 	var input struct {
 		URL string `form:"url" binding:"required,min=1"`
