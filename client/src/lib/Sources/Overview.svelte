@@ -16,7 +16,7 @@
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import { tdClass } from "$lib/Table/defaults";
   import { request } from "$lib/request";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { type Source, fetchSources } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
@@ -37,6 +37,10 @@
     return new Map<string, [string]>();
   }
 
+  let sourceUpdate = setInterval(async () => {
+    getSources();
+  }, 2 * 1000);
+
   const getSources = async () => {
     loadingSources = true;
     const result = await fetchSources(true);
@@ -51,6 +55,10 @@
 
   onMount(() => {
     getSources();
+  });
+
+  onDestroy(() => {
+    clearInterval(sourceUpdate);
   });
 </script>
 
@@ -76,12 +84,8 @@
         attribute: "active"
       },
       {
-        label: "Downloading",
-        attribute: "downloading"
-      },
-      {
-        label: "Waiting",
-        attribute: "waiting"
+        label: "Loading/Queued",
+        attribute: "stats"
       }
     ]}
   >
@@ -101,8 +105,7 @@
         <TableBodyCell {tdClass}
           ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
         >
-        <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
-        <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
+        <TableBodyCell {tdClass}>{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell>
       </tr>
     {/each}
     <div slot="bottom">
