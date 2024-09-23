@@ -154,7 +154,14 @@
   <title>User defined queries</title>
 </svelte:head>
 
-<Modal size="xs" title={querytoDelete.name} bind:open={deleteModalOpen} autoclose outsideclose>
+<Modal
+  size="xs"
+  title={querytoDelete.name}
+  bind:open={deleteModalOpen}
+  autoclose
+  outsideclose
+  classHeader="flex justify-between items-center p-4 md:p-5 rounded-t-lg break-all"
+>
   <div class="text-center">
     <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
       Are you sure you want to delete this query?
