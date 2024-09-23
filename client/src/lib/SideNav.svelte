@@ -11,11 +11,11 @@
 <script lang="ts">
   import {
     Drawer,
-    Heading,
     Sidebar,
     SidebarWrapper,
     SidebarGroup,
-    SidebarItem
+    SidebarItem,
+    SidebarBrand
   } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { appStore } from "$lib/store";
@@ -54,22 +54,25 @@
       {transitionParams}
       bind:hidden={drawerHidden}
       activateClickOutside={false}
-      width="w-45"
+      width="fit-content"
       backdrop={false}
-      class="static bg-primary-700 p-0"
+      class="static min-w-fit bg-primary-700 p-0"
       id="sidebar"
     >
-      <Sidebar class="bg-primary-700" {activeUrl} {activeClass} {nonActiveClass}>
+      <Sidebar
+        asideClass="w-fit max-w-60"
+        class="bg-primary-700"
+        {activeUrl}
+        {activeClass}
+        {nonActiveClass}
+      >
         <SidebarWrapper class="bg-primary-700 px-0">
-          <div class="flex flex-row gap-4">
-            <img
-              alt="ISDuBA logo"
-              class="ml-2 flex-none"
-              style="height: 50px; width: 50px"
-              src="favicon.svg"
-            />
-            <Heading class="mb-6 font-normal text-white">ISDuBA</Heading>
-          </div>
+          <SidebarGroup>
+            <SidebarBrand
+              spanClass="self-center text-4xl font-normal whitespace-nowrap text-white me-4"
+              site={{ img: "favicon.svg", name: "ISDuBA", href: "/#/" }}
+            ></SidebarBrand>
+          </SidebarGroup>
           <SidebarGroup class="space-y-0 bg-primary-700">
             <!-- Entries which are available after login should go here-->
             <SidebarItem class="px-6 py-2.5" label="Dashboard" href="/#/">

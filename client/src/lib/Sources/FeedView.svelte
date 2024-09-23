@@ -10,9 +10,10 @@
 
 <script lang="ts">
   import { type Feed, logLevels } from "$lib/Sources/source";
-  import { Checkbox, Select, Input, TableBodyCell } from "flowbite-svelte";
+  import { Select, Input, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   export let feeds: Feed[] = [];
   export let edit: boolean = false;
@@ -22,7 +23,7 @@
 
   let headers = [
     {
-      label: "Active",
+      label: "",
       attribute: "enable"
     },
     {
@@ -31,11 +32,13 @@
     },
     {
       label: "Log level",
-      attribute: "log_level"
+      attribute: "log_level",
+      class: "min-w-32"
     },
     {
       label: "Label",
-      attribute: "label"
+      attribute: "label",
+      class: "min-w-32"
     }
   ];
 
@@ -49,20 +52,34 @@
 <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
   {#each feeds as feed, index (index)}
     <tr>
-      <TableBodyCell {tdClass}
-        ><Checkbox
-          bind:checked={feed.enable}
-          on:change={async () => {
-            await updateFeed(feed);
-            if (!feed.enable) {
+      <TableBodyCell {tdClass}>
+        {#if feed.enable}
+          <CIconButton
+            on:click={async () => {
+              feed.enable = false;
+              await updateFeed(feed);
               feed.id = undefined;
-            }
-          }}
-        ></Checkbox></TableBodyCell
-      >
-      <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}
-        >{feed.url}</TableBodyCell
-      >
+            }}
+            icon="trash"
+          ></CIconButton>
+        {:else}
+          <CIconButton
+            on:click={async () => {
+              feed.enable = true;
+              await updateFeed(feed);
+            }}
+            icon="plus"
+          ></CIconButton>
+        {/if}
+      </TableBodyCell>
+      <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+        {#if edit}
+          <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>{feed.url}</a
+          >
+        {:else}
+          {feed.url}
+        {/if}
+      </TableBodyCell>
       <TableBodyCell {tdClass}
         ><Select
           items={logLevels}

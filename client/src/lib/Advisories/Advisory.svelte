@@ -8,14 +8,13 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Label, Badge } from "flowbite-svelte";
+  import { Label } from "flowbite-svelte";
   import { onDestroy } from "svelte";
   import { appStore } from "$lib/store";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
-  import { convertVectorToLabel } from "$lib/Advisories/SSVC/SSVCCalculator";
   import Diff from "$lib/Diff/Diff.svelte";
   import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
@@ -26,10 +25,11 @@
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./History.svelte/History.svelte";
   import Tlp from "./TLP.svelte";
+  import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   export let params: any = null;
 
   let document: any = {};
-  let ssvc: any;
+  let ssvcVector: string;
   let comment: string = "";
   let loadCommentsError: ErrorDetails | null;
   let loadEventsError: ErrorDetails | null;
@@ -105,7 +105,7 @@
     if (response.ok) {
       const result = await response.content;
       if (result.documents[0].ssvc) {
-        ssvc = convertVectorToLabel(result.documents[0].ssvc);
+        ssvcVector = result.documents[0].ssvc;
       }
     } else if (response.error) {
       loadDocumentSSVCError = getErrorDetails(`Could not load SSVC.`, response);
@@ -310,7 +310,6 @@
       appStore.setSelectedCVE("");
     }
   }
-  $: ssvcStyle = ssvc ? `color: white; background-color: ${ssvc.color};` : "";
 </script>
 
 <svelte:head>
@@ -377,15 +376,15 @@
       >
         <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
           <div class="mb-4 flex flex-row items-center">
-            {#if ssvc}
+            {#if ssvcVector}
               {#if !isSSVCediting}
-                <Badge class="h-6 w-fit" title={ssvc.vector} style={ssvcStyle}>{ssvc.label}</Badge>
+                <SsvcBadge vector={ssvcVector}></SsvcBadge>
               {/if}
             {/if}
             {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
               <SsvcCalculator
                 bind:isEditing={isSSVCediting}
-                vectorInput={ssvc?.vector}
+                vectorInput={ssvcVector}
                 disabled={!isCalculatingAllowed}
                 documentID={params.id}
                 on:updateSSVC={loadMetaData}

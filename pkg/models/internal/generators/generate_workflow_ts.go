@@ -14,6 +14,7 @@ import (
 	"cmp"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"slices"
@@ -71,14 +72,14 @@ export const WORKFLOW_TRANSITIONS: WorkflowStateTransition[] = [
   {{- if $out }},
   {{ end }}{{ $out = true -}}
   { from: {{ $from | string | upper }}, to: {{ $to | string | upper }}, roles: [{{ range $i, $role := $who }}
-  {{- if $i }}, {{ end }}{{ $role | upper }}{{ end }}] }
+  {{- if $i }}, {{ end }}{{ $role | string | upper }}{{ end }}] }
   {{- end }}
 ];
 `
 
 var tmpl = template.Must(template.New("states").Funcs(
 	template.FuncMap{
-		"string": func(s models.Workflow) string { return string(s) },
+		"string": fmt.Sprint,
 		"upper":  strings.ToUpper,
 	}).Parse(tmplTxt))
 

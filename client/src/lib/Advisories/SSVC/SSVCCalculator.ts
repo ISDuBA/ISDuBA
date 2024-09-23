@@ -8,14 +8,17 @@
 
 import decisionTree from "./CISA-Coordinator";
 
-export type SSVCDecisionChildCombinationItem = {
+/** "Translated" SSVC vector describing what to do with the CSAF document. */
+type SSVCAction = string;
+
+type SSVCDecisionChildCombinationItem = {
   child_key?: string;
   child_label: string;
   child_option_keys?: string[];
   child_option_labels: string[];
 };
 
-export type SSVCOption = {
+type SSVCOption = {
   label: string;
   key: string;
   description: string;
@@ -23,11 +26,11 @@ export type SSVCOption = {
   color?: string;
 };
 
-export type SSVCDecisionChild = {
+type SSVCDecisionChild = {
   label: string;
 };
 
-export type SSVCDecision = {
+type SSVCDecision = {
   label: string;
   key: string;
   decision_type: string;
@@ -35,15 +38,35 @@ export type SSVCDecision = {
   options: SSVCOption[];
 };
 
-export type SSVCDecisionTree = {
+/** Key: Label of a decision. Value: Potential decision */
+type SSVCDecisionCombination = {
+  [key: string]: string;
+};
+
+// The decision tree used in the JSON files.
+type SSVCDecisionTree = {
   decision_points: SSVCDecision[];
-  decisions_table: any[];
+  decisions_table: SSVCDecisionCombination[];
   lang: string;
   title: string;
   version: string;
 };
 
-export function parseDecisionTree() {
+// Parsed so it's easier to step through the tree.
+type ParsedDecisionTree = {
+  decisionPoints: SSVCDecision[];
+  decisionsTable: SSVCDecisionCombination[];
+  mainDecisions: SSVCDecision[];
+  steps: string[];
+};
+
+interface SSVCObject {
+  vector: string;
+  color: string;
+  label: SSVCAction;
+}
+
+function parseDecisionTree(): ParsedDecisionTree {
   const json: SSVCDecisionTree = decisionTree;
   const addedPoints: string[] = [];
   const decisionPoints: SSVCDecision[] = json.decision_points;
@@ -72,38 +95,54 @@ export function parseDecisionTree() {
   };
 }
 
-export function getDecision(
-  decisionPoints: SSVCDecision[],
-  label: string
-): SSVCDecision | undefined {
+function getDecision(decisionPoints: SSVCDecision[], label: string): SSVCDecision | undefined {
   return decisionPoints.find((element) => element.label === label);
 }
 
-export function getOptionWithKey(decision: SSVCDecision, key: string): SSVCOption | undefined {
+function getOptionViaKey(decision: SSVCDecision, key: string): SSVCOption | undefined {
   return decision.options.find((element: SSVCOption) => element.key === key);
 }
 
-export function createIsoTimeStringForSSVC() {
+/** Time has to be saved without milliseconds in SSVC vectors. */
+function createIsoTimeStringForSSVC() {
   const iso = new Date().toISOString();
   return `${iso.split(".")[0]}Z`;
 }
 
-export function convertVectorToLabel(vector: string): any {
+function convertVectorToSSVCObject(vector: string): SSVCObject {
   const { mainDecisions, decisionPoints } = parseDecisionTree();
   const keyPairs = vector.split("/").slice(1, -2);
   let selectedOption: SSVCOption | undefined;
   const keyOfSelectedOption = keyPairs[keyPairs.length - 1].split(":")[1];
   if (mainDecisions.length === keyPairs.length) {
-    selectedOption = getOptionWithKey(mainDecisions[mainDecisions.length - 1], keyOfSelectedOption);
+    selectedOption = getOptionViaKey(mainDecisions[mainDecisions.length - 1], keyOfSelectedOption);
   } else if (decisionPoints.length === keyPairs.length) {
-    selectedOption = getOptionWithKey(
+    selectedOption = getOptionViaKey(
       decisionPoints[decisionPoints.length - 1],
       keyOfSelectedOption
     );
   }
   return {
     vector: vector,
-    label: selectedOption?.label,
-    color: selectedOption?.color
+    label: selectedOption?.label ?? "",
+    color: selectedOption?.color ?? ""
   };
 }
+
+export type {
+  SSVCAction,
+  SSVCDecisionChild,
+  SSVCDecisionChildCombinationItem,
+  SSVCDecision,
+  SSVCDecisionCombination,
+  SSVCDecisionTree,
+  SSVCObject,
+  SSVCOption
+};
+export {
+  convertVectorToSSVCObject,
+  createIsoTimeStringForSSVC,
+  getOptionViaKey,
+  getDecision,
+  parseDecisionTree
+};

@@ -32,6 +32,8 @@
   import { push } from "svelte-spa-router";
   export let params: any = null;
 
+  let sourceEdited: boolean = false;
+
   let modalOpen: boolean = false;
   let modalMessage = "";
   let modalTitle = "";
@@ -54,6 +56,7 @@
 
   let sourceForm: any;
   let updateSourceForm: any;
+  let fillAgeDataFromSource: (source: Source) => void;
 
   let source: Source = {
     name: "",
@@ -74,6 +77,10 @@
     let result = await fetchSource(Number(id), true);
     if (result.ok) {
       source = result.value;
+      if (fillAgeDataFromSource) {
+        fillAgeDataFromSource(source);
+      }
+      sourceEdited = false;
     } else {
       loadSourceError = result.error;
     }
@@ -115,6 +122,7 @@
       saveSourceError = result.error;
       return;
     }
+    await loadSourceInfo(source.id ?? 0);
   };
 
   const deleteSource = async () => {
@@ -146,6 +154,10 @@
     }
   };
 
+  const inputChange = () => {
+    sourceEdited = true;
+  };
+
   const clickFeed = async (feed: Feed) => {
     if (!feed.id) {
       return;
@@ -167,6 +179,8 @@
       feeds = feeds;
 
       updateSourceForm = sourceForm.updateSource;
+      fillAgeDataFromSource = sourceForm.fillAgeDataFromSource;
+      fillAgeDataFromSource(source);
     }
   });
 </script>
@@ -213,8 +227,10 @@
           <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
         </div>
         <div>
-          <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+          {#if pmd.publisher.issuing_authority}
+            <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+          {/if}
         </div>
       {/if}
     </List>
@@ -231,19 +247,25 @@
         </div>
       </List>
     {/if}
-    <div class:hidden={!loadingPMD} class:mb-4={true}>
+
+    <div class:invisible={!loadingPMD} class={!loadingPMD ? "loadingFadeIn" : ""} class:mb-4={true}>
       Loading PMD ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
   </div>
 
   <div class="w-full flex-auto">
-    <div class:hidden={!loadingSource} class:mb-4={true}>
+    <div
+      class:invisible={!loadingSource}
+      class={!loadingSource ? "loadingFadeIn" : ""}
+      class:mb-4={true}
+    >
       Loading source configuration ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
-    <SourceForm bind:this={sourceForm} {source} {formClass} enableActive={true}></SourceForm>
-    <Button on:click={updateSource} color="light">
+    <SourceForm bind:this={sourceForm} {inputChange} {source} {formClass} enableActive={true}
+    ></SourceForm>
+    <Button disabled={!sourceEdited} on:click={updateSource} color="light">
       <i class="bx bxs-save me-2"></i>
       <span>Save source</span>
     </Button>
@@ -267,7 +289,11 @@
 </div>
 
 <FeedView {feeds} {clickFeed} {updateFeed} edit={true}></FeedView>
-<div class:hidden={!loadingFeeds && !loadingPMD} class:mb-4={true}>
+<div
+  class:invisible={!loadingFeeds && !loadingPMD}
+  class={!loadingFeeds && !loadingPMD ? "loadingFadeIn" : ""}
+  class:mb-4={true}
+>
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>

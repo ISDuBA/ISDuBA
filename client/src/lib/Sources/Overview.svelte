@@ -20,6 +20,7 @@
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { type Source, fetchSources } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
@@ -98,13 +99,19 @@
       >
         <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
         <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
-        <TableBodyCell {tdClass}>{source.active}</TableBodyCell>
+        <TableBodyCell {tdClass}
+          ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+        >
         <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
         <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
       </tr>
     {/each}
     <div slot="bottom">
-      <div class:hidden={!loadingSources} class:mb-4={true}>
+      <div
+        class:invisible={!loadingSources}
+        class={loadingSources ? "loadingFadeIn" : ""}
+        class:mb-4={true}
+      >
         Loading ...
         <Spinner color="gray" size="4"></Spinner>
       </div>
