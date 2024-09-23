@@ -39,6 +39,7 @@
   let cloneErrorMessage: ErrorDetails | null = null;
   let orderErrorMessage: ErrorDetails | null = null;
   let columnList: any;
+  let isLoading = false;
 
   const updateQueryOrder = async (queries: Query[]) => {
     let nodes = columnList.querySelectorAll(".columnName");
@@ -85,6 +86,7 @@
   };
 
   const changeIgnored = async (id: number, isChecked: boolean) => {
+    isLoading = true;
     if (ignoredQueries) {
       unsetErrors();
       ({ ignoredQueries, errorMessage: ignoreErrorMessage } = await setIgnored(
@@ -94,9 +96,11 @@
       ));
       if (ignoreErrorMessage === null) dispatch("fetchData");
     }
+    isLoading = false;
   };
 
   const changeDashboard = async (id: number, isChecked: boolean) => {
+    isLoading = true;
     unsetErrors();
     if (queries) {
       const queryToUpdate = queries.filter((q) => q.id === id)[0];
@@ -108,6 +112,7 @@
         }
       }
     }
+    isLoading = false;
   };
 </script>
 
@@ -172,7 +177,7 @@
                   }}
                   checked={query.dashboard}
                   class={isAllowedToEdit ? "" : "text-gray-300"}
-                  disabled={!isAllowedToEdit}
+                  disabled={!isAllowedToEdit || isLoading}
                 ></CCheckbox>
               </TableBodyCell>
               <TableBodyCell {tdClass}>
@@ -181,7 +186,7 @@
                     // @ts-expect-error Cannot use TS (see explanation above)
                     changeIgnored(query.id, event.explicitOriginalTarget?.checked);
                   }}
-                  disabled={!ignoredQueries}
+                  disabled={!ignoredQueries || isLoading}
                   checked={ignoredQueries !== null && ignoredQueries.includes(query.id)}
                 ></CCheckbox>
               </TableBodyCell>
