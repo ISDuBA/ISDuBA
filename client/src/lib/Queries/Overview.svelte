@@ -30,6 +30,7 @@
   let cloneErrorMessage: ErrorDetails | null;
   let querytoDelete: any = resetQueryToDelete();
   let loading = false;
+  let isCloning = false;
 
   $: globalRelevantQueries = queries
     ?.filter((q) => q.definer === "system-default" && q.global && q.dashboard)
@@ -94,6 +95,7 @@
     cloneErrorMessage = null;
     const idsOfClonesQueries = [];
     let failed = false;
+    isCloning = true;
     // Clone the special queries
     for (let i = 0; i < globalRelevantQueries.length; i++) {
       const queryToClone = globalRelevantQueries[i];
@@ -143,6 +145,7 @@
         cloneErrorMessage = getErrorDetails(`Could not update query order.`, response);
       }
     }
+    isCloning = false;
     fetchData();
   };
 </script>
@@ -200,7 +203,10 @@
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
         <Button class="h-fit w-fit text-sm" on:click={cloneDashboardQueries}>
           <i class="bx bx-copy me-2"></i>
-          <span>Clone relevant queries and hide cloned queries</span>
+          <span class="me-2">Clone relevant queries and hide cloned queries</span>
+          <div class:invisible={!isCloning} class={isCloning ? "loadingFadeIn text-white" : ""}>
+            <Spinner color="white" size="4"></Spinner>
+          </div>
         </Button>
       </QueryTable>
 
