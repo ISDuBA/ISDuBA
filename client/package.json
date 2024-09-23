@@ -27,6 +27,7 @@
     "@types/node": "^22.5.4",
     "@types/qs": "^6.9.16",
     "@types/sortablejs": "^1.15.8",
+    "@types/validator": "^13.12.2",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^8.6.0",
     "@vitest/coverage-v8": "^2.0.5",
@@ -60,6 +61,7 @@
     "oidc-client-ts": "^3.0.1",
     "qs": "^6.13.0",
     "sortablejs": "^1.15.3",
-    "svelte-spa-router": "^4.0.1"
+    "svelte-spa-router": "^4.0.1",
+    "validator": "^13.12.0"
   }
 }
