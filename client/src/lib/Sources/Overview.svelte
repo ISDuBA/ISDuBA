@@ -105,8 +105,7 @@
         <TableBodyCell {tdClass}
           ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
         >
-        <TableBodyCell {tdClass}>{source.stats?.downloading}</TableBodyCell>
-        <TableBodyCell {tdClass}>{source.stats?.waiting}</TableBodyCell>
+        <TableBodyCell {tdClass}>{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell>
       </tr>
     {/each}
     <div slot="bottom">
