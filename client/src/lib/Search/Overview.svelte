@@ -30,7 +30,7 @@
   const resetQuery = () => {
     return {
       columns: [...SEARCHPAGECOLUMNS.ADVISORY],
-      advisories: true,
+      queryType: SEARCHTYPES.ADVISORY,
       orders: ["-critical"],
       query: "",
       queryReset: ""
@@ -113,7 +113,7 @@
       query: detail.query,
       queryReset: detail.query,
       columns: [...detail.columns],
-      advisories: detail.kind === SEARCHTYPES.ADVISORY,
+      queryType: detail.kind,
       orders: detail.orders || []
     };
     searchTerm = "";
@@ -166,9 +166,9 @@
       <Button
         size="xs"
         color="light"
-        class={`h-7 py-1 text-xs ${query.advisories ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.ADVISORY ? "bg-gray-200 hover:bg-gray-100" : ""}`}
         on:click={() => {
-          query.advisories = true;
+          query.queryType = SEARCHTYPES.ADVISORY;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           clearSearch();
         }}>Advisories</Button
@@ -176,12 +176,22 @@
       <Button
         size="xs"
         color="light"
-        class={`h-7 py-1 text-xs ${!query.advisories ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.DOCUMENT ? "bg-gray-200 hover:bg-gray-100" : ""}`}
         on:click={() => {
-          query.advisories = false;
+          query.queryType = SEARCHTYPES.DOCUMENT;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
           clearSearch();
         }}>Documents</Button
+      >
+      <Button
+        size="xs"
+        color="light"
+        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.EVENT ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        on:click={() => {
+          query.queryType = SEARCHTYPES.EVENT;
+          query.columns = SEARCHPAGECOLUMNS.EVENT;
+          clearSearch();
+        }}>Events</Button
       >
     </ButtonGroup>
   {/if}
@@ -190,7 +200,7 @@
   <AdvisoryTable
     defaultOrderBy={query.orders[0]}
     columns={query.columns}
-    loadAdvisories={query.advisories}
+    tableType={query.queryType}
     query={`${query.query}`}
     orderBy={query.orders?.join(" ") ?? ""}
     bind:this={advisoryTable}

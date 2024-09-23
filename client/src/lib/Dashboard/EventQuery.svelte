@@ -16,7 +16,7 @@
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
-  import { Badge } from "flowbite-svelte";
+  import { Badge, Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { getRelativeTime } from "./activity";
@@ -218,6 +218,10 @@
   onMount(async () => {
     transformDataToActivities();
   });
+
+  const showMore = () => {
+    push(`/search?query=${storedQuery.id}`);
+  };
 </script>
 
 {#if $appStore.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor())}
@@ -307,6 +311,9 @@
               </div>
             </Activity>
           {/each}
+          <Button on:click={showMore} size="xs" color="light" class="h-6 w-fit rounded-md"
+            >More...</Button
+          >
         {:else}
           <div class="text-gray-600">No matching events found.</div>
         {/if}
