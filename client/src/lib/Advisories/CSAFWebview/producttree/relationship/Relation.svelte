@@ -66,7 +66,7 @@
             ><A
               color="text-blue-700"
               id={crypto.randomUUID()}
-              href={`${basePath}product-${relation.product_reference}`}
+              href={`${basePath}product-${encodeURIComponent(relation.product_reference)}`}
               >{relation.product_reference}</A
             ></td
           >
@@ -77,7 +77,7 @@
             ><A
               color="text-blue-700"
               id={crypto.randomUUID()}
-              href={`${basePath}product-${relation.relates_to_product_reference}`}
+              href={`${basePath}product-${encodeURIComponent(relation.relates_to_product_reference)}`}
               >{relation.relates_to_product_reference}</A
             ></td
           >

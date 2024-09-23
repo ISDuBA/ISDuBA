@@ -92,14 +92,16 @@
               >
             {:else if !renderAllCVEs && fourCVEs.includes(column.name)}
               <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                ><a id={crypto.randomUUID()} href={basePath + "cve-" + column.content}
-                  >{column.content}</a
+                ><a
+                  id={crypto.randomUUID()}
+                  href={basePath + "cve-" + encodeURIComponent(column.content)}>{column.content}</a
                 ></TableHeadCell
               >
             {:else if renderAllCVEs}
               <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}
-                ><a id={crypto.randomUUID()} href={basePath + "cve-" + column.content}
-                  >{column.content}</a
+                ><a
+                  id={crypto.randomUUID()}
+                  href={basePath + "cve-" + encodeURIComponent(column.content)}>{column.content}</a
                 ></TableHeadCell
               >
             {/if}
@@ -114,7 +116,7 @@
                     ><a
                       title={$appStore.webview.doc?.productsByID[column.content]}
                       id={crypto.randomUUID()}
-                      href={basePath + "product-" + column.content}
+                      href={basePath + "product-" + encodeURIComponent(column.content)}
                       >{$appStore.webview.doc?.productsByID[column.content].length > 20
                         ? `${$appStore.webview.doc?.productsByID[column.content].substring(0, 20)}...`
                         : `${$appStore.webview.doc?.productsByID[column.content]}`}

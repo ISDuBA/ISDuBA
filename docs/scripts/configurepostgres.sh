@@ -14,8 +14,6 @@ set -e # to exit if a command in the script fails
 LAB="#listen_addresses = 'localhost'" # Listen Adress Before
 LAA="listen_addresses = '*'"          # Listen Adress After
 
-systemctl status postgresql
-
 # Alter PostgreSQL as postgres user
 psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
 

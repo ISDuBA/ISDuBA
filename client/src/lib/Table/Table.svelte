@@ -31,12 +31,12 @@
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { ADMIN } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { getPublisher } from "$lib/publisher";
   import CIconButton from "$lib/Components/CIconButton.svelte";
+  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import { SEARCHTYPES } from "$lib/Queries/query";
 
   let openRow: number | null;
@@ -104,14 +104,6 @@
   $: if (columns !== undefined) {
     [searchPadding, searchPaddingRight] = getTablePadding(columns, "title");
   }
-
-  const calcSSVC = (documents: any) => {
-    if (!documents) return [];
-    documents.map((d: any) => {
-      if (d["ssvc"]) d["ssvc"] = convertVectorToSSVCObject(d["ssvc"]);
-    });
-    return documents;
-  };
 
   const savePosition = () => {
     let position = [offset, currentPage, limit, orderBy];
@@ -203,13 +195,13 @@
     }
     const response = await request(documentURL, "GET");
     if (response.ok) {
+      ({ count, documents } = response.content);
       if (tableType === SEARCHTYPES.EVENT) {
         count = response.content.count;
         documents = response.content.events;
       } else {
         ({ count, documents } = response.content);
       }
-      documents = calcSSVC(documents) || [];
     } else if (response.error) {
       error =
         response.error === "400"
@@ -449,11 +441,11 @@
                         ></TableBodyCell
                       >
                     {:else if column === "ssvc"}
-                      <TableBodyCell {tdClass}
-                        ><span style={item[column] ? `color:${item[column].color}` : ""}
-                          >{item[column]?.label || ""}</span
-                        ></TableBodyCell
-                      >
+                      <TableBodyCell {tdClass}>
+                        {#if item[column]}
+                          <SsvcBadge vector={item[column]}></SsvcBadge>
+                        {/if}
+                      </TableBodyCell>
                     {:else if column === "state"}
                       <TableBodyCell {tdClass}
                         ><i
