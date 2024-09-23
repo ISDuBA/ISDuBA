@@ -313,6 +313,8 @@
         </div>
       </List>
     {/if}
+    <ErrorMessage error={loadSourceError}></ErrorMessage>
+    <ErrorMessage error={loadPmdError}></ErrorMessage>
 
     <div class:invisible={!loadingPMD} class={!loadingPMD ? "loadingFadeIn" : ""} class:mb-4={true}>
       Loading PMD ...
@@ -351,6 +353,7 @@
       <i class="bx bx-trash me-2 text-red-500"></i>
       <span>Delete source</span>
     </Button>
+    <ErrorMessage error={saveSourceError}></ErrorMessage>
   </div>
 </div>
 
@@ -363,10 +366,6 @@
   Loading ...
   <Spinner color="gray" size="4"></Spinner>
 </div>
+<ErrorMessage error={loadFeedError}></ErrorMessage>
 <ErrorMessage error={feedError}></ErrorMessage>
 <ErrorMessage error={saveFeedError}></ErrorMessage>
-
-<ErrorMessage error={saveSourceError}></ErrorMessage>
-<ErrorMessage error={loadSourceError}></ErrorMessage>
-<ErrorMessage error={loadPmdError}></ErrorMessage>
-<ErrorMessage error={loadFeedError}></ErrorMessage>
