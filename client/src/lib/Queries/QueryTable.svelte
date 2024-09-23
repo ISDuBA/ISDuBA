@@ -111,7 +111,7 @@
   };
 </script>
 
-<div class="mb-2 w-fit">
+<div class="w-fit">
   <div class="mb-1 flex items-center gap-4">
     <span class="text-2xl">{title}</span>
   </div>
@@ -222,8 +222,10 @@
   </div>
   <div class="flex flex-col">
     <slot></slot>
-    <ErrorMessage error={ignoreErrorMessage}></ErrorMessage>
-    <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
-    <ErrorMessage error={orderErrorMessage}></ErrorMessage>
   </div>
+</div>
+<div class="flex flex-col">
+  <ErrorMessage error={ignoreErrorMessage}></ErrorMessage>
+  <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
+  <ErrorMessage error={orderErrorMessage}></ErrorMessage>
 </div>
