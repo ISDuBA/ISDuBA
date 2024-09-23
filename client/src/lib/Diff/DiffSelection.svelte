@@ -238,7 +238,7 @@
 </script>
 
 <div
-  class="fixed bottom-0 left-1 right-1 flex flex-col items-end justify-center sm:left-auto md:right-20"
+  class="fixed bottom-0 left-1 right-1 flex flex-col items-end justify-center lg:left-auto lg:right-20"
 >
   <Button
     on:click={appStore.toggleDiffBox}
@@ -253,16 +253,18 @@
         ? ` - ${docB?.document?.title.substring(0, 25)}${docB?.document?.title.length > 25 ? "..." : ""}`
         : ""}</span
     >
-    <Img src="plus-minus.svg" class="h-4 min-h-2 min-w-2" />
+    <Img src="plus-minus.svg" class="h-4 min-w-4" />
   </Button>
   {#if $appStore.app.diff.isDiffBoxOpen}
     <div
-      class="flex items-stretch gap-6 rounded-tl-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800"
+      class="flex w-full max-w-[700pt] items-stretch gap-6 rounded-tl-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800 lg:w-auto"
     >
-      <div class="flex flex-col">
-        <div class="mb-4 flex justify-between">
+      <div class="flex w-full flex-col">
+        <div class="mb-4 flex flex-col justify-between gap-2 lg:flex-row">
           <div class="flex items-start gap-1">
-            <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3">
+            <div
+              class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3 lg:w-96 lg:max-w-96"
+            >
               {#if docA}
                 <div>
                   <Button
@@ -276,10 +278,17 @@
                     <i class="bx bx-x text-lg"></i>
                   </Button>
                 </div>
-                <div class="flex flex-col">
-                  <div class="mb-1 max-w-96" title={docA.document.title}>{docA.document.title}</div>
-                  <div class="text-gray-600">{getPublisher(docA.document.publisher.name)}</div>
-                  <div class="text-gray-600">Version: {docA.document.tracking.version}</div>
+                <div class="lg:flex lg:flex-col">
+                  <div>{docA.document.tracking.id}</div>
+                  <div class="md:mb-1" title={docA.document.title}>
+                    {docA.document.title}
+                  </div>
+                  <span class="text-sm text-gray-600"
+                    >{getPublisher(docA.document.publisher.name)}</span
+                  >
+                  <span class="text-sm text-gray-600"
+                    >Version: {docA.document.tracking.version}</span
+                  >
                 </div>
               {:else}
                 <div class="flex flex-col gap-2">
@@ -289,7 +298,7 @@
             </div>
           </div>
           <div class="flex gap-1">
-            <div class="flex min-h-28 justify-between gap-1 rounded-md px-3 pb-2">
+            <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 lg:w-96 lg:max-w-96">
               {#if docB}
                 <div>
                   <Button
@@ -303,10 +312,17 @@
                     <i class="bx bx-x text-lg"></i>
                   </Button>
                 </div>
-                <div class="flex flex-col">
-                  <div class="mb-1 max-w-96" title={docB.document.title}>{docB.document.title}</div>
-                  <div class="text-gray-600">{getPublisher(docB.document.publisher.name)}</div>
-                  <div class="text-gray-600">Version: {docB.document.tracking.version}</div>
+                <div class="lg:flex lg:flex-col">
+                  <div>{docB.document.tracking.id}</div>
+                  <div class="md:mb-1" title={docB.document.title}>
+                    {docB.document.title}
+                  </div>
+                  <span class="text-sm text-gray-600"
+                    >{getPublisher(docB.document.publisher.name)}</span
+                  >
+                  <span class="text-sm text-gray-600"
+                    >Version: {docB.document.tracking.version}</span
+                  >
                 </div>
               {:else}
                 <div
@@ -357,7 +373,7 @@
                     <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
                     <TableBodyCell {tdClass}>
                       <span
-                        class="block w-12 overflow-hidden text-ellipsis whitespace-nowrap sm:w-20 md:w-44 lg:w-60 xl:w-96 2xl:w-auto"
+                        class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
                         title={doc.title}>{doc.title}</span
                       >
                     </TableBodyCell>
@@ -415,7 +431,7 @@
               }}
               on:change={handleChange}
               multiple
-              class="ms-1 h-16"
+              class="mb-2 ms-1 h-16"
             >
               <i class="bx bx-upload text-xl text-gray-500"></i>
               <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
