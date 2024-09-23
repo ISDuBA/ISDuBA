@@ -25,7 +25,7 @@
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import SourceForm from "./SourceForm.svelte";
   import { request } from "$lib/request";
   import FeedView from "./FeedView.svelte";
@@ -73,6 +73,23 @@
 
   const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
   const ddClass: string = "break-words font-semibold ml-2 mb-1";
+
+  let updateStats = setInterval(async () => {
+    let result = await fetchSource(source.id ?? 0, true);
+    if (result.ok) {
+      source.stats = result.value.stats;
+    }
+    let feedResult = await fetchFeeds(source.id ?? 0, true);
+    if (feedResult.ok) {
+      for (let feed of feedResult.value) {
+        const find = feeds.find((i) => i.id === feed.id);
+        if (find) {
+          find.stats = feed.stats;
+        }
+      }
+    }
+    feeds = feeds;
+  }, 2 * 1000);
 
   const loadSourceInfo = async (id: number) => {
     loadingSource = true;
@@ -228,6 +245,10 @@
       fillAgeDataFromSource(source);
     }
   });
+
+  onDestroy(() => {
+    clearInterval(updateStats);
+  });
 </script>
 
 <svelte:head>
@@ -280,14 +301,14 @@
       {/if}
     </List>
     {#if source.stats}
-      <h4 class="mt-3">Statistics</h4>
-      <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
+      <h4 class="mt-3">Status</h4>
+      <List tag="dl" class="flex w-full flex-wrap text-sm">
         <div>
-          <DescriptionList tag="dt" {dtClass}>Total downloading</DescriptionList>
+          <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
         </div>
-        <div>
-          <DescriptionList tag="dt" {dtClass}>Total waiting</DescriptionList>
+        <div class="pl-4">
+          <DescriptionList tag="dt" {dtClass}>Queued</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
         </div>
       </List>

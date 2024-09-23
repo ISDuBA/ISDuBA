@@ -27,6 +27,7 @@
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
+  import validator from "validator";
 
   export let params: any = null;
 
@@ -35,7 +36,7 @@
   let sourceForm: any;
   let updateSourceForm: any;
 
-  let validUrl: boolean | null = null;
+  let validUrl: boolean | null = false;
   let urlColor: "red" | "green" | "base" = "base";
   $: if (validUrl !== undefined) {
     if (validUrl === null) {
@@ -83,7 +84,17 @@
     }
   };
 
-  const checkUrl = async () => {};
+  const checkUrl = async () => {
+    if (source.url.startsWith("https://") && source.url.endsWith("provider-metadata.json")) {
+      validUrl = null;
+      return;
+    }
+    if (validator.isFQDN(source.url)) {
+      validUrl = null;
+      return;
+    }
+    validUrl = false;
+  };
 
   const saveAll = async () => {
     updateSourceForm();
@@ -161,7 +172,7 @@
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
-    <Button type="submit" color="light">
+    <Button type="submit" color="light" disabled={validUrl === false}>
       <i class="bx bx-check me-2"></i>
       <span>Search and load provider metadata</span>
     </Button>

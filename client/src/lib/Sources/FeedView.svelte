@@ -11,9 +11,9 @@
 <script lang="ts">
   import { type Feed, logLevels } from "$lib/Sources/source";
   import { Select, Input, TableBodyCell } from "flowbite-svelte";
-  import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
+  import CIconButton from "$lib/Components/CIconButton.svelte";
 
   export let feeds: Feed[] = [];
   export let edit: boolean = false;
@@ -23,7 +23,7 @@
 
   let headers = [
     {
-      label: "Active",
+      label: "",
       attribute: "enable"
     },
     {
@@ -42,28 +42,32 @@
     }
   ];
 
-  let headersEdit = [
-    ...headers,
-    { label: "Downloading", attribute: "downloading" },
-    { label: "Waiting", attribute: "waiting" }
-  ];
+  let headersEdit = [...headers, { label: "Loading/Queued", attribute: "stats" }];
 </script>
 
 <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
   {#each feeds as feed, index (index)}
     <tr>
-      <TableBodyCell {tdClass}
-        ><CCheckbox
-          class="m-auto"
-          bind:checked={feed.enable}
-          on:change={async () => {
-            await updateFeed(feed);
-            if (!feed.enable) {
+      <TableBodyCell {tdClass}>
+        {#if feed.enable}
+          <CIconButton
+            on:click={async () => {
+              feed.enable = false;
+              await updateFeed(feed);
               feed.id = undefined;
-            }
-          }}
-        ></CCheckbox></TableBodyCell
-      >
+            }}
+            icon="trash"
+          ></CIconButton>
+        {:else}
+          <CIconButton
+            on:click={async () => {
+              feed.enable = true;
+              await updateFeed(feed);
+            }}
+            icon="plus"
+          ></CIconButton>
+        {/if}
+      </TableBodyCell>
       <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
         {#if edit}
           <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>{feed.url}</a
@@ -88,8 +92,9 @@
         >
       {/if}
       {#if edit}
-        <TableBodyCell {tdClass}>{feed.stats?.downloading ?? 0}</TableBodyCell>
-        <TableBodyCell {tdClass}>{feed.stats?.waiting ?? 0}</TableBodyCell>
+        <TableBodyCell {tdClass}
+          >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
+        >
       {/if}
     </tr>
   {/each}
