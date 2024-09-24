@@ -171,9 +171,8 @@
               <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
               <TableBodyCell {tdClass}>
                 <CCheckbox
-                  on:click={(event) => {
-                    // @ts-expect-error Cannot use TS (see explanation above)
-                    changeDashboard(query.id, event.explicitOriginalTarget?.checked);
+                  on:click={() => {
+                    changeDashboard(query.id, !ignoredQueries?.includes(query.id));
                   }}
                   checked={query.dashboard}
                   class={isAllowedToEdit ? "" : "text-gray-300"}
@@ -182,9 +181,8 @@
               </TableBodyCell>
               <TableBodyCell {tdClass}>
                 <CCheckbox
-                  on:click={(event) => {
-                    // @ts-expect-error Cannot use TS (see explanation above)
-                    changeIgnored(query.id, event.explicitOriginalTarget?.checked);
+                  on:click={() => {
+                    changeIgnored(query.id, !ignoredQueries?.includes(query.id));
                   }}
                   disabled={!ignoredQueries || isLoading}
                   checked={ignoredQueries !== null && ignoredQueries.includes(query.id)}
