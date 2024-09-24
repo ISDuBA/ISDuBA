@@ -364,28 +364,18 @@
             <span class="mb-1">Temporary documents:</span>
             <Table>
               <TableHead>
+                <TableHeadCell {padding}></TableHeadCell>
                 <TableHeadCell {padding}>Tracking ID</TableHeadCell>
                 <TableHeadCell {padding}>Publisher</TableHeadCell>
                 <TableHeadCell {padding}>Title</TableHeadCell>
                 <TableHeadCell {padding}>Expires in</TableHeadCell>
                 <TableHeadCell {padding}>File name</TableHeadCell>
-                <TableHeadCell {padding}></TableHeadCell>
               </TableHead>
               <TableBody>
                 {#each tempDocuments as document}
                   {@const doc = document.document}
                   {@const tempDocID = `tempdocument${document.file.id}`}
                   <TableBodyRow>
-                    <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
-                    <TableBodyCell {tdClass}>
-                      <span
-                        class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
-                        title={doc.title}>{doc.title}</span
-                      >
-                    </TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
-                    <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
                     <TableBodyCell {tdClass}>
                       <div class="flex items-center">
                         <CIconButton
@@ -419,11 +409,21 @@
                               disableDiffButtons
                                 ? "invert-[70%]"
                                 : ""
-                            } min-h-4 min-w-4`}
+                            } min-h-4 min-w-6`}
                           />
                         </button>
                       </div>
                     </TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
+                    <TableBodyCell {tdClass}>
+                      <span
+                        class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
+                        title={doc.title}>{doc.title}</span
+                      >
+                    </TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
+                    <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
                   </TableBodyRow>
                 {/each}
                 <TableBodyRow></TableBodyRow>
