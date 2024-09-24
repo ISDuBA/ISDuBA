@@ -97,6 +97,7 @@ type SourceInfo struct {
 	Name                    string
 	URL                     string
 	Active                  bool
+	Status                  []string
 	Rate                    *float64
 	Slots                   *int
 	Headers                 []string
@@ -318,6 +319,7 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 			Name:                    s.name,
 			URL:                     s.url,
 			Active:                  s.active,
+			Status:                  s.status,
 			Rate:                    s.rate,
 			Slots:                   s.slots,
 			Headers:                 s.headers,
@@ -901,6 +903,7 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 	}
 	su.addChange(func(s *source) {
 		s.active = active
+		s.status = nil
 		if active {
 			su.manager.backgroundPing()
 		}
@@ -1078,6 +1081,7 @@ func (m *Manager) UpdateSource(
 				slog.Warn("updating client cert failed", "warn", err)
 				if s.active {
 					s.active = false
+					s.status = []string{deactivatedDueToClientCertIssue}
 					x := SourceUpdater{updater: updater[*source]{updatable: s, manager: m}}
 					x.addChange(nil, "active", false)
 					if err := x.updateDB("sources", s.id); err != nil {
@@ -1086,6 +1090,8 @@ func (m *Manager) UpdateSource(
 					resCh <- result{v: SourceDeactivated}
 					return
 				}
+			} else {
+				s.status = nil
 			}
 		}
 		resCh <- result{v: SourceUpdated}

@@ -31,6 +31,8 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const deactivatedDueToClientCertIssue = `Deactivated due to client cert issue.`
+
 // UserAgent is the name of the http client
 var UserAgent = "isduba/" + version.SemVersion
 
@@ -75,6 +77,7 @@ type source struct {
 	active    bool
 	feeds     []*feed
 	usedSlots int
+	status    []string
 
 	rate           *float64
 	limiter        *rate.Limiter

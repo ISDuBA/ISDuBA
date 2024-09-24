@@ -49,6 +49,7 @@ type source struct {
 	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
 	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
 	Active               bool           `json:"active" form:"active"`
+	Status               []string       `json:"status,omitempty"`
 	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
 	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
 	Headers              []string       `json:"headers,omitempty" form:"headers"`
@@ -91,6 +92,7 @@ func newSource(si *sources.SourceInfo) *source {
 		Name:                 si.Name,
 		URL:                  si.URL,
 		Active:               si.Active,
+		Status:               si.Status,
 		Rate:                 si.Rate,
 		Slots:                si.Slots,
 		Headers:              si.Headers,

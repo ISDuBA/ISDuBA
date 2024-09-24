@@ -27,6 +27,7 @@ type Source = {
   client_cert_public?: string | null;
   client_cert_private?: string | null;
   client_cert_passphrase?: string | null;
+  status?: string[];
   stats?: {
     downloading: number;
     waiting: number;
