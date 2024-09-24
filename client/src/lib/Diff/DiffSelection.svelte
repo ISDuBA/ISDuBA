@@ -79,6 +79,11 @@
     clearInterval(intervalID);
   });
 
+  const resetTempDocsErrorMessages = () => {
+    tempDocErrorMessage = null;
+    loadTempDocsErrorMessage = null;
+  };
+
   const dropHandle = (event: any) => {
     event.preventDefault();
     if (event.dataTransfer.items) {
@@ -114,6 +119,7 @@
   };
 
   const uploadFile = (file: File): Promise<void> => {
+    resetTempDocsErrorMessages();
     return new Promise((resolve) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -175,6 +181,7 @@
   };
 
   const getTempDocuments = async () => {
+    loadTempDocsErrorMessage = null;
     const response = await request("/api/tempdocuments", "GET");
     if (response.ok) {
       const result = await response.content;
@@ -199,7 +206,7 @@
   };
 
   const deleteTempDocument = async (id: number) => {
-    tempDocErrorMessage = null;
+    resetTempDocsErrorMessages();
     const response = await request(`/api/tempdocuments/${id}`, "DELETE");
     if (response.ok) {
       if ($appStore.app.diff.docA_ID === `tempdocument${id}`) {
@@ -238,7 +245,7 @@
 </script>
 
 <div
-  class="fixed bottom-0 left-1 right-1 flex flex-col items-end justify-center sm:left-auto md:right-20"
+  class="fixed bottom-0 left-1 right-1 flex flex-col items-end justify-center lg:left-auto lg:right-20"
 >
   <Button
     on:click={appStore.toggleDiffBox}
@@ -253,16 +260,18 @@
         ? ` - ${docB?.document?.title.substring(0, 25)}${docB?.document?.title.length > 25 ? "..." : ""}`
         : ""}</span
     >
-    <Img src="plus-minus.svg" class="h-4 min-h-2 min-w-2" />
+    <Img src="plus-minus.svg" class="h-4 min-w-4" />
   </Button>
   {#if $appStore.app.diff.isDiffBoxOpen}
     <div
-      class="flex items-stretch gap-6 rounded-tl-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800"
+      class="flex w-full max-w-[700pt] items-stretch gap-6 rounded-tl-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800 lg:w-auto"
     >
-      <div class="flex flex-col">
-        <div class="mb-4 flex justify-between">
+      <div class="flex w-full flex-col">
+        <div class="mb-4 flex flex-col justify-between gap-2 lg:flex-row">
           <div class="flex items-start gap-1">
-            <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3">
+            <div
+              class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3 lg:w-96 lg:max-w-96"
+            >
               {#if docA}
                 <div>
                   <Button
@@ -276,10 +285,17 @@
                     <i class="bx bx-x text-lg"></i>
                   </Button>
                 </div>
-                <div class="flex flex-col">
-                  <div class="mb-1 max-w-96" title={docA.document.title}>{docA.document.title}</div>
-                  <div class="text-gray-600">{getPublisher(docA.document.publisher.name)}</div>
-                  <div class="text-gray-600">Version: {docA.document.tracking.version}</div>
+                <div class="lg:flex lg:flex-col">
+                  <div>{docA.document.tracking.id}</div>
+                  <div class="md:mb-1" title={docA.document.title}>
+                    {docA.document.title}
+                  </div>
+                  <span class="text-sm text-gray-600"
+                    >{getPublisher(docA.document.publisher.name)}</span
+                  >
+                  <span class="text-sm text-gray-600"
+                    >Version: {docA.document.tracking.version}</span
+                  >
                 </div>
               {:else}
                 <div class="flex flex-col gap-2">
@@ -289,7 +305,7 @@
             </div>
           </div>
           <div class="flex gap-1">
-            <div class="flex min-h-28 justify-between gap-1 rounded-md px-3 pb-2">
+            <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 lg:w-96 lg:max-w-96">
               {#if docB}
                 <div>
                   <Button
@@ -303,10 +319,17 @@
                     <i class="bx bx-x text-lg"></i>
                   </Button>
                 </div>
-                <div class="flex flex-col">
-                  <div class="mb-1 max-w-96" title={docB.document.title}>{docB.document.title}</div>
-                  <div class="text-gray-600">{getPublisher(docB.document.publisher.name)}</div>
-                  <div class="text-gray-600">Version: {docB.document.tracking.version}</div>
+                <div class="lg:flex lg:flex-col">
+                  <div>{docB.document.tracking.id}</div>
+                  <div class="md:mb-1" title={docB.document.title}>
+                    {docB.document.title}
+                  </div>
+                  <span class="text-sm text-gray-600"
+                    >{getPublisher(docB.document.publisher.name)}</span
+                  >
+                  <span class="text-sm text-gray-600"
+                    >Version: {docB.document.tracking.version}</span
+                  >
                 </div>
               {:else}
                 <div
@@ -341,28 +364,18 @@
             <span class="mb-1">Temporary documents:</span>
             <Table>
               <TableHead>
+                <TableHeadCell {padding}></TableHeadCell>
                 <TableHeadCell {padding}>Tracking ID</TableHeadCell>
                 <TableHeadCell {padding}>Publisher</TableHeadCell>
                 <TableHeadCell {padding}>Title</TableHeadCell>
                 <TableHeadCell {padding}>Expires in</TableHeadCell>
                 <TableHeadCell {padding}>File name</TableHeadCell>
-                <TableHeadCell {padding}></TableHeadCell>
               </TableHead>
               <TableBody>
                 {#each tempDocuments as document}
                   {@const doc = document.document}
                   {@const tempDocID = `tempdocument${document.file.id}`}
                   <TableBodyRow>
-                    <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
-                    <TableBodyCell {tdClass}>
-                      <span
-                        class="block w-12 overflow-hidden text-ellipsis whitespace-nowrap sm:w-20 md:w-44 lg:w-60 xl:w-96 2xl:w-auto"
-                        title={doc.title}>{doc.title}</span
-                      >
-                    </TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
-                    <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
                     <TableBodyCell {tdClass}>
                       <div class="flex items-center">
                         <CIconButton
@@ -370,7 +383,7 @@
                             deleteTempDocument(document.file.id);
                           }}
                           color="red"
-                          title={`delete ${doc.title}`}
+                          title={`delete ${doc.title} - ${doc.tracking.id}`}
                           icon="trash"
                         ></CIconButton>
                         <button
@@ -386,7 +399,7 @@
                           disabled={$appStore.app.diff.docA_ID === tempDocID ||
                             $appStore.app.diff.docB_ID === tempDocID ||
                             disableDiffButtons}
-                          title={`compare ${doc.tracking_id}`}
+                          title={`compare ${doc.title} - ${doc.tracking.id}`}
                         >
                           <Img
                             src="plus-minus.svg"
@@ -396,11 +409,21 @@
                               disableDiffButtons
                                 ? "invert-[70%]"
                                 : ""
-                            } min-h-4 min-w-4`}
+                            } min-h-4 min-w-6`}
                           />
                         </button>
                       </div>
                     </TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
+                    <TableBodyCell {tdClass}>
+                      <span
+                        class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
+                        title={doc.title}>{doc.title}</span
+                      >
+                    </TableBodyCell>
+                    <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
+                    <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
                   </TableBodyRow>
                 {/each}
                 <TableBodyRow></TableBodyRow>
@@ -415,7 +438,7 @@
               }}
               on:change={handleChange}
               multiple
-              class="ms-1 h-16"
+              class="mb-2 ms-1 h-16"
             >
               <i class="bx bx-upload text-xl text-gray-500"></i>
               <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
