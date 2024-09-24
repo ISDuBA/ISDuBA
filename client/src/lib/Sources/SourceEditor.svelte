@@ -143,6 +143,7 @@
       saveSourceError = result.error;
       return;
     }
+    saveSourceError = null;
     await loadSourceInfo(source.id ?? 0);
   };
 

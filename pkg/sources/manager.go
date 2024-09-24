@@ -872,7 +872,8 @@ func (su *SourceUpdater) UpdateRate(rate *float64) error {
 	if rate != nil && su.updatable.rate != nil && *rate == *su.updatable.rate {
 		return nil
 	}
-	if rate != nil && (*rate <= 0 || *rate > su.manager.cfg.Sources.MaxRatePerSource) {
+	if rate != nil && (*rate <= 0 ||
+		(*rate > su.manager.cfg.Sources.MaxRatePerSource && su.manager.cfg.Sources.MaxRatePerSource != 0)) {
 		return InvalidArgumentError("invalid rate value")
 	}
 	su.addChange(func(s *source) { s.setRate(rate) }, "rate", rate)
@@ -887,7 +888,8 @@ func (su *SourceUpdater) UpdateSlots(slots *int) error {
 	if slots != nil && su.updatable.slots != nil && *slots == *su.updatable.slots {
 		return nil
 	}
-	if slots != nil && (*slots < 1 || *slots > su.manager.cfg.Sources.MaxSlotsPerSource) {
+	if slots != nil && (*slots < 1 ||
+		(*slots > su.manager.cfg.Sources.MaxSlotsPerSource && su.manager.cfg.Sources.MaxSlotsPerSource != 0)) {
 		return InvalidArgumentError("invalid slot value")
 	}
 	su.addChange(func(s *source) { s.slots = slots }, "slots", slots)

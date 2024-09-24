@@ -88,10 +88,16 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   if (source.active !== undefined) {
     formData.append("active", source.active.toString());
   }
-  if (source.rate && source.rate !== 0) {
+  if (source.rate) {
+    if (source.rate <= 0) {
+      source.rate = 0.01;
+    }
     formData.append("rate", source.rate.toString());
   }
-  if (source.slots && source.slots !== 0) {
+  if (source.slots) {
+    if (source.slots <= 0) {
+      source.slots = 1;
+    }
     formData.append("slots", source.slots.toString());
   }
   if (source.strict_mode !== undefined) {
@@ -115,9 +121,11 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   if (source.client_cert_passphrase && source.client_cert_passphrase !== "***") {
     formData.append("client_cert_passphrase", source.client_cert_passphrase);
   }
-  for (const header of source.headers) {
-    if (header != "") {
-      formData.append("headers", header);
+  if (source.headers) {
+    for (const header of source.headers) {
+      if (header != "") {
+        formData.append("headers", header);
+      }
     }
   }
   for (const pattern of source.ignore_patterns) {
