@@ -16,8 +16,8 @@ type Source = {
   name: string;
   url: string;
   active?: boolean;
-  rate?: number | null;
-  slots?: number | null;
+  rate?: number;
+  slots?: number;
   headers: string[];
   strict_mode?: boolean;
   insecure?: boolean;
@@ -287,12 +287,6 @@ const fetchSource = async (
       const source = resp.content;
       if (!source.ignore_patterns) {
         source.ignore_patterns = [""];
-      }
-      if (source.rate === undefined) {
-        source.rate = null;
-      }
-      if (source.slots === undefined) {
-        source.slots = null;
       }
       return {
         ok: true,
