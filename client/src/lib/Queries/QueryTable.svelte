@@ -225,10 +225,8 @@
   </div>
   <div class="flex flex-col">
     <slot></slot>
+    <ErrorMessage error={ignoreErrorMessage}></ErrorMessage>
+    <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
+    <ErrorMessage error={orderErrorMessage}></ErrorMessage>
   </div>
-</div>
-<div class="flex flex-col">
-  <ErrorMessage error={ignoreErrorMessage}></ErrorMessage>
-  <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
-  <ErrorMessage error={orderErrorMessage}></ErrorMessage>
 </div>
