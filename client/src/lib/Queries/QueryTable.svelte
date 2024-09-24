@@ -89,12 +89,12 @@
     isLoading = true;
     if (ignoredQueries) {
       unsetErrors();
-      ({ ignoredQueries, errorMessage: ignoreErrorMessage } = await setIgnored(
+      let newIgnored: number[] | null = null;
+      ({ ignoredQueries: newIgnored, errorMessage: ignoreErrorMessage } = await setIgnored(
         id,
-        isChecked,
-        ignoredQueries
+        isChecked
       ));
-      if (ignoreErrorMessage === null) dispatch("fetchData");
+      if (ignoreErrorMessage === null) dispatch("updateIgnored", newIgnored);
     }
     isLoading = false;
   };

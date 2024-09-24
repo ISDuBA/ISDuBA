@@ -86,6 +86,10 @@
     ({ ignoredQueries, errorMessage } = await fetchIgnored());
   };
 
+  const updateIgnored = (event: any) => {
+    ignoredQueries = event.detail;
+  };
+
   onMount(() => {
     fetchData();
   });
@@ -117,8 +121,7 @@
         if (!ignoredQueries.includes(globalRelevantQueries[i].id)) {
           ({ ignoredQueries, errorMessage = cloneErrorMessage } = await setIgnored(
             globalRelevantQueries[i].id,
-            true,
-            ignoredQueries
+            true
           ));
         }
       }
@@ -190,7 +193,7 @@
       isAllowedToEdit={true}
       queries={userQueries}
       title="Personal"
-      on:fetchData={fetchData}
+      on:updateIgnored={updateIgnored}
       on:openDeleteModal={onOpenDeleteModal}
     >
       <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
@@ -204,7 +207,7 @@
         isAllowedToClone={false}
         queries={globalRelevantQueries}
         title="Global relevant dashboard queries"
-        on:fetchData={fetchData}
+        on:updateIgnored={updateIgnored}
         on:openDeleteModal={onOpenDeleteModal}
       >
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
@@ -221,7 +224,7 @@
         {ignoredQueries}
         queries={globalDashboardQueries}
         title="Global dashboard queries (not displayed)"
-        on:fetchData={fetchData}
+        on:updateIgnored={updateIgnored}
         on:openDeleteModal={onOpenDeleteModal}
       ></QueryTable>
 
@@ -229,7 +232,7 @@
         {ignoredQueries}
         queries={globalSearchQueries}
         title="Global search queries"
-        on:fetchData={fetchData}
+        on:updateIgnored={updateIgnored}
         on:openDeleteModal={onOpenDeleteModal}
       ></QueryTable>
     {:else}
@@ -238,7 +241,7 @@
         queries={adminQueries}
         title="Global"
         isAllowedToEdit={appStore.isAdmin()}
-        on:fetchData={fetchData}
+        on:updateIgnored={updateIgnored}
         on:openDeleteModal={onOpenDeleteModal}
       >
         <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"

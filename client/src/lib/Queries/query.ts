@@ -255,19 +255,19 @@ const proposeName = (queries: Query[], name: string) => {
   return `${name} (${highestIndex + 1})`;
 };
 
-const setIgnored = async (id: number, isChecked: boolean, ignoredQueries: number[]) => {
-  let errorMessage: ErrorDetails | null = null;
-  const method = isChecked ? "POST" : "DELETE";
-  const response = await request(`/api/queries/ignore/${id}`, method);
-  if (response.ok) {
-    if (isChecked) {
-      ignoredQueries.push(id);
-    } else {
-      ignoredQueries = ignoredQueries.filter((i) => i !== id);
-    }
-  } else if (response.error) {
-    errorMessage = getErrorDetails(`Could not change option.`, response);
+const setIgnored = async (id: number, doIgnore: boolean) => {
+  let { ignoredQueries, errorMessage } = await fetchIgnored();
+  if (errorMessage != null) return { ignoredQueries, errorMessage };
+  if ((doIgnore && ignoredQueries.includes(id)) || (!doIgnore && !ignoredQueries.includes(id))) {
+    return { ignoredQueries, errorMessage: null };
   }
+  const method = doIgnore ? "POST" : "DELETE";
+  const response = await request(`/api/queries/ignore/${id}`, method);
+  if (response.error) {
+    errorMessage = getErrorDetails(`Could not change option.`, response);
+    return { ignoredQueries, errorMessage };
+  }
+  ({ ignoredQueries, errorMessage } = await fetchIgnored());
   return { ignoredQueries, errorMessage };
 };
 

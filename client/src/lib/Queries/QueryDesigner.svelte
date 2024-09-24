@@ -170,14 +170,14 @@
         );
     }
     if (response.ok) {
-      const id = params ? params.id : response.content.id;
+      const id: string = params ? params.id : response.content.id;
       saveErrorMessage = errorMessage;
       if (
         (!ignoredQueries.includes(Number(id)) && hide === true) ||
         (ignoredQueries.includes(Number(id)) && hide === false)
       ) {
         const ignore = !ignoredQueries.includes(Number(id)) && hide === true;
-        ({ errorMessage } = await setIgnored(id, ignore, ignoredQueries));
+        ({ errorMessage } = await setIgnored(Number(id), ignore));
         saveErrorMessage = errorMessage;
         if (errorMessage === null) {
           push(`/queries/`);
