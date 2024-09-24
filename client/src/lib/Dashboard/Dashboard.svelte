@@ -20,11 +20,6 @@
 
   let filteredQueries: any[] = [];
   let loadIgnoredError: ErrorDetails | null;
-
-  $: advisoryQueries = filteredQueries.filter((query: any) =>
-    [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)
-  );
-  $: eventQueries = filteredQueries.filter((query: any) => query.kind === SEARCHTYPES.EVENT);
   let loadQueryError: ErrorDetails | null;
 
   const fetchStoredQueries = async (): Promise<any[]> => {
@@ -65,11 +60,10 @@
       (query) =>
         query.dashboard &&
         query.global &&
-        (appStore.getRoles().includes(query.role) || !query.role) &&
-        !userDashboardQueries.find((q) => q.id === query.id) &&
+        query.definer === "system-default" &&
         (!ignoredQueries || !ignoredQueries.includes(query.id))
     );
-    filteredQueries = [...userDashboardQueries, ...globalDashboardQueries];
+    filteredQueries = [...userDashboardQueries, ...globalDashboardQueries.slice(0, 2)];
   });
 </script>
 
@@ -78,12 +72,13 @@
 </svelte:head>
 
 {#if $appStore.app.isUserLoggedIn}
-  <div class="mb-8 mt-8 flex flex-wrap gap-10">
-    {#each advisoryQueries as query}
-      <AdvisoryQuery storedQuery={query}></AdvisoryQuery>
-    {/each}
-    {#each eventQueries as query}
-      <EventQuery storedQuery={query}></EventQuery>
+  <div class="mb-8 mt-8 flex flex-row flex-wrap gap-10">
+    {#each filteredQueries as query}
+      {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)}
+        <AdvisoryQuery storedQuery={query}></AdvisoryQuery>
+      {:else}
+        <EventQuery storedQuery={query}></EventQuery>
+      {/if}
     {/each}
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>

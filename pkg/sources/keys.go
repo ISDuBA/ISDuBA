@@ -58,6 +58,8 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
 		return nil, fmt.Errorf("invalid PMD url: %q", source.url)
 	}
+	client := source.httpClient(m)
+	defer client.CloseIdleConnections()
 	for i := range pmd.PGPKeys {
 		key := &pmd.PGPKeys[i]
 		if key.URL == nil {
@@ -69,7 +71,7 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 			continue
 		}
 		u = base.ResolveReference(u)
-		res, err := source.httpGet(m, u.String())
+		res, err := source.httpGet(client, m, u.String())
 		if err != nil {
 			slog.Warn(
 				"Fetching public OpenPGP key failed",
@@ -78,6 +80,7 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 			continue
 		}
 		if res.StatusCode != http.StatusOK {
+			res.Body.Close()
 			slog.Warn(
 				"Fetching public OpenPGP key failed",
 				"url", u,
@@ -114,12 +117,13 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 }
 
 // loadSignature loads an ascii armored OpenPGP signature file from a given url.
-func (s *source) loadSignature(m *Manager, u *url.URL) (*crypto.PGPSignature, []byte, error) {
-	resp, err := s.httpGet(m, u.String())
+func (s *source) loadSignature(client *http.Client, m *Manager, u *url.URL) (*crypto.PGPSignature, []byte, error) {
+	resp, err := s.httpGet(client, m, u.String())
 	if err != nil {
 		return nil, nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
 		return nil, nil, fmt.Errorf(
 			"fetching signature from %q failed: %s (%d)", u, resp.Status, resp.StatusCode)
 	}

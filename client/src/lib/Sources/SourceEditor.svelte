@@ -300,6 +300,16 @@
           {/if}
         </div>
       {/if}
+      <div>
+        <DescriptionList tag="dt" {dtClass}>Status</DescriptionList>
+        {#if source.status}
+          {#each source.status as s}
+            <DescriptionList tag="dd" {ddClass}>{s}</DescriptionList>
+          {/each}
+        {:else}
+          <DescriptionList tag="dd" {ddClass}>OK</DescriptionList>
+        {/if}
+      </div>
     </List>
     {#if source.stats}
       <h4 class="mt-3">Status</h4>

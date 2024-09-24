@@ -20,7 +20,10 @@
     document.getElementById(`${product?.product_id}`)?.scrollIntoView({ behavior: "smooth" });
   }
   let highlight = false;
-  $: if ($appStore.webview.ui.selectedProduct === product?.product_id) {
+
+  $: selectedProduct = $appStore.webview.ui.selectedProduct;
+  $: productID = product?.product_id;
+  $: if (selectedProduct === productID) {
     highlight = true;
     updateUI();
   } else {

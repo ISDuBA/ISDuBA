@@ -65,7 +65,7 @@
     fetchIgnored();
     const response = await request("/api/queries", "GET");
     if (response.ok) {
-      queries = response.content;
+      queries = response.content.filter((q: any) => !q.dashboard);
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }

@@ -25,7 +25,9 @@
       .getElementById(`${relation.full_product_name.product_id}`)
       ?.scrollIntoView({ behavior: "smooth" });
   }
-  $: if ($appStore.webview.ui.selectedProduct === relation.full_product_name.product_id) {
+  $: selectedProduct = $appStore.webview.ui.selectedProduct;
+  $: productID = relation.full_product_name.product_id;
+  $: if (selectedProduct === productID) {
     highlight = true;
     updateUI();
   } else {

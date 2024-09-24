@@ -29,7 +29,9 @@
     generateQueryString,
     type Search,
     type Column,
-    proposeName
+    proposeName,
+    setIgnored,
+    fetchIgnored
   } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
@@ -50,8 +52,9 @@
   let loadQueryError: ErrorDetails | null;
   let loadedData: any = null;
   let abortController: AbortController;
-
   let columnList: any;
+  let hide = false;
+  let ignoredQueries: number[] = [];
 
   // Prop items of (Multi-)Select doesn't accept simple strings
   const roles = [{ name: "<no role>", value: "" }].concat(
@@ -167,7 +170,21 @@
         );
     }
     if (response.ok) {
-      push(`/queries/`);
+      const id: string = params ? params.id : response.content.id;
+      saveErrorMessage = errorMessage;
+      if (
+        (!ignoredQueries.includes(Number(id)) && hide === true) ||
+        (ignoredQueries.includes(Number(id)) && hide === false)
+      ) {
+        const ignore = !ignoredQueries.includes(Number(id)) && hide === true;
+        ({ errorMessage } = await setIgnored(Number(id), ignore));
+        saveErrorMessage = errorMessage;
+        if (errorMessage === null) {
+          push(`/queries/`);
+        }
+      } else {
+        push(`/queries/`);
+      }
     }
   };
 
@@ -261,7 +278,9 @@
       wasNameEdited = true;
     }
     if (params) id = params.id;
+    ({ ignoredQueries, errorMessage } = await fetchIgnored());
     if (id) {
+      if (ignoredQueries.includes(Number(id))) hide = true;
       const response = await request(`/api/queries`, "GET");
       if (response.ok) {
         const result = await response.content;
@@ -355,6 +374,10 @@
             currentSearch.dashboard = !currentSearch.dashboard;
           }}
         ></CCheckbox>
+      </div>
+      <div class="flex flex-row items-center gap-x-2">
+        <span>Hide:</span>
+        <CCheckbox bind:checked={hide}></CCheckbox>
       </div>
     </div>
     <div class="mb-6">
@@ -462,9 +485,7 @@
             The query found {queryCount} results.
           </div>
         {/if}
-        {#if errorMessage}
-          <span class="text-red-600">{errorMessage}</span>
-        {/if}
+        <ErrorMessage error={errorMessage}></ErrorMessage>
         <div class="my-2 ml-auto flex flex-row flex-wrap gap-3">
           {#if !loading}
             <Button on:click={testQuery} color="light"

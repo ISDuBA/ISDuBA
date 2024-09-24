@@ -76,8 +76,7 @@ func (i *inserter) sql(table string) string {
 
 // download fetches the files of a document and stores
 // them into the database.
-func (l location) download(m *Manager, f *feed, done func()) {
-	defer done()
+func (l location) download(m *Manager, f *feed) {
 
 	var (
 		strictMode     bool                     // All checks have to be fulfilled.
@@ -87,13 +86,16 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		checks         []func(*dlStatus, *feed) // List of checks to pass.
 		data           bytes.Buffer             // The raw data will be stored in the database.
 		signatureData  []byte                   // The signature will be stored in the database.
+		client         *http.Client
 	)
 
 	// The manager owns the configuration so extract the parameters beforehand.
 	m.inManager(func(m *Manager) {
 		strictMode = f.source.useStrictMode(m)
 		signatureCheck = f.source.checkSignature(m)
+		client = f.source.httpClient(m)
 	})
+	defer client.CloseIdleConnections()
 
 	// checks is a list of checks to have to be passed in strict mode.
 	checks = []func(ds *dlStatus, f *feed){
@@ -118,7 +120,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 		}
 		if checksum != nil {
 			var check func(*dlStatus, *feed)
-			if remoteChecksum, err := f.source.loadHash(m, hashFile); err != nil {
+			if remoteChecksum, err := f.source.loadHash(client, m, hashFile); err != nil {
 				check = func(ds *dlStatus, f *feed) {
 					ds.set(checksumFailed)
 					f.log(m, config.WarnFeedLogLevel, "Fetching hash %q failed: %v", hashFile, err)
@@ -145,7 +147,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			{".sha256", sha256.New},
 		} {
 			guess := l.doc.String() + h.ext
-			if rc, err := f.source.loadHash(m, guess); err == nil {
+			if rc, err := f.source.loadHash(client, m, guess); err == nil {
 				remoteChecksum, checksum = rc, h.cstr()
 				break
 			}
@@ -172,12 +174,13 @@ func (l location) download(m *Manager, f *feed, done func()) {
 	writers = append(writers, &data)
 
 	// Download the CSAF document.
-	resp, err := f.source.httpGet(m, l.doc.String())
+	resp, err := f.source.httpGet(client, m, l.doc.String())
 	if err != nil {
 		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %v", l.doc, err)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
 		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %s (%d)",
 			l.doc, http.StatusText(resp.StatusCode), resp.StatusCode)
 		return
@@ -259,7 +262,7 @@ func (l location) download(m *Manager, f *feed, done func()) {
 			}
 			var err error
 			var signature *crypto.PGPSignature
-			if signature, signatureData, err = f.source.loadSignature(m, sign); err != nil {
+			if signature, signatureData, err = f.source.loadSignature(client, m, sign); err != nil {
 				if signatureCheck {
 					ds.set(signatureFailed)
 					f.log(m, config.ErrorFeedLogLevel,

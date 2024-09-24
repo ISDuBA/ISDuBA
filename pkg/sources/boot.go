@@ -74,6 +74,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 					}
 				}
 				if bad && s.active {
+					s.status = []string{deactivatedDueToClientCertIssue}
 					s.active = false
 					bads = append(bads, s.id)
 				}

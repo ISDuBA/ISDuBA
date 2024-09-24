@@ -33,6 +33,18 @@ Alternatives considered (and not implemented):
     in the search list at the same time as the personal
     modified cloned queries.)
 
+### Default dashboard queries
+
+To support users to fulfill their role in a good way we store some queries
+in `stored_queries` as part of the migrations. Since we don't know the names of
+the accounts the admins will be using we add `system-default` as `definer` of the
+these queries.
+
+If some admin would decide to save these queries as non-global it could happen
+that the queries would be lost because in this case they would belong to
+`system-default`. If there would be no such user as admin this meant that no
+one could ever set the queries to global again. Therefore, we prevent
+setting the default queries to non-global.
 
 ### client does the selection
 
@@ -59,8 +71,6 @@ via the ignored table.
 
 #### editing user interface
 
-##### Idea of special clone button
-
 A special button ala "Clone the global dashboard queries for me"
 will copy the two global queries, mark the copies as
 for the dashboard, puts them into the first position
@@ -70,12 +80,5 @@ This button avoids the problem that if only the second
 global query is cloned, it would be the first to be displayed
 under the calculation rule above.
 
-The idea was discarded for the reason that an
-admin add new queries and re-order all queries so that
-the default queries were not at the first two positions. If the user
-then clones the first two global queries these maybe are not the
-pre-defined ones. We could mark these queries as pre-defined by
-using another attribute in the SQL table or using a
-naming convention but that would make things more complicate
-than necessary.
+
 
