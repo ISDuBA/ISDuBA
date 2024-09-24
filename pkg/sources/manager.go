@@ -17,6 +17,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
@@ -53,11 +54,17 @@ func (InvalidArgumentError) Is(target error) bool {
 // refreshDuration is the fallback duration for feeds to be checked for refresh.
 const refreshDuration = time.Minute
 
+type downloadJob struct {
+	l location
+	f *feed
+}
+
 // Manager fetches advisories from sources.
 type Manager struct {
 	cfg  *config.Config
 	db   *database.DB
 	fns  chan func(*Manager)
+	jobs chan downloadJob
 	done bool
 
 	cipherKey []byte
@@ -149,6 +156,7 @@ func NewManager(
 		cfg:       cfg,
 		db:        db,
 		fns:       make(chan func(*Manager)),
+		jobs:      make(chan downloadJob),
 		cipherKey: cipherKey,
 		pmdCache:  newPMDCache(),
 		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
@@ -243,24 +251,39 @@ func (m *Manager) startDownloads() {
 				return true
 			}
 			// Find a candidate to download.
-			location := f.findWaiting()
-			if location == nil {
+			loc := f.findWaiting()
+			if loc == nil {
 				return true
 			}
 			m.usedSlots++
 			f.source.usedSlots++
-			location.state = running
-			location.id = m.generateID()
+			loc.state = running
+			loc.id = m.generateID()
 			started = true
-			// Funtion to be called when the download is finished.
-			done := m.downloadDone(f, location.id)
-			// Calling reciever by value is intended here!
-			go (*location).download(m, f, done)
+			m.jobs <- downloadJob{l: *loc, f: f}
 			return m.usedSlots < m.cfg.Sources.DownloadSlots
 		})
 		if !started {
 			return
 		}
+	}
+}
+
+func (dj *downloadJob) finish(m *Manager) {
+	m.fns <- func(m *Manager) {
+		dj.f.source.usedSlots = max(0, dj.f.source.usedSlots-1)
+		m.usedSlots = max(0, m.usedSlots-1)
+		if l := dj.f.findLocationByID(dj.l.id); l != nil {
+			l.state = done
+		}
+	}
+}
+
+func (m *Manager) download(wg *sync.WaitGroup) {
+	defer wg.Done()
+	for job := range m.jobs {
+		job.l.download(m, job.f)
+		job.finish(m)
 	}
 }
 
@@ -282,8 +305,17 @@ func (m *Manager) generateID() int64 {
 
 // Run runs the manager. To be used in a Go routine.
 func (m *Manager) Run(ctx context.Context) {
+
+	var wg sync.WaitGroup
+
+	for range m.cfg.Sources.DownloadSlots {
+		wg.Add(1)
+		go m.download(&wg)
+	}
+
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
+out:
 	for !m.done {
 		m.pmdCache.Cleanup()
 		m.keysCache.Cleanup()
@@ -294,10 +326,12 @@ func (m *Manager) Run(ctx context.Context) {
 		case fn := <-m.fns:
 			fn(m)
 		case <-ctx.Done():
-			return
+			break out
 		case <-refreshTicker.C:
 		}
 	}
+	close(m.jobs)
+	wg.Wait()
 }
 
 // Source returns infos about a source.
@@ -762,21 +796,6 @@ func (m *Manager) RemoveSource(sourceID int64) error {
 // RemoveFeed removes a feed from a source.
 func (m *Manager) RemoveFeed(feedID int64) error {
 	return m.asManager((*Manager).removeFeed, feedID)
-}
-
-// downloadDone returns a function which does the needed
-// book keeping when a download is finished. To be used
-// as a defer function in the download.
-func (m *Manager) downloadDone(f *feed, id int64) func() {
-	return func() {
-		m.fns <- func(m *Manager) {
-			f.source.usedSlots = max(0, f.source.usedSlots-1)
-			m.usedSlots = max(0, m.usedSlots-1)
-			if l := f.findLocationByID(id); l != nil {
-				l.state = done
-			}
-		}
-	}
 }
 
 // PMD returns the provider metadata from the given url.
