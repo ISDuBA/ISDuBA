@@ -170,7 +170,9 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 	if !f.lastModified.IsZero() {
 		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
-	resp, err := f.source.doRequestDirectly(m, req)
+	client := f.source.httpClient(m)
+	defer client.CloseIdleConnections()
+	resp, err := f.source.doRequestDirectly(client, m, req)
 	if err != nil {
 		return nil, err
 	}
@@ -426,9 +428,11 @@ func (s *source) applyHeaders(req *http.Request) {
 }
 
 // doRequestDirectly executes an HTTP request with the source specific parameters.
-func (s *source) doRequestDirectly(m *Manager, req *http.Request) (*http.Response, error) {
+func (s *source) doRequestDirectly(client *http.Client, m *Manager, req *http.Request) (*http.Response, error) {
 	s.applyHeaders(req)
-	client := s.httpClient(m)
+	if client == nil {
+		client = s.httpClient(m)
+	}
 	if limiter := s.wait(); limiter != nil {
 		limiter.Wait(context.Background())
 	}
