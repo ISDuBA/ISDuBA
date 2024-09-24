@@ -427,6 +427,7 @@ GRANT INSERT, DELETE, SELECT, UPDATE ON downloads               TO {{ .User | sa
 --
 DO $$
 DECLARE
+    -- See explanation for definer in docs/developer/queries.md
     default_definer constant varchar = 'system-default';
     default_advisory_columns text array default Array['cvss_v3_score', 'cvss_v2_score', 'comments', 'critical', 'id', 'recent', 'versions', 'title', 'publisher', 'ssvc', 'state', 'tracking_id'];
     default_event_columns text array default Array['cvss_v3_score', 'cvss_v2_score', 'comments', 'critical', 'id', 'title', 'publisher', 'ssvc', 'tracking_id', 'event', 'event_state', 'time', 'actor', 'comments_id'];

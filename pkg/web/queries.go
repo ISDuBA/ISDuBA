@@ -404,7 +404,8 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			`columns,` +
 			`orders,` +
 			`dashboard,` +
-			`role ` +
+			`role, ` +
+			`definer ` +
 			`FROM stored_queries WHERE id = $1 AND `
 		selectNoAdminSQL = selectSQLPrefix +
 			`definer = $2`
@@ -446,6 +447,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				&sq.Orders,
 				&sq.Dashboard,
 				&sq.Role,
+				&sq.Definer,
 			); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
 					notFound = true
@@ -542,6 +544,12 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				// Only admins are allowed to set global
 				if !admin && global {
 					bad = "none admins are not allowed to set global"
+					return nil
+				}
+				// Queries by "system-default" are not allowed to be set to non-global
+				// See explanation in docs/developer/queries.md
+				if !global && sq.Definer == "system-default" {
+					bad = "global dashboard queries are not allowed to be set to non-global"
 					return nil
 				}
 				add(global != sq.Global, "global", global)
