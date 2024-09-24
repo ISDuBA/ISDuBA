@@ -485,9 +485,7 @@
             The query found {queryCount} results.
           </div>
         {/if}
-        {#if errorMessage}
-          <span class="text-red-600">{errorMessage}</span>
-        {/if}
+        <ErrorMessage error={errorMessage}></ErrorMessage>
         <div class="my-2 ml-auto flex flex-row flex-wrap gap-3">
           {#if !loading}
             <Button on:click={testQuery} color="light"
