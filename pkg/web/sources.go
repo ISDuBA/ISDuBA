@@ -49,8 +49,8 @@ type source struct {
 	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
 	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
 	Active               bool           `json:"active" form:"active"`
-	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gte=0"`
+	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=0"`
 	Headers              []string       `json:"headers,omitempty" form:"headers"`
 	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
 	Insecure             *bool          `json:"insecure,omitempty" form:"insecure"`
@@ -154,9 +154,15 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
 		return
 	}
+	if src.Rate != nil && *src.Rate == 0 {
+		src.Rate = nil
+	}
 	if src.Slots != nil && *src.Slots > c.cfg.Sources.MaxSlotsPerSource {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
 		return
+	}
+	if src.Slots != nil && *src.Slots == 0 {
+		src.Slots = nil
 	}
 	if err := validateHeaders(src.Headers); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -286,7 +292,11 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 					return sources.InvalidArgumentError(
 						fmt.Sprintf("parsing 'rate' failed: %v", err.Error()))
 				}
-				r = &x
+				if x == 0 {
+					r = nil
+				} else {
+					r = &x
+				}
 			}
 			if err := su.UpdateRate(r); err != nil {
 				return err
@@ -301,7 +311,11 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 					return sources.InvalidArgumentError(
 						fmt.Sprintf("parsing 'slots' failed: %v", err.Error()))
 				}
-				sl = &x
+				if x == 0 {
+					sl = nil
+				} else {
+					sl = &x
+				}
 			}
 			if err := su.UpdateSlots(sl); err != nil {
 				return err

@@ -88,18 +88,14 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   if (source.active !== undefined) {
     formData.append("active", source.active.toString());
   }
-  if (source.rate) {
-    if (source.rate <= 0) {
-      source.rate = 0.01;
-    }
-    formData.append("rate", source.rate.toString());
+  if ((source.rate && source.rate < 0) || source.rate === undefined) {
+    source.rate = 0;
   }
-  if (source.slots) {
-    if (source.slots <= 0) {
-      source.slots = 1;
-    }
-    formData.append("slots", source.slots.toString());
+  formData.append("rate", source.rate.toString());
+  if ((source.slots && source.slots < 0) || source.slots === undefined) {
+    source.slots = 0;
   }
+  formData.append("slots", source.slots.toString());
   if (source.strict_mode !== undefined) {
     formData.append("strict_mode", source.strict_mode.toString());
   }
