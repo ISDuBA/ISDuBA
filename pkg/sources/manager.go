@@ -310,6 +310,7 @@ func (m *Manager) Run(ctx context.Context) {
 	var wg sync.WaitGroup
 
 	for range m.cfg.Sources.DownloadSlots {
+		wg.Add(1)
 		go m.download(&wg)
 	}
 
