@@ -393,7 +393,7 @@
                             deleteTempDocument(document.file.id);
                           }}
                           color="red"
-                          title={`delete ${doc.title}`}
+                          title={`delete ${doc.title} - ${doc.tracking.id}`}
                           icon="trash"
                         ></CIconButton>
                         <button
@@ -409,7 +409,7 @@
                           disabled={$appStore.app.diff.docA_ID === tempDocID ||
                             $appStore.app.diff.docB_ID === tempDocID ||
                             disableDiffButtons}
-                          title={`compare ${doc.tracking_id}`}
+                          title={`compare ${doc.title} - ${doc.tracking.id}`}
                         >
                           <Img
                             src="plus-minus.svg"
