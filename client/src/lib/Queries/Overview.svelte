@@ -208,7 +208,7 @@
         on:openDeleteModal={onOpenDeleteModal}
       >
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
-        <Button class="h-fit w-fit text-sm" on:click={cloneDashboardQueries}>
+        <Button class="h-fit w-fit text-sm" on:click={cloneDashboardQueries} disabled={isCloning}>
           <i class="bx bx-copy me-2"></i>
           <span class="me-2">Clone relevant queries and hide cloned queries</span>
           <div class:invisible={!isCloning} class={isCloning ? "loadingFadeIn text-white" : ""}>
