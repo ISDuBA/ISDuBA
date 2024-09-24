@@ -76,8 +76,7 @@ func (i *inserter) sql(table string) string {
 
 // download fetches the files of a document and stores
 // them into the database.
-func (l location) download(m *Manager, f *feed, done func()) {
-	defer done()
+func (l location) download(m *Manager, f *feed) {
 
 	var (
 		strictMode     bool                     // All checks have to be fulfilled.
