@@ -14,7 +14,6 @@ import (
 	"log/slog"
 	"net/url"
 	"regexp"
-	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -277,7 +276,6 @@ func (dj *downloadJob) finish(m *Manager) {
 			l.state = done
 		}
 	}
-	fmt.Printf("Number of Go-Routines: %d\n", runtime.NumGoroutine())
 }
 
 func (m *Manager) download(wg *sync.WaitGroup) {

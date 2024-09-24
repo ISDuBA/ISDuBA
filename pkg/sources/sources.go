@@ -174,6 +174,7 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	// Nothing changed since last call.
 	if resp.StatusCode == http.StatusNotModified {
 		return nil, nil
@@ -181,7 +182,6 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("status code %d", resp.StatusCode)
 	}
-	defer resp.Body.Close()
 
 	var locations []location
 	if f.rolie {
@@ -436,47 +436,47 @@ func (s *source) doRequestDirectly(m *Manager, req *http.Request) (*http.Respons
 }
 
 // doRequest executes an HTTP request with the source specific parameters.
-func (s *source) doRequest(m *Manager, req *http.Request) (*http.Response, error) {
+func (s *source) doRequest(client *http.Client, m *Manager, req *http.Request) (*http.Response, error) {
 	// The manager owns the configuration.
 	// So we let the manager do the adjustment of the request.
 
 	var (
 		limiter *rate.Limiter
-		client  *http.Client
 	)
 
 	m.inManager(func(m *Manager) {
 		s.applyHeaders(req)
-		client = s.httpClient(m)
+		if client == nil {
+			client = s.httpClient(m)
+		}
 		limiter = s.wait()
 	})
 
 	if limiter != nil {
 		limiter.Wait(context.Background())
 	}
-
 	return client.Do(req)
 }
 
-func (s *source) httpGet(m *Manager, url string) (*http.Response, error) {
+func (s *source) httpGet(client *http.Client, m *Manager, url string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	return s.doRequest(m, req)
+	return s.doRequest(client, m, req)
 }
 
 // loadHash fetches text form of a hash from remote location.
-func (s *source) loadHash(m *Manager, url string) ([]byte, error) {
-	resp, err := s.httpGet(m, url)
+func (s *source) loadHash(client *http.Client, m *Manager, url string) ([]byte, error) {
+	resp, err := s.httpGet(client, m, url)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s (%d)",
 			http.StatusText(resp.StatusCode), resp.StatusCode)
 	}
-	defer resp.Body.Close()
 	return util.HashFromReader(resp.Body)
 }
 
