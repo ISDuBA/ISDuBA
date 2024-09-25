@@ -76,7 +76,7 @@ func (i *inserter) sql(table string) string {
 
 // download fetches the files of a document and stores
 // them into the database.
-func (l location) download(m *Manager, f *feed) {
+func (l *location) download(m *Manager, f *feed) {
 
 	var (
 		strictMode     bool                     // All checks have to be fulfilled.
@@ -334,7 +334,7 @@ func (l location) download(m *Manager, f *feed) {
 			doc, data.Bytes(),
 			importer,
 			m.cfg.Sources.PublishersTLPs,
-			models.ChainInTx(storeStats, storeSignature, f.storeLastChanges(&l)),
+			models.ChainInTx(storeStats, storeSignature, f.storeLastChanges(l)),
 			false)
 		return err
 	}, 0); err != nil {
