@@ -118,6 +118,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
    You can generate a token yourself e.g. by entering this command:\
    `dd if=/dev/urandom bs=32 count=1 status=none | xxd -p -c 32`
 - `timeout`: How long should be waited for HTTP responses in sources manager? Defaults to `"30s"`.
+- `max_age`: The maximum age of the downloaded documents. Defaults to `"0h"`.
 
 ### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
 
@@ -179,6 +180,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |
 | `ISDUBA_SOURCES_AES_KEY`              | `sources aes_key`                    |
 | `ISDUBA_SOURCES_TIMEOUT`              | `sources timeout`                    |
+| `ISDUBA_SOURCES_MAX_AGE`              | `sources max_age`                    |
 | `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
 | `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |

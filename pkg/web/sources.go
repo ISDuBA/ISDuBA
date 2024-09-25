@@ -50,8 +50,8 @@ type source struct {
 	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
 	Active               bool           `json:"active" form:"active"`
 	Status               []string       `json:"status,omitempty"`
-	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gt=0"`
-	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=1"`
+	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gte=0"`
+	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=0"`
 	Headers              []string       `json:"headers,omitempty" form:"headers"`
 	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
 	Insecure             *bool          `json:"insecure,omitempty" form:"insecure"`
@@ -156,9 +156,15 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'rate' out of range"})
 		return
 	}
+	if src.Rate != nil && *src.Rate == 0 {
+		src.Rate = nil
+	}
 	if src.Slots != nil && *src.Slots > c.cfg.Sources.MaxSlotsPerSource {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "'slots' out of range"})
 		return
+	}
+	if src.Slots != nil && *src.Slots == 0 {
+		src.Slots = nil
 	}
 	if err := validateHeaders(src.Headers); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -190,7 +196,14 @@ func (c *Controller) createSource(ctx *gin.Context) {
 
 	var age *time.Duration
 	if src.Age != nil {
+		if src.Age.Duration > c.cfg.Sources.MaxAge && c.cfg.Sources.MaxAge != 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "'age' out of range"})
+			return
+		}
 		age = &src.Age.Duration
+	}
+	if src.Age == nil && c.cfg.Sources.MaxAge != 0 {
+		age = &c.cfg.Sources.MaxAge
 	}
 
 	switch id, err := c.sm.AddSource(
@@ -281,7 +294,11 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 					return sources.InvalidArgumentError(
 						fmt.Sprintf("parsing 'rate' failed: %v", err.Error()))
 				}
-				r = &x
+				if x == 0 {
+					r = nil
+				} else {
+					r = &x
+				}
 			}
 			if err := su.UpdateRate(r); err != nil {
 				return err
@@ -296,7 +313,11 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 					return sources.InvalidArgumentError(
 						fmt.Sprintf("parsing 'slots' failed: %v", err.Error()))
 				}
-				sl = &x
+				if x == 0 {
+					sl = nil
+				} else {
+					sl = &x
+				}
 			}
 			if err := su.UpdateSlots(sl); err != nil {
 				return err
@@ -631,7 +652,8 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 		func(
 			t time.Time,
 			lvl config.FeedLogLevel,
-			msg string) {
+			msg string,
+		) {
 			entries = append(entries, entry{
 				Time:    t,
 				Level:   lvl,
@@ -640,7 +662,6 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 		},
 		limit, offset, logLevels, count,
 	)
-
 	if err != nil {
 		slog.Error("database error", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -656,6 +677,20 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 // defaultMessage returns the default message.
 func (c *Controller) defaultMessage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
+}
+
+// defaultSourceConfig returns the default source configuration.
+func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
+	cfg := c.cfg.Sources
+	ctx.JSON(http.StatusOK, gin.H{
+		"slots":           cfg.MaxSlotsPerSource,
+		"rate":            cfg.MaxRatePerSource,
+		"log_level":       cfg.FeedLogLevel,
+		"strict_mode":     cfg.StrictMode,
+		"insecure":        cfg.Insecure,
+		"signature_check": cfg.SignatureCheck,
+		"age":             sourceAge{cfg.MaxAge},
+	})
 }
 
 func (c *Controller) pmd(ctx *gin.Context) {

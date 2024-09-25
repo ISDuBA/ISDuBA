@@ -16,8 +16,8 @@ type Source = {
   name: string;
   url: string;
   active?: boolean;
-  rate?: number | null;
-  slots?: number | null;
+  rate?: number;
+  slots?: number;
   headers: string[];
   strict_mode?: boolean;
   insecure?: boolean;
@@ -34,7 +34,18 @@ type Source = {
   };
 };
 
+type SourceConfig = {
+  slots: number;
+  rate: number;
+  log_level: LogLevel;
+  strict_mode: boolean;
+  insecure: boolean;
+  signature_check: boolean;
+  age: string;
+};
+
 enum LogLevel {
+  default = "default",
   debug = "debug",
   info = "info",
   warn = "warn",
@@ -56,10 +67,11 @@ type Feed = {
 };
 
 const logLevels = [
-  { value: LogLevel.error, name: "Error" },
+  { value: LogLevel.default, name: "Default" },
+  { value: LogLevel.error, name: "Errors only" },
   { value: LogLevel.info, name: "Info" },
-  { value: LogLevel.warn, name: "Warn" },
-  { value: LogLevel.debug, name: "Debug" }
+  { value: LogLevel.warn, name: "Errors and warnings" },
+  { value: LogLevel.debug, name: "Debug (verbose)" }
 ];
 
 const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>> => {
@@ -77,12 +89,14 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   if (source.active !== undefined) {
     formData.append("active", source.active.toString());
   }
-  if (source.rate && source.rate !== 0) {
-    formData.append("rate", source.rate.toString());
+  if ((source.rate && source.rate < 0) || source.rate === undefined) {
+    source.rate = 0;
   }
-  if (source.slots && source.slots !== 0) {
-    formData.append("slots", source.slots.toString());
+  formData.append("rate", source.rate.toString());
+  if ((source.slots && source.slots < 0) || source.slots === undefined) {
+    source.slots = 0;
   }
+  formData.append("slots", source.slots.toString());
   if (source.strict_mode !== undefined) {
     formData.append("strict_mode", source.strict_mode.toString());
   }
@@ -104,9 +118,11 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   if (source.client_cert_passphrase && source.client_cert_passphrase !== "***") {
     formData.append("client_cert_passphrase", source.client_cert_passphrase);
   }
-  for (const header of source.headers) {
-    if (header != "") {
-      formData.append("headers", header);
+  if (source.headers) {
+    for (const header of source.headers) {
+      if (header != "") {
+        formData.append("headers", header);
+      }
     }
   }
   for (const pattern of source.ignore_patterns) {
@@ -148,7 +164,7 @@ const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => 
         feeds.push({
           url: feed.url,
           label: label,
-          log_level: LogLevel.error,
+          log_level: LogLevel.default,
           rolie: true,
           enable: true
         });
@@ -164,7 +180,7 @@ const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => 
       feeds.push({
         url: entry.directory_url,
         label: label,
-        log_level: LogLevel.error,
+        log_level: LogLevel.default,
         rolie: false,
         enable: true
       });
@@ -206,7 +222,11 @@ const saveFeeds = async (
       formData.append("url", feed.url);
     }
     formData.append("label", feed.label);
-    formData.append("log_level", feed.log_level);
+    if (feed.log_level === LogLevel.default) {
+      formData.append("log_level", "");
+    } else {
+      formData.append("log_level", feed.log_level);
+    }
 
     const resp = await request(path, method, formData);
     if (resp.error) {
@@ -265,12 +285,6 @@ const fetchSource = async (
       if (!source.ignore_patterns) {
         source.ignore_patterns = [""];
       }
-      if (source.rate === undefined) {
-        source.rate = null;
-      }
-      if (source.slots === undefined) {
-        source.slots = null;
-      }
       return {
         ok: true,
         value: source
@@ -299,6 +313,65 @@ const fetchSources = async (
     ok: false,
     error: getErrorDetails(`Could not load source`, resp)
   };
+};
+
+let defaultConfigCache: Promise<Result<SourceConfig, ErrorDetails>>;
+
+const fetchSourceDefaultConfig = async (): Promise<Result<SourceConfig, ErrorDetails>> => {
+  if (defaultConfigCache) {
+    return defaultConfigCache;
+  }
+  const fetchRequest = async (): Promise<Result<SourceConfig, ErrorDetails>> => {
+    const resp = await request(`/api/sources/default`, "GET");
+    if (resp.ok) {
+      return {
+        ok: true,
+        value: resp.content
+      };
+    }
+    return {
+      ok: false,
+      error: getErrorDetails(`Could not load source default config`, resp)
+    };
+  };
+  defaultConfigCache = fetchRequest();
+  return defaultConfigCache;
+};
+
+const capitalize = (s: string) => {
+  return s && s[0].toUpperCase() + s.slice(1);
+};
+
+const getLogLevels = async (
+  enableDefault: boolean = false
+): Promise<Result<{ value: LogLevel; name: string }[], ErrorDetails>> => {
+  if (!enableDefault) {
+    const levels = [...logLevels].filter((item) => item.value !== LogLevel.default);
+    return {
+      ok: true,
+      value: levels
+    };
+  }
+  const resp = await fetchSourceDefaultConfig();
+  if (resp.ok) {
+    const defaultLogLevel = {
+      name: `Default (${capitalize(resp.value.log_level)})`,
+      value: LogLevel.default
+    };
+    const levels = [...logLevels];
+    const target = levels.find((i) => i.value === LogLevel.default) ?? defaultLogLevel;
+    Object.assign(target, defaultLogLevel);
+
+    levels.map((i) =>
+      i.name === "Default" ? { name: `Default (${defaultLogLevel})`, value: i.value } : i
+    );
+    return {
+      ok: true,
+      value: levels
+    };
+  } else {
+    return resp;
+  }
 };
 
 const fetchFeed = async (
@@ -392,6 +465,8 @@ export {
   type Feed,
   saveSource,
   fetchSource,
+  fetchSourceDefaultConfig,
+  getLogLevels,
   fetchPMD,
   getSourceName,
   calculateMissingFeeds,
@@ -402,6 +477,5 @@ export {
   fetchFeed,
   fetchFeeds,
   fetchSources,
-  saveFeeds,
-  logLevels
+  saveFeeds
 };

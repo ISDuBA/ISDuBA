@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import type { Source } from "$lib/Sources/source";
+  import { type Source, fetchSourceDefaultConfig } from "$lib/Sources/source";
   import {
     Accordion,
     AccordionItem,
@@ -29,31 +29,43 @@
     await loadCerts();
   };
 
+  const parseAge = (age?: string): [number | undefined, AgeUnit] => {
+    if (age === "0s") {
+      age = "0h";
+    }
+    let baseNumber: number | undefined = undefined;
+    let baseUnit: AgeUnit = ageUnit;
+    let [numStr, ...r]: string[] = (age ?? "").split("h");
+    let num: number = +numStr;
+    if (!(Number.isInteger(num) && !/[1-9]/.test(r.join(``)))) {
+      throw Error("Expected age to be given exclusively in hours, actual value was '" + age + "'.");
+    }
+    if (num) {
+      for (let i = ageUnits.length - 1; i >= 0; i--) {
+        let unit = ageUnits[i].value;
+        let len = ageUnitLengths[unit];
+        if (num % len === 0) {
+          baseNumber = num / len;
+          baseUnit = unit;
+          break;
+        }
+      }
+    }
+    return [baseNumber, baseUnit];
+  };
+
   export const fillAgeDataFromSource = (useSource: Source) => {
     ageUnit = AgeUnit.years;
     let baseNumber: number | undefined = undefined;
     let baseUnit: AgeUnit = ageUnit;
     if (useSource.age && !["0s", "0h"].includes(useSource.age)) {
-      let [numStr, ...r]: string[] = (useSource.age ?? "").split("h");
-      let num: number = +numStr;
-      if (!(Number.isInteger(num) && !/[1-9]/.test(r.join(``)))) {
-        throw Error(
-          "Expected age to be given exclusively in hours, actual value was '" + useSource.age + "'."
-        );
-      }
-      if (num) {
-        for (let i = ageUnits.length - 1; i >= 0; i--) {
-          let unit = ageUnits[i].value;
-          let len = ageUnitLengths[unit];
-          if (num % len === 0) {
-            baseNumber = num / len;
-            baseUnit = unit;
-            break;
-          }
-        }
-      }
+      [baseNumber, baseUnit] = parseAge(source.age);
     } else if (useSource.age && ["0s", "0h"].includes(useSource.age)) {
       baseNumber = 0;
+    } else {
+      let placeholder: number | undefined;
+      [placeholder, baseUnit] = parseAge(ageDefaultDuration);
+      agePlaceholder = placeholder ?? 0;
     }
     ageNumber = baseNumber;
     ageUnit = baseUnit;
@@ -95,7 +107,23 @@
 
   let displayActiveHighlight: boolean = true;
 
-  onMount(() => {
+  let ratePlaceholder = 0;
+  let slotPlaceholder = 2;
+
+  let ageDefaultDuration = "1h";
+  let agePlaceholder = 2;
+
+  const loadSourceDefaults = async () => {
+    const resp = await fetchSourceDefaultConfig();
+    if (resp.ok) {
+      ratePlaceholder = resp.value.rate;
+      slotPlaceholder = resp.value.slots;
+      ageDefaultDuration = resp.value.age;
+    }
+  };
+
+  onMount(async () => {
+    await loadSourceDefaults();
     fillAgeDataFromSource(source);
   });
 
@@ -272,7 +300,7 @@
               class="rounded-none rounded-l-lg"
               type="number"
               min="0"
-              placeholder="2"
+              placeholder={agePlaceholder.toString()}
               on:input={onChangedAge}
               bind:value={ageNumber}
             ></Input>
@@ -286,23 +314,23 @@
         </div>
         <div>
           <Label>Rate</Label>
-          <input
+          <Input
             type="number"
-            placeholder="1"
+            step="0.01"
+            placeholder={ratePlaceholder.toString()}
             on:input={inputChange}
-            min="1"
-            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"
+            min="0"
             bind:value={source.rate}
           />
         </div>
         <div>
           <Label>Slots</Label>
-          <input
+          <Input
             type="number"
-            placeholder="2"
+            step="1"
+            placeholder={slotPlaceholder.toString()}
             min="1"
             on:input={inputChange}
-            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 rtl:text-right"
             bind:value={source.slots}
           />
         </div>

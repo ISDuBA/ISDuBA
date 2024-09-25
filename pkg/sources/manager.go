@@ -893,8 +893,9 @@ func (su *SourceUpdater) UpdateRate(rate *float64) error {
 	if rate != nil && su.updatable.rate != nil && *rate == *su.updatable.rate {
 		return nil
 	}
-	if rate != nil && (*rate <= 0 || *rate > su.manager.cfg.Sources.MaxRatePerSource) {
-		return InvalidArgumentError("invalid rate value")
+	if rate != nil && (*rate <= 0 ||
+		(*rate > su.manager.cfg.Sources.MaxRatePerSource && su.manager.cfg.Sources.MaxRatePerSource != 0)) {
+		return InvalidArgumentError("rate value out of range")
 	}
 	su.addChange(func(s *source) { s.setRate(rate) }, "rate", rate)
 	return nil
@@ -908,8 +909,9 @@ func (su *SourceUpdater) UpdateSlots(slots *int) error {
 	if slots != nil && su.updatable.slots != nil && *slots == *su.updatable.slots {
 		return nil
 	}
-	if slots != nil && (*slots < 1 || *slots > su.manager.cfg.Sources.MaxSlotsPerSource) {
-		return InvalidArgumentError("invalid slot value")
+	if slots != nil && (*slots < 1 ||
+		(*slots > su.manager.cfg.Sources.MaxSlotsPerSource && su.manager.cfg.Sources.MaxSlotsPerSource != 0)) {
+		return InvalidArgumentError("slot value ot ouf range")
 	}
 	su.addChange(func(s *source) { s.slots = slots }, "slots", slots)
 	return nil
@@ -991,6 +993,9 @@ func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
 	}
 	if su.updatable.age != nil && age != nil && *su.updatable.age == *age {
 		return nil
+	}
+	if age != nil && (*age > su.manager.cfg.Sources.MaxAge && su.manager.cfg.Sources.MaxAge != 0) {
+		return InvalidArgumentError("invalid age value")
 	}
 	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
 	return nil
