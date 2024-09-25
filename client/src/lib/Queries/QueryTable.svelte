@@ -13,7 +13,7 @@
   import { tablePadding, tdClass } from "$lib/Table/defaults";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import CIconButton from "$lib/Components/CIconButton.svelte";
-  import { createEventDispatcher } from "svelte";
+  import { getContext } from "svelte";
   import { setIgnored, updateStoredQuery, type Query } from "./query";
   import { push } from "svelte-spa-router";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -27,7 +27,7 @@
   export let isAllowedToEdit = false;
   export let isAllowedToClone = true;
 
-  const dispatch = createEventDispatcher();
+  const queryContext: any = getContext("queryContext");
 
   const resetQueryToDelete = () => {
     return { name: "", id: -1 };
@@ -94,7 +94,11 @@
         id,
         isChecked
       ));
-      if (ignoreErrorMessage === null) dispatch("updateIgnored", newIgnored);
+      if (ignoreErrorMessage === null) {
+        type UpdateIgnoredFunction = (newIgnored: number[]) => void;
+        const updateIgnored: UpdateIgnoredFunction = queryContext["updateIgnored"];
+        updateIgnored(newIgnored);
+      }
     }
     isLoading = false;
   };
@@ -194,7 +198,12 @@
                     title={`clone ${query.name}`}
                     icon="copy"
                     on:click={() => {
-                      push(`/queries/new?clone=${query.id}`);
+                      const cloneQuery = queryContext["cloneQuery"];
+                      const queryToClone = query;
+                      if (!isAllowedToEdit) {
+                        queryToClone.global = false;
+                      }
+                      cloneQuery(query);
                     }}
                   ></CIconButton>
                 {/if}
@@ -205,7 +214,8 @@
                         name: query.name,
                         id: query.id
                       };
-                      dispatch("openDeleteModal", querytoDelete);
+                      const openDeleteModal = queryContext["openDeleteModal"];
+                      openDeleteModal(querytoDelete);
                     }}
                     title={`delete ${query.name}`}
                     icon="trash"
