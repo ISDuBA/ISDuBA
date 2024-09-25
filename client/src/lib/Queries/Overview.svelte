@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { Button, Spinner } from "flowbite-svelte";
-  import { onMount } from "svelte";
+  import { onMount, setContext } from "svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
@@ -25,6 +25,7 @@
   };
 
   let queries: Query[] | undefined = [];
+  let newQueries: Query[] = [];
   let ignoredQueries: number[] = [];
   let errorMessage: ErrorDetails | null;
   let cloneErrorMessage: ErrorDetails | null;
@@ -61,7 +62,7 @@
   };
 
   const onOpenDeleteModal = async (event: any) => {
-    querytoDelete = event.detail;
+    querytoDelete = event;
     deleteModalOpen = true;
   };
 
@@ -86,8 +87,8 @@
     ({ ignoredQueries, errorMessage } = await fetchIgnored());
   };
 
-  const updateIgnored = (event: any) => {
-    ignoredQueries = event.detail;
+  const updateIgnored = (newIgnoredQueries: any) => {
+    ignoredQueries = newIgnoredQueries;
   };
 
   onMount(() => {
@@ -97,7 +98,6 @@
   const cloneDashboardQueries = async () => {
     if (!globalRelevantQueries || !userQueries || !queries) return;
     cloneErrorMessage = null;
-    const idsOfClonesQueries = [];
     let failed = false;
     isCloning = true;
     // Clone the special queries
@@ -105,14 +105,7 @@
       const queryToClone = globalRelevantQueries[i];
       if (queryToClone) {
         queryToClone.global = false;
-        queryToClone.name = proposeName(queries, queryToClone.name);
-        const response = await createStoredQuery(queryToClone);
-        if (!response.ok && response.error) {
-          cloneErrorMessage = getErrorDetails(`Failed to clone queries.`, response);
-          failed = true;
-        } else {
-          idsOfClonesQueries.push(response.content.id);
-        }
+        await cloneQuery(queryToClone);
       }
     }
     if (!failed) {
@@ -125,32 +118,70 @@
           ));
         }
       }
-      // Place the cloned queries at the top
-      type Order = {
-        id: number;
-        order: number;
-      };
-      let orders: Order[] = [];
-      let count = 0;
-      for (let i = 0; i < idsOfClonesQueries.length; i++) {
-        orders.push({ id: idsOfClonesQueries[i], order: count });
-        count++;
-      }
-      for (let i = 0; i < userQueries.length; i++) {
-        orders.push({
-          id: userQueries[i].id,
-          order: count
-        });
-        count++;
-      }
-      let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
-      if (!response.ok && response.error) {
-        cloneErrorMessage = getErrorDetails(`Could not update query order.`, response);
-      }
     }
     isCloning = false;
-    fetchData();
+    await fetchData();
   };
+
+  const cloneQuery = async (query: Query) => {
+    if (!queries) return;
+    isCloning = true;
+    query.name = proposeName(queries, query.name);
+    const response = await createStoredQuery(query);
+    if (!response.ok && response.error) {
+      cloneErrorMessage = getErrorDetails(`Failed to clone query.`, response);
+    } else if (response.ok) {
+      await placeQueriesAtTop([response.content.id]);
+      const queriesBeforeClone = queries;
+      await fetchData();
+      const table = document.getElementById(query.global ? "global-queries" : "personal-queries");
+      if (table) {
+        table.scrollTop = 0;
+        table.scrollIntoView({ behavior: "smooth" });
+      }
+      const queriesAfterClone = queries;
+      newQueries = [
+        ...newQueries,
+        ...queriesAfterClone.filter((q) => !queriesBeforeClone.map((q) => q.id).includes(q.id))
+      ];
+      const newQueriesCopy: Query[] = newQueries;
+      setTimeout(() => {
+        newQueries = newQueries.filter((q) => {
+          return !newQueriesCopy.map((q) => q.id).includes(q.id);
+        });
+      }, 5000);
+    }
+    isCloning = false;
+  };
+
+  const placeQueriesAtTop = async (queryIDs: number[], global = false) => {
+    if (!userQueries || !adminQueries) return;
+    type Order = {
+      id: number;
+      order: number;
+    };
+    let orders: Order[] = [];
+    let count = 0;
+    const userQueryIDs = userQueries.map((q) => q.id);
+    const adminQueryIDs = adminQueries.map((q) => q.id);
+    const newOrderIDs: number[] = global
+      ? [...userQueryIDs, ...queryIDs, ...adminQueryIDs]
+      : [...queryIDs, ...userQueryIDs, ...adminQueryIDs];
+    for (let i = 0; i < newOrderIDs.length; i++) {
+      orders.push({ id: newOrderIDs[i], order: count });
+      count++;
+    }
+    let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
+    if (!response.ok && response.error) {
+      cloneErrorMessage = getErrorDetails(`Could not update query order.`, response);
+    }
+  };
+
+  setContext("queryContext", {
+    cloneQuery: cloneQuery,
+    openDeleteModal: onOpenDeleteModal,
+    updateIgnored: updateIgnored
+  });
 </script>
 
 <svelte:head>
@@ -189,12 +220,12 @@
 {#if queries && queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
     <QueryTable
+      tableContainerID="personal-queries"
       {ignoredQueries}
+      {newQueries}
       isAllowedToEdit={true}
       queries={userQueries}
       title="Personal"
-      on:updateIgnored={updateIgnored}
-      on:openDeleteModal={onOpenDeleteModal}
     >
       <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
         ><i class="bx bx-plus me-2"></i>New query</Button
@@ -204,11 +235,10 @@
     {#if !appStore.isAdmin()}
       <QueryTable
         {ignoredQueries}
+        {newQueries}
         isAllowedToClone={false}
         queries={globalRelevantQueries}
         title="Global relevant dashboard queries"
-        on:updateIgnored={updateIgnored}
-        on:openDeleteModal={onOpenDeleteModal}
       >
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
         <Button class="h-fit w-fit text-sm" on:click={cloneDashboardQueries} disabled={isCloning}>
@@ -222,27 +252,21 @@
 
       <QueryTable
         {ignoredQueries}
+        {newQueries}
         queries={globalDashboardQueries}
         title="Global dashboard queries (not displayed)"
-        on:updateIgnored={updateIgnored}
-        on:openDeleteModal={onOpenDeleteModal}
       ></QueryTable>
 
-      <QueryTable
-        {ignoredQueries}
-        queries={globalSearchQueries}
-        title="Global search queries"
-        on:updateIgnored={updateIgnored}
-        on:openDeleteModal={onOpenDeleteModal}
+      <QueryTable {ignoredQueries} queries={globalSearchQueries} title="Global search queries"
       ></QueryTable>
     {:else}
       <QueryTable
+        tableContainerID="global-queries"
         {ignoredQueries}
+        {newQueries}
         queries={adminQueries}
         title="Global"
         isAllowedToEdit={appStore.isAdmin()}
-        on:updateIgnored={updateIgnored}
-        on:openDeleteModal={onOpenDeleteModal}
       >
         <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
           ><i class="bx bx-plus me-2"></i>New query</Button

@@ -13,7 +13,7 @@
   import { tablePadding, tdClass } from "$lib/Table/defaults";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import CIconButton from "$lib/Components/CIconButton.svelte";
-  import { createEventDispatcher } from "svelte";
+  import { getContext } from "svelte";
   import { setIgnored, updateStoredQuery, type Query } from "./query";
   import { push } from "svelte-spa-router";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -21,13 +21,15 @@
   import Sortable from "sortablejs";
   import { request } from "$lib/request";
 
+  export let tableContainerID: string | null = null;
   export let title = "";
   export let queries: Query[] | undefined = [];
+  export let newQueries: Query[] = [];
   export let ignoredQueries: number[] | null = null;
   export let isAllowedToEdit = false;
   export let isAllowedToClone = true;
 
-  const dispatch = createEventDispatcher();
+  const queryContext: any = getContext("queryContext");
 
   const resetQueryToDelete = () => {
     return { name: "", id: -1 };
@@ -94,7 +96,11 @@
         id,
         isChecked
       ));
-      if (ignoreErrorMessage === null) dispatch("updateIgnored", newIgnored);
+      if (ignoreErrorMessage === null) {
+        type UpdateIgnoredFunction = (newIgnored: number[]) => void;
+        const updateIgnored: UpdateIgnoredFunction = queryContext["updateIgnored"];
+        updateIgnored(newIgnored);
+      }
     }
     isLoading = false;
   };
@@ -114,6 +120,16 @@
     }
     isLoading = false;
   };
+
+  const clone = async (query: Query) => {
+    if (!queries) return;
+    const cloneQuery = queryContext["cloneQuery"];
+    const queryToClone = query;
+    if (!isAllowedToEdit) {
+      queryToClone.global = false;
+    }
+    await cloneQuery(query);
+  };
 </script>
 
 <div class="w-fit">
@@ -121,7 +137,7 @@
     <span class="text-2xl">{title}</span>
   </div>
   <hr class="mb-6" />
-  <div class="mb-2 max-h-[66vh] overflow-auto">
+  <div id={tableContainerID} class="mb-2 max-h-[66vh] overflow-auto">
     <Table hoverable={true} noborder={true}>
       <TableHead>
         <TableHeadCell padding={tablePadding}></TableHeadCell>
@@ -156,7 +172,8 @@
                   push(`/queries/${query.id}`);
                 }
               }}
-              class={isAllowedToEdit ? "cursor-pointer" : ""}
+              class:cursor-pointer={isAllowedToEdit}
+              class:motion-safe:animate-pulse-fast={newQueries.map((q) => q.id).includes(query.id)}
               ><TableBodyCell {tdClass}>
                 {#if isAllowedToEdit}
                   <Img
@@ -193,8 +210,8 @@
                   <CIconButton
                     title={`clone ${query.name}`}
                     icon="copy"
-                    on:click={() => {
-                      push(`/queries/new?clone=${query.id}`);
+                    on:click={async () => {
+                      clone(query);
                     }}
                   ></CIconButton>
                 {/if}
@@ -205,7 +222,8 @@
                         name: query.name,
                         id: query.id
                       };
-                      dispatch("openDeleteModal", querytoDelete);
+                      const openDeleteModal = queryContext["openDeleteModal"];
+                      openDeleteModal(querytoDelete);
                     }}
                     title={`delete ${query.name}`}
                     icon="trash"
