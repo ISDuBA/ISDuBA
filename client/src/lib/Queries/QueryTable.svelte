@@ -171,10 +171,10 @@
               <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
               <TableBodyCell {tdClass}>
                 <CCheckbox
-                  on:click={() => {
-                    changeDashboard(query.id, !ignoredQueries?.includes(query.id));
+                  on:change={() => {
+                    changeDashboard(query.id, query.dashboard);
                   }}
-                  checked={query.dashboard}
+                  bind:checked={query.dashboard}
                   class={isAllowedToEdit ? "" : "text-gray-300"}
                   disabled={!isAllowedToEdit || isLoading}
                 ></CCheckbox>
