@@ -16,9 +16,9 @@
 
 <button
   on:click={() => dispatch("click")}
-  class="flex flex-col justify-between rounded-md border border-solid border-gray-300 px-4 py-2 shadow-md hover:bg-gray-100"
+  class="flex flex-col justify-between break-all rounded-md border border-solid border-gray-300 px-4 py-2 shadow-md hover:bg-gray-100"
 >
-  <div class="mb-2 flex w-full flex-row justify-between text-left text-xs">
+  <div class="mb-2 flex w-full flex-row justify-between gap-2 text-left text-xs">
     <div>
       <slot name="top-left"></slot>
     </div>
@@ -30,7 +30,7 @@
   <div class="mb-3 flex-grow text-left">
     <slot></slot>
   </div>
-  <div class="flex w-full flex-row justify-between text-left text-xs">
+  <div class="flex w-full flex-row justify-between gap-2 text-left text-xs">
     <div>
       <slot name="bottom-left"></slot>
     </div>
