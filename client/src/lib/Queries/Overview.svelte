@@ -25,6 +25,7 @@
   };
 
   let queries: Query[] | undefined = [];
+  let newQueries: Query[] = [];
   let ignoredQueries: number[] = [];
   let errorMessage: ErrorDetails | null;
   let cloneErrorMessage: ErrorDetails | null;
@@ -97,7 +98,6 @@
   const cloneDashboardQueries = async () => {
     if (!globalRelevantQueries || !userQueries || !queries) return;
     cloneErrorMessage = null;
-    const idsOfClonedQueries = [];
     let failed = false;
     isCloning = true;
     // Clone the special queries
@@ -105,14 +105,7 @@
       const queryToClone = globalRelevantQueries[i];
       if (queryToClone) {
         queryToClone.global = false;
-        queryToClone.name = proposeName(queries, queryToClone.name);
-        const response = await createStoredQuery(queryToClone);
-        if (!response.ok && response.error) {
-          cloneErrorMessage = getErrorDetails(`Failed to clone queries.`, response);
-          failed = true;
-        } else {
-          idsOfClonedQueries.push(response.content.id);
-        }
+        await cloneQuery(queryToClone);
       }
     }
     if (!failed) {
@@ -125,10 +118,9 @@
           ));
         }
       }
-      await placeQueriesAtTop(idsOfClonedQueries);
     }
     isCloning = false;
-    fetchData();
+    await fetchData();
   };
 
   const cloneQuery = async (query: Query) => {
@@ -140,7 +132,24 @@
       cloneErrorMessage = getErrorDetails(`Failed to clone query.`, response);
     } else if (response.ok) {
       await placeQueriesAtTop([response.content.id]);
-      fetchData();
+      const queriesBeforeClone = queries;
+      await fetchData();
+      const table = document.getElementById(query.global ? "global-queries" : "personal-queries");
+      if (table) {
+        table.scrollTop = 0;
+        table.scrollIntoView({ behavior: "smooth" });
+      }
+      const queriesAfterClone = queries;
+      newQueries = [
+        ...newQueries,
+        ...queriesAfterClone.filter((q) => !queriesBeforeClone.map((q) => q.id).includes(q.id))
+      ];
+      const newQueriesCopy: Query[] = newQueries;
+      setTimeout(() => {
+        newQueries = newQueries.filter((q) => {
+          return !newQueriesCopy.map((q) => q.id).includes(q.id);
+        });
+      }, 5000);
     }
     isCloning = false;
   };
@@ -210,7 +219,14 @@
 <ErrorMessage error={errorMessage}></ErrorMessage>
 {#if queries && queries.length > 0}
   <div class="flex flex-row flex-wrap gap-12">
-    <QueryTable {ignoredQueries} isAllowedToEdit={true} queries={userQueries} title="Personal">
+    <QueryTable
+      tableContainerID="personal-queries"
+      {ignoredQueries}
+      {newQueries}
+      isAllowedToEdit={true}
+      queries={userQueries}
+      title="Personal"
+    >
       <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
         ><i class="bx bx-plus me-2"></i>New query</Button
       >
@@ -219,6 +235,7 @@
     {#if !appStore.isAdmin()}
       <QueryTable
         {ignoredQueries}
+        {newQueries}
         isAllowedToClone={false}
         queries={globalRelevantQueries}
         title="Global relevant dashboard queries"
@@ -235,6 +252,7 @@
 
       <QueryTable
         {ignoredQueries}
+        {newQueries}
         queries={globalDashboardQueries}
         title="Global dashboard queries (not displayed)"
       ></QueryTable>
@@ -243,7 +261,9 @@
       ></QueryTable>
     {:else}
       <QueryTable
+        tableContainerID="global-queries"
         {ignoredQueries}
+        {newQueries}
         queries={adminQueries}
         title="Global"
         isAllowedToEdit={appStore.isAdmin()}

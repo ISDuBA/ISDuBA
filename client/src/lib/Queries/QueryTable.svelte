@@ -21,8 +21,10 @@
   import Sortable from "sortablejs";
   import { request } from "$lib/request";
 
+  export let tableContainerID: string | null = null;
   export let title = "";
   export let queries: Query[] | undefined = [];
+  export let newQueries: Query[] = [];
   export let ignoredQueries: number[] | null = null;
   export let isAllowedToEdit = false;
   export let isAllowedToClone = true;
@@ -118,6 +120,16 @@
     }
     isLoading = false;
   };
+
+  const clone = async (query: Query) => {
+    if (!queries) return;
+    const cloneQuery = queryContext["cloneQuery"];
+    const queryToClone = query;
+    if (!isAllowedToEdit) {
+      queryToClone.global = false;
+    }
+    await cloneQuery(query);
+  };
 </script>
 
 <div class="w-fit">
@@ -125,7 +137,7 @@
     <span class="text-2xl">{title}</span>
   </div>
   <hr class="mb-6" />
-  <div class="mb-2 max-h-[66vh] overflow-auto">
+  <div id={tableContainerID} class="mb-2 max-h-[66vh] overflow-auto">
     <Table hoverable={true} noborder={true}>
       <TableHead>
         <TableHeadCell padding={tablePadding}></TableHeadCell>
@@ -160,7 +172,8 @@
                   push(`/queries/${query.id}`);
                 }
               }}
-              class={isAllowedToEdit ? "cursor-pointer" : ""}
+              class:cursor-pointer={isAllowedToEdit}
+              class:motion-safe:animate-pulse-fast={newQueries.map((q) => q.id).includes(query.id)}
               ><TableBodyCell {tdClass}>
                 {#if isAllowedToEdit}
                   <Img
@@ -197,13 +210,8 @@
                   <CIconButton
                     title={`clone ${query.name}`}
                     icon="copy"
-                    on:click={() => {
-                      const cloneQuery = queryContext["cloneQuery"];
-                      const queryToClone = query;
-                      if (!isAllowedToEdit) {
-                        queryToClone.global = false;
-                      }
-                      cloneQuery(query);
+                    on:click={async () => {
+                      clone(query);
                     }}
                   ></CIconButton>
                 {/if}
