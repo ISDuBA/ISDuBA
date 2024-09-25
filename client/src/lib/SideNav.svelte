@@ -20,6 +20,7 @@
   import { sineIn } from "svelte/easing";
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
+  import { truncate } from "$lib/utils";
 
   let notactivated =
     "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-primary-100 hover:text-primary-900";
@@ -113,7 +114,7 @@
             {#if !$appStore.app.sessionExpired}
               <SidebarItem
                 class="px-6 py-2.5"
-                label={$appStore.app.tokenParsed?.preferred_username}
+                label={truncate($appStore.app.tokenParsed?.preferred_username ?? "", 15)}
                 href="/#/login"
               >
                 <svelte:fragment slot="icon">

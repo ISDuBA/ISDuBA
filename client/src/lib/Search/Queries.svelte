@@ -17,6 +17,7 @@
   import { push } from "svelte-spa-router";
   import { createEventDispatcher } from "svelte";
   import { type Query } from "$lib/Queries/query";
+  import { truncate } from "$lib/utils";
 
   const dispatch = createEventDispatcher();
 
@@ -77,10 +78,6 @@
       }, 100);
     }
   });
-
-  const truncate = (str: string, n: number) => {
-    return str.length > n ? str.slice(0, n - 1) + "…" : str;
-  };
 
   const selectQuery = (index: number) => {
     if (selectedIndex == index) {
