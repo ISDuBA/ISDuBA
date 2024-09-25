@@ -125,31 +125,35 @@
           ));
         }
       }
-      // Place the cloned queries at the top
-      type Order = {
-        id: number;
-        order: number;
-      };
-      let orders: Order[] = [];
-      let count = 0;
-      for (let i = 0; i < idsOfClonesQueries.length; i++) {
-        orders.push({ id: idsOfClonesQueries[i], order: count });
-        count++;
-      }
-      for (let i = 0; i < userQueries.length; i++) {
-        orders.push({
-          id: userQueries[i].id,
-          order: count
-        });
-        count++;
-      }
-      let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
-      if (!response.ok && response.error) {
-        cloneErrorMessage = getErrorDetails(`Could not update query order.`, response);
-      }
+      await placeQueriesAtTop(idsOfClonesQueries);
     }
     isCloning = false;
     fetchData();
+  };
+
+  const placeQueriesAtTop = async (queryIDs: number[]) => {
+    if (!userQueries) return;
+    type Order = {
+      id: number;
+      order: number;
+    };
+    let orders: Order[] = [];
+    let count = 0;
+    for (let i = 0; i < queryIDs.length; i++) {
+      orders.push({ id: queryIDs[i], order: count });
+      count++;
+    }
+    for (let i = 0; i < userQueries.length; i++) {
+      orders.push({
+        id: userQueries[i].id,
+        order: count
+      });
+      count++;
+    }
+    let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
+    if (!response.ok && response.error) {
+      cloneErrorMessage = getErrorDetails(`Could not update query order.`, response);
+    }
   };
 </script>
 
