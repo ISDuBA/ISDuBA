@@ -78,6 +78,10 @@
     }
   });
 
+  const truncate = (str: string, n: number) => {
+    return str.length > n ? str.slice(0, n - 1) + "…" : str;
+  };
+
   const selectQuery = (index: number) => {
     if (selectedIndex == index) {
       selectedIndex = -1;
@@ -98,7 +102,7 @@
             on:click={() => selectQuery(index)}
             class={getClass(query.global, index === selectedIndex)}
           >
-            <span title={query.description} class="p-2">{query.name}</span>
+            <span title={query.description} class="p-2">{truncate(query.name, 30)}</span>
           </Button>
         {/if}
       {/each}
