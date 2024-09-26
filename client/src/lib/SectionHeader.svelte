@@ -14,7 +14,7 @@
   export let title = "";
 </script>
 
-<div class="mb-3 flex text-lg text-gray-900 dark:text-white">
+<div class="mb-3 flex break-all text-lg text-gray-900 dark:text-white">
   <Heading tag="h2" class="me-4 w-fit" customSize="text-lg">{title} <slot /></Heading>
   <slot name="right"></slot>
 </div>
