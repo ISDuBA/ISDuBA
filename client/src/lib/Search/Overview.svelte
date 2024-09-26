@@ -198,7 +198,7 @@
 </div>
 {#if searchTerm !== null}
   <AdvisoryTable
-    defaultOrderBy={[query.orders[0]]}
+    defaultOrderBy={query.orders}
     columns={query.columns}
     tableType={query.queryType}
     query={`${query.query}`}
