@@ -198,11 +198,11 @@
 </div>
 {#if searchTerm !== null}
   <AdvisoryTable
-    defaultOrderBy={query.orders[0]}
+    defaultOrderBy={[query.orders[0]]}
     columns={query.columns}
     tableType={query.queryType}
     query={`${query.query}`}
-    orderBy={query.orders?.join(" ") ?? ""}
+    orderBy={query.orders}
     bind:this={advisoryTable}
   ></AdvisoryTable>
 {/if}

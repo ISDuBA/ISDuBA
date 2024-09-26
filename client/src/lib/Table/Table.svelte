@@ -57,8 +57,8 @@
   export let query: string = "";
   export let searchTerm: string = "";
   export let tableType: SEARCHTYPES;
-  export let orderBy = "title";
-  export let defaultOrderBy = "";
+  export let orderBy: string[] = ["title"];
+  export let defaultOrderBy = ["title"];
 
   $: disableDiffButtons =
     $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
@@ -121,11 +121,9 @@
     }
   };
 
-  $: orderByColumns = orderBy.split(" ");
-
   const setOrderBy = async () => {
     await tick();
-    orderByColumns
+    orderBy
       .map((c) => {
         return c.replace("-", "");
       })
@@ -176,12 +174,12 @@
 
     if (tableType === SEARCHTYPES.EVENT) {
       documentURL = encodeURI(
-        `/api/events?${queryParam}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/events?${queryParam}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     } else {
       const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
       documentURL = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     }
 
@@ -242,22 +240,18 @@
   };
 
   const switchSort = async (column: string) => {
-    let orderByCols = orderBy.split(" ");
-    if (
-      orderByCols.find((c: string) => {
-        return c === column;
-      })
-    ) {
-      orderBy = `-${column}`;
-    } else if (
-      orderByCols.find((c: string) => {
-        return c === `-${column}`;
-      })
-    ) {
-      orderBy = `${column}`;
-    } else {
-      orderBy = column;
+    let found = orderBy.find((c) => c === column);
+    let foundMinus = orderBy.find((c) => c === "-" + column);
+    if (foundMinus) {
+      orderBy = orderBy.filter((c) => c !== "-" + column);
     }
+    if (found) {
+      orderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
+    }
+    if (!found && !foundMinus) {
+      orderBy.push(column);
+    }
+    orderBy = orderBy;
     await tick();
     fetchData();
   };
@@ -283,6 +277,20 @@
   };
 
   $: numberOfPages = Math.ceil(count / limit);
+
+  const getColumnOrder = (orderBy: string[], column: string): string => {
+    let index = orderBy.indexOf(column);
+    let indexMinus = orderBy.indexOf("-" + column);
+
+    if (indexMinus >= 0) {
+      return indexMinus + 1 + "";
+    }
+    if (index >= 0) {
+      return index + 1 + "";
+    }
+
+    return "";
+  };
 </script>
 
 <svelte:window bind:innerWidth />
@@ -404,13 +412,13 @@
                   }}
                   >{getColumnDisplayName(column)}<i
                     class:bx={true}
-                    class:bx-caret-up={orderBy.split(" ").find((c) => {
+                    class:bx-caret-up={orderBy.find((c) => {
                       return c === column;
-                    })}
-                    class:bx-caret-down={orderBy.split(" ").find((c) => {
+                    }) !== undefined}
+                    class:bx-caret-down={orderBy.find((c) => {
                       return c === `-${column}`;
-                    })}
-                  ></i></TableHeadCell
+                    }) !== undefined}
+                  ></i>{getColumnOrder(orderBy, column)}</TableHeadCell
                 >
               {/if}
             {/each}
