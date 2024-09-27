@@ -9,24 +9,27 @@
 -->
 
 <script lang="ts">
-  import BranchComponent from "./Branch.svelte";
+  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import Product from "$lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
   import type { Branch } from "$lib/types";
   import { Badge } from "flowbite-svelte";
   export let branch: Branch;
+  export let open: boolean;
 </script>
 
 <div class="pl-3">
-  <div class="py-2">
-    <Badge rounded large color="dark">{branch.category}</Badge>
-    {branch.name}
-  </div>
-  {#if branch.branches}
-    {#each branch.branches as b}
-      <BranchComponent branch={b} />
-    {/each}
-  {/if}
-  {#if branch.product}
-    <Product product={branch.product} />
-  {/if}
+  <Collapsible {open} header={branch.category + ": " + branch.name}>
+    <div slot="header" class="py-2">
+      <Badge rounded large color="dark">{branch.category}</Badge>
+      {branch.name}
+    </div>
+    {#if branch.branches}
+      {#each branch.branches as b}
+        <svelte:self branch={b} {open} />
+      {/each}
+    {/if}
+    {#if branch.product}
+      <Product product={branch.product} />
+    {/if}
+  </Collapsible>
 </div>
