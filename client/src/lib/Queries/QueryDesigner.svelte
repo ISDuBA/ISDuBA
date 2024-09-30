@@ -173,22 +173,19 @@
           );
       }
     }
-    if (response?.ok || !isAllowedToEdit) {
-      const id: string = params ? params.id : response?.content.id;
-      saveErrorMessage = errorMessage;
-      if (
-        (!ignoredQueries.includes(Number(id)) && hide === true) ||
-        (ignoredQueries.includes(Number(id)) && hide === false)
-      ) {
-        const ignore = !ignoredQueries.includes(Number(id)) && hide === true;
-        ({ errorMessage } = await setIgnored(Number(id), ignore));
-        saveErrorMessage = errorMessage;
-        if (errorMessage === null) {
-          push(`/queries/`);
-        }
-      } else {
+    // Save hide/ignore
+    const id: string = params ? params.id : response?.content.id;
+    if (
+      (!ignoredQueries.includes(Number(id)) && hide === true) ||
+      (ignoredQueries.includes(Number(id)) && hide === false)
+    ) {
+      const ignore = !ignoredQueries.includes(Number(id)) && hide === true;
+      ({ ignoredQueries, errorMessage: saveErrorMessage } = await setIgnored(Number(id), ignore));
+      if (errorMessage === null) {
         push(`/queries/`);
       }
+    } else {
+      push(`/queries/`);
     }
   };
 
