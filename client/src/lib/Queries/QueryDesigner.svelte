@@ -55,6 +55,8 @@
   let columnList: any;
   let hide = false;
   let ignoredQueries: number[] = [];
+  let isAllowedToEdit = true;
+  let sortable: any = null;
 
   // Prop items of (Multi-)Select doesn't accept simple strings
   const roles = [{ name: "<no role>", value: "" }].concat(
@@ -132,45 +134,47 @@
 
   const saveQuery = async () => {
     unsetMessages();
-    const formData = new FormData();
-    formData.append("kind", currentSearch.searchType);
-    formData.append("name", currentSearch.name);
-    formData.append("global", `${currentSearch.global}`);
-    formData.append("dashboard", `${currentSearch.dashboard}`);
-    if (currentSearch.role) {
-      formData.append("role", `${currentSearch.role}`);
-    } else {
-      formData.append("role", "");
-    }
-    if (currentSearch.description.length > 0) {
-      formData.append("description", currentSearch.description);
-    }
-    if (currentSearch.query.length > 0) {
-      formData.append("query", currentSearch.query);
-    }
-    let sortedColumns = sortColumns(currentSearch.columns);
-    const columns = sortedColumns.filter((c) => c.visible).map((c) => c.name);
-    formData.append("columns", columns.join(" "));
-    const columnsForOrder = currentSearch.orderBy.filter((order) => order[0] !== "");
-    const orderBy = columnsForOrder.map(
-      (c) => `${c[1] === ORDERDIRECTIONS.DESC ? "-" : ""}${c[0]}`
-    );
-    formData.append("orders", orderBy.join(" "));
     let response;
-    if (loadedData) {
-      response = await request(`/api/queries/${loadedData.id}`, "PUT", formData);
-    } else {
-      response = await request("/api/queries", "POST", formData);
+    if (isAllowedToEdit) {
+      const formData = new FormData();
+      formData.append("kind", currentSearch.searchType);
+      formData.append("name", currentSearch.name);
+      formData.append("global", `${currentSearch.global}`);
+      formData.append("dashboard", `${currentSearch.dashboard}`);
+      if (currentSearch.role) {
+        formData.append("role", `${currentSearch.role}`);
+      } else {
+        formData.append("role", "");
+      }
+      if (currentSearch.description.length > 0) {
+        formData.append("description", currentSearch.description);
+      }
+      if (currentSearch.query.length > 0) {
+        formData.append("query", currentSearch.query);
+      }
+      let sortedColumns = sortColumns(currentSearch.columns);
+      const columns = sortedColumns.filter((c) => c.visible).map((c) => c.name);
+      formData.append("columns", columns.join(" "));
+      const columnsForOrder = currentSearch.orderBy.filter((order) => order[0] !== "");
+      const orderBy = columnsForOrder.map(
+        (c) => `${c[1] === ORDERDIRECTIONS.DESC ? "-" : ""}${c[0]}`
+      );
+      formData.append("orders", orderBy.join(" "));
+      if (loadedData) {
+        response = await request(`/api/queries/${loadedData.id}`, "PUT", formData);
+      } else {
+        response = await request("/api/queries", "POST", formData);
+      }
+      if (!response.ok && response.error) {
+        saveErrorMessage = getErrorDetails(`Failed to save query.`, response);
+        if (response.error === "409")
+          saveErrorMessage = getErrorDetails(
+            `A query with the name "${currentSearch.name}" already exists.`
+          );
+      }
     }
-    if (!response.ok && response.error) {
-      saveErrorMessage = getErrorDetails(`Failed to save query.`, response);
-      if (response.error === "409")
-        saveErrorMessage = getErrorDetails(
-          `A query with the name "${currentSearch.name}" already exists.`
-        );
-    }
-    if (response.ok) {
-      const id: string = params ? params.id : response.content.id;
+    if (response?.ok || !isAllowedToEdit) {
+      const id: string = params ? params.id : response?.content.id;
       saveErrorMessage = errorMessage;
       if (
         (!ignoredQueries.includes(Number(id)) && hide === true) ||
@@ -287,6 +291,9 @@
         if (params && params.id) {
           loadedData = thisQuery;
         }
+        if (thisQuery.global && !appStore.isAdmin()) {
+          isAllowedToEdit = false;
+        }
         currentSearch = generateQueryFrom(thisQuery);
         if (queryString?.clone) {
           currentSearch.name = proposeName(thisQuery, currentSearch.name);
@@ -309,10 +316,12 @@
     return undefined;
   };
 
-  $: if (columnList) {
-    Sortable.create(columnList, {
+  $: if (columnList && isAllowedToEdit) {
+    sortable = Sortable.create(columnList, {
       animation: 150
     });
+  } else if (sortable && !isAllowedToEdit) {
+    sortable.option("disabled", true);
   }
 
   $: noColumnSelected = currentSearch.columns.every((c) => c.visible == false);
@@ -332,6 +341,7 @@
               >Name:</Label
             >
             <Input
+              disabled={!isAllowedToEdit}
               on:input={() => {
                 wasNameEdited = true;
               }}
@@ -347,7 +357,7 @@
         </div>
         <div class="mb-4 flex w-1/3 min-w-56 flex-col gap-x-2 md:mb-0 md:min-w-96">
           <Label>Description:</Label>
-          <Input bind:value={currentSearch.description} />
+          <Input disabled={!isAllowedToEdit} bind:value={currentSearch.description} />
         </div>
       </div>
     </div>
@@ -367,6 +377,7 @@
         <span>Dashboard:</span>
         <CCheckbox
           checked={currentSearch.dashboard}
+          disabled={!isAllowedToEdit}
           on:change={() => {
             currentSearch.dashboard = !currentSearch.dashboard;
           }}
@@ -387,6 +398,7 @@
       <ButtonGroup>
         <RadioButton
           class="h-8"
+          disabled={!isAllowedToEdit}
           on:change={toggleSearchType}
           value={SEARCHTYPES.ADVISORY}
           bind:group={currentSearch.searchType}
@@ -395,12 +407,14 @@
         >
         <RadioButton
           class="h-8"
+          disabled={!isAllowedToEdit}
           on:change={toggleSearchType}
           value={SEARCHTYPES.DOCUMENT}
           bind:group={currentSearch.searchType}>Documents</RadioButton
         >
         <RadioButton
           class="h-8"
+          disabled={!isAllowedToEdit}
           on:change={toggleSearchType}
           value={SEARCHTYPES.EVENT}
           bind:group={currentSearch.searchType}>Events</RadioButton
@@ -421,15 +435,17 @@
           {@const order = getOrderDirection(currentSearch.columns[index].name)}
           <div
             role="presentation"
-            class="mb-1 flex cursor-pointer flex-row items-center"
+            class={`mb-1 flex flex-row items-center ${isAllowedToEdit ? "cursor-pointer" : "cursor-default"}`}
             on:blur={() => {}}
             on:focus={() => {}}
           >
-            <div class:w-6={true} class:flex={true} class:flex-col={true}>
-              <button>
-                <Img src="grid-dots-vertical-rounded.svg" class="h-auto w-5 invert-[.5]" />
-              </button>
-            </div>
+            {#if isAllowedToEdit}
+              <div class:w-6={true} class:flex={true} class:flex-col={true}>
+                <button>
+                  <Img src="grid-dots-vertical-rounded.svg" class="h-auto w-5 invert-[.5]" />
+                </button>
+              </div>
+            {/if}
             <div class="columnName me-2 w-1/3 min-w-40">{col.name}</div>
             <div class="me-2 w-1/4 md:min-w-28">
               <CCheckbox
@@ -437,9 +453,11 @@
                   setVisible(index);
                 }}
                 checked={currentSearch.columns[index].visible}
+                disabled={!isAllowedToEdit}
               ></CCheckbox>
             </div>
             <button
+              disabled={!isAllowedToEdit}
               on:click={() => {
                 switchOrderDirection(col.name);
               }}
@@ -463,7 +481,7 @@
     <div class="mt-6 w-full">
       <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
       <div class="flex flex-row">
-        <Input bind:value={currentSearch.query} />
+        <Input disabled={!isAllowedToEdit} bind:value={currentSearch.query} />
       </div>
       {#if saveErrorMessage}
         <div class="mt-2 flex md:justify-end">
