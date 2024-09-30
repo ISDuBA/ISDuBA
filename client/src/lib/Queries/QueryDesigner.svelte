@@ -281,18 +281,15 @@
     ({ ignoredQueries, errorMessage } = await fetchIgnored());
     if (id) {
       if (ignoredQueries.includes(Number(id))) hide = true;
-      const response = await request(`/api/queries`, "GET");
+      const response = await request(`/api/queries/${id}`, "GET");
       if (response.ok) {
-        const result = await response.content;
-        const thisQuery = result.find((q: any) => {
-          return q.id == id;
-        });
+        const thisQuery = await response.content;
         if (params && params.id) {
           loadedData = thisQuery;
         }
         currentSearch = generateQueryFrom(thisQuery);
         if (queryString?.clone) {
-          currentSearch.name = proposeName(result, currentSearch.name);
+          currentSearch.name = proposeName(thisQuery, currentSearch.name);
           if (!isRoleIncluded(appStore.getRoles(), [ADMIN])) {
             currentSearch.global = false;
             currentSearch.role = undefined;
