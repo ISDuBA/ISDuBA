@@ -168,11 +168,9 @@
           {#each queries as query, index (index)}
             <tr
               on:click={() => {
-                if (isAllowedToEdit) {
-                  push(`/queries/${query.id}`);
-                }
+                push(`/queries/${query.id}`);
               }}
-              class:cursor-pointer={isAllowedToEdit}
+              class:cursor-pointer={true}
               class:motion-safe:animate-pulse-fast={newQueries.map((q) => q.id).includes(query.id)}
               ><TableBodyCell {tdClass}>
                 {#if isAllowedToEdit}

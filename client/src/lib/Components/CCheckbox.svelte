@@ -30,7 +30,7 @@
 
 <Checkbox
   bind:checked
-  class={`min-h-[20px] min-w-[20px] cursor-pointer !p-[6px] !py-[6px] ${$$props.class}`}
+  class={`min-h-[20px] min-w-[20px] cursor-pointer !p-[6px] !py-[6px] ${$$props?.class}`}
   {choices}
   {color}
   {custom}
