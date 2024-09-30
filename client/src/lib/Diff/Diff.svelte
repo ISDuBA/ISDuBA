@@ -30,6 +30,9 @@
   let isEditedSectionOpen = true;
   let isSideBySideViewActivated = true;
   let pressedButtonClass = "bg-gray-200 hover:bg-gray-100";
+  let accordionItemDefaultClass =
+    "flex justify-start items-center gap-x-4 text-gray-700 font-semibold w-full";
+  let textFlushOpen = "text-gray-500 dark:text-white";
   $: addChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "add") : [];
   $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
@@ -104,7 +107,8 @@
       <AccordionItem
         paddingFlush="pt-0 pb-3"
         bind:open={isAddSectionOpen}
-        class="justify-start gap-x-4 text-gray-700"
+        defaultClass={accordionItemDefaultClass}
+        {textFlushOpen}
       >
         <div slot="header">
           <div class="flex items-center gap-2">
@@ -128,7 +132,8 @@
       <AccordionItem
         paddingFlush="py-3"
         bind:open={isRemoveSectionOpen}
-        class="justify-start gap-x-4 text-gray-700"
+        defaultClass={accordionItemDefaultClass}
+        {textFlushOpen}
       >
         <div slot="header">
           <div class="flex items-center gap-2">
@@ -154,7 +159,8 @@
       <AccordionItem
         paddingFlush="py-3"
         bind:open={isEditedSectionOpen}
-        class="justify-start gap-x-4 text-gray-700"
+        defaultClass={accordionItemDefaultClass}
+        {textFlushOpen}
       >
         <div slot="header">
           <div class="flex items-center gap-2">
