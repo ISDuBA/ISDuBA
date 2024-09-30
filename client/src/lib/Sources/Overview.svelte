@@ -53,8 +53,10 @@
     }
   };
 
-  onMount(() => {
-    getSources();
+  onMount(async () => {
+    if (appStore.isEditor() || appStore.isSourceManager()) {
+      await getSources();
+    }
   });
 
   onDestroy(() => {
