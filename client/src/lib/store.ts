@@ -38,10 +38,16 @@ type AppStore = {
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
     errors: ErrorMessage[];
+    documents: any[] | null;
+    documentsToDelete: any[] | null;
+    selectedDocumentIDs: Set<number>;
+    isToolboxOpen: boolean;
+    isDeleteModalOpen: boolean;
     diff: {
-      isDiffBoxOpen: boolean;
       docA_ID: string | undefined;
       docB_ID: string | undefined;
+      docA: any | undefined;
+      docB: any | undefined;
     };
   };
   webview: {
@@ -86,9 +92,10 @@ const generateInitialState = (): AppStore => {
         lastName: ""
       },
       diff: {
-        isDiffBoxOpen: false,
         docA_ID: undefined,
-        docB_ID: undefined
+        docB_ID: undefined,
+        docA: undefined,
+        docB: undefined
       },
       sessionExpired: false,
       sessionExpiredMessage: null,
@@ -96,7 +103,12 @@ const generateInitialState = (): AppStore => {
       isUserLoggedIn: false,
       tokenParsed: null,
       userManager: null,
-      errors: []
+      errors: [],
+      documents: null,
+      documentsToDelete: null,
+      isDeleteModalOpen: false,
+      selectedDocumentIDs: new Set<number>(),
+      isToolboxOpen: false
     },
     webview: {
       doc: null,
@@ -130,6 +142,7 @@ function createStore() {
   subscribe((v) => (state = v));
   return {
     subscribe,
+    set,
     setFourCVEs: (cves: any) => {
       update((settings) => {
         settings.webview.four_cves = cves;
@@ -343,15 +356,15 @@ function createStore() {
         return settings;
       });
     },
-    toggleDiffBox: () => {
+    toggleToolbox: () => {
       update((settings) => {
-        settings.app.diff.isDiffBoxOpen = !settings.app.diff.isDiffBoxOpen;
+        settings.app.isToolboxOpen = !settings.app.isToolboxOpen;
         return settings;
       });
     },
-    openDiffBox: () => {
+    openToolbox: () => {
       update((settings) => {
-        settings.app.diff.isDiffBoxOpen = true;
+        settings.app.isToolboxOpen = true;
         return settings;
       });
     },
@@ -364,6 +377,54 @@ function createStore() {
     setDiffDocB_ID: (id: string | number | undefined) => {
       update((settings) => {
         settings.app.diff.docB_ID = id?.toString();
+        return settings;
+      });
+    },
+    setDiffDocA: (doc: any) => {
+      update((settings) => {
+        settings.app.diff.docA = doc;
+        return settings;
+      });
+    },
+    setDiffDocB: (doc: any) => {
+      update((settings) => {
+        settings.app.diff.docB = doc;
+        return settings;
+      });
+    },
+    setDocuments: (newDocuments: any[]) => {
+      update((settings) => {
+        settings.app.documents = newDocuments;
+        return settings;
+      });
+    },
+    setDocumentsToDelete: (documents: any[]) => {
+      update((settings) => {
+        settings.app.documentsToDelete = documents;
+        return settings;
+      });
+    },
+    setIsDeleteModalOpen: (isOpen: boolean) => {
+      update((settings) => {
+        settings.app.isDeleteModalOpen = isOpen;
+        return settings;
+      });
+    },
+    addSelectedDocumentID: (id: number) => {
+      update((settings) => {
+        settings.app.selectedDocumentIDs.add(id);
+        return settings;
+      });
+    },
+    removeSelectedDocumentID: (id: number) => {
+      update((settings) => {
+        settings.app.selectedDocumentIDs.delete(id);
+        return settings;
+      });
+    },
+    clearSelectedDocumentIDs: () => {
+      update((settings) => {
+        settings.app.selectedDocumentIDs.clear();
         return settings;
       });
     },
@@ -419,6 +480,13 @@ function createStore() {
     isAdmin: () => appStore.getRoles().includes(ADMIN),
     isAuditor: () => appStore.getRoles().includes(AUDITOR),
     isSourceManager: () => appStore.getRoles().includes(SOURCE_MANAGER),
+    isOnlySourceManager: () =>
+      appStore.getRoles().includes(SOURCE_MANAGER) &&
+      !appStore.isAdmin() &&
+      !appStore.isEditor() &&
+      !appStore.isAuditor() &&
+      !appStore.isImporter() &&
+      !appStore.isReviewer(),
     getUserManager: () => state.app.userManager,
     getIsUserLoggedIn: () => state.app.isUserLoggedIn,
     getOption: (option: string) => state.app.config[option],

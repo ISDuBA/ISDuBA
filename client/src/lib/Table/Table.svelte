@@ -13,6 +13,8 @@
   import { tick } from "svelte";
   import { push } from "svelte-spa-router";
   import {
+    Button,
+    Dropdown,
     Label,
     PaginationItem,
     Select,
@@ -22,8 +24,6 @@
     TableHead,
     TableHeadCell,
     Table,
-    Modal,
-    Button,
     Img
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher, searchColumnName } from "$lib/Table/defaults";
@@ -32,12 +32,16 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ADMIN } from "$lib/workflow";
-  import { isRoleIncluded } from "$lib/permissions";
+  import { getAllowedWorkflowChanges, isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { getPublisher } from "$lib/publisher";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import { SEARCHTYPES } from "$lib/Queries/query";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
+  import { areArraysEqual } from "$lib/utils";
+  import DeleteModal from "./DeleteModal.svelte";
+  import { updateMultipleStates } from "$lib/Advisories/advisory";
 
   let openRow: number | null;
   let abortController: AbortController;
@@ -50,8 +54,10 @@
   let count = 0;
   let currentPage = 1;
   let documents: any = null;
+  $: documentIDs = documents?.map((d: any) => d.id) ?? [];
   let loading = false;
   let error: ErrorDetails | null;
+  let changeWorkflowStateError: ErrorDetails | null;
   let prevQuery = "";
   export let columns: string[];
   export let query: string = "";
@@ -64,8 +70,44 @@
     $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
 
   let anchorLink: string | null;
-  let deleteModalOpen = false;
-  let documentToDelete: any = {};
+
+  $: areAllSelected =
+    documents && areArraysEqual(documentIDs, Array.from($appStore.app.selectedDocumentIDs.keys()));
+
+  $: selectedDocuments =
+    $appStore.app.documents?.filter((d: any) => $appStore.app.selectedDocumentIDs.has(d.id)) ?? [];
+  $: allowedWorkflowStateChanges = getAllowedWorkflowChanges(
+    selectedDocuments?.map((d: any) => d.state) ?? []
+  );
+  $: workflowOptions = allowedWorkflowStateChanges.map((c) => {
+    return { name: c.to, value: c.to };
+  });
+
+  let selectedState: any;
+  let dropdownOpen = false;
+  const selectClass =
+    "max-w-96 w-fit text-gray-900 disabled:text-gray-400 bg-gray-50 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:disabled:text-gray-500 dark:focus:ring-primary-500 dark:focus:border-primary-500";
+
+  const changeWorkflowState = async () => {
+    if (!selectedDocuments || selectedDocuments.length < 0) return;
+    const changes: any[] = [];
+    selectedDocuments?.forEach((doc: any) => {
+      changes.push({
+        state: selectedState,
+        publisher: doc.publisher,
+        tracking_id: doc.tracking_id
+      });
+    });
+    changeWorkflowStateError = null;
+    const response = await updateMultipleStates(changes);
+    if (response.ok) {
+      fetchData();
+      dropdownOpen = false;
+      selectedState = undefined;
+    } else if (response.error) {
+      changeWorkflowStateError = getErrorDetails("Couldn't change state.", response);
+    }
+  };
 
   let innerWidth = 0;
 
@@ -152,6 +194,8 @@
   $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
   export async function fetchData(): Promise<void> {
+    appStore.setDocuments([]);
+    appStore.clearSelectedDocumentIDs();
     if (query !== prevQuery) {
       restorePosition();
       savePosition();
@@ -200,6 +244,7 @@
       } else {
         ({ count, documents } = response.content);
       }
+      appStore.setDocuments(documents);
     } else if (response.error) {
       error =
         response.error === "400"
@@ -256,22 +301,7 @@
     fetchData();
   };
 
-  const deleteDocument = async () => {
-    let url = "";
-    if (tableType === SEARCHTYPES.ADVISORY) {
-      url = encodeURI(
-        `/api/advisory/${documentToDelete.publisher}/${documentToDelete.tracking_id}`
-      );
-    } else {
-      url = encodeURI(`/api/documents/${documentToDelete.id}`);
-    }
-    const response = await request(url, "DELETE");
-    if (response.error) {
-      error = getErrorDetails(
-        `Could not delete ${tableType === SEARCHTYPES.ADVISORY ? "advisory" : "document"}`,
-        response
-      );
-    }
+  const onDeleted = async () => {
     await fetchData();
     first();
   };
@@ -295,54 +325,103 @@
 
 <svelte:window bind:innerWidth />
 
-<Modal size="xs" title={documentToDelete.title} bind:open={deleteModalOpen} autoclose outsideclose>
-  <div class="text-center">
-    <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-      Are you sure you want to delete this {tableType === SEARCHTYPES.ADVISORY
-        ? "advisory"
-        : "document"}?
-    </h3>
-    <Button
-      on:click={() => {
-        deleteDocument();
-      }}
-      color="red"
-      class="me-2">Yes, I'm sure</Button
-    >
-    <Button color="alternative">No, cancel</Button>
-  </div>
-</Modal>
+<DeleteModal
+  on:deleted={onDeleted}
+  documents={$appStore.app.documentsToDelete || []}
+  type={tableType}
+></DeleteModal>
 
-<div>
+<div class="flex-grow">
   <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
-      <div class="flex flex-row items-baseline">
-        <Label class="mr-3 text-nowrap"
-          >{query
-            ? "Matches per page"
-            : tableType === SEARCHTYPES.ADVISORY
-              ? "Advisories per page"
-              : tableType === SEARCHTYPES.DOCUMENT
-                ? "Documents per page"
-                : "Events per page"}</Label
-        >
-        <Select
-          size="sm"
-          id="pagecount"
-          class="mt-2 h-7 w-24 p-1 leading-3"
-          items={[
-            { name: "10", value: 10 },
-            { name: "25", value: 25 },
-            { name: "50", value: 50 },
-            { name: "100", value: 100 }
-          ]}
-          bind:value={limit}
-          on:change={() => {
-            offset = 0;
-            currentPage = 1;
-            fetchData();
-          }}
-        ></Select>
+      <div class="flex flex-row items-baseline gap-8">
+        {#if !appStore.isOnlySourceManager()}
+          <div class="flex items-center gap-2">
+            {#if appStore.isAdmin()}
+              <Button
+                on:click={() => {
+                  appStore.setDocumentsToDelete(selectedDocuments);
+                  appStore.setIsDeleteModalOpen(true);
+                }}
+                class="!p-2"
+                color="light"
+                disabled={!selectedDocuments || selectedDocuments.length === 0}
+              >
+                <i class="bx bx-trash text-red-600"></i>
+              </Button>
+            {/if}
+            <Button
+              class="!p-2"
+              color="light"
+              disabled={workflowOptions.length === 0}
+              id="state-icon"
+            >
+              <i class="bx bx-git-commit text-black-700"></i>
+            </Button>
+            <Dropdown
+              bind:open={dropdownOpen}
+              on:show={(event) => {
+                if (!event.detail) {
+                  changeWorkflowStateError = null;
+                }
+              }}
+              placement="top-start"
+              triggeredBy="#state-icon"
+              class="w-full max-w-sm divide-y divide-gray-100 rounded p-4 shadow dark:divide-gray-700 dark:bg-gray-800"
+              containerClass="divide-y z-50 border border-gray-300"
+            >
+              <div class="flex flex-col gap-3">
+                <div class="flex w-fit flex-col gap-3">
+                  <Label>
+                    <span>New workflow state</span>
+                    <Select
+                      bind:value={selectedState}
+                      items={workflowOptions}
+                      placeholder="Choose..."
+                      defaultClass={selectClass}
+                    ></Select>
+                  </Label>
+                  <Button
+                    on:click={() => {
+                      changeWorkflowState();
+                    }}
+                    disabled={!selectedState}
+                    class="h-fit">Change</Button
+                  >
+                </div>
+                <ErrorMessage error={changeWorkflowStateError}></ErrorMessage>
+              </div>
+            </Dropdown>
+          </div>
+        {/if}
+        <div class="flex items-baseline gap-2">
+          <Select
+            size="md"
+            id="pagecount"
+            class="mt-2 h-8 w-24 !p-2 leading-3"
+            items={[
+              { name: "10", value: 10 },
+              { name: "25", value: 25 },
+              { name: "50", value: 50 },
+              { name: "100", value: 100 }
+            ]}
+            bind:value={limit}
+            on:change={() => {
+              offset = 0;
+              currentPage = 1;
+              fetchData();
+            }}
+          ></Select>
+          <Label class="mr-3 text-nowrap"
+            >{query
+              ? "Matches per page"
+              : tableType === SEARCHTYPES.ADVISORY
+                ? "Advisories per page"
+                : tableType === SEARCHTYPES.DOCUMENT
+                  ? "Documents per page"
+                  : "Events per page"}</Label
+          >
+        </div>
       </div>
       <div>
         <div class="mx-3 flex flex-row">
@@ -403,6 +482,24 @@
       <a href={anchorLink}>
         <Table style="w-auto" hoverable={true} noborder={true}>
           <TableHead class="cursor-pointer">
+            {#if !appStore.isOnlySourceManager()}
+              <TableHeadCell padding="px-0">
+                <CCheckbox
+                  checked={areAllSelected}
+                  on:click={(event) => {
+                    const isChecked = event.detail.target.checked;
+                    if (isChecked) {
+                      for (let i = 0; i < documentIDs.length; i++) {
+                        appStore.addSelectedDocumentID(documentIDs[i]);
+                      }
+                    } else {
+                      appStore.clearSelectedDocumentIDs();
+                    }
+                  }}
+                ></CCheckbox>
+              </TableHeadCell>
+            {/if}
+            <TableHeadCell padding="px-0"></TableHeadCell>
             {#each columns as column}
               {#if column !== searchColumnName}
                 <TableHeadCell
@@ -422,9 +519,6 @@
                 >
               {/if}
             {/each}
-            {#if isAdmin}
-              <TableHeadCell padding={tablePadding}></TableHeadCell>
-            {/if}
           </TableHead>
           <TableBody>
             {#each documents as item, i}
@@ -440,6 +534,66 @@
                   anchorLink = null;
                 }}
               >
+                {#if !appStore.isOnlySourceManager()}
+                  <TableBodyCell tdClass="px-0">
+                    <CCheckbox
+                      checked={$appStore.app.selectedDocumentIDs.has(item.id)}
+                      on:click={(event) => {
+                        const isChecked = event.detail.target.checked;
+                        if (isChecked) {
+                          appStore.addSelectedDocumentID(item.id);
+                        } else {
+                          appStore.removeSelectedDocumentID(item.id);
+                        }
+                      }}
+                    ></CCheckbox>
+                  </TableBodyCell>
+                {/if}
+                <TableBodyCell tdClass="px-0">
+                  <div class="flex items-center">
+                    {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
+                      <CIconButton
+                        on:click={() => {
+                          appStore.setDocumentsToDelete([item]);
+                          appStore.setIsDeleteModalOpen(true);
+                        }}
+                        title={`delete ${item.tracking_id}`}
+                        icon="trash"
+                        color="red"
+                      ></CIconButton>
+                    {/if}
+                    <button
+                      on:click|stopPropagation={(e) => {
+                        if ($appStore.app.diff.docA_ID) {
+                          appStore.setDiffDocB_ID(item.id);
+                        } else {
+                          appStore.setDiffDocA_ID(item.id);
+                        }
+                        appStore.openToolbox();
+                        e.preventDefault();
+                      }}
+                      class:invisible={!$appStore.app.isToolboxOpen &&
+                        $appStore.app.diff.docA_ID === undefined &&
+                        $appStore.app.diff.docB_ID === undefined}
+                      disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
+                        $appStore.app.diff.docB_ID === item.id.toString() ||
+                        disableDiffButtons}
+                      class="min-w-[26px] p-1"
+                      title={`compare ${item.tracking_id}`}
+                    >
+                      <Img
+                        src="plus-minus.svg"
+                        class={`${
+                          $appStore.app.diff.docA_ID === item.id.toString() ||
+                          $appStore.app.diff.docB_ID === item.id.toString() ||
+                          disableDiffButtons
+                            ? "invert-[70%]"
+                            : ""
+                        } min-h-4`}
+                      />
+                    </button>
+                  </div>
+                </TableBodyCell>
                 {#each columns as column}
                   {#if column !== searchColumnName}
                     {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
@@ -537,48 +691,6 @@
                     {/if}
                   {/if}
                 {/each}
-                <TableBodyCell {tdClass}>
-                  {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
-                    <CIconButton
-                      on:click={() => {
-                        documentToDelete = item;
-                        deleteModalOpen = true;
-                      }}
-                      title={`delete ${item.tracking_id}`}
-                      icon="trash"
-                      color="red"
-                    ></CIconButton>
-                  {/if}
-                  <button
-                    on:click|stopPropagation={(e) => {
-                      if ($appStore.app.diff.docA_ID) {
-                        appStore.setDiffDocB_ID(item.id);
-                      } else {
-                        appStore.setDiffDocA_ID(item.id);
-                      }
-                      appStore.openDiffBox();
-                      e.preventDefault();
-                    }}
-                    class:invisible={!$appStore.app.diff.isDiffBoxOpen &&
-                      $appStore.app.diff.docA_ID === undefined &&
-                      $appStore.app.diff.docB_ID === undefined}
-                    disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
-                      $appStore.app.diff.docB_ID === item.id.toString() ||
-                      disableDiffButtons}
-                    title={`compare ${item.tracking_id}`}
-                  >
-                    <Img
-                      src="plus-minus.svg"
-                      class={`${
-                        $appStore.app.diff.docA_ID === item.id.toString() ||
-                        $appStore.app.diff.docB_ID === item.id.toString() ||
-                        disableDiffButtons
-                          ? "invert-[70%]"
-                          : ""
-                      } min-h-4 min-w-4`}
-                    />
-                  </button>
-                </TableBodyCell>
               </tr>
               {#if item[searchColumnName]}
                 <TableBodyRow class="border border-y-indigo-500/100 bg-white">

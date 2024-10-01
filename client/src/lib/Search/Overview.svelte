@@ -15,10 +15,10 @@
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
-  import DiffSelection from "$lib/Diff/DiffSelection.svelte";
   import { appStore } from "$lib/store";
   import { querystring } from "svelte-spa-router";
   import { parse } from "qs";
+  import Toolbox from "./Toolbox.svelte";
 
   let searchTerm: string | null;
   let advisoryTable: any;
@@ -208,5 +208,5 @@
 {/if}
 
 {#if appStore.isEditor() || appStore.isReviewer()}
-  <DiffSelection></DiffSelection>
+  <Toolbox></Toolbox>
 {/if}
