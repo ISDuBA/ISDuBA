@@ -47,18 +47,17 @@
   $: docA_ID = $appStore.app.diff.docA_ID;
   $: docB_ID = $appStore.app.diff.docB_ID;
   $: if (docA_ID || docB_ID) getDocuments();
-  $: isDiffBoxOpen = $appStore.app.diff.isDiffBoxOpen;
-  $: if (isDiffBoxOpen) {
+  $: docA = $appStore.app.diff.docA;
+  $: docB = $appStore.app.diff.docB;
+  $: isToolboxOpen = $appStore.app.isToolboxOpen;
+  $: if (isToolboxOpen) {
     getTempDocuments();
     getDocuments();
   }
-  $: disableDiffButtons =
-    $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
+  $: disableDiffButtons = docA_ID !== undefined && docB_ID !== undefined;
 
   let freeTempDocuments = 0;
   let tempDocuments: any[] = [];
-  let docA: any;
-  let docB: any;
   let loadDocumentsErrorMessage: ErrorDetails | null;
   let tempDocErrorMessage: ErrorDetails | null;
   let loadTempDocsErrorMessage: ErrorDetails | null;
@@ -137,10 +136,13 @@
 
   const getDocuments = async () => {
     loadDocumentsErrorMessage = null;
-    if ($appStore.app.diff.docA_ID) {
+    if (docA_ID) {
       const responseDocA = await getDocument("A");
       if (responseDocA.ok) {
-        if ($appStore.app.diff.docA_ID) docA = await responseDocA.content;
+        if (docA_ID) {
+          const content = await responseDocA.content;
+          appStore.setDiffDocA(content);
+        }
       } else if (responseDocA.error) {
         if (responseDocA.error === "404") {
           appStore.setDiffDocA_ID(undefined);
@@ -152,12 +154,15 @@
         }
       }
     } else {
-      docA = undefined;
+      appStore.setDiffDocA(undefined);
     }
-    if ($appStore.app.diff.docB_ID) {
+    if (docB_ID) {
       const responseDocB = await getDocument("B");
       if (responseDocB.ok) {
-        if ($appStore.app.diff.docB_ID) docB = await responseDocB.content;
+        if (docB_ID) {
+          const content = await responseDocB.content;
+          appStore.setDiffDocB(content);
+        }
       } else if (responseDocB.error) {
         if (responseDocB.error === "404") {
           appStore.setDiffDocB_ID(undefined);
@@ -169,12 +174,12 @@
         }
       }
     } else {
-      docB = undefined;
+      appStore.setDiffDocB(undefined);
     }
   };
 
   const getDocument = async (letter: string) => {
-    const docID = letter === "A" ? $appStore.app.diff.docA_ID : $appStore.app.diff.docB_ID;
+    const docID = letter === "A" ? docA_ID : docB_ID;
     const endpoint = docID?.startsWith("tempdocument") ? "tempdocuments" : "documents";
     const id = docID?.startsWith("tempdocument") ? docID.replace("tempdocument", "") : docID;
     return request(`/api/${endpoint}/${id}`, "GET");
@@ -209,9 +214,9 @@
     resetTempDocsErrorMessages();
     const response = await request(`/api/tempdocuments/${id}`, "DELETE");
     if (response.ok) {
-      if ($appStore.app.diff.docA_ID === `tempdocument${id}`) {
+      if (docA_ID === `tempdocument${id}`) {
         appStore.setDiffDocA_ID(undefined);
-      } else if ($appStore.app.diff.docB_ID === `tempdocument${id}`) {
+      } else if (docB_ID === `tempdocument${id}`) {
         appStore.setDiffDocB_ID(undefined);
       }
       getTempDocuments();
@@ -221,9 +226,9 @@
   };
 
   const deleteExpiredDocFromStore = (id: number) => {
-    if ($appStore.app.diff.docA_ID === `tempdocument${id}`) {
+    if (docA_ID === `tempdocument${id}`) {
       appStore.setDiffDocA_ID(undefined);
-    } else if ($appStore.app.diff.docB_ID === `tempdocument${id}`) {
+    } else if (docB_ID === `tempdocument${id}`) {
       appStore.setDiffDocB_ID(undefined);
     }
   };
@@ -244,214 +249,167 @@
   };
 </script>
 
-<div
-  class="fixed bottom-0 left-1 right-1 flex flex-col items-end justify-center lg:left-auto lg:right-20"
->
-  <Button
-    on:click={appStore.toggleDiffBox}
-    class="rounded-none rounded-t-md border-b-0"
-    color="light"
-  >
-    <span class="me-2"
-      >Diff {docA
-        ? `${docA?.document?.title.substring(0, 25)}${docA?.document?.title.length > 25 ? "..." : ""}`
-        : ""}
-      {docB
-        ? ` - ${docB?.document?.title.substring(0, 25)}${docB?.document?.title.length > 25 ? "..." : ""}`
-        : ""}</span
-    >
-    <Img src="plus-minus.svg" class="h-4 min-w-4" />
-  </Button>
-  {#if $appStore.app.diff.isDiffBoxOpen}
-    <div
-      class="flex w-full max-w-[700pt] items-stretch gap-6 rounded-tl-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800 lg:w-auto"
-    >
-      <div class="flex w-full flex-col">
-        <div class="mb-4 flex flex-col justify-between gap-2 lg:flex-row">
-          <div class="flex items-start gap-1">
-            <div
-              class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3 lg:w-96 lg:max-w-96"
-            >
-              {#if docA}
-                <div>
-                  <Button
-                    on:click={() => {
-                      appStore.setDiffDocA_ID(undefined);
-                      docA = undefined;
-                    }}
-                    color="light"
-                    class="border-0 p-1"
-                  >
-                    <i class="bx bx-x text-lg"></i>
-                  </Button>
-                </div>
-                <div class="lg:flex lg:flex-col">
-                  <div>{docA.document.tracking.id}</div>
-                  <div class="md:mb-1" title={docA.document.title}>
-                    {docA.document.title}
-                  </div>
-                  <span class="text-sm text-gray-600"
-                    >{getPublisher(docA.document.publisher.name)}</span
-                  >
-                  <span class="text-sm text-gray-600"
-                    >Version: {docA.document.tracking.version}</span
-                  >
-                </div>
-              {:else}
-                <div class="flex flex-col gap-2">
-                  <P italic>Select a document or upload local ones.</P>
-                </div>
-              {/if}
-            </div>
-          </div>
-          <div class="flex gap-1">
-            <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 lg:w-96 lg:max-w-96">
-              {#if docB}
-                <div>
-                  <Button
-                    on:click={() => {
-                      appStore.setDiffDocB_ID(undefined);
-                      docB = undefined;
-                    }}
-                    color="light"
-                    class="border-0 p-1"
-                  >
-                    <i class="bx bx-x text-lg"></i>
-                  </Button>
-                </div>
-                <div class="lg:flex lg:flex-col">
-                  <div>{docB.document.tracking.id}</div>
-                  <div class="md:mb-1" title={docB.document.title}>
-                    {docB.document.title}
-                  </div>
-                  <span class="text-sm text-gray-600"
-                    >{getPublisher(docB.document.publisher.name)}</span
-                  >
-                  <span class="text-sm text-gray-600"
-                    >Version: {docB.document.tracking.version}</span
-                  >
-                </div>
-              {:else}
-                <div
-                  class:flex={true}
-                  class:flex-col={true}
-                  class:gap-2={true}
-                  class:invisible={!docA}
-                >
-                  <P italic>Select a document or upload local ones.</P>
-                </div>
-              {/if}
-            </div>
-          </div>
-          <div class="flex h-full items-start">
+<div class="flex w-full flex-col">
+  <div class="mb-4 flex flex-col justify-between gap-2 lg:flex-row">
+    <div class="flex items-start gap-1">
+      <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3 lg:w-96 lg:max-w-96">
+        {#if docA}
+          <div>
             <Button
-              on:click={() => push("/diff")}
-              disabled={!docA ||
-                !docB ||
-                !$appStore.app.diff.docA_ID ||
-                !$appStore.app.diff.docB_ID}
-              size="sm"
-              class="flex gap-x-2"
+              on:click={() => {
+                appStore.setDiffDocA_ID(undefined);
+                appStore.setDiffDocA(undefined);
+              }}
+              color="light"
+              class="border-0 p-1"
             >
-              <Img src="plus-minus.svg" class="w-5 invert" />
-              <span>Compare</span>
+              <i class="bx bx-x text-lg"></i>
             </Button>
           </div>
-        </div>
-        <ErrorMessage error={loadDocumentsErrorMessage}></ErrorMessage>
-        <div class="flex flex-col">
-          {#if tempDocuments?.length > 0}
-            <span class="mb-1">Temporary documents:</span>
-            <Table>
-              <TableHead>
-                <TableHeadCell {padding}></TableHeadCell>
-                <TableHeadCell {padding}>Tracking ID</TableHeadCell>
-                <TableHeadCell {padding}>Publisher</TableHeadCell>
-                <TableHeadCell {padding}>Title</TableHeadCell>
-                <TableHeadCell {padding}>Expires in</TableHeadCell>
-                <TableHeadCell {padding}>File name</TableHeadCell>
-              </TableHead>
-              <TableBody>
-                {#each tempDocuments as document}
-                  {@const doc = document.document}
-                  {@const tempDocID = `tempdocument${document.file.id}`}
-                  <TableBodyRow>
-                    <TableBodyCell {tdClass}>
-                      <div class="flex items-center">
-                        <CIconButton
-                          on:click={() => {
-                            deleteTempDocument(document.file.id);
-                          }}
-                          color="red"
-                          title={`delete ${doc.title} - ${doc.tracking.id}`}
-                          icon="trash"
-                        ></CIconButton>
-                        <button
-                          on:click|stopPropagation={(e) => {
-                            if ($appStore.app.diff.docA_ID) {
-                              appStore.setDiffDocB_ID(tempDocID);
-                            } else {
-                              appStore.setDiffDocA_ID(tempDocID);
-                            }
-                            e.preventDefault();
-                          }}
-                          class:invisible={!$appStore.app.diff.isDiffBoxOpen}
-                          disabled={$appStore.app.diff.docA_ID === tempDocID ||
-                            $appStore.app.diff.docB_ID === tempDocID ||
-                            disableDiffButtons}
-                          title={`compare ${doc.title} - ${doc.tracking.id}`}
-                        >
-                          <Img
-                            src="plus-minus.svg"
-                            class={`${
-                              $appStore.app.diff.docA_ID === tempDocID ||
-                              $appStore.app.diff.docB_ID === tempDocID ||
-                              disableDiffButtons
-                                ? "invert-[70%]"
-                                : ""
-                            } min-h-4 min-w-6`}
-                          />
-                        </button>
-                      </div>
-                    </TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
-                    <TableBodyCell {tdClass}>
-                      <span
-                        class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
-                        title={doc.title}>{doc.title}</span
-                      >
-                    </TableBodyCell>
-                    <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
-                    <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
-                  </TableBodyRow>
-                {/each}
-                <TableBodyRow></TableBodyRow>
-              </TableBody>
-            </Table>
-          {/if}
-          {#if freeTempDocuments}
-            <Dropzone
-              on:drop={dropHandle}
-              on:dragover={(event) => {
-                event.preventDefault();
-              }}
-              on:change={handleChange}
-              multiple
-              class="mb-2 ms-1 h-16"
-            >
-              <i class="bx bx-upload text-xl text-gray-500"></i>
-              <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                Upload temporary documents ({freeTempDocuments} free {freeTempDocuments > 1
-                  ? "slots"
-                  : "slot"} left)
-              </p>
-            </Dropzone>
-          {/if}
-          <ErrorMessage error={tempDocErrorMessage}></ErrorMessage>
-          <ErrorMessage error={loadTempDocsErrorMessage}></ErrorMessage>
-        </div>
+          <div class="lg:flex lg:flex-col">
+            <div>{docA.document.tracking.id}</div>
+            <div class="md:mb-1" title={docA.document.title}>
+              {docA.document.title}
+            </div>
+            <span class="text-sm text-gray-600">{getPublisher(docA.document.publisher.name)}</span>
+            <span class="text-sm text-gray-600">Version: {docA.document.tracking.version}</span>
+          </div>
+        {:else}
+          <div class="flex flex-col gap-2">
+            <P italic>Select a document or upload local ones.</P>
+          </div>
+        {/if}
       </div>
     </div>
-  {/if}
+    <div class="flex gap-1">
+      <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 lg:w-96 lg:max-w-96">
+        {#if docB}
+          <div>
+            <Button
+              on:click={() => {
+                appStore.setDiffDocB_ID(undefined);
+                appStore.setDiffDocB(undefined);
+              }}
+              color="light"
+              class="border-0 p-1"
+            >
+              <i class="bx bx-x text-lg"></i>
+            </Button>
+          </div>
+          <div class="lg:flex lg:flex-col">
+            <div>{docB.document.tracking.id}</div>
+            <div class="md:mb-1" title={docB.document.title}>
+              {docB.document.title}
+            </div>
+            <span class="text-sm text-gray-600">{getPublisher(docB.document.publisher.name)}</span>
+            <span class="text-sm text-gray-600">Version: {docB.document.tracking.version}</span>
+          </div>
+        {:else}
+          <div class:flex={true} class:flex-col={true} class:gap-2={true} class:invisible={!docA}>
+            <P italic>Select a document or upload local ones.</P>
+          </div>
+        {/if}
+      </div>
+    </div>
+    <div class="flex h-full items-start">
+      <Button
+        on:click={() => push("/diff")}
+        disabled={!docA || !docB || !docA_ID || !docB_ID}
+        size="sm"
+        class="flex gap-x-2"
+      >
+        <Img src="plus-minus.svg" class="w-5 invert" />
+        <span>Compare</span>
+      </Button>
+    </div>
+  </div>
+  <ErrorMessage error={loadDocumentsErrorMessage}></ErrorMessage>
+  <div class="flex flex-col">
+    {#if tempDocuments?.length > 0}
+      <span class="mb-1">Temporary documents:</span>
+      <Table>
+        <TableHead>
+          <TableHeadCell {padding}></TableHeadCell>
+          <TableHeadCell {padding}>Tracking ID</TableHeadCell>
+          <TableHeadCell {padding}>Publisher</TableHeadCell>
+          <TableHeadCell {padding}>Title</TableHeadCell>
+          <TableHeadCell {padding}>Expires in</TableHeadCell>
+          <TableHeadCell {padding}>File name</TableHeadCell>
+        </TableHead>
+        <TableBody>
+          {#each tempDocuments as document}
+            {@const doc = document.document}
+            {@const tempDocID = `tempdocument${document.file.id}`}
+            <TableBodyRow>
+              <TableBodyCell {tdClass}>
+                <div class="flex items-center">
+                  <CIconButton
+                    on:click={() => {
+                      deleteTempDocument(document.file.id);
+                    }}
+                    color="red"
+                    title={`delete ${doc.title} - ${doc.tracking.id}`}
+                    icon="trash"
+                  ></CIconButton>
+                  <button
+                    on:click|stopPropagation={(e) => {
+                      if (docA_ID) {
+                        appStore.setDiffDocB_ID(tempDocID);
+                      } else {
+                        appStore.setDiffDocA_ID(tempDocID);
+                      }
+                      e.preventDefault();
+                    }}
+                    class:invisible={!$appStore.app.isToolboxOpen}
+                    disabled={docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons}
+                    title={`compare ${doc.title} - ${doc.tracking.id}`}
+                  >
+                    <Img
+                      src="plus-minus.svg"
+                      class={`${
+                        docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons
+                          ? "invert-[70%]"
+                          : ""
+                      } min-h-4 min-w-6`}
+                    />
+                  </button>
+                </div>
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
+              <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
+              <TableBodyCell {tdClass}>
+                <span
+                  class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
+                  title={doc.title}>{doc.title}</span
+                >
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
+              <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
+            </TableBodyRow>
+          {/each}
+          <TableBodyRow></TableBodyRow>
+        </TableBody>
+      </Table>
+    {/if}
+    {#if freeTempDocuments}
+      <Dropzone
+        on:drop={dropHandle}
+        on:dragover={(event) => {
+          event.preventDefault();
+        }}
+        on:change={handleChange}
+        multiple
+        class="mb-2 ms-1 h-16"
+      >
+        <i class="bx bx-upload text-xl text-gray-500"></i>
+        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+          Upload temporary documents ({freeTempDocuments} free {freeTempDocuments > 1
+            ? "slots"
+            : "slot"} left)
+        </p>
+      </Dropzone>
+    {/if}
+    <ErrorMessage error={tempDocErrorMessage}></ErrorMessage>
+    <ErrorMessage error={loadTempDocsErrorMessage}></ErrorMessage>
+  </div>
 </div>

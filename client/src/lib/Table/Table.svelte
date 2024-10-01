@@ -22,8 +22,6 @@
     TableHead,
     TableHeadCell,
     Table,
-    Modal,
-    Button,
     Img
   } from "flowbite-svelte";
   import { tdClass, tablePadding, title, publisher, searchColumnName } from "$lib/Table/defaults";
@@ -38,6 +36,9 @@
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import { SEARCHTYPES } from "$lib/Queries/query";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
+  import { areArraysEqual } from "$lib/utils";
+  import DeleteModal from "./DeleteModal.svelte";
 
   let openRow: number | null;
   let abortController: AbortController;
@@ -50,6 +51,7 @@
   let count = 0;
   let currentPage = 1;
   let documents: any = null;
+  $: documentIDs = documents?.map((d: any) => d.id) ?? [];
   let loading = false;
   let error: ErrorDetails | null;
   let prevQuery = "";
@@ -64,8 +66,9 @@
     $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
 
   let anchorLink: string | null;
-  let deleteModalOpen = false;
-  let documentToDelete: any = {};
+
+  $: areAllSelected =
+    documents && areArraysEqual(documentIDs, Array.from($appStore.app.selectedDocumentIDs.keys()));
 
   let innerWidth = 0;
 
@@ -152,6 +155,8 @@
   $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
 
   export async function fetchData(): Promise<void> {
+    appStore.setDocuments([]);
+    appStore.clearSelectedDocumentIDs();
     if (query !== prevQuery) {
       restorePosition();
       savePosition();
@@ -200,6 +205,7 @@
       } else {
         ({ count, documents } = response.content);
       }
+      appStore.setDocuments(documents);
     } else if (response.error) {
       error =
         response.error === "400"
@@ -256,22 +262,7 @@
     fetchData();
   };
 
-  const deleteDocument = async () => {
-    let url = "";
-    if (tableType === SEARCHTYPES.ADVISORY) {
-      url = encodeURI(
-        `/api/advisory/${documentToDelete.publisher}/${documentToDelete.tracking_id}`
-      );
-    } else {
-      url = encodeURI(`/api/documents/${documentToDelete.id}`);
-    }
-    const response = await request(url, "DELETE");
-    if (response.error) {
-      error = getErrorDetails(
-        `Could not delete ${tableType === SEARCHTYPES.ADVISORY ? "advisory" : "document"}`,
-        response
-      );
-    }
+  const onDeleted = async () => {
     await fetchData();
     first();
   };
@@ -295,25 +286,13 @@
 
 <svelte:window bind:innerWidth />
 
-<Modal size="xs" title={documentToDelete.title} bind:open={deleteModalOpen} autoclose outsideclose>
-  <div class="text-center">
-    <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-      Are you sure you want to delete this {tableType === SEARCHTYPES.ADVISORY
-        ? "advisory"
-        : "document"}?
-    </h3>
-    <Button
-      on:click={() => {
-        deleteDocument();
-      }}
-      color="red"
-      class="me-2">Yes, I'm sure</Button
-    >
-    <Button color="alternative">No, cancel</Button>
-  </div>
-</Modal>
+<DeleteModal
+  on:deleted={onDeleted}
+  documents={$appStore.app.documentsToDelete || []}
+  type={tableType}
+></DeleteModal>
 
-<div>
+<div class="flex-grow">
   <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
       <div class="flex flex-row items-baseline">
@@ -403,6 +382,22 @@
       <a href={anchorLink}>
         <Table style="w-auto" hoverable={true} noborder={true}>
           <TableHead class="cursor-pointer">
+            <TableHeadCell padding="px-0">
+              <CCheckbox
+                checked={areAllSelected}
+                on:click={(event) => {
+                  const isChecked = event.detail.target.checked;
+                  if (isChecked) {
+                    for (let i = 0; i < documentIDs.length; i++) {
+                      appStore.addSelectedDocumentID(documentIDs[i]);
+                    }
+                  } else {
+                    appStore.clearSelectedDocumentIDs();
+                  }
+                }}
+              ></CCheckbox>
+            </TableHeadCell>
+            <TableHeadCell padding="px-0"></TableHeadCell>
             {#each columns as column}
               {#if column !== searchColumnName}
                 <TableHeadCell
@@ -422,9 +417,6 @@
                 >
               {/if}
             {/each}
-            {#if isAdmin}
-              <TableHeadCell padding={tablePadding}></TableHeadCell>
-            {/if}
           </TableHead>
           <TableBody>
             {#each documents as item, i}
@@ -440,6 +432,64 @@
                   anchorLink = null;
                 }}
               >
+                <TableBodyCell tdClass="px-0">
+                  <CCheckbox
+                    checked={$appStore.app.selectedDocumentIDs.has(item.id)}
+                    on:click={(event) => {
+                      const isChecked = event.detail.target.checked;
+                      if (isChecked) {
+                        appStore.addSelectedDocumentID(item.id);
+                      } else {
+                        appStore.removeSelectedDocumentID(item.id);
+                      }
+                    }}
+                  ></CCheckbox>
+                </TableBodyCell>
+                <TableBodyCell tdClass="px-0">
+                  <div class="flex items-center">
+                    {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
+                      <CIconButton
+                        on:click={() => {
+                          appStore.setDocumentsToDelete([item]);
+                          appStore.setIsDeleteModalOpen(true);
+                        }}
+                        title={`delete ${item.tracking_id}`}
+                        icon="trash"
+                        color="red"
+                      ></CIconButton>
+                    {/if}
+                    <button
+                      on:click|stopPropagation={(e) => {
+                        if ($appStore.app.diff.docA_ID) {
+                          appStore.setDiffDocB_ID(item.id);
+                        } else {
+                          appStore.setDiffDocA_ID(item.id);
+                        }
+                        appStore.openToolbox();
+                        e.preventDefault();
+                      }}
+                      class:invisible={!$appStore.app.isToolboxOpen &&
+                        $appStore.app.diff.docA_ID === undefined &&
+                        $appStore.app.diff.docB_ID === undefined}
+                      disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
+                        $appStore.app.diff.docB_ID === item.id.toString() ||
+                        disableDiffButtons}
+                      class="min-w-[26px] p-1"
+                      title={`compare ${item.tracking_id}`}
+                    >
+                      <Img
+                        src="plus-minus.svg"
+                        class={`${
+                          $appStore.app.diff.docA_ID === item.id.toString() ||
+                          $appStore.app.diff.docB_ID === item.id.toString() ||
+                          disableDiffButtons
+                            ? "invert-[70%]"
+                            : ""
+                        } min-h-4`}
+                      />
+                    </button>
+                  </div>
+                </TableBodyCell>
                 {#each columns as column}
                   {#if column !== searchColumnName}
                     {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
@@ -537,48 +587,6 @@
                     {/if}
                   {/if}
                 {/each}
-                <TableBodyCell {tdClass}>
-                  {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
-                    <CIconButton
-                      on:click={() => {
-                        documentToDelete = item;
-                        deleteModalOpen = true;
-                      }}
-                      title={`delete ${item.tracking_id}`}
-                      icon="trash"
-                      color="red"
-                    ></CIconButton>
-                  {/if}
-                  <button
-                    on:click|stopPropagation={(e) => {
-                      if ($appStore.app.diff.docA_ID) {
-                        appStore.setDiffDocB_ID(item.id);
-                      } else {
-                        appStore.setDiffDocA_ID(item.id);
-                      }
-                      appStore.openDiffBox();
-                      e.preventDefault();
-                    }}
-                    class:invisible={!$appStore.app.diff.isDiffBoxOpen &&
-                      $appStore.app.diff.docA_ID === undefined &&
-                      $appStore.app.diff.docB_ID === undefined}
-                    disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
-                      $appStore.app.diff.docB_ID === item.id.toString() ||
-                      disableDiffButtons}
-                    title={`compare ${item.tracking_id}`}
-                  >
-                    <Img
-                      src="plus-minus.svg"
-                      class={`${
-                        $appStore.app.diff.docA_ID === item.id.toString() ||
-                        $appStore.app.diff.docB_ID === item.id.toString() ||
-                        disableDiffButtons
-                          ? "invert-[70%]"
-                          : ""
-                      } min-h-4 min-w-4`}
-                    />
-                  </button>
-                </TableBodyCell>
               </tr>
               {#if item[searchColumnName]}
                 <TableBodyRow class="border border-y-indigo-500/100 bg-white">

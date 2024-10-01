@@ -11,3 +11,17 @@
 export const truncate = (str: string, n: number) => {
   return str.length > n ? str.slice(0, n - 1) + "…" : str;
 };
+
+export const areArraysEqual = (
+  a: (number | string)[],
+  b: (number | string)[],
+  sameOrder: boolean = false
+) => {
+  if (a === b) return true;
+  if (a.length !== b.length || typeof a[0] !== typeof b[0]) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (sameOrder && a[i] !== b[i]) return false;
+    else if (!b.includes(a[i])) return false;
+  }
+  return true;
+};

@@ -244,7 +244,7 @@
   <div>
     <SideNav></SideNav>
   </div>
-  <main class="max-h-screen w-full overflow-auto bg-white p-6">
+  <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 pb-0">
     {#if $appStore.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}
