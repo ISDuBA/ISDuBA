@@ -68,7 +68,7 @@
 #                      or your administrator."""
 # aes_key = ""
 # timeout = "30s"
-# max_age = "0h"
+# max_age = "17520h"
 
 # [remote_validator]
 # url = ""
