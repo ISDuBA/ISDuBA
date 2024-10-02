@@ -75,7 +75,7 @@
     }
   };
 
-  $: if (columnList) {
+  $: if (columnList && isAllowedToEdit) {
     Sortable.create(columnList, {
       animation: 150,
       onEnd: elementDragEventUserQuery
