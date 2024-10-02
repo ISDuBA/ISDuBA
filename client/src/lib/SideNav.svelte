@@ -86,7 +86,7 @@
                 <i class="bx bx-spreadsheet"></i>
               </svelte:fragment>
             </SidebarItem>
-            {#if appStore.isEditor() || appStore.isSourceManager()}
+            {#if appStore.isEditor() || appStore.isSourceManager() || appStore.isImporter()}
               <SidebarItem class="px-6 py-2.5" label="Sources" href="/#/sources">
                 <svelte:fragment slot="icon">
                   <i class="bx bx-git-repo-forked"></i>
