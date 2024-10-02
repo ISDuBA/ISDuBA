@@ -181,7 +181,7 @@
                 {/if}
               </TableBodyCell>
               <TableBodyCell {tdClass}>
-                <span>{query.name ?? "-"}</span>
+                <span class="columnName">{query.name ?? "-"}</span>
               </TableBodyCell>
               <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
               <TableBodyCell {tdClass}>
