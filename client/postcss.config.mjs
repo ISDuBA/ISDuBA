@@ -6,10 +6,10 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-const tailwindcss = require("tailwindcss");
-const autoprefixer = require("autoprefixer");
+import tailwindcss from "tailwindcss";
+import autoprefixer from "autoprefixer";
 
-const config = {
+export default {
   plugins: [
     //Some plugins, like tailwindcss/nesting, need to run before Tailwind,
     tailwindcss(),
@@ -17,5 +17,3 @@ const config = {
     autoprefixer
   ]
 };
-
-module.exports = config;

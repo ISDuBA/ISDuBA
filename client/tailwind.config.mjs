@@ -7,7 +7,8 @@
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 /** @type {import('tailwindcss').Config}*/
-const config = {
+import flowbite from "flowbite/plugin";
+export default {
   content: [
     "./src/**/*.{html,js,svelte,ts}",
     "./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}"
@@ -36,7 +37,5 @@ const config = {
     }
   },
 
-  plugins: [require("flowbite/plugin")]
+  plugins: [flowbite]
 };
-
-module.exports = config;

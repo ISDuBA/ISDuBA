@@ -36,7 +36,7 @@
 
   $: if ($appStore.webview.doc) {
     const vulnerabilities = [...$appStore.webview.doc.productVulnerabilities];
-    // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
+
     headerColumns = vulnerabilities.shift()!;
     productLines = vulnerabilities;
   }
