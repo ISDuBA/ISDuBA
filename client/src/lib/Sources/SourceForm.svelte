@@ -234,6 +234,7 @@
       <Label>Private cert</Label>
       <div class="mb-3 inline-flex w-full">
         <Fileupload
+          value=""
           class="rounded-none rounded-l-lg"
           on:change={inputChange}
           bind:files={privateCert}
@@ -254,6 +255,7 @@
       <Label>Public cert</Label>
       <div class="mb-3 inline-flex w-full">
         <Fileupload
+          value=""
           class="rounded-none rounded-l-lg"
           on:change={inputChange}
           bind:files={publicCert}

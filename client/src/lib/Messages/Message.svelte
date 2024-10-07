@@ -44,7 +44,7 @@
 {#if error}
   <Toast
     color={coloryByType(error.type)}
-    bind:open
+    bind:toastStatus={open}
     transition={blur}
     on:close={() => {
       appStore.removeError(error.id);
