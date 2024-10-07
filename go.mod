@@ -20,7 +20,7 @@ require (
 	github.com/samber/slog-gin v1.13.5
 	github.com/sergi/go-diff v1.3.1
 	golang.org/x/oauth2 v0.23.0
-	golang.org/x/time v0.6.0
+	golang.org/x/time v0.7.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
