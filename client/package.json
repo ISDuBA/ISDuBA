@@ -36,7 +36,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.44.0",
     "flowbite": "^2.5.2",
-    "flowbite-svelte": "^0.46.18",
+    "flowbite-svelte": "^0.46.22",
     "husky": "^9.1.6",
     "postcss": "^8.4.47",
     "postcss-load-config": "^6.0.1",

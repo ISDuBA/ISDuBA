@@ -20,7 +20,7 @@
 <Card size="lg" class="h-96">
   <div class="flex flex-col">
     <Label class="pb-2">{label}</Label>
-    <Fileupload bind:files multiple />
+    <Fileupload value="" bind:files multiple />
     <Listgroup class="mt-6">
       {#if !files}
         <ListgroupItem>No files selected</ListgroupItem>

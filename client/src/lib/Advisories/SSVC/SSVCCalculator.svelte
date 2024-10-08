@@ -313,7 +313,16 @@
       <span class="pt-[0.3rem] font-mono text-gray-400" color="gray"
         >Step {currentStep + 1}/{steps.length}</span
       >
-      <StepIndicator size="h-1" currentStep={currentStep + 1} {steps} hideLabel />
+      <StepIndicator
+        glow={false}
+        completedCustom=""
+        currentCustom=""
+        color="primary"
+        size="h-1"
+        currentStep={currentStep + 1}
+        {steps}
+        hideLabel
+      />
       {#if steps[currentStep]}
         <div class="mb-2 mt-2">
           <span class="text-nowrap text-xl">{steps[currentStep]}</span>
