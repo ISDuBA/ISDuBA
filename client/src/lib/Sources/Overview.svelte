@@ -38,7 +38,9 @@
   }
 
   let sourceUpdate = setInterval(async () => {
-    getSources();
+    if (appStore.isEditor() || appStore.isSourceManager()) {
+      getSources();
+    }
   }, 30 * 1000);
 
   const getSources = async () => {
