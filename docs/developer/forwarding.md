@@ -37,3 +37,11 @@ an HTTP header with an API token for access.
 
 * The number of recieving systems is small and changes rarely.
 * It is okay for the _source-manager_ role to manage.
+
+The targets can be setup by a configuration file. It has to
+specify publishers, credentials, and an URL for each target.
+In the client the user interface must offer the user the possibility
+to select documents and to select targets to forward the documents.
+
+An open question is if the documents to forward have to fulfill
+the same criteria of quality as for the downloader.
