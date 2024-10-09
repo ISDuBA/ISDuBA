@@ -69,7 +69,7 @@ Together with the event, the source manager will then see it in their
 list of sources.
 (If we do check the sources for new feeds before we check the aggregators,
 there will not be new feeds from the aggregator for old source entries
-they the new feeds will have been found from the source entry check already.)
+as the new feeds will have been found from the source entry check already.)
 
 If an aggregator is inspected, we also check all source entries
 for each feed and lists those sources where the feed has a configuration.
