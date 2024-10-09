@@ -42,7 +42,7 @@
   const cellStyleKey = "w-40 py-0";
 </script>
 
-<div class="2xl:w-max">
+<div class="w-full">
   <div class="mb-3">
     <span class="text-xl">{title} </span>
     {#if $appStore.webview.doc?.status !== Status.final}

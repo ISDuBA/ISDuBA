@@ -9,7 +9,6 @@
 -->
 <script lang="ts">
   import { appStore } from "$lib/store";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import General from "$lib/Advisories/CSAFWebview/general/General.svelte";
   import ProductTree from "$lib/Advisories/CSAFWebview/producttree/ProductTree.svelte";
   import Vulnerabilities from "$lib/Advisories/CSAFWebview/vulnerabilities/Vulnerabilities.svelte";
@@ -20,8 +19,38 @@
   import References from "./references/References.svelte";
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
 
+  import { Tabs, TabItem } from "flowbite-svelte";
+
   export let position = "";
   export let basePath = "";
+
+  const sideScroll = "w-full overflow-y-auto h-max";
+  const webviewDataSections = [
+    "vulnerabilitiesOverview",
+    "productTree",
+    "vulnerabilities",
+    "notes",
+    "acknowledgements",
+    "references",
+    "revisionHistory"
+  ] as const;
+  type WebviewDataSections = (typeof webviewDataSections)[number];
+
+  let screenPhase: number = 0;
+  let placeToPhase = Object.fromEntries(
+    webviewDataSections.map((key) => [key, { show: false, phase: 9 }])
+  ) as { [place in WebviewDataSections]: { show: boolean; phase: number } };
+  let isCSAF: boolean = false;
+
+  let tabOpen: { [key in WebviewDataSections]: boolean } = {
+    vulnerabilitiesOverview: true,
+    productTree: false,
+    vulnerabilities: false,
+    notes: false,
+    acknowledgements: false,
+    references: false,
+    revisionHistory: false
+  };
 
   const updateUI = async () => {
     // This is a hack
@@ -37,106 +66,202 @@
     }, 300);
   };
 
+  const updateTabOpen = () => {
+    let openedTab: WebviewDataSections = (Object.entries(tabOpen).find((tab) => tab[1]) ?? [
+      "vulnerabilitiesOverview"
+    ])[0] as WebviewDataSections;
+    if (
+      openedTab !== "vulnerabilitiesOverview" &&
+      (screenPhase >= placeToPhase[openedTab].phase || !placeToPhase[openedTab].show)
+    ) {
+      tabOpen.vulnerabilitiesOverview = true;
+      tabOpen[openedTab] = false;
+    }
+  };
+
+  const updatePlaces = () => {
+    let phaseObject: { [key in WebviewDataSections]?: { show: boolean; phase: number } } = {};
+    let next = 1;
+    let increment = (place: WebviewDataSections, show: any) => {
+      phaseObject[place] = { show: !!show, phase: next };
+      if (show) {
+        next++;
+      }
+    };
+    increment(
+      "productTree",
+      $appStore.webview.doc && $appStore.webview.doc["isProductTreePresent"]
+    );
+    increment(
+      "vulnerabilities",
+      $appStore.webview.doc && $appStore.webview.doc["isVulnerabilitiesPresent"]
+    );
+    increment("notes", $appStore.webview.doc?.notes);
+    increment("acknowledgements", $appStore.webview.doc?.acknowledgements);
+    increment("references", $appStore.webview.doc && $appStore.webview.doc.references.length > 0);
+    increment("revisionHistory", $appStore.webview.doc?.isRevisionHistoryPresent);
+    placeToPhase = {
+      vulnerabilitiesOverview: { show: true, phase: next },
+      ...phaseObject
+    } as { [key in WebviewDataSections]: { show: boolean; phase: number } };
+    updateTabOpen();
+  };
+
+  const showTab = (place: { show: boolean; phase: number }) =>
+    place.show && place.phase > screenPhase;
+  const showArea = (place: { show: boolean; phase: number }) =>
+    place.show && place.phase <= screenPhase;
+
   $: if (position && position != "") {
     updateUI();
   }
 
   $: aliases = $appStore.webview.doc?.aliases;
 
-  $: isCSAF = !(
-    !$appStore.webview.doc?.isRevisionHistoryPresent &&
-    !$appStore.webview.doc?.isDocPresent &&
-    !$appStore.webview.doc?.isProductTreePresent &&
-    !$appStore.webview.doc?.isPublisherPresent &&
-    !$appStore.webview.doc?.isTLPPresent &&
-    !$appStore.webview.doc?.isTrackingPresent &&
-    !$appStore.webview.doc?.isVulnerabilitiesPresent
-  );
+  $: innerWidth = 0;
+  $: {
+    let oldPhase = screenPhase;
+    screenPhase = Math.max(0, Math.floor(innerWidth / 480 - 2));
+    if (oldPhase !== screenPhase) {
+      updatePlaces();
+    }
+  }
+  $: {
+    isCSAF = !!(
+      $appStore.webview.doc?.isRevisionHistoryPresent ||
+      $appStore.webview.doc?.isDocPresent ||
+      $appStore.webview.doc?.isProductTreePresent ||
+      $appStore.webview.doc?.isPublisherPresent ||
+      $appStore.webview.doc?.isTLPPresent ||
+      $appStore.webview.doc?.isTrackingPresent ||
+      $appStore.webview.doc?.isVulnerabilitiesPresent
+    );
+    updatePlaces();
+  }
 </script>
 
-<div class="flex flex-col">
+<svelte:window bind:innerWidth />
+
+<div class="grid auto-cols-fr grid-flow-col gap-10">
   {#if isCSAF}
-    {#if $appStore.webview.doc}
-      <div class="mb-4">
-        <General />
+    <div class="flex w-full flex-col">
+      {#if $appStore.webview.doc}
+        <div class="mb-4 w-full">
+          <General />
+        </div>
+      {/if}
+      {#if aliases}
+        <ValueList label="Aliases" values={aliases} />
+      {/if}
+      {#if showTab(placeToPhase.revisionHistory)}
+        <Tabs>
+          <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Vulnerabilities overview">
+            {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
+              <ProductVulnerabilities {basePath} />
+            {:else}
+              <i>
+                <h2>No Vulnerabilities overview</h2>
+                (As no products are connected to vulnerabilities.)
+              </i>
+            {/if}
+          </TabItem>
+          {#if showTab(placeToPhase.productTree)}
+            <TabItem bind:open={tabOpen.productTree} title="Product tree">
+              <ProductTree {basePath} />
+            </TabItem>
+          {/if}
+          {#if showTab(placeToPhase.vulnerabilities)}
+            <TabItem bind:open={tabOpen.vulnerabilities} title="Vulnerabilities">
+              <Vulnerabilities {basePath} />
+            </TabItem>
+          {/if}
+          {#if showTab(placeToPhase.notes) && $appStore.webview.doc?.notes}
+            <TabItem bind:open={tabOpen.notes} title="Notes">
+              <Notes notes={$appStore.webview.doc?.notes} />
+            </TabItem>
+          {/if}
+          {#if showTab(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
+            <TabItem bind:open={tabOpen.acknowledgements} title="Acknowledgements">
+              <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+            </TabItem>
+          {/if}
+          {#if showTab(placeToPhase.references)}
+            <TabItem bind:open={tabOpen.references} title="References">
+              <References references={$appStore.webview.doc?.references} />
+            </TabItem>
+          {/if}
+          {#if showTab(placeToPhase.revisionHistory)}
+            <TabItem bind:open={tabOpen.revisionHistory} title="Revision history">
+              <RevisionHistory />
+            </TabItem>
+          {/if}
+        </Tabs>
+      {:else}
+        <div>
+          <span class="text-xl">Vulnerabilities Overwiew</span>
+          <div class={sideScroll}>
+            {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
+              <ProductVulnerabilities {basePath} />
+            {:else}
+              <i>
+                <h2>No Vulnerabilities overview</h2>
+                (As no products are connected to vulnerabilities.)
+              </i>
+            {/if}
+          </div>
+        </div>
+      {/if}
+    </div>
+    {#if showArea(placeToPhase.productTree)}
+      <div>
+        <span class="text-xl">Product tree</span>
+        <div class={sideScroll}>
+          <ProductTree {basePath} />
+        </div>
       </div>
     {/if}
-    {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
-      <Collapsible
-        header="Vulnerabilities overview"
-        open={$appStore.webview.ui.isVulnerabilitiesOverviewVisible}
-      >
-        <ProductVulnerabilities {basePath} />
-      </Collapsible>
-    {:else}
-      <h2>No Vulnerabilities overview</h2>
-      (As no products are connected to vulnerabilities.)
-    {/if}
-    {#if $appStore.webview.doc && $appStore.webview.doc["isProductTreePresent"]}
-      <Collapsible
-        header="Product tree"
-        onOpen={() => {
-          appStore.setProductTreeOpen();
-        }}
-        open={$appStore.webview.ui.isProductTreeVisible}
-        onClose={() => {
-          appStore.setProductTreeSectionInVisible();
-          appStore.resetSelectedProduct();
-          appStore.setProductTreeClosed();
-        }}
-      >
-        <ProductTree {basePath} />
-      </Collapsible>
-    {/if}
-    {#if $appStore.webview.doc && $appStore.webview.doc["isVulnerabilitiesPresent"]}
-      <Collapsible
-        header="Vulnerabilities"
-        open={$appStore.webview.ui.isVulnerabilitiesSectionVisible}
-        onClose={() => {
-          appStore.setVulnerabilitiesSectionInvisible();
-        }}
-      >
-        <Vulnerabilities {basePath} />
-      </Collapsible>
+    {#if showArea(placeToPhase.vulnerabilities)}
+      <div>
+        <span class="text-xl">Vulnerabilities</span>
+        <div class={sideScroll}>
+          <Vulnerabilities {basePath} />
+        </div>
+      </div>
     {/if}
   {/if}
-
-  {#if aliases}
-    <ValueList label="Aliases" values={aliases} />
-  {/if}
-  {#if $appStore.webview.doc?.notes}
+  {#if showArea(placeToPhase.notes) && $appStore.webview.doc?.notes}
     <div>
-      <Collapsible header="Notes" level={2}>
+      <span class="text-xl">Notes</span>
+      <div class={sideScroll}>
         <Notes notes={$appStore.webview.doc?.notes} />
-      </Collapsible>
+      </div>
     </div>
   {/if}
 
-  {#if $appStore.webview.doc?.acknowledgements}
+  {#if showArea(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
     <div>
-      <Collapsible header="Acknowledgements" level={2}>
+      <span class="text-xl">Acknowledgements</span>
+      <div class={sideScroll}>
         <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
-      </Collapsible>
+      </div>
     </div>
   {/if}
 
-  {#if $appStore.webview.doc && $appStore.webview.doc.references.length > 0}
+  {#if showArea(placeToPhase.references)}
     <div>
-      <Collapsible header="References" level={2}>
+      <span class="text-xl">References</span>
+      <div class={sideScroll}>
         <References references={$appStore.webview.doc?.references} />
-      </Collapsible>
+      </div>
     </div>
   {/if}
 
-  {#if $appStore.webview.doc?.isRevisionHistoryPresent}
+  {#if showArea(placeToPhase.revisionHistory)}
     <div>
-      <Collapsible
-        header="Revision history"
-        level={2}
-        open={$appStore.webview.ui.isRevisionHistoryVisible}
-      >
+      <span class="text-xl">Revision history</span>
+      <div class={sideScroll}>
         <RevisionHistory />
-      </Collapsible>
+      </div>
     </div>
   {/if}
 </div>
