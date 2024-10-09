@@ -19,20 +19,29 @@
 </script>
 
 {#if $appStore.webview.doc?.productTree.branches}
-  {#each $appStore.webview.doc?.productTree.branches as branch}
-    <Collapsible
-      header="Branches"
-      open={$appStore.webview.ui.isProductTreeVisible ||
-        ($appStore.webview.ui.isProductTreeOpen &&
-          !(
-            $appStore.webview.doc?.productTree.relationships &&
-            $appStore.webview.doc?.productTree.product_groups &&
-            $appStore.webview.doc?.productTree.full_product_names
-          ))}
-    >
-      <Branch {branch} />
-    </Collapsible>
-  {/each}
+  <Collapsible
+    header="Branches"
+    open={$appStore.webview.ui.isProductTreeVisible ||
+      ($appStore.webview.ui.isProductTreeOpen &&
+        !(
+          $appStore.webview.doc?.productTree.relationships &&
+          $appStore.webview.doc?.productTree.product_groups &&
+          $appStore.webview.doc?.productTree.full_product_names
+        ))}
+  >
+    {#each $appStore.webview.doc?.productTree.branches as branch}
+      <Branch
+        {branch}
+        open={$appStore.webview.ui.isProductTreeVisible ||
+          ($appStore.webview.ui.isProductTreeOpen &&
+            !(
+              $appStore.webview.doc?.productTree.relationships &&
+              $appStore.webview.doc?.productTree.product_groups &&
+              $appStore.webview.doc?.productTree.full_product_names
+            ))}
+      />
+    {/each}
+  </Collapsible>
 {/if}
 
 {#if $appStore.webview.doc?.productTree.relationships}

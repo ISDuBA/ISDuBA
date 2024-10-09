@@ -73,9 +73,11 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div title={header} id={header} class={class_}>
-    <div on:click={toggle}>
+    <div class="inline-flex items-center" on:click={toggle}>
       <i class="bx {getClass(level)} {icon}" />
-      <span class={getClass(level)}>{header}</span>
+      <slot class={getClass(level)} name="header"
+        ><span class={getClass(level)}>{header}</span></slot
+      >
     </div>
     {#if visibility === "block"}
       <div id={uuid} class={class_}>
