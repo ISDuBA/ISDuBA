@@ -121,10 +121,12 @@
         Loading ...
         <Spinner color="gray" size="4"></Spinner>
       </div>
-      <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-        <i class="bx bx-plus"></i>
-        <span>Add source</span>
-      </Button>
+      {#if appStore.isSourceManager()}
+        <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+          <i class="bx bx-plus"></i>
+          <span>Add source</span>
+        </Button>
+      {/if}
       <ErrorMessage error={sourcesError}></ErrorMessage>
     </div>
   </CustomTable>
