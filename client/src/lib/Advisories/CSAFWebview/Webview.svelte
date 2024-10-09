@@ -154,10 +154,12 @@
         <ValueList label="Aliases" values={aliases} />
       {/if}
       {#if showTab(placeToPhase.revisionHistory)}
-        <Tabs>
+        <Tabs tabStyle="pill">
           <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Vulnerabilities overview">
             {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
-              <ProductVulnerabilities {basePath} />
+              <div class={sideScroll}>
+                <ProductVulnerabilities {basePath} />
+              </div>
             {:else}
               <i>
                 <h2>No Vulnerabilities overview</h2>
@@ -167,32 +169,44 @@
           </TabItem>
           {#if showTab(placeToPhase.productTree)}
             <TabItem bind:open={tabOpen.productTree} title="Product tree">
-              <ProductTree {basePath} />
+              <div class={sideScroll}>
+                <ProductTree {basePath} />
+              </div>
             </TabItem>
           {/if}
           {#if showTab(placeToPhase.vulnerabilities)}
             <TabItem bind:open={tabOpen.vulnerabilities} title="Vulnerabilities">
-              <Vulnerabilities {basePath} />
+              <div class={sideScroll}>
+                <Vulnerabilities {basePath} />
+              </div>
             </TabItem>
           {/if}
           {#if showTab(placeToPhase.notes) && $appStore.webview.doc?.notes}
             <TabItem bind:open={tabOpen.notes} title="Notes">
-              <Notes notes={$appStore.webview.doc?.notes} />
+              <div class={sideScroll}>
+                <Notes notes={$appStore.webview.doc?.notes} />
+              </div>
             </TabItem>
           {/if}
           {#if showTab(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
             <TabItem bind:open={tabOpen.acknowledgements} title="Acknowledgements">
-              <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+              <div class={sideScroll}>
+                <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+              </div>
             </TabItem>
           {/if}
           {#if showTab(placeToPhase.references)}
             <TabItem bind:open={tabOpen.references} title="References">
-              <References references={$appStore.webview.doc?.references} />
+              <div class={sideScroll}>
+                <References references={$appStore.webview.doc?.references} />
+              </div>
             </TabItem>
           {/if}
           {#if showTab(placeToPhase.revisionHistory)}
             <TabItem bind:open={tabOpen.revisionHistory} title="Revision history">
-              <RevisionHistory />
+              <div class={sideScroll}>
+                <RevisionHistory />
+              </div>
             </TabItem>
           {/if}
         </Tabs>
