@@ -119,6 +119,7 @@
       source.insecure = resp.value.insecure;
       source.strict_mode = resp.value.strict_mode;
       source.signature_check = resp.value.signature_check;
+      source.age = resp.value.age;
     }
   };
 
