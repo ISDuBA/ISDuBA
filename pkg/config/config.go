@@ -106,6 +106,10 @@ const (
 )
 
 const (
+	defaultForwarderUpdateInterval = 5 * time.Minute
+)
+
+const (
 	defaultRemoteValidatorURL   = ""
 	defaultRemoteValidatorCache = ""
 )
@@ -196,6 +200,20 @@ type Sources struct {
 	AESKey            string                `toml:"aes_key"`
 }
 
+// ForwardTarget are the config options for the forward target.
+type ForwardTarget struct {
+	URL               url.URL `toml:"url"`
+	ClientPrivateCert string  `toml:"private_cert"`
+	ClientPublicCert  string  `toml:"public_cert"`
+	Publisher         *string `toml:"publisher"`
+	Enabled           bool    `toml:"enabled"`
+}
+
+type Forwarder struct {
+	UpdateInterval time.Duration `toml:"update_interval"`
+	Targets        ForwardTarget `toml:"target"`
+}
+
 // Client are the config options for the client.
 type Client struct {
 	KeycloakURL      string        `toml:"keycloak_url" json:"keycloak_url"`
@@ -217,6 +235,7 @@ type Config struct {
 	Sources         Sources                     `toml:"sources"`
 	RemoteValidator csaf.RemoteValidatorOptions `toml:"remote_validator"`
 	Client          Client                      `toml:"client"`
+	Forwarder       Forwarder                   `toml:"forwarder"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -330,6 +349,9 @@ func Load(file string) (*Config, error) {
 			Insecure:          defaultSourcesInsecure,
 			SignatureCheck:    defaultSourcesSignatureCheck,
 			MaxAge:            defaultSourcesMaxAge,
+		},
+		Forwarder: Forwarder{
+			UpdateInterval: defaultForwarderUpdateInterval,
 		},
 		RemoteValidator: csaf.RemoteValidatorOptions{
 			URL:     defaultRemoteValidatorURL,
