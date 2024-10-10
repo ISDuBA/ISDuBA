@@ -81,3 +81,6 @@
 # keycloak_client_id = "auth"
 # update_interval = "5m"
 # idle_timeout = "30m"
+
+# [forwarder]
+# update_interval = "5m"

@@ -405,6 +405,12 @@ CREATE TABLE downloads (
 
 CREATE INDEX ON downloads (time);
 
+CREATE TABLE forwarded_documents (
+    url          varchar NOT NULL,
+    documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    UNIQUE(url, documents_id)
+);
+
 --
 -- permissions
 --
@@ -422,6 +428,7 @@ GRANT INSERT, DELETE, SELECT, UPDATE ON feeds                   TO {{ .User | sa
 GRANT INSERT, DELETE, SELECT, UPDATE ON changes                 TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON feed_logs               TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON downloads               TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON forwarded_documents     TO {{ .User | sanitize }};
 
 --
 -- default queries
