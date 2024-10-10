@@ -9,12 +9,28 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/gin-gonic/gin"
 )
+
+// parseTime parses a time from a given string.
+func parseTime(s string) (time.Time, error) {
+	for _, layout := range []string{
+		time.RFC3339,
+		time.DateTime,
+		time.DateOnly,
+	} {
+		if v, err := time.Parse(layout, s); err == nil {
+			return v, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("cannot parse %q as time", s)
+}
 
 // parserMode parses parser mode from a given string.
 func parserMode(s string) (query.ParserMode, error) {
