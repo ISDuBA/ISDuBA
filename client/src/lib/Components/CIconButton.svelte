@@ -13,6 +13,7 @@
   import { createEventDispatcher } from "svelte";
 
   export let icon = "";
+  export let disabled = false;
   export let color: ColorVariant = "dark";
   export let title = "";
 
@@ -24,8 +25,12 @@
     event.stopPropagation();
     dispatch("click", event);
   }}
+  {disabled}
   {title}
+  id={$$props.id}
   class="p-1"
 >
-  <i class={`bx bx-${icon} text-${color}-600 text-lg ${$$props.class}`}></i>
+  <i
+    class={`bx bx-${icon} text-${color}-600 text-lg ${$$props.class} ${disabled ? "contrast-0 saturate-0" : ""}`}
+  ></i>
 </button>
