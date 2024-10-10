@@ -460,6 +460,12 @@ CREATE TRIGGER extract_cves_trigger_update AFTER UPDATE
     WHEN (NEW.document <> OLD.document)
     EXECUTE FUNCTION extract_cves();
 
+CREATE TABLE forwarded_documents (
+    url          varchar NOT NULL,
+    documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    UNIQUE(url, documents_id)
+);
+
 --
 -- permissions
 --
@@ -479,6 +485,7 @@ GRANT INSERT, DELETE, SELECT, UPDATE ON feed_logs               TO {{ .User | sa
 GRANT INSERT, DELETE, SELECT, UPDATE ON downloads               TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON unique_cves             TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON documents_cves          TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON forwarded_documents     TO {{ .User | sanitize }};
 
 --
 -- default queries
