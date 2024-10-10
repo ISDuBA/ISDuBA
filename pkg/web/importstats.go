@@ -26,8 +26,8 @@ import (
 const selectImportStatsSQL = `SELECT ` +
 	`date_bin($1, time, $2) AS bucket,` +
 	`count(*) AS count ` +
-	`FROM downloads %s ` +
-	`WHERE time BETWEEN $2 AND $3 %s ` +
+	`FROM downloads %s ` + // placeholder for deeper joins.
+	`WHERE time BETWEEN $2 AND $3 %s ` + // placeholder for more filters.
 	`GROUP BY bucket ` +
 	`ORDER BY bucket`
 
@@ -45,23 +45,12 @@ func (c *Controller) importStatsSource(ctx *gin.Context) {
 	if !filterImportStats(ctx, &cond) {
 		return
 	}
-	var list [][]any
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
+	c.serveImportStats(ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) (pgx.Rows, error) {
 			const joinFeeds = `JOIN feeds ON downloads.feeds_id = feeds.id`
 			sql := fmt.Sprintf(selectImportStatsSQL, joinFeeds, cond.String())
-			rows, _ := conn.Query(rctx, sql, step, from, to, sourcesID)
-			var err error
-			list, err = collectBuckets(rows)
-			return err
-		}, 0,
-	); err != nil {
-		slog.Error("Cannot fetch import stats", "error", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	ctx.JSON(http.StatusOK, list)
+			return conn.Query(rctx, sql, step, from, to, sourcesID)
+		})
 }
 
 func (c *Controller) importStatsAllSources(ctx *gin.Context) {
@@ -73,22 +62,11 @@ func (c *Controller) importStatsAllSources(ctx *gin.Context) {
 	if !filterImportStats(ctx, &cond) {
 		return
 	}
-	var list [][]any
-	if err := c.db.Run(
-		ctx.Request.Context(),
-		func(rctx context.Context, conn *pgxpool.Conn) error {
+	c.serveImportStats(ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) (pgx.Rows, error) {
 			sql := fmt.Sprintf(selectImportStatsSQL, "", cond.String())
-			rows, _ := conn.Query(rctx, sql, step, from, to)
-			var err error
-			list, err = collectBuckets(rows)
-			return err
-		}, 0,
-	); err != nil {
-		slog.Error("Cannot fetch import stats", "error", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	ctx.JSON(http.StatusOK, list)
+			return conn.Query(rctx, sql, step, from, to)
+		})
 }
 
 func (c *Controller) importStatsFeed(ctx *gin.Context) {
@@ -105,12 +83,22 @@ func (c *Controller) importStatsFeed(ctx *gin.Context) {
 	if !filterImportStats(ctx, &cond) {
 		return
 	}
+	c.serveImportStats(ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) (pgx.Rows, error) {
+			sql := fmt.Sprintf(selectImportStatsSQL, "", cond.String())
+			return conn.Query(rctx, sql, step, from, to, feedID)
+		})
+}
+
+func (c *Controller) serveImportStats(
+	ctx *gin.Context,
+	query func(context.Context, *pgxpool.Conn) (pgx.Rows, error),
+) {
 	var list [][]any
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			sql := fmt.Sprintf(selectImportStatsSQL, "", cond.String())
-			rows, _ := conn.Query(rctx, sql, step, from, to, feedID)
+			rows, _ := query(rctx, conn)
 			var err error
 			list, err = collectBuckets(rows)
 			return err
