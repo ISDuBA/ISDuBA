@@ -62,8 +62,6 @@ func (c *Controller) importStatsSource(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, list)
-	// TODO: Implement me!
-	ctx.JSON(http.StatusNotFound, gin.H{"error": "not implemented, yet"})
 }
 
 func (c *Controller) importStatsAllSources(ctx *gin.Context) {
