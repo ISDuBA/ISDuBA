@@ -242,40 +242,40 @@
         </div>
       </div>
     {/if}
-  {/if}
-  {#if showArea(placeToPhase.notes) && $appStore.webview.doc?.notes}
-    <div>
-      <span class="text-xl">Notes</span>
-      <div class={sideScroll}>
-        <Notes notes={$appStore.webview.doc?.notes} />
+    {#if showArea(placeToPhase.notes) && $appStore.webview.doc?.notes}
+      <div>
+        <span class="text-xl">Notes</span>
+        <div class={sideScroll}>
+          <Notes notes={$appStore.webview.doc?.notes} />
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
 
-  {#if showArea(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
-    <div>
-      <span class="text-xl">Acknowledgements</span>
-      <div class={sideScroll}>
-        <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+    {#if showArea(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
+      <div>
+        <span class="text-xl">Acknowledgements</span>
+        <div class={sideScroll}>
+          <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
 
-  {#if showArea(placeToPhase.references)}
-    <div>
-      <span class="text-xl">References</span>
-      <div class={sideScroll}>
-        <References references={$appStore.webview.doc?.references} />
+    {#if showArea(placeToPhase.references)}
+      <div>
+        <span class="text-xl">References</span>
+        <div class={sideScroll}>
+          <References references={$appStore.webview.doc?.references} />
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
 
-  {#if showArea(placeToPhase.revisionHistory)}
-    <div>
-      <span class="text-xl">Revision history</span>
-      <div class={sideScroll}>
-        <RevisionHistory />
+    {#if showArea(placeToPhase.revisionHistory)}
+      <div>
+        <span class="text-xl">Revision history</span>
+        <div class={sideScroll}>
+          <RevisionHistory />
+        </div>
       </div>
-    </div>
+    {/if}
   {/if}
 </div>
