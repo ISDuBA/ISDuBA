@@ -13,11 +13,6 @@ for a *development* build on Ubuntu 24.04.
 These settings are **not suitable for production**.
 
 
-## Prerequisites
-
- - A set of CSAF-Advisories, e.g. aquired via the [csaf_downloader tool.](https://github.com/csaf-poc/csaf_distribution)
-
-
 ## Setup ISDuBA
 The setup should be performed via the [installation scripts.](./scripts/README.md)
 
@@ -49,8 +44,8 @@ If this is not set either, then a random password will be generated
 and stored in `docs/scripts/password.txt`.
 
 
-### Import advisories
-Import the previously downloaded advisories into the database via the bulk importer:
+### (Optional) Import advisories manually
+Import the advisories into the database via the bulk importer:
 
 An example for a local PostgreSQL:
 - `~/downloaded_advisories`: location to download your advisories from, replace with your actual location
