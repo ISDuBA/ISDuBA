@@ -32,7 +32,7 @@
       });
 </script>
 
-<div class="flex max-h-[34rem] flex-col overflow-auto p-1">
+<div class="flex max-h-[470px] flex-col overflow-auto p-1">
   <Table>
     <TableBody>
       {#each historyEntries as event}

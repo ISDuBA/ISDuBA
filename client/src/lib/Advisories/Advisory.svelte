@@ -338,7 +338,7 @@
   <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
   <div class="w-full lg:grid lg:grid-cols-[1fr_29rem]">
     <div
-      class="right-3 mr-3 flex w-[29rem] flex-col bg-white lg:order-2 lg:max-h-full lg:flex-none lg:overflow-auto"
+      class="right-3 mr-3 flex w-full flex-col bg-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
     >
       <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
         <div class="mb-4 flex flex-row items-center">
@@ -383,9 +383,9 @@
         {/if}
       </div>
       <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
-      <div class="">
+      <div class="h-auto">
         {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
-          <div class="mt-6">
+          <div class="mt-6 h-full">
             <History
               state={advisoryState}
               on:commentUpdate={() => {
