@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"net/url"
 	"regexp"
 	"slices"
@@ -66,6 +67,7 @@ type Manager struct {
 	fns  chan func(*Manager)
 	jobs chan downloadJob
 	done bool
+	rnd  *rand.Rand
 
 	cipherKey []byte
 
@@ -157,6 +159,7 @@ func NewManager(
 		db:        db,
 		fns:       make(chan func(*Manager)),
 		jobs:      make(chan downloadJob),
+		rnd:       rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())),
 		cipherKey: cipherKey,
 		pmdCache:  newPMDCache(),
 		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
@@ -182,6 +185,25 @@ func (m *Manager) activeFeeds(fn func(*feed) bool) {
 					return
 				}
 			}
+		}
+	}
+}
+
+// shuffledActiveFeeds iterates in a shuffled order over
+// the feeds of the active sources.
+func (m *Manager) shuffledActiveFeeds(fn func(*feed) bool) {
+	var active []*feed
+	for _, s := range m.sources {
+		if s.active {
+			active = append(active, s.feeds...)
+		}
+	}
+	m.rnd.Shuffle(len(active), func(i, j int) {
+		active[i], active[j] = active[j], active[i]
+	})
+	for _, f := range active {
+		if !fn(f) {
+			return
 		}
 	}
 }
@@ -241,7 +263,7 @@ func (m *Manager) refreshFeeds() {
 func (m *Manager) startDownloads() {
 	for m.usedSlots < m.cfg.Sources.DownloadSlots {
 		started := false
-		m.activeFeeds(func(f *feed) bool {
+		m.shuffledActiveFeeds(func(f *feed) bool {
 			// Has this feed a free slot?
 			maxSlots := min(m.cfg.Sources.MaxSlotsPerSource, m.cfg.Sources.DownloadSlots)
 			if f.source.slots != nil {
