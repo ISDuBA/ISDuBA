@@ -56,24 +56,33 @@
     // This is a hack
     setTimeout(() => {
       if (position.startsWith("product-")) {
+        console.log("PRODUCT");
+        updateTabOpen("productTree");
         appStore.setProductTreeSectionVisible();
         appStore.setSelectedProduct(position.replace("product-", ""));
       }
       if (position.startsWith("cve-")) {
+        console.log("CVE");
+        updateTabOpen("vulnerabilities");
         appStore.setSelectedCVE(position.replace("cve-", ""));
         appStore.setVulnerabilitiesSectionVisible();
       }
     }, 300);
   };
 
-  const updateTabOpen = () => {
+  const updateTabOpen = (open?: WebviewDataSections) => {
     let openedTab: WebviewDataSections = (Object.entries(tabOpen).find((tab) => tab[1]) ?? [
       "vulnerabilitiesOverview"
     ])[0] as WebviewDataSections;
-    if (
-      openedTab !== "vulnerabilitiesOverview" &&
-      (screenPhase >= placeToPhase[openedTab].phase || !placeToPhase[openedTab].show)
-    ) {
+    const canBeOpened = (tab: WebviewDataSections) =>
+      tab === "vulnerabilitiesOverview" ||
+      (screenPhase < placeToPhase[tab].phase && placeToPhase[tab].show);
+    if (open && canBeOpened(open)) {
+      if (open !== openedTab) {
+        tabOpen[open] = true;
+        tabOpen[openedTab] = false;
+      }
+    } else if (openedTab !== "vulnerabilitiesOverview" && !canBeOpened(openedTab)) {
       tabOpen.vulnerabilitiesOverview = true;
       tabOpen[openedTab] = false;
     }
