@@ -130,7 +130,7 @@
   $: innerWidth = 0;
   $: {
     let oldPhase = screenPhase;
-    screenPhase = Math.max(0, Math.floor(innerWidth / 480 - 2));
+    screenPhase = Math.max(0, Math.floor(innerWidth / 550 - 2));
     if (oldPhase !== screenPhase) {
       updatePlaces();
     }
@@ -151,7 +151,7 @@
 
 <svelte:window bind:innerWidth />
 
-<div class="grid auto-cols-fr grid-flow-col gap-10">
+<div class="grid auto-cols-fr grid-flow-col gap-6">
   {#if isCSAF}
     <div class="flex w-full flex-col">
       {#if $appStore.webview.doc}

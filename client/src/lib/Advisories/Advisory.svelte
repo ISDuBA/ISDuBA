@@ -399,7 +399,9 @@
         {/if}
       </div>
     </div>
-    <div class="mr-12 flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:overflow-auto">
+    <div
+      class="flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:overflow-auto lg:pr-6"
+    >
       <div class="flex flex-row">
         {#if advisoryVersions.length > 0}
           <Version
