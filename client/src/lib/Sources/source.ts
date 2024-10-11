@@ -44,6 +44,8 @@ type SourceConfig = {
   age: string;
 };
 
+type Statistic = [[Date, number]];
+
 enum LogLevel {
   default = "default",
   debug = "debug",
@@ -274,6 +276,64 @@ const fetchPMD = async (url: string): Promise<Result<CSAFProviderMetadata, Error
   }
 };
 
+class StatisticType {
+  downloadFailed: boolean;
+  filenameFailed: boolean;
+  schemaFailed: boolean;
+  remoteFailed: boolean;
+  checksumFailed: boolean;
+  signatureFailed: boolean;
+
+  constructor() {
+    this.downloadFailed = false;
+    this.filenameFailed = false;
+    this.schemaFailed = false;
+    this.remoteFailed = false;
+    this.checksumFailed = false;
+    this.signatureFailed = false;
+  }
+}
+
+const fetchStatistic = async (
+  from: Date,
+  to: Date,
+  step: string,
+  filter: StatisticType,
+  id?: number,
+  feed: boolean = false
+): Promise<Result<Statistic, ErrorDetails>> => {
+  let path = "/api/stats/imports";
+  if (id && !feed) {
+    path += `/source/${id}`;
+  }
+  if (id && feed) {
+    path += `/feed/${id}`;
+  }
+  let filterQuery = "";
+  filterQuery += filter.downloadFailed ? `&download_failed=true` : "";
+  filterQuery += filter.filenameFailed ? `&filename_failed=true` : "";
+  filterQuery += filter.schemaFailed ? `&schmema_failed=true` : "";
+  filterQuery += filter.remoteFailed ? `&remote_failed=true` : "";
+  filterQuery += filter.checksumFailed ? `&checksum_failed=true` : "";
+  filterQuery += filter.signatureFailed ? `&signature_failed=true` : "";
+  const resp = await request(
+    `${path}?from=${from.toISOString()}&to=${to.toISOString()}&step=${step}` + filterQuery,
+    "GET"
+  );
+  if (resp.ok) {
+    if (resp.content) {
+      return {
+        ok: true,
+        value: resp.content
+      };
+    }
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load statistic`, resp)
+  };
+};
+
 const fetchSource = async (
   id: number,
   showStats: boolean = false
@@ -461,6 +521,7 @@ const parseHeaders = (source: Source): string[][] => {
 
 export {
   type Source,
+  type Statistic,
   LogLevel,
   type Feed,
   saveSource,
@@ -477,5 +538,7 @@ export {
   fetchFeed,
   fetchFeeds,
   fetchSources,
-  saveFeeds
+  saveFeeds,
+  fetchStatistic,
+  StatisticType
 };
