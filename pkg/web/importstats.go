@@ -180,7 +180,7 @@ func filterImportStats(ctx *gin.Context, cond *strings.Builder) bool {
 				cond.WriteString(" OR ")
 			} else {
 				have = true
-				if cond.Len() > 0 {
+				if cond.Len() == 0 {
 					cond.WriteString(" AND ")
 				}
 				cond.WriteByte('(')
