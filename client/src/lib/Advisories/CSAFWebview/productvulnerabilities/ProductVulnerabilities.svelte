@@ -96,20 +96,20 @@
               >
             {:else if index == 1}
               <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}>
-                <div class={!renderAllCVEs ? "" : titleStyles[0]}>
-                  <div class={!renderAllCVEs ? "" : titleStyles[1]}>
-                    <div class={!renderAllCVEs ? "" : titleStyles[2]}>
-                      <div class={!renderAllCVEs ? "" : titleStyles[3]}>{column.content}</div>
+                <div class={titleStyles[0]}>
+                  <div class={titleStyles[1]}>
+                    <div class={titleStyles[2]}>
+                      <div class={titleStyles[3]}>{column.content}</div>
                     </div>
                   </div>
                 </div>
               </TableHeadCell>
             {:else if !renderAllCVEs && fourCVEs.includes(column.name)}
               <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}>
-                <div class={!renderAllCVEs ? "" : titleStyles[0]}>
-                  <div class={!renderAllCVEs ? "" : titleStyles[1]}>
-                    <div class={!renderAllCVEs ? "" : titleStyles[2]}>
-                      <div class={!renderAllCVEs ? "" : titleStyles[3]}>
+                <div class={titleStyles[0]}>
+                  <div class={titleStyles[1]}>
+                    <div class={titleStyles[2]}>
+                      <div class={titleStyles[3]}>
                         <a
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
@@ -122,10 +122,10 @@
               </TableHeadCell>
             {:else if renderAllCVEs}
               <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}>
-                <div class={!renderAllCVEs ? "" : titleStyles[0]}>
-                  <div class={!renderAllCVEs ? "" : titleStyles[1]}>
-                    <div class={!renderAllCVEs ? "" : titleStyles[2]}>
-                      <div class={!renderAllCVEs ? "" : titleStyles[3]}>
+                <div class={titleStyles[0]}>
+                  <div class={titleStyles[1]}>
+                    <div class={titleStyles[2]}>
+                      <div class={titleStyles[3]}>
                         <a
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
