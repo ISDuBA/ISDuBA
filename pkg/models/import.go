@@ -336,16 +336,24 @@ func ImportDocumentData(
 	defer tx.Rollback(ctx)
 
 	const (
-		insertDoc     = `INSERT INTO documents (document, original) VALUES ($1, $2) RETURNING id`
-		insertLog     = `INSERT INTO events_log (event, state, actor, documents_id) VALUES ('import_document', 'new', $1, $2)`
-		queryText     = `SELECT id FROM unique_texts WHERE txt = $1`
-		insertText    = `INSERT INTO unique_texts (txt) VALUES ($1) RETURNING id`
-		insertDocText = `INSERT INTO documents_texts (documents_id, num, txt_id) VALUES ($1, $2, $3)`
-		loadTexts     = `SELECT u.id, txt FROM documents d JOIN documents_texts t ` +
+		savepointDoc         = `SAVEPOINT insert_document`
+		rollbackSavepointDoc = `ROLLBACK TO SAVEPOINT insert_document`
+		releaseSavepointDoc  = `RELEASE SAVEPOINT insert_document`
+		insertDoc            = `INSERT INTO documents (document, original) VALUES ($1, $2) RETURNING id`
+		insertLog            = `INSERT INTO events_log (event, state, actor, documents_id) VALUES ('import_document', 'new', $1, $2)`
+		queryText            = `SELECT id FROM unique_texts WHERE txt = $1`
+		insertText           = `INSERT INTO unique_texts (txt) VALUES ($1) RETURNING id`
+		insertDocText        = `INSERT INTO documents_texts (documents_id, num, txt_id) VALUES ($1, $2, $3)`
+		loadTexts            = `SELECT u.id, txt FROM documents d JOIN documents_texts t ` +
 			`ON d.id = t.documents_id JOIN unique_texts u ` +
 			`ON t.txt_id = u.id ` +
 			`WHERE d.publisher = $1 AND d.tracking_id = $2`
 	)
+
+	// Using a savepoint only rolls back the transaction partially.
+	if _, err := tx.Exec(ctx, savepointDoc); err != nil {
+		return 0, err
+	}
 
 	var id int64
 	if err := tx.QueryRow(
@@ -355,11 +363,16 @@ func ImportDocumentData(
 		var pgErr *pgconn.PgError
 		// Unique constraint violation
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			// Rolling back to savepoint to enable execution of the
+			// remaining book keeping within the inTx callback.
+			if _, err2 := tx.Exec(ctx, rollbackSavepointDoc); err2 != nil {
+				return 0, errors.Join(ErrAlreadyInDatabase, err2)
+			}
 			if inTx != nil {
 				if err2 := inTx(ctx, tx, 0, true); err2 != nil {
 					return 0, errors.Join(ErrAlreadyInDatabase, err2)
 				}
-				if err2 := tx.Commit(ctx); err != nil {
+				if err2 := tx.Commit(ctx); err2 != nil {
 					return 0, errors.Join(ErrAlreadyInDatabase, err2)
 				}
 			}
@@ -367,6 +380,12 @@ func ImportDocumentData(
 		}
 		return 0, fmt.Errorf("inserting document failed: %w", err)
 	}
+
+	// Keep the document
+	if _, err := tx.Exec(ctx, releaseSavepointDoc); err != nil {
+		return 0, err
+	}
+
 	if _, err := tx.Exec(ctx, insertLog, actor, id); err != nil {
 		return 0, fmt.Errorf("inserting log failed: %w", err)
 	}

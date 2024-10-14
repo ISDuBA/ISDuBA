@@ -14,6 +14,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash"
 	"io"
@@ -337,7 +338,7 @@ func (l *location) download(m *Manager, f *feed) {
 		importer = &m.cfg.Sources.FeedImporter
 	}
 
-	if err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
+	switch err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
 		_, err := models.ImportDocumentData(
 			ctx, conn,
 			doc, data.Bytes(),
@@ -346,7 +347,11 @@ func (l *location) download(m *Manager, f *feed) {
 			models.ChainInTx(storeStats, storeSignature, f.storeLastChanges(l)),
 			false)
 		return err
-	}, 0); err != nil {
+	}, 0); {
+	case errors.Is(err, models.ErrAlreadyInDatabase):
+		f.log(m, config.InfoFeedLogLevel, "not storing duplicate %q: %v", l.doc, err)
+		break
+	case err != nil:
 		f.log(m, config.ErrorFeedLogLevel, "storing %q failed: %v", l.doc, err)
 		return
 	}
