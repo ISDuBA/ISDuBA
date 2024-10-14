@@ -44,6 +44,7 @@ const (
 	remoteValidationFailed
 	checksumFailed
 	signatureFailed
+	duplicateFailed
 )
 
 func (ds *dlStatus) set(mask dlStatus) { *ds |= mask }
@@ -57,6 +58,7 @@ func (ds dlStatus) toInserter(i *inserter) {
 	i.add("remote_failed", ds.has(remoteValidationFailed))
 	i.add("checksum_failed", ds.has(checksumFailed))
 	i.add("signature_failed", ds.has(signatureFailed))
+	i.add("duplicate_failed", ds.has(duplicateFailed))
 }
 
 type inserter struct {
@@ -302,9 +304,13 @@ func (l *location) download(m *Manager, f *feed) {
 	}
 
 	// Store stats in database.
-	storeStats := func(ctx context.Context, tx pgx.Tx, docID int64) error {
+	storeStats := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
 		var i inserter
-		i.add("documents_id", docID)
+		if !duplicate {
+			i.add("documents_id", docID)
+		} else {
+			status.set(duplicateFailed)
+		}
 		if !f.invalid.Load() {
 			i.add("feeds_id", f.id)
 		}
@@ -315,7 +321,10 @@ func (l *location) download(m *Manager, f *feed) {
 	}
 
 	// Store signature data in database.
-	storeSignature := func(ctx context.Context, tx pgx.Tx, docID int64) error {
+	storeSignature := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
+		if duplicate {
+			return nil
+		}
 		const insertSQL = `UPDATE documents ` +
 			`SET (signature, filename) = ($1, $2)` +
 			`WHERE id = $3`

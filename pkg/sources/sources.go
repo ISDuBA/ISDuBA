@@ -506,8 +506,8 @@ func (s *source) useStrictMode(m *Manager) bool {
 // storeLastChanges is intented to be called in the transaction storing the
 // imported document after is was successful. It helps to remember the
 // last changes per location so we don't need to download them all again and again.
-func (f *feed) storeLastChanges(l *location) func(context.Context, pgx.Tx, int64) error {
-	return func(ctx context.Context, tx pgx.Tx, _ int64) error {
+func (f *feed) storeLastChanges(l *location) func(context.Context, pgx.Tx, int64, bool) error {
+	return func(ctx context.Context, tx pgx.Tx, _ int64, _ bool) error {
 		if f.invalid.Load() {
 			return nil
 		}
