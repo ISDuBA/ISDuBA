@@ -101,7 +101,7 @@ const (
 	defaultSourcesStrictMode     = true
 	defaultSourcesInsecure       = false
 	defaultSourcesSignatureCheck = true
-	defaultSourcesMaxAge         = 0 * time.Hour
+	defaultSourcesMaxAge         = 17520 * time.Hour
 	defaultSourcesAESKey         = ""
 )
 
