@@ -359,6 +359,9 @@ func ImportDocumentData(
 				if err2 := inTx(ctx, tx, 0, true); err2 != nil {
 					return 0, errors.Join(ErrAlreadyInDatabase, err2)
 				}
+				if err2 := tx.Commit(ctx); err != nil {
+					return 0, errors.Join(ErrAlreadyInDatabase, err2)
+				}
 			}
 			return 0, ErrAlreadyInDatabase
 		}
