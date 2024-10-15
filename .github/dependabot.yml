@@ -13,6 +13,13 @@ updates:
     schedule:
       interval: "weekly"
     labels: [ ]
+    groups:
+      dependencies:
+        update-types:
+        - "minor"
+        - "patch"
+        exclude-patterns:
+        - "flowbite*"
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
