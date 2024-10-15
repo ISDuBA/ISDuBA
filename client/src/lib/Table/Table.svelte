@@ -31,7 +31,7 @@
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { ADMIN } from "$lib/workflow";
+  import { ADMIN, EDITOR, IMPORTER, REVIEWER } from "$lib/workflow";
   import { getAllowedWorkflowChanges, isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store";
   import { getPublisher } from "$lib/publisher";
@@ -82,6 +82,9 @@
   $: workflowOptions = allowedWorkflowStateChanges.map((c) => {
     return { name: c.to, value: c.to };
   });
+  $: isMultiSelectionAllowed =
+    isRoleIncluded(appStore.getRoles(), [EDITOR, IMPORTER, ADMIN, REVIEWER]) &&
+    ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) || tableType === SEARCHTYPES.ADVISORY);
 
   let selectedState: any;
   let dropdownOpen = false;
@@ -335,7 +338,7 @@
   <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
       <div class="flex flex-row items-baseline gap-8">
-        {#if !appStore.isOnlySourceManager()}
+        {#if isMultiSelectionAllowed}
           <div class="flex items-center gap-2">
             {#if appStore.isAdmin()}
               <Button
@@ -350,48 +353,50 @@
                 <i class="bx bx-trash text-red-600"></i>
               </Button>
             {/if}
-            <Button
-              class="!p-2"
-              color="light"
-              disabled={workflowOptions.length === 0}
-              id="state-icon"
-            >
-              <i class="bx bx-git-commit text-black-700"></i>
-            </Button>
-            <Dropdown
-              bind:open={dropdownOpen}
-              on:show={(event) => {
-                if (!event.detail) {
-                  changeWorkflowStateError = null;
-                }
-              }}
-              placement="top-start"
-              triggeredBy="#state-icon"
-              class="w-full max-w-sm divide-y divide-gray-100 rounded p-4 shadow dark:divide-gray-700 dark:bg-gray-800"
-              containerClass="divide-y z-50 border border-gray-300"
-            >
-              <div class="flex flex-col gap-3">
-                <div class="flex w-fit flex-col gap-3">
-                  <Label>
-                    <span>New workflow state</span>
-                    <Select
-                      bind:value={selectedState}
-                      items={workflowOptions}
-                      placeholder="Choose..."
-                      defaultClass={selectClass}
-                    ></Select>
-                  </Label>
-                  <Button
-                    on:click={() => {
-                      changeWorkflowState();
-                    }}
-                    disabled={!selectedState}
-                    class="h-fit">Change</Button
-                  >
+            {#if tableType === SEARCHTYPES.ADVISORY}
+              <Button
+                class="!p-2"
+                color="light"
+                disabled={workflowOptions.length === 0}
+                id="state-icon"
+              >
+                <i class="bx bx-git-commit text-black-700"></i>
+              </Button>
+              <Dropdown
+                bind:open={dropdownOpen}
+                on:show={(event) => {
+                  if (!event.detail) {
+                    changeWorkflowStateError = null;
+                  }
+                }}
+                placement="top-start"
+                triggeredBy="#state-icon"
+                class="w-full max-w-sm divide-y divide-gray-100 rounded p-4 shadow dark:divide-gray-700 dark:bg-gray-800"
+                containerClass="divide-y z-50 border border-gray-300"
+              >
+                <div class="flex flex-col gap-3">
+                  <div class="flex w-fit flex-col gap-3">
+                    <Label>
+                      <span>New workflow state</span>
+                      <Select
+                        bind:value={selectedState}
+                        items={workflowOptions}
+                        placeholder="Choose..."
+                        defaultClass={selectClass}
+                      ></Select>
+                    </Label>
+                    <Button
+                      on:click={() => {
+                        changeWorkflowState();
+                      }}
+                      disabled={!selectedState}
+                      class="h-fit">Change</Button
+                    >
+                  </div>
+                  <ErrorMessage error={changeWorkflowStateError}></ErrorMessage>
                 </div>
-                <ErrorMessage error={changeWorkflowStateError}></ErrorMessage>
-              </div>
-            </Dropdown>
+              </Dropdown>
+            {/if}
           </div>
         {/if}
         <div class="flex items-baseline gap-2">
@@ -482,7 +487,7 @@
       <a href={anchorLink}>
         <Table style="w-auto" hoverable={true} noborder={true}>
           <TableHead class="cursor-pointer">
-            {#if !appStore.isOnlySourceManager()}
+            {#if isMultiSelectionAllowed}
               <TableHeadCell padding="px-0">
                 <CCheckbox
                   checked={areAllSelected}
@@ -534,7 +539,7 @@
                   anchorLink = null;
                 }}
               >
-                {#if !appStore.isOnlySourceManager()}
+                {#if isMultiSelectionAllowed}
                   <TableBodyCell tdClass="px-0">
                     <CCheckbox
                       checked={$appStore.app.selectedDocumentIDs.has(item.id)}
