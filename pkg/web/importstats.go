@@ -170,6 +170,7 @@ func filterImportStats(ctx *gin.Context, cond *strings.Builder) bool {
 		"remote_failed",
 		"checksum_failed",
 		"signature_failed",
+		"duplicate_failed",
 	} {
 		if value := ctx.Query(flag); value != "" {
 			v, ok := parse(ctx, strconv.ParseBool, value)

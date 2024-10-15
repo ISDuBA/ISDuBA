@@ -399,7 +399,8 @@ CREATE TABLE downloads (
     schema_failed    bool,
     remote_failed    bool,
     checksum_failed  bool,
-    signature_failed bool
+    signature_failed bool,
+    duplicate_failed bool
 );
 
 CREATE INDEX ON downloads (time);
