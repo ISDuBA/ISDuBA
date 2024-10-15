@@ -12,6 +12,7 @@
   import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   export let label;
   export let upload = (files: FileList) => {
+    // eslint-disable-next-line no-console
     console.log(files);
   };
   let files: FileList;

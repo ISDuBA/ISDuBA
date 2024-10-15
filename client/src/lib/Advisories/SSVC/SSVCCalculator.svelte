@@ -126,7 +126,6 @@
     let selectedOption: SSVCOption | null = null;
     mainDecisions[currentStep].options.forEach((option: SSVCOption) => {
       if (option.child_combinations) {
-        console.log(selectedChildOptions);
         if (doesContainChildCombo(selectedChildOptions, option.child_combinations)) {
           selectedOption = option;
         }

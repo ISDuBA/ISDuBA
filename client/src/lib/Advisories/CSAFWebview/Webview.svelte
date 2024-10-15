@@ -56,13 +56,11 @@
     // This is a hack
     setTimeout(() => {
       if (position.startsWith("product-")) {
-        console.log("PRODUCT");
         updateTabOpen("productTree");
         appStore.setProductTreeSectionVisible();
         appStore.setSelectedProduct(position.replace("product-", ""));
       }
       if (position.startsWith("cve-")) {
-        console.log("CVE");
         updateTabOpen("vulnerabilities");
         appStore.setSelectedCVE(position.replace("cve-", ""));
         appStore.setVulnerabilitiesSectionVisible();
