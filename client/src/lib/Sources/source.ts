@@ -283,6 +283,7 @@ class StatisticType {
   remoteFailed: boolean;
   checksumFailed: boolean;
   signatureFailed: boolean;
+  duplicateFailed: boolean;
 
   constructor() {
     this.downloadFailed = false;
@@ -291,6 +292,7 @@ class StatisticType {
     this.remoteFailed = false;
     this.checksumFailed = false;
     this.signatureFailed = false;
+    this.duplicateFailed = false;
   }
 }
 
@@ -316,6 +318,7 @@ const fetchStatistic = async (
   filterQuery += filter.remoteFailed ? `&remote_failed=true` : "";
   filterQuery += filter.checksumFailed ? `&checksum_failed=true` : "";
   filterQuery += filter.signatureFailed ? `&signature_failed=true` : "";
+  filterQuery += filter.duplicateFailed ? `&duplicate_failed=true` : "";
   const resp = await request(
     `${path}?from=${from.toISOString()}&to=${to.toISOString()}&step=${step}` + filterQuery,
     "GET"

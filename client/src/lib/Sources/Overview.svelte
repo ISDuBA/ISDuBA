@@ -18,19 +18,12 @@
   import { request } from "$lib/request";
   import { onDestroy, onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import {
-    type Source,
-    type Statistic,
-    StatisticType,
-    fetchSources,
-    fetchStatistic
-  } from "$lib/Sources/source";
+  import { type Source, fetchSources } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
-  import ApexCharts from "apexcharts";
+  import SourceStats from "./SourceStats.svelte";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
-  let statisticError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
 
@@ -63,171 +56,10 @@
     }
   };
 
-  let overviewChart: any;
-
-  type GroupedStatistic = {
-    import: Statistic;
-    signatureFailed: Statistic;
-    checksumFailed: Statistic;
-  };
-  let stats: GroupedStatistic | undefined = undefined;
-
-  const fixAxis = (stats: Statistic, axis: Date[]) => {
-    let newStatistics: Statistic = [] as unknown as Statistic;
-    for (let date of axis) {
-      let entry = stats.find((i) => i[0] === date) ?? [date, 0];
-      newStatistics.push(entry);
-    }
-    return newStatistics;
-  };
-
-  $: if (overviewChart && stats) {
-    let importAxis = stats.import.map((a) => a[0]);
-    let signatureAxis = stats.signatureFailed.map((a) => a[0]);
-    let checksumAxis = stats.checksumFailed.map((a) => a[0]);
-
-    let xAxis = [...new Set([...importAxis, ...signatureAxis, ...checksumAxis])];
-    let importData = fixAxis(stats.import, xAxis).map((a) => a[1]);
-    let signatureData = fixAxis(stats.signatureFailed, xAxis).map((a) => a[1]);
-    let checksumData = fixAxis(stats.checksumFailed, xAxis).map((a) => a[1]);
-    let options = {
-      series: [
-        {
-          name: "Imported documents",
-          data: importData
-        },
-        {
-          name: "Signature failed",
-          data: signatureData
-        },
-        {
-          name: "Checksum failed",
-          data: checksumData
-        }
-      ],
-      chart: {
-        height: 350,
-        type: "line",
-        zoom: {
-          enabled: false
-        }
-      },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        width: [5, 7, 5],
-        curve: "straight",
-        dashArray: [0, 8, 5]
-      },
-      title: {
-        text: "Download Statistics",
-        align: "left"
-      },
-      legend: {
-        tooltipHoverFormatter: function (val: any, opts: any) {
-          return (
-            val +
-            " - <strong>" +
-            opts.w.globals.series[opts.seriesIndex][opts.dataPointIndex] +
-            "</strong>"
-          );
-        }
-      },
-      markers: {
-        size: 0,
-        hover: {
-          sizeOffset: 6
-        }
-      },
-      xaxis: {
-        categories: xAxis
-      },
-      tooltip: {
-        y: [
-          {
-            title: {
-              formatter: function (val: any) {
-                return val;
-              }
-            }
-          },
-          {
-            title: {
-              formatter: function (val: any) {
-                return val;
-              }
-            }
-          },
-          {
-            title: {
-              formatter: function (val: any) {
-                return val;
-              }
-            }
-          }
-        ]
-      },
-      grid: {
-        borderColor: "#f1f1f1"
-      }
-    };
-    let chart = new ApexCharts(overviewChart, options);
-    chart.render();
-  }
-
-  const loadStats = async () => {
-    let from = new Date();
-    from.setDate(from.getDate() - 30);
-    from.setMinutes(0, 0, 0);
-    let to = new Date();
-    to.setMinutes(0, 0, 0);
-
-    let importStats: Statistic;
-    let checksumFailed: Statistic;
-    let signatureFailed: Statistic;
-
-    let type = new StatisticType();
-    let resp = await fetchStatistic(from, to, "48h", type);
-    if (!resp.ok) {
-      statisticError = resp.error;
-      return;
-    } else {
-      importStats = resp.value;
-    }
-
-    type.signatureFailed = true;
-    resp = await fetchStatistic(from, to, "48h", type);
-    if (!resp.ok) {
-      statisticError = resp.error;
-      return;
-    } else {
-      signatureFailed = resp.value;
-    }
-
-    type.signatureFailed = false;
-    type.checksumFailed = true;
-
-    resp = await fetchStatistic(from, to, "48h", type);
-    if (!resp.ok) {
-      statisticError = resp.error;
-      return;
-    } else {
-      checksumFailed = resp.value;
-    }
-
-    stats = {
-      import: importStats,
-      checksumFailed: checksumFailed,
-      signatureFailed: signatureFailed
-    };
-  };
-
   onMount(async () => {
     if (appStore.isEditor() || appStore.isSourceManager()) {
       await getSources();
     }
-    await loadStats();
   });
 
   onDestroy(() => {
@@ -320,6 +152,4 @@
   {/if}
 </div>
 
-<SectionHeader title="Statistics"></SectionHeader>
-<div bind:this={overviewChart}></div>
-<ErrorMessage error={statisticError}></ErrorMessage>
+<SourceStats title="Statistics"></SourceStats>

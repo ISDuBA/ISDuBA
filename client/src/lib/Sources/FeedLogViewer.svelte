@@ -17,6 +17,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { onMount } from "svelte";
   import { fetchFeedLogs, fetchFeed, type Feed } from "./source";
+  import SourceStats from "./SourceStats.svelte";
 
   export let params: any = null;
 
@@ -218,3 +219,7 @@
 
 <ErrorMessage error={loadLogsError}></ErrorMessage>
 <ErrorMessage error={loadFeedError}></ErrorMessage>
+
+{#if feed}
+  <SourceStats title="Statistics" isFeed id={feed.id}></SourceStats>
+{/if}
