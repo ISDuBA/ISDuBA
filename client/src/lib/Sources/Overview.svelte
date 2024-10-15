@@ -71,85 +71,87 @@
   <title>Sources</title>
 </svelte:head>
 
-<div>
-  <SectionHeader title="Sources"></SectionHeader>
-  {#if appStore.isEditor() || appStore.isSourceManager()}
-    <CustomTable
-      title="CSAF Provider"
-      headers={[
-        {
-          label: "Name",
-          attribute: "name"
-        },
-        {
-          label: "Domain/PMD",
-          attribute: "url"
-        },
-        {
-          label: "Active",
-          attribute: "active"
-        },
-        {
-          label: "Loading/Queued",
-          attribute: "stats"
-        }
-      ]}
-    >
-      {#each sources as source, index (index)}
-        <tr
-          on:click={() => {
-            if (appStore.isSourceManager()) {
-              push(`/sources/${source.id}`);
-            }
-          }}
-          on:blur={() => {}}
-          on:focus={() => {}}
-          class={appStore.isSourceManager() ? "cursor-pointer" : ""}
-        >
-          <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
-          <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
-          <TableBodyCell {tdClass}
-            ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+<div class="flex flex-col gap-6">
+  <div>
+    <SectionHeader title="Sources"></SectionHeader>
+    {#if appStore.isEditor() || appStore.isSourceManager()}
+      <CustomTable
+        title="CSAF Provider"
+        headers={[
+          {
+            label: "Name",
+            attribute: "name"
+          },
+          {
+            label: "Domain/PMD",
+            attribute: "url"
+          },
+          {
+            label: "Active",
+            attribute: "active"
+          },
+          {
+            label: "Loading/Queued",
+            attribute: "stats"
+          }
+        ]}
+      >
+        {#each sources as source, index (index)}
+          <tr
+            on:click={() => {
+              if (appStore.isSourceManager()) {
+                push(`/sources/${source.id}`);
+              }
+            }}
+            on:blur={() => {}}
+            on:focus={() => {}}
+            class={appStore.isSourceManager() ? "cursor-pointer" : ""}
           >
-          <TableBodyCell {tdClass}
-            >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
+            <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
+            <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
+            <TableBodyCell {tdClass}
+              ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
+            >
+          </tr>
+        {/each}
+        <div slot="bottom">
+          <div
+            class:invisible={!loadingSources}
+            class={loadingSources ? "loadingFadeIn" : ""}
+            class:mb-4={true}
           >
-        </tr>
-      {/each}
-      <div slot="bottom">
-        <div
-          class:invisible={!loadingSources}
-          class={loadingSources ? "loadingFadeIn" : ""}
-          class:mb-4={true}
-        >
-          Loading ...
-          <Spinner color="gray" size="4"></Spinner>
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+          {#if appStore.isSourceManager()}
+            <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+              <i class="bx bx-plus"></i>
+              <span>Add source</span>
+            </Button>
+          {/if}
+          <ErrorMessage error={sourcesError}></ErrorMessage>
         </div>
-        {#if appStore.isSourceManager()}
-          <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-            <i class="bx bx-plus"></i>
-            <span>Add source</span>
-          </Button>
-        {/if}
-        <ErrorMessage error={sourcesError}></ErrorMessage>
-      </div>
-    </CustomTable>
-  {/if}
-  {#await getMessage() then resp}
-    {#if resp.message}
-      {resp.message}
+      </CustomTable>
     {/if}
-  {/await}
-  <ErrorMessage error={sourcesError}></ErrorMessage>
-  <ErrorMessage error={messageError}></ErrorMessage>
+    {#await getMessage() then resp}
+      {#if resp.message}
+        {resp.message}
+      {/if}
+    {/await}
+    <ErrorMessage error={sourcesError}></ErrorMessage>
+    <ErrorMessage error={messageError}></ErrorMessage>
 
-  <br />
-  {#if appStore.isImporter()}
-    <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
-      <i class="bx bx-upload"></i>
-      <span>Upload documents</span>
-    </Button>
-  {/if}
+    <br />
+    {#if appStore.isImporter()}
+      <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
+        <i class="bx bx-upload"></i>
+        <span>Upload documents</span>
+      </Button>
+    {/if}
+  </div>
+
+  <SourceStats title="Statistics"></SourceStats>
 </div>
-
-<SourceStats title="Statistics"></SourceStats>

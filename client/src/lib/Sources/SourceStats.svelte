@@ -77,14 +77,18 @@
       dataLabels: {
         enabled: false
       },
+      grid: {
+        borderColor: "#dedede",
+        yaxis: {
+          lines: {
+            show: true
+          }
+        }
+      },
       stroke: {
         width: [5, 7, 5],
         curve: "straight",
         dashArray: [0, 8, 5]
-      },
-      title: {
-        text: "Download Statistics",
-        align: "left"
       },
       legend: {
         tooltipHoverFormatter: function (val: any, opts: any) {
@@ -102,8 +106,15 @@
           sizeOffset: 6
         }
       },
+      noData: {
+        text: "No information available."
+      },
       xaxis: {
         categories: xAxis
+      },
+      theme: {
+        mode: "light",
+        palette: "palette3"
       },
       tooltip: {
         y: [
@@ -129,9 +140,6 @@
             }
           }
         ]
-      },
-      grid: {
-        borderColor: "#f1f1f1"
       }
     };
     let chart = new ApexCharts(overviewChart, options);
