@@ -319,6 +319,12 @@ const fetchStatistic = async (
   filterQuery += filter.checksumFailed ? `&checksum_failed=true` : "";
   filterQuery += filter.signatureFailed ? `&signature_failed=true` : "";
   filterQuery += filter.duplicateFailed ? `&duplicate_failed=true` : "";
+
+  // Get stats until end of day
+  to.setUTCHours(23);
+  to.setMinutes(59);
+  to.setSeconds(59);
+  to.setMilliseconds(999);
   const resp = await request(
     `${path}?from=${from.toISOString()}&to=${to.toISOString()}&step=${step}` + filterQuery,
     "GET"

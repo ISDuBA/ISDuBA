@@ -221,5 +221,5 @@
 <ErrorMessage error={loadFeedError}></ErrorMessage>
 
 {#if feed}
-  <SourceStats title="Statistics" isFeed id={feed.id}></SourceStats>
+  <SourceStats isFeed id={feed.id} enableRangeSelection></SourceStats>
 {/if}

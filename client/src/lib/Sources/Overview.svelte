@@ -153,5 +153,5 @@
     {/if}
   </div>
 
-  <SourceStats title="Statistics"></SourceStats>
+  <SourceStats enableRangeSelection></SourceStats>
 </div>
