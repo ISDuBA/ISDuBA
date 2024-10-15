@@ -480,13 +480,6 @@ function createStore() {
     isAdmin: () => appStore.getRoles().includes(ADMIN),
     isAuditor: () => appStore.getRoles().includes(AUDITOR),
     isSourceManager: () => appStore.getRoles().includes(SOURCE_MANAGER),
-    isOnlySourceManager: () =>
-      appStore.getRoles().includes(SOURCE_MANAGER) &&
-      !appStore.isAdmin() &&
-      !appStore.isEditor() &&
-      !appStore.isAuditor() &&
-      !appStore.isImporter() &&
-      !appStore.isReviewer(),
     getUserManager: () => state.app.userManager,
     getIsUserLoggedIn: () => state.app.isUserLoggedIn,
     getOption: (option: string) => state.app.config[option],
