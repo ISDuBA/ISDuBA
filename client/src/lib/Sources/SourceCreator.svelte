@@ -138,57 +138,59 @@
   <title>Sources - Add source</title>
 </svelte:head>
 
-<SectionHeader title="Add new CSAF trusted provider"></SectionHeader>
-{#if params?.domain}
-  <List tag="dl" class="divide-y divide-gray-200 text-sm 2xl:w-max">
-    <div>
-      <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
-      <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
-    </div>
-    {#if pmd}
+<div>
+  <SectionHeader title="Add new CSAF trusted provider"></SectionHeader>
+  {#if params?.domain}
+    <List tag="dl" class="divide-y divide-gray-200 text-sm 2xl:w-max">
       <div>
-        <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
-        <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+        <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
+        <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
       </div>
-      <div>
-        <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
-        <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
-      </div>
-      <div>
-        <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
-        <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
-      </div>
-      <div>
-        {#if pmd.publisher.issuing_authority}
-          <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
-        {/if}
-      </div>
-    {/if}
-  </List>
+      {#if pmd}
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+        </div>
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
+        </div>
+        <div>
+          <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
+        </div>
+        <div>
+          {#if pmd.publisher.issuing_authority}
+            <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+          {/if}
+        </div>
+      {/if}
+    </List>
 
-  <SourceForm bind:this={sourceForm} {formClass} {source}></SourceForm>
-  <FeedView feeds={pmdFeeds}></FeedView>
+    <SourceForm bind:this={sourceForm} {formClass} {source}></SourceForm>
+    <FeedView feeds={pmdFeeds}></FeedView>
 
-  <Button on:click={saveAll} color="light">
-    <i class="bx bxs-save me-2"></i>
-    <span>Save source</span>
-  </Button>
-{:else}
-  <form on:submit={loadPMD} class={formClass}>
-    <Label>Domain/PMD</Label>
-    <Input bind:value={source.url} on:input={checkUrl} color={urlColor}></Input>
-    <br />
-    <div class:hidden={!loadingPMD} class:mb-4={true}>
-      Loading ...
-      <Spinner color="gray" size="4"></Spinner>
-    </div>
-    <Button type="submit" color="light" disabled={validUrl === false}>
-      <i class="bx bx-check me-2"></i>
-      <span>Search and load provider metadata</span>
+    <Button on:click={saveAll} color="light">
+      <i class="bx bxs-save me-2"></i>
+      <span>Save source</span>
     </Button>
-  </form>
-{/if}
+  {:else}
+    <form on:submit={loadPMD} class={formClass}>
+      <Label>Domain/PMD</Label>
+      <Input bind:value={source.url} on:input={checkUrl} color={urlColor}></Input>
+      <br />
+      <div class:hidden={!loadingPMD} class:mb-4={true}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+      <Button type="submit" color="light" disabled={validUrl === false}>
+        <i class="bx bx-check me-2"></i>
+        <span>Search and load provider metadata</span>
+      </Button>
+    </form>
+  {/if}
 
-<br />
-<ErrorMessage error={errorMessage}></ErrorMessage>
+  <br />
+  <ErrorMessage error={errorMessage}></ErrorMessage>
+</div>

@@ -9,7 +9,7 @@
  */
 
 import { appStore } from "./store";
-import type { Role, WorkflowState } from "./workflow";
+import type { Role, WorkflowState, WorkflowStateTransition } from "./workflow";
 import { NEW, READ, REVIEW, ASSESSING, ARCHIVED, DELETE, WORKFLOW_TRANSITIONS } from "./workflow";
 
 export function isRoleIncluded(roles: Role[], rolesToCheck: Role[]) {
@@ -59,9 +59,20 @@ export function allowedToChangeWorkflow(
   return false;
 }
 
-export function getAllowedWorkflowChanges(currentState: WorkflowState) {
-  return WORKFLOW_TRANSITIONS.filter(
-    (transition) =>
-      isRoleIncluded(transition.roles, appStore.getRoles()) && transition.from === currentState
-  );
+export function getAllowedWorkflowChanges(
+  currentStates: WorkflowState[]
+): WorkflowStateTransition[] {
+  const workflowTransitions: WorkflowStateTransition[] = [];
+  if (currentStates.length === 0) return workflowTransitions;
+  WORKFLOW_TRANSITIONS.forEach((transition: WorkflowStateTransition) => {
+    if (
+      !workflowTransitions.includes(transition) &&
+      isRoleIncluded(transition.roles, appStore.getRoles()) &&
+      currentStates.length ===
+        currentStates.filter((s: WorkflowState) => s === transition.from).length
+    ) {
+      workflowTransitions.push(transition);
+    }
+  });
+  return workflowTransitions;
 }

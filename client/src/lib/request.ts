@@ -92,7 +92,7 @@ export const request = async (
   }
 };
 
-const getAccessToken = async () => {
+export const getAccessToken = async () => {
   const userManager = appStore.getUserManager();
   return userManager.getUser().then(async (user: User) => {
     if (user) {
