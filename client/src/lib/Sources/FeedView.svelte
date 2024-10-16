@@ -45,7 +45,7 @@
     }
   ];
 
-  let headersEdit = [...headers, { label: "Loading/Queued", attribute: "stats" }];
+  let headersEdit = [...headers, { label: "Loading/Queued", attribute: "stats" }, { label: "Logs", attribute: "logs" }];
 
   let logLevels: { value: LogLevel; name: string }[] = [];
 
@@ -113,6 +113,11 @@
           <TableBodyCell {tdClass}
             >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
           >
+          <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+            <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
+              <i class="bx bx-archive text-red-600"> </i></a
+            >
+          </TableBodyCell>
         {/if}
       </tr>
     {/each}
