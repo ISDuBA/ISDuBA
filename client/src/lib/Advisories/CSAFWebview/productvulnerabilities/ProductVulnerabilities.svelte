@@ -145,7 +145,7 @@
               {#each line as column}
                 {#if column.name === "Product"}
                   <TableBodyCell tdClass={tdClass + " sticky left-0 bg-inherit"}>
-                    <div class="max-w-1/2 min-w-56 whitespace-normal text-wrap">
+                    <div class="max-w-1/2 min-w-56 whitespace-normal text-wrap break-all">
                       <a
                         title={$appStore.webview.doc?.productsByID[column.content]}
                         id={crypto.randomUUID()}

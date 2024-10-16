@@ -17,7 +17,11 @@
 
 {#if notes}
   {#each notes as note}
-    <Collapsible header={`Category: ${note.category}`} level={4} open={notes.length === 1}>
+    <Collapsible
+      header={note.title ? `${note.category}: ${note.title}` : note.category}
+      level={4}
+      open={notes.length === 1}
+    >
       <SingleNote {note} />
     </Collapsible>
   {/each}

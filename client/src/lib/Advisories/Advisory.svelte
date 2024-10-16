@@ -61,6 +61,7 @@
   } else {
     isCalculatingAllowed = false;
   }
+  $: canSeeCommentArea = appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor();
 
   const setAsReadTimeout: number[] = [];
   let isDiffOpen = false;
@@ -326,7 +327,10 @@
     </div>
     <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
       <Label class="text-gray-600">{params.publisherNamespace}</Label>
-      <div class="right-6 mt-4 flex h-fit flex-row gap-2 min-[1080px]:absolute">
+      <div
+        class={"right-6 mt-4 flex h-fit flex-row gap-2" +
+          (canSeeCommentArea ? " min-[1080px]:absolute" : "")}
+      >
         <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
       </div>
     </div>
@@ -336,55 +340,55 @@
   <ErrorMessage error={stateError}></ErrorMessage>
   <ErrorMessage error={loadDocumentError}></ErrorMessage>
   <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
-  <div class="w-full lg:grid lg:grid-cols-[1fr_29rem]">
-    <div
-      class="right-3 mr-3 flex w-full flex-col bg-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
-    >
-      <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
-        <div class="mb-4 flex flex-row items-center">
-          {#if ssvcVector}
-            {#if !isSSVCediting}
-              <SsvcBadge vector={ssvcVector}></SsvcBadge>
+  <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
+    {#if canSeeCommentArea}
+      <div
+        class="right-3 mr-3 flex w-full flex-col bg-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
+      >
+        <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
+          <div class="mb-4 flex flex-row items-center">
+            {#if ssvcVector}
+              {#if !isSSVCediting}
+                <SsvcBadge vector={ssvcVector}></SsvcBadge>
+              {/if}
             {/if}
-          {/if}
-          {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
-            <SsvcCalculator
-              bind:isEditing={isSSVCediting}
-              vectorInput={ssvcVector}
-              disabled={!isCalculatingAllowed}
-              documentID={params.id}
-              on:updateSSVC={loadMetaData}
-              {allowEditing}
-            ></SsvcCalculator>
+            {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
+              <SsvcCalculator
+                bind:isEditing={isSSVCediting}
+                vectorInput={ssvcVector}
+                disabled={!isCalculatingAllowed}
+                documentID={params.id}
+                on:updateSSVC={loadMetaData}
+                {allowEditing}
+              ></SsvcCalculator>
+            {/if}
+          </div>
+          {#if isCommentingAllowed && !isSSVCediting}
+            <div class="mt-6">
+              <Label class="mb-2" for="comment-textarea"
+                >{advisoryState === ARCHIVED ? "Reactivate with comment" : "New Comment"}</Label
+              >
+              <CommentTextArea
+                on:focus={() => {
+                  commentFocus = true;
+                }}
+                on:blur={() => {
+                  commentFocus = false;
+                }}
+                on:input={() => (createCommentError = null)}
+                on:saveComment={createComment}
+                on:saveForReview={sendForReview}
+                on:saveForAssessing={sendForAssessing}
+                bind:value={comment}
+                errorMessage={createCommentError}
+                buttonText="Send"
+                state={advisoryState}
+              ></CommentTextArea>
+            </div>
           {/if}
         </div>
-        {#if isCommentingAllowed && !isSSVCediting}
-          <div class="mt-6">
-            <Label class="mb-2" for="comment-textarea"
-              >{advisoryState === ARCHIVED ? "Reactivate with comment" : "New Comment"}</Label
-            >
-            <CommentTextArea
-              on:focus={() => {
-                commentFocus = true;
-              }}
-              on:blur={() => {
-                commentFocus = false;
-              }}
-              on:input={() => (createCommentError = null)}
-              on:saveComment={createComment}
-              on:saveForReview={sendForReview}
-              on:saveForAssessing={sendForAssessing}
-              bind:value={comment}
-              errorMessage={createCommentError}
-              buttonText="Send"
-              state={advisoryState}
-            ></CommentTextArea>
-          </div>
-        {/if}
-      </div>
-      <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
-      <div class="h-auto">
-        {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+        <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
+        <div class="h-auto">
           <div class="mt-6 h-full">
             <History
               state={advisoryState}
@@ -396,11 +400,12 @@
           </div>
           <ErrorMessage error={loadEventsError}></ErrorMessage>
           <ErrorMessage error={loadCommentsError}></ErrorMessage>
-        {/if}
+        </div>
       </div>
-    </div>
+    {/if}
     <div
-      class="flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:overflow-auto lg:pr-6"
+      class={"flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:pr-6" +
+        (canSeeCommentArea ? " lg:overflow-auto" : "")}
     >
       <div class="flex flex-row">
         {#if advisoryVersions.length > 0}
