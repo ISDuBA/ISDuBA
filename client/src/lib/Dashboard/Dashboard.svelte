@@ -17,6 +17,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { SEARCHTYPES } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import DashboardStats from "./DashboardStats.svelte";
 
   let filteredQueries: any[] = [];
   let loadIgnoredError: ErrorDetails | null;
@@ -83,4 +84,5 @@
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
   <ErrorMessage error={loadIgnoredError}></ErrorMessage>
+  <DashboardStats></DashboardStats>
 {/if}
