@@ -199,7 +199,7 @@
   export async function fetchData(): Promise<void> {
     appStore.setDocuments([]);
     appStore.clearSelectedDocumentIDs();
-    setOpenRowNull();
+    openRow = null;
     if (query !== prevQuery) {
       restorePosition();
       savePosition();
@@ -308,10 +308,6 @@
   const onDeleted = async () => {
     await fetchData();
     first();
-  };
-
-  const setOpenRowNull = async () => {
-    openRow = null;
   };
 
   $: numberOfPages = Math.ceil(count / limit);
