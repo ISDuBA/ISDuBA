@@ -45,7 +45,11 @@
     }
   ];
 
-  let headersEdit = [...headers, { label: "Loading/Queued", attribute: "stats" }, { label: "Logs", attribute: "logs" }];
+  let headersEdit = [
+    ...headers,
+    { label: "Loading/Queued", attribute: "stats" },
+    { label: "Logs", attribute: "logs" }
+  ];
 
   let logLevels: { value: LogLevel; name: string }[] = [];
 
