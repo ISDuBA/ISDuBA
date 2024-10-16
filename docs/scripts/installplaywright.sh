@@ -24,6 +24,9 @@ cd ../../client # change directory
 npm install
 echo "Successfully installed client dependencies."
 
+# enable pre-commit hook
+npm run prepare
+
 sudo npx playwright install --with-deps
 # needs to be rerun for browsers
 npx playwright install
