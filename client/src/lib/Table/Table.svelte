@@ -199,6 +199,7 @@
   export async function fetchData(): Promise<void> {
     appStore.setDocuments([]);
     appStore.clearSelectedDocumentIDs();
+    openRow = null;
     if (query !== prevQuery) {
       restorePosition();
       savePosition();
