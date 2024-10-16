@@ -312,7 +312,7 @@
 
   const setOpenRowNull = async () => {
     openRow = null;
-  }
+  };
 
   $: numberOfPages = Math.ceil(count / limit);
 
