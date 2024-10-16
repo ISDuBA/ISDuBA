@@ -24,6 +24,7 @@
   export let formClass: string = "";
   export let source: Source;
   export let enableActive: boolean = false;
+  export let parseSource: boolean = true;
   export const updateSource = async () => {
     formatHeaders();
     await loadCerts();
@@ -142,16 +143,12 @@
   };
 
   const onChangedHeaders = (e: Event | undefined) => {
-    const lastIndex = headers.length - 1;
-    if (
-      (headers[lastIndex][0].length > 0 && headers[lastIndex][1].length > 0) ||
-      (lastIndex - 1 >= 0 &&
-        headers[lastIndex - 1][0].length > 0 &&
-        headers[lastIndex - 1][1].length > 0)
-    ) {
+    let lastElement = headers[headers.length - 1];
+    if (lastElement === undefined || (lastElement[0] !== "" && lastElement[1] !== "")) {
       headers.push(["", ""]);
-      headers = headers;
     }
+    formatHeaders();
+
     if (e) {
       inputChange();
     }
@@ -181,7 +178,10 @@
   };
 
   $: if (source.headers) {
-    parseHeaders();
+    if (parseSource) {
+      parseHeaders();
+      parseSource = false;
+    }
   }
 
   const parseHeaders = () => {

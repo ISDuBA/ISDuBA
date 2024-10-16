@@ -123,6 +123,10 @@
     }
   };
 
+  const inputChange = async () => {
+    await updateSourceForm();
+  };
+
   onMount(async () => {
     await loadSourceDefaults();
     let domain = params?.domain;
@@ -168,7 +172,7 @@
       {/if}
     </List>
 
-    <SourceForm bind:this={sourceForm} {formClass} {source}></SourceForm>
+    <SourceForm bind:this={sourceForm} {inputChange} {formClass} {source}></SourceForm>
     <FeedView feeds={pmdFeeds}></FeedView>
 
     <Button on:click={saveAll} color="light">

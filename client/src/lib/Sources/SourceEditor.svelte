@@ -58,6 +58,8 @@
   let updateSourceForm: any;
   let fillAgeDataFromSource: (source: Source) => void;
 
+  let loadSource: boolean = true;
+
   let source: Source = {
     name: "",
     url: "",
@@ -96,6 +98,7 @@
     let result = await fetchSource(Number(id), true);
     if (result.ok) {
       source = result.value;
+      loadSource = true;
       if (fillAgeDataFromSource) {
         fillAgeDataFromSource(source);
       }
@@ -342,7 +345,13 @@
       Loading source configuration ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
-    <SourceForm bind:this={sourceForm} {inputChange} {source} {formClass} enableActive={true}
+    <SourceForm
+      bind:this={sourceForm}
+      bind:parseSource={loadSource}
+      {inputChange}
+      {source}
+      {formClass}
+      enableActive={true}
     ></SourceForm>
     <Button disabled={!sourceEdited} on:click={updateSource} color="light">
       <i class="bx bxs-save me-2"></i>
