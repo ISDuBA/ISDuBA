@@ -9,15 +9,27 @@
 -->
 
 <script lang="ts">
-  import Reference from "./Reference.svelte";
+  import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   export let references: any;
+  const baseCellStyle = "py-2 px-2";
+  const cellStyle = "" + baseCellStyle;
 </script>
 
 {#if references}
-  {#each references as reference, index}
-    <Reference {reference} />
-    {#if references.length > 1 && index < references.length - 1}
-      <hr />
-    {/if}
-  {/each}
+  <div class="mt-1 w-full pl-5">
+    <Table noborder striped={true}>
+      <TableBody>
+        {#each references as reference}
+          <TableBodyRow>
+            <TableBodyCell tdClass={cellStyle}>{reference.category}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}
+              ><p class="mb-2">{reference.summary}</p>
+              <p><i class="bx bx-link"></i>{reference.url}</p></TableBodyCell
+            >
+            <TableBodyCell></TableBodyCell>
+          </TableBodyRow>
+        {/each}
+      </TableBody>
+    </Table>
+  </div>
 {/if}
