@@ -345,7 +345,9 @@
       <div
         class="right-3 mr-3 flex w-full flex-col bg-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
       >
-        <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
+        <div
+          class={isSSVCediting || commentFocus ? " h-64 w-full p-3 shadow-md" : "h-64 w-full p-3"}
+        >
           <div class="mb-4 flex flex-row items-center">
             {#if ssvcVector}
               {#if !isSSVCediting}
