@@ -18,9 +18,10 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import Activity from "./Activity.svelte";
   import { getPublisher } from "$lib/publisher";
-  import { Button, Spinner } from "flowbite-svelte";
+  import { Spinner } from "flowbite-svelte";
   import { getRelativeTime } from "./activity";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import ShowMoreButton from "./ShowMoreButton.svelte";
 
   export let storedQuery: any;
   let documents: any[] | null = null;
@@ -78,10 +79,6 @@
 
   const openDocument = (doc: any) => {
     push(`/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`);
-  };
-
-  const showMore = () => {
-    push(`/search?query=${storedQuery.id}`);
   };
 </script>
 
@@ -144,13 +141,11 @@
               </div>
             </Activity>
           {/each}
-          <Button on:click={showMore} size="xs" color="light" class="h-6 w-fit rounded-md"
-            >More...</Button
-          >
         {:else}
           <div class="text-gray-600">No matching advisories found.</div>
         {/if}
       {/if}
+      <ShowMoreButton id={storedQuery.id}></ShowMoreButton>
     </div>
     <ErrorMessage error={newDocumentsError}></ErrorMessage>
   </div>
