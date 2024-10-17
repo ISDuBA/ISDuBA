@@ -424,6 +424,7 @@
           <Diff showTitle={false}></Diff>
         {:else}
           <Webview
+            widthOffset={canSeeCommentArea ? 464 : 0}
             basePath={"#/advisories/" +
               params.publisherNamespace +
               "/" +

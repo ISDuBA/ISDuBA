@@ -23,6 +23,7 @@
 
   export let position = "";
   export let basePath = "";
+  export let widthOffset = 0;
 
   const sideScroll = "w-full overflow-y-auto h-max";
   const webviewDataSections = [
@@ -128,7 +129,7 @@
   $: innerWidth = 0;
   $: {
     let oldPhase = screenPhase;
-    screenPhase = Math.max(0, Math.floor(innerWidth / 550 - 2));
+    screenPhase = Math.max(0, Math.floor((innerWidth - widthOffset) / 550 - 1));
     if (oldPhase !== screenPhase) {
       updatePlaces();
     }
