@@ -16,11 +16,12 @@
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
-  import { Badge, Button, Spinner } from "flowbite-svelte";
+  import { Badge, Spinner } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { getRelativeTime } from "./activity";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import ShowMoreButton from "./ShowMoreButton.svelte";
 
   export let storedQuery: any;
   const ignoredColumns = [
@@ -135,10 +136,6 @@
     await transformDataToActivities();
     isLoading = false;
   });
-
-  const showMore = () => {
-    push(`/search?query=${storedQuery.id}`);
-  };
 </script>
 
 {#if $appStore.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor())}
@@ -230,13 +227,11 @@
               </div>
             </Activity>
           {/each}
-          <Button on:click={showMore} size="xs" color="light" class="h-6 w-fit rounded-md"
-            >More...</Button
-          >
         {:else}
           <div class="text-gray-600">No matching events found.</div>
         {/if}
       {/if}
+      <ShowMoreButton id={storedQuery.id}></ShowMoreButton>
       {#if activityCount > 10}<div class="">…There are more events</div>{/if}
     </div>
     <ErrorMessage error={loadActivityError}></ErrorMessage>
