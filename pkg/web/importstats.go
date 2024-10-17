@@ -23,15 +23,53 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const selectImportStatsSQL = `SELECT ` +
-	`date_bin($1, time, $2) AS bucket,` +
-	`count(*) AS count ` +
-	`FROM downloads %s ` + // placeholder for deeper joins.
-	`WHERE time BETWEEN $2 AND $3 %s ` + // placeholder for more filters.
-	`GROUP BY bucket ` +
-	`ORDER BY bucket`
+const (
+	selectImportStatsSQL = `SELECT ` +
+		`date_bin($1, time, $2) AS bucket,` +
+		`count(*) AS count ` +
+		`FROM downloads ` +
+		`%s ` + // placeholder for deeper joins.
+		`WHERE time BETWEEN $2 AND $3 ` +
+		`%s ` + // placeholder for more filters.
+		`GROUP BY bucket ` +
+		`ORDER BY bucket`
+	selectCVEStatsSQL = `SELECT ` +
+		`date_bin($1, time, $2) AS bucket,` +
+		`count(distinct cve_id) AS count ` +
+		`FROM downloads JOIN documents ON downloads.documents_id = documents.id ` +
+		`JOIN documents_cves ON documents.id = documents_cves.documents_id ` +
+		`%s ` + // placeholder for deeper joins.
+		`WHERE time BETWEEN $2 AND $3 ` +
+		`%s ` + // placeholder for more filters.
+		`GROUP BY bucket ` +
+		`ORDER BY bucket`
+)
+
+func (c *Controller) cveStatsSource(ctx *gin.Context) {
+	c.importStatsSourceTmpl(ctx, selectCVEStatsSQL)
+}
+
+func (c *Controller) cveStatsFeed(ctx *gin.Context) {
+	c.importStatsFeedTmpl(ctx, selectCVEStatsSQL)
+}
+
+func (c *Controller) cveStatsAllSources(ctx *gin.Context) {
+	c.importStatsAllSourcesTmpl(ctx, selectCVEStatsSQL)
+}
 
 func (c *Controller) importStatsSource(ctx *gin.Context) {
+	c.importStatsSourceTmpl(ctx, selectImportStatsSQL)
+}
+
+func (c *Controller) importStatsAllSources(ctx *gin.Context) {
+	c.importStatsAllSourcesTmpl(ctx, selectImportStatsSQL)
+}
+
+func (c *Controller) importStatsFeed(ctx *gin.Context) {
+	c.importStatsFeedTmpl(ctx, selectImportStatsSQL)
+}
+
+func (c *Controller) importStatsSourceTmpl(ctx *gin.Context, sqlTmpl string) {
 	sourcesID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
@@ -48,12 +86,12 @@ func (c *Controller) importStatsSource(ctx *gin.Context) {
 	c.serveImportStats(ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) (pgx.Rows, error) {
 			const joinFeeds = `JOIN feeds ON downloads.feeds_id = feeds.id`
-			sql := fmt.Sprintf(selectImportStatsSQL, joinFeeds, cond.String())
+			sql := fmt.Sprintf(sqlTmpl, joinFeeds, cond.String())
 			return conn.Query(rctx, sql, step, from, to, sourcesID)
 		})
 }
 
-func (c *Controller) importStatsAllSources(ctx *gin.Context) {
+func (c *Controller) importStatsAllSourcesTmpl(ctx *gin.Context, sqlTmpl string) {
 	from, to, step, ok := importStatsInterval(ctx)
 	if !ok {
 		return
@@ -64,12 +102,12 @@ func (c *Controller) importStatsAllSources(ctx *gin.Context) {
 	}
 	c.serveImportStats(ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) (pgx.Rows, error) {
-			sql := fmt.Sprintf(selectImportStatsSQL, "", cond.String())
+			sql := fmt.Sprintf(sqlTmpl, "", cond.String())
 			return conn.Query(rctx, sql, step, from, to)
 		})
 }
 
-func (c *Controller) importStatsFeed(ctx *gin.Context) {
+func (c *Controller) importStatsFeedTmpl(ctx *gin.Context, sqlTmpl string) {
 	feedID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
@@ -85,7 +123,7 @@ func (c *Controller) importStatsFeed(ctx *gin.Context) {
 	}
 	c.serveImportStats(ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) (pgx.Rows, error) {
-			sql := fmt.Sprintf(selectImportStatsSQL, "", cond.String())
+			sql := fmt.Sprintf(sqlTmpl, "", cond.String())
 			return conn.Query(rctx, sql, step, from, to, feedID)
 		})
 }

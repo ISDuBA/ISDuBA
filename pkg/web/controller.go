@@ -175,6 +175,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/stats/imports/source/:id", authAll, c.importStatsSource)
 	api.GET("/stats/imports/feed/:id", authAll, c.importStatsFeed)
 	api.GET("/stats/imports", authAll, c.importStatsAllSources)
+	api.GET("/stats/cve/source/:id", authAll, c.cveStatsSource)
+	api.GET("/stats/cve/feed/:id", authAll, c.cveStatsFeed)
+	api.GET("/stats/cve", authAll, c.cveStatsAllSources)
 
 	return r
 }
