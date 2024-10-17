@@ -59,13 +59,11 @@
     setTimeout(() => {
       if (position.startsWith("product-")) {
         updateTabOpen("productTree");
-        appStore.setProductTreeSectionVisible();
         appStore.setSelectedProduct(position.replace("product-", ""));
       }
       if (position.startsWith("cve-")) {
         updateTabOpen("vulnerabilities");
         appStore.setSelectedCVE(position.replace("cve-", ""));
-        appStore.setVulnerabilitiesSectionVisible();
       }
     }, 300);
   };
@@ -197,7 +195,7 @@
           {#if showTab(placeToPhase.notes) && $appStore.webview.doc?.notes}
             <TabItem bind:open={tabOpen.notes} title="Notes">
               <div class={sideScroll}>
-                <Notes notes={$appStore.webview.doc?.notes} />
+                <Notes open notes={$appStore.webview.doc?.notes} />
               </div>
             </TabItem>
           {/if}
@@ -226,7 +224,7 @@
       {:else}
         <div>
           <FakeButton active>Vulnerabilities overview</FakeButton>
-          <div class="mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+          <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
           <div class={sideScroll}>
             {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
               <ProductVulnerabilities {basePath} />
@@ -243,7 +241,7 @@
     {#if showArea(placeToPhase.productTree)}
       <div>
         <FakeButton active>Product tree</FakeButton>
-        <div class="mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <ProductTree {basePath} />
         </div>
@@ -252,7 +250,7 @@
     {#if showArea(placeToPhase.vulnerabilities)}
       <div>
         <FakeButton active>Vulnerabilities</FakeButton>
-        <div class="mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <Vulnerabilities {basePath} />
         </div>
@@ -261,9 +259,9 @@
     {#if showArea(placeToPhase.notes) && $appStore.webview.doc?.notes}
       <div>
         <FakeButton active>Notes</FakeButton>
-        <div class="mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
-          <Notes notes={$appStore.webview.doc?.notes} />
+          <Notes open notes={$appStore.webview.doc?.notes} />
         </div>
       </div>
     {/if}
@@ -271,7 +269,7 @@
     {#if showArea(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
       <div>
         <FakeButton active>Acknowledgements</FakeButton>
-        <div class="mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
         </div>
@@ -281,7 +279,7 @@
     {#if showArea(placeToPhase.references)}
       <div>
         <FakeButton active>References</FakeButton>
-        <div class="mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <References references={$appStore.webview.doc?.references} />
         </div>
@@ -291,7 +289,7 @@
     {#if showArea(placeToPhase.revisionHistory)}
       <div>
         <FakeButton active>Revision history</FakeButton>
-        <div class="mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <RevisionHistory />
         </div>

@@ -37,7 +37,6 @@
   export let basePath = "";
 
   onMount(() => {
-    appStore.setProductTreeSectionInVisible();
     appStore.resetSelectedProduct();
   });
 
