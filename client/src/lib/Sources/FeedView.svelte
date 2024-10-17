@@ -90,7 +90,7 @@
           {/if}
         </TableBodyCell>
         <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-          {#if edit}
+          {#if edit && feed.enable}
             <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}
               >{feed.url}</a
             >
@@ -117,11 +117,13 @@
           <TableBodyCell {tdClass}
             >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
           >
-          <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-            <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
-              <i class="bx bx-archive text-red-600"> </i></a
-            >
-          </TableBodyCell>
+          {#if feed.enable}
+            <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+              <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
+                <i class="bx bx-archive text-red-600"> </i></a
+              >
+            </TableBodyCell>
+          {/if}
         {/if}
       </tr>
     {/each}
