@@ -95,16 +95,6 @@
             {/if}
             <SidebarItem
               class="px-6 py-2.5"
-              label="Statistics"
-              href="javascript: void(0)"
-              nonActiveClass={notactivated}
-            >
-              <svelte:fragment slot="icon">
-                <i class="bx bx-bar-chart-square"></i>
-              </svelte:fragment>
-            </SidebarItem>
-            <SidebarItem
-              class="px-6 py-2.5"
               label="Configuration"
               href="javascript: void(0)"
               nonActiveClass={notactivated}
