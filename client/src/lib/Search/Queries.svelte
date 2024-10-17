@@ -74,7 +74,16 @@
       // Need to wait until sortedQueries is filled.
       setTimeout(() => {
         const index = sortedQueries.findIndex((q) => q.id === Number(queryString.query));
-        selectQuery(index);
+
+        // Probably a dashboard query
+        if (index === -1) {
+          const query = response.content.filter((q: any) => `${q.id}` === queryString.query)?.[0];
+          if (query) {
+            dispatch("querySelected", query);
+          }
+        } else {
+          selectQuery(index);
+        }
       }, 100);
     }
   });
