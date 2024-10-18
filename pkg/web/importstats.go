@@ -69,6 +69,21 @@ func (c *Controller) importStatsFeed(ctx *gin.Context) {
 	c.importStatsFeedTmpl(ctx, selectImportStatsSQL)
 }
 
+func (c *Controller) critcalStatsSource(ctx *gin.Context) {
+	// TODO: Implement me!
+	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not Implemented, yet!"})
+}
+
+func (c *Controller) criticalStatsAllSources(ctx *gin.Context) {
+	// TODO: Implement me!
+	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not Implemented, yet!"})
+}
+
+func (c *Controller) critcalStatsFeed(ctx *gin.Context) {
+	// TODO: Implement me!
+	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not Implemented, yet!"})
+}
+
 func (c *Controller) importStatsSourceTmpl(ctx *gin.Context, sqlTmpl string) {
 	sourcesID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
