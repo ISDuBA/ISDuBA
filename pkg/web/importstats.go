@@ -221,7 +221,7 @@ func collectCritcalBuckets(rows pgx.Rows) ([][]any, error) {
 		if err := rows.Scan(&bucket, &critical, &count); err != nil {
 			return nil, fmt.Errorf("cannot scan criticals: %w", err)
 		}
-		add(bucket, critical, count)
+		add(bucket.UTC(), critical, count)
 	}
 	if len(bins) > 0 {
 		list = append(list, []any{last, bins})
