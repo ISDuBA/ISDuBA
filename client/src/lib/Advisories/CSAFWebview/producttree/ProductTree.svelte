@@ -15,14 +15,36 @@
   import ProductGroups from "./productgroup/ProductGroups.svelte";
   import ProductNames from "./product/ProductNames.svelte";
   import Relationships from "./relationship/Relationships.svelte";
+  import { productTreeCutoffs } from "../efficiencyCutoffs";
   export let basePath = "";
+
+  let openSubBranches = false;
+  let openBranches = false;
+  let openRelationships = false;
+
+  $: {
+    let size = 0;
+    for (let branch of $appStore.webview.doc?.productTree.branches ?? []) {
+      if (branch.branches) {
+        size = size + branch.branches.length;
+      }
+      if (size >= productTreeCutoffs.level2Upper) {
+        break;
+      }
+    }
+    openBranches = size <= productTreeCutoffs.level2Upper;
+    openSubBranches = size <= productTreeCutoffs.level2Lower;
+    openRelationships =
+      $appStore.webview.doc?.productTree.relationships?.length ?? 0 <= productTreeCutoffs.relations;
+  }
 </script>
 
 {#if $appStore.webview.doc?.productTree.branches}
-  <Collapsible header="Branches" open>
+  <Collapsible header="Branches" open={openBranches}>
     {#each $appStore.webview.doc?.productTree.branches as branch}
       <Branch
         {branch}
+        {openSubBranches}
         open={$appStore.webview.doc?.productTree.branches.length < 5 ||
           !(
             $appStore.webview.doc?.productTree.relationships ||
@@ -35,7 +57,7 @@
 {/if}
 
 {#if $appStore.webview.doc?.productTree.relationships}
-  <Collapsible header="Relationships" open>
+  <Collapsible header="Relationships" open={openRelationships}>
     <Relationships {basePath} relationships={$appStore.webview.doc?.productTree.relationships} />
   </Collapsible>
 {/if}

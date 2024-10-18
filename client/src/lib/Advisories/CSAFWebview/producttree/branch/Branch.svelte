@@ -15,6 +15,7 @@
   import { Badge } from "flowbite-svelte";
   export let branch: Branch;
   export let open: boolean;
+  export let openSubBranches: boolean = false;
 </script>
 
 <div class="pl-3">
@@ -25,7 +26,7 @@
     </div>
     {#if branch.branches}
       {#each branch.branches as b}
-        <svelte:self branch={b} {open} />
+        <svelte:self branch={b} open={openSubBranches} {openSubBranches} />
       {/each}
     {/if}
     {#if branch.product}
