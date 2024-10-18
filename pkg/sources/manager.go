@@ -889,7 +889,7 @@ func placeholders(n int) string {
 }
 
 // SourceUpdater offers a protocol to update a source. Call the UpdateX
-// (with X in Name, Rate, ...) methods to update specfic fields.
+// (with X in Name, Rate, ...) methods to update specific fields.
 type SourceUpdater struct {
 	updater[*source]
 	clientCertUpdated bool
@@ -1144,7 +1144,7 @@ func (m *Manager) UpdateSource(
 }
 
 // FeedUpdater offers a protocol to update a source. Call the UpdateX
-// (with X in LogLevel, Label) methods to update specfic fields.
+// (with X in LogLevel, Label) methods to update specific fields.
 type FeedUpdater struct {
 	updater[*feed]
 }
