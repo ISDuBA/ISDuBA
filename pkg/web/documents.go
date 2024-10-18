@@ -155,12 +155,24 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		}
 	}
 
+	// Store stats in database.
+	storeStats := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
+		if duplicate {
+			return nil
+		}
+		const insertSQL = `INSERT INTO downloads ` +
+			`(documents_id, feeds_id) VALUES ($1, ` +
+			`(SELECT id FROM feeds WHERE sources_id = 0 AND label = 'manual'))`
+		_, err := tx.Exec(ctx, insertSQL, docID)
+		return err
+	}
+
 	var id int64
 	switch err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			id, err = models.ImportDocumentData(
-				rctx, conn, document, buf.Bytes(), actor, c.tlps(ctx), nil, false)
+				rctx, conn, document, buf.Bytes(), actor, c.tlps(ctx), storeStats, false)
 			return err
 		}, 0,
 	); {
