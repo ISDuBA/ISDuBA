@@ -27,7 +27,7 @@
   <div class="mt-1 w-fit pl-5">
     <Table noborder striped={true}>
       <TableHead>
-        <TableHeadCell padding={tablePadding}>Number</TableHeadCell>
+        <TableHeadCell padding={tablePadding}>#</TableHeadCell>
         <TableHeadCell padding={tablePadding}>Date</TableHeadCell>
         <TableHeadCell padding={tablePadding}>Summary</TableHeadCell>
         <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
