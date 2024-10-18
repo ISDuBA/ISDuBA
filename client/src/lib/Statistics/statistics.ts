@@ -22,6 +22,19 @@ type StatisticFilter = {
   checksumFailed?: boolean;
   signatureFailed?: boolean;
   duplicateFailed?: boolean;
+  [key: string]: boolean | undefined;
+};
+
+type ImportStatistic = {
+  imports?: Statistic;
+  signatureFailed?: Statistic;
+  checksumFailed?: Statistic;
+  filenameFailed?: Statistic;
+  schemaFailed?: Statistic;
+  downloadFailed?: Statistic;
+  remoteFailed?: Statistic;
+  duplicateFailed?: Statistic;
+  [key: string]: Statistic | undefined;
 };
 
 const setToEndOfDay = (date: Date) => {
@@ -52,6 +65,49 @@ const toLocaleISOString = (d: Date) => {
     padMilliseconds(d.getMilliseconds()) +
     "Z"
   );
+};
+
+const fetchAllImportStatistic = async (
+  from: Date,
+  to: Date,
+  step: string,
+  id?: number,
+  isFeed: boolean = false
+): Promise<Result<ImportStatistic, ErrorDetails>> => {
+  const importStats: ImportStatistic = {};
+  const response = await fetchStatistic(new Date(from), new Date(to), step, {}, id, isFeed);
+  if (response.ok) {
+    importStats.imports = response.value;
+  } else if (response.error) {
+    return {
+      ok: false,
+      error: response.error
+    };
+  }
+  const failureTypes = [
+    "signatureFailed",
+    "checksumFailed",
+    "filenameFailed",
+    "schemaFailed",
+    "downloadFailed",
+    "remoteFailed",
+    "duplicateFailed"
+  ];
+  for (let i = 0; i < failureTypes.length; i++) {
+    const type: string = failureTypes[i];
+    const filter: StatisticFilter = {};
+    filter[type] = true;
+    const response2 = await fetchStatistic(new Date(from), new Date(to), step, filter, id, isFeed);
+    if (response2.ok) {
+      importStats[type] = response2.value;
+    } else if (response2.error) {
+      return {
+        ok: false,
+        error: response2.error
+      };
+    }
+  }
+  return { ok: true, value: importStats };
 };
 
 const fetchStatistic = async (
@@ -87,6 +143,11 @@ const fetchStatistic = async (
   );
   if (resp.ok) {
     if (resp.content) {
+      for (let i = 0; i < resp.content.length; i++) {
+        const date = new Date(resp.content[i][0]);
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+        resp.content[i][0] = date;
+      }
       return {
         ok: true,
         value: resp.content
@@ -99,5 +160,5 @@ const fetchStatistic = async (
   };
 };
 
-export { fetchStatistic, setToEndOfDay, toLocaleISOString };
-export type { Statistic, StatisticEntry, StatisticFilter };
+export { fetchAllImportStatistic, fetchStatistic, setToEndOfDay, toLocaleISOString };
+export type { ImportStatistic, Statistic, StatisticEntry, StatisticFilter };
