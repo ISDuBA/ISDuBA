@@ -84,5 +84,5 @@
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
   <ErrorMessage error={loadIgnoredError}></ErrorMessage>
-  <DashboardStats></DashboardStats>
+  <DashboardStats updateIntervalInMinutes={10}></DashboardStats>
 {/if}
