@@ -14,6 +14,12 @@ import type { Result } from "$lib/types";
 type StatisticEntry = [Date, number | null];
 type Statistic = StatisticEntry[];
 
+type CVSS = number;
+type CritStatisticEntry = [CVSS | number];
+type CritStatistic = [Date, CritStatisticEntry[]];
+
+type StatisticType = "imports" | "importFailures" | "cve" | "critical";
+
 type StatisticFilter = {
   downloadFailed?: boolean;
   filenameFailed?: boolean;
@@ -22,6 +28,21 @@ type StatisticFilter = {
   checksumFailed?: boolean;
   signatureFailed?: boolean;
   duplicateFailed?: boolean;
+  [key: string]: boolean | undefined;
+};
+
+type StatisticGroup = {
+  critical?: Statistic;
+  cves?: Statistic;
+  imports?: Statistic;
+  signatureFailed?: Statistic;
+  checksumFailed?: Statistic;
+  filenameFailed?: Statistic;
+  schemaFailed?: Statistic;
+  downloadFailed?: Statistic;
+  remoteFailed?: Statistic;
+  duplicateFailed?: Statistic;
+  [key: string]: Statistic | undefined;
 };
 
 const setToEndOfDay = (date: Date) => {
@@ -54,15 +75,80 @@ const toLocaleISOString = (d: Date) => {
   );
 };
 
+const fetchBasicStatistic = async (
+  from: Date,
+  to: Date,
+  step: number,
+  type: StatisticType,
+  id?: number,
+  isFeed: boolean = false
+): Promise<Result<StatisticGroup, ErrorDetails>> => {
+  const stats: StatisticGroup = {};
+  const response = await fetchStatistic(new Date(from), new Date(to), step, type, {}, id, isFeed);
+  if (response.ok) {
+    if (type === "imports") stats.imports = response.value;
+    else stats[type] = response.value;
+  } else if (response.error) {
+    return {
+      ok: false,
+      error: response.error
+    };
+  }
+  return { ok: true, value: stats };
+};
+
+const fetchImportFailuresStatistic = async (
+  from: Date,
+  to: Date,
+  step: number,
+  id?: number,
+  isFeed: boolean = false
+): Promise<Result<StatisticGroup, ErrorDetails>> => {
+  const importStats: StatisticGroup = {};
+  const failureTypes = [
+    "signatureFailed",
+    "checksumFailed",
+    "filenameFailed",
+    "schemaFailed",
+    "downloadFailed",
+    "remoteFailed",
+    "duplicateFailed"
+  ];
+  for (let i = 0; i < failureTypes.length; i++) {
+    const type: string = failureTypes[i];
+    const filter: StatisticFilter = {};
+    filter[type] = true;
+    const response = await fetchStatistic(
+      new Date(from),
+      new Date(to),
+      step,
+      "imports",
+      filter,
+      id,
+      isFeed
+    );
+    if (response.ok) {
+      importStats[type] = response.value;
+    } else if (response.error) {
+      return {
+        ok: false,
+        error: response.error
+      };
+    }
+  }
+  return { ok: true, value: importStats };
+};
+
 const fetchStatistic = async (
   from: Date,
   to: Date,
-  step: string,
+  step: number,
+  type: StatisticType,
   filter?: StatisticFilter,
   id?: number,
   feed: boolean = false
-): Promise<Result<Statistic, ErrorDetails>> => {
-  let path = "/api/stats/imports";
+): Promise<Result<any, ErrorDetails>> => {
+  let path = `/api/stats/${type}`;
   if (id && !feed) {
     path += `/source/${id}`;
   }
@@ -81,15 +167,20 @@ const fetchStatistic = async (
   }
 
   const resp = await request(
-    `${path}?from=${toLocaleISOString(from)}&to=${toLocaleISOString(to)}&step=${step}` +
+    `${path}?from=${toLocaleISOString(from)}&to=${toLocaleISOString(to)}&step=${step}ms` +
       filterQuery,
     "GET"
   );
   if (resp.ok) {
     if (resp.content) {
+      for (let i = 0; i < resp.content.length; i++) {
+        const date = new Date(resp.content[i][0]);
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+        resp.content[i][0] = date;
+      }
       return {
         ok: true,
-        value: resp.content
+        value: fillGaps(from, to, step, resp.content)
       };
     }
   }
@@ -99,5 +190,36 @@ const fetchStatistic = async (
   };
 };
 
-export { fetchStatistic, setToEndOfDay, toLocaleISOString };
-export type { Statistic, StatisticEntry, StatisticFilter };
+// Fill gaps with null values so the user can see at which times nothing was imported.
+const fillGaps = (from: Date, to: Date, stepsInMilliseconds: number, values: any) => {
+  const newStats: any = [];
+  for (let i = from.getTime(); i <= to.getTime(); i += stepsInMilliseconds) {
+    const foundValue: any = values.find((v: any) => v[0].getTime() === i);
+    if (foundValue) {
+      newStats.push(foundValue);
+    } else {
+      newStats.push([new Date(i), null]);
+    }
+  }
+  return newStats;
+};
+
+export {
+  fetchImportFailuresStatistic,
+  fetchStatistic,
+  fetchBasicStatistic,
+  pad,
+  padMilliseconds,
+  setToEndOfDay,
+  toLocaleISOString
+};
+export type {
+  StatisticGroup,
+  Statistic,
+  StatisticEntry,
+  StatisticFilter,
+  StatisticType,
+  CritStatistic,
+  CritStatisticEntry,
+  CVSS
+};
