@@ -217,6 +217,54 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		extraHeaders)
 }
 
+func (c *Controller) viewForwardTargets(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, c.fm.GetTargets())
+}
+
+// forwardDocument is an end point to forward a document.
+func (c *Controller) forwardDocument(ctx *gin.Context) {
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no valid document id specified"})
+		return
+	}
+
+	targetID, ok := parse(ctx, toInt64, ctx.Param("target"))
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no target specified"})
+		return
+	}
+
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
+
+	fields := []string{"id"}
+	builder := query.SQLBuilder{}
+	builder.CreateWhere(expr)
+	sql := builder.CreateQuery(fields, "", -1, -1)
+
+	var documentID int64
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&documentID)
+		}, 0,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		}
+		return
+	}
+
+	if err := c.fm.ForwardDocument(ctx.Request.Context(), int(targetID), documentID); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"id": documentID})
+}
+
 // overviewDocuments is an end point to return an overview document.
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	// Use the advisories.

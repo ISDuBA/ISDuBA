@@ -21,6 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/forwarder"
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
@@ -31,6 +32,7 @@ import (
 type Controller struct {
 	cfg *config.Config
 	db  *database.DB
+	fm  *forwarder.ForwardManager
 	ts  *tempstore.Store
 	sm  *sources.Manager
 	val csaf.RemoteValidator
@@ -40,6 +42,7 @@ type Controller struct {
 func NewController(
 	cfg *config.Config,
 	db *database.DB,
+	fm *forwarder.ForwardManager,
 	ts *tempstore.Store,
 	dl *sources.Manager,
 	val csaf.RemoteValidator,
@@ -47,6 +50,7 @@ func NewController(
 	return &Controller{
 		cfg: cfg,
 		db:  db,
+		fm:  fm,
 		ts:  ts,
 		sm:  dl,
 		val: val,
@@ -99,6 +103,8 @@ func (c *Controller) Bind() http.Handler {
 	// Everyone can view (GET) overviewDocuments and viewDocuments?
 	api.GET("/documents", authAll /* authEdReAu */, c.overviewDocuments)
 	api.GET("/documents/:id", authAll /* authEdReAu */, c.viewDocument)
+	api.GET("/documents/forward", authAll /* authEdReAu */, c.viewForwardTargets)
+	api.GET("/documents/forward/:id/:target", authAll /* authEdReAu */, c.forwardDocument)
 	// Admin can delete documents
 	api.DELETE("/documents/:id", authAdm, c.deleteDocument)
 
