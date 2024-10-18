@@ -112,6 +112,12 @@ const SEARCHPAGECOLUMNS = {
     "comments"
   ],
   EVENT: [
+    "time",
+    "event",
+    "actor",
+    "comments",
+    "event_state",
+    "comments_id",
     "critical",
     "id",
     "tracking_id",
@@ -124,13 +130,7 @@ const SEARCHPAGECOLUMNS = {
     "cvss_v2_score",
     "cvss_v3_score",
     "ssvc",
-    "four_cves",
-    "comments",
-    "event",
-    "event_state",
-    "time",
-    "actor",
-    "comments_id"
+    "four_cves"
   ]
 };
 interface Column {

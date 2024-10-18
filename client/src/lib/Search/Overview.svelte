@@ -190,6 +190,7 @@
         on:click={() => {
           query.queryType = SEARCHTYPES.EVENT;
           query.columns = SEARCHPAGECOLUMNS.EVENT;
+          query.orders = ["-time"];
           clearSearch();
         }}>Events</Button
       >
