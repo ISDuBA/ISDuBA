@@ -85,6 +85,8 @@
   $: isMultiSelectionAllowed =
     isRoleIncluded(appStore.getRoles(), [EDITOR, IMPORTER, ADMIN, REVIEWER]) &&
     ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) || tableType === SEARCHTYPES.ADVISORY);
+  $: areThereAnyComments =
+    tableType === SEARCHTYPES.EVENT && documents?.find((d: any) => d.event === "add_comment");
 
   let selectedState: any;
   let dropdownOpen = false;
@@ -506,6 +508,9 @@
               </TableHeadCell>
             {/if}
             <TableHeadCell padding="px-0"></TableHeadCell>
+            {#if areThereAnyComments}
+              <TableHeadCell padding={tablePadding} class="cursor-default">Comment</TableHeadCell>
+            {/if}
             {#each columns as column}
               {#if column !== searchColumnName}
                 <TableHeadCell
@@ -600,6 +605,23 @@
                     </button>
                   </div>
                 </TableBodyCell>
+                {#if areThereAnyComments}
+                  <TableBodyCell {tdClass}>
+                    {#if item.comments_id}
+                      {#await request(`api/comments/post/${item.comments_id}`, "GET")}
+                        <Spinner color="gray" size="4"></Spinner>
+                      {:then response}
+                        {#if response.ok}
+                          <div class="w-[120pt] max-w-[140pt] text-wrap">
+                            {response.content.message}
+                          </div>
+                        {:else}
+                          <span class="text-red-700">Couldn't load comment.</span>
+                        {/if}
+                      {/await}
+                    {/if}
+                  </TableBodyCell>
+                {/if}
                 {#each columns as column}
                   {#if column !== searchColumnName}
                     {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
