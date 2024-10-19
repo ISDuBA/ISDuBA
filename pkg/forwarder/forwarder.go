@@ -127,18 +127,18 @@ func (fm *ForwardManager) runTargets(ctx context.Context) {
 }
 
 func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *target, documentIDs []int64) {
+	defer target.running.Unlock()
 	for _, documentID := range documentIDs {
 		document, err := fm.loadDocument(ctx, documentID)
 		if err != nil {
 			slog.Error("could not load document to forward", "err", err)
 			continue
 		}
-		documentString := string(document[:])
+		documentString := string(document)
 		if err := fm.uploadDocument(ctx, documentString, documentID, target); err != nil {
 			slog.Error("could not forward document", "err", err)
 		}
 	}
-	target.running.Unlock()
 }
 
 func (fm *ForwardManager) uploadDocument(ctx context.Context, doc string, documentID int64, target *target) error {
@@ -152,6 +152,7 @@ func (fm *ForwardManager) uploadDocument(ctx context.Context, doc string, docume
 		slog.Error("sending forward request failed", "err", err)
 		return err
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusCreated {
 		slog.Error("forwarding failed", "status", res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -257,7 +258,7 @@ func (fm *ForwardManager) fetchNewDocuments(ctx context.Context, url string, pub
 			fetchSQL := `SELECT documents_id FROM events_log ` +
 				`WHERE documents_id in ` +
 				`(SELECT id FROM documents WHERE ` + wherePublisher +
-				`id not in (SELECT documents_id FROM forwarded_documents WHERE url = $1)) ORDER BY time DESC`
+				`id NOT IN (SELECT documents_id FROM forwarded_documents WHERE url = $1)) ORDER BY time DESC`
 			rows, _ := conn.Query(rctx, fetchSQL, args...)
 			var err error
 			documentIDs, err = pgx.CollectRows(
@@ -323,7 +324,7 @@ func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, doc
 			result <- err
 			return
 		}
-		documentString := string(document[:])
+		documentString := string(document)
 		result <- fm.uploadDocument(ctx, documentString, documentID, &fm.targets[targetID])
 	}
 	return <-result
