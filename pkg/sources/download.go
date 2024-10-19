@@ -350,7 +350,6 @@ func (l *location) download(m *Manager, f *feed) {
 	}, 0); {
 	case errors.Is(err, models.ErrAlreadyInDatabase):
 		f.log(m, config.InfoFeedLogLevel, "not storing duplicate %q: %v", l.doc, err)
-		break
 	case err != nil:
 		f.log(m, config.ErrorFeedLogLevel, "storing %q failed: %v", l.doc, err)
 		return
