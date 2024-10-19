@@ -15,9 +15,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/ISDuBA/ISDuBA/pkg/database/query"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"io"
 	"log/slog"
 	"mime/multipart"
@@ -27,6 +24,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
@@ -294,22 +295,28 @@ type ForwardTarget struct {
 	ID  int    `json:"id"`
 }
 
-func (fm *ForwardManager) GetTargets() []ForwardTarget {
-	targets := []ForwardTarget{}
-	for index := range fm.targets {
-		target := &fm.targets[index]
-		targets = append(targets, ForwardTarget{ID: index, URL: target.url})
+// Targets returns a list of forward targets.
+func (fm *ForwardManager) Targets() []ForwardTarget {
+	result := make(chan []ForwardTarget)
+	fm.fns <- func(fm *ForwardManager) {
+		targets := make([]ForwardTarget, len(fm.targets))
+		for i := range fm.targets {
+			target := &fm.targets[i]
+			targets[i] = ForwardTarget{ID: i, URL: target.url}
+		}
+		result <- targets
 	}
-	return targets
+	return <-result
 }
 
 // ForwardDocument sends the document to the specified target.
 func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, documentID int64) error {
-	if len(fm.targets) <= targetID {
-		return errors.New("could not find target with specified id")
-	}
 	result := make(chan error)
 	fm.fns <- func(fm *ForwardManager) {
+		if len(fm.targets) <= targetID {
+			result <- errors.New("could not find target with specified id")
+			return
+		}
 		document, err := fm.loadDocument(ctx, documentID)
 		if err != nil {
 			slog.Error("could not load document to forward", "err", err)

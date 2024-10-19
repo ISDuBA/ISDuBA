@@ -218,7 +218,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 }
 
 func (c *Controller) viewForwardTargets(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, c.fm.GetTargets())
+	ctx.JSON(http.StatusOK, c.fm.Targets())
 }
 
 // forwardDocument is an end point to forward a document.
