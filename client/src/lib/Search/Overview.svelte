@@ -170,6 +170,15 @@
         on:click={() => {
           query.queryType = SEARCHTYPES.ADVISORY;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
+          query.orders = query.orders.filter((criterium) => {
+            if (criterium.charAt(0) === "-") {
+              criterium = criterium.slice(1);
+            }
+            return SEARCHPAGECOLUMNS.ADVISORY.indexOf(criterium) != -1;
+          });
+          if (query.orders.length === 0) {
+            query.orders = ["-critical"];
+          }
           clearSearch();
         }}>Advisories</Button
       >
@@ -180,6 +189,15 @@
         on:click={() => {
           query.queryType = SEARCHTYPES.DOCUMENT;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
+          query.orders = query.orders.filter((criterium) => {
+            if (criterium.charAt(0) === "-") {
+              criterium = criterium.slice(1);
+            }
+            return SEARCHPAGECOLUMNS.DOCUMENT.indexOf(criterium) != -1;
+          });
+          if (query.orders.length === 0) {
+            query.orders = ["-critical"];
+          }
           clearSearch();
         }}>Documents</Button
       >
