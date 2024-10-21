@@ -9,8 +9,17 @@
 -->
 
 <script lang="ts">
+  import DashboardStats from "$lib/Dashboard/DashboardStats.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
 </script>
 
 <SectionHeader title="Statistics"></SectionHeader>
 <hr class="mb-6" />
+<DashboardStats
+  height="400pt"
+  enableRangeSelection
+  showLegend
+  stepsInMinutes={240}
+  title="Imports"
+  types={["imports", "importFailures", "cve"]}
+></DashboardStats>
