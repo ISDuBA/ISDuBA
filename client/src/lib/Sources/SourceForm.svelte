@@ -199,7 +199,7 @@
   const formatHeaders = () => {
     source.headers = [];
     for (const header of headers) {
-      if (header[0] !== "" && header[1] !== "") source.headers.push(`${header[0]}:${header[1]}`);
+      if (header[0] !== "") source.headers.push(`${header[0]}:${header[1] ?? ""}`);
     }
   };
 

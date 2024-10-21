@@ -342,7 +342,10 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 			if err := su.UpdateHeaders(headers); err != nil {
 				return err
 			}
+		} else if err := su.UpdateHeaders([]string{}); err != nil {
+			return err
 		}
+
 		// Little helper function for the otional bool fields.
 		optBool := func(option string, update func(*bool) error) error {
 			value, ok := ctx.GetPostForm(option)
