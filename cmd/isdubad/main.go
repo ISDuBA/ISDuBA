@@ -21,6 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/forwarder"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/ISDuBA/ISDuBA/pkg/version"
@@ -56,6 +57,9 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
+	forwardManager := forwarder.NewForwardManager(&cfg.Forwarder, db)
+	go forwardManager.Run(ctx)
+
 	// Is the remote validator configured?
 	var val csaf.RemoteValidator
 	if cfg.RemoteValidator.URL != "" {
@@ -79,7 +83,7 @@ func run(cfg *config.Config) error {
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, tmpStore, sm, val)
+	ctrl := web.NewController(cfg, db, forwardManager, tmpStore, sm, val)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)
