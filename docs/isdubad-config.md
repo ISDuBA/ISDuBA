@@ -142,6 +142,9 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_forwarder_target"></a> Section `[[forwarder.target]]` Forwarder target configuration
 
+Only documents that are successfully imported into the database are forwarded.
+Documents that are discarded because of failed validation are not forwarded.
+
 - `enabled`: Specifies if the target automatically receives new documents. If disabled the target only receives documents on manual forwarding.
 - `url`: The URL of the forward target.
 - `publisher`: Specifies the publisher of the documents that need to be forwarded.
