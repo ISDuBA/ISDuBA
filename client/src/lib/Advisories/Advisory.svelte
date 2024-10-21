@@ -322,7 +322,9 @@
     <div class="flex gap-2">
       <Label class="text-lg">
         <span class="mr-2">{params.trackingID}</span>
-        <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+        {#if $appStore.webview.doc?.tlp.label}
+          <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+        {/if}
       </Label>
     </div>
     <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">

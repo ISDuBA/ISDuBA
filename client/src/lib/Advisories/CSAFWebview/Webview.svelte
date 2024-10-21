@@ -20,7 +20,7 @@
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
   import FakeButton from "./FakeButton.svelte";
 
-  import { Tabs, TabItem } from "flowbite-svelte";
+  import { Tabs, TabItem, Spinner } from "flowbite-svelte";
 
   export let position = "";
   export let basePath = "";
@@ -295,5 +295,9 @@
         </div>
       </div>
     {/if}
+  {:else}
+    <div class="ml-32 mt-32">
+      <Spinner color="gray" size="8"></Spinner>
+    </div>
   {/if}
 </div>

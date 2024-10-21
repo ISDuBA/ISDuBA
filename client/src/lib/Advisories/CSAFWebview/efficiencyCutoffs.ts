@@ -8,9 +8,9 @@
 
 export const productTreeCutoffs = {
   level1: 20,
-  level2Lower: 50,
-  level2Upper: 100,
-  relations: 100
+  level2Lower: 20,
+  level2Upper: 50,
+  relations: 50
 };
 
-export const cveCutoff = 20;
+export const cveCutoff = 50;
