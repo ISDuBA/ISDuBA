@@ -181,6 +181,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/stats/critical/source/:id", authAll, c.criticalStatsSource)
 	api.GET("/stats/critical/feed/:id", authAll, c.criticalStatsFeed)
 	api.GET("/stats/critical", authAll, c.criticalStatsAllSources)
+	api.GET("/stats/totals", authAll, c.statsTotal)
 
 	return r
 }
