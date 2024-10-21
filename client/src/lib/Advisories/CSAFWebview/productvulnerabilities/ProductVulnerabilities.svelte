@@ -53,7 +53,7 @@
 <div class="crosstable-overview mb-3 mt-3 flex flex-col">
   {#if productLines.length > 0}
     <div class="mb-3 mt-3 flex flex-row">
-      <div class="flex flex-wrap items-baseline gap-4">
+      <div class="flex flex-wrap items-baseline gap-4 text-sm">
         <div class="flex flex-row items-baseline">
           <i class="bx bx-check" />
           <span class="ml-1 text-nowrap">Fixed</span>
@@ -75,7 +75,7 @@
             <Button
               color="light"
               size="sm"
-              class={`mr-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+              class={`mr-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
               on:click={() => {
                 renderAllCVEs = !renderAllCVEs;
               }}><span class="text-nowrap">All CVEs ({productLines[0].length - 2})</span></Button
@@ -84,17 +84,20 @@
         {/if}
       </div>
     </div>
-    <div class="crosstable flex flex-row">
+    <div class="crosstable mx-auto flex flex-row lg:mx-0">
       <Table noborder striped={true}>
         <TableHead>
           {#each headerColumns as column, index}
             {#if index == 0}
               <TableHeadCell
-                class="sticky left-0 z-30 text-nowrap bg-white align-bottom font-normal"
+                class="sticky left-0 z-30 text-nowrap bg-white align-bottom font-normal dark:bg-gray-800"
                 padding={tablePadding}>{column.content}</TableHeadCell
               >
             {:else if index == 1}
-              <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}>
+              <TableHeadCell
+                class="text-nowrap bg-white font-normal dark:bg-gray-800"
+                padding={tablePadding}
+              >
                 <div class={titleStyles[0]}>
                   <div class={titleStyles[1]}>
                     <div class={titleStyles[2]}>
@@ -104,7 +107,10 @@
                 </div>
               </TableHeadCell>
             {:else if !renderAllCVEs && fourCVEs.includes(column.name)}
-              <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}>
+              <TableHeadCell
+                class="text-nowrap bg-white font-normal dark:bg-gray-800"
+                padding={tablePadding}
+              >
                 <div class={titleStyles[0]}>
                   <div class={titleStyles[1]}>
                     <div class={titleStyles[2]}>
@@ -120,7 +126,10 @@
                 </div>
               </TableHeadCell>
             {:else if renderAllCVEs}
-              <TableHeadCell class="text-nowrap font-normal" padding={tablePadding}>
+              <TableHeadCell
+                class="text-nowrap bg-white font-normal dark:bg-gray-800"
+                padding={tablePadding}
+              >
                 <div class={titleStyles[0]}>
                   <div class={titleStyles[1]}>
                     <div class={titleStyles[2]}>

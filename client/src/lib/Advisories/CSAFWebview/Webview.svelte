@@ -166,7 +166,7 @@
           activeClasses="h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 hover:bg-gray-100 rounded-lg shadow-sm"
           inactiveClasses="h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 rounded-lg"
         >
-          <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Vulnerabilities overview">
+          <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Overview">
             {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
               <div class={sideScroll}>
                 <ProductVulnerabilities {basePath} />
@@ -223,7 +223,7 @@
         </Tabs>
       {:else}
         <div>
-          <FakeButton active>Vulnerabilities overview</FakeButton>
+          <FakeButton active>Overview</FakeButton>
           <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
           <div class={sideScroll}>
             {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
