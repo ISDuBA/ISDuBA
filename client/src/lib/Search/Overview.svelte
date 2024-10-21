@@ -26,65 +26,6 @@
   let selectedCustomQuery: any;
   let queryString: any;
   // let searchqueryTimer: any = null;
-  const advisoryOrders = [
-    "critical",
-    "cvss_v3_score",
-    "cvss_v2_score",
-    "ssvc",
-    "state",
-    "four_cves",
-    "publisher",
-    "title",
-    "tracking_id",
-    "initial_release_date",
-    "current_release_date",
-    "version",
-    "comments",
-    "recent",
-    "versions",
-    "-critical",
-    "-cvss_v3_score",
-    "-cvss_v2_score",
-    "-ssvc",
-    "-state",
-    "-four_cves",
-    "-publisher",
-    "-title",
-    "-tracking_id",
-    "-initial_release_date",
-    "-current_release_date",
-    "-version",
-    "-comments",
-    "-recent",
-    "-versions"
-  ];
-
-  const documentOrders = [
-    "critical",
-    "cvss_v3_score",
-    "cvss_v2_score",
-    "ssvc",
-    "four_cves",
-    "publisher",
-    "title",
-    "tracking_id",
-    "initial_release_date",
-    "current_release_date",
-    "version",
-    "comments",
-    "-critical",
-    "-cvss_v3_score",
-    "-cvss_v2_score",
-    "-ssvc",
-    "-four_cves",
-    "-publisher",
-    "-title",
-    "-tracking_id",
-    "-initial_release_date",
-    "-current_release_date",
-    "-version",
-    "-comments"
-  ];
 
   const resetQuery = () => {
     return {
@@ -229,9 +170,12 @@
         on:click={() => {
           query.queryType = SEARCHTYPES.ADVISORY;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
-          query.orders = query.orders.filter(
-            (criterium) => advisoryOrders.indexOf(criterium) != -1
-          );
+          query.orders = query.orders.filter((criterium) => {
+            if (criterium.charAt(0) === "-") {
+              criterium = criterium.slice(1);
+            }
+            return SEARCHPAGECOLUMNS.ADVISORY.indexOf(criterium) != -1;
+          });
           if (query.orders.length === 0) {
             query.orders = ["-critical"];
           }
@@ -245,9 +189,12 @@
         on:click={() => {
           query.queryType = SEARCHTYPES.DOCUMENT;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
-          query.orders = query.orders.filter(
-            (criterium) => documentOrders.indexOf(criterium) != -1
-          );
+          query.orders = query.orders.filter((criterium) => {
+            if (criterium.charAt(0) === "-") {
+              criterium = criterium.slice(1);
+            }
+            return SEARCHPAGECOLUMNS.DOCUMENT.indexOf(criterium) != -1;
+          });
           if (query.orders.length === 0) {
             query.orders = ["-critical"];
           }
