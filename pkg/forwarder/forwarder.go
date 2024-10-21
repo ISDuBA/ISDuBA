@@ -76,11 +76,21 @@ func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
 			TLSClientConfig: &tlsConfig,
 		}
 
+		var headers http.Header
+		for _, header := range targetCfg.Header {
+			h := strings.Split(header, ":")
+			if len(h) != 2 {
+				slog.Error("forwarder init: could not set invalid header key:pair value", "header", header)
+				continue
+			}
+			headers.Add(h[0], h[1])
+		}
+
 		t := target{
 			client:    client,
 			url:       targetCfg.URL,
 			publisher: targetCfg.Publisher,
-			header:    targetCfg.Header,
+			header:    headers,
 			running:   &sync.Mutex{},
 			enabled:   targetCfg.Enabled,
 		}
@@ -216,7 +226,7 @@ func (fm *ForwardManager) buildRequest(doc string, filename string, target *targ
 	}
 	contentType := writer.FormDataContentType()
 	if target.header != nil {
-		req.Header = target.header
+		req.Header = target.header.Clone()
 	}
 	req.Header.Set("Content-Type", contentType)
 	return req, nil

@@ -12,7 +12,6 @@ package config
 import (
 	"fmt"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -207,7 +206,7 @@ type ForwardTarget struct {
 	ClientPrivateCert string        `toml:"private_cert"`
 	ClientPublicCert  string        `toml:"public_cert"`
 	Publisher         *string       `toml:"publisher"`
-	Header            http.Header   `toml:"header"`
+	Header            []string      `toml:"header"`
 	Enabled           bool          `toml:"enabled"`
 	Timeout           time.Duration `toml:"timeout"`
 }
