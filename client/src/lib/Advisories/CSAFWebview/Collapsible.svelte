@@ -12,7 +12,6 @@
   export let header: string;
   export let open = false;
   export let level = 2;
-  export let class_ = "pl-4";
   export let highlight = false;
   const uuid = crypto.randomUUID();
   export let onOpen = () => {
@@ -72,7 +71,7 @@
 <div class:collapsible={true} class:highlight-section={highlight}>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div title={header} id={header} class={class_}>
+  <div title={header} id={header}>
     <div class="inline-flex items-center" on:click={toggle}>
       <i class="bx {getClass(level)} {icon}" />
       <slot class={getClass(level)} name="header"
@@ -80,7 +79,7 @@
       >
     </div>
     {#if visibility === "block"}
-      <div id={uuid} class={class_}>
+      <div id={uuid} class="ml-2 border-l-2 border-l-gray-200 pl-2">
         <slot />
       </div>
     {/if}
