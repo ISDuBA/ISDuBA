@@ -84,3 +84,10 @@
 
 # [forwarder]
 # update_interval = "5m"
+
+# This is a example target
+# [[forwarder.target]]
+# enabled = true
+# url = "http://example.com/api/v1/import"
+# header = "x-api-key:secret"
+# timeout = "5s"

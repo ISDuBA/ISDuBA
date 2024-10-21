@@ -11,7 +11,7 @@
 # The `isdubad.toml` configuration file
 
 The `isdubad` server is configured with a [TOML v1.0.0](https://toml.io/en/v1.0.0) file.
-Some of the configurables can be overwritten by environment variables. See a full list [here](#env_vars).
+Some of the configuration can be overwritten by environment variables. See a full list [here](#env_vars).
 
 An example file can be found [here](./example_isdubad.toml) (with the default values as comments).
 
@@ -29,6 +29,8 @@ The configuration consists of the following sections:
 - [`[sources]`](#section_sources) Sources
 - [`[remote_validator]`](#section_remote_validator) Remote validator
 - [`[client]`](#section_client) Client configuration
+- [`[forwarder]`](#section_forwarder) Forwarder configuration
+- [`[[forwarder.target]]`](#section_forwarder_target) Forwarder target configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
@@ -50,9 +52,9 @@ The configuration consists of the following sections:
 
 - `url`: Defaults to `"http://localhost:8080"`.
 - `realm`: Name of the realm used be the server. Defaults to `"isduba"`.
-- `certs_caching`: How long should signing certificats from the Keycloak should be cached before reasked. Defaults to `"8h"`.
+- `certs_caching`: How long should signing certificates from the Keycloak should be cached before reasked. Defaults to `"8h"`.
 - `timeout`: How long should we wait for reactions from the Keycloak server. Defaults to `"30s"`.
-- `full_certs_path`: Special URL to fetch the signing certificats from. Defaults to `""`.
+- `full_certs_path`: Special URL to fetch the signing certificates from. Defaults to `""`.
 
 ### <a name="section_web"></a> Section `[web]` Web interface
 
@@ -67,7 +69,7 @@ The configuration consists of the following sections:
 - `port`: Port of the database server. Defaults to `5432`.
 - `database`: Name of the database. Defaults to `"isduba"`.
 - `user`: Name of the database user. Defaults to `"isduba"`.
-- `password`: Passwordof the database user. Defaults to `"isduba"`.
+- `password`: Password of the database user. Defaults to `"isduba"`.
 - `admin_user`: Name of an admin database user. Only needed when migration is needed. Defaults to `"postgres"`.
 - `admin_database`: Name of an admin database. Only needed in case of migrations. Defaults to `"postgres"`.
 - `admin_password`: Password of the admin user. For migrations only. Defaults to `"postgres"`.
@@ -85,7 +87,7 @@ Defaults to:
 '*' = ["WHITE"]
 ```
 
-An empty `publisher` means all not explicity stated. `publisher`s with non empty values have a higher priority.
+An empty `publisher` means all not explicitly stated. `publisher`s with non-empty values have a higher priority.
 Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values
 `WHITE`, `GREEN`, `AMBER` and `RED`.
 
@@ -98,7 +100,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
 - `strict_mode`: Enables strict checking of sources. Defaults to `true`.
-- `insecure`: Enables insecure mode (Don't check TLS certficates of HTTPS transfer). Defaults to `false`.
+- `insecure`: Enables insecure mode (Don't check TLS certificates of HTTPS transfer). Defaults to `false`.
 - `signature_check`: Failing OpenPGP signature check stops import of document. Defaults to `true`.
 - `download_slots`: The number of concurrent downloads from the sources. Defaults to `100`.
 - `max_slots_per_source`: The number of concurrent downloads per source. Defaults to `2`.
@@ -110,7 +112,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }`
 - `default_message`: The message that should be displayed inside the source manager.
 - `aes_key`: A crypto token in form of 64 character long hex string used to encrypt security sensitive\
-   fields in the database like passphrasses and private keys. Defaults to "".\
+   fields in the database like passphrases and private keys. Defaults to "".\
    If an empty token is given, the server will generate a new one every time it starts.\
    You can store the generated token in the config file to re-gain access to the encrypted data.\
    Alternatively you can put the token in a separate file and store the path to this file\
@@ -133,6 +135,18 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `keycloak_client_id`: The public client identifier. Defaults to `"auth"`.
 - `update_interval`: Specifies how often the token should be renewed. Defaults to `"5m"`.
 - `idle_timeout`: When the user should be logged out after inactivity. Defaults to `"30m"`.
+
+### <a name="section_forwarder"></a> Section `[forwarder]` Forwarder configuration
+
+- `update_interval`: Specifies how often the database is checked for new documents. Defaults to `"5m"`.
+
+### <a name="section_forwarder_target"></a> Section `[[forwarder.target]]` Forwarder target configuration
+
+- `enabled`: Specifies if the target automatically receives new documents. If disabled the target only receives documents on manual forwarding.
+- `url`: The URL of the forward target.
+- `publisher`: Specifies the publisher of the documents that need to be forwarded.
+- `header`: List all headers that are sent to the target. The format is `key:value`.
+- `timeout`: Sets the http client timeout. It is recommended to set this value, to avoid problems on network errors.
 
 ## <a name="env_vars"></a>Environment variables
 
@@ -188,3 +202,4 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 | `ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID`    | `client keycloak_client_id`          |
 | `ISDUBA_CLIENT_UPDATE_INTERVAL`       | `client update_interval`             |
 | `ISDUBA_CLIENT_IDLE_TIMEOUT`          | `client idle_timeout`                |
+| `ISDUBA_FORWARDER_UPDATE_INTERVAL`    | `forwarder update_interval`          |
