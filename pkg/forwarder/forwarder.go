@@ -87,7 +87,7 @@ func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
 			TLSClientConfig: &tlsConfig,
 		}
 
-		var headers http.Header
+		headers := http.Header{}
 		for _, header := range targetCfg.Header {
 			h := strings.Split(header, ":")
 			if len(h) != 2 {
