@@ -150,21 +150,21 @@ func (fm *ForwardManager) runTargets(ctx context.Context) {
 func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *target, documentIDs []int64) {
 	defer target.running.Unlock()
 	for _, documentID := range documentIDs {
-		document, err := fm.loadDocument(ctx, documentID)
+		document, filename, err := fm.loadDocument(ctx, documentID)
 		if err != nil {
 			slog.Error("could not load document to forward", "err", err)
 			continue
 		}
 		documentString := string(document)
-		if err := fm.uploadDocument(ctx, documentString, documentID, target); err != nil {
+		if err := fm.uploadDocument(ctx, documentString, filename, documentID, target); err != nil {
 			slog.Error("could not forward document", "err", err)
 		}
 	}
 }
 
-func (fm *ForwardManager) uploadDocument(ctx context.Context, doc string, documentID int64, target *target) error {
+func (fm *ForwardManager) uploadDocument(ctx context.Context, doc string, filename string, documentID int64, target *target) error {
 	valStatus := fm.fetchValidationStatus(ctx, documentID)
-	req, err := fm.buildRequest(doc, "test", valStatus, target)
+	req, err := fm.buildRequest(doc, filename, valStatus, target)
 	if err != nil {
 		slog.Error("building forward request failed", "err", err)
 		return err
@@ -222,7 +222,7 @@ func (fm *ForwardManager) buildRequest(doc string, filename string, status valid
 
 	base := filepath.Base(filename)
 	part("advisory", base, "application/json", doc)
-	part("validation_status", "", "text/plain", string(validValidationStatus))
+	part("validation_status", "", "text/plain", string(status))
 
 	if err != nil {
 		return nil, err
@@ -244,25 +244,26 @@ func (fm *ForwardManager) buildRequest(doc string, filename string, status valid
 	return req, nil
 }
 
-func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) ([]byte, error) {
+func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) ([]byte, string, error) {
 	expr := query.FieldEqInt("id", documentID)
 
-	fields := []string{"original"}
+	fields := []string{"original", "filename"}
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 	sql := builder.CreateQuery(fields, "", -1, -1)
 
 	var original []byte
+	var filename string
 
 	if err := fm.db.Run(
 		ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original)
+			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original, &filename)
 		}, 0,
 	); err != nil {
-		return []byte{}, err
+		return []byte{}, "", err
 	}
-	return original, nil
+	return original, filename, nil
 }
 
 func (fm *ForwardManager) fetchNewDocuments(ctx context.Context, url string, publisher *string) ([]int64, error) {
@@ -367,14 +368,14 @@ func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, doc
 			result <- errors.New("could not find target with specified id")
 			return
 		}
-		document, err := fm.loadDocument(ctx, documentID)
+		document, filename, err := fm.loadDocument(ctx, documentID)
 		if err != nil {
 			slog.Error("could not load document to forward", "err", err)
 			result <- err
 			return
 		}
 		documentString := string(document)
-		result <- fm.uploadDocument(ctx, documentString, documentID, &fm.targets[targetID])
+		result <- fm.uploadDocument(ctx, documentString, filename, documentID, &fm.targets[targetID])
 	}
 	return <-result
 }
