@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -31,6 +32,16 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+)
+
+// validationStatus represents the validation status
+// known to the HTTP endpoint.
+type validationStatus string
+
+const (
+	validValidationStatus        = validationStatus("valid")
+	invalidValidationStatus      = validationStatus("invalid")
+	notValidatedValidationStatus = validationStatus("not_validated")
 )
 
 type target struct {
@@ -152,7 +163,8 @@ func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *target, d
 }
 
 func (fm *ForwardManager) uploadDocument(ctx context.Context, doc string, documentID int64, target *target) error {
-	req, err := fm.buildRequest(doc, "test", target)
+	valStatus := fm.fetchValidationStatus(ctx, documentID)
+	req, err := fm.buildRequest(doc, "test", valStatus, target)
 	if err != nil {
 		slog.Error("building forward request failed", "err", err)
 		return err
@@ -189,7 +201,7 @@ func createFormFile(w *multipart.Writer, fieldname, filename, mimeType string) (
 	return w.CreatePart(h)
 }
 
-func (fm *ForwardManager) buildRequest(doc string, filename string, target *target) (*http.Request, error) {
+func (fm *ForwardManager) buildRequest(doc string, filename string, status validationStatus, target *target) (*http.Request, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 
@@ -210,7 +222,7 @@ func (fm *ForwardManager) buildRequest(doc string, filename string, target *targ
 
 	base := filepath.Base(filename)
 	part("advisory", base, "application/json", doc)
-	part("validation_status", "", "text/plain", "not_validated")
+	part("validation_status", "", "text/plain", string(validValidationStatus))
 
 	if err != nil {
 		return nil, err
@@ -285,6 +297,33 @@ func (fm *ForwardManager) fetchNewDocuments(ctx context.Context, url string, pub
 	}
 
 	return documentIDs, nil
+}
+
+func (fm *ForwardManager) fetchValidationStatus(ctx context.Context, documentID int64) validationStatus {
+	status := notValidatedValidationStatus
+
+	if err := fm.db.Run(ctx, func(rctx context.Context, conn *pgxpool.Conn) error {
+		fetchSQL := `SELECT bool_or(filename_failed OR remote_failed OR checksum_failed OR signature_failed) FROM downloads ` +
+			`WHERE documents_id = $1`
+		var failedValidation bool
+		if err := conn.QueryRow(rctx, fetchSQL, documentID).Scan(&failedValidation); err != nil {
+			// Check if there was no download record
+			if err == sql.ErrNoRows {
+				return nil
+			} else {
+				return err
+			}
+		}
+		if failedValidation {
+			status = invalidValidationStatus
+		} else {
+			status = validValidationStatus
+		}
+		return nil
+	}, 0); err != nil {
+		slog.Error("could not fetch validation status", "err", err)
+	}
+	return status
 }
 
 func (fm *ForwardManager) logDocument(ctx context.Context, url string, documentID int64) {
