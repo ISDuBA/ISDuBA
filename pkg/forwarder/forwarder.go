@@ -261,7 +261,7 @@ func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) ([
 			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original, &filename)
 		}, 0,
 	); err != nil {
-		return []byte{}, "", err
+		return nil, "", err
 	}
 	return original, filename, nil
 }
@@ -311,9 +311,8 @@ func (fm *ForwardManager) fetchValidationStatus(ctx context.Context, documentID 
 			// Check if there was no download record
 			if err == sql.ErrNoRows {
 				return nil
-			} else {
-				return err
 			}
+			return err
 		}
 		if failedValidation {
 			status = invalidValidationStatus
