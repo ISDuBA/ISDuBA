@@ -259,7 +259,7 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 	}
 
 	if err := c.fm.ForwardDocument(ctx.Request.Context(), int(targetID), documentID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"id": documentID})
