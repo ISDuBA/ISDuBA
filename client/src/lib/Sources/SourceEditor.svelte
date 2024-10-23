@@ -80,7 +80,10 @@
   const ddClass: string = "break-words font-semibold ml-2 mb-1";
 
   let updateStats = setInterval(async () => {
-    let result = await fetchSource(source.id ?? 0, true);
+    if (!source.id || source.id === 0) {
+      return;
+    }
+    let result = await fetchSource(source.id, true);
     if (result.ok) {
       source.stats = result.value.stats;
     }
@@ -126,7 +129,7 @@
   };
 
   const loadFeeds = async () => {
-    if (!source.id) {
+    if (source.id === undefined) {
       return;
     }
     loadingFeeds = true;
@@ -240,14 +243,21 @@
     fillAgeDataFromSource = sourceForm.fillAgeDataFromSource;
     let id = params?.id;
     if (id) {
-      await loadSourceInfo(Number(id));
-      await loadPMD();
+      let sourceID = Number(id);
+      if (sourceID === 0) {
+        source.id = sourceID;
+      } else {
+        await loadSourceInfo(sourceID);
+        await loadPMD();
+      }
       await loadFeeds();
-      let missingFeeds = calculateMissingFeeds(parseFeeds(pmd, feeds), feeds);
-      missingFeeds.map((f) => {
-        f.enable = false;
-      });
-      feeds.push(...missingFeeds);
+      if (id !== 0) {
+        let missingFeeds = calculateMissingFeeds(parseFeeds(pmd, feeds), feeds);
+        missingFeeds.map((f) => {
+          f.enable = false;
+        });
+        feeds.push(...missingFeeds);
+      }
       feeds = feeds;
       fillAgeDataFromSource(source);
     }
@@ -350,45 +360,47 @@
     </div>
   </div>
 
-  <div class="w-full flex-auto">
-    <div
-      class:invisible={!loadingSource}
-      class={!loadingSource ? "loadingFadeIn" : ""}
-      class:mb-4={true}
-    >
-      Loading source configuration ...
-      <Spinner color="gray" size="4"></Spinner>
+  {#if source.id !== 0}
+    <div class="w-full flex-auto">
+      <div
+        class:invisible={!loadingSource}
+        class={!loadingSource ? "loadingFadeIn" : ""}
+        class:mb-4={true}
+      >
+        Loading source configuration ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+      <SourceForm
+        bind:this={sourceForm}
+        bind:parseSource={loadSource}
+        {inputChange}
+        {source}
+        {formClass}
+        enableActive={true}
+      ></SourceForm>
+      <Button disabled={!sourceEdited} on:click={updateSource} color="light">
+        <i class="bx bxs-save me-2"></i>
+        <span>Save source</span>
+      </Button>
+      <Button
+        on:click={(event) => {
+          event.stopPropagation();
+          modalCallback = () => {
+            deleteSource();
+          };
+          modalMessage = "Are you sure you want to delete this source?";
+          modalTitle = `Source ${source.name}`;
+          modalOpen = true;
+        }}
+        title={`Delete source "${source.name}"`}
+        color="light"
+      >
+        <i class="bx bx-trash me-2 text-red-500"></i>
+        <span>Delete source</span>
+      </Button>
+      <ErrorMessage error={saveSourceError}></ErrorMessage>
     </div>
-    <SourceForm
-      bind:this={sourceForm}
-      bind:parseSource={loadSource}
-      {inputChange}
-      {source}
-      {formClass}
-      enableActive={true}
-    ></SourceForm>
-    <Button disabled={!sourceEdited} on:click={updateSource} color="light">
-      <i class="bx bxs-save me-2"></i>
-      <span>Save source</span>
-    </Button>
-    <Button
-      on:click={(event) => {
-        event.stopPropagation();
-        modalCallback = () => {
-          deleteSource();
-        };
-        modalMessage = "Are you sure you want to delete this source?";
-        modalTitle = `Source ${source.name}`;
-        modalOpen = true;
-      }}
-      title={`Delete source "${source.name}"`}
-      color="light"
-    >
-      <i class="bx bx-trash me-2 text-red-500"></i>
-      <span>Delete source</span>
-    </Button>
-    <ErrorMessage error={saveSourceError}></ErrorMessage>
-  </div>
+  {/if}
 </div>
 
 <FeedView {feeds} {clickFeed} {updateFeed} edit={true}></FeedView>
