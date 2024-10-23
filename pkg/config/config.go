@@ -106,6 +106,10 @@ const (
 )
 
 const (
+	defaultForwarderUpdateInterval = 5 * time.Minute
+)
+
+const (
 	defaultRemoteValidatorURL   = ""
 	defaultRemoteValidatorCache = ""
 )
@@ -196,6 +200,23 @@ type Sources struct {
 	AESKey            string                `toml:"aes_key"`
 }
 
+// ForwardTarget are the config options for the forward target.
+type ForwardTarget struct {
+	URL               string        `toml:"url"`
+	ClientPrivateCert string        `toml:"private_cert"`
+	ClientPublicCert  string        `toml:"public_cert"`
+	Publisher         *string       `toml:"publisher"`
+	Header            []string      `toml:"header"`
+	Enabled           bool          `toml:"enabled"`
+	Timeout           time.Duration `toml:"timeout"`
+}
+
+// Forwarder are the config options for the document forwarder.
+type Forwarder struct {
+	Targets        []ForwardTarget `toml:"target"`
+	UpdateInterval time.Duration   `toml:"update_interval"`
+}
+
 // Client are the config options for the client.
 type Client struct {
 	KeycloakURL      string        `toml:"keycloak_url" json:"keycloak_url"`
@@ -217,6 +238,7 @@ type Config struct {
 	Sources         Sources                     `toml:"sources"`
 	RemoteValidator csaf.RemoteValidatorOptions `toml:"remote_validator"`
 	Client          Client                      `toml:"client"`
+	Forwarder       Forwarder                   `toml:"forwarder"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -331,6 +353,9 @@ func Load(file string) (*Config, error) {
 			SignatureCheck:    defaultSourcesSignatureCheck,
 			MaxAge:            defaultSourcesMaxAge,
 		},
+		Forwarder: Forwarder{
+			UpdateInterval: defaultForwarderUpdateInterval,
+		},
 		RemoteValidator: csaf.RemoteValidatorOptions{
 			URL:     defaultRemoteValidatorURL,
 			Presets: defaultRemoteValidatorPresets,
@@ -428,6 +453,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
+		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
 	)
 }
 
