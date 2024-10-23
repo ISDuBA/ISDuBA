@@ -19,6 +19,7 @@
   height="400pt"
   enableRangeSelection
   showLegend
+  showModeToggle
   stepsInMinutes={240}
   title="Imports"
   types={["cve", "imports", "importFailures"]}
@@ -28,6 +29,7 @@
   enableRangeSelection
   isStacked
   showLegend
+  showModeToggle
   stepsInMinutes={240}
   title="Critical value of imports"
   types={["critical"]}

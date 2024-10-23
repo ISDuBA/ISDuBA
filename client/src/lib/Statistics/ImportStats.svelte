@@ -25,6 +25,7 @@
   import { Button, ButtonGroup, Input, Label, Spinner } from "flowbite-svelte";
   import { onDestroy, onMount } from "svelte";
   import "chartjs-adapter-moment";
+  import StatsTable from "./StatsTable.svelte";
 
   export let height = "140pt";
   export let stepsInMinutes = 30;
@@ -35,6 +36,9 @@
   export let title = `Imports / ${stepsInMinutes} min`;
   export let types: StatisticType[] = ["imports"];
   export let isStacked = false;
+  export let showModeToggle = false;
+
+  type StatisticsMode = "diagram" | "table";
 
   let from: string | undefined;
   let to: string | undefined;
@@ -45,6 +49,10 @@
   let stats: StatisticGroup = {};
   let intervalID: ReturnType<typeof setInterval> | null;
   let stepsInMilliseconds = 1000 * 60 * stepsInMinutes;
+  let mode: StatisticsMode = "diagram";
+  const basicButtonClass = "py-1 px-3";
+  const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
+  const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100`;
   const updateInterval = 1000 * 60 * (updateIntervalInMinutes ?? 0);
   const categoryColors = [
     "#3D6090",
@@ -207,6 +215,10 @@
     stats = newStats;
   };
 
+  const setMode = (newMode: StatisticsMode) => {
+    mode = newMode;
+  };
+
   const updateOptions = () => {
     if (from) {
       const minFrom = new Date(from);
@@ -275,10 +287,7 @@
     return label;
   };
 
-  onMount(async () => {
-    from = initialFrom.toISOString().split("T")[0];
-    to = new Date().toISOString().split("T")[0];
-    await loadStats();
+  const initChart = () => {
     chart = new Chart(chartComponentRef, {
       type: "bar",
       data: {
@@ -290,14 +299,6 @@
         plugins: {
           legend: {
             display: showLegend
-          },
-          title: {
-            align: "start",
-            display: true,
-            padding: {
-              bottom: 20
-            },
-            text: title
           },
           tooltip: {
             callbacks: {
@@ -376,6 +377,13 @@
       });
       return items;
     };
+  };
+
+  onMount(async () => {
+    from = initialFrom.toISOString().split("T")[0];
+    to = new Date().toISOString().split("T")[0];
+    await loadStats();
+    initChart();
     if (updateIntervalInMinutes) {
       intervalID = setInterval(async () => {
         if (!isLoading) {
@@ -432,7 +440,22 @@
   };
 </script>
 
-<div class="mb-8 flex w-full max-w-[96%] flex-col 2xl:w-[46%]">
+<div class="mb-8 flex w-full max-w-[96%] flex-col gap-4 2xl:w-[46%]">
+  <div class="flex gap-6">
+    <h3>{title}</h3>
+    {#if showModeToggle}
+      <ButtonGroup>
+        <Button
+          class={mode === "diagram" ? pressedButtonClass : buttonClass}
+          on:click={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
+        >
+        <Button
+          class={mode === "table" ? pressedButtonClass : buttonClass}
+          on:click={() => setMode("table")}><i class="bx bx-table"></i></Button
+        >
+      </ButtonGroup>
+    {/if}
+  </div>
   <ErrorMessage {error}></ErrorMessage>
   {#if isLoading}
     <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
@@ -440,42 +463,45 @@
       <Spinner color="gray" size="4"></Spinner>
     </div>
   {/if}
-  <div class="flex flex-col gap-4 border px-2">
+  <div hidden={mode === "table"} class="border px-2">
     <div style:height>
       <canvas bind:this={chartComponentRef}></canvas>
     </div>
-    {#if enableRangeSelection}
-      <div class="my-2 flex items-end justify-center gap-4">
-        <Label for="from"
-          ><span>From:</span>
-          <Input let:props>
-            <input on:change={updateSteps} id="from" type="date" {...props} bind:value={from} />
-          </Input>
-        </Label>
-        <Label for="to"
-          ><span>To:</span>
-          <Input let:props>
-            <input on:change={updateSteps} id="to" type="date" {...props} bind:value={to} />
-          </Input>
-        </Label>
-        <ButtonGroup class="h-fit">
-          <Button
-            on:click={() => {
-              selectPredefinedRange("day");
-            }}>Day</Button
-          >
-          <Button
-            on:click={() => {
-              selectPredefinedRange("month");
-            }}>Month</Button
-          >
-          <Button
-            on:click={() => {
-              selectPredefinedRange("year");
-            }}>Year</Button
-          >
-        </ButtonGroup>
-      </div>
-    {/if}
   </div>
+  {#if mode === "table"}
+    <StatsTable {stats}></StatsTable>
+  {/if}
+  {#if enableRangeSelection}
+    <div class="my-2 flex items-end justify-center gap-4">
+      <Label for="from"
+        ><span>From:</span>
+        <Input let:props>
+          <input on:change={updateSteps} id="from" type="date" {...props} bind:value={from} />
+        </Input>
+      </Label>
+      <Label for="to"
+        ><span>To:</span>
+        <Input let:props>
+          <input on:change={updateSteps} id="to" type="date" {...props} bind:value={to} />
+        </Input>
+      </Label>
+      <ButtonGroup class="h-fit">
+        <Button
+          on:click={() => {
+            selectPredefinedRange("day");
+          }}>Day</Button
+        >
+        <Button
+          on:click={() => {
+            selectPredefinedRange("month");
+          }}>Month</Button
+        >
+        <Button
+          on:click={() => {
+            selectPredefinedRange("year");
+          }}>Year</Button
+        >
+      </ButtonGroup>
+    </div>
+  {/if}
 </div>
