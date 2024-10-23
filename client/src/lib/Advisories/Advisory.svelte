@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, Select, Label, Modal } from "flowbite-svelte";
+  import { Button, Select, Label, Modal, Spinner } from "flowbite-svelte";
   import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Version from "$lib/Advisories/Version.svelte";
@@ -47,6 +47,8 @@
   let isCommentingAllowed: boolean;
   let isSSVCediting = false;
   let position = "";
+  let processRunning = false;
+  let lastSuccessfulForwardTarget: number | undefined;
 
   $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
     if (appStore.isReviewer() && [REVIEW].includes(advisoryState)) {
@@ -313,12 +315,17 @@
   };
 
   const forwardDocument = async () => {
+    processRunning = true;
     const response = await request(
       `/api/documents/forward/${params.id}/${selectedForwardTarget}`,
       "POST"
     );
+    processRunning = false;
     if (response.error) {
+      openForwardModal = false;
       loadForwardTargetsError = getErrorDetails(`Couldn't load forward targets.`, response);
+    } else {
+      lastSuccessfulForwardTarget = selectedForwardTarget;
     }
   };
   onDestroy(() => {
@@ -351,12 +358,16 @@
 <Modal bind:open={openForwardModal}>
   <Label class="text-lg">Forward document</Label>
   <Select items={availableForwardSelection} bind:value={selectedForwardTarget}></Select>
-  <Button
-    on:click={() => {
-      openForwardModal = false;
-      forwardDocument();
-    }}>Send document</Button
-  >
+  <Button disabled={processRunning} on:click={forwardDocument}>
+    <span class="mr-2">Send document</span>
+    {#if processRunning}
+      <Spinner></Spinner>
+    {:else if lastSuccessfulForwardTarget === selectedForwardTarget}
+      <div class="inline-flex w-8 items-center"><i class="bx bx-check text-2xl" /></div>
+    {:else}
+      <div class="inline-flex w-8 items-center"><i class="bx bx-right-arrow-alt text-2xl" /></div>
+    {/if}
+  </Button>
 </Modal>
 
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
