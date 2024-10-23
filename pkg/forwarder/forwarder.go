@@ -13,7 +13,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -43,6 +42,12 @@ const (
 	invalidValidationStatus      = validationStatus("invalid")
 	notValidatedValidationStatus = validationStatus("not_validated")
 )
+
+type document struct {
+	data      string
+	filename  string
+	valStatus validationStatus
+}
 
 type target struct {
 	url       string
@@ -150,21 +155,19 @@ func (fm *ForwardManager) runTargets(ctx context.Context) {
 func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *target, documentIDs []int64) {
 	defer target.running.Unlock()
 	for _, documentID := range documentIDs {
-		document, filename, err := fm.loadDocument(ctx, documentID)
+		document, err := fm.loadDocument(ctx, documentID)
 		if err != nil {
 			slog.Error("could not load document to forward", "err", err)
 			continue
 		}
-		documentString := string(document)
-		if err := fm.uploadDocument(ctx, documentString, filename, documentID, target); err != nil {
+		if err := fm.uploadDocument(ctx, document, documentID, target); err != nil {
 			slog.Error("could not forward document", "err", err)
 		}
 	}
 }
 
-func (fm *ForwardManager) uploadDocument(ctx context.Context, doc string, filename string, documentID int64, target *target) error {
-	valStatus := fm.fetchValidationStatus(ctx, documentID)
-	req, err := fm.buildRequest(doc, filename, valStatus, target)
+func (fm *ForwardManager) uploadDocument(ctx context.Context, doc *document, documentID int64, target *target) error {
+	req, err := fm.buildRequest(doc.data, doc.filename, doc.valStatus, target)
 	if err != nil {
 		slog.Error("building forward request failed", "err", err)
 		return err
@@ -244,26 +247,37 @@ func (fm *ForwardManager) buildRequest(doc string, filename string, status valid
 	return req, nil
 }
 
-func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) ([]byte, string, error) {
+func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) (*document, error) {
 	expr := query.FieldEqInt("id", documentID)
 
-	fields := []string{"original", "filename"}
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
-	sql := builder.CreateQuery(fields, "", -1, -1)
 
 	var original []byte
 	var filename string
+	var failedValidation *bool
+	validationStatus := notValidatedValidationStatus
 
 	if err := fm.db.Run(
 		ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original, &filename)
+			fetchSQL := `SELECT original, filename, (filename_failed OR remote_failed OR checksum_failed OR signature_failed) FROM documents` +
+				` JOIN downloads ON documents.id = downloads.documents_id` +
+				` WHERE ` + builder.WhereClause
+			return conn.QueryRow(rctx, fetchSQL, builder.Replacements...).Scan(&original, &filename, &failedValidation)
 		}, 0,
 	); err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	return original, filename, nil
+	if failedValidation != nil {
+		if *failedValidation {
+			validationStatus = invalidValidationStatus
+		} else {
+			validationStatus = validValidationStatus
+		}
+	}
+	documentString := string(original)
+	return &document{documentString, filename, validationStatus}, nil
 }
 
 func (fm *ForwardManager) fetchNewDocuments(ctx context.Context, url string, publisher *string) ([]int64, error) {
@@ -298,32 +312,6 @@ func (fm *ForwardManager) fetchNewDocuments(ctx context.Context, url string, pub
 	}
 
 	return documentIDs, nil
-}
-
-func (fm *ForwardManager) fetchValidationStatus(ctx context.Context, documentID int64) validationStatus {
-	status := notValidatedValidationStatus
-
-	if err := fm.db.Run(ctx, func(rctx context.Context, conn *pgxpool.Conn) error {
-		fetchSQL := `SELECT bool_or(filename_failed OR remote_failed OR checksum_failed OR signature_failed) FROM downloads ` +
-			`WHERE documents_id = $1`
-		var failedValidation bool
-		if err := conn.QueryRow(rctx, fetchSQL, documentID).Scan(&failedValidation); err != nil {
-			// Check if there was no download record
-			if err == sql.ErrNoRows {
-				return nil
-			}
-			return err
-		}
-		if failedValidation {
-			status = invalidValidationStatus
-		} else {
-			status = validValidationStatus
-		}
-		return nil
-	}, 0); err != nil {
-		slog.Error("could not fetch validation status", "err", err)
-	}
-	return status
 }
 
 func (fm *ForwardManager) logDocument(ctx context.Context, url string, documentID int64) {
@@ -367,14 +355,13 @@ func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, doc
 			result <- errors.New("could not find target with specified id")
 			return
 		}
-		document, filename, err := fm.loadDocument(ctx, documentID)
+		document, err := fm.loadDocument(ctx, documentID)
 		if err != nil {
 			slog.Error("could not load document to forward", "err", err)
 			result <- err
 			return
 		}
-		documentString := string(document)
-		result <- fm.uploadDocument(ctx, documentString, filename, documentID, &fm.targets[targetID])
+		result <- fm.uploadDocument(ctx, document, documentID, &fm.targets[targetID])
 	}
 	return <-result
 }
