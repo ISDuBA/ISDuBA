@@ -374,6 +374,7 @@
           },
           y: {
             beginAtZero: true,
+            stacked: isStacked,
             title: { display: axes[0].label.length > 0, text: axes[0].label }
           }
         }
