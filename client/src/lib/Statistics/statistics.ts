@@ -18,7 +18,7 @@ type CVSS = number;
 type CritStatisticEntry = [CVSS | number];
 type CritStatistic = [Date, CritStatisticEntry[]];
 
-type StatisticType = "imports" | "importFailures" | "cve" | "critical";
+type StatisticType = "imports" | "importFailures" | "importFailuresCombined" | "cve" | "critical";
 
 type StatisticFilter = {
   downloadFailed?: boolean;
@@ -42,6 +42,7 @@ type StatisticGroup = {
   downloadFailed?: Statistic;
   remoteFailed?: Statistic;
   duplicateFailed?: Statistic;
+  importFailuresCombined?: Statistic;
   [key: string]: Statistic | undefined;
 };
 

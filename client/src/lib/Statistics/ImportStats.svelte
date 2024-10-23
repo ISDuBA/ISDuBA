@@ -34,10 +34,14 @@
   export let initialFrom: Date = new Date(Date.now() - 1000 * 60 * 60 * 24 * 2);
   export let updateIntervalInMinutes: number | null = null;
   export let title = `Imports / ${stepsInMinutes} min`;
-  export let types: StatisticType[] = ["imports"];
+  export let axes: Axis[] = [{ label: "Docs", types: ["imports"] }];
   export let isStacked = false;
   export let showModeToggle = false;
 
+  type Axis = {
+    label: string;
+    types: StatisticType[];
+  };
   type StatisticsMode = "diagram" | "table";
 
   let from: string | undefined;
@@ -85,10 +89,12 @@
   const month = day * 30;
   const year = month * 12;
 
+  $: types = axes.map((axis) => axis.types).flat();
   $: datasets = Object.keys(stats).map((key: string, index: number) => {
     let label = key;
-    if (key === "cve") label = "CVEs of imported documents";
+    if (key === "cve") label = "CVEs of documents";
     if (key === "imports") label = "Imported documents";
+    if (key === "importFailuresCombined") label = "Failed imports";
     if (key === "signatureFailed") label = "Failed signature checks";
     if (key === "checksumFailed") label = "Failed checksum checks";
     if (key === "filenameFailed") label = "Failed filename checks";
@@ -96,6 +102,7 @@
     if (key === "downloadFailed") label = "Failed downloads";
     if (key === "remoteFailed") label = "Failed remote";
     if (key === "duplicateFailed") label = "Failures because of duplicates";
+    const yAxisID = axes.findIndex((axis) => axis.types.includes(key as StatisticType));
     return {
       label: label,
       data: stats[key]?.map((s) => {
@@ -105,7 +112,8 @@
       backgroundColor:
         types.length === 1 && types.includes("critical")
           ? rangeColors[index]
-          : categoryColors[index]
+          : categoryColors[index],
+      yAxisID: `y${yAxisID > 0 ? yAxisID : ""}`
     };
   });
 
@@ -121,7 +129,7 @@
   const loadStats = async () => {
     if (!from || !to) return;
     error = null;
-    let response;
+    let response: any;
     const toParameter = isToday(new Date(to))
       ? new Date(Date.now() + hour)
       : setToEndOfDay(new Date(to));
@@ -139,14 +147,33 @@
         error = response.error;
       }
     }
-    if (types.includes("importFailures")) {
+    if (types.includes("importFailures") || types.includes("importFailuresCombined")) {
       response = await fetchImportFailuresStatistic(
         new Date(from),
         toParameter,
         stepsInMilliseconds
       );
       if (response.ok) {
-        Object.assign(newStats, response.value);
+        if (types.includes("importFailuresCombined")) {
+          // Merge all failure stats
+          const importFailuresStats: StatisticGroup = {
+            importFailuresCombined: []
+          };
+          const keys = Object.keys(response.value);
+          keys.forEach((key) => {
+            const singleStats = response.value[key];
+            singleStats.forEach((s: any, index: number) => {
+              if (!importFailuresStats.importFailuresCombined?.[index]) {
+                importFailuresStats.importFailuresCombined?.push([s[0], s[1]]);
+              } else {
+                importFailuresStats.importFailuresCombined[index][1] += s[1];
+              }
+            });
+          });
+          Object.assign(newStats, importFailuresStats);
+        } else {
+          Object.assign(newStats, response.value);
+        }
       } else {
         error = response.error;
       }
@@ -353,11 +380,23 @@
             }
           },
           y: {
-            beginAtZero: true
+            beginAtZero: true,
+            title: { display: axes[0].label.length > 0, text: axes[0].label }
           }
         }
       }
     });
+    if (axes[1]) {
+      const showLabel = axes[1].label.length > 0;
+      chart.options.scales.y1 = {
+        beginAtZero: true,
+        grid: {
+          drawOnChartArea: false // only want the grid lines for one axis to show up
+        },
+        title: { display: showLabel, text: axes[1].label },
+        position: "right"
+      };
+    }
     // Remove "Crit" from legend labels because otherwise it would appear in front of every crit label
     // which would be too much "noise".
     chart.options.plugins.legend.labels.generateLabels = (chart: any) => {

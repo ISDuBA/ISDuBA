@@ -21,8 +21,11 @@
   showLegend
   showModeToggle
   stepsInMinutes={240}
-  title="Imports"
-  types={["cve", "imports", "importFailures"]}
+  title="Imports and CVEs"
+  axes={[
+    { label: "Documents", types: ["imports", "importFailuresCombined"] },
+    { label: "CVEs", types: ["cve"] }
+  ]}
 ></ImportStats>
 <ImportStats
   height="400pt"
@@ -32,5 +35,5 @@
   showModeToggle
   stepsInMinutes={240}
   title="Critical value of imports"
-  types={["critical"]}
+  axes={[{ label: "", types: ["critical"] }]}
 ></ImportStats>
