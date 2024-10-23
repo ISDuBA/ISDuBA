@@ -274,13 +274,13 @@
     const paddedMinutes = pad(date.getMinutes());
     let diff = new Date(to).getTime() - new Date(from).getTime();
     if (diff >= year) {
-      label = `${paddedMonth}/${date.getFullYear()}`;
+      label = `${date.getFullYear()}-${paddedMonth}`;
     } else if (diff > month + 3 * day) {
-      label = `${paddedMonth}/${paddedDate}`;
+      label = `${date.getFullYear()}-${paddedMonth}-${paddedDate}`;
     } else if (diff >= month) {
-      label = `CW ${getWeekNumber(date)}`;
+      label = `${date.getFullYear()}-W${getWeekNumber(date)}`;
     } else if (diff == week) {
-      label = `${paddedMonth}/${paddedDate}`;
+      label = `${date.getFullYear()}-${paddedMonth}-${paddedDate}`;
     } else {
       label = `${paddedHours}:${paddedMinutes}`;
     }
