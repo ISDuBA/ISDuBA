@@ -440,7 +440,7 @@
   };
 </script>
 
-<div class="mb-8 flex w-full max-w-[96%] flex-col gap-4 2xl:w-[46%]">
+<div class="mb-16 flex flex-col gap-4">
   <div class="flex gap-6">
     <h3>{title}</h3>
     {#if showModeToggle}
@@ -472,7 +472,7 @@
     <StatsTable {stats}></StatsTable>
   {/if}
   {#if enableRangeSelection}
-    <div class="my-2 flex items-end justify-center gap-4">
+    <div class="my-2 flex flex-wrap items-end justify-start gap-4 md:justify-center">
       <Label for="from"
         ><span>From:</span>
         <Input let:props>

@@ -84,5 +84,7 @@
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
   <ErrorMessage error={loadIgnoredError}></ErrorMessage>
-  <ImportStats updateIntervalInMinutes={10}></ImportStats>
+  <div class="mb-8 flex w-full max-w-[96%] flex-col gap-4 2xl:w-[46%]">
+    <ImportStats updateIntervalInMinutes={10}></ImportStats>
+  </div>
 {/if}
