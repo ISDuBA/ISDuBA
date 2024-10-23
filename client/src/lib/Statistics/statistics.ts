@@ -14,8 +14,8 @@ import type { Result } from "$lib/types";
 type StatisticEntry = [Date, number | null];
 type Statistic = StatisticEntry[];
 
-type CVSS = number;
-type CritStatisticEntry = [CVSS | number];
+type CVSSTextualRating = "None" | "Low" | "Medium" | "High";
+type CritStatisticEntry = [CVSSTextualRating | number];
 type CritStatistic = [Date, CritStatisticEntry[]];
 
 type StatisticType = "imports" | "importFailures" | "importFailuresCombined" | "cve" | "critical";
@@ -44,6 +44,18 @@ type StatisticGroup = {
   duplicateFailed?: Statistic;
   importFailuresCombined?: Statistic;
   [key: string]: Statistic | undefined;
+};
+
+const getCVSSTextualRating = (CVSS: number): CVSSTextualRating => {
+  if (CVSS === 0) {
+    return "None";
+  } else if (CVSS <= 3.9) {
+    return "Low";
+  } else if (CVSS <= 6.9) {
+    return "Medium";
+  } else {
+    return "High";
+  }
 };
 
 const setToEndOfDay = (date: Date) => {
@@ -209,6 +221,7 @@ export {
   fetchImportFailuresStatistic,
   fetchStatistic,
   fetchBasicStatistic,
+  getCVSSTextualRating,
   pad,
   padMilliseconds,
   setToEndOfDay,
@@ -222,5 +235,5 @@ export type {
   StatisticType,
   CritStatistic,
   CritStatisticEntry,
-  CVSS
+  CVSSTextualRating
 };

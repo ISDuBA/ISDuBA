@@ -17,9 +17,10 @@
     type StatisticGroup,
     type StatisticType,
     fetchBasicStatistic,
-    type CVSS,
     setToEndOfDay,
-    pad
+    pad,
+    getCVSSTextualRating,
+    type CVSSTextualRating
   } from "$lib/Statistics/statistics";
   import Chart from "chart.js/auto";
   import { Button, ButtonGroup, Input, Label, Spinner } from "flowbite-svelte";
@@ -69,19 +70,7 @@
     "#8B084A",
     "#C552B1"
   ];
-  const rangeColors = [
-    "#FFEFB0",
-    "#F7D79D",
-    "#EEBF89",
-    "#E6A776",
-    "#DE8F62",
-    "#D6774F",
-    "#CD5D3A",
-    "#C54728",
-    "#BC2D13",
-    "#B41500",
-    "#ddd"
-  ];
+  const rangeColors = ["#ddd", "#FFEFB0", "#E6A776", "#CD5D3A", "#B41500"];
   const minute = 1000 * 60;
   const hour = minute * 60;
   const day = hour * 24;
@@ -196,36 +185,40 @@
       if (response.ok) {
         const crit: any = response.value.critical;
         if (crit) {
-          const critStats: any = {};
-          for (let i = 1; i < 11; i++) {
-            critStats[`Crit ${i}`] = [];
-          }
-          critStats["Crit null"] = [];
+          const critStats: any = {
+            cvss_null: [],
+            cvss_None: [],
+            cvss_Low: [],
+            cvss_Medium: [],
+            cvss_High: []
+          };
           for (let i = 0; i < crit.length; i++) {
             const date = crit[i][0];
-            const counts: any = {};
-            for (let i = 1; i < 11; i++) {
-              counts[i] = 0;
-            }
-            counts["null"] = 0;
+            const counts: any = {
+              cvss_null: [],
+              cvss_None: [],
+              cvss_Low: [],
+              cvss_Medium: [],
+              cvss_High: []
+            };
             const keys = Object.keys(critStats);
             // Iterate through the values of one point of time
             if (crit[i][1]) {
               for (let j = 0; j < crit[i][1].length; j++) {
                 type NumberOfDocs = number;
-                type CritCount = [CVSS | null, NumberOfDocs];
+                type CritCount = [number | null, NumberOfDocs];
                 const critCount: CritCount = crit[i][1][j];
                 const numberOfDocs = critCount[1];
                 const cvss = critCount?.[0];
                 if (cvss) {
-                  const flooredValue = `${Math.floor(cvss)}`;
-                  counts[flooredValue] = counts[flooredValue] + numberOfDocs;
+                  const cvssTextialRating: CVSSTextualRating = getCVSSTextualRating(cvss);
+                  counts[cvssTextialRating] = counts[`cvss_${cvssTextialRating}`] + numberOfDocs;
                 } else {
                   counts["null"] = counts["null"] + numberOfDocs;
                 }
               }
               keys.forEach((key) => {
-                critStats[key].push([date, counts[key.replace("Crit ", "")]]);
+                critStats[key].push([date, counts[key.replace("cvss_", "")]]);
               });
             } else {
               keys.forEach((key) => {
@@ -403,7 +396,7 @@
       const items: any[] = [];
       chart.legend.legendItems.forEach((item: any, index: number) => {
         const datasetMeta = chart.getDatasetMeta(item.datasetIndex);
-        const label = datasetMeta.label.replace("Crit ", "");
+        const label = datasetMeta.label.replace("cvss_", "");
         items.push({
           text: label,
           datasetIndex: index,
