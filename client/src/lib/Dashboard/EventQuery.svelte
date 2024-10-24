@@ -19,7 +19,7 @@
   import { Badge, Spinner } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
-  import { getRelativeTime } from "./activity";
+  import { getRelativeTime } from "$lib/time";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
 

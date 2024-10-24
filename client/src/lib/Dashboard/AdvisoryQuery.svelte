@@ -19,7 +19,7 @@
   import Activity from "./Activity.svelte";
   import { getPublisher } from "$lib/publisher";
   import { Spinner } from "flowbite-svelte";
-  import { getRelativeTime } from "./activity";
+  import { getRelativeTime } from "$lib/time";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
 

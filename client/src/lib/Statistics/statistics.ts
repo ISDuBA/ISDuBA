@@ -9,6 +9,7 @@
 import { getErrorDetails } from "$lib/Errors/error";
 import type { ErrorDetails } from "$lib/Errors/error";
 import { request } from "$lib/request";
+import { toLocaleISOString } from "$lib/time";
 import type { Result } from "$lib/types";
 
 type StatisticEntry = [Date, number | null];
@@ -58,36 +59,6 @@ const getCVSSTextualRating = (CVSS: number): CVSSTextualRating => {
   }
 };
 
-const setToEndOfDay = (date: Date) => {
-  date.setHours(23);
-  date.setMinutes(59);
-  date.setSeconds(59);
-  date.setMilliseconds(999);
-  return date;
-};
-
-const pad = (n: number) => (n < 10 ? "0" + n : n);
-const padMilliseconds = (n: number) => (n >= 100 ? n.toString() : n > 10 ? "0" + n : "00" + n);
-
-const toLocaleISOString = (d: Date) => {
-  return (
-    d.getFullYear() +
-    "-" +
-    pad(d.getMonth() + 1) +
-    "-" +
-    pad(d.getDate()) +
-    "T" +
-    pad(d.getHours()) +
-    ":" +
-    pad(d.getMinutes()) +
-    ":" +
-    pad(d.getSeconds()) +
-    "." +
-    padMilliseconds(d.getMilliseconds()) +
-    "Z"
-  );
-};
-
 const fetchBasicStatistic = async (
   from: Date,
   to: Date,
@@ -99,8 +70,7 @@ const fetchBasicStatistic = async (
   const stats: StatisticGroup = {};
   const response = await fetchStatistic(new Date(from), new Date(to), step, type, {}, id, isFeed);
   if (response.ok) {
-    if (type === "imports") stats.imports = response.value;
-    else stats[type] = response.value;
+    stats[type] = response.value;
   } else if (response.error) {
     return {
       ok: false,
@@ -150,6 +120,24 @@ const fetchImportFailuresStatistic = async (
     }
   }
   return { ok: true, value: importStats };
+};
+
+const mergeImportFailureStatistics = (group: StatisticGroup) => {
+  const importFailuresStats: StatisticGroup = {
+    importFailuresCombined: []
+  };
+  const keys = Object.keys(group);
+  keys.forEach((key) => {
+    const singleStats = group[key];
+    singleStats?.forEach((s: any, index: number) => {
+      if (!importFailuresStats.importFailuresCombined?.[index]) {
+        importFailuresStats.importFailuresCombined?.push([s[0], s[1]]);
+      } else {
+        importFailuresStats.importFailuresCombined[index][1] += s[1];
+      }
+    });
+  });
+  return importFailuresStats;
 };
 
 const fetchStatistic = async (
@@ -222,10 +210,7 @@ export {
   fetchStatistic,
   fetchBasicStatistic,
   getCVSSTextualRating,
-  pad,
-  padMilliseconds,
-  setToEndOfDay,
-  toLocaleISOString
+  mergeImportFailureStatistics
 };
 export type {
   StatisticGroup,

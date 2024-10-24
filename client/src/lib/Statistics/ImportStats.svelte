@@ -13,37 +13,52 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import {
     fetchImportFailuresStatistic,
-    toLocaleISOString,
     type StatisticGroup,
     type StatisticType,
     fetchBasicStatistic,
-    setToEndOfDay,
-    pad,
     getCVSSTextualRating,
-    type CVSSTextualRating
+    type CVSSTextualRating,
+    mergeImportFailureStatistics
   } from "$lib/Statistics/statistics";
   import Chart from "chart.js/auto";
   import { Button, ButtonGroup, Input, Label, Spinner } from "flowbite-svelte";
   import { onDestroy, onMount } from "svelte";
   import "chartjs-adapter-moment";
   import StatsTable from "./StatsTable.svelte";
+  import {
+    HOUR_MS,
+    YEAR_MS,
+    MONTH_MS,
+    DAY_MS,
+    WEEK_MS,
+    pad,
+    setToEndOfDay,
+    toLocaleISOString
+  } from "$lib/time";
 
+  export let divContainerClass = "mb-16";
   export let height = "140pt";
   export let stepsInMinutes = 30;
   export let showLegend = false;
-  export let enableRangeSelection = false;
-  export let initialFrom: Date = new Date(Date.now() - 1000 * 60 * 60 * 24 * 2);
+  export let showRangeSelection = false;
+  export let initialFrom: Date = new Date(Date.now() - DAY_MS * 2);
   export let updateIntervalInMinutes: number | null = null;
   export let title = `Imports / ${stepsInMinutes} min`;
   export let axes: Axis[] = [{ label: "Docs", types: ["imports"] }];
   export let isStacked = false;
   export let showModeToggle = false;
+  export let colors: string[] | undefined = undefined;
+  export let source: Source | null = null;
 
   type Axis = {
     label: string;
     types: StatisticType[];
   };
   type StatisticsMode = "diagram" | "table";
+  type Source = {
+    id: number;
+    isFeed: boolean;
+  };
 
   let from: string | undefined;
   let to: string | undefined;
@@ -71,12 +86,6 @@
     "#C552B1"
   ];
   const rangeColors = ["#ddd", "#FFEFB0", "#E6A776", "#CD5D3A", "#B41500"];
-  const minute = 1000 * 60;
-  const hour = minute * 60;
-  const day = hour * 24;
-  const week = day * 7;
-  const month = day * 30;
-  const year = month * 12;
 
   $: types = axes.map((axis) => axis.types).flat();
   $: datasets = Object.keys(stats).map((key: string, index: number) => {
@@ -101,13 +110,18 @@
         return { x: s[0], y: s[1] };
       }),
       borderWidth: 0,
-      backgroundColor:
-        types.length === 1 && types.includes("critical")
-          ? rangeColors[index]
-          : categoryColors[index],
+      backgroundColor: getColor(index),
       yAxisID: `y${yAxisID > 0 ? yAxisID : ""}`
     };
   });
+
+  const getColor = (index: number) => {
+    return colors
+      ? colors[index]
+      : types.length === 1 && types.includes("critical")
+        ? rangeColors[index]
+        : categoryColors[index];
+  };
 
   const isToday = (date: Date) => {
     const today = new Date();
@@ -123,7 +137,7 @@
     error = null;
     let response: any;
     const toParameter = isToday(new Date(to))
-      ? new Date(Date.now() + hour)
+      ? new Date(Date.now() + HOUR_MS)
       : setToEndOfDay(new Date(to));
     const newStats: StatisticGroup = {};
     if (types.includes("imports")) {
@@ -131,7 +145,9 @@
         new Date(from),
         toParameter,
         stepsInMilliseconds,
-        "imports"
+        "imports",
+        source?.id,
+        source?.isFeed
       );
       if (response.ok) {
         Object.assign(newStats, response.value);
@@ -143,26 +159,13 @@
       response = await fetchImportFailuresStatistic(
         new Date(from),
         toParameter,
-        stepsInMilliseconds
+        stepsInMilliseconds,
+        source?.id,
+        source?.isFeed
       );
       if (response.ok) {
         if (types.includes("importFailuresCombined")) {
-          // Merge all failure stats
-          const importFailuresStats: StatisticGroup = {
-            importFailuresCombined: []
-          };
-          const keys = Object.keys(response.value);
-          keys.forEach((key) => {
-            const singleStats = response.value[key];
-            singleStats.forEach((s: any, index: number) => {
-              if (!importFailuresStats.importFailuresCombined?.[index]) {
-                importFailuresStats.importFailuresCombined?.push([s[0], s[1]]);
-              } else {
-                importFailuresStats.importFailuresCombined[index][1] += s[1];
-              }
-            });
-          });
-          Object.assign(newStats, importFailuresStats);
+          Object.assign(newStats, mergeImportFailureStatistics(response.value));
         } else {
           Object.assign(newStats, response.value);
         }
@@ -171,7 +174,14 @@
       }
     }
     if (types.includes("cve")) {
-      response = await fetchBasicStatistic(new Date(from), toParameter, stepsInMilliseconds, "cve");
+      response = await fetchBasicStatistic(
+        new Date(from),
+        toParameter,
+        stepsInMilliseconds,
+        "cve",
+        source?.id,
+        source?.isFeed
+      );
       if (response.ok) {
         Object.assign(newStats, response.value);
       } else {
@@ -183,7 +193,9 @@
         new Date(from),
         toParameter,
         stepsInMilliseconds,
-        "critical"
+        "critical",
+        source?.id,
+        source?.isFeed
       );
       if (response.ok) {
         const crit: any = response.value.critical;
@@ -254,7 +266,7 @@
     if (to && from) {
       let maxTo = new Date(to);
       if (isToday(maxTo)) {
-        maxTo = new Date(Date.now() + hour);
+        maxTo = new Date(Date.now() + HOUR_MS);
       } else {
         maxTo = setToEndOfDay(new Date(to));
       }
@@ -296,13 +308,13 @@
     const paddedHours = pad(date.getHours());
     const paddedMinutes = pad(date.getMinutes());
     let diff = new Date(to).getTime() - new Date(from).getTime();
-    if (diff >= year) {
+    if (diff >= YEAR_MS) {
       label = `${date.getFullYear()}-${paddedMonth}`;
-    } else if (diff > month + 3 * day) {
+    } else if (diff > MONTH_MS + 3 * DAY_MS) {
       label = `${date.getFullYear()}-${paddedMonth}-${paddedDate}`;
-    } else if (diff >= month) {
+    } else if (diff >= MONTH_MS) {
       label = `${date.getFullYear()}-W${getWeekNumber(date)}`;
-    } else if (diff == week) {
+    } else if (diff == WEEK_MS) {
       label = `${date.getFullYear()}-${paddedMonth}-${paddedDate}`;
     } else {
       label = `${paddedHours}:${paddedMinutes}`;
@@ -404,10 +416,7 @@
         items.push({
           text: label,
           datasetIndex: index,
-          fillStyle:
-            types.length === 1 && types.includes("critical")
-              ? rangeColors[index]
-              : categoryColors[index],
+          fillStyle: getColor(index),
           hidden: datasetMeta.hidden
         });
       });
@@ -441,14 +450,14 @@
   const updateSteps = () => {
     if (!from || !to) return;
     let diff = new Date(to).getTime() - new Date(from).getTime();
-    if (diff >= year) {
-      stepsInMilliseconds = Math.floor(diff / year) * month;
-    } else if (diff >= month) {
-      stepsInMilliseconds = week;
-    } else if (diff >= week) {
-      stepsInMilliseconds = day;
+    if (diff >= YEAR_MS) {
+      stepsInMilliseconds = Math.floor(diff / YEAR_MS) * MONTH_MS;
+    } else if (diff >= MONTH_MS) {
+      stepsInMilliseconds = WEEK_MS;
+    } else if (diff >= WEEK_MS) {
+      stepsInMilliseconds = DAY_MS;
     } else {
-      stepsInMilliseconds = hour;
+      stepsInMilliseconds = HOUR_MS;
     }
     updateChart();
   };
@@ -458,14 +467,14 @@
     const newFrom = new Date();
     const newTo = new Date();
     let diff = 1;
-    stepsInMilliseconds = hour;
+    stepsInMilliseconds = HOUR_MS;
     if (range === "month") {
-      stepsInMilliseconds = week;
+      stepsInMilliseconds = WEEK_MS;
       diff = 30;
       newTo.setDate(newTo.getDate() + 1);
     }
     if (range === "year") {
-      stepsInMilliseconds = month;
+      stepsInMilliseconds = MONTH_MS;
       diff = 365;
       newTo.setMonth(newTo.getMonth() + 1);
     }
@@ -476,68 +485,70 @@
   };
 </script>
 
-<div class="mb-16 flex flex-col gap-4">
-  <div class="flex gap-6">
-    <h3>{title}</h3>
-    {#if showModeToggle}
-      <ButtonGroup>
-        <Button
-          class={mode === "diagram" ? pressedButtonClass : buttonClass}
-          on:click={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
-        >
-        <Button
-          class={mode === "table" ? pressedButtonClass : buttonClass}
-          on:click={() => setMode("table")}><i class="bx bx-table"></i></Button
-        >
-      </ButtonGroup>
+<div class={divContainerClass}>
+  <div class="flex flex-col gap-4">
+    <div class="flex gap-6">
+      <h3>{title}</h3>
+      {#if showModeToggle}
+        <ButtonGroup>
+          <Button
+            class={mode === "diagram" ? pressedButtonClass : buttonClass}
+            on:click={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
+          >
+          <Button
+            class={mode === "table" ? pressedButtonClass : buttonClass}
+            on:click={() => setMode("table")}><i class="bx bx-table"></i></Button
+          >
+        </ButtonGroup>
+      {/if}
+    </div>
+    <ErrorMessage {error}></ErrorMessage>
+    {#if isLoading}
+      <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+    {/if}
+    <div hidden={mode === "table"} class="border px-2">
+      <div style:height>
+        <canvas bind:this={chartComponentRef}></canvas>
+      </div>
+    </div>
+    {#if mode === "table"}
+      <StatsTable {stats}></StatsTable>
+    {/if}
+    {#if showRangeSelection}
+      <div class="my-2 flex flex-wrap items-end justify-start gap-4 md:justify-center">
+        <Label for="from"
+          ><span>From:</span>
+          <Input let:props>
+            <input on:change={updateSteps} id="from" type="date" {...props} bind:value={from} />
+          </Input>
+        </Label>
+        <Label for="to"
+          ><span>To:</span>
+          <Input let:props>
+            <input on:change={updateSteps} id="to" type="date" {...props} bind:value={to} />
+          </Input>
+        </Label>
+        <ButtonGroup class="h-fit">
+          <Button
+            on:click={() => {
+              selectPredefinedRange("day");
+            }}>Day</Button
+          >
+          <Button
+            on:click={() => {
+              selectPredefinedRange("month");
+            }}>Month</Button
+          >
+          <Button
+            on:click={() => {
+              selectPredefinedRange("year");
+            }}>Year</Button
+          >
+        </ButtonGroup>
+      </div>
     {/if}
   </div>
-  <ErrorMessage {error}></ErrorMessage>
-  {#if isLoading}
-    <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
-      Loading ...
-      <Spinner color="gray" size="4"></Spinner>
-    </div>
-  {/if}
-  <div hidden={mode === "table"} class="border px-2">
-    <div style:height>
-      <canvas bind:this={chartComponentRef}></canvas>
-    </div>
-  </div>
-  {#if mode === "table"}
-    <StatsTable {stats}></StatsTable>
-  {/if}
-  {#if enableRangeSelection}
-    <div class="my-2 flex flex-wrap items-end justify-start gap-4 md:justify-center">
-      <Label for="from"
-        ><span>From:</span>
-        <Input let:props>
-          <input on:change={updateSteps} id="from" type="date" {...props} bind:value={from} />
-        </Input>
-      </Label>
-      <Label for="to"
-        ><span>To:</span>
-        <Input let:props>
-          <input on:change={updateSteps} id="to" type="date" {...props} bind:value={to} />
-        </Input>
-      </Label>
-      <ButtonGroup class="h-fit">
-        <Button
-          on:click={() => {
-            selectPredefinedRange("day");
-          }}>Day</Button
-        >
-        <Button
-          on:click={() => {
-            selectPredefinedRange("month");
-          }}>Month</Button
-        >
-        <Button
-          on:click={() => {
-            selectPredefinedRange("year");
-          }}>Year</Button
-        >
-      </ButtonGroup>
-    </div>
-  {/if}
 </div>

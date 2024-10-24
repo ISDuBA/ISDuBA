@@ -9,7 +9,8 @@
 -->
 
 <script lang="ts">
-  import { toLocaleISOString, type StatisticGroup } from "$lib/Statistics/statistics";
+  import { type StatisticGroup } from "$lib/Statistics/statistics";
+  import { toLocaleISOString } from "$lib/time";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import { TableBodyCell } from "flowbite-svelte";

@@ -17,7 +17,7 @@
 <hr class="mb-6" />
 <ImportStats
   height="400pt"
-  enableRangeSelection
+  showRangeSelection
   showLegend
   showModeToggle
   stepsInMinutes={240}
@@ -29,7 +29,7 @@
 ></ImportStats>
 <ImportStats
   height="400pt"
-  enableRangeSelection
+  showRangeSelection
   isStacked
   showLegend
   showModeToggle
