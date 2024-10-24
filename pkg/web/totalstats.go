@@ -90,7 +90,7 @@ func (c *Controller) statsTotal(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			tx, err := conn.BeginTx(rctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+			tx, err := conn.Begin(rctx)
 			if err != nil {
 				return err
 			}
