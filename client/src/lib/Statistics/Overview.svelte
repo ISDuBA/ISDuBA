@@ -9,8 +9,41 @@
 -->
 
 <script lang="ts">
+  import ImportStats from "./ImportStats.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
 </script>
 
 <SectionHeader title="Statistics"></SectionHeader>
 <hr class="mb-6" />
+<ImportStats
+  chartType="scatter"
+  height="400pt"
+  showRangeSelection
+  showLegend
+  showModeToggle
+  stepsInMinutes={180}
+  title="Advisories and Documents"
+  axes={[{ label: "", types: ["totals"] }]}
+></ImportStats>
+<ImportStats
+  height="400pt"
+  showRangeSelection
+  showLegend
+  showModeToggle
+  stepsInMinutes={240}
+  title="Imports and CVEs"
+  axes={[
+    { label: "Imports", types: ["imports", "importFailuresCombined"] },
+    { label: "CVEs", types: ["cve"] }
+  ]}
+></ImportStats>
+<ImportStats
+  height="400pt"
+  showRangeSelection
+  isStacked
+  showLegend
+  showModeToggle
+  stepsInMinutes={240}
+  title="Critical value of imports"
+  axes={[{ label: "", types: ["critical"] }]}
+></ImportStats>

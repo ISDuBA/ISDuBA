@@ -30,6 +30,9 @@
   import { request } from "$lib/request";
   import FeedView from "./FeedView.svelte";
   import { push } from "svelte-spa-router";
+  import { DAY_MS } from "$lib/time";
+  import SourceBasicStats from "./SourceBasicStats.svelte";
+  import ImportStats from "$lib/Statistics/ImportStats.svelte";
   export let params: any = null;
 
   let sourceEdited: boolean = false;
@@ -325,6 +328,23 @@
           <DescriptionList tag="dt" {dtClass}>Queued</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
         </div>
+        <div class="pl-4">
+          <DescriptionList tag="dt" {dtClass}>Imported/Failed</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>
+            {#if source.id}
+              <SourceBasicStats sourceID={source.id}></SourceBasicStats>
+            {/if}
+          </DescriptionList>
+        </div>
+        <div class="pl-4">
+          <DescriptionList tag="dt" {dtClass}>Imported/Failed (last 24h)</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>
+            {@const yesterday = Date.now() - DAY_MS}
+            {#if source.id}
+              <SourceBasicStats from={new Date(yesterday)} sourceID={source.id}></SourceBasicStats>
+            {/if}
+          </DescriptionList>
+        </div>
       </List>
     {/if}
     <ErrorMessage error={loadSourceError}></ErrorMessage>
@@ -389,3 +409,27 @@
 <ErrorMessage error={loadFeedError}></ErrorMessage>
 <ErrorMessage error={feedError}></ErrorMessage>
 <ErrorMessage error={saveFeedError}></ErrorMessage>
+
+{#if source.id}
+  <ImportStats
+    axes={[{ label: "", types: ["imports"] }]}
+    height="200pt"
+    initialFrom={new Date(Date.now() - DAY_MS)}
+    showLegend
+    showModeToggle
+    showRangeSelection
+    source={{ id: source.id, isFeed: false }}
+    title="Imports"
+  ></ImportStats>
+  <ImportStats
+    axes={[{ label: "", types: ["importFailures"] }]}
+    height="200pt"
+    initialFrom={new Date(Date.now() - DAY_MS)}
+    isStacked
+    showLegend
+    showModeToggle
+    showRangeSelection
+    source={{ id: source.id, isFeed: false }}
+    title="Import failures"
+  ></ImportStats>
+{/if}
