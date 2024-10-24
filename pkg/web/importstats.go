@@ -91,6 +91,8 @@ func (c *Controller) criticalStatsFeed(ctx *gin.Context) {
 	c.importStatsFeedTmpl(ctx, selectCriticalSQL, collectCritcalBuckets)
 }
 
+const importStatsDefaultInterval = 3 * 24 * time.Hour
+
 func (c *Controller) importStatsSourceTmpl(
 	ctx *gin.Context,
 	sqlTmpl string,
@@ -100,7 +102,7 @@ func (c *Controller) importStatsSourceTmpl(
 	if !ok {
 		return
 	}
-	from, to, step, ok := importStatsInterval(ctx)
+	from, to, step, ok := importStatsInterval(ctx, importStatsDefaultInterval)
 	if !ok {
 		return
 	}
@@ -122,7 +124,7 @@ func (c *Controller) importStatsAllSourcesTmpl(
 	sqlTmpl string,
 	collectBuckets func(rows pgx.Rows) ([][]any, error),
 ) {
-	from, to, step, ok := importStatsInterval(ctx)
+	from, to, step, ok := importStatsInterval(ctx, importStatsDefaultInterval)
 	if !ok {
 		return
 	}
@@ -146,7 +148,7 @@ func (c *Controller) importStatsFeedTmpl(
 	if !ok {
 		return
 	}
-	from, to, step, ok := importStatsInterval(ctx)
+	from, to, step, ok := importStatsInterval(ctx, importStatsDefaultInterval)
 	if !ok {
 		return
 	}
@@ -229,7 +231,10 @@ func collectCritcalBuckets(rows pgx.Rows) ([][]any, error) {
 	return list, nil
 }
 
-func importStatsInterval(ctx *gin.Context) (time.Time, time.Time, time.Duration, bool) {
+func importStatsInterval(
+	ctx *gin.Context,
+	diff time.Duration,
+) (time.Time, time.Time, time.Duration, bool) {
 	var (
 		ok       bool
 		from, to time.Time
@@ -241,7 +246,7 @@ func importStatsInterval(ctx *gin.Context) (time.Time, time.Time, time.Duration,
 			return time.Time{}, time.Time{}, 0, false
 		}
 	} else {
-		from = now().Add(-time.Hour * 3 * 24)
+		from = now().Add(-diff)
 	}
 
 	if value := ctx.Query("to"); value != "" {
