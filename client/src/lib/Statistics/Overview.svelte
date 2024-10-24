@@ -23,7 +23,7 @@
   stepsInMinutes={240}
   title="Imports and CVEs"
   axes={[
-    { label: "Documents", types: ["imports", "importFailuresCombined"] },
+    { label: "Imports", types: ["imports", "importFailuresCombined"] },
     { label: "CVEs", types: ["cve"] }
   ]}
 ></ImportStats>

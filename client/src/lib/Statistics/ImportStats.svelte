@@ -82,7 +82,7 @@
   $: datasets = Object.keys(stats).map((key: string, index: number) => {
     let label = key;
     if (key === "cve") label = "CVEs of documents";
-    if (key === "imports") label = "Imported documents";
+    if (key === "imports") label = "Imports";
     if (key === "importFailuresCombined") label = "Failed imports";
     if (key === "signatureFailed") label = "Failed signature checks";
     if (key === "checksumFailed") label = "Failed checksum checks";
@@ -91,6 +91,9 @@
     if (key === "downloadFailed") label = "Failed downloads";
     if (key === "remoteFailed") label = "Failed remote";
     if (key === "duplicateFailed") label = "Failures because of duplicates";
+    if (key.startsWith("cvss_")) {
+      label = key.replace("cvss_", "");
+    }
     const yAxisID = axes.findIndex((axis) => axis.types.includes(key as StatisticType));
     return {
       label: label,
