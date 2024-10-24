@@ -377,7 +377,9 @@
     <div class="flex grow flex-col gap-y-2">
       <Label class="text-lg">
         <span class="mr-2">{params.trackingID}</span>
-        <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+        {#if $appStore.webview.doc?.tlp.label}
+          <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+        {/if}
       </Label>
       <Label class="text-gray-600">{params.publisherNamespace}</Label>
     </div>
@@ -410,7 +412,9 @@
       <div
         class="right-3 mr-3 flex w-full flex-col bg-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
       >
-        <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
+        <div
+          class={isSSVCediting || commentFocus ? " h-64 w-full p-3 shadow-md" : "h-64 w-full p-3"}
+        >
           <div class="mb-4 flex flex-row items-center">
             {#if ssvcVector}
               {#if !isSSVCediting}

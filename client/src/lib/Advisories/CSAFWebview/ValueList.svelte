@@ -16,8 +16,10 @@
 </script>
 
 <P>{label}</P>
-<List>
-  {#each values as value}
-    <Li>{value}</Li>
-  {/each}
-</List>
+{#if values}
+  <List>
+    {#each values as value}
+      <Li>{value}</Li>
+    {/each}
+  </List>
+{/if}

@@ -63,9 +63,6 @@ type AppStore = {
       isGeneralSectionVisible: boolean;
       isRevisionHistoryVisible: boolean;
       isVulnerabilitiesOverviewVisible: boolean;
-      isVulnerabilitiesSectionVisible: boolean;
-      isProductTreeOpen: boolean;
-      isProductTreeVisible: boolean;
       isFeedSectionOpen: boolean;
       selectedCVE: string;
       selectedProduct: string;
@@ -123,9 +120,6 @@ const generateInitialState = (): AppStore => {
         isGeneralSectionVisible: true,
         isRevisionHistoryVisible: false,
         isVulnerabilitiesOverviewVisible: true,
-        isVulnerabilitiesSectionVisible: false,
-        isProductTreeOpen: false,
-        isProductTreeVisible: false,
         isFeedSectionOpen: false,
         selectedCVE: "",
         selectedProduct: "",
@@ -262,18 +256,6 @@ function createStore() {
         return settings;
       });
     },
-    setVulnerabilitiesSectionVisible: () => {
-      update((settings) => {
-        settings.webview.ui.isVulnerabilitiesSectionVisible = true;
-        return settings;
-      });
-    },
-    setVulnerabilitiesSectionInvisible: () => {
-      update((settings) => {
-        settings.webview.ui.isVulnerabilitiesSectionVisible = false;
-        return settings;
-      });
-    },
     setVulnerabilitiesOverviewVisible: () => {
       update((settings) => {
         settings.webview.ui.isVulnerabilitiesOverviewVisible = true;
@@ -283,30 +265,6 @@ function createStore() {
     setVulnerabilitiesOverviewInvisible: () => {
       update((settings) => {
         settings.webview.ui.isVulnerabilitiesOverviewVisible = false;
-        return settings;
-      });
-    },
-    setProductTreeOpen: () => {
-      update((settings) => {
-        settings.webview.ui.isProductTreeOpen = true;
-        return settings;
-      });
-    },
-    setProductTreeClosed: () => {
-      update((settings) => {
-        settings.webview.ui.isProductTreeOpen = false;
-        return settings;
-      });
-    },
-    setProductTreeSectionVisible: () => {
-      update((settings) => {
-        settings.webview.ui.isProductTreeVisible = true;
-        return settings;
-      });
-    },
-    setProductTreeSectionInVisible: () => {
-      update((settings) => {
-        settings.webview.ui.isProductTreeVisible = false;
         return settings;
       });
     },

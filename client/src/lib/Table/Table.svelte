@@ -136,22 +136,6 @@
     return names[column] ?? column;
   };
 
-  const getTablePadding = (columns: any, match: string): any => {
-    for (let i = 0; i < columns.length; i++) {
-      if (columns[i] === match) {
-        return [Array(i).fill(0), Array(columns.length - i - 1).fill(0)];
-      }
-    }
-    return [[], Array(columns.length).fill(0)];
-  };
-
-  let searchPadding: any[] = [];
-  let searchPaddingRight: any[] = [];
-
-  $: if (columns !== undefined) {
-    [searchPadding, searchPaddingRight] = getTablePadding(columns, "title");
-  }
-
   const savePosition = () => {
     let position = [offset, currentPage, limit, orderBy];
     sessionStorage.setItem("tablePosition" + query + tableType, JSON.stringify(position));
@@ -722,15 +706,9 @@
               </tr>
               {#if item[searchColumnName]}
                 <TableBodyRow class="border border-y-indigo-500/100 bg-white">
-                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
-                  {#each searchPadding as _}
-                    <TableBodyCell {tdClass}></TableBodyCell>
-                  {/each}
-                  <TableBodyCell {tdClass}>{@html item[searchColumnName]}</TableBodyCell>
-                  <!-- eslint-disable-next-line  @typescript-eslint/no-unused-vars -->
-                  {#each searchPaddingRight as _}
-                    <TableBodyCell {tdClass}></TableBodyCell>
-                  {/each}
+                  <TableBodyCell colspan={columns.length} {tdClass}
+                    >{@html item[searchColumnName]}</TableBodyCell
+                  >
                 </TableBodyRow>
               {/if}
             {/each}
