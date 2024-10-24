@@ -72,9 +72,20 @@ func processFile(
 			r = file
 		}
 
+		// Store stats in database.
+		storeStats := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
+			if duplicate {
+				return nil
+			}
+			const insertSQL = `INSERT INTO downloads ` +
+				`(documents_id, feeds_id) VALUES ($1, ` +
+				`(SELECT id FROM feeds WHERE sources_id = 0 AND label = 'bulk'))`
+			_, err := tx.Exec(ctx, insertSQL, docID)
+			return err
+		}
 		var id int64
 		if err = db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
-			id, err = models.ImportDocument(ctx, conn, r, actor, nil, nil, dry)
+			id, err = models.ImportDocument(ctx, conn, r, actor, nil, storeStats, dry)
 			return err
 		}, 0); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {
