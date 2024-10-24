@@ -10,7 +10,6 @@ package web
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -27,19 +26,29 @@ func (c *Controller) statsTotal(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-	var when time.Time
-	if t := ctx.Query("time"); t != "" {
-		var ok bool
-		if when, ok = parse(ctx, parseTime, t); !ok {
+	var (
+		from, to time.Time
+		step     time.Duration
+	)
+	if from, to, step, ok = importStatsInterval(ctx, 0); !ok {
+		return
+	}
+
+	if !from.Equal(to) {
+		if step <= 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "step too small"})
+			return
+		}
+		if steps := to.Sub(from) / step; steps >= 65536/2-2 {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "too many steps"})
 			return
 		}
 	} else {
-		when = time.Now()
+		step = time.Hour
 	}
-	var (
-		documentsSQL, advisoriesSQL string
-		numDocuments, numAdvisories int64
-	)
+
+	var documentsSQL, advisoriesSQL string
+
 	if imports {
 		documentsSQL = `SELECT count(*) FROM documents ` +
 			`JOIN downloads ON documents.id = downloads.documents_id ` +
@@ -53,6 +62,31 @@ func (c *Controller) statsTotal(ctx *gin.Context) {
 		advisoriesSQL = `SELECT count(DISTINCT (publisher, tracking_id)) FROM documents ` +
 			`WHERE least(current_release_date, current_timestamp) <= $1`
 	}
+
+	list := [][]any{}
+
+	queries := func(when time.Time) (func(row pgx.Row) error, func(row pgx.Row) error) {
+		var numDocs, numAdvs int64
+		queryDocuments := func(row pgx.Row) error {
+			return row.Scan(&numDocs)
+		}
+		queryAdvisories := func(row pgx.Row) error {
+			if err := row.Scan(&numAdvs); err != nil {
+				return err
+			}
+			list = append(list, []any{when.UTC(), numDocs, numAdvs})
+			return nil
+		}
+		return queryDocuments, queryAdvisories
+	}
+
+	batch := &pgx.Batch{}
+	for when := from; !when.After(to); when = when.Add(step) {
+		docs, advs := queries(when)
+		batch.Queue(documentsSQL, when).QueryRow(docs)
+		batch.Queue(advisoriesSQL, when).QueryRow(advs)
+	}
+
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
@@ -61,17 +95,12 @@ func (c *Controller) statsTotal(ctx *gin.Context) {
 				return err
 			}
 			defer tx.Rollback(rctx)
-			return errors.Join(
-				tx.QueryRow(rctx, documentsSQL, when).Scan(&numDocuments),
-				tx.QueryRow(rctx, advisoriesSQL, when).Scan(&numAdvisories))
+			return tx.SendBatch(rctx, batch).Close()
 		}, 0,
 	); err != nil {
 		slog.Error("counting documents/advisories failed", "error", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"documents":  numDocuments,
-		"advisories": numAdvisories,
-	})
+	ctx.JSON(http.StatusOK, list)
 }
