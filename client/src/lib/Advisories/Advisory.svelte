@@ -358,16 +358,18 @@
 <Modal bind:open={openForwardModal}>
   <Label class="text-lg">Forward document</Label>
   <Select items={availableForwardSelection} bind:value={selectedForwardTarget}></Select>
-  <Button disabled={processRunning} on:click={forwardDocument}>
-    <span class="mr-2">Send document</span>
-    {#if processRunning}
-      <Spinner></Spinner>
-    {:else if lastSuccessfulForwardTarget === selectedForwardTarget}
-      <div class="inline-flex w-8 items-center"><i class="bx bx-check text-2xl" /></div>
-    {:else}
-      <div class="inline-flex w-8 items-center"><i class="bx bx-right-arrow-alt text-2xl" /></div>
-    {/if}
-  </Button>
+  {#if typeof selectedForwardTarget === "number"}
+    <Button disabled={processRunning} on:click={forwardDocument}>
+      <span class="mr-2">Send document</span>
+      {#if processRunning}
+        <Spinner></Spinner>
+      {:else if lastSuccessfulForwardTarget === selectedForwardTarget}
+        <div class="inline-flex w-8 items-center"><i class="bx bx-check text-2xl" /></div>
+      {:else}
+        <div class="inline-flex w-8 items-center"><i class="bx bx-right-arrow-alt text-2xl" /></div>
+      {/if}
+    </Button>
+  {/if}
 </Modal>
 
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
