@@ -16,6 +16,16 @@
 <SectionHeader title="Statistics"></SectionHeader>
 <hr class="mb-6" />
 <ImportStats
+  chartType="scatter"
+  height="400pt"
+  showRangeSelection
+  showLegend
+  showModeToggle
+  stepsInMinutes={180}
+  title="Advisories and Documents"
+  axes={[{ label: "", types: ["totals"] }]}
+></ImportStats>
+<ImportStats
   height="400pt"
   showRangeSelection
   showLegend

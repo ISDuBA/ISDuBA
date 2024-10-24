@@ -19,7 +19,16 @@ type CVSSTextualRating = "None" | "Low" | "Medium" | "High";
 type CritStatisticEntry = [CVSSTextualRating | number];
 type CritStatistic = [Date, CritStatisticEntry[]];
 
-type StatisticType = "imports" | "importFailures" | "importFailuresCombined" | "cve" | "critical";
+type TotalsStatisticsEntry = [Date, number, number];
+
+type StatisticType =
+  | "imports"
+  | "importFailures"
+  | "importFailuresCombined"
+  | "cve"
+  | "critical"
+  | "totals"
+  | "totalsImported";
 
 type StatisticFilter = {
   downloadFailed?: boolean;
@@ -44,6 +53,10 @@ type StatisticGroup = {
   remoteFailed?: Statistic;
   duplicateFailed?: Statistic;
   importFailuresCombined?: Statistic;
+  totalDocuments?: Statistic;
+  totalImportedDocuments?: Statistic;
+  totalAdvisories?: Statistic;
+  totalImportedAdvisories?: Statistic;
   [key: string]: Statistic | undefined;
 };
 
@@ -205,10 +218,65 @@ const fillGaps = (from: Date, to: Date, stepsInMilliseconds: number, values: any
   return newStats;
 };
 
+const fetchTotals = async (
+  from?: Date,
+  to?: Date,
+  step?: number,
+  imports = false
+): Promise<Result<StatisticGroup, ErrorDetails>> => {
+  let query = "";
+  if (from) {
+    query += `&from=${toLocaleISOString(from)}`;
+  }
+  if (to) {
+    query += `&to=${toLocaleISOString(to)}`;
+  }
+  if (step) {
+    query += `&step=${step}`;
+  }
+  query += `&imports=${imports}`;
+  const resp = await request(`/api/stats/totals?${query}`, "GET");
+  if (resp.ok) {
+    if (resp.content) {
+      const stats: StatisticGroup = {};
+      const entries: TotalsStatisticsEntry[] = resp.content;
+      for (let i = 0; i < entries.length; i++) {
+        const date = new Date(entries[i][0]);
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+        entries[i][0] = date;
+      }
+      const advisories: StatisticEntry[] = entries.map((entry: TotalsStatisticsEntry) => [
+        entry[0],
+        entry[2]
+      ]);
+      const documents: StatisticEntry[] = entries.map((entry: TotalsStatisticsEntry) => [
+        entry[0],
+        entry[1]
+      ]);
+      if (imports) {
+        stats.totalImportedAdvisories = advisories;
+        stats.totalImportedDocuments = documents;
+      } else {
+        stats.totalAdvisories = advisories;
+        stats.totalDocuments = documents;
+      }
+      return {
+        ok: true,
+        value: stats
+      };
+    }
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load statistic`, resp)
+  };
+};
+
 export {
   fetchImportFailuresStatistic,
   fetchStatistic,
   fetchBasicStatistic,
+  fetchTotals,
   getCVSSTextualRating,
   mergeImportFailureStatistics
 };

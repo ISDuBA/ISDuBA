@@ -18,7 +18,8 @@
     fetchBasicStatistic,
     getCVSSTextualRating,
     type CVSSTextualRating,
-    mergeImportFailureStatistics
+    mergeImportFailureStatistics,
+    fetchTotals
   } from "$lib/Statistics/statistics";
   import Chart from "chart.js/auto";
   import { Button, ButtonGroup, Input, Label, Spinner } from "flowbite-svelte";
@@ -36,6 +37,7 @@
     toLocaleISOString
   } from "$lib/time";
 
+  export let chartType: "bar" | "scatter" = "bar";
   export let divContainerClass = "mb-16";
   export let height = "140pt";
   export let stepsInMinutes = 30;
@@ -189,65 +191,81 @@
       }
     }
     if (types.includes("critical")) {
-      response = await fetchBasicStatistic(
-        new Date(from),
-        toParameter,
-        stepsInMilliseconds,
-        "critical",
-        source?.id,
-        source?.isFeed
-      );
+      const critStats = await getCriticalStatistic(toParameter);
+      if (!critStats?.message) {
+        Object.assign(newStats, critStats);
+      }
+    }
+    if (types.includes("totals")) {
+      response = await fetchTotals(new Date(from), toParameter);
       if (response.ok) {
-        const crit: any = response.value.critical;
-        if (crit) {
-          const critStats: any = {
+        Object.assign(newStats, response.value);
+      } else {
+        error = response.error;
+      }
+    }
+    stats = newStats;
+  };
+
+  const getCriticalStatistic = async (to: Date): Promise<ErrorDetails | undefined> => {
+    if (!from) return;
+    const response = await fetchBasicStatistic(
+      new Date(from),
+      to,
+      stepsInMilliseconds,
+      "critical",
+      source?.id,
+      source?.isFeed
+    );
+    if (response.ok) {
+      const crit: any = response.value.critical;
+      if (crit) {
+        const critStats: any = {
+          cvss_null: [],
+          cvss_None: [],
+          cvss_Low: [],
+          cvss_Medium: [],
+          cvss_High: []
+        };
+        for (let i = 0; i < crit.length; i++) {
+          const date = crit[i][0];
+          const counts: any = {
             cvss_null: [],
             cvss_None: [],
             cvss_Low: [],
             cvss_Medium: [],
             cvss_High: []
           };
-          for (let i = 0; i < crit.length; i++) {
-            const date = crit[i][0];
-            const counts: any = {
-              cvss_null: [],
-              cvss_None: [],
-              cvss_Low: [],
-              cvss_Medium: [],
-              cvss_High: []
-            };
-            const keys = Object.keys(critStats);
-            // Iterate through the values of one point of time
-            if (crit[i][1]) {
-              for (let j = 0; j < crit[i][1].length; j++) {
-                type NumberOfDocs = number;
-                type CritCount = [number | null, NumberOfDocs];
-                const critCount: CritCount = crit[i][1][j];
-                const numberOfDocs = critCount[1];
-                const cvss = critCount?.[0];
-                if (cvss) {
-                  const cvssTextialRating: CVSSTextualRating = getCVSSTextualRating(cvss);
-                  counts[cvssTextialRating] = counts[`cvss_${cvssTextialRating}`] + numberOfDocs;
-                } else {
-                  counts["null"] = counts["null"] + numberOfDocs;
-                }
+          const keys = Object.keys(critStats);
+          // Iterate through the values of one point of time
+          if (crit[i][1]) {
+            for (let j = 0; j < crit[i][1].length; j++) {
+              type NumberOfDocs = number;
+              type CritCount = [number | null, NumberOfDocs];
+              const critCount: CritCount = crit[i][1][j];
+              const numberOfDocs = critCount[1];
+              const cvss = critCount?.[0];
+              if (cvss) {
+                const cvssTextialRating: CVSSTextualRating = getCVSSTextualRating(cvss);
+                counts[cvssTextialRating] = counts[`cvss_${cvssTextialRating}`] + numberOfDocs;
+              } else {
+                counts["null"] = counts["null"] + numberOfDocs;
               }
-              keys.forEach((key) => {
-                critStats[key].push([date, counts[key.replace("cvss_", "")]]);
-              });
-            } else {
-              keys.forEach((key) => {
-                critStats[key].push([date, 0]);
-              });
             }
+            keys.forEach((key) => {
+              critStats[key].push([date, counts[key.replace("cvss_", "")]]);
+            });
+          } else {
+            keys.forEach((key) => {
+              critStats[key].push([date, 0]);
+            });
           }
-          Object.assign(newStats, critStats);
         }
-      } else {
-        error = response.error;
+        return critStats;
       }
+    } else {
+      error = response.error;
     }
-    stats = newStats;
   };
 
   const setMode = (newMode: StatisticsMode) => {
@@ -266,7 +284,7 @@
     if (to && from) {
       let maxTo = new Date(to);
       if (isToday(maxTo)) {
-        maxTo = new Date(Date.now() + HOUR_MS);
+        maxTo = new Date(Date.now() + HOUR_MS * 2);
       } else {
         maxTo = setToEndOfDay(new Date(to));
       }
@@ -324,13 +342,18 @@
 
   const initChart = () => {
     chart = new Chart(chartComponentRef, {
-      type: "bar",
+      type: chartType,
       data: {
         datasets
       },
       options: {
         maintainAspectRatio: false,
         aspectRatio: 1,
+        elements: {
+          point: {
+            radius: 5
+          }
+        },
         plugins: {
           legend: {
             display: showLegend
