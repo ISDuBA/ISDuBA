@@ -104,7 +104,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/documents", authAll /* authEdReAu */, c.overviewDocuments)
 	api.GET("/documents/:id", authAll /* authEdReAu */, c.viewDocument)
 	api.GET("/documents/forward", authAll /* authEdReAu */, c.viewForwardTargets)
-	api.GET("/documents/forward/:id/:target", authAll /* authEdReAu */, c.forwardDocument)
+	api.POST("/documents/forward/:id/:target", authAll /* authEdReAu */, c.forwardDocument)
 	// Admin can delete documents
 	api.DELETE("/documents/:id", authAdm, c.deleteDocument)
 

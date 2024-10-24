@@ -8,8 +8,8 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Label } from "flowbite-svelte";
-  import { onDestroy } from "svelte";
+  import { Button, Select, Label, Modal, Spinner } from "flowbite-svelte";
+  import { onDestroy, onMount } from "svelte";
   import { appStore } from "$lib/store";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
@@ -38,6 +38,7 @@
   let loadFourCVEsError: ErrorDetails | null;
   let createCommentError: ErrorDetails | null;
   let loadDocumentSSVCError: ErrorDetails | null;
+  let loadForwardTargetsError: ErrorDetails | null;
   let stateError: ErrorDetails | null;
   let advisoryVersions: any[] = [];
   let advisoryVersionByDocumentID: any;
@@ -46,6 +47,9 @@
   let isCommentingAllowed: boolean;
   let isSSVCediting = false;
   let position = "";
+  let processRunning = false;
+  let lastSuccessfulForwardTarget: number | undefined;
+
   $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
     if (appStore.isReviewer() && [REVIEW].includes(advisoryState)) {
       isCommentingAllowed = true;
@@ -66,6 +70,9 @@
   const setAsReadTimeout: number[] = [];
   let isDiffOpen = false;
   let commentFocus = false;
+
+  let availableForwardSelection: any[] = [];
+  let selectedForwardTarget: number | undefined;
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
@@ -295,10 +302,40 @@
     }
   }
 
+  const fetchForwardTargets = async () => {
+    const response = await request(`/api/documents/forward`, "GET");
+    if (response.ok) {
+      availableForwardSelection = [];
+      for (let target of response.content) {
+        availableForwardSelection.push({ value: target.id, name: target.url });
+      }
+    } else if (response.error) {
+      loadForwardTargetsError = getErrorDetails(`Couldn't load forward targets.`, response);
+    }
+  };
+
+  const forwardDocument = async () => {
+    processRunning = true;
+    const response = await request(
+      `/api/documents/forward/${params.id}/${selectedForwardTarget}`,
+      "POST"
+    );
+    processRunning = false;
+    if (response.error) {
+      openForwardModal = false;
+      loadForwardTargetsError = getErrorDetails(`Couldn't load forward targets.`, response);
+    } else {
+      lastSuccessfulForwardTarget = selectedForwardTarget;
+    }
+  };
   onDestroy(() => {
     setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
     });
+  });
+
+  onMount(async () => {
+    await fetchForwardTargets();
   });
 
   $: if (params) {
@@ -311,31 +348,57 @@
       appStore.setSelectedCVE("");
     }
   }
+  let openForwardModal = false;
 </script>
 
 <svelte:head>
   <title>{params.trackingID}</title>
 </svelte:head>
 
+<Modal bind:open={openForwardModal}>
+  <Label class="text-lg">Forward document</Label>
+  <Select items={availableForwardSelection} bind:value={selectedForwardTarget}></Select>
+  <Button disabled={processRunning} on:click={forwardDocument}>
+    <span class="mr-2">Send document</span>
+    {#if processRunning}
+      <Spinner></Spinner>
+    {:else if lastSuccessfulForwardTarget === selectedForwardTarget}
+      <div class="inline-flex w-8 items-center"><i class="bx bx-check text-2xl" /></div>
+    {:else}
+      <div class="inline-flex w-8 items-center"><i class="bx bx-right-arrow-alt text-2xl" /></div>
+    {/if}
+  </Button>
+</Modal>
+
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
-  <div class="flex flex-none flex-col">
-    <div class="flex gap-2">
+  <div class="flex flex-col flex-wrap gap-4 lg:flex-row lg:gap-2">
+    <div class="flex grow flex-col gap-y-2">
       <Label class="text-lg">
         <span class="mr-2">{params.trackingID}</span>
         <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
       </Label>
-    </div>
-    <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
       <Label class="text-gray-600">{params.publisherNamespace}</Label>
-      <div
-        class={"right-6 mt-4 flex h-fit flex-row gap-2" +
-          (canSeeCommentArea ? " min-[1080px]:absolute" : "")}
-      >
+    </div>
+    <div class="flex shrink grow flex-col gap-y-4 lg:items-end lg:gap-y-2">
+      <div class="flex h-fit flex-row gap-2 lg:order-2">
         <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
       </div>
+      {#if availableForwardSelection.length != 0}
+        <div class="flex h-fit flex-row gap-2 lg:order-1">
+          <Button
+            size="xs"
+            color="light"
+            class="h-7 py-1 text-xs"
+            on:click={() => (openForwardModal = true)}
+          >
+            Forward document</Button
+          >
+        </div>
+      {/if}
     </div>
     <div class="mb-4 mt-2" />
   </div>
+  <ErrorMessage error={loadForwardTargetsError}></ErrorMessage>
   <ErrorMessage error={loadAdvisoryVersionsError}></ErrorMessage>
   <ErrorMessage error={stateError}></ErrorMessage>
   <ErrorMessage error={loadDocumentError}></ErrorMessage>
