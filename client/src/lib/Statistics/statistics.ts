@@ -72,6 +72,18 @@ const getCVSSTextualRating = (CVSS: number): CVSSTextualRating => {
   }
 };
 
+const getCVSSTextualRatingDescription = (textualRating: string): string => {
+  if (textualRating === "None") {
+    return "0";
+  } else if (textualRating === "Low") {
+    return "0.1 - 3.9";
+  } else if (textualRating === "Medium") {
+    return "4.0 - 6.9";
+  } else {
+    return "7.0 - 10.0";
+  }
+};
+
 const fetchBasicStatistic = async (
   from: Date,
   to: Date,
@@ -278,6 +290,7 @@ export {
   fetchBasicStatistic,
   fetchTotals,
   getCVSSTextualRating,
+  getCVSSTextualRatingDescription,
   mergeImportFailureStatistics
 };
 export type {

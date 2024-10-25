@@ -19,7 +19,8 @@
     getCVSSTextualRating,
     type CVSSTextualRating,
     mergeImportFailureStatistics,
-    fetchTotals
+    fetchTotals,
+    getCVSSTextualRatingDescription
   } from "$lib/Statistics/statistics";
   import Chart from "chart.js/auto";
   import { Button, ButtonGroup, Input, Label, Spinner } from "flowbite-svelte";
@@ -103,7 +104,11 @@
     if (key === "downloadFailed") label = "Failed downloads";
     if (key === "remoteFailed") label = "Failed remote";
     if (key === "duplicateFailed") label = "Failures because of duplicates";
-    if (key.startsWith("cvss_")) {
+    if (key === "totalAdvisories") label = "Advisories";
+    if (key === "totalDocuments") label = "Documents";
+    if (key === "cvss_null") {
+      label = "N/A";
+    } else if (key.startsWith("cvss_")) {
       label = key.replace("cvss_", "");
     }
     const yAxisID = axes.findIndex((axis) => axis.types.includes(key as StatisticType));
@@ -366,8 +371,12 @@
           tooltip: {
             callbacks: {
               label: function (context: any) {
+                const label = context.dataset.label;
+                const addition = ["None", "Low", "Medium", "High"].includes(label)
+                  ? ` (${getCVSSTextualRatingDescription(label)})`
+                  : "";
                 if (context.formattedValue && context.dataset.label) {
-                  return `${context.dataset.label}: ${context.formattedValue}`;
+                  return `${context.dataset.label}${addition}: ${context.formattedValue}`;
                 }
                 return "";
               },
