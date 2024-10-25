@@ -24,7 +24,7 @@ import (
 func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
 	rolie, err := csaf.LoadROLIEFeed(r)
 	if err != nil {
-		return nil, fmt.Errorf("rolie from data failed: %w", err)
+		return nil, fmt.Errorf("loading rolie feed from data failed: %w", err)
 	}
 	resolve := func(href string, store **url.URL) error {
 		u, err := url.Parse(href)
@@ -45,6 +45,7 @@ func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
 	}
 	// Extract the locations
 	entries := rolie.Feed.Entry
+	slog.Debug("rolie feed entries", "num", len(entries), "feed", f.id)
 	dls := make([]location, 0, len(entries))
 nextEntry:
 	for _, entry := range entries {
