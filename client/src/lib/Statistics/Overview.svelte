@@ -16,8 +16,9 @@
 <SectionHeader title="Statistics"></SectionHeader>
 <hr class="mb-6" />
 <ImportStats
-  chartType="scatter"
-  height="400pt"
+  chartType="line"
+  colors={["#3D6090", "#E6A776"]}
+  height="300pt"
   showRangeSelection
   showLegend
   showModeToggle
@@ -26,7 +27,7 @@
   axes={[{ label: "", types: ["totals"] }]}
 ></ImportStats>
 <ImportStats
-  height="400pt"
+  height="300pt"
   showRangeSelection
   showLegend
   showModeToggle
@@ -38,7 +39,7 @@
   ]}
 ></ImportStats>
 <ImportStats
-  height="400pt"
+  height="300pt"
   showRangeSelection
   isStacked
   showLegend

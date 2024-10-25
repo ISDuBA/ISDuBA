@@ -36,8 +36,9 @@
     setToEndOfDay,
     toLocaleISOString
   } from "$lib/time";
+  import chroma from "chroma-js";
 
-  export let chartType: "bar" | "scatter" = "bar";
+  export let chartType: "bar" | "line" | "scatter" = "bar";
   export let divContainerClass = "mb-16";
   export let height = "140pt";
   export let stepsInMinutes = 30;
@@ -106,13 +107,17 @@
       label = key.replace("cvss_", "");
     }
     const yAxisID = axes.findIndex((axis) => axis.types.includes(key as StatisticType));
+    const color = getColor(index);
     return {
       label: label,
       data: stats[key]?.map((s) => {
         return { x: s[0], y: s[1] };
       }),
-      borderWidth: 0,
-      backgroundColor: getColor(index),
+      borderWidth: chartType === "line" ? 2 : 0,
+      backgroundColor: chartType === "line" ? chroma(color).brighten(1.4).hex() : color,
+      borderColor: color,
+      fill: true,
+      pointBackgroundColor: color,
       yAxisID: `y${yAxisID > 0 ? yAxisID : ""}`
     };
   });
@@ -197,7 +202,7 @@
       }
     }
     if (types.includes("totals")) {
-      response = await fetchTotals(new Date(from), toParameter);
+      response = await fetchTotals(new Date(from), toParameter, stepsInMilliseconds);
       if (response.ok) {
         Object.assign(newStats, response.value);
       } else {
@@ -351,7 +356,7 @@
         aspectRatio: 1,
         elements: {
           point: {
-            radius: 5
+            radius: 4
           }
         },
         plugins: {
@@ -369,7 +374,11 @@
               title: (tooltipItems: any[]) => {
                 const start: any = tooltipItems[0].dataset.data[tooltipItems[0].dataIndex];
                 const end: any = tooltipItems[0].dataset.data[tooltipItems[0].dataIndex + 1];
-                return `${toLocaleISOString(start.x)}${end ? " - " : ""}${end ? toLocaleISOString(end.x) : ""}`;
+                if (chartType === "bar") {
+                  return `${toLocaleISOString(start.x)}${end ? " - " : ""}${end ? toLocaleISOString(end.x) : ""}`;
+                } else {
+                  return `${toLocaleISOString(start.x)}`;
+                }
               }
             }
           }

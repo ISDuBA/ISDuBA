@@ -232,7 +232,7 @@ const fetchTotals = async (
     query += `&to=${toLocaleISOString(to)}`;
   }
   if (step) {
-    query += `&step=${step}`;
+    query += `&step=${step}ms`;
   }
   query += `&imports=${imports}`;
   const resp = await request(`/api/stats/totals?${query}`, "GET");
