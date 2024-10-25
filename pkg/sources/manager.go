@@ -248,6 +248,7 @@ func (m *Manager) refreshFeeds() {
 	m.activeFeeds(func(f *feed) bool {
 		// Does the feed need a refresh?
 		if f.nextCheck.IsZero() || !now.Before(f.nextCheck) {
+			slog.Debug("refreshing feed", "feed", f.id, "source", f.source.name)
 			if err := f.refresh(m); err != nil {
 				f.log(m, config.ErrorFeedLogLevel, "feed refresh failed: %v", err.Error())
 			}

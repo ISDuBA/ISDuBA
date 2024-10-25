@@ -105,10 +105,13 @@ func (f *feed) refresh(m *Manager) error {
 		return fmt.Errorf("fetching feed index failed: %w", err)
 	}
 	if candidates == nil {
+		slog.Debug("feed has not changed", "feed", f.id)
 		f.log(m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
 		f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 		return nil
 	}
+
+	slog.Debug("feed has new candidates", "feed", f.id, "candidates", len(candidates))
 
 	// Filter out candidates which are already in the database with same or newer.
 	if candidates, err = f.removeOlder(m.db, candidates); err != nil {
@@ -116,6 +119,7 @@ func (f *feed) refresh(m *Manager) error {
 	}
 
 	if len(candidates) == 0 { // Nothing to do.
+		slog.Debug("feed has no candidates left", "feed", f.id)
 		return nil
 	}
 
@@ -129,6 +133,7 @@ func (f *feed) refresh(m *Manager) error {
 		return a.updated.Compare(b.updated)
 	})
 
+	slog.Debug("feed entries to download", "feed", f.id, "queue", len(f.queue))
 	f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 	return nil
 }
