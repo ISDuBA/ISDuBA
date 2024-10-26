@@ -418,12 +418,14 @@
             afterBuildTicks: (axis: any) => {
               const newTicks: any[] = [];
               const firstProperty = Object.keys(stats)[0];
-              stats?.[firstProperty]?.forEach((stat) => {
-                newTicks.push({
-                  value: stat[0].getTime(),
-                  major: false,
-                  label: toLocaleISOString(stat[0])
-                });
+              stats?.[firstProperty]?.forEach((stat, index) => {
+                if (stepsInMilliseconds >= HOUR_MS || index % 8 === 0) {
+                  newTicks.push({
+                    value: stat[0].getTime(),
+                    major: false,
+                    label: toLocaleISOString(stat[0])
+                  });
+                }
               });
               axis.ticks = newTicks;
             }
