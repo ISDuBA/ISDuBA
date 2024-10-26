@@ -226,7 +226,6 @@
     axes={[{ label: "", types: ["imports"] }]}
     height="200pt"
     initialFrom={new Date(Date.now() - DAY_MS)}
-    showLegend
     showModeToggle
     showRangeSelection
     source={{ id: feed.id, isFeed: true }}
@@ -241,6 +240,6 @@
     showModeToggle
     showRangeSelection
     source={{ id: feed.id, isFeed: true }}
-    title="Import failures"
+    title="Import errors"
   ></ImportStats>
 {/if}

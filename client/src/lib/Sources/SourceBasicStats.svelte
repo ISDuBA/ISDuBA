@@ -8,11 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import {
-    fetchBasicStatistic,
-    fetchImportFailuresStatistic,
-    mergeImportFailureStatistics
-  } from "$lib/Statistics/statistics";
+  import { fetchBasicStatistic } from "$lib/Statistics/statistics";
   import { Spinner } from "flowbite-svelte";
 
   export let from: Date = new Date(0);
@@ -24,17 +20,6 @@
 {:then response}
   {#if response.ok}
     {response.value.imports?.[0][1] ?? 0}
-  {:else}
-    <span class="text-red-700">Couldn't load value.</span>
-  {/if}
-{/await}
-/
-{#await fetchImportFailuresStatistic(from, new Date(), Date.now() - from.getTime(), sourceID)}
-  <Spinner color="gray" size="4"></Spinner>
-{:then response}
-  {#if response.ok}
-    {@const merged = mergeImportFailureStatistics(response.value)}
-    {merged.importFailuresCombined?.[0][1]}
   {:else}
     <span class="text-red-700">Couldn't load value.</span>
   {/if}

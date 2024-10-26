@@ -75,12 +75,7 @@
 
 <div>
   <SectionHeader title="Sources"></SectionHeader>
-  <ImportStats
-    axes={[{ label: "Imports", types: ["imports", "importFailuresCombined"] }]}
-    colors={["#22428f", "#d74030"]}
-    divContainerClass="mb-8"
-    showLegend
-    title=""
+  <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-8" title=""
   ></ImportStats>
   {#if appStore.isEditor() || appStore.isSourceManager()}
     <CustomTable
@@ -103,12 +98,8 @@
           attribute: "stats"
         },
         {
-          label: "Imported/Failed",
+          label: "Imported (last 24h)",
           attribute: "statsHistory"
-        },
-        {
-          label: "Imported/Failed (last 24h)",
-          attribute: "statsLastDay"
         }
       ]}
     >
@@ -133,13 +124,10 @@
           >
           <TableBodyCell>
             {#if source.id}
+              {@const yesterday = Date.now() - DAY_MS}
               <SourceBasicStats sourceID={source.id}></SourceBasicStats>
-            {/if}
-          </TableBodyCell>
-          <TableBodyCell {tdClass}>
-            {@const yesterday = Date.now() - DAY_MS}
-            {#if source.id}
-              <SourceBasicStats from={new Date(yesterday)} sourceID={source.id}></SourceBasicStats>
+              (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
+              ></SourceBasicStats>)
             {/if}
           </TableBodyCell>
         </tr>

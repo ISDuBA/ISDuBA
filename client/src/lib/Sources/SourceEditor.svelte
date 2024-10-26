@@ -329,19 +329,13 @@
           <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
         </div>
         <div class="pl-4">
-          <DescriptionList tag="dt" {dtClass}>Imported/Failed</DescriptionList>
+          <DescriptionList tag="dt" {dtClass}>Imported (last 24h)</DescriptionList>
           <DescriptionList tag="dd" {ddClass}>
             {#if source.id}
+              {@const yesterday = Date.now() - DAY_MS}
               <SourceBasicStats sourceID={source.id}></SourceBasicStats>
-            {/if}
-          </DescriptionList>
-        </div>
-        <div class="pl-4">
-          <DescriptionList tag="dt" {dtClass}>Imported/Failed (last 24h)</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>
-            {@const yesterday = Date.now() - DAY_MS}
-            {#if source.id}
-              <SourceBasicStats from={new Date(yesterday)} sourceID={source.id}></SourceBasicStats>
+              (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
+              ></SourceBasicStats>)
             {/if}
           </DescriptionList>
         </div>
@@ -415,7 +409,6 @@
     axes={[{ label: "", types: ["imports"] }]}
     height="200pt"
     initialFrom={new Date(Date.now() - DAY_MS)}
-    showLegend
     showModeToggle
     showRangeSelection
     source={{ id: source.id, isFeed: false }}
@@ -430,6 +423,6 @@
     showModeToggle
     showRangeSelection
     source={{ id: source.id, isFeed: false }}
-    title="Import failures"
+    title="Import errors"
   ></ImportStats>
 {/if}
