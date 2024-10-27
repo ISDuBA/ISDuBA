@@ -51,11 +51,12 @@ type document struct {
 
 type target struct {
 	url       string
+	name      string
 	publisher *string
 	header    http.Header
 	client    http.Client
 	running   *sync.Mutex
-	enabled   bool
+	automatic bool
 }
 
 // ForwardManager forwards documents to specified targets.
@@ -105,10 +106,11 @@ func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
 		t := target{
 			client:    client,
 			url:       targetCfg.URL,
+			name:      targetCfg.Name,
 			publisher: targetCfg.Publisher,
 			header:    headers,
 			running:   &sync.Mutex{},
-			enabled:   targetCfg.Enabled,
+			automatic: targetCfg.Automatic,
 		}
 
 		targets = append(targets, t)
@@ -141,7 +143,7 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 func (fm *ForwardManager) runTargets(ctx context.Context) {
 	for index := range fm.targets {
 		target := &fm.targets[index]
-		if !target.enabled || !target.running.TryLock() {
+		if !target.automatic || !target.running.TryLock() {
 			continue
 		}
 		documentIDs, err := fm.fetchNewDocuments(ctx, target.url, target.publisher)
@@ -329,18 +331,21 @@ func (fm *ForwardManager) logDocument(ctx context.Context, url string, documentI
 
 // ForwardTarget contains information about the available target.
 type ForwardTarget struct {
-	URL string `json:"url"`
-	ID  int    `json:"id"`
+	URL  string `json:"url"`
+	Name string `json:"name,omitempty"`
+	ID   int    `json:"id"`
 }
 
 // Targets returns a list of forward targets.
 func (fm *ForwardManager) Targets() []ForwardTarget {
 	result := make(chan []ForwardTarget)
 	fm.fns <- func(fm *ForwardManager) {
-		targets := make([]ForwardTarget, len(fm.targets))
+		targets := make([]ForwardTarget, 0, len(fm.targets))
 		for i := range fm.targets {
 			target := &fm.targets[i]
-			targets[i] = ForwardTarget{ID: i, URL: target.url}
+			if !target.automatic {
+				targets = append(targets, ForwardTarget{ID: i, URL: target.url, Name: target.name})
+			}
 		}
 		result <- targets
 	}

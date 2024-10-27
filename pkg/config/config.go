@@ -203,11 +203,12 @@ type Sources struct {
 // ForwardTarget are the config options for the forward target.
 type ForwardTarget struct {
 	URL               string        `toml:"url"`
+	Name              string        `toml:"name"`
 	ClientPrivateCert string        `toml:"private_cert"`
 	ClientPublicCert  string        `toml:"public_cert"`
 	Publisher         *string       `toml:"publisher"`
 	Header            []string      `toml:"header"`
-	Enabled           bool          `toml:"enabled"`
+	Automatic         bool          `toml:"automatic"`
 	Timeout           time.Duration `toml:"timeout"`
 }
 
