@@ -28,7 +28,7 @@ type Manager struct {
 // NewManager creates a new aggregators manager.
 func NewManager(cfg *config.Aggregators) *Manager {
 	return &Manager{
-		Cache: newCache(),
+		Cache: newCache(cfg.Timeout),
 		fns:   make(chan func(*Manager)),
 		cfg:   cfg,
 	}

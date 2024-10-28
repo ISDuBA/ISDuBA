@@ -124,6 +124,7 @@ const (
 )
 
 const (
+	defaultAggregatorsTimeout        = 30 * time.Second
 	defaultAggregatorsUpdateInterval = 1 * time.Hour
 )
 
@@ -223,6 +224,7 @@ type Forwarder struct {
 
 // Aggregators are the config options for the aggregators.
 type Aggregators struct {
+	Timeout        time.Duration `toml:"timeout"`
 	UpdateInterval time.Duration `toml:"update_interval"`
 }
 
@@ -378,6 +380,7 @@ func Load(file string) (*Config, error) {
 			IdleTimeout:      defaultClientIdleTimeout,
 		},
 		Aggregators: Aggregators{
+			Timeout:        defaultAggregatorsTimeout,
 			UpdateInterval: defaultAggregatorsUpdateInterval,
 		},
 	}
@@ -467,6 +470,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
+		envStore{"ISDUBA_AGGREGATORS_TIMEOUT", storeDuration(&cfg.Aggregators.Timeout)},
 		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
 	)
 }
