@@ -19,6 +19,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ISDuBA/ISDuBA/pkg/aggregators"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/forwarder"
@@ -60,6 +61,9 @@ func run(cfg *config.Config) error {
 	forwardManager := forwarder.NewForwardManager(&cfg.Forwarder, db)
 	go forwardManager.Run(ctx)
 
+	agg := aggregators.NewManager(&cfg.Aggregators)
+	go agg.Run(ctx)
+
 	// Is the remote validator configured?
 	var val csaf.RemoteValidator
 	if cfg.RemoteValidator.URL != "" {
@@ -83,7 +87,14 @@ func run(cfg *config.Config) error {
 
 	cfg.Web.Configure()
 
-	ctrl := web.NewController(cfg, db, forwardManager, tmpStore, sm, val)
+	ctrl := web.NewController(
+		cfg, db,
+		forwardManager,
+		tmpStore,
+		sm,
+		agg,
+		val,
+	)
 
 	addr := cfg.Web.Addr()
 	slog.Info("Starting web server", "address", addr)

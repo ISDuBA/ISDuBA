@@ -123,6 +123,10 @@ const (
 	defaultClientIdleTimeout      = 30 * time.Minute
 )
 
+const (
+	defaultAggregatorsUpdateInterval = 1 * time.Hour
+)
+
 // HumanSize de-serializes sizes from integer strings
 // with suffix "k" (1000), "K" (1024), "m", "M", "g", "G".
 // With no suffix given bytes are assumed.
@@ -217,6 +221,11 @@ type Forwarder struct {
 	UpdateInterval time.Duration   `toml:"update_interval"`
 }
 
+// Aggregators are the config options for the aggregators.
+type Aggregators struct {
+	UpdateInterval time.Duration `toml:"update_interval"`
+}
+
 // Client are the config options for the client.
 type Client struct {
 	KeycloakURL      string        `toml:"keycloak_url" json:"keycloak_url"`
@@ -239,6 +248,7 @@ type Config struct {
 	RemoteValidator csaf.RemoteValidatorOptions `toml:"remote_validator"`
 	Client          Client                      `toml:"client"`
 	Forwarder       Forwarder                   `toml:"forwarder"`
+	Aggregators     Aggregators                 `toml:"aggregators"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -367,6 +377,9 @@ func Load(file string) (*Config, error) {
 			UpdateInterval:   defaultClientUpdateInterval,
 			IdleTimeout:      defaultClientIdleTimeout,
 		},
+		Aggregators: Aggregators{
+			UpdateInterval: defaultAggregatorsUpdateInterval,
+		},
 	}
 	if file != "" {
 		md, err := toml.DecodeFile(file, cfg)
@@ -454,6 +467,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
+		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
 	)
 }
 

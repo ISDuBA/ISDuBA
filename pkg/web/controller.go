@@ -19,6 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 	sloggin "github.com/samber/slog-gin"
 
+	"github.com/ISDuBA/ISDuBA/pkg/aggregators"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/forwarder"
@@ -35,6 +36,7 @@ type Controller struct {
 	fm  *forwarder.ForwardManager
 	ts  *tempstore.Store
 	sm  *sources.Manager
+	am  *aggregators.Manager
 	val csaf.RemoteValidator
 }
 
@@ -45,6 +47,7 @@ func NewController(
 	fm *forwarder.ForwardManager,
 	ts *tempstore.Store,
 	dl *sources.Manager,
+	am *aggregators.Manager,
 	val csaf.RemoteValidator,
 ) *Controller {
 	return &Controller{
@@ -53,6 +56,7 @@ func NewController(
 		fm:  fm,
 		ts:  ts,
 		sm:  dl,
+		am:  am,
 		val: val,
 	}
 }
