@@ -31,7 +31,7 @@
   showRangeSelection
   showLegend
   showModeToggle
-  stepsInMinutes={240}
+  stepsInMinutes={60}
   title="Imports and CVEs"
   axes={[
     { label: "Imports", types: ["imports", "importFailuresCombined"] },
@@ -44,7 +44,7 @@
   isStacked
   showLegend
   showModeToggle
-  stepsInMinutes={240}
+  stepsInMinutes={60}
   title="Critical value of imports"
   axes={[{ label: "", types: ["critical"] }]}
 ></ImportStats>
