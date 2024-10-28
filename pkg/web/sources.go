@@ -380,7 +380,9 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 					return sources.InvalidArgumentError(
 						fmt.Sprintf("parsing 'age' failed: %v", err.Error()))
 				}
-				age = &d
+				if d != 0 {
+					age = &d
+				}
 			}
 			if err := su.UpdateAge(age); err != nil {
 				return err

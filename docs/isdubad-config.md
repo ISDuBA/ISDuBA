@@ -120,7 +120,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
    You can generate a token yourself e.g. by entering this command:\
    `dd if=/dev/urandom bs=32 count=1 status=none | xxd -p -c 32`
 - `timeout`: How long should be waited for HTTP responses in sources manager? Defaults to `"30s"`.
-- `default_age`: The default age of the downloaded documents. Defaults to `"17520h"`, i.e. 2 years.
+- `default_age`: The default maximum age of the downloaded documents. A value of 0 means that there is no limit. Defaults to `"17520h"`, i.e. 2 years.
 
 ### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
 
