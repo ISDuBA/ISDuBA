@@ -90,10 +90,14 @@
 ## automatic = true
 ## name = "First example target"
 ## url = "http://example.com/api/v1/import"
+## publisher = "publisher-name"
 ## header = [ "x-api-key:secret" ]
+## private_cert = "private-cert-file"
+## public_cert = "public-cert-file"
 ##
 ## [[forwarder.target]]
 ## automatic = false
 ## name = "Second example target"
 ## url = "https://example.org/api/v1/import"
 ## header = [ "x-api-key:secret" ]
+## timeout = "5s"
