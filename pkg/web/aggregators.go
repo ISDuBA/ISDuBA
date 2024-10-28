@@ -57,6 +57,27 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 }
 
 func (c *Controller) deleteAggregator(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not implemented, yet!"})
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
+		return
+	}
+	const sql = `DELETE FROM aggregators WHERE id = $1`
+	var deleted bool
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			tag, err := conn.Exec(rctx, sql, id)
+			deleted = tag.RowsAffected() > 1
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("delete aggregator failed", "error", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if deleted {
+		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	}
 }
