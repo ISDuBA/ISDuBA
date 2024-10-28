@@ -487,6 +487,7 @@
     if (intervalID) {
       clearInterval(intervalID);
     }
+    chart.destroy();
   });
 
   // Fit steps to selected time range so the bars don't become to thin.
