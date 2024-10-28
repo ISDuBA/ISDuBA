@@ -10,11 +10,14 @@ package web
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -52,8 +55,37 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 }
 
 func (c *Controller) createAggregator(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not implemented, yet!"})
+	var (
+		ok   bool
+		name string
+		url  string
+		id   int64
+	)
+	if name, ok = parse(ctx, notEmpty, ctx.PostForm("name")); !ok {
+		return
+	}
+	if url, ok = parse(ctx, endsWith("/aggregator.json"), ctx.PostForm("url")); !ok {
+		return
+	}
+	const sql = `INSERT INTO aggregators (name, url) VALUES ($1, $2) RETURNING id`
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, sql, name, url).Scan(&id)
+		}, 0,
+	); err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": fmt.Sprintf("not a unique value: %v", err.Error()),
+			})
+		} else {
+			slog.Error("inserting aggregator failed", "error", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	ctx.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
 func (c *Controller) deleteAggregator(ctx *gin.Context) {
