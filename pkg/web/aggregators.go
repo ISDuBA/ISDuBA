@@ -10,16 +10,44 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type custom struct {
+	// TODO
+}
+
+type argumentedAggregator struct {
+	Aggregator json.RawMessage `json:"aggregator"`
+	Custom     custom          `json:"custom"`
+}
+
+func (c *Controller) aggregatorProxy(ctx *gin.Context) {
+	validate, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("validate", "false"))
+	if !ok {
+		return
+	}
+	ca, err := c.am.Cache.GetAggregator(ctx.Query("url"), validate)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	aAgg := argumentedAggregator{
+		Aggregator: ca.Raw,
+		Custom:     custom{},
+	}
+	ctx.JSON(http.StatusOK, &aAgg)
+}
 
 func (c *Controller) viewAggregators(ctx *gin.Context) {
 	type aggregator struct {

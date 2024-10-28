@@ -46,7 +46,7 @@ func newCache(timeout time.Duration) *Cache {
 }
 
 // GetAggregator fetches a cached aggregator.
-func (c *Cache) GetAggregator(url string) (*CachedAggregator, error) {
+func (c *Cache) GetAggregator(url string, validate bool) (*CachedAggregator, error) {
 	if !strings.HasSuffix(url, "/aggregator.json") {
 		return nil, errors.New("invalid aggregator url")
 	}
@@ -70,18 +70,27 @@ func (c *Cache) GetAggregator(url string) (*CachedAggregator, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("invalid status code %s (%d)", resp.Status, resp.StatusCode)
 	}
-	var (
-		data bytes.Buffer
-		doc  any
-	)
-	r := io.TeeReader(resp.Body, &data)
-	if err := json.NewDecoder(r).Decode(&doc); err != nil {
-		return nil, fmt.Errorf("invalid json: %w", err)
+	var raw []byte
+	if validate {
+		var data bytes.Buffer
+		var doc any
+		r := io.TeeReader(resp.Body, &data)
+		if err := json.NewDecoder(r).Decode(&doc); err != nil {
+			return nil, fmt.Errorf("invalid json: %w", err)
+		}
+		msgs, err := csaf.ValidateAggregator(doc)
+		if err != nil {
+			return nil, fmt.Errorf("validation failed: %w", err)
+		}
+		if len(msgs) > 0 {
+			return nil, fmt.Errorf("validation failed: %s", strings.Join(msgs, ", "))
+		}
+		raw = bytes.Clone(data.Bytes())
+	} else {
+		if raw, err = io.ReadAll(resp.Body); err != nil {
+			return nil, err
+		}
 	}
-	if msgs, err := csaf.ValidateAggregator(doc); len(msgs) > 0 || err != nil {
-		return nil, fmt.Errorf("error: %w messages: %s", err, strings.Join(msgs, ", "))
-	}
-	raw := bytes.Clone(data.Bytes())
 	agg := new(csaf.Aggregator)
 	if err := json.Unmarshal(raw, agg); err != nil {
 		return nil, fmt.Errorf("cannot unmarshal aggregator: %w", err)
