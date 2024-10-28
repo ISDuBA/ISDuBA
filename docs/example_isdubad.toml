@@ -85,7 +85,7 @@
 # [forwarder]
 # update_interval = "5m"
 
-## These are example target
+## These are example targets to show the forwarder target syntax.
 ## [[forwarder.target]]
 ## automatic = true
 ## name = "First example target"
@@ -93,7 +93,7 @@
 ## header = [ "x-api-key:secret" ]
 ##
 ## [[forwarder.target]]
-## enabled = false
+## automatic = false
 ## name = "Second example target"
-## url = "http://example.org/api/v1/import"
+## url = "https://example.org/api/v1/import"
 ## header = [ "x-api-key:secret" ]
