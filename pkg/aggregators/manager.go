@@ -18,6 +18,8 @@ import (
 
 // Manager handles the refreshing of the aggregators.
 type Manager struct {
+	Cache *Cache
+
 	done bool
 	fns  chan func(*Manager)
 	cfg  *config.Aggregators
@@ -26,7 +28,9 @@ type Manager struct {
 // NewManager creates a new aggregators manager.
 func NewManager(cfg *config.Aggregators) *Manager {
 	return &Manager{
-		cfg: cfg,
+		Cache: newCache(),
+		fns:   make(chan func(*Manager)),
+		cfg:   cfg,
 	}
 }
 
