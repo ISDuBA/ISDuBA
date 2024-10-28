@@ -18,15 +18,26 @@
   import { request } from "$lib/request";
   import { onDestroy, onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { type Source, fetchSources } from "$lib/Sources/source";
+  import {
+    type Source,
+    type Aggregator,
+    fetchSources,
+    fetchAggregators,
+    fetchAggregatorData
+  } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
+  let aggregatorError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
+  let loadingAggregators: boolean = false;
 
   let sources: Source[] = [];
+  let aggregators: Aggregator[] = [];
+  let aggregatorData = new Map<number, [string, string][]>();
+
   async function getMessage() {
     const response = await request("api/sources/message", "GET");
     if (response.ok) {
@@ -55,9 +66,43 @@
     }
   };
 
+  const getAggregators = async () => {
+    loadingAggregators = true;
+    const result = await fetchAggregators();
+    loadingAggregators = false;
+    if (result.ok) {
+      aggregators = result.value;
+    } else {
+      aggregatorError = result.error;
+    }
+  };
+
+  const parseAggregatorData = (data: any): [string, string][] => {
+    return data.aggregator.csaf_providers.map((i: any) => [
+      i.metadata.publisher.name,
+      i.metadata.url
+    ]);
+  };
+
+  const toggleAggregatorView = async (aggregator: Aggregator) => {
+    if (aggregatorData.get(aggregator.id ?? -1)) {
+      aggregatorData.delete(aggregator.id ?? -1);
+      aggregatorData = aggregatorData;
+      return;
+    }
+    const resp = await fetchAggregatorData(aggregator.url);
+    if (resp.ok) {
+      aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value));
+      aggregatorData = aggregatorData;
+    } else {
+      aggregatorError = resp.error;
+    }
+  };
+
   onMount(async () => {
     if (appStore.isEditor() || appStore.isSourceManager()) {
       await getSources();
+      await getAggregators();
     }
   });
 
@@ -71,8 +116,8 @@
 </svelte:head>
 
 <div>
-  <SectionHeader title="Sources"></SectionHeader>
   {#if appStore.isEditor() || appStore.isSourceManager()}
+    <SectionHeader title="Sources"></SectionHeader>
     <CustomTable
       title="CSAF Provider"
       headers={[
@@ -131,6 +176,59 @@
           </Button>
         {/if}
         <ErrorMessage error={sourcesError}></ErrorMessage>
+      </div>
+    </CustomTable>
+    <CustomTable
+      title="Aggregator"
+      headers={[
+        {
+          label: "Name",
+          attribute: "name"
+        },
+        {
+          label: "URL",
+          attribute: "url"
+        }
+      ]}
+    >
+      {#each aggregators as aggregator, index (index)}
+        <tr
+          on:click={async () => {
+            if (appStore.isSourceManager()) {
+              await toggleAggregatorView(aggregator);
+            }
+          }}
+          on:blur={() => {}}
+          on:focus={() => {}}
+          class={appStore.isSourceManager() ? "cursor-pointer" : ""}
+        >
+          <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
+          <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
+        </tr>
+        {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
+        {#each list as entry}
+          <tr class="bg-slate-200">
+            <TableBodyCell {tdClass}>{entry[0]}</TableBodyCell>
+            <TableBodyCell {tdClass}>{entry[1]}</TableBodyCell>
+          </tr>
+        {/each}
+      {/each}
+      <div slot="bottom">
+        <div
+          class:invisible={!loadingAggregators}
+          class={loadingAggregators ? "loadingFadeIn" : ""}
+          class:mb-4={true}
+        >
+          Loading ...
+          <Spinner color="gray" size="4"></Spinner>
+        </div>
+        {#if appStore.isSourceManager()}
+          <Button href="/#/aggregator/new" class="mb-2" color="primary" size="xs">
+            <i class="bx bx-plus"></i>
+            <span>Add aggregator</span>
+          </Button>
+        {/if}
+        <ErrorMessage error={aggregatorError}></ErrorMessage>
       </div>
     </CustomTable>
   {/if}

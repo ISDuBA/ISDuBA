@@ -74,6 +74,12 @@ const logLevels = [
   { value: LogLevel.debug, name: "Debug (verbose)" }
 ];
 
+type Aggregator = {
+  id?: number;
+  name: string;
+  url: string;
+};
+
 const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>> => {
   let method = "POST";
   let path = `/api/sources`;
@@ -315,6 +321,57 @@ const fetchSources = async (
   };
 };
 
+const fetchAggregators = async (): Promise<Result<Aggregator[], ErrorDetails>> => {
+  const resp = await request(`/api/aggregators`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load aggregators`, resp)
+  };
+};
+
+const saveAggregator = async (aggregator: Aggregator): Promise<Result<number, ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("name", aggregator.name);
+  formData.append("url", aggregator.url);
+  const resp = await request(`/api/aggregators`, "POST", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content.id
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not save aggregator`, resp)
+  };
+};
+
+const fetchAggregatorData = async (
+  url: string,
+  validate: boolean = false
+): Promise<Result<any, ErrorDetails>> => {
+  const resp = await request(
+    `/api/aggregator?url=${encodeURIComponent(url)}&validate=${validate}`,
+    "GET"
+  );
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not fetch aggregator data`, resp)
+  };
+};
+
 let defaultConfigCache: Promise<Result<SourceConfig, ErrorDetails>>;
 
 const fetchSourceDefaultConfig = async (): Promise<Result<SourceConfig, ErrorDetails>> => {
@@ -461,9 +518,11 @@ const parseHeaders = (source: Source): string[][] => {
 
 export {
   type Source,
+  type Aggregator,
   LogLevel,
   type Feed,
   saveSource,
+  saveAggregator,
   fetchSource,
   fetchSourceDefaultConfig,
   getLogLevels,
@@ -477,5 +536,7 @@ export {
   fetchFeed,
   fetchFeeds,
   fetchSources,
+  fetchAggregators,
+  fetchAggregatorData,
   saveFeeds
 };
