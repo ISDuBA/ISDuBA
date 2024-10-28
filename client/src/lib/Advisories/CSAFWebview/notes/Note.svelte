@@ -22,10 +22,6 @@
     keys.push("Audience");
     values.push(note.audience);
   }
-  if (note.title) {
-    keys.push("Title");
-    values.push(note.title);
-  }
 
   const getMarkdown = () => {
     return marked.parse(
@@ -40,7 +36,7 @@
   <h5>Text</h5>
 </div>
 
-<div class="markdown-text ml-7">
+<div class="markdown-text">
   <div class="display-markdown max-w-2/3">
     {@html DOMPurify.sanitize(getMarkdown())}
   </div>
@@ -48,9 +44,10 @@
 
 <style>
   .markdown-text {
+    margin-left: 1.75rem;
     padding: 0.5rem;
     border: 1px solid lightgray;
-    width: 100%;
+    min-width: 200px;
     overflow-x: auto;
     position: relative;
   }

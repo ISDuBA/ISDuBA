@@ -13,6 +13,7 @@
   import SingleNote from "$lib/Advisories/CSAFWebview/notes/Note.svelte";
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   export let notes: Note[];
+  export let open: boolean = false;
 </script>
 
 {#if notes}
@@ -20,7 +21,7 @@
     <Collapsible
       header={note.title ? `${note.category}: ${note.title}` : note.category}
       level={4}
-      open={notes.length === 1}
+      {open}
     >
       <SingleNote {note} />
     </Collapsible>
