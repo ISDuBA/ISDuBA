@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import type { Reference } from "$lib/types";
+  import type { Reference } from "$lib/pmdTypes";
   export let reference: Reference;
   let keys: string[] = [];
   let values: string[] = [];

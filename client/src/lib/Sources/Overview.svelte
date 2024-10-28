@@ -17,6 +17,7 @@
   import { tdClass } from "$lib/Table/defaults";
   import { request } from "$lib/request";
   import { onDestroy, onMount } from "svelte";
+  import { type CSAFAggregator } from "$lib/aggregatorTypes";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import {
     type Source,
@@ -77,11 +78,8 @@
     }
   };
 
-  const parseAggregatorData = (data: any): [string, string][] => {
-    return data.aggregator.csaf_providers.map((i: any) => [
-      i.metadata.publisher.name,
-      i.metadata.url
-    ]);
+  const parseAggregatorData = (data: CSAFAggregator): [string, string][] => {
+    return data.csaf_providers.map((i: any) => [i.metadata.publisher.name, i.metadata.url]);
   };
 
   const toggleAggregatorView = async (aggregator: Aggregator) => {
@@ -92,7 +90,7 @@
     }
     const resp = await fetchAggregatorData(aggregator.url);
     if (resp.ok) {
-      aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value));
+      aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value.aggregator));
       aggregatorData = aggregatorData;
     } else {
       aggregatorError = resp.error;

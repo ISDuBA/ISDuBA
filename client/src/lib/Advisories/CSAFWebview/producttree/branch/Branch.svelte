@@ -11,7 +11,7 @@
 <script lang="ts">
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import Product from "$lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
-  import type { Branch } from "$lib/types";
+  import type { Branch } from "$lib/pmdTypes";
   import { Badge } from "flowbite-svelte";
   export let branch: Branch;
   export let open: boolean;
