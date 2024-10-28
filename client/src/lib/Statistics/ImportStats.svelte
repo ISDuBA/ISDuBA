@@ -259,7 +259,7 @@
                 const cvssTextialRating: CVSSTextualRating = getCVSSTextualRating(cvss);
                 counts[cvssTextialRating] = counts[`cvss_${cvssTextialRating}`] + numberOfDocs;
               } else {
-                counts["null"] = counts["null"] + numberOfDocs;
+                counts["null"] = counts["cvss_null"] + numberOfDocs;
               }
             }
             keys.forEach((key) => {
