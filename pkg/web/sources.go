@@ -196,14 +196,10 @@ func (c *Controller) createSource(ctx *gin.Context) {
 
 	var age *time.Duration
 	if src.Age != nil {
-		if src.Age.Duration > c.cfg.Sources.MaxAge && c.cfg.Sources.MaxAge != 0 {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "'age' out of range"})
-			return
-		}
 		age = &src.Age.Duration
 	}
-	if src.Age == nil && c.cfg.Sources.MaxAge != 0 {
-		age = &c.cfg.Sources.MaxAge
+	if src.Age == nil && c.cfg.Sources.DefaultAge != 0 {
+		age = &c.cfg.Sources.DefaultAge
 	}
 
 	switch id, err := c.sm.AddSource(
@@ -692,7 +688,7 @@ func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 		"strict_mode":     cfg.StrictMode,
 		"insecure":        cfg.Insecure,
 		"signature_check": cfg.SignatureCheck,
-		"age":             sourceAge{cfg.MaxAge},
+		"age":             sourceAge{cfg.DefaultAge},
 	})
 }
 
