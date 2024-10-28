@@ -307,7 +307,7 @@
     if (response.ok) {
       availableForwardSelection = [];
       for (let target of response.content) {
-        availableForwardSelection.push({ value: target.id, name: target.url });
+        availableForwardSelection.push({ value: target.id, name: target.name });
       }
     } else if (response.error) {
       loadForwardTargetsError = getErrorDetails(`Couldn't load forward targets.`, response);
