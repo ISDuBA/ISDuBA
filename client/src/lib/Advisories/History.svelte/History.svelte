@@ -87,8 +87,9 @@
   {#if historyEntries.length === 0}
     <span class="ml-auto mr-auto text-gray-400">{fullHistory ? "No entries" : "No comments"}</span>
   {/if}
-  <div class="mt-6 flex flex-row">
-    <ButtonGroup class="ml-auto h-7">
+  <div class="mt-6 flex flex-row justify-end gap-2">
+    <slot name="additionalButtons"></slot>
+    <ButtonGroup class="h-7">
       <Button
         size="xs"
         color="light"
