@@ -38,14 +38,36 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-	ca, err := c.am.Cache.GetAggregator(ctx.Query("url"), validate)
+	url := ctx.Query("url")
+	ca, err := c.am.Cache.GetAggregator(url, validate)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	// search in database
+	const sql = `SELECT id, name FROM aggregators WHERE url = $1`
+	var (
+		id   int64
+		name string
+	)
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, sql, url).Scan(&id, &name)
+		}, 0,
+	); err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		slog.Error("fetching aggregator failed", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	var custom custom
+	if name != "" {
+		custom.ID = id
+		custom.Name = name
+	}
 	aAgg := argumentedAggregator{
 		Aggregator: ca.Raw,
-		Custom:     custom{},
+		Custom:     custom,
 	}
 	ctx.JSON(http.StatusOK, &aAgg)
 }
