@@ -24,7 +24,8 @@ import (
 )
 
 type custom struct {
-	// TODO
+	ID   int64  `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type argumentedAggregator struct {
@@ -78,8 +79,46 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 }
 
 func (c *Controller) viewAggregator(ctx *gin.Context) {
-	// TODO: Implement me!
-	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Not implemented, yet!"})
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
+		return
+	}
+	validate, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("validate", "false"))
+	if !ok {
+		return
+	}
+	var (
+		name string
+		url  string
+	)
+	const sql = `SELECT name, url from aggregators WHERE id = $1`
+	switch err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, sql, id).Scan(&name, &url)
+		}, 0,
+	); {
+	case errors.Is(err, pgx.ErrNoRows):
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	case err != nil:
+		slog.Error("fetching aggregator failed", "err", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ca, err := c.am.Cache.GetAggregator(url, validate)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	aAgg := argumentedAggregator{
+		Aggregator: ca.Raw,
+		Custom: custom{
+			ID:   id,
+			Name: name,
+		},
+	}
+	ctx.JSON(http.StatusOK, &aAgg)
 }
 
 func (c *Controller) createAggregator(ctx *gin.Context) {
