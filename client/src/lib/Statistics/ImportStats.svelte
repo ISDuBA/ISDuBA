@@ -293,8 +293,13 @@
     }
     if (to && from) {
       let maxTo = new Date(to);
-      if (isToday(maxTo)) {
-        maxTo = new Date(Date.now() + HOUR_MS * 2);
+      let diff = new Date(to).getTime() - new Date(from).getTime();
+      if (diff >= YEAR_MS) {
+        maxTo.setMonth(maxTo.getMonth() + 1);
+      } else if (diff >= MONTH_MS) {
+        maxTo.setDate(maxTo.getDate() + 2);
+      } else if (isToday(maxTo)) {
+        maxTo = new Date(Date.now() + HOUR_MS * 0);
       } else {
         maxTo = setToEndOfDay(new Date(to));
       }
@@ -497,7 +502,7 @@
     if (!from || !to) return;
     let diff = new Date(to).getTime() - new Date(from).getTime();
     if (diff >= YEAR_MS) {
-      stepsInMilliseconds = Math.floor(diff / YEAR_MS) * MONTH_MS;
+      stepsInMilliseconds = MONTH_MS;
     } else if (diff >= MONTH_MS) {
       stepsInMilliseconds = WEEK_MS;
     } else if (diff >= WEEK_MS) {
@@ -505,7 +510,6 @@
     } else {
       stepsInMilliseconds = HOUR_MS;
     }
-    updateChart();
   };
 
   // In case of month or year we need some padding so the last month/year is not cut-off.
@@ -515,19 +519,16 @@
     let diff = 1;
     stepsInMilliseconds = HOUR_MS;
     if (range === "month") {
-      stepsInMilliseconds = WEEK_MS;
       diff = 30;
-      newTo.setDate(newTo.getDate() + 1);
     }
     if (range === "year") {
-      stepsInMilliseconds = MONTH_MS;
       diff = 365;
-      newTo.setMonth(newTo.getMonth() + 1);
     }
     newFrom.setDate(newFrom.getDate() - diff);
     from = newFrom.toISOString().split("T")[0];
     to = newTo.toISOString().split("T")[0];
     updateSteps();
+    updateChart();
   };
 </script>
 

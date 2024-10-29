@@ -9,7 +9,6 @@
 import { getErrorDetails } from "$lib/Errors/error";
 import type { ErrorDetails } from "$lib/Errors/error";
 import { request } from "$lib/request";
-import { toLocaleISOString } from "$lib/time";
 import type { Result } from "$lib/types";
 
 type StatisticEntry = [Date, number | null];
@@ -193,15 +192,13 @@ const fetchStatistic = async (
   }
 
   const resp = await request(
-    `${path}?from=${toLocaleISOString(from)}&to=${toLocaleISOString(to)}&step=${step}ms` +
-      filterQuery,
+    `${path}?from=${from.toISOString()}&to=${to.toISOString()}&step=${step}ms` + filterQuery,
     "GET"
   );
   if (resp.ok) {
     if (resp.content) {
       for (let i = 0; i < resp.content.length; i++) {
         const date = new Date(resp.content[i][0]);
-        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
         resp.content[i][0] = date;
       }
       return {
@@ -238,10 +235,10 @@ const fetchTotals = async (
 ): Promise<Result<StatisticGroup, ErrorDetails>> => {
   let query = "";
   if (from) {
-    query += `&from=${toLocaleISOString(from)}`;
+    query += `&from=${from.toISOString()}`;
   }
   if (to) {
-    query += `&to=${toLocaleISOString(to)}`;
+    query += `&to=${to.toISOString()}`;
   }
   if (step) {
     query += `&step=${step}ms`;
@@ -254,7 +251,6 @@ const fetchTotals = async (
       const entries: TotalsStatisticsEntry[] = resp.content;
       for (let i = 0; i < entries.length; i++) {
         const date = new Date(entries[i][0]);
-        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
         entries[i][0] = date;
       }
       const advisories: StatisticEntry[] = entries.map((entry: TotalsStatisticsEntry) => [
