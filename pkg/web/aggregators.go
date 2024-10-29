@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -24,8 +25,9 @@ import (
 )
 
 type custom struct {
-	ID   int64  `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	ID            int64                         `json:"id,omitempty"`
+	Name          string                        `json:"name,omitempty"`
+	Subscriptions []sources.SourceSubscriptions `json:"subscriptions,omitempty"`
 }
 
 type argumentedAggregator struct {
@@ -60,7 +62,9 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	var custom custom
+	custom := custom{
+		Subscriptions: c.sm.Subscriptions(ca.SourceURLs()),
+	}
 	if name != "" {
 		custom.ID = id
 		custom.Name = name
@@ -136,8 +140,9 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 	aAgg := argumentedAggregator{
 		Aggregator: ca.Raw,
 		Custom: custom{
-			ID:   id,
-			Name: name,
+			ID:            id,
+			Name:          name,
+			Subscriptions: c.sm.Subscriptions(ca.SourceURLs()),
 		},
 	}
 	ctx.JSON(http.StatusOK, &aAgg)

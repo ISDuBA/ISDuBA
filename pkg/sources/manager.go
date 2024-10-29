@@ -121,6 +121,25 @@ type SourceInfo struct {
 	Stats                   *Stats
 }
 
+// FeedSubscription are the ID and the URL of a subscribed feed.
+type FeedSubscription struct {
+	ID  int64  `json:"id"`
+	URL string `json:"url"`
+}
+
+// SourceSubscription tells which feeds are subscribed by a source.
+type SourceSubscription struct {
+	ID    int64              `json:"id"`
+	Name  string             `json:"name"`
+	Feeds []FeedSubscription `feeds:"feeds,omitempty"`
+}
+
+// SourceSubscriptions tells which sources are subscribed for given url.
+type SourceSubscriptions struct {
+	URL           string               `json:"url"`
+	Subscriptions []SourceSubscription `json:"subscriptions,omitempty"`
+}
+
 // FeedInfo are infos about a feed.
 type FeedInfo struct {
 	ID    int64
@@ -392,6 +411,46 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 		}
 	}
 	return <-siCh
+}
+
+// Subscriptions return a list of subscription infos for a given list of source URLs.
+func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
+	result := make(chan []SourceSubscriptions)
+	m.fns <- func(m *Manager) {
+		// We can subscribe a source more than once.
+		sources := make(map[string][]*source, len(m.sources))
+		for _, s := range m.sources {
+			if pmd := s.pmdURL(m); pmd != "" {
+				sources[pmd] = append(sources[pmd], s)
+			}
+		}
+		subs := make([]SourceSubscriptions, 0, len(urls))
+		for _, url := range urls {
+			var subscriptions []SourceSubscription
+			for _, s := range sources[url] {
+				var feeds []FeedSubscription
+				for _, f := range s.feeds {
+					if !f.invalid.Load() {
+						feeds = append(feeds, FeedSubscription{
+							ID:  f.id,
+							URL: f.url.String(),
+						})
+					}
+				}
+				subscriptions = append(subscriptions, SourceSubscription{
+					ID:    s.id,
+					Name:  s.name,
+					Feeds: feeds,
+				})
+			}
+			subs = append(subs, SourceSubscriptions{
+				URL:           url,
+				Subscriptions: subscriptions,
+			})
+		}
+		result <- subs
+	}
+	return <-result
 }
 
 // Sources iterates over all sources and passes infos to a given function.
@@ -687,6 +746,7 @@ func (m *Manager) AddSource(
 	s := &source{
 		name:                 name,
 		url:                  url,
+		pmd:                  lpmd.URL,
 		rate:                 rate,
 		slots:                slots,
 		headers:              headers,

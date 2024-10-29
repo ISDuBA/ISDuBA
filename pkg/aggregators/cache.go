@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -101,4 +102,35 @@ func (c *Cache) GetAggregator(url string, validate bool) (*CachedAggregator, err
 	}
 	c.Set(url, ca)
 	return ca, nil
+}
+
+// SourceURLs extracts the source URLs from the cached aggregator.
+func (ca *CachedAggregator) SourceURLs() []string {
+	var urls []string
+	unique := func(url string) {
+		if !slices.Contains(urls, url) {
+			urls = append(urls, url)
+		}
+	}
+	add := func(metadata *csaf.AggregatorCSAFProviderMetadata) {
+		if metadata != nil {
+			if url := metadata.URL; url != nil {
+				unique(string(*url))
+			}
+		}
+	}
+	for _, provider := range ca.Aggregator.CSAFProviders {
+		if provider != nil {
+			add(provider.Metadata)
+		}
+	}
+	for _, publisher := range ca.Aggregator.CSAFPublishers {
+		if publisher != nil {
+			add(publisher.Metadata)
+			for _, m := range publisher.Mirrors {
+				unique(string(m))
+			}
+		}
+	}
+	return urls
 }

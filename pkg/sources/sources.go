@@ -73,6 +73,7 @@ type feed struct {
 type source struct {
 	id        int64
 	name      string
+	pmd       string
 	url       string
 	active    bool
 	feeds     []*feed
@@ -506,6 +507,20 @@ func (s *source) useStrictMode(m *Manager) bool {
 		return *s.strictMode
 	}
 	return m.cfg.Sources.StrictMode
+}
+
+// pmdURL lazy loads the pmd URL.
+func (s *source) pmdURL(m *Manager) string {
+	if s.pmd != "" {
+		return s.pmd
+	}
+	lpmd := m.PMD(s.url)
+	if !lpmd.Valid() {
+		slog.Warn("PMD loading failed", "messages", lpmd.Messages)
+		return ""
+	}
+	s.pmd = lpmd.URL
+	return s.pmd
 }
 
 // storeLastChanges is intented to be called in the transaction storing the

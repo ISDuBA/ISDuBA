@@ -38,6 +38,8 @@ func NewManager(cfg *config.Aggregators) *Manager {
 func (m *Manager) Run(ctx context.Context) {
 	ticker := time.NewTicker(m.cfg.UpdateInterval)
 	defer ticker.Stop()
+	cacheTicker := time.NewTicker(holdingDuration)
+	defer cacheTicker.Stop()
 	for !m.done {
 		select {
 		case fn := <-m.fns:
@@ -46,6 +48,8 @@ func (m *Manager) Run(ctx context.Context) {
 			return
 		case <-ticker.C:
 			m.refresh(ctx)
+		case <-cacheTicker.C:
+			m.Cache.Cleanup()
 		}
 	}
 }
