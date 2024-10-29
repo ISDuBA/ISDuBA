@@ -288,7 +288,7 @@
       ><span slot="header">Advanced options</span>
       <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-[minmax(190px,1fr)_1fr_1fr]">
         <div>
-          <Label>Age</Label>
+          <Label>Maximum document age</Label>
           <div class="inline-flex w-full">
             <Input
               class="rounded-none rounded-l-lg"
@@ -337,7 +337,7 @@
           >Check TLS certificates</CCheckbox
         >
         <CCheckbox on:change={inputChange} bind:checked={source.signature_check}
-          >Signature check</CCheckbox
+          >Check document PGP signature</CCheckbox
         >
       </div>
 
