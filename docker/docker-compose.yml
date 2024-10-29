@@ -8,7 +8,7 @@
 
 services:
   keycloak:
-    image: keycloak/keycloak:23.0
+    image: keycloak/keycloak:26.0
     container_name: "isduba-keycloak"
     ports:
       - "${KC_HOSTNAME_PORT}:8080"
