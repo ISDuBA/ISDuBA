@@ -345,7 +345,7 @@ CREATE TABLE sources (
     slots                  int,
     headers                text[],
     strict_mode            bool,
-    insecure               bool,
+    secure                 bool,
     signature_check        bool,
     age                    interval,
     ignore_patterns        text[],

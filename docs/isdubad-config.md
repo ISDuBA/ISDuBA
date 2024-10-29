@@ -99,7 +99,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
 - `strict_mode`: Enables strict checking of sources. Defaults to `true`.
-- `insecure`: Enables insecure mode (Don't check TLS certificates of HTTPS transfer). Defaults to `false`.
+- `secure`: Enables secure mode (Checks TLS certificates of HTTPS transfer). Defaults to `true`.
 - `signature_check`: Failing OpenPGP signature check stops import of document. Defaults to `true`.
 - `download_slots`: The number of concurrent downloads from the sources. Defaults to `100`.
 - `max_slots_per_source`: The number of concurrent downloads per source. Defaults to `2`.
@@ -195,7 +195,7 @@ Documents that are discarded because of failed validation are not forwarded.
 | `ISDUBA_SOURCES_FEED_IMPORTER`        | `sources feed_importer`              |
 | `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `sources default_message`            |
 | `ISDUBA_SOURCES_STRICT_MODE`          | `sources strict_mode`                |
-| `ISDUBA_SOURCES_INSECURE`             | `sources insecure`                   |
+| `ISDUBA_SOURCES_SECURE`               | `sources secure`                     |
 | `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |
 | `ISDUBA_SOURCES_AES_KEY`              | `sources aes_key`                    |
 | `ISDUBA_SOURCES_TIMEOUT`              | `sources timeout`                    |

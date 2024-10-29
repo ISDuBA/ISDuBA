@@ -111,7 +111,7 @@ type SourceInfo struct {
 	Slots                   *int
 	Headers                 []string
 	StrictMode              *bool
-	Insecure                *bool
+	Secure                  *bool
 	SignatureCheck          *bool
 	Age                     *time.Duration
 	IgnorePatterns          []*regexp.Regexp
@@ -380,7 +380,7 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 			Slots:                   s.slots,
 			Headers:                 s.headers,
 			StrictMode:              s.strictMode,
-			Insecure:                s.insecure,
+			Secure:                  s.secure,
 			SignatureCheck:          s.signatureCheck,
 			Age:                     s.age,
 			IgnorePatterns:          s.ignorePatterns,
@@ -414,7 +414,7 @@ func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 				Slots:                   s.slots,
 				Headers:                 s.headers,
 				StrictMode:              s.strictMode,
-				Insecure:                s.insecure,
+				Secure:                  s.secure,
 				SignatureCheck:          s.signatureCheck,
 				Age:                     s.age,
 				IgnorePatterns:          s.ignorePatterns,
@@ -670,7 +670,7 @@ func (m *Manager) AddSource(
 	slots *int,
 	headers []string,
 	strictMode *bool,
-	insecure *bool,
+	secure *bool,
 	signatureCheck *bool,
 	age *time.Duration,
 	ignorePatterns []*regexp.Regexp,
@@ -690,7 +690,7 @@ func (m *Manager) AddSource(
 		slots:                slots,
 		headers:              headers,
 		strictMode:           strictMode,
-		insecure:             insecure,
+		secure:               secure,
 		signatureCheck:       signatureCheck,
 		age:                  age,
 		ignorePatterns:       ignorePatterns,
@@ -717,7 +717,7 @@ func (m *Manager) AddSource(
 		}
 		const sql = `INSERT INTO sources (` +
 			`name, url, rate, slots, headers, ` +
-			`strict_mode, insecure, signature_check, age, ignore_patterns, ` +
+			`strict_mode, secure, signature_check, age, ignore_patterns, ` +
 			`client_cert_public, client_cert_private, client_cert_passphrase) ` +
 			`VALUES (` +
 			`$1, $2, $3, $4, $5, ` +
@@ -729,7 +729,7 @@ func (m *Manager) AddSource(
 			func(rctx context.Context, con *pgxpool.Conn) error {
 				return con.QueryRow(rctx, sql,
 					name, url, rate, slots, headers,
-					strictMode, insecure, signatureCheck, age, ignorePatterns,
+					strictMode, secure, signatureCheck, age, ignorePatterns,
 					clientCertPublic, clientCertPrivate, clientCertPassphrase,
 				).Scan(&s.id)
 			}, 0,
@@ -984,15 +984,15 @@ func (su *SourceUpdater) UpdateStrictMode(strictMode *bool) error {
 	return nil
 }
 
-// UpdateInsecure requests an update on insecure.
-func (su *SourceUpdater) UpdateInsecure(insecure *bool) error {
-	if su.updatable.insecure == nil && insecure == nil {
+// UpdateSecure requests an update on secure.
+func (su *SourceUpdater) UpdateSecure(secure *bool) error {
+	if su.updatable.secure == nil && secure == nil {
 		return nil
 	}
-	if su.updatable.insecure != nil && insecure != nil && *su.updatable.insecure == *insecure {
+	if su.updatable.secure != nil && secure != nil && *su.updatable.secure == *secure {
 		return nil
 	}
-	su.addChange(func(s *source) { s.insecure = insecure }, "insecure", insecure)
+	su.addChange(func(s *source) { s.secure = secure }, "secure", secure)
 	return nil
 }
 

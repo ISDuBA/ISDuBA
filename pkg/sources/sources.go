@@ -84,7 +84,7 @@ type source struct {
 	slots          *int
 	headers        []string
 	strictMode     *bool
-	insecure       *bool
+	secure         *bool
 	signatureCheck *bool
 	age            *time.Duration
 	ignorePatterns []*regexp.Regexp
@@ -404,10 +404,10 @@ func (s *source) httpClient(m *Manager) *http.Client {
 	client := http.Client{}
 	var tlsConfig tls.Config
 
-	if s.insecure != nil {
-		tlsConfig.InsecureSkipVerify = *s.insecure
+	if s.secure != nil {
+		tlsConfig.InsecureSkipVerify = !*s.secure
 	} else {
-		tlsConfig.InsecureSkipVerify = m.cfg.Sources.Insecure
+		tlsConfig.InsecureSkipVerify = !m.cfg.Sources.Secure
 	}
 
 	if len(s.tlsCertificates) > 0 {
@@ -452,9 +452,7 @@ func (s *source) doRequest(client *http.Client, m *Manager, req *http.Request) (
 	// The manager owns the configuration.
 	// So we let the manager do the adjustment of the request.
 
-	var (
-		limiter *rate.Limiter
-	)
+	var limiter *rate.Limiter
 
 	m.inManager(func(m *Manager) {
 		s.applyHeaders(req)

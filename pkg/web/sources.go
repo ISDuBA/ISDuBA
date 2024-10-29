@@ -54,7 +54,7 @@ type source struct {
 	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=0"`
 	Headers              []string       `json:"headers,omitempty" form:"headers"`
 	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
-	Insecure             *bool          `json:"insecure,omitempty" form:"insecure"`
+	Secure               *bool          `json:"secure,omitempty" form:"secure"`
 	SignatureCheck       *bool          `json:"signature_check,omitempty" form:"signature_check"`
 	Age                  *sourceAge     `json:"age,omitempty" form:"age"`
 	IgnorePatterns       []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
@@ -97,7 +97,7 @@ func newSource(si *sources.SourceInfo) *source {
 		Slots:                si.Slots,
 		Headers:              si.Headers,
 		StrictMode:           si.StrictMode,
-		Insecure:             si.Insecure,
+		Secure:               si.Secure,
 		SignatureCheck:       si.SignatureCheck,
 		Age:                  sa,
 		IgnorePatterns:       sources.AsStrings(si.IgnorePatterns),
@@ -209,7 +209,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.Slots,
 		src.Headers,
 		src.StrictMode,
-		src.Insecure,
+		src.Secure,
 		src.SignatureCheck,
 		age,
 		ignorePatterns,
@@ -363,8 +363,8 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		if err := optBool("strict_mode", su.UpdateStrictMode); err != nil {
 			return err
 		}
-		// insecure
-		if err := optBool("insecure", su.UpdateInsecure); err != nil {
+		// secure
+		if err := optBool("secure", su.UpdateSecure); err != nil {
 			return err
 		}
 		// signatureCheck
@@ -688,7 +688,7 @@ func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 		"rate":            cfg.MaxRatePerSource,
 		"log_level":       cfg.FeedLogLevel,
 		"strict_mode":     cfg.StrictMode,
-		"insecure":        cfg.Insecure,
+		"secure":          cfg.Secure,
 		"signature_check": cfg.SignatureCheck,
 		"age":             sourceAge{cfg.DefaultAge},
 	})
