@@ -267,9 +267,9 @@
               const numberOfDocs = entry[1];
               const cvss = entry?.[0];
               if (cvss) {
-                const cvssTextialRating: CVSSTextualRating = getCVSSTextualRating(cvss);
-                counts[`cvss_${cvssTextialRating}`] =
-                  counts[`cvss_${cvssTextialRating}`] + numberOfDocs;
+                const cvssTextualRating: CVSSTextualRating = getCVSSTextualRating(cvss);
+                counts[`cvss_${cvssTextualRating}`] =
+                  counts[`cvss_${cvssTextualRating}`] + numberOfDocs;
               } else {
                 counts["cvss_null"] = counts["cvss_null"] + numberOfDocs;
               }
