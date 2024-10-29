@@ -327,7 +327,7 @@
     processRunning = false;
     if (response.error) {
       openForwardModal = false;
-      loadForwardTargetsError = getErrorDetails(`Couldn't load forward targets.`, response);
+      loadForwardTargetsError = getErrorDetails(`Could not forward document`, response);
     } else {
       lastSuccessfulForwardTarget = selectedForwardTarget;
     }
