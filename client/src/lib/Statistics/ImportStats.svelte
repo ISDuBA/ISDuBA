@@ -79,15 +79,14 @@
   const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100`;
   const updateInterval = 1000 * 60 * (updateIntervalInMinutes ?? 0);
   const categoryColors = [
-    "#3D6090",
-    "#7EC9EE",
-    "#4FB4A3",
-    "#2A904D",
-    "#AFA11C",
-    "#E2D072",
-    "#DB667A",
-    "#8B084A",
-    "#C552B1"
+    "#000000",
+    "#E69F00",
+    "#56B4E9",
+    "#009E73",
+    "#F0E442",
+    "#0072B2",
+    "#D55E00",
+    "#CC79A7"
   ];
   const rangeColors = ["#ddd", "#FFEFB0", "#E6A776", "#CD5D3A", "#B41500"];
 
@@ -128,11 +127,23 @@
   });
 
   const getColor = (index: number) => {
-    return colors
-      ? colors[index]
-      : types.length === 1 && types.includes("critical")
-        ? rangeColors[index]
-        : categoryColors[index];
+    let color;
+    if (colors) {
+      color = colors[index];
+    } else if (
+      types.length === 1 &&
+      !types.includes("importFailures") &&
+      !types.includes("totals")
+    ) {
+      if (types.includes("critical")) {
+        color = rangeColors[index];
+      } else {
+        color = "#3D6090";
+      }
+    } else {
+      color = categoryColors[index];
+    }
+    return color;
   };
 
   const isToday = (date: Date) => {
@@ -511,6 +522,7 @@
     } else {
       stepsInMilliseconds = HOUR_MS;
     }
+    updateChart();
   };
 
   // In case of month or year we need some padding so the last month/year is not cut-off.

@@ -11,6 +11,7 @@
 <script lang="ts">
   import ImportStats from "./ImportStats.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
+  import { DAY_MS } from "$lib/time";
 </script>
 
 <SectionHeader title="Statistics"></SectionHeader>
@@ -19,15 +20,18 @@
   chartType="line"
   colors={["#3D6090", "#E6A776"]}
   height="300pt"
+  initialFrom={new Date(Date.now() - DAY_MS)}
   showRangeSelection
   showLegend
   showModeToggle
-  stepsInMinutes={180}
+  stepsInMinutes={60}
   title="Advisories and Documents"
   axes={[{ label: "", types: ["totals"] }]}
 ></ImportStats>
 <ImportStats
+  colors={["#5fcc57", "#c64f08", "#1c2c5e"]}
   height="300pt"
+  initialFrom={new Date(Date.now() - DAY_MS)}
   showRangeSelection
   showLegend
   showModeToggle
@@ -40,6 +44,7 @@
 ></ImportStats>
 <ImportStats
   height="300pt"
+  initialFrom={new Date(Date.now() - DAY_MS)}
   showRangeSelection
   isStacked
   showLegend
