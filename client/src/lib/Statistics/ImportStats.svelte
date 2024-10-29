@@ -239,31 +239,32 @@
         };
         for (let i = 0; i < crit.length; i++) {
           const date = crit[i][0];
+          const entries = crit[i][1];
           const counts: any = {
-            cvss_null: [],
-            cvss_None: [],
-            cvss_Low: [],
-            cvss_Medium: [],
-            cvss_High: []
+            cvss_null: 0,
+            cvss_None: 0,
+            cvss_Low: 0,
+            cvss_Medium: 0,
+            cvss_High: 0
           };
           const keys = Object.keys(critStats);
           // Iterate through the values of one point of time
-          if (crit[i][1]) {
-            for (let j = 0; j < crit[i][1].length; j++) {
-              type NumberOfDocs = number;
-              type CritCount = [number | null, NumberOfDocs];
-              const critCount: CritCount = crit[i][1][j];
-              const numberOfDocs = critCount[1];
-              const cvss = critCount?.[0];
+          if (entries) {
+            type NumberOfDocs = number;
+            type CritCount = [number | null, NumberOfDocs];
+            entries.forEach((entry: CritCount) => {
+              const numberOfDocs = entry[1];
+              const cvss = entry?.[0];
               if (cvss) {
                 const cvssTextialRating: CVSSTextualRating = getCVSSTextualRating(cvss);
-                counts[cvssTextialRating] = counts[`cvss_${cvssTextialRating}`] + numberOfDocs;
+                counts[`cvss_${cvssTextialRating}`] =
+                  counts[`cvss_${cvssTextialRating}`] + numberOfDocs;
               } else {
-                counts["null"] = counts["cvss_null"] + numberOfDocs;
+                counts["cvss_null"] = counts["cvss_null"] + numberOfDocs;
               }
-            }
+            });
             keys.forEach((key) => {
-              critStats[key].push([date, counts[key.replace("cvss_", "")]]);
+              critStats[key].push([date, counts[key]]);
             });
           } else {
             keys.forEach((key) => {
