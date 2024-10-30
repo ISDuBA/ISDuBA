@@ -251,7 +251,7 @@
         await loadPMD();
       }
       await loadFeeds();
-      if (id !== 0) {
+      if (source.id !== 0) {
         let missingFeeds = calculateMissingFeeds(parseFeeds(pmd, feeds), feeds);
         missingFeeds.map((f) => {
           f.enable = false;
