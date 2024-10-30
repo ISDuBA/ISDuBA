@@ -10,16 +10,7 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import {
-    Input,
-    Spinner,
-    Button,
-    Img,
-    RadioButton,
-    ButtonGroup,
-    Label,
-    Select
-  } from "flowbite-svelte";
+  import { Input, Spinner, Button, Img, ButtonGroup, Label, Select } from "flowbite-svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { request } from "$lib/request";
   import {
@@ -57,6 +48,10 @@
   let ignoredQueries: number[] = [];
   let isAllowedToEdit = true;
   let sortable: any = null;
+
+  const basicButtonClass = "h-8";
+  const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
+  const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100`;
 
   // Prop items of (Multi-)Select doesn't accept simple strings
   const roles = [{ name: "<no role>", value: "" }].concat(
@@ -207,7 +202,8 @@
     currentSearch.columns[index].visible = !currentSearch.columns[index].visible;
   };
 
-  const toggleSearchType = () => {
+  const setSearchType = (newSearchType: SEARCHTYPES) => {
+    currentSearch.searchType = newSearchType;
     if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
       currentSearch.columns = columnsFromNames(COLUMNS.DOCUMENT);
     }
@@ -393,28 +389,26 @@
     </div>
     <div class="mb-2">
       <ButtonGroup>
-        <RadioButton
-          class="h-8"
+        <Button
+          class={currentSearch.searchType === SEARCHTYPES.ADVISORY
+            ? pressedButtonClass
+            : buttonClass}
           disabled={!isAllowedToEdit}
-          on:change={toggleSearchType}
-          value={SEARCHTYPES.ADVISORY}
-          bind:group={currentSearch.searchType}
+          on:click={() => setSearchType(SEARCHTYPES.ADVISORY)}
         >
-          Advisories</RadioButton
+          Advisories</Button
         >
-        <RadioButton
-          class="h-8"
+        <Button
+          class={currentSearch.searchType === SEARCHTYPES.DOCUMENT
+            ? pressedButtonClass
+            : buttonClass}
           disabled={!isAllowedToEdit}
-          on:change={toggleSearchType}
-          value={SEARCHTYPES.DOCUMENT}
-          bind:group={currentSearch.searchType}>Documents</RadioButton
+          on:click={() => setSearchType(SEARCHTYPES.DOCUMENT)}>Documents</Button
         >
-        <RadioButton
-          class="h-8"
+        <Button
+          class={currentSearch.searchType === SEARCHTYPES.EVENT ? pressedButtonClass : buttonClass}
           disabled={!isAllowedToEdit}
-          on:change={toggleSearchType}
-          value={SEARCHTYPES.EVENT}
-          bind:group={currentSearch.searchType}>Events</RadioButton
+          on:click={() => setSearchType(SEARCHTYPES.EVENT)}>Events</Button
         >
       </ButtonGroup>
     </div>
