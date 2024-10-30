@@ -245,7 +245,7 @@
     if (id) {
       let sourceID = Number(id);
       if (sourceID === 0) {
-        source.id = sourceID;
+        source.id = 0;
       } else {
         await loadSourceInfo(sourceID);
         await loadPMD();
@@ -416,7 +416,7 @@
 <ErrorMessage error={feedError}></ErrorMessage>
 <ErrorMessage error={saveFeedError}></ErrorMessage>
 
-{#if source.id}
+{#if source.id !== undefined}
   <ImportStats
     axes={[{ label: "", types: ["imports"] }]}
     height="200pt"
