@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"sync"
 	"time"
 
@@ -99,6 +100,36 @@ func (cpmd *CachedProviderMetadata) Model() (*csaf.ProviderMetadata, error) {
 	}
 	cpmd.model = model
 	return model, nil
+}
+
+// availableFeeds returns a list of the feeds available for the given provider.
+func availableFeeds(pmd *csaf.ProviderMetadata) []string {
+	var feeds []string
+	add := func(feed string) {
+		if !slices.Contains(feeds, feed) {
+			feeds = append(feeds, feed)
+		}
+	}
+	// ROLIE feeds
+	for i := range pmd.Distributions {
+		d := pmd.Distributions[i]
+		if d.Rolie == nil {
+			continue
+		}
+		feeds := d.Rolie.Feeds
+		for j := range feeds {
+			if f := &feeds[j]; f.URL != nil {
+				add(string(*f.URL))
+			}
+		}
+	}
+	// Directory feeds
+	for i := range pmd.Distributions {
+		if d := pmd.Distributions[i]; d.Rolie == nil && d.DirectoryURL != "" {
+			add(d.DirectoryURL)
+		}
+	}
+	return feeds
 }
 
 // isROLIEFeed checks if the given url leads to a ROLIE feed.

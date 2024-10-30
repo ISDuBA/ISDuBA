@@ -137,6 +137,7 @@ type SourceSubscription struct {
 // SourceSubscriptions tells which sources are subscribed for given url.
 type SourceSubscriptions struct {
 	URL           string               `json:"url"`
+	Feeds         []string             `json:"feeds,omitempty"`
 	Subscriptions []SourceSubscription `json:"subscriptions,omitempty"`
 }
 
@@ -443,8 +444,13 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 					Feeds: feeds,
 				})
 			}
+			var feeds []string
+			if pmd, err := m.PMD(url).Model(); err == nil {
+				feeds = availableFeeds(pmd)
+			}
 			subs = append(subs, SourceSubscriptions{
 				URL:           url,
+				Feeds:         feeds,
 				Subscriptions: subscriptions,
 			})
 		}
