@@ -15,6 +15,7 @@
     Dropzone,
     Img,
     P,
+    Spinner,
     Table,
     TableBody,
     TableBodyCell,
@@ -46,7 +47,8 @@
 
   $: docA_ID = $appStore.app.diff.docA_ID;
   $: docB_ID = $appStore.app.diff.docB_ID;
-  $: if (docA_ID || docB_ID) getDocuments();
+  $: if (docA_ID) updateDocumentA();
+  $: if (docB_ID) updateDocumentB();
   $: docA = $appStore.app.diff.docA;
   $: docB = $appStore.app.diff.docB;
   $: isToolboxOpen = $appStore.app.isToolboxOpen;
@@ -58,10 +60,13 @@
 
   let freeTempDocuments = 0;
   let tempDocuments: any[] = [];
-  let loadDocumentsErrorMessage: ErrorDetails | null;
+  let loadDocumentAErrorMessage: ErrorDetails | null;
+  let loadDocumentBErrorMessage: ErrorDetails | null;
   let tempDocErrorMessage: ErrorDetails | null;
   let loadTempDocsErrorMessage: ErrorDetails | null;
   let intervalID: ReturnType<typeof setTimeout> | undefined = undefined;
+  let isLoadingDocA = false;
+  let isLoadingDocB = false;
 
   const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
   const padding = "pe-5 pt-2";
@@ -135,9 +140,15 @@
   };
 
   const getDocuments = async () => {
-    loadDocumentsErrorMessage = null;
+    updateDocumentA();
+    updateDocumentB();
+  };
+
+  const updateDocumentA = async () => {
+    loadDocumentAErrorMessage = null;
     if (docA_ID) {
-      const responseDocA = await getDocument("A");
+      isLoadingDocA = true;
+      const responseDocA = await fetchDocument("A");
       if (responseDocA.ok) {
         if (docA_ID) {
           const content = await responseDocA.content;
@@ -147,17 +158,23 @@
         if (responseDocA.error === "404") {
           appStore.setDiffDocA_ID(undefined);
         } else {
-          loadDocumentsErrorMessage = getErrorDetails(
+          loadDocumentAErrorMessage = getErrorDetails(
             `Could not load first document.`,
             responseDocA
           );
         }
       }
+      isLoadingDocA = false;
     } else {
       appStore.setDiffDocA(undefined);
     }
+  };
+
+  const updateDocumentB = async () => {
+    loadDocumentBErrorMessage = null;
     if (docB_ID) {
-      const responseDocB = await getDocument("B");
+      isLoadingDocB = true;
+      const responseDocB = await fetchDocument("B");
       if (responseDocB.ok) {
         if (docB_ID) {
           const content = await responseDocB.content;
@@ -167,18 +184,19 @@
         if (responseDocB.error === "404") {
           appStore.setDiffDocB_ID(undefined);
         } else {
-          loadDocumentsErrorMessage = getErrorDetails(
+          loadDocumentBErrorMessage = getErrorDetails(
             `Could not load second document.`,
             responseDocB
           );
         }
       }
+      isLoadingDocB = false;
     } else {
       appStore.setDiffDocB(undefined);
     }
   };
 
-  const getDocument = async (letter: string) => {
+  const fetchDocument = async (letter: string) => {
     const docID = letter === "A" ? docA_ID : docB_ID;
     const endpoint = docID?.startsWith("tempdocument") ? "tempdocuments" : "documents";
     const id = docID?.startsWith("tempdocument") ? docID.replace("tempdocument", "") : docID;
@@ -253,7 +271,12 @@
   <div class="mb-4 flex flex-col justify-between gap-2 lg:flex-row">
     <div class="flex items-start gap-1">
       <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3 lg:w-96 lg:max-w-96">
-        {#if docA}
+        {#if isLoadingDocA}
+          <div>
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+        {:else if docA}
           <div>
             <Button
               on:click={() => {
@@ -283,7 +306,12 @@
     </div>
     <div class="flex gap-1">
       <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 lg:w-96 lg:max-w-96">
-        {#if docB}
+        {#if isLoadingDocB}
+          <div>
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+        {:else if docB}
           <div>
             <Button
               on:click={() => {
@@ -323,7 +351,8 @@
       </Button>
     </div>
   </div>
-  <ErrorMessage error={loadDocumentsErrorMessage}></ErrorMessage>
+  <ErrorMessage error={loadDocumentAErrorMessage}></ErrorMessage>
+  <ErrorMessage error={loadDocumentBErrorMessage}></ErrorMessage>
   <div class="flex flex-col">
     {#if tempDocuments?.length > 0}
       <span class="mb-1">Temporary documents:</span>
