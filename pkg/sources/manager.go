@@ -129,15 +129,15 @@ type FeedSubscription struct {
 
 // SourceSubscription tells which feeds are subscribed by a source.
 type SourceSubscription struct {
-	ID    int64              `json:"id"`
-	Name  string             `json:"name"`
-	Feeds []FeedSubscription `feeds:"feeds,omitempty"`
+	ID         int64              `json:"id"`
+	Name       string             `json:"name"`
+	Subscribed []FeedSubscription `json:"subscribed,omitempty"`
 }
 
 // SourceSubscriptions tells which sources are subscribed for given url.
 type SourceSubscriptions struct {
 	URL           string               `json:"url"`
-	Feeds         []string             `json:"feeds,omitempty"`
+	Available     []string             `json:"available,omitempty"`
 	Subscriptions []SourceSubscription `json:"subscriptions,omitempty"`
 }
 
@@ -428,28 +428,28 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 		for _, url := range urls {
 			var subscriptions []SourceSubscription
 			for _, s := range sources[url] {
-				var feeds []FeedSubscription
+				var subscribed []FeedSubscription
 				for _, f := range s.feeds {
 					if !f.invalid.Load() {
-						feeds = append(feeds, FeedSubscription{
+						subscribed = append(subscribed, FeedSubscription{
 							ID:  f.id,
 							URL: f.url.String(),
 						})
 					}
 				}
 				subscriptions = append(subscriptions, SourceSubscription{
-					ID:    s.id,
-					Name:  s.name,
-					Feeds: feeds,
+					ID:         s.id,
+					Name:       s.name,
+					Subscribed: subscribed,
 				})
 			}
-			var feeds []string
+			var available []string
 			if pmd, err := m.PMD(url).Model(); err == nil {
-				feeds = availableFeeds(pmd)
+				available = availableFeeds(pmd)
 			}
 			subs = append(subs, SourceSubscriptions{
 				URL:           url,
-				Feeds:         feeds,
+				Available:     available,
 				Subscriptions: subscriptions,
 			})
 		}
