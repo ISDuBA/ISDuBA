@@ -519,7 +519,7 @@
         </TableHead>
         <TableBody>
           {#each documents as item, i}
-            <tr>
+            <tr class={i % 2 == 1 ? "bg-white hover:bg-gray-200" : "bg-gray-100 hover:bg-gray-200"}>
               {#if isMultiSelectionAllowed}
                 <TableBodyCell tdClass="px-0">
                   <CCheckbox
@@ -782,7 +782,10 @@
               {/each}
             </tr>
             {#if item[searchColumnName]}
-              <TableBodyRow class="border border-y-indigo-500/100 bg-white">
+              <TableBodyRow
+                class={(i % 2 == 1 ? "bg-white" : "bg-gray-100") +
+                  " border border-y-indigo-500/100"}
+              >
                 <TableBodyCell colspan={columns.length} {tdClass}
                   >{@html item[searchColumnName]}</TableBodyCell
                 >
