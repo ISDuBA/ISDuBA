@@ -19,8 +19,9 @@
     class?: string;
     clickCallBack?: () => void;
   };
-  export let title: string | undefined;
+  export let title: string | undefined = undefined;
   export let headers: TableHeader[];
+  export let stickyHeaders = false;
   let orderBy = "";
 </script>
 
@@ -32,8 +33,8 @@
       </div>
     </SectionHeader>
   {/if}
-  <Table hoverable={true} noborder={true}>
-    <TableHead>
+  <Table divClass="relative" hoverable={true} noborder={true}>
+    <TableHead theadClass={stickyHeaders ? "sticky top-[0] bg-white" : ""}>
       {#each headers as header}
         <TableHeadCell class={header.class ?? ""} padding={tablePadding} on:click={() => {}}>
           <span>{header.label}</span>
