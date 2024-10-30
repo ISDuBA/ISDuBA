@@ -14,6 +14,7 @@
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   export let notes: Note[];
   export let open: boolean = false;
+  $: hasDescription = notes.some((note) => note.category === "description");
 </script>
 
 {#if notes}
@@ -21,7 +22,7 @@
     <Collapsible
       header={note.title ? `${note.category}: ${note.title}` : note.category}
       level={4}
-      {open}
+      open={open || note.category === (hasDescription ? "description" : "summary")}
     >
       <SingleNote {note} />
     </Collapsible>
