@@ -738,15 +738,15 @@ func (m *Manager) AddSource(
 	clientCertPrivate []byte,
 	clientCertPassphrase []byte,
 ) (int64, error) {
-	lpmd := m.PMD(url)
-	if !lpmd.Valid() {
+	cpmd := m.PMD(url)
+	if !cpmd.Valid() {
 		return 0, InvalidArgumentError("PMD is invalid")
 	}
 	errCh := make(chan error)
 	s := &source{
 		name:                 name,
 		url:                  url,
-		pmd:                  lpmd.URL,
+		pmd:                  cpmd.Loaded.URL,
 		rate:                 rate,
 		slots:                slots,
 		headers:              headers,
@@ -823,7 +823,7 @@ func (m *Manager) AddFeed(
 			errCh <- InvalidArgumentError("label already exists")
 			return
 		}
-		pmd, err := asProviderMetaData(m.PMD(s.url))
+		pmd, err := m.PMD(s.url).Model()
 		if err != nil {
 			errCh <- err
 			return
@@ -882,7 +882,7 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 }
 
 // PMD returns the provider metadata from the given url.
-func (m *Manager) PMD(url string) *csaf.LoadedProviderMetadata {
+func (m *Manager) PMD(url string) *CachedProviderMetadata {
 	return m.pmdCache.pmd(m, url)
 }
 

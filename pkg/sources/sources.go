@@ -514,12 +514,12 @@ func (s *source) pmdURL(m *Manager) string {
 	if s.pmd != "" {
 		return s.pmd
 	}
-	lpmd := m.PMD(s.url)
-	if !lpmd.Valid() {
-		slog.Warn("PMD loading failed", "messages", lpmd.Messages)
+	cpmd := m.PMD(s.url)
+	if !cpmd.Valid() {
+		slog.Warn("PMD loading failed", "url", s.url)
 		return ""
 	}
-	s.pmd = lpmd.URL
+	s.pmd = cpmd.Loaded.URL
 	return s.pmd
 }
 

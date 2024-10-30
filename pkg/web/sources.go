@@ -704,18 +704,19 @@ func (c *Controller) pmd(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	lpmd := c.sm.PMD(input.URL)
-	if !lpmd.Valid() {
+	cpmd := c.sm.PMD(input.URL)
+	if !cpmd.Valid() {
 		h := gin.H{}
-		if n := len(lpmd.Messages); n > 0 {
-			msgs := make([]string, 0, n)
-			for i := range lpmd.Messages {
-				msgs = append(msgs, lpmd.Messages[i].Message)
+		msgs := cpmd.Loaded.Messages
+		if n := len(msgs); n > 0 {
+			txts := make([]string, 0, n)
+			for i := range msgs {
+				txts = append(txts, msgs[i].Message)
 			}
-			h["messages"] = msgs
+			h["messages"] = txts
 		}
 		ctx.JSON(http.StatusBadGateway, h)
 		return
 	}
-	ctx.JSON(http.StatusOK, lpmd.Document)
+	ctx.JSON(http.StatusOK, cpmd.Loaded.Document)
 }

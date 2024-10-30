@@ -19,8 +19,6 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/internal/cache"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
-	"github.com/csaf-poc/csaf_distribution/v3/csaf"
-	"github.com/csaf-poc/csaf_distribution/v3/util"
 )
 
 type keysCache struct {
@@ -40,17 +38,17 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 		return keys, nil
 	}
 	keys, _ := crypto.NewKeyRing(nil)
-	lpmd := m.pmdCache.pmd(m, source.url)
-	if !lpmd.Valid() {
+	cpmd := m.pmdCache.pmd(m, source.url)
+	if !cpmd.Valid() {
 		// Try again soon.
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
 		return nil, fmt.Errorf("PMD of %q is invalid", source.url)
 	}
-	var pmd csaf.ProviderMetadata
-	if err := util.ReMarshalJSON(&pmd, lpmd.Document); err != nil {
+	pmd, err := cpmd.Model()
+	if err != nil {
 		// Try again soon.
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
-		return nil, fmt.Errorf("re-marshaling of %q failed: %w", lpmd.URL, err)
+		return nil, fmt.Errorf("re-marshaling failed: %w", err)
 	}
 	base, err := url.Parse(source.url)
 	if err != nil {
