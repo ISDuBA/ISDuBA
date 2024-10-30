@@ -20,7 +20,8 @@
     type CVSSTextualRating,
     mergeImportFailureStatistics,
     fetchTotals,
-    getCVSSTextualRatingDescription
+    getCVSSTextualRatingDescription,
+    getLabelForKey
   } from "$lib/Statistics/statistics";
   import Chart from "chart.js/auto";
   import { Button, ButtonGroup, Input, Label, Spinner } from "flowbite-svelte";
@@ -92,24 +93,7 @@
 
   $: types = axes.map((axis) => axis.types).flat();
   $: datasets = Object.keys(stats).map((key: string, index: number) => {
-    let label = key;
-    if (key === "cve") label = "CVEs of documents";
-    if (key === "imports") label = "Imports";
-    if (key === "importFailuresCombined") label = "Failed imports";
-    if (key === "signatureFailed") label = "Failed signature checks";
-    if (key === "checksumFailed") label = "Failed checksum checks";
-    if (key === "filenameFailed") label = "Failed filename checks";
-    if (key === "schemaFailed") label = "Failed schema checks";
-    if (key === "downloadFailed") label = "Failed downloads";
-    if (key === "remoteFailed") label = "Failed remote";
-    if (key === "duplicateFailed") label = "Failures because of duplicates";
-    if (key === "totalAdvisories") label = "Advisories";
-    if (key === "totalDocuments") label = "Documents";
-    if (key === "cvss_null") {
-      label = "N/A";
-    } else if (key.startsWith("cvss_")) {
-      label = key.replace("cvss_", "");
-    }
+    let label = getLabelForKey(key);
     const yAxisID = axes.findIndex((axis) => axis.types.includes(key as StatisticType));
     const color = getColor(index);
     return {

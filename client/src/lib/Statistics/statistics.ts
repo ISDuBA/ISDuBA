@@ -83,6 +83,28 @@ const getCVSSTextualRatingDescription = (textualRating: string): string => {
   }
 };
 
+const getLabelForKey = (key: string): string => {
+  let label = key;
+  if (key === "cve") label = "CVEs of documents";
+  if (key === "imports") label = "Imports";
+  if (key === "importFailuresCombined") label = "Imports errors";
+  if (key === "signatureFailed") label = "Failed signature checks";
+  if (key === "checksumFailed") label = "Failed checksum checks";
+  if (key === "filenameFailed") label = "Failed filename checks";
+  if (key === "schemaFailed") label = "Failed schema checks";
+  if (key === "downloadFailed") label = "Failed downloads";
+  if (key === "remoteFailed") label = "Failed remote";
+  if (key === "duplicateFailed") label = "Failures because of duplicates";
+  if (key === "totalAdvisories") label = "Advisories";
+  if (key === "totalDocuments") label = "Documents";
+  if (key === "cvss_null") {
+    label = "N/A";
+  } else if (key.startsWith("cvss_")) {
+    label = key.replace("cvss_", "");
+  }
+  return label;
+};
+
 const fetchBasicStatistic = async (
   from: Date,
   to: Date,
@@ -287,6 +309,7 @@ export {
   fetchTotals,
   getCVSSTextualRating,
   getCVSSTextualRatingDescription,
+  getLabelForKey,
   mergeImportFailureStatistics
 };
 export type {

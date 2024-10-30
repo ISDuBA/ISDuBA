@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { type StatisticGroup } from "$lib/Statistics/statistics";
+  import { getLabelForKey, type StatisticGroup } from "$lib/Statistics/statistics";
   import { toLocaleISOString } from "$lib/time";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
@@ -27,7 +27,7 @@
         { label: "Date", attribute: "date" },
         ...Object.keys(stats).map((s) => {
           return {
-            label: s,
+            label: getLabelForKey(s),
             attribute: s
           };
         })
