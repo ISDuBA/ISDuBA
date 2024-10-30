@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, ButtonGroup, Label } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Button, ButtonGroup, Label, Spinner } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
   import type { JsonDiffResult } from "./Diff";
   import LazyEntry from "./LazyEntry.svelte";
@@ -17,7 +17,6 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { appStore } from "$lib/store";
-  import { onMount } from "svelte";
 
   export let showTitle = true;
   let title = "";
@@ -33,15 +32,16 @@
   let accordionItemDefaultClass =
     "flex justify-start items-center gap-x-4 text-gray-700 font-semibold w-full";
   let textFlushOpen = "text-gray-500 dark:text-white";
+  let isLoading = false;
   $: addChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "add") : [];
   $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
-  $: if (diffDocuments) getDiff();
   $: docA_ID = $appStore.app.diff.docA_ID;
   $: docB_ID = $appStore.app.diff.docB_ID;
   $: if (docA_ID && docB_ID) compare();
 
   const compare = async () => {
+    isLoading = true;
     const responseDocA = await getDocument("A");
     const responseDocB = await getDocument("B");
     if (responseDocA.ok && responseDocB.ok) {
@@ -55,6 +55,8 @@
       const to = `${diffDocuments.docA.document.tracking.id} (Version ${diffDocuments.docA.document.tracking.version})`;
       title = `Changes from ${from} to ${to}`;
     }
+    await getDiff();
+    isLoading = false;
   };
 
   const getDocument = async (letter: string) => {
@@ -63,10 +65,6 @@
     const id = docID?.startsWith("tempdocument") ? docID.replace("tempdocument", "") : docID;
     return request(`/api/${endpoint}/${id}`, "GET");
   };
-
-  onMount(async () => {
-    compare();
-  });
 
   const getDiff = async () => {
     urlPath = `/api/diff/${$appStore.app.diff.docB_ID}/${$appStore.app.diff.docA_ID}?word-diff=true`;
@@ -96,6 +94,12 @@
 </svelte:head>
 
 <div>
+  {#if isLoading}
+    <div>
+      Loading diff ...
+      <Spinner color="gray" size="4"></Spinner>
+    </div>
+  {/if}
   <ErrorMessage {error}></ErrorMessage>
   {#if diff}
     {#if showTitle}
