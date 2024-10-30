@@ -10,7 +10,6 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
-  import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
 
   $: trackingVersion = $appStore.webview.doc?.trackingVersion;
   $: generator = $appStore.webview.doc?.generator;
@@ -38,8 +37,8 @@
   ) {
     appStore.setSingleErrorMsg("Are you sure the URL refers to a CSAF document?");
   }
-  const cellStyleValue = "px-6 py-0";
-  const cellStyleKey = "w-40 py-0";
+  const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
+  const cellStyleKey = "content-center w-40 py-0";
 </script>
 
 <div class="w-full">
@@ -49,82 +48,52 @@
       <span class="ml-3 text-lg text-gray-400">{status}</span>
     {/if}
   </div>
-  <div class="flex flex-row flex-wrap">
-    <div class="flex flex-col">
-      <Table noborder>
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>Publisher name</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{publisherName}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>Publisher namespace</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{publisherNamespace}</TableBodyCell>
-        </TableBodyRow>
-        {#if publisherContactDetails}
-          <TableBodyRow>
-            <TableBodyCell tdClass={cellStyleKey}>Publisher contact details</TableBodyCell>
-            <TableBodyCell tdClass={cellStyleValue}>{publisherContactDetails}</TableBodyCell>
-          </TableBodyRow>
+  <div class="flex w-full flex-row flex-wrap">
+    <div class="grid w-full grid-cols-[auto_minmax(0,_1fr)] gap-1.5 text-sm">
+      <div class={cellStyleKey}>Publisher name</div>
+      <div class={cellStyleValue}>{publisherName}</div>
+      <div class={cellStyleKey}>Publisher namespace</div>
+      <div class={cellStyleValue}>{publisherNamespace}</div>
+      {#if publisherContactDetails}
+        <div class={cellStyleKey}>Publisher contact details</div>
+        <div class={cellStyleValue}>{publisherContactDetails}</div>
+      {/if}
+      {#if publisherIssuingAuthority}
+        <div class={cellStyleKey}>Publisher issuing authority</div>
+        <div class={cellStyleValue}>{publisherIssuingAuthority}</div>
+      {/if}
+      <div class={cellStyleKey}>Publisher category</div>
+      <div class={cellStyleValue}>{publisherCategory}</div>
+      <div class={cellStyleKey}>Published</div>
+      <div class={cellStyleValue}>{published}</div>
+      <div class={cellStyleKey}>Last update</div>
+      <div class={cellStyleValue}>{lastUpdate}</div>
+      <div class={cellStyleKey}>CSAF-Version</div>
+      <div class={cellStyleValue}>{csafVersion}</div>
+      <div class={cellStyleKey}>Category</div>
+      <div class={cellStyleValue}>{category}</div>
+      {#if $appStore.webview.doc?.aggregateSeverity}
+        <div class={cellStyleKey}>Aggregate severity text</div>
+        <div class={cellStyleValue}>
+          <span>{$appStore.webview.doc?.aggregateSeverity.text}</span>
+        </div>
+        {#if $appStore.webview.doc?.aggregateSeverity.namespace}
+          <div class={cellStyleKey}>Aggregate severity namespace</div>
+          <div class={cellStyleValue}>
+            <span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span>
+          </div>
         {/if}
-        {#if publisherIssuingAuthority}
-          <TableBodyRow>
-            <TableBodyCell tdClass={cellStyleKey}>Publisher issuing authority</TableBodyCell>
-            <TableBodyCell tdClass={cellStyleValue}>{publisherIssuingAuthority}</TableBodyCell>
-          </TableBodyRow>
-        {/if}
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>Publisher category</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{publisherCategory}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>Published</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{published}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>Last update</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{lastUpdate}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>CSAF-Version</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{csafVersion}</TableBodyCell>
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>Category</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{category}</TableBodyCell>
-        </TableBodyRow>
-        {#if $appStore.webview.doc?.aggregateSeverity}
-          <TableBodyRow>
-            <TableBodyCell tdClass={cellStyleKey}>Aggregate severity text</TableBodyCell>
-            <TableBodyCell tdClass={cellStyleValue}>
-              <span>{$appStore.webview.doc?.aggregateSeverity.text}</span></TableBodyCell
-            >
-          </TableBodyRow>
-          {#if $appStore.webview.doc?.aggregateSeverity.namespace}
-            <TableBodyRow>
-              <TableBodyCell tdClass={cellStyleKey}>Aggregate severity namespace</TableBodyCell>
-              <TableBodyCell tdClass={cellStyleValue}
-                ><span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span></TableBodyCell
-              >
-            </TableBodyRow>
-          {/if}
-        {/if}
-        {#if lang}
-          <TableBodyRow>
-            <TableBodyCell tdClass={cellStyleKey}>Language</TableBodyCell>
-            <TableBodyCell tdClass={cellStyleValue}>{lang}</TableBodyCell>
-          </TableBodyRow>
-        {/if}
-        {#if sourceLang}
-          <TableBodyRow>
-            <TableBodyCell tdClass={cellStyleKey}>Source lang</TableBodyCell>
-            <TableBodyCell tdClass={cellStyleValue}>{sourceLang}</TableBodyCell>
-          </TableBodyRow>
-        {/if}
-        <TableBodyRow>
-          <TableBodyCell tdClass={cellStyleKey}>Tracking Version</TableBodyCell>
-          <TableBodyCell tdClass={cellStyleValue}>{trackingVersion}</TableBodyCell>
-        </TableBodyRow>
-      </Table>
+      {/if}
+      {#if lang}
+        <div class={cellStyleKey}>Language</div>
+        <div class={cellStyleValue}>{lang}</div>
+      {/if}
+      {#if sourceLang}
+        <div class={cellStyleKey}>Source lang</div>
+        <div class={cellStyleValue}>{sourceLang}</div>
+      {/if}
+      <div class={cellStyleKey}>Tracking Version</div>
+      <div class={cellStyleValue}>{trackingVersion}</div>
     </div>
   </div>
   <div class="mt-3 flex flex-row">
