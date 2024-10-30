@@ -129,9 +129,9 @@ type FeedSubscription struct {
 
 // SourceSubscription tells which feeds are subscribed by a source.
 type SourceSubscription struct {
-	ID         int64              `json:"id"`
-	Name       string             `json:"name"`
-	Subscribed []FeedSubscription `json:"subscribed,omitempty"`
+	ID          int64              `json:"id"`
+	Name        string             `json:"name"`
+	Subscripted []FeedSubscription `json:"subscripted,omitempty"`
 }
 
 // SourceSubscriptions tells which sources are subscribed for given url.
@@ -428,19 +428,19 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 		for _, url := range urls {
 			var subscriptions []SourceSubscription
 			for _, s := range sources[url] {
-				var subscribed []FeedSubscription
+				var subscripted []FeedSubscription
 				for _, f := range s.feeds {
 					if !f.invalid.Load() {
-						subscribed = append(subscribed, FeedSubscription{
+						subscripted = append(subscripted, FeedSubscription{
 							ID:  f.id,
 							URL: f.url.String(),
 						})
 					}
 				}
 				subscriptions = append(subscriptions, SourceSubscription{
-					ID:         s.id,
-					Name:       s.name,
-					Subscribed: subscribed,
+					ID:          s.id,
+					Name:        s.name,
+					Subscripted: subscripted,
 				})
 			}
 			var available []string
