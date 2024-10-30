@@ -19,9 +19,11 @@ const config: PlaywrightTestConfig = {
       use: {
         ...devices["Desktop Chrome"],
         // Use prepared auth state.
-        storageState: "playwright/.auth/user.json"
+        storageState: "playwright/.auth/user.json",
+        screenshot: "only-on-failure"
       },
-      dependencies: ["setup"]
+      dependencies: ["setup"],
+      outputDir: "./playwright/output"
     },
 
     {
@@ -29,9 +31,11 @@ const config: PlaywrightTestConfig = {
       use: {
         ...devices["Desktop Firefox"],
         // Use prepared auth state.
-        storageState: "playwright/.auth/user.json"
+        storageState: "playwright/.auth/user.json",
+        screenshot: "only-on-failure"
       },
-      dependencies: ["setup"]
+      dependencies: ["setup"],
+      outputDir: "./playwright/output"
     }
   ],
   webServer: {

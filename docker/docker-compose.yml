@@ -8,7 +8,7 @@
 
 services:
   keycloak:
-    image: keycloak/keycloak:23.0
+    image: keycloak/keycloak:26.0
     container_name: "isduba-keycloak"
     ports:
       - "${KC_HOSTNAME_PORT}:8080"
@@ -92,7 +92,7 @@ services:
       ISDUBA_CLIENT_KEYCLOAK_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
       ISDUBA_CLIENT_KEYCLOAK_REALM: "isduba"
       ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID: "auth"
-      ISDUBA_CLIENT_IDLE_TIMEOUT: 30
+      ISDUBA_CLIENT_IDLE_TIMEOUT: "30m"
     ports:
       - "${CLIENT_PORT}:8081"
     depends_on:

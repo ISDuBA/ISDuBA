@@ -17,6 +17,8 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { onMount } from "svelte";
   import { fetchFeedLogs, fetchFeed, type Feed } from "./source";
+  import ImportStats from "$lib/Statistics/ImportStats.svelte";
+  import { DAY_MS } from "$lib/time";
 
   export let params: any = null;
 
@@ -218,3 +220,26 @@
 
 <ErrorMessage error={loadLogsError}></ErrorMessage>
 <ErrorMessage error={loadFeedError}></ErrorMessage>
+
+{#if feed?.id}
+  <ImportStats
+    axes={[{ label: "", types: ["imports"] }]}
+    height="200pt"
+    initialFrom={new Date(Date.now() - DAY_MS)}
+    showModeToggle
+    showRangeSelection
+    source={{ id: feed.id, isFeed: true }}
+    title="Imports"
+  ></ImportStats>
+  <ImportStats
+    axes={[{ label: "", types: ["importFailures"] }]}
+    height="200pt"
+    initialFrom={new Date(Date.now() - DAY_MS)}
+    isStacked
+    showLegend
+    showModeToggle
+    showRangeSelection
+    source={{ id: feed.id, isFeed: true }}
+    title="Import errors"
+  ></ImportStats>
+{/if}

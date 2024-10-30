@@ -68,7 +68,7 @@
 #                      or your administrator."""
 # aes_key = ""
 # timeout = "30s"
-# max_age = "17520h"
+# default_age = "17520h"
 
 # [remote_validator]
 # url = ""
@@ -85,9 +85,19 @@
 # [forwarder]
 # update_interval = "5m"
 
-# This is a example target
-# [[forwarder.target]]
-# enabled = true
-# url = "http://example.com/api/v1/import"
-# header = [ "x-api-key:secret" ]
-# timeout = "5s"
+## These are example targets to show the forwarder target syntax.
+## [[forwarder.target]]
+## automatic = true
+## name = "First example target"
+## url = "http://example.com/api/v1/import"
+## publisher = "publisher-name"
+## header = [ "x-api-key:secret" ]
+## private_cert = "private-cert-file"
+## public_cert = "public-cert-file"
+##
+## [[forwarder.target]]
+## automatic = false
+## name = "Second example target"
+## url = "https://example.org/api/v1/import"
+## header = [ "x-api-key:secret" ]
+## timeout = "5s"

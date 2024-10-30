@@ -63,10 +63,6 @@
       [baseNumber, baseUnit] = parseAge(source.age);
     } else if (useSource.age && ["0s", "0h"].includes(useSource.age)) {
       baseNumber = 0;
-    } else {
-      let placeholder: number | undefined;
-      [placeholder, baseUnit] = parseAge(ageDefaultDuration);
-      agePlaceholder = placeholder ?? 0;
     }
     ageNumber = baseNumber;
     ageUnit = baseUnit;
@@ -111,15 +107,11 @@
   let ratePlaceholder = 0;
   let slotPlaceholder = 2;
 
-  let ageDefaultDuration = "1h";
-  let agePlaceholder = 2;
-
   const loadSourceDefaults = async () => {
     const resp = await fetchSourceDefaultConfig();
     if (resp.ok) {
       ratePlaceholder = resp.value.rate;
       slotPlaceholder = resp.value.slots;
-      ageDefaultDuration = resp.value.age;
     }
   };
 
@@ -302,7 +294,7 @@
               class="rounded-none rounded-l-lg"
               type="number"
               min="0"
-              placeholder={agePlaceholder.toString()}
+              placeholder="0"
               on:input={onChangedAge}
               bind:value={ageNumber}
             ></Input>

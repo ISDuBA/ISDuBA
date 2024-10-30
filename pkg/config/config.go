@@ -101,7 +101,7 @@ const (
 	defaultSourcesStrictMode     = true
 	defaultSourcesInsecure       = false
 	defaultSourcesSignatureCheck = true
-	defaultSourcesMaxAge         = 17520 * time.Hour
+	defaultSourcesAge            = 17520 * time.Hour
 	defaultSourcesAESKey         = ""
 )
 
@@ -201,18 +201,19 @@ type Sources struct {
 	StrictMode        bool                  `toml:"strict_mode"`
 	Insecure          bool                  `toml:"insecure"`
 	SignatureCheck    bool                  `toml:"signature_check"`
-	MaxAge            time.Duration         `toml:"max_age"`
+	DefaultAge        time.Duration         `toml:"default_age"`
 	AESKey            string                `toml:"aes_key"`
 }
 
 // ForwardTarget are the config options for the forward target.
 type ForwardTarget struct {
 	URL               string        `toml:"url"`
+	Name              string        `toml:"name"`
 	ClientPrivateCert string        `toml:"private_cert"`
 	ClientPublicCert  string        `toml:"public_cert"`
 	Publisher         *string       `toml:"publisher"`
 	Header            []string      `toml:"header"`
-	Enabled           bool          `toml:"enabled"`
+	Automatic         bool          `toml:"automatic"`
 	Timeout           time.Duration `toml:"timeout"`
 }
 
@@ -363,7 +364,7 @@ func Load(file string) (*Config, error) {
 			StrictMode:        defaultSourcesStrictMode,
 			Insecure:          defaultSourcesInsecure,
 			SignatureCheck:    defaultSourcesSignatureCheck,
-			MaxAge:            defaultSourcesMaxAge,
+			DefaultAge:        defaultSourcesAge,
 		},
 		Forwarder: Forwarder{
 			UpdateInterval: defaultForwarderUpdateInterval,
@@ -460,7 +461,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_INSECURE", storeBool(&cfg.Sources.Insecure)},
 		envStore{"ISDUBA_SOURCES_SIGNATURE_CHECK", storeBool(&cfg.Sources.SignatureCheck)},
 		envStore{"ISDUBA_SOURCES_TIMEOUT", storeDuration(&cfg.Sources.Timeout)},
-		envStore{"ISDUBA_SOURCES_MAX_AGE", storeDuration(&cfg.Sources.MaxAge)},
+		envStore{"ISDUBA_SOURCES_DEFAULT_AGE", storeDuration(&cfg.Sources.DefaultAge)},
 		envStore{"ISDUBA_SOURCES_AES_KEY", storeString(&cfg.Sources.AESKey)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_URL", storeString(&cfg.RemoteValidator.URL)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_CACHE", storeString(&cfg.RemoteValidator.Cache)},

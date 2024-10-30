@@ -151,6 +151,10 @@
   };
 
   const buildHistory = async () => {
+    if (!canSeeCommentArea) {
+      historyEntries = [];
+      return;
+    }
     const comments = await loadComments();
     let events = await loadEvents();
     const commentsByTime = comments.reduce((o: any, n: any) => {
@@ -307,7 +311,7 @@
     if (response.ok) {
       availableForwardSelection = [];
       for (let target of response.content) {
-        availableForwardSelection.push({ value: target.id, name: target.url });
+        availableForwardSelection.push({ value: target.id, name: target.name });
       }
     } else if (response.error) {
       loadForwardTargetsError = getErrorDetails(`Couldn't load forward targets.`, response);
@@ -323,7 +327,7 @@
     processRunning = false;
     if (response.error) {
       openForwardModal = false;
-      loadForwardTargetsError = getErrorDetails(`Couldn't load forward targets.`, response);
+      loadForwardTargetsError = getErrorDetails(`Could not forward document`, response);
     } else {
       lastSuccessfulForwardTarget = selectedForwardTarget;
     }
@@ -373,30 +377,23 @@
 </Modal>
 
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
-  <div class="flex flex-col flex-wrap gap-4 lg:flex-row lg:gap-2">
-    <div class="flex grow flex-col gap-y-2">
+  <div class="flex flex-none flex-col">
+    <div class="flex gap-2">
       <Label class="text-lg">
         <span class="mr-2">{params.trackingID}</span>
-        <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+        {#if $appStore.webview.doc?.tlp.label}
+          <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+        {/if}
       </Label>
-      <Label class="text-gray-600">{params.publisherNamespace}</Label>
     </div>
-    <div class="flex shrink grow flex-col gap-y-4 lg:items-end lg:gap-y-2">
-      <div class="flex h-fit flex-row gap-2 lg:order-2">
+    <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
+      <Label class="text-gray-600">{params.publisherNamespace}</Label>
+      <div
+        class={"right-6 mt-4 flex h-fit flex-row gap-2" +
+          (canSeeCommentArea ? " min-[1080px]:absolute" : "")}
+      >
         <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
       </div>
-      {#if availableForwardSelection.length != 0}
-        <div class="flex h-fit flex-row gap-2 lg:order-1">
-          <Button
-            size="xs"
-            color="light"
-            class="h-7 py-1 text-xs"
-            on:click={() => (openForwardModal = true)}
-          >
-            Forward document</Button
-          >
-        </div>
-      {/if}
     </div>
     <div class="mb-4 mt-2" />
   </div>
@@ -410,7 +407,9 @@
       <div
         class="right-3 mr-3 flex w-full flex-col bg-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
       >
-        <div class={isSSVCediting || commentFocus ? " w-full p-3 shadow-md" : "w-full p-3"}>
+        <div
+          class={isSSVCediting || commentFocus ? " h-64 w-full p-3 shadow-md" : "h-64 w-full p-3"}
+        >
           <div class="mb-4 flex flex-row items-center">
             {#if ssvcVector}
               {#if !isSSVCediting}
@@ -461,7 +460,20 @@
                 buildHistory();
               }}
               entries={historyEntries}
-            ></History>
+            >
+              <div slot="additionalButtons">
+                {#if availableForwardSelection.length != 0}
+                  <Button
+                    size="xs"
+                    color="light"
+                    class="h-7 py-1 text-xs"
+                    on:click={() => (openForwardModal = true)}
+                  >
+                    Forward document</Button
+                  >
+                {/if}
+              </div>
+            </History>
           </div>
           <ErrorMessage error={loadEventsError}></ErrorMessage>
           <ErrorMessage error={loadCommentsError}></ErrorMessage>
@@ -499,6 +511,18 @@
               "/"}
             {position}
           ></Webview>
+          {#if !canSeeCommentArea && availableForwardSelection.length != 0}
+            <div class="my-2 flex w-full flex-row justify-end">
+              <Button
+                size="xs"
+                color="light"
+                class="h-7 py-1 text-xs"
+                on:click={() => (openForwardModal = true)}
+              >
+                Forward document
+              </Button>
+            </div>
+          {/if}
         {/if}
       </div>
     </div>

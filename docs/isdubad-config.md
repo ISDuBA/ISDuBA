@@ -30,7 +30,6 @@ The configuration consists of the following sections:
 - [`[remote_validator]`](#section_remote_validator) Remote validator
 - [`[client]`](#section_client) Client configuration
 - [`[forwarder]`](#section_forwarder) Forwarder configuration
-- [`[[forwarder.target]]`](#section_forwarder_target) Forwarder target configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
@@ -120,7 +119,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
    You can generate a token yourself e.g. by entering this command:\
    `dd if=/dev/urandom bs=32 count=1 status=none | xxd -p -c 32`
 - `timeout`: How long should be waited for HTTP responses in sources manager? Defaults to `"30s"`.
-- `max_age`: The maximum age of the downloaded documents. Defaults to `"17520h"`, i.e. 2 years.
+- `default_age`: The default maximum age of the downloaded documents. A value of 0 means that there is no limit. Defaults to `"17520h"`, i.e. 2 years.
 
 ### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
 
@@ -140,16 +139,19 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 - `update_interval`: Specifies how often the database is checked for new documents. Defaults to `"5m"`.
 
-### <a name="section_forwarder_target"></a> Section `[[forwarder.target]]` Forwarder target configuration
+#### Section `[[forwarder.target]]` Forwarder target configuration
 
 Only documents that are successfully imported into the database are forwarded.
 Documents that are discarded because of failed validation are not forwarded.
 
-- `enabled`: Specifies if the target automatically receives new documents. If disabled the target only receives documents on manual forwarding.
+- `automatic`: Specifies if the target automatically receives new documents. If disabled the target only receives documents on manual forwarding.
 - `url`: The URL of the forward target.
+- `name`: The name of target. This value will be displayed on manual forwarding the document.
 - `publisher`: Specifies the publisher of the documents that need to be forwarded.
 - `header`: List all headers that are sent to the target. The format is `key:value`.
-- `timeout`: Sets the http client timeout. It is recommended to set this value, to avoid problems on network errors.
+- `private_cert`: The location of the private client certificate.
+- `public_cert`: The location of the public client certificate.
+- `timeout`: Sets the http client timeout. Set this value if the network is unstable.
 
 ## <a name="env_vars"></a>Environment variables
 
@@ -197,7 +199,7 @@ Documents that are discarded because of failed validation are not forwarded.
 | `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |
 | `ISDUBA_SOURCES_AES_KEY`              | `sources aes_key`                    |
 | `ISDUBA_SOURCES_TIMEOUT`              | `sources timeout`                    |
-| `ISDUBA_SOURCES_MAX_AGE`              | `sources max_age`                    |
+| `ISDUBA_SOURCES_DEFAULT_AGE`          | `sources default_age`                |
 | `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
 | `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |

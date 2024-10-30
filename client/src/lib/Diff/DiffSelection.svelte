@@ -29,20 +29,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onDestroy, onMount } from "svelte";
   import CIconButton from "$lib/Components/CIconButton.svelte";
-
-  const getRelativeTime = (date: Date) => {
-    const now = Date.now();
-    const passedTime = now - date.getTime();
-    if (passedTime < 60000) {
-      return "<1 min ago";
-    } else if (passedTime < 3600000) {
-      return `${Math.floor(passedTime / 60000)} min ago`;
-    } else if (passedTime < 86400000) {
-      return `${Math.floor(passedTime / 3600000)} hours ago`;
-    } else {
-      return `${Math.floor(passedTime / 86400000)} days ago`;
-    }
-  };
+  import { getRelativeTime } from "$lib/time";
 
   $: docA_ID = $appStore.app.diff.docA_ID;
   $: docB_ID = $appStore.app.diff.docB_ID;

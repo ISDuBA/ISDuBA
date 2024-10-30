@@ -27,6 +27,9 @@
     fetchAggregatorData
   } from "$lib/Sources/source";
   import { appStore } from "$lib/store";
+  import { DAY_MS } from "$lib/time";
+  import ImportStats from "$lib/Statistics/ImportStats.svelte";
+  import SourceBasicStats from "./SourceBasicStats.svelte";
 
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
@@ -114,8 +117,10 @@
 </svelte:head>
 
 <div>
+  <SectionHeader title="Sources"></SectionHeader>
+  <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-8" title=""
+  ></ImportStats>
   {#if appStore.isEditor() || appStore.isSourceManager()}
-    <SectionHeader title="Sources"></SectionHeader>
     <CustomTable
       title="CSAF Provider"
       headers={[
@@ -134,6 +139,10 @@
         {
           label: "Loading/Queued",
           attribute: "stats"
+        },
+        {
+          label: "Imported (last 24h)",
+          attribute: "statsHistory"
         }
       ]}
     >
@@ -156,6 +165,14 @@
           <TableBodyCell {tdClass}
             >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
           >
+          <TableBodyCell>
+            {#if source.id}
+              {@const yesterday = Date.now() - DAY_MS}
+              <SourceBasicStats sourceID={source.id}></SourceBasicStats>
+              (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
+              ></SourceBasicStats>)
+            {/if}
+          </TableBodyCell>
         </tr>
       {/each}
       <div slot="bottom">

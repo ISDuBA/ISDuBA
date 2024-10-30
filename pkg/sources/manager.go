@@ -348,7 +348,6 @@ func (m *Manager) generateID() int64 {
 
 // Run runs the manager. To be used in a Go routine.
 func (m *Manager) Run(ctx context.Context) {
-
 	var wg sync.WaitGroup
 
 	for range m.cfg.Sources.DownloadSlots {
@@ -1082,9 +1081,6 @@ func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
 	}
 	if su.updatable.age != nil && age != nil && *su.updatable.age == *age {
 		return nil
-	}
-	if age != nil && (*age > su.manager.cfg.Sources.MaxAge && su.manager.cfg.Sources.MaxAge != 0) {
-		return InvalidArgumentError("invalid age value")
 	}
 	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
 	return nil
