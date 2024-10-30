@@ -20,7 +20,7 @@ type Source = {
   slots?: number;
   headers: string[];
   strict_mode?: boolean;
-  insecure?: boolean;
+  secure?: boolean;
   signature_check?: boolean;
   age?: string;
   ignore_patterns: string[];
@@ -39,7 +39,7 @@ type SourceConfig = {
   rate: number;
   log_level: LogLevel;
   strict_mode: boolean;
-  insecure: boolean;
+  secure: boolean;
   signature_check: boolean;
   age: string;
 };
@@ -100,8 +100,8 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   if (source.strict_mode !== undefined) {
     formData.append("strict_mode", source.strict_mode.toString());
   }
-  if (source.insecure !== undefined) {
-    formData.append("insecure", source.insecure.toString());
+  if (source.secure !== undefined) {
+    formData.append("secure", source.secure.toString());
   }
   if (source.signature_check !== undefined) {
     formData.append("signature_check", source.signature_check.toString());

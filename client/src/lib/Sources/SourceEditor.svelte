@@ -196,11 +196,11 @@
       tmpB.headers = [];
     }
 
-    if (tmpA.insecure === undefined) {
-      tmpA.insecure = false;
+    if (tmpA.secure === undefined) {
+      tmpA.secure = false;
     }
-    if (tmpB.insecure === undefined) {
-      tmpB.insecure = false;
+    if (tmpB.secure === undefined) {
+      tmpB.secure = false;
     }
 
     if (tmpA.signature_check === undefined) {
