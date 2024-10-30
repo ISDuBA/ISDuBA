@@ -27,6 +27,7 @@
   let headerColumns: any[] = [];
   let productLines: any[] = [];
 
+  const linkStyle = "underline";
   const titleStyles = [
     "w-4 overflow-hidden",
     "w-max",
@@ -116,6 +117,7 @@
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
                         <a
+                          class={linkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
                           >{column.content}</a
@@ -135,6 +137,7 @@
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
                         <a
+                          class={linkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
                           >{column.content}
@@ -158,6 +161,7 @@
                         title={$appStore.webview.doc?.productsByID[column.content]}
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
+                        class={linkStyle}
                         >{$appStore.webview.doc?.productsByID[column.content]}
                         ({column.content.length > 20
                           ? column.content.substring(0, 20) + "..."
