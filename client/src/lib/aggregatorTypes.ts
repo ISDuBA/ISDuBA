@@ -182,9 +182,26 @@ export interface CSAFPublisherMetadata {
 }
 
 /**
+ * Contains information about all subscriptions.
+ */
+export interface Subscription {
+  url: string;
+  available: string[];
+}
+
+/**
+ * Contains additional metadata about the aggregator.
+ */
+export interface Custom {
+  id: number;
+  name: string;
+  subscriptions: Subscription[];
+}
+
+/**
  * Contains the json document of the Aggregator with additional metadata
  */
-export interface AggregatorInfo {
+export interface AggregatorMetadata {
   aggregator: CSAFAggregator;
-  custom: any;
+  custom: Custom;
 }

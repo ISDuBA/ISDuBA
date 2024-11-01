@@ -10,7 +10,7 @@ import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 import { request } from "$lib/request";
 import type { Result } from "$lib/types";
 import type { CSAFProviderMetadata } from "$lib/provider";
-import type { AggregatorInfo } from "$lib/aggregatorTypes";
+import type { AggregatorMetadata } from "$lib/aggregatorTypes";
 
 type Source = {
   id?: number;
@@ -353,10 +353,25 @@ const saveAggregator = async (aggregator: Aggregator): Promise<Result<number, Er
   };
 };
 
+const deleteAggregator = async (id: number): Promise<Result<null, ErrorDetails>> => {
+  const resp = await request(`/api/aggregators/${id}`, "DELETE");
+  if (resp.error) {
+    return {
+      ok: false,
+      error: getErrorDetails(`Could not delete aggregator`, resp)
+    };
+  } else {
+    return {
+      ok: true,
+      value: null
+    };
+  }
+};
+
 const fetchAggregatorData = async (
   url: string,
   validate: boolean = false
-): Promise<Result<AggregatorInfo, ErrorDetails>> => {
+): Promise<Result<AggregatorMetadata, ErrorDetails>> => {
   const resp = await request(
     `/api/aggregator?url=${encodeURIComponent(url)}&validate=${validate}`,
     "GET"
@@ -473,7 +488,7 @@ const deleteFeed = async (id: number): Promise<Result<null, ErrorDetails>> => {
   if (resp.error) {
     return {
       ok: false,
-      error: getErrorDetails(`Could not load feed`, resp)
+      error: getErrorDetails(`Could not delete feed`, resp)
     };
   } else {
     return {
@@ -534,6 +549,7 @@ export {
   parseHeaders,
   parseFeeds,
   deleteFeed,
+  deleteAggregator,
   fetchFeed,
   fetchFeeds,
   fetchSources,
