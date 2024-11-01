@@ -193,7 +193,7 @@ func (c *Controller) deleteAggregator(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			tag, err := conn.Exec(rctx, sql, id)
-			deleted = tag.RowsAffected() > 1
+			deleted = tag.RowsAffected() > 0
 			return err
 		}, 0,
 	); err != nil {
