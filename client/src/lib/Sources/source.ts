@@ -10,6 +10,7 @@ import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 import { request } from "$lib/request";
 import type { Result } from "$lib/types";
 import type { CSAFProviderMetadata } from "$lib/provider";
+import type { AggregatorInfo } from "$lib/aggregatorTypes";
 
 type Source = {
   id?: number;
@@ -355,7 +356,7 @@ const saveAggregator = async (aggregator: Aggregator): Promise<Result<number, Er
 const fetchAggregatorData = async (
   url: string,
   validate: boolean = false
-): Promise<Result<any, ErrorDetails>> => {
+): Promise<Result<AggregatorInfo, ErrorDetails>> => {
   const resp = await request(
     `/api/aggregator?url=${encodeURIComponent(url)}&validate=${validate}`,
     "GET"

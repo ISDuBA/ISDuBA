@@ -36,7 +36,7 @@
   import type { HttpResponse } from "$lib/types";
   import DocumentUpload from "$lib/Sources/DocumentUpload.svelte";
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
-  import AggregatorCreator from "$lib/Sources/AggregatorCreator.svelte";
+  import AggregatorViewer from "$lib/Sources/AggregatorViewer.svelte";
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
 
   let loadConfigError: ErrorDetails | null;
@@ -231,8 +231,8 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/aggregator/new": wrap({
-      component: AggregatorCreator,
+    "/aggregator": wrap({
+      component: AggregatorViewer,
       userData: loginRequired,
       conditions: [loginCondition]
     }),

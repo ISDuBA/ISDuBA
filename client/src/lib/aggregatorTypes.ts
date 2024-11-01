@@ -180,3 +180,11 @@ export interface CSAFPublisherMetadata {
   url: URLOfTheMetadata;
   [k: string]: unknown;
 }
+
+/**
+ * Contains the json document of the Aggregator with additional metadata
+ */
+export interface AggregatorInfo {
+  aggregator: CSAFAggregator;
+  custom: any;
+}
