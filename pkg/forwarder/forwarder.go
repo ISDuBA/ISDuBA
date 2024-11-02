@@ -149,9 +149,14 @@ func (fm *ForwardManager) runTargets(ctx context.Context) {
 		documentIDs, err := fm.fetchNewDocuments(ctx, target.url, target.publisher)
 		if err != nil {
 			slog.Error("could not fetch documents to forward", "err", err)
+			target.running.Unlock()
 			continue
 		}
-		go fm.uploadDocuments(ctx, target, documentIDs)
+		if len(documentIDs) > 0 {
+			go fm.uploadDocuments(ctx, target, documentIDs)
+		} else {
+			target.running.Unlock()
+		}
 	}
 }
 
