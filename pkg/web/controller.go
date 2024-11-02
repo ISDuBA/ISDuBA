@@ -168,6 +168,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/sources", authEdSM, c.viewSources)
 	api.POST("/sources", authSM, c.createSource)
 	api.GET("/sources/message", authAll, c.defaultMessage)
+	api.GET("/sources/attention", authSM, c.attentionSources)
 	api.GET("/sources/default", authSM, c.defaultSourceConfig)
 	api.DELETE("/sources/:id", authSM, c.deleteSource)
 	api.GET("/sources/:id", authSM, c.viewSource)

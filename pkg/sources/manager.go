@@ -1054,7 +1054,7 @@ func (su *SourceUpdater) UpdateRate(rate *float64) error {
 		return nil
 	}
 	if rate != nil && (*rate <= 0 ||
-		(*rate > su.manager.cfg.Sources.MaxRatePerSource && su.manager.cfg.Sources.MaxRatePerSource != 0)) {
+		*rate > su.manager.cfg.Sources.MaxRatePerSource && su.manager.cfg.Sources.MaxRatePerSource != 0) {
 		return InvalidArgumentError("rate value out of range")
 	}
 	su.addChange(func(s *source) { s.setRate(rate) }, "rate", rate)
@@ -1070,7 +1070,7 @@ func (su *SourceUpdater) UpdateSlots(slots *int) error {
 		return nil
 	}
 	if slots != nil && (*slots < 1 ||
-		(*slots > su.manager.cfg.Sources.MaxSlotsPerSource && su.manager.cfg.Sources.MaxSlotsPerSource != 0)) {
+		*slots > su.manager.cfg.Sources.MaxSlotsPerSource && su.manager.cfg.Sources.MaxSlotsPerSource != 0) {
 		return InvalidArgumentError("slot value ot ouf range")
 	}
 	su.addChange(func(s *source) { s.slots = slots }, "slots", slots)
@@ -1340,4 +1340,19 @@ func (m *Manager) UpdateFeed(
 	}
 	res := <-resCh
 	return res.updated, res.err
+}
+
+// AttentionSources calls given callback for each active source which needs attention.
+// If the all flag is not set only the active sources are evaluated.
+func (m *Manager) AttentionSources(all bool, fn func(id int64, name string)) {
+	done := make(chan struct{})
+	m.fns <- func(m *Manager) {
+		defer close(done)
+		for _, s := range m.sources {
+			if (all || s.active) && s.checksumAck.Before(s.checksumUpdated) {
+				fn(s.id, s.name)
+			}
+		}
+	}
+	<-done
 }

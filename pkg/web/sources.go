@@ -680,6 +680,23 @@ func (c *Controller) defaultMessage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
 }
 
+// attentionSources returns a list of sources that need attention.
+func (c *Controller) attentionSources(ctx *gin.Context) {
+	all, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("all", "false"))
+	if !ok {
+		return
+	}
+	type attention struct {
+		ID   int64  `json:"id"`
+		Name string `json:"name"`
+	}
+	list := []attention{}
+	c.sm.AttentionSources(all, func(id int64, name string) {
+		list = append(list, attention{ID: id, Name: name})
+	})
+	ctx.JSON(http.StatusOK, list)
+}
+
 // defaultSourceConfig returns the default source configuration.
 func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 	cfg := c.cfg.Sources
