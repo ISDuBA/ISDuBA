@@ -49,6 +49,7 @@ type source struct {
 	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
 	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
 	Active               bool           `json:"active" form:"active"`
+	Attention            bool           `json:"attention" form:"attention"`
 	Status               []string       `json:"status,omitempty"`
 	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gte=0"`
 	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=0"`
@@ -92,6 +93,7 @@ func newSource(si *sources.SourceInfo) *source {
 		Name:                 si.Name,
 		URL:                  si.URL,
 		Active:               si.Active,
+		Attention:            si.Attention,
 		Status:               si.Status,
 		Rate:                 si.Rate,
 		Slots:                si.Slots,
@@ -327,6 +329,17 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 					fmt.Sprintf("parsing 'active' failed: %v", err.Error()))
 			}
 			if err := su.UpdateActive(act); err != nil {
+				return err
+			}
+		}
+		// attention
+		if attention, ok := ctx.GetPostForm("attention"); ok {
+			att, err := strconv.ParseBool(attention)
+			if err != nil {
+				return sources.InvalidArgumentError(
+					fmt.Sprintf("parsing 'attention' failed: %v", err.Error()))
+			}
+			if err := su.UpdateAttention(att); err != nil {
 				return err
 			}
 		}

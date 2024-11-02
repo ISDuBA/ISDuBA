@@ -108,6 +108,7 @@ type SourceInfo struct {
 	Name                    string
 	URL                     string
 	Active                  bool
+	Attention               bool
 	Status                  []string
 	Rate                    *float64
 	Slots                   *int
@@ -458,6 +459,7 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 			Name:                    s.name,
 			URL:                     s.url,
 			Active:                  s.active,
+			Attention:               s.checksumAck.Before(s.checksumUpdated),
 			Status:                  s.status,
 			Rate:                    s.rate,
 			Slots:                   s.slots,
@@ -1089,6 +1091,23 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 			su.manager.backgroundPing()
 		}
 	}, "active", active)
+	return nil
+}
+
+// UpdateAttention requests an attention update.
+func (su *SourceUpdater) UpdateAttention(att bool) error {
+	if old := su.updatable.checksumAck.Before(su.updatable.checksumUpdated); old == att {
+		return nil
+	}
+	var when time.Time
+	if !att {
+		when = su.updatable.checksumUpdated
+	} else {
+		when = su.updatable.checksumUpdated.Add(-time.Second)
+	}
+	su.addChange(func(s *source) {
+		s.checksumAck = when
+	}, "checksum_ack", when)
 	return nil
 }
 
