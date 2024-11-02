@@ -9,7 +9,9 @@
 package sources
 
 import (
+	"bufio"
 	"context"
+	"crypto/sha1"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -130,6 +132,18 @@ func availableFeeds(pmd *csaf.ProviderMetadata) []string {
 		}
 	}
 	return feeds
+}
+
+// checksumPMD calculates a checksum over the relevant fields in a PMD.
+// Currently only the feed paths are used.
+func checksumPMD(pmd *csaf.ProviderMetadata) []byte {
+	feeds := availableFeeds(pmd)
+	hash := sha1.New()
+	w := bufio.NewWriter(hash)
+	for _, feed := range feeds {
+		w.WriteString(feed)
+	}
+	return hash.Sum(nil)
 }
 
 // isROLIEFeed checks if the given url leads to a ROLIE feed.

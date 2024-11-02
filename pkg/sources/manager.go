@@ -9,6 +9,7 @@
 package sources
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log/slog"
@@ -24,6 +25,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -357,6 +359,8 @@ func (m *Manager) Run(ctx context.Context) {
 
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
+	checkingTicker := time.NewTicker(m.cfg.Sources.Checking)
+	defer checkingTicker.Stop()
 out:
 	for !m.done {
 		m.pmdCache.Cleanup()
@@ -369,11 +373,70 @@ out:
 			fn(m)
 		case <-ctx.Done():
 			break out
+		case now := <-checkingTicker.C:
+			m.checkSources(ctx, now)
 		case <-refreshTicker.C:
 		}
 	}
 	close(m.jobs)
 	wg.Wait()
+}
+
+func (m *Manager) checkSources(ctx context.Context, now time.Time) {
+	now = now.UTC()
+	updates := pgx.Batch{}
+
+	const sql = `UPDATE sources ` +
+		`SET (checksum, checksum_updated) = ($1, $2) ` +
+		`WHERE id = $3`
+
+	var apply []func()
+
+	for _, s := range m.sources {
+		cpmd := m.PMD(s.url)
+		if !cpmd.Valid() {
+			slog.Warn("invalid PMD", "url", s.url, "id", s.id)
+			continue
+		}
+		model, err := cpmd.Model()
+		if err != nil {
+			slog.Warn("invalid PMD model", "url", s.url, "id", s.id, "err", err)
+			continue
+		}
+		checksum := checksumPMD(model)
+		if !bytes.Equal(checksum, s.checksum) {
+			updates.Queue(sql, checksum, now, s.id)
+			s := s // Not really need since Go 1.22
+			apply = append(apply, func() {
+				s.checksum = checksum
+				s.checksumUpdated = now
+			})
+		}
+	}
+	// Only send updates if there where changes.
+	if updates.Len() > 0 {
+		if err := m.db.Run(
+			ctx,
+			func(ctx context.Context, conn *pgxpool.Conn) error {
+				tx, err := conn.Begin(ctx)
+				if err != nil {
+					return err
+				}
+				defer tx.Rollback(ctx)
+				if err := tx.SendBatch(ctx, &updates).Close(); err != nil {
+					return err
+				}
+				return tx.Commit(ctx)
+			}, 0,
+		); err != nil {
+			slog.Error("Storing source checksums failed", "err", err)
+			return
+		}
+		// Apply after db operations have succeeded.
+		for _, fn := range apply {
+			fn()
+		}
+	}
 }
 
 // Source returns infos about a source.
@@ -747,6 +810,11 @@ func (m *Manager) AddSource(
 	if !cpmd.Valid() {
 		return 0, InvalidArgumentError("PMD is invalid")
 	}
+	model, err := cpmd.Model()
+	if err != nil {
+		return 0, InvalidArgumentError("PMD model is invalid")
+	}
+	now := time.Now().UTC()
 	errCh := make(chan error)
 	s := &source{
 		name:                 name,
@@ -762,6 +830,9 @@ func (m *Manager) AddSource(
 		clientCertPublic:     clientCertPublic,
 		clientCertPrivate:    clientCertPrivate,
 		clientCertPassphrase: clientCertPassphrase,
+		checksum:             checksumPMD(model),
+		checksumAck:          now.Add(-time.Second),
+		checksumUpdated:      now,
 	}
 	if clientCertPrivate != nil {
 		var err error
@@ -787,7 +858,8 @@ func (m *Manager) AddSource(
 			`VALUES (` +
 			`$1, $2, $3, $4, $5, ` +
 			`$6, $7, $8, $9, $10, ` +
-			`$11, $12, $13) ` +
+			`$11, $12, $13, ` +
+			`$14, $15, $16) ` +
 			`RETURNING id`
 		if err := m.db.Run(
 			context.Background(),
@@ -796,6 +868,7 @@ func (m *Manager) AddSource(
 					name, url, rate, slots, headers,
 					strictMode, insecure, signatureCheck, age, ignorePatterns,
 					clientCertPublic, clientCertPrivate, clientCertPassphrase,
+					s.checksum, s.checksumAck, s.checksumUpdated,
 				).Scan(&s.id)
 			}, 0,
 		); err != nil {

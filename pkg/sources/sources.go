@@ -93,6 +93,10 @@ type source struct {
 	clientCertPrivate    []byte
 	clientCertPassphrase []byte
 	tlsCertificates      []tls.Certificate
+
+	checksum        []byte
+	checksumAck     time.Time
+	checksumUpdated time.Time
 }
 
 // refresh fetches the feed index and accordingly updates
