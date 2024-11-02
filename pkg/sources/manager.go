@@ -751,7 +751,6 @@ func (m *Manager) AddSource(
 	s := &source{
 		name:                 name,
 		url:                  url,
-		pmd:                  cpmd.Loaded.URL,
 		rate:                 rate,
 		slots:                slots,
 		headers:              headers,
