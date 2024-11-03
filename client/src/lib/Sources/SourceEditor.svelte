@@ -289,78 +289,83 @@
 </Modal>
 
 <SectionHeader title={source.name}></SectionHeader>
-<div class="mb-3 grid w-full grid-cols-1 justify-stretch gap-10 lg:grid-cols-2">
-  <div class="w-full">
-    <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
-      <div>
-        <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
-        <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
-      </div>
-      {#if pmd}
+{#if source.id !== 0}
+  <div class="mb-3 grid w-full grid-cols-1 justify-stretch gap-10 lg:grid-cols-2">
+    <div class="w-full">
+      <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
         <div>
-          <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+          <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
         </div>
+        {#if pmd}
+          <div>
+            <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+          </div>
+          <div>
+            <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
+          </div>
+          <div>
+            <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
+          </div>
+          <div>
+            {#if pmd.publisher.issuing_authority}
+              <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
+              <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList
+              >
+            {/if}
+          </div>
+        {/if}
         <div>
-          <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
-        </div>
-        <div>
-          <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
-        </div>
-        <div>
-          {#if pmd.publisher.issuing_authority}
-            <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+          <DescriptionList tag="dt" {dtClass}>Status</DescriptionList>
+          {#if source.status}
+            {#each source.status as s}
+              <DescriptionList tag="dd" {ddClass}>{s}</DescriptionList>
+            {/each}
+          {:else}
+            <DescriptionList tag="dd" {ddClass}>OK</DescriptionList>
           {/if}
         </div>
-      {/if}
-      <div>
-        <DescriptionList tag="dt" {dtClass}>Status</DescriptionList>
-        {#if source.status}
-          {#each source.status as s}
-            <DescriptionList tag="dd" {ddClass}>{s}</DescriptionList>
-          {/each}
-        {:else}
-          <DescriptionList tag="dd" {ddClass}>OK</DescriptionList>
-        {/if}
-      </div>
-    </List>
-    {#if source.stats}
-      <h4 class="mt-3">Status</h4>
-      <List tag="dl" class="flex w-full flex-wrap text-sm">
-        <div>
-          <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
-        </div>
-        <div class="pl-4">
-          <DescriptionList tag="dt" {dtClass}>Queued</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
-        </div>
-        <div class="pl-4">
-          <DescriptionList tag="dt" {dtClass}>Imported (last 24h)</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>
-            {#if source.id}
-              {@const yesterday = Date.now() - DAY_MS}
-              <SourceBasicStats sourceID={source.id}></SourceBasicStats>
-              (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
-              ></SourceBasicStats>)
-            {/if}
-          </DescriptionList>
-        </div>
       </List>
-    {/if}
-    <ErrorMessage error={loadSourceError}></ErrorMessage>
-    <ErrorMessage error={loadPmdError}></ErrorMessage>
+      {#if source.stats}
+        <h4 class="mt-3">Status</h4>
+        <List tag="dl" class="flex w-full flex-wrap text-sm">
+          <div>
+            <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
+          </div>
+          <div class="pl-4">
+            <DescriptionList tag="dt" {dtClass}>Queued</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
+          </div>
+          <div class="pl-4">
+            <DescriptionList tag="dt" {dtClass}>Imported (last 24h)</DescriptionList>
+            <DescriptionList tag="dd" {ddClass}>
+              {#if source.id}
+                {@const yesterday = Date.now() - DAY_MS}
+                <SourceBasicStats sourceID={source.id}></SourceBasicStats>
+                (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
+                ></SourceBasicStats>)
+              {/if}
+            </DescriptionList>
+          </div>
+        </List>
+      {/if}
+      <ErrorMessage error={loadSourceError}></ErrorMessage>
+      <ErrorMessage error={loadPmdError}></ErrorMessage>
 
-    <div class:invisible={!loadingPMD} class={!loadingPMD ? "loadingFadeIn" : ""} class:mb-4={true}>
-      Loading PMD ...
-      <Spinner color="gray" size="4"></Spinner>
+      <div
+        class:invisible={!loadingPMD}
+        class={!loadingPMD ? "loadingFadeIn" : ""}
+        class:mb-4={true}
+      >
+        Loading PMD ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
     </div>
-  </div>
 
-  {#if source.id !== 0}
     <div class="w-full flex-auto">
       <div
         class:invisible={!loadingSource}
@@ -400,10 +405,10 @@
       </Button>
       <ErrorMessage error={saveSourceError}></ErrorMessage>
     </div>
-  {/if}
-</div>
+  </div>
+{/if}
 
-<FeedView {feeds} {clickFeed} {updateFeed} edit={true}></FeedView>
+<FeedView {feeds} placeholderFeed={source.id === 0} {clickFeed} {updateFeed} edit={true}></FeedView>
 <div
   class:invisible={!loadingFeeds && !loadingPMD}
   class={!loadingFeeds && !loadingPMD ? "loadingFadeIn" : ""}
