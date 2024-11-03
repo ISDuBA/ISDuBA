@@ -25,6 +25,7 @@
   import { type AggregatorMetadata } from "$lib/aggregatorTypes";
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
+  import { push } from "svelte-spa-router";
 
   type AggregatorInfo = {
     name: string;
@@ -241,7 +242,17 @@
               <i class="bx bx-book"></i>{/if}</TableBodyCell
           >
           <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
-          <TableBodyCell {tdClass}></TableBodyCell>
+          <TableBodyCell {tdClass}>
+            <Button
+              on:click={async () => {
+                push(`/sources/new/${encodeURIComponent(entry.url)}`);
+              }}
+              class="!p-2"
+              color="light"
+            >
+              <i class="bx bx-folder-plus"></i>
+            </Button></TableBodyCell
+          >
         </tr>
         {#if entry.expand}
           {#each entry.availableFeeds as feed}
