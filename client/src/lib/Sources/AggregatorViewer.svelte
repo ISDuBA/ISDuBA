@@ -239,7 +239,7 @@
 
           <TableBodyCell {tdClass}
             >{entry.name}{#if entry.publisher}
-              <i class="bx bx-book"></i>{/if}</TableBodyCell
+              &nbsp; <i class="bx bx-book"></i>{/if}</TableBodyCell
           >
           <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
           <TableBodyCell {tdClass}>
