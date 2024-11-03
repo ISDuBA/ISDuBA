@@ -29,6 +29,7 @@ type Source = {
   client_cert_private?: string | null;
   client_cert_passphrase?: string | null;
   status?: string[];
+  attention: boolean;
   stats?: {
     downloading: number;
     waiting: number;

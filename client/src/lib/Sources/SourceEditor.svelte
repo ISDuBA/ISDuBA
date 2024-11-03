@@ -71,7 +71,8 @@
     slots: 2,
     strict_mode: true,
     headers: [""],
-    ignore_patterns: [""]
+    ignore_patterns: [""],
+    attention: false
   };
 
   let oldSource = structuredClone(source);

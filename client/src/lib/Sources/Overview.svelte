@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, Spinner, TableBodyCell } from "flowbite-svelte";
+  import { Badge, Button, Spinner, TableBodyCell } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { push } from "svelte-spa-router";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -82,6 +82,10 @@
       title="CSAF Provider"
       headers={[
         {
+          label: "",
+          attribute: "attention"
+        },
+        {
           label: "Name",
           attribute: "name"
         },
@@ -114,6 +118,11 @@
           on:focus={() => {}}
           class={appStore.isSourceManager() ? "cursor-pointer" : ""}
         >
+          {#if source.attention}
+            <TableBodyCell {tdClass}><Badge>Changes detected</Badge></TableBodyCell>
+          {:else}
+            <TableBodyCell {tdClass}></TableBodyCell>
+          {/if}
           <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
           <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
           <TableBodyCell {tdClass}
