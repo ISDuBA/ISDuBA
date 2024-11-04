@@ -162,7 +162,7 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		}
 		const insertSQL = `INSERT INTO downloads ` +
 			`(documents_id, feeds_id) VALUES ($1, ` +
-			`(SELECT id FROM feeds WHERE sources_id = 0 AND label = 'manual'))`
+			`(SELECT id FROM feeds WHERE sources_id = 0 AND label = 'single'))`
 		_, err := tx.Exec(ctx, insertSQL, docID)
 		return err
 	}
