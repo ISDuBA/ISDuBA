@@ -460,7 +460,7 @@ func (s *source) doRequest(client *http.Client, m *Manager, req *http.Request) (
 		limiter *rate.Limiter
 	)
 
-	m.inManager(func(m *Manager) {
+	m.inManager(func(m *Manager, _ context.Context) {
 		s.applyHeaders(req)
 		if client == nil {
 			client = s.httpClient(m)

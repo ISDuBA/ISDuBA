@@ -66,7 +66,7 @@ type downloadJob struct {
 type Manager struct {
 	cfg  *config.Config
 	db   *database.DB
-	fns  chan func(*Manager)
+	fns  chan func(*Manager, context.Context)
 	jobs chan downloadJob
 	done bool
 	rnd  *rand.Rand
@@ -82,6 +82,8 @@ type Manager struct {
 
 	usedSlots int
 	uniqueID  int64
+
+	sourceChecker func(*Manager)
 }
 
 // SourceUpdateResult is return by UpdateSource.
@@ -178,15 +180,16 @@ func NewManager(
 		return nil, fmt.Errorf("creating cipher failed: %w", err)
 	}
 	return &Manager{
-		cfg:       cfg,
-		db:        db,
-		fns:       make(chan func(*Manager)),
-		jobs:      make(chan downloadJob),
-		rnd:       rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())),
-		cipherKey: cipherKey,
-		pmdCache:  newPMDCache(),
-		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
-		val:       val,
+		cfg:           cfg,
+		db:            db,
+		fns:           make(chan func(*Manager, context.Context)),
+		jobs:          make(chan downloadJob),
+		rnd:           rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())),
+		cipherKey:     cipherKey,
+		pmdCache:      newPMDCache(),
+		keysCache:     newKeysCache(cfg.Sources.OpenPGPCaching),
+		val:           val,
+		sourceChecker: (*Manager).prefetchPMDs,
 	}, nil
 }
 
@@ -316,7 +319,7 @@ func (m *Manager) startDownloads() {
 }
 
 func (dj *downloadJob) finish(m *Manager) {
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, _ context.Context) {
 		dj.f.source.usedSlots = max(0, dj.f.source.usedSlots-1)
 		m.usedSlots = max(0, m.usedSlots-1)
 		if l := dj.f.findLocationByID(dj.l.id); l != nil {
@@ -371,11 +374,13 @@ out:
 		m.startDownloads()
 		select {
 		case fn := <-m.fns:
-			fn(m)
+			fn(m, ctx)
 		case <-ctx.Done():
 			break out
-		case now := <-checkingTicker.C:
-			m.checkSources(ctx, now)
+		case <-checkingTicker.C:
+			if m.sourceChecker != nil {
+				m.sourceChecker(m)
+			}
 		case <-refreshTicker.C:
 		}
 	}
@@ -383,8 +388,37 @@ out:
 	wg.Wait()
 }
 
-func (m *Manager) checkSources(ctx context.Context, now time.Time) {
-	now = now.UTC()
+func (m *Manager) prefetchPMDs() {
+	// The loading of the PMD is time consuming.
+	// Prefill the cache before checking the sources.
+	go func() {
+		var sources []*source
+		for _, s := range m.sources {
+			cpmd := m.PMD(s.url)
+			if !cpmd.Valid() {
+				slog.Warn("invalid PMD", "url", s.url, "id", s.id)
+				continue
+			}
+			if _, err := cpmd.Model(); err != nil {
+				slog.Warn("invalid PMD model", "url", s.url, "id", s.id, "err", err)
+				continue
+			}
+			sources = append(sources, s)
+		}
+		// Run the real checking in the manager.
+		m.fns <- func(m *Manager, ctx context.Context) {
+			// Only check the sources where prefetching worked.
+			m.checkSources(ctx, sources)
+			// re-enable checking
+			m.sourceChecker = (*Manager).prefetchPMDs
+		}
+	}()
+	// prevent stacking checks.
+	m.sourceChecker = nil
+}
+
+func (m *Manager) checkSources(ctx context.Context, sources []*source) {
+	now := time.Now().UTC()
 	updates := pgx.Batch{}
 
 	const sql = `UPDATE sources ` +
@@ -393,7 +427,9 @@ func (m *Manager) checkSources(ctx context.Context, now time.Time) {
 
 	var apply []func()
 
-	for _, s := range m.sources {
+	for _, s := range sources {
+		// There is still a little risk that the prefetched PMD
+		// went out of cache.
 		cpmd := m.PMD(s.url)
 		if !cpmd.Valid() {
 			slog.Warn("invalid PMD", "url", s.url, "id", s.id)
@@ -443,7 +479,7 @@ func (m *Manager) checkSources(ctx context.Context, now time.Time) {
 // Source returns infos about a source.
 func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 	siCh := make(chan *SourceInfo)
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, _ context.Context) {
 		s := m.findSourceByID(id)
 		if s == nil {
 			siCh <- nil
@@ -481,7 +517,7 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 // Subscriptions return a list of subscription infos for a given list of source URLs.
 func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 	result := make(chan []SourceSubscriptions)
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, _ context.Context) {
 		// We can subscribe a source more than once.
 		sources := make(map[string][]*source, len(m.sources))
 		for _, s := range m.sources {
@@ -526,7 +562,7 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 // Sources iterates over all sources and passes infos to a given function.
 func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 	done := make(chan struct{})
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, _ context.Context) {
 		defer close(done)
 		si := new(SourceInfo)
 		for _, s := range m.sources {
@@ -562,7 +598,7 @@ func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 // Feeds passes the fields of the feeds of a given source to a given function.
 func (m *Manager) Feeds(sourceID int64, fn func(*FeedInfo), stats bool) error {
 	errCh := make(chan error)
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, _ context.Context) {
 		s := m.findSourceByID(sourceID)
 		if s == nil {
 			errCh <- NoSuchEntryError("no such source")
@@ -596,7 +632,7 @@ func (m *Manager) Feeds(sourceID int64, fn func(*FeedInfo), stats bool) error {
 // Feed returns the infos of a feed.
 func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
 	fiCh := make(chan *FeedInfo)
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, _ context.Context) {
 		f := m.findFeedByID(feedID)
 		if f == nil || f.invalid.Load() {
 			fiCh <- nil
@@ -711,7 +747,7 @@ func (m *Manager) FeedLog(
 }
 
 // ping wakes up the manager.
-func (m *Manager) ping() {}
+func (m *Manager) ping(context.Context) {}
 
 func (m *Manager) backgroundPing() {
 	go func() { m.fns <- (*Manager).ping }()
@@ -719,17 +755,17 @@ func (m *Manager) backgroundPing() {
 
 // Kill stops the manager.
 func (m *Manager) Kill() {
-	m.fns <- func(m *Manager) { m.done = true }
+	m.fns <- func(m *Manager, _ context.Context) { m.done = true }
 }
 
-func (m *Manager) removeSource(sourceID int64) error {
+func (m *Manager) removeSource(ctx context.Context, sourceID int64) error {
 	if m.findSourceByID(sourceID) == nil {
 		return NoSuchEntryError("no such source")
 	}
 	const sql = `DELETE FROM sources WHERE id = $1`
 	notFound := false
 	if err := m.db.Run(
-		context.Background(),
+		ctx,
 		func(rctx context.Context, con *pgxpool.Conn) error {
 			tags, err := con.Exec(rctx, sql, sourceID)
 			if err != nil {
@@ -756,7 +792,7 @@ func (m *Manager) removeSource(sourceID int64) error {
 	return nil
 }
 
-func (m *Manager) removeFeed(feedID int64) error {
+func (m *Manager) removeFeed(ctx context.Context, feedID int64) error {
 	f := m.findFeedByID(feedID)
 	if f == nil {
 		return NoSuchEntryError("no such feed")
@@ -764,7 +800,7 @@ func (m *Manager) removeFeed(feedID int64) error {
 	f.invalid.Store(true)
 	const sql = `DELETE FROM feeds WHERE id = $1`
 	if err := m.db.Run(
-		context.Background(),
+		ctx,
 		func(ctx context.Context, con *pgxpool.Conn) error {
 			_, err := con.Exec(ctx, sql, feedID)
 			return err
@@ -777,18 +813,18 @@ func (m *Manager) removeFeed(feedID int64) error {
 	return nil
 }
 
-func (m *Manager) inManager(fn func(*Manager)) {
+func (m *Manager) inManager(fn func(*Manager, context.Context)) {
 	done := make(chan struct{})
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, ctx context.Context) {
 		defer close(done)
-		fn(m)
+		fn(m, ctx)
 	}
 	<-done
 }
 
-func (m *Manager) asManager(fn func(*Manager, int64) error, id int64) error {
+func (m *Manager) asManager(fn func(*Manager, context.Context, int64) error, id int64) error {
 	err := make(chan error)
-	m.fns <- func(m *Manager) { err <- fn(m, id) }
+	m.fns <- func(m *Manager, ctx context.Context) { err <- fn(m, ctx, id) }
 	return <-err
 }
 
@@ -848,7 +884,7 @@ func (m *Manager) AddSource(
 			return 0, err
 		}
 	}
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, ctx context.Context) {
 		if m.findSourceByName(name) != nil {
 			errCh <- InvalidArgumentError("source already exists")
 			return
@@ -864,7 +900,7 @@ func (m *Manager) AddSource(
 			`$14, $15, $16) ` +
 			`RETURNING id`
 		if err := m.db.Run(
-			context.Background(),
+			ctx,
 			func(rctx context.Context, con *pgxpool.Conn) error {
 				return con.QueryRow(rctx, sql,
 					name, url, rate, slots, headers,
@@ -892,7 +928,7 @@ func (m *Manager) AddFeed(
 ) (int64, error) {
 	var feedID int64
 	errCh := make(chan error)
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, ctx context.Context) {
 		s := m.findSourceByID(sourceID)
 		if s == nil {
 			errCh <- NoSuchEntryError("no such source")
@@ -916,7 +952,7 @@ func (m *Manager) AddFeed(
 			`VALUES ($1, $2, $3, $4, $5::feed_logs_level) ` +
 			`RETURNING id`
 		if err := m.db.Run(
-			context.Background(),
+			ctx,
 			func(ctx context.Context, conn *pgxpool.Conn) error {
 				return conn.QueryRow(ctx, sql,
 					label,
@@ -994,7 +1030,7 @@ func (u *updater[T]) applyChanges() bool {
 	return len(u.changes) > 0
 }
 
-func (u *updater[T]) updateDB(table string, id int64) error {
+func (u *updater[T]) updateDB(ctx context.Context, table string, id int64) error {
 	if len(u.fields) == 0 {
 		return nil
 	}
@@ -1009,7 +1045,7 @@ func (u *updater[T]) updateDB(table string, id int64) error {
 		placeholders(len(u.values)),
 		id, table)
 	return u.manager.db.Run(
-		context.Background(),
+		ctx,
 		func(ctx context.Context, conn *pgxpool.Conn) error {
 			_, err := conn.Exec(ctx, sql, u.values...)
 			return err
@@ -1256,7 +1292,7 @@ func (m *Manager) UpdateSource(
 		err error
 	}
 	resCh := make(chan result)
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, ctx context.Context) {
 		s := m.findSourceByID(sourceID)
 		if s == nil {
 			resCh <- result{err: NoSuchEntryError("no such source")}
@@ -1267,7 +1303,7 @@ func (m *Manager) UpdateSource(
 			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
 			return
 		}
-		if err := su.updateDB("sources", s.id); err != nil {
+		if err := su.updateDB(ctx, "sources", s.id); err != nil {
 			resCh <- result{err: fmt.Errorf("updating database failed: %w", err)}
 			return
 		}
@@ -1284,7 +1320,7 @@ func (m *Manager) UpdateSource(
 					s.status = []string{deactivatedDueToClientCertIssue}
 					x := SourceUpdater{updater: updater[*source]{updatable: s, manager: m}}
 					x.addChange(nil, "active", false)
-					if err := x.updateDB("sources", s.id); err != nil {
+					if err := x.updateDB(ctx, "sources", s.id); err != nil {
 						slog.Error("deactivating source failed", "err", err)
 					}
 					resCh <- result{v: SourceDeactivated}
@@ -1339,7 +1375,7 @@ func (m *Manager) UpdateFeed(
 		err     error
 	}
 	resCh := make(chan result)
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, ctx context.Context) {
 		f := m.findFeedByID(feedID)
 		if f == nil {
 			resCh <- result{err: NoSuchEntryError("no such feed")}
@@ -1350,7 +1386,7 @@ func (m *Manager) UpdateFeed(
 			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
 			return
 		}
-		if err := fu.updateDB("feeds", f.id); err != nil {
+		if err := fu.updateDB(ctx, "feeds", f.id); err != nil {
 			resCh <- result{err: fmt.Errorf("updating database failed: %w", err)}
 			return
 		}
@@ -1365,7 +1401,7 @@ func (m *Manager) UpdateFeed(
 // If the all flag is not set only the active sources are evaluated.
 func (m *Manager) AttentionSources(all bool, fn func(id int64, name string)) {
 	done := make(chan struct{})
-	m.fns <- func(m *Manager) {
+	m.fns <- func(m *Manager, _ context.Context) {
 		defer close(done)
 		for _, s := range m.sources {
 			if (all || s.active) && s.checksumAck.Before(s.checksumUpdated) {
