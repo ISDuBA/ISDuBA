@@ -7,9 +7,9 @@
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
 export const productTreeCutoffs = {
-  level1: 20,
-  level2Lower: 20,
-  level2Upper: 50,
+  level1: 80,
+  level2Lower: 80,
+  level2Upper: 200,
   relations: 50
 };
 
