@@ -388,27 +388,42 @@ out:
 	wg.Wait()
 }
 
+type prefetchedPMD struct {
+	id       int64
+	url      string
+	checksum []byte
+}
+
 func (m *Manager) prefetchPMDs() {
 	// The loading of the PMD is time consuming.
-	// Prefill the cache before checking the sources.
+	// so the fetching id off-loaded from the main loop.
+	urls := make([]prefetchedPMD, len(m.sources))
+	for i, s := range m.sources {
+		urls[i] = prefetchedPMD{id: s.id, url: s.url}
+	}
 	go func() {
-		var sources []*source
-		for _, s := range m.sources {
+		prefetched := make([]prefetchedPMD, 0, len(urls))
+		for i := range urls {
+			s := &urls[i]
 			cpmd := m.PMD(s.url)
 			if !cpmd.Valid() {
 				slog.Warn("invalid PMD", "url", s.url, "id", s.id)
 				continue
 			}
-			if _, err := cpmd.Model(); err != nil {
+			pmd, err := cpmd.Model()
+			if err != nil {
 				slog.Warn("invalid PMD model", "url", s.url, "id", s.id, "err", err)
 				continue
 			}
-			sources = append(sources, s)
+			prefetched = append(prefetched, prefetchedPMD{
+				id:       s.id,
+				checksum: checksumPMD(pmd),
+			})
 		}
 		// Run the real checking in the manager.
 		m.fns <- func(m *Manager, ctx context.Context) {
 			// Only check the sources where prefetching worked.
-			m.checkSources(ctx, sources)
+			m.checkSources(ctx, prefetched)
 			// re-enable checking
 			m.sourceChecker = (*Manager).prefetchPMDs
 		}
@@ -417,7 +432,7 @@ func (m *Manager) prefetchPMDs() {
 	m.sourceChecker = nil
 }
 
-func (m *Manager) checkSources(ctx context.Context, sources []*source) {
+func (m *Manager) checkSources(ctx context.Context, prefetched []prefetchedPMD) {
 	now := time.Now().UTC()
 	updates := pgx.Batch{}
 
@@ -427,25 +442,17 @@ func (m *Manager) checkSources(ctx context.Context, sources []*source) {
 
 	var apply []func()
 
-	for _, s := range sources {
-		// There is still a little risk that the prefetched PMD
-		// went out of cache.
-		cpmd := m.PMD(s.url)
-		if !cpmd.Valid() {
-			slog.Warn("invalid PMD", "url", s.url, "id", s.id)
+	for i := range prefetched {
+		pre := &prefetched[i]
+		s := m.findSourceByID(pre.id)
+		if s == nil {
+			// Should not happen!
 			continue
 		}
-		model, err := cpmd.Model()
-		if err != nil {
-			slog.Warn("invalid PMD model", "url", s.url, "id", s.id, "err", err)
-			continue
-		}
-		checksum := checksumPMD(model)
-		if !bytes.Equal(checksum, s.checksum) {
-			updates.Queue(sql, checksum, now, s.id)
-			s := s // Not really need since Go 1.22
+		if !bytes.Equal(pre.checksum, s.checksum) {
+			updates.Queue(sql, pre.checksum, now, pre.id)
 			apply = append(apply, func() {
-				s.checksum = checksum
+				s.checksum = pre.checksum
 				s.checksumUpdated = now
 			})
 		}
