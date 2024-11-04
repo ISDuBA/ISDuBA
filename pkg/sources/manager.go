@@ -593,6 +593,9 @@ func (m *Manager) Kill() {
 }
 
 func (m *Manager) removeSource(sourceID int64) error {
+	if sourceID == 0 {
+		return InvalidArgumentError("cannot remove this source")
+	}
 	if m.findSourceByID(sourceID) == nil {
 		return NoSuchEntryError("no such source")
 	}
@@ -630,6 +633,9 @@ func (m *Manager) removeFeed(feedID int64) error {
 	f := m.findFeedByID(feedID)
 	if f == nil {
 		return NoSuchEntryError("no such feed")
+	}
+	if f.source.id == 0 {
+		return InvalidArgumentError("cannot delete this feed")
 	}
 	f.invalid.Store(true)
 	const sql = `DELETE FROM feeds WHERE id = $1`
@@ -757,6 +763,9 @@ func (m *Manager) AddFeed(
 		if s == nil {
 			errCh <- NoSuchEntryError("no such source")
 			return
+		}
+		if s.id == 0 {
+			errCh <- InvalidArgumentError("cannot update this source")
 		}
 		if slices.ContainsFunc(s.feeds, func(f *feed) bool { return f.label == label }) {
 			errCh <- InvalidArgumentError("label already exists")
@@ -889,7 +898,7 @@ func placeholders(n int) string {
 }
 
 // SourceUpdater offers a protocol to update a source. Call the UpdateX
-// (with X in Name, Rate, ...) methods to update specfic fields.
+// (with X in Name, Rate, ...) methods to update specific fields.
 type SourceUpdater struct {
 	updater[*source]
 	clientCertUpdated bool
@@ -1094,6 +1103,9 @@ func (m *Manager) UpdateSource(
 	sourceID int64,
 	updates func(*SourceUpdater) error,
 ) (SourceUpdateResult, error) {
+	if sourceID == 0 {
+		return SourceUnchanged, InvalidArgumentError("cannot update this source")
+	}
 	type result struct {
 		v   SourceUpdateResult
 		err error
@@ -1144,7 +1156,7 @@ func (m *Manager) UpdateSource(
 }
 
 // FeedUpdater offers a protocol to update a source. Call the UpdateX
-// (with X in LogLevel, Label) methods to update specfic fields.
+// (with X in LogLevel, Label) methods to update specific fields.
 type FeedUpdater struct {
 	updater[*feed]
 }
@@ -1187,6 +1199,9 @@ func (m *Manager) UpdateFeed(
 		if f == nil {
 			resCh <- result{err: NoSuchEntryError("no such feed")}
 			return
+		}
+		if f.source.id == 0 {
+			resCh <- result{err: InvalidArgumentError("cannot update this feed")}
 		}
 		fu := FeedUpdater{updater: updater[*feed]{updatable: f, manager: m}}
 		if err := updates(&fu); err != nil {

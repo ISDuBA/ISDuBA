@@ -509,3 +509,10 @@ BEGIN
     INSERT INTO stored_queries (definer, global, name, description, query, columns, orders, dashboard, role, kind) VALUES(default_definer, true, 'Importer-advisories-global-default', 'New', '$event import_document events = me mentioned me involved or and now 168h duration - $time <= $actor me !=', default_event_columns, '{"-time"}', true, 'importer', 'events');
     INSERT INTO stored_queries (definer, global, name, description, query, columns, orders, dashboard, role, kind) VALUES(default_definer, true, 'Importer-recent-global-default', 'Recent changes', '$event import_document events != me mentioned me involved or and now 168h duration - $time <= $actor me !=', default_event_columns, '{"-time"}', true, 'importer', 'events');
 END $$;
+
+--
+-- Placeholder for manual imports
+--
+INSERT INTO sources (id, name, url) VALUES (0, 'manual_imports', 'manual.invalid');
+INSERT INTO feeds (label, sources_id, url) VALUES ('single', 0, 'https://manual.invalid');
+INSERT INTO feeds (label, sources_id, url) VALUES ('bulk', 0, 'https://manual.invalid');

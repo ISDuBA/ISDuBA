@@ -25,7 +25,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers, ` +
 			`strict_mode, secure, signature_check, age, ignore_patterns, ` +
 			`client_cert_public, client_cert_private, client_cert_passphrase ` +
-			`FROM sources`
+			`FROM sources ORDER BY id`
 		feedsSQL = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
