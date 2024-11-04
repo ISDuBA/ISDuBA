@@ -14,7 +14,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/csaf-poc/csaf_distribution/v3/csaf"
+	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	sloggin "github.com/samber/slog-gin"

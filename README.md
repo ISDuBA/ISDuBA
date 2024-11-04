@@ -25,7 +25,7 @@ ISDuBA uses:
  * [svelte-flowbite](https://flowbite-svelte.com/)
      for the single page web application frontend
  * a downloading kernel that is close to
- [csaf_distribution](https://github.com/csaf-poc/csaf_distribution)
+ [csaf_distribution](https://github.com/gocsaf/csaf)
  * an extended version of
    [csaf_webview](https://github.com/csaf-poc/csaf_webview)
 
