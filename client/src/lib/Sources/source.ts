@@ -82,6 +82,41 @@ type Aggregator = {
   url: string;
 };
 
+type Attention = {
+  id: number;
+  name: string;
+};
+
+const fetchAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {
+  const resp = await request(`/api/sources/attention`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load attention list`, resp)
+  };
+};
+
+const resetAttention = async (source: Source): Promise<Result<Attention[], ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("attention", "false");
+  const resp = await request(`/api/sources/${source.id}`, "PUT", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not update source attention`, resp)
+  };
+};
+
 const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>> => {
   let method = "POST";
   let path = `/api/sources`;
@@ -138,6 +173,7 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
       formData.append("ignore_patterns", pattern);
     }
   }
+  formData.append("attention", "false");
   const resp = await request(path, method, formData);
   if (resp.ok) {
     if (resp.content.id) {
@@ -536,6 +572,7 @@ const parseHeaders = (source: Source): string[][] => {
 export {
   type Source,
   type Aggregator,
+  type Attention,
   LogLevel,
   type Feed,
   saveSource,
@@ -556,5 +593,7 @@ export {
   fetchSources,
   fetchAggregators,
   fetchAggregatorData,
-  saveFeeds
+  saveFeeds,
+  fetchAttentionList,
+  resetAttention
 };
