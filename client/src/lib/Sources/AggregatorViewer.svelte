@@ -258,8 +258,7 @@
           {#each entry.availableFeeds as feed}
             <tr class="bg-slate-200">
               <TableBodyCell {tdClass}></TableBodyCell>
-              <TableBodyCell {tdClass}>{feed}</TableBodyCell>
-              <TableBodyCell {tdClass}></TableBodyCell>
+              <TableBodyCell colspan={2} {tdClass}>{feed}</TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
             </tr>
           {/each}
