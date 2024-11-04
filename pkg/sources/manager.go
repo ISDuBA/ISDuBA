@@ -395,8 +395,8 @@ type prefetchedPMD struct {
 }
 
 func (m *Manager) prefetchPMDs() {
-	// The loading of the PMD is time consuming.
-	// so the fetching id off-loaded from the main loop.
+	// The loading of the PMD is time consuming
+	// so the fetching is off-loaded from the main loop.
 	urls := make([]prefetchedPMD, len(m.sources))
 	for i, s := range m.sources {
 		urls[i] = prefetchedPMD{id: s.id, url: s.url}
@@ -523,19 +523,35 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 
 // Subscriptions return a list of subscription infos for a given list of source URLs.
 func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
+	// Resolving external PMDs is too time consuming for the
+	// manager run loop. So do it before.
+	var (
+		sources   = make(map[string][]int64, len(m.sources))
+		available = make([][]string, len(urls))
+	)
+	for _, s := range m.sources {
+		if cpmd := m.PMD(s.url); cpmd.Valid() {
+			url := cpmd.Loaded.URL
+			sources[url] = append(sources[url], s.id)
+		}
+	}
+	for i, url := range urls {
+		if pmd, err := m.PMD(url).Model(); err == nil {
+			available[i] = availableFeeds(pmd)
+		}
+	}
 	result := make(chan []SourceSubscriptions)
 	m.fns <- func(m *Manager, _ context.Context) {
 		// We can subscribe a source more than once.
-		sources := make(map[string][]*source, len(m.sources))
-		for _, s := range m.sources {
-			if pmd := s.pmdURL(m); pmd != "" {
-				sources[pmd] = append(sources[pmd], s)
-			}
-		}
 		subs := make([]SourceSubscriptions, 0, len(urls))
-		for _, url := range urls {
+		for i, url := range urls {
 			var subscriptions []SourceSubscription
-			for _, s := range sources[url] {
+			for _, sourceID := range sources[url] {
+				s := m.findSourceByID(sourceID)
+				if s == nil {
+					// Should not happen.
+					continue
+				}
 				var subscripted []FeedSubscription
 				for _, f := range s.feeds {
 					if !f.invalid.Load() {
@@ -551,13 +567,9 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 					Subscripted: subscripted,
 				})
 			}
-			var available []string
-			if pmd, err := m.PMD(url).Model(); err == nil {
-				available = availableFeeds(pmd)
-			}
 			subs = append(subs, SourceSubscriptions{
 				URL:           url,
-				Available:     available,
+				Available:     available[i],
 				Subscriptions: subscriptions,
 			})
 		}
