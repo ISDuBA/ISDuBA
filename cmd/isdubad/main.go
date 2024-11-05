@@ -61,7 +61,7 @@ func run(cfg *config.Config) error {
 	forwardManager := forwarder.NewForwardManager(&cfg.Forwarder, db)
 	go forwardManager.Run(ctx)
 
-	agg := aggregators.NewManager(&cfg.Aggregators)
+	agg := aggregators.NewManager(&cfg.Aggregators, db)
 	go agg.Run(ctx)
 
 	// Is the remote validator configured?

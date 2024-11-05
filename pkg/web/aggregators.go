@@ -224,7 +224,6 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 	const sql = `SELECT id, name FROM aggregators ` +
 		`WHERE checksum_ack < checksum_updated ` +
 		`ORDER BY name`
-
 	type attention struct {
 		ID   int64  `json:"id"`
 		Name string `json:"name"`
