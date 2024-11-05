@@ -133,9 +133,10 @@ func (m *Manager) refresh(ctx context.Context) {
 	}
 	close(toFetch)
 	wg.Wait()
-
-	var batch pgx.Batch
-	now := time.Now()
+	var (
+		batch pgx.Batch
+		now   = time.Now()
+	)
 	for i := range aggregators {
 		agg := &aggregators[i]
 		if !bytes.Equal(agg.checksum, agg.newChecksum) {
