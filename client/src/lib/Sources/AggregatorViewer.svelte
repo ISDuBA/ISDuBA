@@ -28,6 +28,8 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
 
+  export let params: any = null;
+
   type AggregatorInfo = {
     name: string;
     url: string;
@@ -177,6 +179,13 @@
   };
   onMount(async () => {
     await getAggregators();
+    if (params) {
+      let id = Number(params.id);
+      let aggregator = aggregators.find((i) => i.id === id);
+      if (aggregator) {
+        await toggleAggregatorView(aggregator);
+      }
+    }
   });
 </script>
 
