@@ -359,6 +359,7 @@ func Load(file string) (*Config, error) {
 			MaxRatePerSource:  defaultSourcesMaxRatePerSlot,
 			OpenPGPCaching:    defaultSourcesOpenPGPCaching,
 			FeedRefresh:       defaultSourcesFeedRefresh,
+			Timeout:           defaultSourcesTimeout,
 			FeedLogLevel:      defaultSourcesFeedLogLevel,
 			FeedImporter:      defaultSourcesFeedImporter,
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
