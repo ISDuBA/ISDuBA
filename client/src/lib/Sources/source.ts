@@ -87,7 +87,21 @@ type Attention = {
   name: string;
 };
 
-const fetchAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {
+const fetchAggregatorAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {
+  const resp = await request(`/api/aggregators/attention`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load attention list`, resp)
+  };
+};
+
+const fetchSourceAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {
   const resp = await request(`/api/sources/attention`, "GET");
   if (resp.ok) {
     return {
@@ -101,7 +115,7 @@ const fetchAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> 
   };
 };
 
-const resetAttention = async (source: Source): Promise<Result<Attention[], ErrorDetails>> => {
+const resetSourceAttention = async (source: Source): Promise<Result<Attention[], ErrorDetails>> => {
   const formData = new FormData();
   formData.append("attention", "false");
   const resp = await request(`/api/sources/${source.id}`, "PUT", formData);
@@ -594,6 +608,7 @@ export {
   fetchAggregators,
   fetchAggregatorData,
   saveFeeds,
-  fetchAttentionList,
-  resetAttention
+  fetchSourceAttentionList,
+  resetSourceAttention,
+  fetchAggregatorAttentionList
 };

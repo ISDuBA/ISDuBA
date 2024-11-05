@@ -19,7 +19,7 @@
     calculateMissingFeeds,
     parseFeeds,
     saveFeeds,
-    resetAttention
+    resetSourceAttention
   } from "$lib/Sources/source";
   import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -186,7 +186,7 @@
   };
 
   const markAsDone = async () => {
-    let result = await resetAttention(source);
+    let result = await resetSourceAttention(source);
     if (!result.ok) {
       saveSourceError = result.error;
     }

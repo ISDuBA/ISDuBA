@@ -11,7 +11,11 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
-  import { type Attention, fetchAttentionList } from "$lib/Sources/source";
+  import {
+    type Attention,
+    fetchSourceAttentionList,
+    fetchAggregatorAttentionList
+  } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails } from "$lib/Errors/error";
@@ -19,18 +23,37 @@
   import { Button, Spinner } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
 
+  interface MergedAttention extends Attention {
+    isSource: boolean;
+  }
+
   let attentionCount = 0;
-  let attentions: Attention[];
+  let attentions: MergedAttention[] = [];
   let loadAttentionError: ErrorDetails | null;
   let isLoading = false;
 
   const loadAttentionList = async () => {
-    let result = await fetchAttentionList();
-    if (result.ok) {
-      attentions = result.value;
+    let sourceResult = await fetchSourceAttentionList();
+    if (sourceResult.ok) {
+      attentions.push(
+        ...sourceResult.value.map((i) => {
+          return { ...i, isSource: true };
+        })
+      );
     } else {
-      loadAttentionError = result.error;
+      loadAttentionError = sourceResult.error;
     }
+    let aggregatorResult = await fetchAggregatorAttentionList();
+    if (aggregatorResult.ok) {
+      attentions.push(
+        ...aggregatorResult.value.map((i) => {
+          return { ...i, isSource: false };
+        })
+      );
+    } else {
+      loadAttentionError = aggregatorResult.error;
+    }
+    attentionCount = attentions.length;
   };
 
   onMount(async () => {
@@ -58,7 +81,9 @@
                 if (attention.id) push(`/sources/${attention.id}`);
               }}
             >
-              <div slot="top-left">Source change</div>
+              <div slot="top-left">
+                {attention.isSource ? "Source change" : "Aggregator change"}
+              </div>
               <div>{attention.name}</div>
             </Activity>
           {/each}
