@@ -78,7 +78,13 @@
           {#each attentions as attention}
             <Activity
               on:click={() => {
-                if (attention.id) push(`/sources/${attention.id}`);
+                if (attention.id) {
+                  if (attention.isSource) {
+                    push(`/sources/${attention.id}`);
+                  } else {
+                    push("/sources/attention");
+                  }
+                }
               }}
             >
               <div slot="top-left">

@@ -226,13 +226,13 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/sources/:id": wrap({
-      component: SourceEditor,
+    "/sources/aggregator": wrap({
+      component: AggregatorViewer,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/aggregator": wrap({
-      component: AggregatorViewer,
+    "/sources/:id": wrap({
+      component: SourceEditor,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
