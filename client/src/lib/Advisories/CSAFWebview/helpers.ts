@@ -6,11 +6,4 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
-export const productTreeCutoffs = {
-  level1: 80,
-  level2Lower: 80,
-  level2Upper: 200,
-  relations: 50
-};
-
-export const cveCutoff = 50;
+export const innerLinkStyle = "hover:underline text-primary-700 dark:text-primary-400";
