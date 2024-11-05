@@ -377,7 +377,7 @@
 </Modal>
 
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
-  <div class="flex flex-none flex-col">
+  <div class="flex w-full flex-none flex-col">
     <div class="flex gap-2">
       <Label class="text-lg">
         <span class="mr-2">{params.trackingID}</span>
@@ -386,12 +386,13 @@
         {/if}
       </Label>
     </div>
-    <div class="flex flex-row flex-wrap items-end justify-start gap-y-2 md:justify-between">
-      <Label class="text-gray-600">{params.publisherNamespace}</Label>
-      <div
-        class={"right-6 mt-4 flex h-fit flex-row gap-2" +
-          (canSeeCommentArea ? " min-[1080px]:absolute" : "")}
+    <div
+      class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_400px]"
+    >
+      <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
+        >{params.publisherNamespace}</Label
       >
+      <div class="mt-4 flex h-fit flex-row gap-2 self-center">
         <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
       </div>
     </div>
