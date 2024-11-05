@@ -99,7 +99,7 @@ const (
 	defaultSourcesDefaultMessage    = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager or your administrator."
 	defaultSourcesStrictMode     = true
-	defaultSourcesInsecure       = false
+	defaultSourcesSecure         = true
 	defaultSourcesSignatureCheck = true
 	defaultSourcesAge            = 17520 * time.Hour
 	defaultSourcesAESKey         = ""
@@ -200,7 +200,7 @@ type Sources struct {
 	FeedImporter      string                `toml:"feed_importer"`
 	DefaultMessage    string                `toml:"default_message"`
 	StrictMode        bool                  `toml:"strict_mode"`
-	Insecure          bool                  `toml:"insecure"`
+	Secure            bool                  `toml:"secure"`
 	SignatureCheck    bool                  `toml:"signature_check"`
 	DefaultAge        time.Duration         `toml:"default_age"`
 	AESKey            string                `toml:"aes_key"`
@@ -365,7 +365,7 @@ func Load(file string) (*Config, error) {
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
 			DefaultMessage:    defaultSourcesDefaultMessage,
 			StrictMode:        defaultSourcesStrictMode,
-			Insecure:          defaultSourcesInsecure,
+			Secure:            defaultSourcesSecure,
 			SignatureCheck:    defaultSourcesSignatureCheck,
 			DefaultAge:        defaultSourcesAge,
 			Checking:          defaultSourcesChecking,
@@ -462,7 +462,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_FEED_IMPORTER", storeString(&cfg.Sources.FeedImporter)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
 		envStore{"ISDUBA_SOURCES_STRICT_MODE", storeBool(&cfg.Sources.StrictMode)},
-		envStore{"ISDUBA_SOURCES_INSECURE", storeBool(&cfg.Sources.Insecure)},
+		envStore{"ISDUBA_SOURCES_SECURE", storeBool(&cfg.Sources.Secure)},
 		envStore{"ISDUBA_SOURCES_SIGNATURE_CHECK", storeBool(&cfg.Sources.SignatureCheck)},
 		envStore{"ISDUBA_SOURCES_TIMEOUT", storeDuration(&cfg.Sources.Timeout)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_AGE", storeDuration(&cfg.Sources.DefaultAge)},

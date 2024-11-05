@@ -22,9 +22,6 @@
   import { page } from "$app/stores";
   import { truncate } from "$lib/utils";
 
-  let notactivated =
-    "flex items-center p-2 text-base font-normal text-gray-400 dark:text-gray-400 hover:bg-primary-100 hover:text-primary-900";
-
   $: activeUrl = "/" + $page.url.hash;
 
   let activeClass =
@@ -96,16 +93,6 @@
             <SidebarItem class="px-6 py-2.5" label="Statistics" href="/#/statistics">
               <svelte:fragment slot="icon">
                 <i class="bx bx-bar-chart-square"></i>
-              </svelte:fragment>
-            </SidebarItem>
-            <SidebarItem
-              class="px-6 py-2.5"
-              label="Configuration"
-              href="javascript: void(0)"
-              nonActiveClass={notactivated}
-            >
-              <svelte:fragment slot="icon">
-                <i class="bx bx-cog"></i>
               </svelte:fragment>
             </SidebarItem>
             {#if !$appStore.app.sessionExpired}

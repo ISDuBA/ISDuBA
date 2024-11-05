@@ -117,7 +117,7 @@
   const loadSourceDefaults = async () => {
     const resp = await fetchSourceDefaultConfig();
     if (resp.ok) {
-      source.insecure = resp.value.insecure;
+      source.secure = resp.value.secure;
       source.strict_mode = resp.value.strict_mode;
       source.signature_check = resp.value.signature_check;
       source.age = resp.value.age;

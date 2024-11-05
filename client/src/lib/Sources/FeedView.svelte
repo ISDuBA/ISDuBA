@@ -18,6 +18,7 @@
   import type { ErrorDetails } from "$lib/Errors/error";
   import CIconButton from "$lib/Components/CIconButton.svelte";
 
+  export let placeholderFeed: boolean = false;
   export let feeds: Feed[] = [];
   export let edit: boolean = false;
 
@@ -51,6 +52,21 @@
     { label: "Logs", attribute: "logs" }
   ];
 
+  let headerPlaceholder = headersEdit.filter(
+    (i) => i.attribute === "label" || i.attribute === "logs"
+  );
+
+  let tableHeaders = headers;
+  $: if (edit !== undefined || placeholderFeed !== undefined) {
+    if (placeholderFeed) {
+      tableHeaders = headerPlaceholder;
+    } else if (edit) {
+      tableHeaders = headersEdit;
+    } else {
+      tableHeaders = headers;
+    }
+  }
+
   let logLevels: { value: LogLevel; name: string }[] = [];
 
   let loadConfigError: ErrorDetails | null;
@@ -66,63 +82,72 @@
 </script>
 
 {#if logLevels}
-  <CustomTable title="Feeds" headers={edit ? headersEdit : headers}>
+  <CustomTable title="Feeds" headers={tableHeaders}>
     {#each feeds as feed, index (index)}
       <tr>
-        <TableBodyCell {tdClass}>
-          {#if feed.enable}
-            <CIconButton
-              on:click={async () => {
-                feed.enable = false;
-                await updateFeed(feed);
-                feed.id = undefined;
-              }}
-              icon="trash"
-            ></CIconButton>
-          {:else}
-            <CIconButton
-              on:click={async () => {
-                feed.enable = true;
-                await updateFeed(feed);
-              }}
-              icon="plus"
-            ></CIconButton>
-          {/if}
-        </TableBodyCell>
-        <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-          {#if edit && feed.enable}
-            <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}
-              >{feed.url}</a
+        {#if placeholderFeed}
+          <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
+          <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+            <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
+              <i class="bx bx-archive"> </i></a
             >
-          {:else}
-            {feed.url}
-          {/if}
-        </TableBodyCell>
-        <TableBodyCell {tdClass}
-          ><Select
-            items={logLevels}
-            bind:value={feed.log_level}
-            on:change={async () => await updateFeed(feed)}
-          /></TableBodyCell
-        >
-        {#if edit && !feed.enable}
-          <TableBodyCell {tdClass}>N/A</TableBodyCell>
+          </TableBodyCell>
         {:else}
-          <TableBodyCell {tdClass}
-            ><Input bind:value={feed.label} on:input={async () => await updateFeed(feed)}
-            ></Input></TableBodyCell
-          >
-        {/if}
-        {#if edit}
-          <TableBodyCell {tdClass}
-            >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
-          >
-          {#if feed.enable}
-            <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-              <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
-                <i class="bx bx-archive text-red-600"> </i></a
+          <TableBodyCell {tdClass}>
+            {#if feed.enable && !placeholderFeed}
+              <CIconButton
+                on:click={async () => {
+                  feed.enable = false;
+                  await updateFeed(feed);
+                  feed.id = undefined;
+                }}
+                icon="trash"
+              ></CIconButton>
+            {:else}
+              <CIconButton
+                on:click={async () => {
+                  feed.enable = true;
+                  await updateFeed(feed);
+                }}
+                icon="plus"
+              ></CIconButton>
+            {/if}
+          </TableBodyCell>
+          <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+            {#if edit && feed.enable}
+              <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}
+                >{feed.url}</a
               >
-            </TableBodyCell>
+            {:else}
+              {feed.url}
+            {/if}
+          </TableBodyCell>
+          <TableBodyCell {tdClass}
+            ><Select
+              items={logLevels}
+              bind:value={feed.log_level}
+              on:change={async () => await updateFeed(feed)}
+            /></TableBodyCell
+          >
+          {#if edit && !feed.enable}
+            <TableBodyCell {tdClass}>N/A</TableBodyCell>
+          {:else}
+            <TableBodyCell {tdClass}
+              ><Input bind:value={feed.label} on:input={async () => await updateFeed(feed)}
+              ></Input></TableBodyCell
+            >
+          {/if}
+          {#if edit}
+            <TableBodyCell {tdClass}
+              >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
+            >
+            {#if feed.enable}
+              <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+                <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
+                  <i class="bx bx-archive"> </i></a
+                >
+              </TableBodyCell>
+            {/if}
           {/if}
         {/if}
       </tr>

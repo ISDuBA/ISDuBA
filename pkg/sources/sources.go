@@ -84,7 +84,7 @@ type source struct {
 	slots          *int
 	headers        []string
 	strictMode     *bool
-	insecure       *bool
+	secure         *bool
 	signatureCheck *bool
 	age            *time.Duration
 	ignorePatterns []*regexp.Regexp
@@ -408,10 +408,10 @@ func (s *source) httpClient(m *Manager) *http.Client {
 	client := http.Client{}
 	var tlsConfig tls.Config
 
-	if s.insecure != nil {
-		tlsConfig.InsecureSkipVerify = *s.insecure
+	if s.secure != nil {
+		tlsConfig.InsecureSkipVerify = !*s.secure
 	} else {
-		tlsConfig.InsecureSkipVerify = m.cfg.Sources.Insecure
+		tlsConfig.InsecureSkipVerify = !m.cfg.Sources.Secure
 	}
 
 	if len(s.tlsCertificates) > 0 {
@@ -456,9 +456,7 @@ func (s *source) doRequest(client *http.Client, m *Manager, req *http.Request) (
 	// The manager owns the configuration.
 	// So we let the manager do the adjustment of the request.
 
-	var (
-		limiter *rate.Limiter
-	)
+	var limiter *rate.Limiter
 
 	m.inManager(func(m *Manager, _ context.Context) {
 		s.applyHeaders(req)
@@ -512,8 +510,8 @@ func (s *source) useStrictMode(m *Manager) bool {
 	return m.cfg.Sources.StrictMode
 }
 
-// storeLastChanges is intented to be called in the transaction storing the
-// imported document after is was successful. It helps to remember the
+// storeLastChanges is intended to be called in the transaction storing the
+// imported document after was successful. It helps to remember the
 // last changes per location so we don't need to download them all again and again.
 func (f *feed) storeLastChanges(l *location) func(context.Context, pgx.Tx, int64, bool) error {
 	return func(ctx context.Context, tx pgx.Tx, _ int64, _ bool) error {

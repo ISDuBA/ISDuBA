@@ -52,7 +52,7 @@
 
 # [sources]
 # strict_mode = true
-# insecure = false
+# secure = true
 # signature_check = true
 # download_slots = 100
 # max_slots_per_source = 2

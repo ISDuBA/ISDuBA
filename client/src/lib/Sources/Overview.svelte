@@ -124,13 +124,15 @@
             <TableBodyCell {tdClass}></TableBodyCell>
           {/if}
           <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
-          <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
-          <TableBodyCell {tdClass}
-            ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
-          >
-          <TableBodyCell {tdClass}
-            >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
-          >
+          {#if source.id !== 0}
+            <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
+            <TableBodyCell {tdClass}
+              ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
+            >
+          {/if}
           <TableBodyCell>
             {#if source.id}
               {@const yesterday = Date.now() - DAY_MS}

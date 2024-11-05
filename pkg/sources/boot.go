@@ -23,10 +23,10 @@ import (
 func (m *Manager) Boot(ctx context.Context) error {
 	const (
 		sourcesSQL = `SELECT id, name, url, rate, slots, active, headers, ` +
-			`strict_mode, insecure, signature_check, age, ignore_patterns, ` +
+			`strict_mode, secure, signature_check, age, ignore_patterns, ` +
 			`client_cert_public, client_cert_private, client_cert_passphrase, ` +
 			`checksum, checksum_ack, checksum_updated ` +
-			`FROM sources`
+			`FROM sources ORDER BY id`
 		feedsSQL = `SELECT id, label, sources_id, url, rolie, log_lvl::text FROM feeds`
 	)
 	if err := m.db.Run(
@@ -51,7 +51,7 @@ func (m *Manager) Boot(ctx context.Context) error {
 				)
 				if err := row.Scan(
 					&s.id, &s.name, &s.url, &s.rate, &s.slots, &s.active, &s.headers,
-					&s.strictMode, &s.insecure, &s.signatureCheck, &s.age, &patterns,
+					&s.strictMode, &s.secure, &s.signatureCheck, &s.age, &patterns,
 					&s.clientCertPublic, &clientCertPrivate, &clientCertPassphrase,
 					&s.checksum, &s.checksumAck, &s.checksumUpdated,
 				); err != nil {
