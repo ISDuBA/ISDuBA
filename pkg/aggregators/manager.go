@@ -109,19 +109,19 @@ func (m *Manager) refresh(ctx context.Context) {
 		return
 	}
 	var (
-		toFetch    = make(chan int)
+		toFetch    = make(chan *aggregator)
 		numWorkers = min(maxPMDWorkers, len(aggregators))
 		wg         sync.WaitGroup
 	)
 	fetch := func() {
 		wg.Done()
-		for index := range toFetch {
-			cagg, err := m.Cache.GetAggregator(aggregators[index].url, false)
+		for agg := range toFetch {
+			cagg, err := m.Cache.GetAggregator(agg.url, false)
 			if err != nil {
-				slog.Warn("fetching aggregator failed", "err", err)
+				slog.Warn("fetching aggregator failed", "url", agg.url, "err", err)
 				continue
 			}
-			aggregators[index].newChecksum = aggregatorChecksum(cagg)
+			agg.newChecksum = aggregatorChecksum(cagg)
 		}
 	}
 	for range numWorkers {
@@ -129,7 +129,7 @@ func (m *Manager) refresh(ctx context.Context) {
 		go fetch()
 	}
 	for index := range aggregators {
-		toFetch <- index
+		toFetch <- &aggregators[index]
 	}
 	close(toFetch)
 	wg.Wait()
