@@ -170,7 +170,7 @@
 
   <br />
   {#if appStore.isSourceManager()}
-    <Button href="/#/sources/aggregator" class="my-2" color="primary" size="xs">
+    <Button href="/#/sources/aggregators" class="my-2" color="primary" size="xs">
       <span>Aggregator List</span>
     </Button>
   {/if}

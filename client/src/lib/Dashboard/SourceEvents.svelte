@@ -54,6 +54,7 @@
       loadAttentionError = aggregatorResult.error;
     }
     attentionCount = attentions.length;
+    attentions = attentions;
   };
 
   onMount(async () => {
@@ -82,7 +83,7 @@
                   if (attention.isSource) {
                     push(`/sources/${attention.id}`);
                   } else {
-                    push("/sources/attention");
+                    push(`/sources/aggregators/${attention.id}`);
                   }
                 }
               }}
