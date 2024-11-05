@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Badge, Button, Spinner, TableBodyCell } from "flowbite-svelte";
+  import { Button, Spinner, TableBodyCell } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { push } from "svelte-spa-router";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -28,6 +28,7 @@
   let sourcesError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
+  const smallColumnClass = "w-7 max-w-7 min-w-7";
 
   let sources: Source[] = [];
   async function getMessage() {
@@ -83,7 +84,8 @@
       headers={[
         {
           label: "",
-          attribute: "attention"
+          attribute: "attention",
+          class: smallColumnClass
         },
         {
           label: "Name",
@@ -119,9 +121,11 @@
           class={appStore.isSourceManager() ? "cursor-pointer" : ""}
         >
           {#if source.attention}
-            <TableBodyCell {tdClass}><Badge>Changes detected</Badge></TableBodyCell>
+            <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
+              <i class="bx bx-info-square text-lg"></i>
+            </TableBodyCell>
           {:else}
-            <TableBodyCell {tdClass}></TableBodyCell>
+            <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}></TableBodyCell>
           {/if}
           <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
           {#if source.id !== 0}
