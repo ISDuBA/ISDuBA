@@ -80,6 +80,7 @@ type Aggregator = {
   id?: number;
   name: string;
   url: string;
+  attention?: boolean;
 };
 
 type Attention = {
@@ -98,6 +99,24 @@ const fetchAggregatorAttentionList = async (): Promise<Result<Attention[], Error
   return {
     ok: false,
     error: getErrorDetails(`Could not load attention list`, resp)
+  };
+};
+
+const resetAggregatorAttention = async (
+  aggregator: Aggregator
+): Promise<Result<Attention[], ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("attention", "false");
+  const resp = await request(`/api/aggregators/${aggregator.id}`, "PUT", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not update source attention`, resp)
   };
 };
 
@@ -610,5 +629,6 @@ export {
   saveFeeds,
   fetchSourceAttentionList,
   resetSourceAttention,
-  fetchAggregatorAttentionList
+  fetchAggregatorAttentionList,
+  resetAggregatorAttention
 };

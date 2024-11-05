@@ -14,10 +14,11 @@
     fetchAggregatorData,
     fetchAggregators,
     deleteAggregator,
-    type Aggregator
+    type Aggregator,
+    resetAggregatorAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
+  import { Badge, Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -143,6 +144,12 @@
     loadingAggregators = false;
     if (resp.ok) {
       aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value));
+      let resetResult = await resetAggregatorAttention(aggregator);
+      if (resetResult.ok) {
+        aggregator.attention = false;
+      } else {
+        aggregatorError = resetResult.error;
+      }
       aggregatorData = aggregatorData;
     } else {
       aggregatorError = resp.error;
@@ -182,7 +189,14 @@
   <CustomTable
     title="Aggregator List"
     headers={[
-      { label: "", attribute: "expand" },
+      {
+        label: "",
+        attribute: "expand"
+      },
+      {
+        label: "",
+        attribute: "attention"
+      },
       {
         label: "Name",
         attribute: "name"
@@ -211,6 +225,11 @@
             <i class="bx bx-minus"></i>
           {/if}
         </TableBodyCell>
+        {#if aggregator.attention}
+          <TableBodyCell {tdClass}><Badge>Changes detected</Badge></TableBodyCell>
+        {:else}
+          <TableBodyCell {tdClass}></TableBodyCell>
+        {/if}
         <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
         <TableBodyCell {tdClass}
@@ -237,6 +256,7 @@
             {/if}
           </TableBodyCell>
 
+          <TableBodyCell {tdClass}></TableBodyCell>
           <TableBodyCell {tdClass}
             >{entry.name}{#if entry.publisher}
               &nbsp; <i class="bx bx-book"></i>{/if}</TableBodyCell
@@ -257,6 +277,7 @@
         {#if entry.expand}
           {#each entry.availableFeeds as feed}
             <tr class="bg-slate-200">
+              <TableBodyCell {tdClass}></TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
               <TableBodyCell colspan={2} {tdClass}>{feed}</TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
