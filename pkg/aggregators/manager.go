@@ -114,7 +114,7 @@ func (m *Manager) refresh(ctx context.Context) {
 		wg         sync.WaitGroup
 	)
 	fetch := func() {
-		wg.Done()
+		defer wg.Done()
 		for agg := range toFetch {
 			cagg, err := m.Cache.GetAggregator(agg.url, false)
 			if err != nil {
