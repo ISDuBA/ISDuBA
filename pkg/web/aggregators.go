@@ -27,6 +27,7 @@ import (
 type custom struct {
 	ID            int64                         `json:"id,omitempty"`
 	Name          string                        `json:"name,omitempty"`
+	Attention     *bool                         `json:"attention,omitempty"`
 	Subscriptions []sources.SourceSubscriptions `json:"subscriptions,omitempty"`
 }
 
@@ -47,15 +48,18 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 		return
 	}
 	// search in database
-	const sql = `SELECT id, name FROM aggregators WHERE url = $1`
+	const sql = `SELECT ` +
+		`id, name, (checksum_ack < checksum_updated) AS attention ` +
+		`FROM aggregators WHERE url = $1`
 	var (
-		id   int64
-		name string
+		id        int64
+		name      string
+		attention bool
 	)
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, url).Scan(&id, &name)
+			return conn.QueryRow(rctx, sql, url).Scan(&id, &name, &attention)
 		}, 0,
 	); err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		slog.Error("fetching aggregator failed", "err", err)
@@ -68,6 +72,7 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	if name != "" {
 		custom.ID = id
 		custom.Name = name
+		custom.Attention = &attention
 	}
 	aAgg := argumentedAggregator{
 		Aggregator: ca.Raw,
@@ -78,12 +83,15 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 
 func (c *Controller) viewAggregators(ctx *gin.Context) {
 	type aggregator struct {
-		ID   int64  `json:"id"`
-		Name string `json:"name"`
-		URL  string `json:"url"`
+		ID        int64  `json:"id"`
+		Name      string `json:"name"`
+		URL       string `json:"url"`
+		Attention bool   `json:"attention"`
 	}
 	var list []aggregator
-	const sql = `SELECT id, name, url FROM aggregators ORDER by name`
+	const sql = `SELECT ` +
+		`id, name, url, (checksum_ack < checksum_updated) AS attention ` +
+		`FROM aggregators ORDER by name`
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
@@ -91,7 +99,7 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 			var err error
 			list, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (aggregator, error) {
 				var a aggregator
-				err := row.Scan(&a.ID, &a.Name, &a.URL)
+				err := row.Scan(&a.ID, &a.Name, &a.URL, &a.Attention)
 				return a, err
 			})
 			return err
@@ -114,14 +122,17 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 		return
 	}
 	var (
-		name string
-		url  string
+		name      string
+		url       string
+		attention bool
 	)
-	const sql = `SELECT name, url from aggregators WHERE id = $1`
+	const sql = `SELECT ` +
+		`name, url, (checksum_ack < checksum_updated) AS attention ` +
+		`FROM aggregators WHERE id = $1`
 	switch err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, id).Scan(&name, &url)
+			return conn.QueryRow(rctx, sql, id).Scan(&name, &url, &attention)
 		}, 0,
 	); {
 	case errors.Is(err, pgx.ErrNoRows):
@@ -142,6 +153,7 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 		Custom: custom{
 			ID:            id,
 			Name:          name,
+			Attention:     &attention,
 			Subscriptions: c.sm.Subscriptions(ca.SourceURLs()),
 		},
 	}
