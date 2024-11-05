@@ -248,3 +248,51 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, list)
 }
+
+func (c *Controller) updateAggregator(ctx *gin.Context) {
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
+		return
+	}
+	attention, ok := ctx.GetPostForm("attention")
+	if !ok {
+		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
+		return
+	}
+	att, ok := parse(ctx, strconv.ParseBool, attention)
+	if !ok {
+		return
+	}
+	const (
+		prefix   = `UPDATE aggregators SET `
+		suffix   = ` WHERE id = $1`
+		sqlAtt   = prefix + `checksum_ack = checksum_updated - '1s':interval` + suffix
+		sqlNoAtt = prefix + `checksum_ack = checksum_updated` + suffix
+	)
+	var updateSQL, msg string
+	if att {
+		updateSQL = sqlAtt
+	} else {
+		updateSQL = sqlNoAtt
+	}
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			tags, err := conn.Exec(rctx, updateSQL, id)
+			if err != nil {
+				return err
+			}
+			if tags.RowsAffected() > 0 {
+				msg = "changed"
+			} else {
+				msg = "unchanged"
+			}
+			return nil
+		}, 0,
+	); err != nil {
+		slog.Error("updating aggregator failed", "error", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"msg": msg})
+}
