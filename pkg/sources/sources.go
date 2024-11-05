@@ -512,16 +512,6 @@ func (s *source) useStrictMode(m *Manager) bool {
 	return m.cfg.Sources.StrictMode
 }
 
-// pmdURL lazy loads the pmd URL.
-func (s *source) pmdURL(m *Manager) string {
-	cpmd := m.PMD(s.url)
-	if !cpmd.Valid() {
-		slog.Warn("PMD loading failed", "url", s.url)
-		return ""
-	}
-	return cpmd.Loaded.URL
-}
-
 // storeLastChanges is intented to be called in the transaction storing the
 // imported document after is was successful. It helps to remember the
 // last changes per location so we don't need to download them all again and again.
