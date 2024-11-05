@@ -219,3 +219,33 @@ func (c *Controller) deleteAggregator(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 	}
 }
+
+func (c *Controller) attentionAggregators(ctx *gin.Context) {
+	const sql = `SELECT id, name FROM aggregators ` +
+		`WHERE checksum_ack < checksum_updated ` +
+		`ORDER BY name`
+
+	type attention struct {
+		ID   int64  `json:"id"`
+		Name string `json:"name"`
+	}
+	var list []attention
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			rows, _ := conn.Query(rctx, sql)
+			var err error
+			list, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (attention, error) {
+				var att attention
+				err := row.Scan(&att.ID, &att.Name)
+				return att, err
+			})
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("fetching aggregator failed", "error", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, list)
+}
