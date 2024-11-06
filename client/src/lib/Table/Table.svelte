@@ -681,7 +681,7 @@
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
-                      <div class="m-2 table w-full text-wrap">
+                      <div class="m-2 table w-[min(250px)] text-wrap">
                         <span title={item[column]}>{item[column]}</span>
                       </div></TableBodyCell
                     >
@@ -766,6 +766,17 @@
                         <span class:text-red-500={Number(item[column]) > 5.0}
                           >{item[column] == null ? "" : item[column]}</span
                         >
+                      </div></TableBodyCell
+                    >
+                  {:else if column === "tracking_id"}
+                    <TableBodyCell {tdClass}
+                      ><a
+                        class="absolute bottom-0 left-0 right-0 top-0"
+                        href={getAdvisoryAnchorLink(item)}
+                      >
+                      </a>
+                      <div class="m-2 table w-40 text-wrap">
+                        {item[column] ?? ""}
                       </div></TableBodyCell
                     >
                   {:else}
