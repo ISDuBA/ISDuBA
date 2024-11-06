@@ -18,7 +18,7 @@
     resetAggregatorAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Badge, Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
+  import { Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -27,8 +27,6 @@
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
-
-  export let params: any = null;
 
   type AggregatorInfo = {
     name: string;
@@ -74,6 +72,7 @@
   };
 
   let formClass = "max-w-[800pt]";
+  const smallColumnClass = "w-7 max-w-7 min-w-7";
 
   const checkUrl = () => {
     if (aggregator.url === "") {
@@ -179,13 +178,6 @@
   };
   onMount(async () => {
     await getAggregators();
-    if (params) {
-      let id = Number(params.id);
-      let aggregator = aggregators.find((i) => i.id === id);
-      if (aggregator) {
-        await toggleAggregatorView(aggregator);
-      }
-    }
   });
 </script>
 
@@ -196,15 +188,16 @@
 <div>
   <SectionHeader title="Aggregator"></SectionHeader>
   <CustomTable
-    title="Aggregator List"
     headers={[
       {
         label: "",
-        attribute: "expand"
+        attribute: "expand",
+        class: smallColumnClass
       },
       {
         label: "",
-        attribute: "attention"
+        attribute: "attention",
+        class: smallColumnClass
       },
       {
         label: "Name",
@@ -214,7 +207,7 @@
         label: "URL",
         attribute: "url"
       },
-      { label: "", attribute: "delete" }
+      { label: "", attribute: "delete", class: smallColumnClass }
     ]}
   >
     {#each aggregators as aggregator, index (index)}
@@ -227,7 +220,7 @@
         }}
         class={appStore.isSourceManager() ? "cursor-pointer" : ""}
       >
-        <TableBodyCell {tdClass}>
+        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
           {#if list.length === 0}
             <i class="bx bx-plus"></i>
           {:else}
@@ -235,13 +228,15 @@
           {/if}
         </TableBodyCell>
         {#if aggregator.attention}
-          <TableBodyCell {tdClass}><Badge>Changes detected</Badge></TableBodyCell>
+          <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
+            <i class="bx bx-info-square text-lg"></i>
+          </TableBodyCell>
         {:else}
-          <TableBodyCell {tdClass}></TableBodyCell>
+          <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}></TableBodyCell>
         {/if}
         <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
-        <TableBodyCell {tdClass}
+        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}
           ><Button
             on:click={async () => {
               if (aggregator.id) {
@@ -309,22 +304,28 @@
   </CustomTable>
   {#if appStore.isSourceManager()}
     <form on:submit={submitAggregator} class={formClass}>
-      <Label>Name</Label>
-      <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
-      <Label>URL</Label>
-      <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
-      <br />
-      <Button
-        type="submit"
-        color="light"
-        disabled={validUrl === false ||
-          validName === false ||
-          aggregator.name === "" ||
-          aggregator.url === ""}
-      >
-        <i class="bx bx-check me-2"></i>
-        <span>Save aggregator</span>
-      </Button>
+      <div class="flex w-96 flex-col gap-2">
+        <div>
+          <Label>Name</Label>
+          <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
+        </div>
+        <div>
+          <Label>URL</Label>
+          <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
+        </div>
+        <Button
+          type="submit"
+          class="mt-2 w-fit"
+          color="light"
+          disabled={validUrl === false ||
+            validName === false ||
+            aggregator.name === "" ||
+            aggregator.url === ""}
+        >
+          <i class="bx bx-check me-2"></i>
+          <span>Save aggregator</span>
+        </Button>
+      </div>
     </form>
   {/if}
   <ErrorMessage error={aggregatorSaveError}></ErrorMessage>

@@ -616,6 +616,7 @@ func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 				Name:                    s.name,
 				URL:                     s.url,
 				Active:                  s.active,
+				Attention:               s.checksumAck.Before(s.checksumUpdated),
 				Rate:                    s.rate,
 				Slots:                   s.slots,
 				Headers:                 s.headers,
