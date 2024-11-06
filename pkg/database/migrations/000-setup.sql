@@ -533,6 +533,7 @@ END $$;
 --
 -- Placeholder for manual imports
 --
-INSERT INTO sources (id, name, url) VALUES (0, 'manual_imports', 'manual.invalid');
+INSERT INTO sources (id, name, url, checksum_ack, checksum_updated)
+    VALUES (0, 'manual_imports', 'manual.invalid', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO feeds (label, sources_id, url) VALUES ('single', 0, 'https://manual.invalid');
 INSERT INTO feeds (label, sources_id, url) VALUES ('bulk', 0, 'https://manual.invalid');
