@@ -75,7 +75,7 @@
     <Card>
       <div class="flex flex-col gap-4">
         <P class="flex flex-col"
-          ><span><b>Server URL: </b>{appStore.getKeycloakURL()}</span><span
+          ><span><b>Keycloak Server URL: </b>{appStore.getKeycloakURL()}</span><span
             ><b>Realm: </b>{appStore.getKeycloakRealm()}</span
           ></P
         >

@@ -225,7 +225,7 @@
       {newQueries}
       isAllowedToEdit={true}
       queries={userQueries}
-      title="Personal"
+      title="Personal queries"
     >
       <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
         ><i class="bx bx-plus me-2"></i>New query</Button
@@ -265,7 +265,7 @@
         {ignoredQueries}
         {newQueries}
         queries={adminQueries}
-        title="Global"
+        title="Global queries"
         isAllowedToEdit={appStore.isAdmin()}
       >
         <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
