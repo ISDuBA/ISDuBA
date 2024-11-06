@@ -72,7 +72,8 @@
   };
 
   let formClass = "max-w-[800pt]";
-  const smallColumnClass = "w-7 max-w-7 min-w-7";
+  const extraSmallColumnClass = "w-7 max-w-7 min-w-7";
+  const smallColumnClass = "w-10 max-w-10 min-w-10";
 
   const checkUrl = () => {
     if (aggregator.url === "") {
@@ -197,8 +198,9 @@
       {
         label: "",
         attribute: "attention",
-        class: smallColumnClass
+        class: extraSmallColumnClass
       },
+      { label: "", attribute: "delete", class: smallColumnClass },
       {
         label: "Name",
         attribute: "name"
@@ -206,8 +208,7 @@
       {
         label: "URL",
         attribute: "url"
-      },
-      { label: "", attribute: "delete", class: smallColumnClass }
+      }
     ]}
   >
     {#each aggregators as aggregator, index (index)}
@@ -228,14 +229,12 @@
           {/if}
         </TableBodyCell>
         {#if aggregator.attention}
-          <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
+          <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}>
             <i class="bx bx-info-square text-lg"></i>
           </TableBodyCell>
         {:else}
-          <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}></TableBodyCell>
+          <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}></TableBodyCell>
         {/if}
-        <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
-        <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
         <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}
           ><Button
             on:click={async () => {
@@ -249,6 +248,8 @@
             <i class="bx bx-trash text-red-600"></i>
           </Button>
         </TableBodyCell>
+        <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
+        <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
       </tr>
       {#each list as entry}
         <tr class="bg-slate-100" on:click={() => (entry.expand = !entry.expand)}>
@@ -261,11 +262,6 @@
           </TableBodyCell>
 
           <TableBodyCell {tdClass}></TableBodyCell>
-          <TableBodyCell {tdClass}
-            >{entry.name}{#if entry.publisher}
-              &nbsp; <i class="bx bx-book"></i>{/if}</TableBodyCell
-          >
-          <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
           <TableBodyCell {tdClass}>
             <Button
               on:click={async () => {
@@ -277,6 +273,11 @@
               <i class="bx bx-folder-plus"></i>
             </Button></TableBodyCell
           >
+          <TableBodyCell {tdClass}
+            >{entry.name}{#if entry.publisher}
+              &nbsp; <i class="bx bx-book"></i>{/if}</TableBodyCell
+          >
+          <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
         </tr>
         {#if entry.expand}
           {#each entry.availableFeeds as feed}
