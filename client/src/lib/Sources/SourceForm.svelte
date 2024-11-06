@@ -107,6 +107,9 @@
   let ratePlaceholder = 0;
   let slotPlaceholder = 2;
 
+  let privateReset = {};
+  let publicReset = {};
+
   const loadSourceDefaults = async () => {
     const resp = await fetchSourceDefaultConfig();
     if (resp.ok) {
@@ -225,16 +228,20 @@
       ><span slot="header">Credentials</span>
       <Label>Private cert</Label>
       <div class="mb-3 inline-flex w-full">
-        <Fileupload
-          value=""
-          class="rounded-none rounded-l-lg"
-          on:change={inputChange}
-          bind:files={privateCert}
-        ></Fileupload>
+        {#key privateReset}
+          <Fileupload
+            value=""
+            class="rounded-none rounded-l-lg"
+            on:change={inputChange}
+            bind:files={privateCert}
+            clearable={true}
+          ></Fileupload>
+        {/key}
         <Button
           on:click={() => {
             source.client_cert_private = null;
             privateCert = undefined;
+            privateReset = {};
             inputChange();
           }}
           title="Remove private cert"
@@ -246,16 +253,19 @@
       </div>
       <Label>Public cert</Label>
       <div class="mb-3 inline-flex w-full">
-        <Fileupload
-          value=""
-          class="rounded-none rounded-l-lg"
-          on:change={inputChange}
-          bind:files={publicCert}
-        ></Fileupload>
+        {#key publicReset}
+          <Fileupload
+            value=""
+            class="rounded-none rounded-l-lg"
+            on:change={inputChange}
+            bind:files={publicCert}
+          ></Fileupload>
+        {/key}
         <Button
           on:click={() => {
             source.client_cert_public = null;
             publicCert = undefined;
+            publicReset = {};
             inputChange();
           }}
           title="Remove public cert"
