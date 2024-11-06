@@ -350,7 +350,7 @@
                 disabled={workflowOptions.length === 0}
                 id="state-icon"
               >
-                <i class="bx bx-git-commit text-black-700"></i>
+                <i class="bx bx-git-commit text-black-700 dark:text-gray-300"></i>
               </Button>
               <Dropdown
                 bind:open={dropdownOpen}
@@ -430,7 +430,7 @@
           </div>
           <div class="flex items-center">
             <input
-              class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right`}
+              class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-black`}
               on:change={() => {
                 if (!parseInt("" + currentPage)) currentPage = 1;
                 currentPage = Math.floor(currentPage);
@@ -519,7 +519,11 @@
         </TableHead>
         <TableBody>
           {#each documents as item, i}
-            <tr class={i % 2 == 1 ? "bg-white hover:bg-gray-200" : "bg-gray-100 hover:bg-gray-200"}>
+            <tr
+              class={i % 2 == 1
+                ? "bg-white hover:bg-gray-200 dark:bg-black dark:hover:bg-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"}
+            >
               {#if isMultiSelectionAllowed}
                 <TableBodyCell tdClass="px-0">
                   <CCheckbox
@@ -569,7 +573,7 @@
                   >
                     <Img
                       src="plus-minus.svg"
-                      class={`${
+                      class={`dark:fill-white ${
                         $appStore.app.diff.docA_ID === item.id.toString() ||
                         $appStore.app.diff.docB_ID === item.id.toString() ||
                         disableDiffButtons

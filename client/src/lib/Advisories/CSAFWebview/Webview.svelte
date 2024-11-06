@@ -163,8 +163,8 @@
       {#if showTab(placeToPhase.revisionHistory)}
         <Tabs
           defaultClass="flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse mb-2"
-          activeClasses="h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 hover:bg-gray-100 rounded-lg shadow-sm"
-          inactiveClasses="h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 rounded-lg"
+          activeClasses="h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg shadow-sm"
+          inactiveClasses="h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg"
         >
           <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Overview">
             {#if $appStore.webview.doc?.productVulnerabilities.length > 1}

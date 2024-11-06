@@ -38,6 +38,7 @@
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
   import AggregatorViewer from "$lib/Sources/AggregatorViewer.svelte";
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
+  import { DarkMode } from "flowbite-svelte";
 
   let loadConfigError: ErrorDetails | null;
 
@@ -252,15 +253,16 @@
   };
 </script>
 
-<div class="flex bg-primary-700">
+<div class="flex bg-primary-700 dark:bg-black dark:text-white">
   <div>
     <SideNav></SideNav>
   </div>
-  <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 pb-0">
+  <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 pb-0 dark:bg-black">
     {#if $appStore.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}
     <ErrorMessage error={loadConfigError}></ErrorMessage>
   </main>
+  <DarkMode />
   <Messages></Messages>
 </div>

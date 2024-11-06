@@ -77,7 +77,7 @@
   let mode: StatisticsMode = "diagram";
   const basicButtonClass = "py-1 px-3";
   const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
-  const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100`;
+  const pressedButtonClass = `${basicButtonClass} bg-gray-200 dark:text-white text-black hover:!bg-gray-100`;
   const updateInterval = 1000 * 60 * (updateIntervalInMinutes ?? 0);
   const categoryColors = [
     "#000000",

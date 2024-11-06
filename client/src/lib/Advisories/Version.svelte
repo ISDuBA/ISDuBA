@@ -25,7 +25,7 @@
   let secondDocumentIndex: number | undefined;
   let nextColor = "red";
   const diffButtonBaseClass = "!p-2 h-8 w-8 mb-2";
-  const versionButtonClass = "text-black hover:text-black border border-solid";
+  const versionButtonClass = "dark:text-white text-black hover:text-black border border-solid";
   const redButtonClass = `${versionButtonClass} bg-red-100 group-hover:bg-red-300 border-red-700`;
   const greenButtonClass = `${versionButtonClass} bg-green-100 group-hover:bg-green-300 border-green-700`;
   const lightButtonClass = `${versionButtonClass} bg-white group-hover:bg-gray-200 border-gray-700`;

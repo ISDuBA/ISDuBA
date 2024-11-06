@@ -406,7 +406,7 @@
   <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
     {#if canSeeCommentArea}
       <div
-        class="right-3 mr-3 flex w-full flex-col bg-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
+        class="right-3 mr-3 flex w-full flex-col bg-white dark:bg-black dark:text-white lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
       >
         <div
           class={isSSVCediting || commentFocus ? " h-64 w-full p-3 shadow-md" : "h-64 w-full p-3"}

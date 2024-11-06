@@ -104,7 +104,7 @@
                 {/if}
               </div>
               <span slot="top-right" class="ml-auto">{getPublisher(doc.publisher)}</span>
-              <div class="text-black">{doc.title ?? "Title: undefined"}</div>
+              <div class="text-black dark:text-white">{doc.title ?? "Title: undefined"}</div>
               <div class="text-sm text-gray-700">{doc.tracking_id}</div>
               <div slot="bottom-left" class="flex items-center gap-4 text-gray-500">
                 {#if doc.comments !== undefined}
