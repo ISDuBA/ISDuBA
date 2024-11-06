@@ -10,6 +10,7 @@
 
 <script lang="ts">
   export let header: string;
+  export let title: string | undefined = undefined;
   export let open = false;
   export let level = 2;
   export let highlight = false;
@@ -71,7 +72,7 @@
 <div class:collapsible={true} class:highlight-section={highlight}>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div title={header} id={header}>
+  <div {title} id={header}>
     <div class="inline-flex items-center" on:click={toggle}>
       <i class="bx {getClass(level)} {icon}" />
       <slot class={getClass(level)} name="header"

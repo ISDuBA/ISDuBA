@@ -282,7 +282,6 @@
           outline
           size="xs"
           class="h-8"
-          title="Cancel"
           on:click={() => {
             isEditing = false;
           }}
@@ -293,15 +292,12 @@
           outline
           size="xs"
           class="h-8"
-          title="Evaluate"
           {disabled}
           on:click={() => (startedCalculation = true)}
         >
           Evaluate
         </Button>
-        <Button size="xs" class="h-8" title="Save" on:click={() => saveSSVC(vectorInput)}>
-          Save
-        </Button>
+        <Button size="xs" class="h-8" on:click={() => saveSSVC(vectorInput)}>Save</Button>
       </div>
     </div>
   {:else}
@@ -358,7 +354,6 @@
                 <Button
                   class="h-6"
                   outline
-                  title="Custom"
                   size="xs"
                   on:click={() => {
                     isComplex = true;
