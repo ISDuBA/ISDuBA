@@ -530,15 +530,12 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 		id  int64
 	}
 	var urlIDs []urlID
-	done := make(chan struct{})
-	m.fns <- func(m *Manager, _ context.Context) {
-		defer close(done)
+	m.inManager(func(m *Manager, _ context.Context) {
 		urlIDs = make([]urlID, len(m.sources))
 		for i, s := range m.sources {
 			urlIDs[i] = urlID{s.url, s.id}
 		}
-	}
-	<-done
+	})
 
 	// Resolving external PMDs is too time consuming for the
 	// manager run loop. So do it before.
@@ -601,9 +598,7 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 
 // Sources iterates over all sources and passes infos to a given function.
 func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
-	done := make(chan struct{})
-	m.fns <- func(m *Manager, _ context.Context) {
-		defer close(done)
+	m.inManager(func(m *Manager, _ context.Context) {
 		si := new(SourceInfo)
 		for _, s := range m.sources {
 			var st *Stats
@@ -632,8 +627,7 @@ func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 			}
 			fn(si)
 		}
-	}
-	<-done
+	})
 }
 
 // Feeds passes the fields of the feeds of a given source to a given function.
@@ -860,6 +854,8 @@ func (m *Manager) removeFeed(ctx context.Context, feedID int64) error {
 	return nil
 }
 
+// inManager calls the given function inside
+// the main loop of the manager and waits for it to return.
 func (m *Manager) inManager(fn func(*Manager, context.Context)) {
 	done := make(chan struct{})
 	m.fns <- func(m *Manager, ctx context.Context) {
@@ -1457,14 +1453,11 @@ func (m *Manager) UpdateFeed(
 // AttentionSources calls given callback for each active source which needs attention.
 // If the all flag is not set only the active sources are evaluated.
 func (m *Manager) AttentionSources(all bool, fn func(id int64, name string)) {
-	done := make(chan struct{})
-	m.fns <- func(m *Manager, _ context.Context) {
-		defer close(done)
+	m.inManager(func(m *Manager, _ context.Context) {
 		for _, s := range m.sources {
 			if (all || s.active) && s.checksumAck.Before(s.checksumUpdated) {
 				fn(s.id, s.name)
 			}
 		}
-	}
-	<-done
+	})
 }
