@@ -94,7 +94,6 @@ func doMigrations(
 	migs []migration,
 ) (bool, error) {
 	if err := func() error {
-		slog.InfoContext(ctx, "admin url", "url", cfg.AdminURL())
 		conn, err := pgx.Connect(ctx, cfg.AdminURL())
 		if err != nil {
 			return err
