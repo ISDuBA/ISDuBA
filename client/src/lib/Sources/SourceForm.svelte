@@ -10,17 +10,10 @@
 
 <script lang="ts">
   import { type Source, fetchSourceDefaultConfig } from "$lib/Sources/source";
-  import {
-    Accordion,
-    AccordionItem,
-    Button,
-    Fileupload,
-    Input,
-    Label,
-    Select
-  } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Button, Input, Label, Select } from "flowbite-svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount } from "svelte";
+  import CFileinput from "$lib/Components/CFileinput.svelte";
   export let formClass: string = "";
   export let source: Source;
   export let enableActive: boolean = false;
@@ -224,47 +217,19 @@
     <AccordionItem
       ><span slot="header">Credentials</span>
       <Label>Private cert</Label>
-      <div class="mb-3 inline-flex w-full">
-        <Fileupload
-          value=""
-          class="rounded-none rounded-l-lg"
-          on:change={inputChange}
-          bind:files={privateCert}
-        ></Fileupload>
-        <Button
-          on:click={() => {
-            source.client_cert_private = null;
-            privateCert = undefined;
-            inputChange();
-          }}
-          title="Remove private cert"
-          class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
-          color="light"
-        >
-          <i class="bx bx-x"></i>
-        </Button>
-      </div>
+      <CFileinput
+        bind:files={privateCert}
+        on:change={inputChange}
+        id="private-cert"
+        titleClearButton="Remove private cert"
+      ></CFileinput>
       <Label>Public cert</Label>
-      <div class="mb-3 inline-flex w-full">
-        <Fileupload
-          value=""
-          class="rounded-none rounded-l-lg"
-          on:change={inputChange}
-          bind:files={publicCert}
-        ></Fileupload>
-        <Button
-          on:click={() => {
-            source.client_cert_public = null;
-            publicCert = undefined;
-            inputChange();
-          }}
-          title="Remove public cert"
-          class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
-          color="light"
-        >
-          <i class="bx bx-x"></i>
-        </Button>
-      </div>
+      <CFileinput
+        bind:files={publicCert}
+        on:change={inputChange}
+        id="public-cert"
+        titleClearButton="Remove public cert"
+      ></CFileinput>
       <Label>Client cert passphrase</Label>
       <div class="mb-3 inline-flex w-full">
         <Input
