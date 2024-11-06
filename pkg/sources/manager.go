@@ -1154,9 +1154,10 @@ func (su *SourceUpdater) UpdateSlots(slots *int) error {
 	if slots != nil && su.updatable.slots != nil && *slots == *su.updatable.slots {
 		return nil
 	}
-	if slots != nil && (*slots < 1 ||
-		*slots > su.manager.cfg.Sources.MaxSlotsPerSource && su.manager.cfg.Sources.MaxSlotsPerSource != 0) {
-		return InvalidArgumentError("slot value ot ouf range")
+	if msps := su.manager.cfg.Sources.MaxSlotsPerSource; slots != nil &&
+		(*slots < 1 || *slots > msps && msps != 0) {
+		msg := fmt.Sprintf("slot value out of range: %d not in [1, %d]", *slots, msps)
+		return InvalidArgumentError(msg)
 	}
 	su.addChange(func(s *source) { s.slots = slots }, "slots", slots)
 	return nil
