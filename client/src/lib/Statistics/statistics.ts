@@ -196,10 +196,10 @@ const fetchStatistic = async (
   feed: boolean = false
 ): Promise<Result<any, ErrorDetails>> => {
   let path = `/api/stats/${type}`;
-  if (id && !feed) {
+  if (id !== undefined && !feed) {
     path += `/source/${id}`;
   }
-  if (id && feed) {
+  if (id !== undefined && feed) {
     path += `/feed/${id}`;
   }
   let filterQuery = "";
