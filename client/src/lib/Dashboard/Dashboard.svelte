@@ -18,6 +18,7 @@
   import { SEARCHTYPES } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
+  import SourceEvents from "./SourceEvents.svelte";
 
   let filteredQueries: any[] = [];
   let loadIgnoredError: ErrorDetails | null;
@@ -84,6 +85,7 @@
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
   <ErrorMessage error={loadIgnoredError}></ErrorMessage>
+  <SourceEvents></SourceEvents>
   <div class="mb-8 flex w-full max-w-[96%] flex-col gap-4 2xl:w-[46%]">
     <ImportStats updateIntervalInMinutes={10}></ImportStats>
   </div>

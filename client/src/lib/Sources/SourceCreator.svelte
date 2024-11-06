@@ -56,7 +56,8 @@
     slots: undefined,
     active: false,
     headers: [""],
-    ignore_patterns: [""]
+    ignore_patterns: [""],
+    attention: false
   };
 
   let formClass = "max-w-[800pt]";

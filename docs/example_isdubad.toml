@@ -69,6 +69,7 @@
 # aes_key = ""
 # timeout = "30s"
 # default_age = "17520h"
+# checking = "2h"
 
 # [remote_validator]
 # url = ""

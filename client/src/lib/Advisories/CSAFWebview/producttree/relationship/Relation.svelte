@@ -14,7 +14,7 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
-  import type { Relationship } from "$lib/types";
+  import type { Relationship } from "$lib/pmdTypes";
   import { A } from "flowbite-svelte";
   export let relation: Relationship;
   let highlight = false;

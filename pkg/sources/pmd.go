@@ -9,10 +9,14 @@
 package sources
 
 import (
+	"bufio"
 	"context"
+	"crypto/sha1"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
+	"sync"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/internal/cache"
@@ -23,20 +27,28 @@ import (
 // holdingPMDsDuration is the duration how long PMDs are cached.
 const holdingPMDsDuration = time.Minute * 15
 
+// CachedProviderMetadata holds a loaded PMD and enables access to
+// the respective model.
+type CachedProviderMetadata struct {
+	Loaded  *csaf.LoadedProviderMetadata
+	modelMu sync.Mutex
+	model   *csaf.ProviderMetadata
+}
+
 type pmdCache struct {
-	*cache.ExpirationCache[string, *csaf.LoadedProviderMetadata]
+	*cache.ExpirationCache[string, *CachedProviderMetadata]
 }
 
 func newPMDCache() *pmdCache {
 	return &pmdCache{
-		ExpirationCache: cache.NewExpirationCache[string, *csaf.LoadedProviderMetadata](holdingPMDsDuration),
+		ExpirationCache: cache.NewExpirationCache[string, *CachedProviderMetadata](holdingPMDsDuration),
 	}
 }
 
-func (pc *pmdCache) pmd(m *Manager, url string) *csaf.LoadedProviderMetadata {
+func (pc *pmdCache) pmd(m *Manager, url string) *CachedProviderMetadata {
 
-	if lpmd, ok := pc.Get(url); ok {
-		return lpmd
+	if cpmd, ok := pc.Get(url); ok {
+		return cpmd
 	}
 
 	header := http.Header{}
@@ -62,21 +74,76 @@ func (pc *pmdCache) pmd(m *Manager, url string) *csaf.LoadedProviderMetadata {
 	}
 	pmdLoader := csaf.NewProviderMetadataLoader(client)
 	lpmd := pmdLoader.Load(url)
-	pc.Set(url, lpmd)
-	return lpmd
+	cpmd := &CachedProviderMetadata{Loaded: lpmd}
+	pc.Set(url, cpmd)
+	return cpmd
 }
 
-func asProviderMetaData(lpmd *csaf.LoadedProviderMetadata) (*csaf.ProviderMetadata, error) {
-	if !lpmd.Valid() {
+// Valid returns true if the loaded PMD is valid.
+func (cpmd *CachedProviderMetadata) Valid() bool {
+	return cpmd != nil && cpmd.Loaded.Valid()
+}
+
+// Model returns the model for the loaded PMD.
+func (cpmd *CachedProviderMetadata) Model() (*csaf.ProviderMetadata, error) {
+	if !cpmd.Valid() {
 		return nil, InvalidArgumentError("PMD is invalid")
 	}
-	pmd := new(csaf.ProviderMetadata)
+	cpmd.modelMu.Lock()
+	defer cpmd.modelMu.Unlock()
+	if cpmd.model != nil {
+		return cpmd.model, nil
+	}
+	model := new(csaf.ProviderMetadata)
 	// XXX: This is ugly! We should better keep the original data when loading the PMD.
-	if err := util.ReMarshalJSON(pmd, lpmd.Document); err != nil {
+	if err := util.ReMarshalJSON(model, cpmd.Loaded.Document); err != nil {
 		return nil, InvalidArgumentError(
 			fmt.Sprintf("re-marshaling of PDM failed: %v", err.Error()))
 	}
-	return pmd, nil
+	cpmd.model = model
+	return model, nil
+}
+
+// availableFeeds returns a list of the feeds available for the given provider.
+func availableFeeds(pmd *csaf.ProviderMetadata) []string {
+	var feeds []string
+	add := func(feed string) {
+		if !slices.Contains(feeds, feed) {
+			feeds = append(feeds, feed)
+		}
+	}
+	// ROLIE feeds
+	for i := range pmd.Distributions {
+		d := pmd.Distributions[i]
+		if d.Rolie == nil {
+			continue
+		}
+		feeds := d.Rolie.Feeds
+		for j := range feeds {
+			if f := &feeds[j]; f.URL != nil {
+				add(string(*f.URL))
+			}
+		}
+	}
+	// Directory feeds
+	for i := range pmd.Distributions {
+		if d := pmd.Distributions[i]; d.Rolie == nil && d.DirectoryURL != "" {
+			add(d.DirectoryURL)
+		}
+	}
+	return feeds
+}
+
+// checksumPMD calculates a checksum over the relevant fields in a PMD.
+// Currently only the feed paths are used.
+func checksumPMD(pmd *csaf.ProviderMetadata) []byte {
+	feeds := availableFeeds(pmd)
+	hash := sha1.New()
+	w := bufio.NewWriter(hash)
+	for _, feed := range feeds {
+		w.WriteString(feed)
+	}
+	return hash.Sum(nil)
 }
 
 // isROLIEFeed checks if the given url leads to a ROLIE feed.

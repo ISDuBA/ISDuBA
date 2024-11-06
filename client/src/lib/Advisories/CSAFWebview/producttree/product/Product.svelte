@@ -14,7 +14,7 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "./ProductIdentificationHelper.svelte";
-  import type { FullProductName } from "$lib/types";
+  import type { FullProductName } from "$lib/pmdTypes";
   export let product: FullProductName;
   let highlight = false;
   /**

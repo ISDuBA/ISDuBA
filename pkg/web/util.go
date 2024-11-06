@@ -9,9 +9,11 @@
 package web
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
@@ -39,6 +41,24 @@ func parserMode(s string) (query.ParserMode, error) {
 		return 0, err
 	}
 	return pm, nil
+}
+
+// endsWith checks if the input ends with a given suffix.
+func endsWith(suffix string) func(string) (string, error) {
+	return func(s string) (string, error) {
+		if !strings.HasSuffix(s, suffix) {
+			return "", fmt.Errorf("parameter has to end with %q", suffix)
+		}
+		return s, nil
+	}
+}
+
+// notEmpty checks if the parameter contains any text.
+func notEmpty(s string) (string, error) {
+	if s == "" {
+		return "", errors.New("parameter is empty")
+	}
+	return s, nil
 }
 
 // toInt64 parses a given string to a 64bit integer.

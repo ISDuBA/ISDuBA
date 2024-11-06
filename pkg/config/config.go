@@ -103,6 +103,7 @@ const (
 	defaultSourcesSignatureCheck = true
 	defaultSourcesAge            = 17520 * time.Hour
 	defaultSourcesAESKey         = ""
+	defaultSourcesChecking       = 2 * time.Hour
 )
 
 const (
@@ -121,6 +122,11 @@ const (
 	defaultClientKeycloakClientID = "auth"
 	defaultClientUpdateInterval   = 5 * time.Minute
 	defaultClientIdleTimeout      = 30 * time.Minute
+)
+
+const (
+	defaultAggregatorsTimeout        = 30 * time.Second
+	defaultAggregatorsUpdateInterval = 1 * time.Hour
 )
 
 // HumanSize de-serializes sizes from integer strings
@@ -198,6 +204,7 @@ type Sources struct {
 	SignatureCheck    bool                  `toml:"signature_check"`
 	DefaultAge        time.Duration         `toml:"default_age"`
 	AESKey            string                `toml:"aes_key"`
+	Checking          time.Duration         `toml:"checking"`
 }
 
 // ForwardTarget are the config options for the forward target.
@@ -216,6 +223,12 @@ type ForwardTarget struct {
 type Forwarder struct {
 	Targets        []ForwardTarget `toml:"target"`
 	UpdateInterval time.Duration   `toml:"update_interval"`
+}
+
+// Aggregators are the config options for the aggregators.
+type Aggregators struct {
+	Timeout        time.Duration `toml:"timeout"`
+	UpdateInterval time.Duration `toml:"update_interval"`
 }
 
 // Client are the config options for the client.
@@ -240,6 +253,7 @@ type Config struct {
 	RemoteValidator csaf.RemoteValidatorOptions `toml:"remote_validator"`
 	Client          Client                      `toml:"client"`
 	Forwarder       Forwarder                   `toml:"forwarder"`
+	Aggregators     Aggregators                 `toml:"aggregators"`
 }
 
 // URL creates a connection URL from the configured credentials.
@@ -345,6 +359,7 @@ func Load(file string) (*Config, error) {
 			MaxRatePerSource:  defaultSourcesMaxRatePerSlot,
 			OpenPGPCaching:    defaultSourcesOpenPGPCaching,
 			FeedRefresh:       defaultSourcesFeedRefresh,
+			Timeout:           defaultSourcesTimeout,
 			FeedLogLevel:      defaultSourcesFeedLogLevel,
 			FeedImporter:      defaultSourcesFeedImporter,
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
@@ -353,6 +368,7 @@ func Load(file string) (*Config, error) {
 			Secure:            defaultSourcesSecure,
 			SignatureCheck:    defaultSourcesSignatureCheck,
 			DefaultAge:        defaultSourcesAge,
+			Checking:          defaultSourcesChecking,
 		},
 		Forwarder: Forwarder{
 			UpdateInterval: defaultForwarderUpdateInterval,
@@ -367,6 +383,10 @@ func Load(file string) (*Config, error) {
 			KeycloakClientID: defaultClientKeycloakClientID,
 			UpdateInterval:   defaultClientUpdateInterval,
 			IdleTimeout:      defaultClientIdleTimeout,
+		},
+		Aggregators: Aggregators{
+			Timeout:        defaultAggregatorsTimeout,
+			UpdateInterval: defaultAggregatorsUpdateInterval,
 		},
 	}
 	if file != "" {
@@ -447,6 +467,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_TIMEOUT", storeDuration(&cfg.Sources.Timeout)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_AGE", storeDuration(&cfg.Sources.DefaultAge)},
 		envStore{"ISDUBA_SOURCES_AES_KEY", storeString(&cfg.Sources.AESKey)},
+		envStore{"ISDUBA_SOURCES_CHECKING", storeDuration(&cfg.Sources.Checking)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_URL", storeString(&cfg.RemoteValidator.URL)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_CACHE", storeString(&cfg.RemoteValidator.Cache)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},
@@ -455,6 +476,8 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
+		envStore{"ISDUBA_AGGREGATORS_TIMEOUT", storeDuration(&cfg.Aggregators.Timeout)},
+		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
 	)
 }
 

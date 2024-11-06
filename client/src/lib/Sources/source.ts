@@ -10,6 +10,7 @@ import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 import { request } from "$lib/request";
 import type { Result } from "$lib/types";
 import type { CSAFProviderMetadata } from "$lib/provider";
+import type { AggregatorMetadata } from "$lib/aggregatorTypes";
 
 type Source = {
   id?: number;
@@ -28,6 +29,7 @@ type Source = {
   client_cert_private?: string | null;
   client_cert_passphrase?: string | null;
   status?: string[];
+  attention: boolean;
   stats?: {
     downloading: number;
     waiting: number;
@@ -73,6 +75,80 @@ const logLevels = [
   { value: LogLevel.warn, name: "Errors and warnings" },
   { value: LogLevel.debug, name: "Debug (verbose)" }
 ];
+
+type Aggregator = {
+  id?: number;
+  name: string;
+  url: string;
+  attention?: boolean;
+};
+
+type Attention = {
+  id: number;
+  name: string;
+};
+
+const fetchAggregatorAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {
+  const resp = await request(`/api/aggregators/attention`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load attention list`, resp)
+  };
+};
+
+const resetAggregatorAttention = async (
+  aggregator: Aggregator
+): Promise<Result<Attention[], ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("attention", "false");
+  const resp = await request(`/api/aggregators/${aggregator.id}`, "PUT", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not update source attention`, resp)
+  };
+};
+
+const fetchSourceAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {
+  const resp = await request(`/api/sources/attention`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load attention list`, resp)
+  };
+};
+
+const resetSourceAttention = async (source: Source): Promise<Result<Attention[], ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("attention", "false");
+  const resp = await request(`/api/sources/${source.id}`, "PUT", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not update source attention`, resp)
+  };
+};
 
 const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>> => {
   let method = "POST";
@@ -130,6 +206,7 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
       formData.append("ignore_patterns", pattern);
     }
   }
+  formData.append("attention", "false");
   const resp = await request(path, method, formData);
   if (resp.ok) {
     if (resp.content.id) {
@@ -315,6 +392,72 @@ const fetchSources = async (
   };
 };
 
+const fetchAggregators = async (): Promise<Result<Aggregator[], ErrorDetails>> => {
+  const resp = await request(`/api/aggregators`, "GET");
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not load aggregators`, resp)
+  };
+};
+
+const saveAggregator = async (aggregator: Aggregator): Promise<Result<number, ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("name", aggregator.name);
+  formData.append("url", aggregator.url);
+  const resp = await request(`/api/aggregators`, "POST", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content.id
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not save aggregator`, resp)
+  };
+};
+
+const deleteAggregator = async (id: number): Promise<Result<null, ErrorDetails>> => {
+  const resp = await request(`/api/aggregators/${id}`, "DELETE");
+  if (resp.error) {
+    return {
+      ok: false,
+      error: getErrorDetails(`Could not delete aggregator`, resp)
+    };
+  } else {
+    return {
+      ok: true,
+      value: null
+    };
+  }
+};
+
+const fetchAggregatorData = async (
+  url: string,
+  validate: boolean = false
+): Promise<Result<AggregatorMetadata, ErrorDetails>> => {
+  const resp = await request(
+    `/api/aggregator?url=${encodeURIComponent(url)}&validate=${validate}`,
+    "GET"
+  );
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not fetch aggregator data`, resp)
+  };
+};
+
 let defaultConfigCache: Promise<Result<SourceConfig, ErrorDetails>>;
 
 const fetchSourceDefaultConfig = async (): Promise<Result<SourceConfig, ErrorDetails>> => {
@@ -415,7 +558,7 @@ const deleteFeed = async (id: number): Promise<Result<null, ErrorDetails>> => {
   if (resp.error) {
     return {
       ok: false,
-      error: getErrorDetails(`Could not load feed`, resp)
+      error: getErrorDetails(`Could not delete feed`, resp)
     };
   } else {
     return {
@@ -461,9 +604,12 @@ const parseHeaders = (source: Source): string[][] => {
 
 export {
   type Source,
+  type Aggregator,
+  type Attention,
   LogLevel,
   type Feed,
   saveSource,
+  saveAggregator,
   fetchSource,
   fetchSourceDefaultConfig,
   getLogLevels,
@@ -474,8 +620,15 @@ export {
   parseHeaders,
   parseFeeds,
   deleteFeed,
+  deleteAggregator,
   fetchFeed,
   fetchFeeds,
   fetchSources,
-  saveFeeds
+  fetchAggregators,
+  fetchAggregatorData,
+  saveFeeds,
+  fetchSourceAttentionList,
+  resetSourceAttention,
+  fetchAggregatorAttentionList,
+  resetAggregatorAttention
 };
