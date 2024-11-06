@@ -523,23 +523,44 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 
 // Subscriptions return a list of subscription infos for a given list of source URLs.
 func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
+
+	// Extract data needed to figure out real urls.
+	type urlID struct {
+		url string
+		id  int64
+	}
+	var urlIDs []urlID
+	done := make(chan struct{})
+	m.fns <- func(m *Manager, _ context.Context) {
+		defer close(done)
+		urlIDs = make([]urlID, len(m.sources))
+		for i, s := range m.sources {
+			urlIDs[i] = urlID{s.url, s.id}
+		}
+	}
+	<-done
+
 	// Resolving external PMDs is too time consuming for the
 	// manager run loop. So do it before.
 	var (
-		sources   = make(map[string][]int64, len(m.sources))
+		sources   = make(map[string][]int64, len(urlIDs))
 		available = make([][]string, len(urls))
 	)
-	for _, s := range m.sources {
+
+	for i := range urlIDs {
+		s := &urlIDs[i]
 		if cpmd := m.PMD(s.url); cpmd.Valid() {
 			url := cpmd.Loaded.URL
 			sources[url] = append(sources[url], s.id)
 		}
 	}
+
 	for i, url := range urls {
 		if pmd, err := m.PMD(url).Model(); err == nil {
 			available[i] = availableFeeds(pmd)
 		}
 	}
+
 	result := make(chan []SourceSubscriptions)
 	m.fns <- func(m *Manager, _ context.Context) {
 		// We can subscribe a source more than once.
