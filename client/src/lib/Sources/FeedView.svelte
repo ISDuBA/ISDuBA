@@ -71,6 +71,8 @@
 
   let loadConfigError: ErrorDetails | null;
 
+  let feedBlinkID = -1;
+
   onMount(async () => {
     const resp = await getLogLevels(!edit);
     if (resp.ok) {
@@ -78,13 +80,15 @@
     } else {
       loadConfigError = resp.error;
     }
+    feedBlinkID = Number(sessionStorage.getItem("feedBlinkID") ?? "-1");
+    sessionStorage.removeItem("feedBlinkID");
   });
 </script>
 
 {#if logLevels}
   <CustomTable title="Feeds" headers={tableHeaders}>
     {#each feeds as feed, index (index)}
-      <tr>
+      <tr class={feed.id === feedBlinkID ? "blink" : ""}>
         {#if placeholderFeed}
           <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
           <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>

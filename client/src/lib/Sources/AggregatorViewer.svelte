@@ -333,7 +333,7 @@
           <TableBodyCell {tdClass}>
             <Button
               on:click={async () => {
-                push(`/sources/new/${encodeURIComponent(entry.url)}`);
+                await push(`/sources/new/${encodeURIComponent(entry.url)}`);
               }}
               class="!p-2"
               color="light"
@@ -343,7 +343,7 @@
             {#each entry.subscribedID as id}
               <Button
                 on:click={async () => {
-                  push(`/sources/${id}`);
+                  await push(`/sources/${id}`);
                 }}
                 class="!p-2"
                 color="light"
@@ -366,7 +366,8 @@
                 {#each feed.subscribedID as feedReference}
                   <Button
                     on:click={async () => {
-                      push(`/sources/${feedReference.sourceID}`);
+                      sessionStorage.setItem("feedBlinkID", String(feedReference.feedID));
+                      await push(`/sources/${feedReference.sourceID}`);
                     }}
                     class="!p-2"
                     color="light"
