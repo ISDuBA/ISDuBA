@@ -573,12 +573,12 @@
                   >
                     <Img
                       src="plus-minus.svg"
-                      class={`dark:fill-white ${
+                      class={`${
                         $appStore.app.diff.docA_ID === item.id.toString() ||
                         $appStore.app.diff.docB_ID === item.id.toString() ||
                         disableDiffButtons
                           ? "invert-[70%]"
-                          : ""
+                          : "dark:invert"
                       } min-h-4`}
                     />
                   </button>

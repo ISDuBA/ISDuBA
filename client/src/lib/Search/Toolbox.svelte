@@ -32,7 +32,7 @@
           ? ` - ${docB?.document?.title.substring(0, 25)}${docB?.document?.title.length > 25 ? "..." : ""}`
           : ""}</span
       >
-      <Img src="plus-minus.svg" class="h-4 min-w-4 dark:fill-white" />
+      <Img src="plus-minus.svg" class="h-4 min-w-4 dark:invert" />
     </Button>
   </div>
   {#if $appStore.app.isToolboxOpen}
