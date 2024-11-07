@@ -8,11 +8,11 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
-export const truncate = (str: string, n: number) => {
+const truncate = (str: string, n: number) => {
   return str.length > n ? str.slice(0, n - 1) + "…" : str;
 };
 
-export const areArraysEqual = (
+const areArraysEqual = (
   a: (number | string)[],
   b: (number | string)[],
   sameOrder: boolean = false
@@ -25,3 +25,16 @@ export const areArraysEqual = (
   }
   return true;
 };
+
+const isArrayOfString = (obj: any) => {
+  if (!Array.isArray(obj)) return false;
+  for (let i = 0; i < obj.length; i++) {
+    const element = obj[i];
+    if (typeof element !== "string") {
+      return false;
+    }
+  }
+  return true;
+};
+
+export { truncate, areArraysEqual, isArrayOfString };
