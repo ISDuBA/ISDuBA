@@ -1116,6 +1116,16 @@ func placeholders(n int) string {
 type SourceUpdater struct {
 	updater[*source]
 	clientCertUpdated bool
+	doBackgroundPing  bool
+}
+
+// applyChanges overwrites base to only issue one background ping.
+func (su *SourceUpdater) applyChanges() bool {
+	applied := su.updater.applyChanges()
+	if applied && su.doBackgroundPing {
+		su.manager.backgroundPing()
+	}
+	return applied
 }
 
 // UpdateName requests a name update.
@@ -1172,7 +1182,7 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 		s.active = active
 		s.status = nil
 		if active {
-			su.manager.backgroundPing()
+			su.doBackgroundPing = true
 		}
 	}, "active", active)
 	return nil
@@ -1257,7 +1267,10 @@ func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
 	if su.updatable.age != nil && age != nil && *su.updatable.age == *age {
 		return nil
 	}
-	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
+	su.addChange(func(s *source) {
+		s.setAge(age)
+		su.doBackgroundPing = true
+	}, "age", age)
 	return nil
 }
 
