@@ -18,12 +18,16 @@
   import { A } from "flowbite-svelte";
   export let relation: Relationship;
   let highlight = false;
+  let blink = false;
   export let basePath = "";
   async function updateUI() {
     await tick();
     document
       .getElementById(`${relation.full_product_name.product_id}`)
       ?.scrollIntoView({ behavior: "smooth" });
+    blink = true;
+    await new Promise((res) => setTimeout(res, 5000));
+    blink = false;
   }
   $: selectedProduct = $appStore.webview.ui.selectedProduct;
   $: productID = relation.full_product_name.product_id;
@@ -46,7 +50,7 @@
     }
   }}
 >
-  <div id={relation.full_product_name.product_id}>
+  <div id={relation.full_product_name.product_id} class={blink ? "blink" : ""}>
     <KeyValue
       keys={["Category", "Name", "Product ID"]}
       values={[

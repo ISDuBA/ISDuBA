@@ -30,3 +30,22 @@
     opacity: 1;
   }
 }
+
+/*
+Webview styles
+*/
+
+@keyframes blink {
+  from {
+    background-color: gray;
+  }
+  to {
+    background-color: inherit;
+  }
+}
+
+.blink {
+  animation-name: blink;
+  animation-duration: 4s;
+  border-radius: 0.5rem;
+}
