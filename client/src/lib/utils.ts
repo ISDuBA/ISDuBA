@@ -37,4 +37,14 @@ const isArrayOfString = (obj: any) => {
   return true;
 };
 
-export { truncate, areArraysEqual, isArrayOfString };
+const getKeysOfAllObjects = (objects: object[]): string[] => {
+  const keys: string[] = [];
+  for (let i = 0; i < objects.length; i++) {
+    Object.keys(objects[i]).forEach((key) => {
+      if (!keys.includes(key)) keys.push(key);
+    });
+  }
+  return keys;
+};
+
+export { truncate, areArraysEqual, isArrayOfString, getKeysOfAllObjects };

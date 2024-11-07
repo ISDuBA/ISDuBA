@@ -6,10 +6,14 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-export type JsonDiffResultList = JsonDiffResult[];
-
-export type JsonDiffResult = {
+type JsonDiffResult = {
   op: "add" | "remove" | "replace";
   path: string;
   value?: string | object | object[];
 };
+
+type JsonDiffResultWrapper = {
+  result: JsonDiffResult | JsonDiffResult[];
+};
+
+export type { JsonDiffResult, JsonDiffResultWrapper };

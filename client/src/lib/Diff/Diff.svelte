@@ -11,12 +11,13 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, ButtonGroup, Label, Spinner } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
-  import type { JsonDiffResult } from "./Diff";
+  import type { JsonDiffResult, JsonDiffResultWrapper } from "./Diff";
   import LazyEntry from "./LazyEntry.svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { appStore } from "$lib/store";
+  import DiffGroupedEntry from "./DiffGroupedEntry.svelte";
 
   export let showTitle = true;
   let title = "";
@@ -34,6 +35,10 @@
   let textFlushOpen = "text-gray-500 dark:text-white";
   let isLoading = false;
   $: addChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "add") : [];
+  let groupedAddChanges: JsonDiffResultWrapper[] = [];
+  $: if (addChanges) {
+    groupedAddChanges = groupChanges(addChanges);
+  }
   $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
   $: docA_ID = $appStore.app.diff.docA_ID;
@@ -57,6 +62,42 @@
     }
     await getDiff();
     isLoading = false;
+  };
+
+  const groupChanges = (changes: JsonDiffResult[]) => {
+    const list: JsonDiffResultWrapper[] = [];
+    const groupedChanges: any = {};
+    changes.forEach((change: any) => {
+      const splitted = change.path.split("/");
+      const lastPart = Number(splitted[splitted.length - 1]);
+      let containsNestedObject = false;
+      if (change.value && typeof change.value === "object") {
+        containsNestedObject = Object.keys(change.value).some((key) => {
+          return (
+            (typeof change.value[key] === "object" && !Array.isArray(change.value[key])) ||
+            (Array.isArray(change.value[key]) && typeof change.value[key][0] === "object")
+          );
+        });
+      }
+      if (isNaN(lastPart) || containsNestedObject || typeof change.value === "string") {
+        list.push({
+          result: change
+        });
+      } else {
+        const key = splitted.slice(0, -1).join("/");
+        if (!groupedChanges[key]) groupedChanges[key] = [];
+        groupedChanges[key].push(change);
+      }
+    });
+    Object.keys(groupedChanges).forEach((key) => {
+      list.push({ result: groupedChanges[key] });
+    });
+    list.sort((a, b) => {
+      const pathA = Array.isArray(a.result) ? a.result[0].path : a.result.path;
+      const pathB = Array.isArray(b.result) ? b.result[0].path : b.result.path;
+      return pathA.localeCompare(pathB, "en");
+    });
+    return list;
   };
 
   const getDocument = async (letter: string) => {
@@ -120,18 +161,27 @@
             <span>Added ({addChanges.length})</span>
           </div>
         </div>
-        {#each addChanges as change}
-          <div class={getBodyClass("add")}>
-            {#if change.value}
-              <div class="mb-1 text-sm font-bold">
-                <code>
-                  {change.path}
-                </code>
-              </div>
-              <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
-              ></DiffEntry>
-            {/if}
-          </div>
+        {#each groupedAddChanges as change}
+          {#if !Array.isArray(change.result)}
+            <div class={getBodyClass("add")}>
+              {#if change.result.value}
+                <div class="mb-1 text-sm font-bold">
+                  <code>
+                    {change.result.path}
+                  </code>
+                </div>
+                <DiffEntry
+                  content={change.result.value}
+                  {isSideBySideViewActivated}
+                  operation={change.result.op}
+                ></DiffEntry>
+              {/if}
+            </div>
+          {:else}
+            <div class={getBodyClass("add")}>
+              <DiffGroupedEntry {change}></DiffGroupedEntry>
+            </div>
+          {/if}
         {/each}
       </AccordionItem>
       <AccordionItem
