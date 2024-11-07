@@ -67,7 +67,12 @@ A 3-button-menue on the top right allows to switch between showing advisories, d
 Within the table, the advisories can be sorted via all depicted criteria by clicking on it. 
 Clicking on an entry will lead to the relevant advisory within it's [document view](#document-view).
 
-The checkboxes on the left side allow for multioperations where applicable.
+The checkboxes on the left side allow for multioperations where applicable and
+the Diff-module on the bottom left allows editors and reviewers to compare
+any listed advisory to each other or to a manually uploaded advisory. Clicking on the Diff-button
+will open a small box and show a new plusminus-icon next to the advisories.
+After selecting two documents, the compare-button leads to a github-styled
+diff-overview of these documents.
 
 
 ### Search and Advanced Search
@@ -132,6 +137,30 @@ Lastly and most importantly, the results can be filtered via the query criteria,
 
 As such, the advanced search can be thought of as a live query for the search page.
 
+## Document View
+
+This is the users main hub for evaluating documents and advisories.
+All information about a document is listed here, and using the labeled buttons
+the user can look at any imported document of the advisory.
+Using the "Show Changes"-button, users can also directly compare differences
+between document versions. Additionally,
+some actions can set the "state" of an advisory. The following states exist:
+
+ * New: An advisory that noone has yet interacted with.
+ * Read: An advisory someone has spend at least some time on.
+ * Assessing: An advisory that has actively been worked on
+ * Review: An advisory that has been evaluated and should be reviewed by a reviewer
+ * Archived: An advisory that has been archived
+ * Delete: An advisory that is marked for deletion
+
+To see who can set which states, [refer to this graphic](https://github.com/ISDuBA/ISDuBA/blob/main/docs/workflow.svg).
+
+Setting the SSVC-score can be done via the "Please enter a SSVC"-tool, where
+users can either set the SSVC directly or use a decision tree via the "Evaluate"-button.
+
+Lastly, to ease communication, there exists a comment-field where users can
+communicate with each other as well as a history to see what has happened with the advisory thus far.
+
 ## Sources
 
 The sources tab is the central hub for Source-Managers to configure the automatic download of
@@ -178,6 +207,3 @@ the numerical values against timestamps.
 
 The profile page contains a quick overview over the users personal information, such as roles or groups and
 allows the user to quickly logout or view their keycloak profile.
-
-## Document View
-TBD
