@@ -9,7 +9,7 @@
 export type JsonDiffResultList = JsonDiffResult[];
 
 export type JsonDiffResult = {
-  op: string;
+  op: "add" | "remove" | "replace";
   path: string;
   value?: string | object | object[];
 };
