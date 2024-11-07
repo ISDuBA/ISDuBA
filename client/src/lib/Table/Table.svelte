@@ -430,7 +430,7 @@
           </div>
           <div class="flex items-center">
             <input
-              class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-black`}
+              class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-950`}
               on:change={() => {
                 if (!parseInt("" + currentPage)) currentPage = 1;
                 currentPage = Math.floor(currentPage);
@@ -521,7 +521,7 @@
           {#each documents as item, i}
             <tr
               class={i % 2 == 1
-                ? "bg-white hover:bg-gray-200 dark:bg-black dark:hover:bg-gray-600"
+                ? "bg-white hover:bg-gray-200 dark:bg-gray-950 dark:hover:bg-gray-600"
                 : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"}
             >
               {#if isMultiSelectionAllowed}

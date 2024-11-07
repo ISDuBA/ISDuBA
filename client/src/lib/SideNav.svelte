@@ -114,7 +114,7 @@
         />
       </Sidebar>
     </Drawer>
-    <div class="h-screen bg-white p-2 dark:bg-black">
+    <div class="h-screen bg-white p-2 dark:bg-gray-950">
       <button on:click={toggleDrawer}>
         <i title={drawerHidden ? "open navigation" : "close navigation"} class="bx bx-menu text-2xl"
         ></i>

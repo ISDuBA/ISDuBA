@@ -37,7 +37,7 @@
   </div>
   {#if $appStore.app.isToolboxOpen}
     <div
-      class="flex min-h-48 w-full min-w-full max-w-[700pt] items-stretch gap-6 rounded-tr-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800 dark:border-gray-800 dark:bg-black dark:shadow-gray-200 md:min-w-96 lg:w-auto"
+      class="flex min-h-48 w-full min-w-full max-w-[700pt] items-stretch gap-6 rounded-tr-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800 dark:border-gray-800 dark:bg-gray-950 dark:shadow-gray-200 md:min-w-96 lg:w-auto"
     >
       <DiffSelection></DiffSelection>
     </div>
