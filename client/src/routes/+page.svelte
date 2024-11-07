@@ -252,11 +252,11 @@
   };
 </script>
 
-<div class="flex bg-primary-700 dark:bg-gray-950 dark:text-white">
+<div class="flex bg-primary-700 dark:bg-gray-800 dark:text-white">
   <div>
     <SideNav></SideNav>
   </div>
-  <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 pb-0 dark:bg-gray-950">
+  <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 pb-0 dark:bg-gray-800">
     {#if $appStore.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}

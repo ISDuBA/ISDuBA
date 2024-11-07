@@ -26,9 +26,9 @@
   $: activeUrl = "/" + $page.url.hash;
 
   let activeClass =
-    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-gray-800 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700";
+    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-800 dark:text-white hover:bg-primary-100 dark:hover:bg-primary-900";
   let nonActiveClass =
-    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 dark:hover:bg-gray-600 hover:text-primary-900";
+    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-900";
 
   let transitionParams = {
     x: -320,
@@ -55,24 +55,27 @@
       activateClickOutside={false}
       width="fit-content"
       backdrop={false}
-      class="static min-w-fit bg-primary-700 p-0 dark:bg-gray-800"
+      class="static min-w-fit bg-primary-700 p-0"
       id="sidebar"
     >
       <Sidebar
         asideClass="w-fit max-w-60 relative h-full"
-        class="bg-primary-700 dark:bg-gray-800"
+        class="bg-primary-700"
         {activeUrl}
         {activeClass}
         {nonActiveClass}
       >
-        <SidebarWrapper class="bg-primary-700 px-0 dark:bg-gray-800">
+        <SidebarWrapper
+          class="bg-primary-700 px-0"
+          divClass="overflow-y-auto py-4 px-3 bg-gray-50 rounded"
+        >
           <SidebarGroup>
             <SidebarBrand
               spanClass="self-center text-4xl font-normal whitespace-nowrap text-white me-4"
               site={{ img: "favicon.svg", name: "ISDuBA", href: "/#/" }}
             ></SidebarBrand>
           </SidebarGroup>
-          <SidebarGroup class="space-y-0 bg-primary-700 dark:bg-gray-800">
+          <SidebarGroup class="space-y-0 bg-primary-700">
             <!-- Entries which are available after login should go here-->
             <SidebarItem class="px-6 py-2.5" label="Dashboard" href="/#/">
               <svelte:fragment slot="icon">
@@ -110,11 +113,11 @@
           </SidebarGroup>
         </SidebarWrapper>
         <DarkMode
-          btnClass="absolute bottom-2 hover:bg-primary-100 dark:text-white hover:text-primary-900 dark:hover:bg-gray-600 text-white w-full px-[1.35rem] py-2.5"
+          btnClass="absolute bottom-2 hover:bg-primary-100 dark:text-white hover:text-primary-900 dark:hover:bg-primary-900 text-white w-full px-[1.35rem] py-2.5"
         />
       </Sidebar>
     </Drawer>
-    <div class="h-screen bg-white p-2 dark:bg-gray-950">
+    <div class="h-screen bg-white p-2 dark:bg-gray-800">
       <button on:click={toggleDrawer}>
         <i title={drawerHidden ? "open navigation" : "close navigation"} class="bx bx-menu text-2xl"
         ></i>
