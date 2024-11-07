@@ -162,6 +162,13 @@ func (f *feed) removeOutdatedWaiting(candidates []location) {
 	})
 }
 
+// resetIndexTags resets the tags used to signal
+// that we know the feed index.
+func (f *feed) resetIndexTags() {
+	f.lastETag = ""
+	f.lastModified = time.Time{}
+}
+
 // fetchIndex fetches the content of the feed index.
 func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 	indexURL := f.url.String()
@@ -196,7 +203,6 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("status code %d", resp.StatusCode)
 	}
-
 	var locations []location
 	if f.rolie {
 		locations, err = f.rolieLocations(resp.Body)
@@ -325,6 +331,7 @@ func (s *source) forceIndexRefresh() {
 	for _, f := range s.feeds {
 		if !f.invalid.Load() {
 			f.nextCheck = past
+			f.resetIndexTags()
 		}
 	}
 }

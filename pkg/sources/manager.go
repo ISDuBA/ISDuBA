@@ -547,8 +547,13 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 	for i := range urlIDs {
 		s := &urlIDs[i]
 		if cpmd := m.PMD(s.url); cpmd.Valid() {
-			url := cpmd.Loaded.URL
-			sources[url] = append(sources[url], s.id)
+			model, _ := cpmd.Model()
+			curl := model.CanonicalURL
+			u := cpmd.Loaded.URL
+			if curl != nil {
+				u = string(*curl)
+			}
+			sources[u] = append(sources[u], s.id)
 		}
 	}
 
@@ -1116,6 +1121,16 @@ func placeholders(n int) string {
 type SourceUpdater struct {
 	updater[*source]
 	clientCertUpdated bool
+	doBackgroundPing  bool
+}
+
+// applyChanges overwrites base to only issue one background ping.
+func (su *SourceUpdater) applyChanges() bool {
+	applied := su.updater.applyChanges()
+	if applied && su.doBackgroundPing {
+		su.manager.backgroundPing()
+	}
+	return applied
 }
 
 // UpdateName requests a name update.
@@ -1154,9 +1169,10 @@ func (su *SourceUpdater) UpdateSlots(slots *int) error {
 	if slots != nil && su.updatable.slots != nil && *slots == *su.updatable.slots {
 		return nil
 	}
-	if slots != nil && (*slots < 1 ||
-		*slots > su.manager.cfg.Sources.MaxSlotsPerSource && su.manager.cfg.Sources.MaxSlotsPerSource != 0) {
-		return InvalidArgumentError("slot value ot ouf range")
+	if msps := su.manager.cfg.Sources.MaxSlotsPerSource; slots != nil &&
+		(*slots < 1 || *slots > msps && msps != 0) {
+		msg := fmt.Sprintf("slot value out of range: %d not in [1, %d]", *slots, msps)
+		return InvalidArgumentError(msg)
 	}
 	su.addChange(func(s *source) { s.slots = slots }, "slots", slots)
 	return nil
@@ -1171,7 +1187,7 @@ func (su *SourceUpdater) UpdateActive(active bool) error {
 		s.active = active
 		s.status = nil
 		if active {
-			su.manager.backgroundPing()
+			su.doBackgroundPing = true
 		}
 	}, "active", active)
 	return nil
@@ -1256,7 +1272,10 @@ func (su *SourceUpdater) UpdateAge(age *time.Duration) error {
 	if su.updatable.age != nil && age != nil && *su.updatable.age == *age {
 		return nil
 	}
-	su.addChange(func(s *source) { s.setAge(age) }, "age", age)
+	su.addChange(func(s *source) {
+		s.setAge(age)
+		su.doBackgroundPing = true
+	}, "age", age)
 	return nil
 }
 

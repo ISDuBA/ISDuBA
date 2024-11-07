@@ -208,7 +208,7 @@
 <form class={formClass}>
   <Label>Name</Label>
   <Input class="mb-3" on:input={inputChange} bind:value={source.name}></Input>
-  <div class={!source.active && displayActiveHighlight ? "backgroundHighlight" : ""}>
+  <div class={!source.active && displayActiveHighlight ? "blink" : ""}>
     {#if enableActive}
       <CCheckbox
         class="mb-3"
@@ -408,22 +408,3 @@
   </Accordion>
   <br />
 </form>
-
-<style>
-  @keyframes fadeIt {
-    0% {
-      background-color: #ffffff;
-    }
-    50% {
-      background-color: #048dd9;
-    }
-    100% {
-      background-color: #ffffff;
-    }
-  }
-
-  .backgroundHighlight {
-    background-image: none !important;
-    animation: fadeIt 0.75s 2 ease-in-out 0.5s;
-  }
-</style>

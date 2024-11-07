@@ -31,7 +31,7 @@
     <TableBody>
       {#each keys as key, index}
         {#if key === "text" || key === "Text"}
-          <TableBodyRow>
+          <TableBodyRow color="custom">
             <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}>
               <div class="markdown-text">
@@ -42,7 +42,7 @@
             </TableBodyCell>
           </TableBodyRow>
         {:else}
-          <TableBodyRow
+          <TableBodyRow color="custom"
             ><TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}>{values[index]}</TableBodyCell>
           </TableBodyRow>

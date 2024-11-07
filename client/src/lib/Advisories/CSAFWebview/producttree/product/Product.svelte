@@ -17,12 +17,16 @@
   import type { FullProductName } from "$lib/pmdTypes";
   export let product: FullProductName;
   let highlight = false;
+  let blink = false;
   /**
    * updateUI waits for the UI to settle and scrolls to given ProductID.
    */
   async function updateUI() {
     await tick();
     document.getElementById(`${product?.product_id}`)?.scrollIntoView({ behavior: "smooth" });
+    blink = true;
+    await new Promise((res) => setTimeout(res, 5000));
+    blink = false;
   }
   $: selectedProduct = $appStore.webview.ui.selectedProduct;
   $: productID = product?.product_id;
@@ -34,7 +38,7 @@
   }
 </script>
 
-<div class="p-2">
+<div class={"p-2" + (blink ? " blink" : "")} id={product.product_id}>
   <Collapsible
     header={product.name}
     level={4}
@@ -46,11 +50,9 @@
       }
     }}
   >
-    <div id={product.product_id}>
-      <KeyValue keys={["Product ID"]} values={[product.name, product.product_id]} />
-      {#if product.product_identification_helper}
-        <ProductIdentificationHelper helper={product.product_identification_helper} />
-      {/if}
-    </div>
+    <KeyValue keys={["Product ID"]} values={[product.name, product.product_id]} />
+    {#if product.product_identification_helper}
+      <ProductIdentificationHelper helper={product.product_identification_helper} />
+    {/if}
   </Collapsible>
 </div>
