@@ -94,16 +94,16 @@ Utilizing the query cogwheel at the top left, a user can enter the query designe
 There are four different kind of queries:
 
  * Personal Queries
-  * These are only visible and effective for the user who created them
+   * These are only visible and effective for the user who created them
 
  * Global relevant dashboard queries
-  * These are the preset dashboard queries if not filtered out by the admins
+   * These are the preset dashboard queries if not filtered out by the admins
 
  * Global dashboard queries (not displayed)
-  * These are admin-created dashboard queries that users can copy if they so desire
+   * These are admin-created dashboard queries that users can copy if they so desire
 
  * Global search queries
-  * These are admin-created queries that can be used to filter results on the search page.
+   * These are admin-created queries that can be used to filter results on the search page.
 
 
 Here a user can view the existing queries and copy them so they can edit them to fit their own needs.
