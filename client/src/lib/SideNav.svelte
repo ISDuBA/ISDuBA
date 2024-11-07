@@ -21,6 +21,7 @@
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
   import { truncate } from "$lib/utils";
+  import { DarkMode } from "flowbite-svelte";
 
   $: activeUrl = "/" + $page.url.hash;
 
@@ -58,7 +59,7 @@
       id="sidebar"
     >
       <Sidebar
-        asideClass="w-fit max-w-60"
+        asideClass="w-fit max-w-60 relative h-full"
         class="bg-primary-700 dark:bg-gray-800"
         {activeUrl}
         {activeClass}
@@ -108,6 +109,9 @@
             {/if}
           </SidebarGroup>
         </SidebarWrapper>
+        <DarkMode
+          btnClass="absolute bottom-2 hover:bg-primary-100 dark:text-white hover:text-primary-900 dark:hover:bg-gray-600 text-white w-full px-[1.35rem] py-2.5"
+        />
       </Sidebar>
     </Drawer>
     <div class="h-screen bg-white p-2 dark:bg-black">

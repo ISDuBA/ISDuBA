@@ -38,7 +38,6 @@
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
   import AggregatorViewer from "$lib/Sources/AggregatorViewer.svelte";
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
-  import { DarkMode } from "flowbite-svelte";
 
   let loadConfigError: ErrorDetails | null;
 
@@ -263,6 +262,5 @@
     {/if}
     <ErrorMessage error={loadConfigError}></ErrorMessage>
   </main>
-  <DarkMode />
   <Messages></Messages>
 </div>
