@@ -27,7 +27,7 @@
   let activeClass =
     "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-gray-800 dark:text-white hover:bg-primary-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700";
   let nonActiveClass =
-    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 hover:bg-gray-600 hover:text-primary-900";
+    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 dark:hover:bg-gray-600 hover:text-primary-900";
 
   let transitionParams = {
     x: -320,
