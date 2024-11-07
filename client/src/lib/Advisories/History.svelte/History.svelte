@@ -36,13 +36,14 @@
   <Table>
     <TableBody>
       {#each historyEntries as event}
-        <TableBodyRow>
+        <TableBodyRow color="custom">
           {#if event.event_type !== "add_comment"}
             <TableBodyCell {tdClass}>
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
-                  <small class="mb-1 w-32 text-xs text-slate-400" title={event.time}
-                    >{`${event.time.replace("T", " ").split(".")[0]}`}</small
+                  <small
+                    class="mb-1 w-32 text-xs text-slate-400 dark:text-slate-600"
+                    title={event.time}>{`${event.time.replace("T", " ").split(".")[0]}`}</small
                   >
                   <small class="ml-1 flex-grow">
                     {#if event.event_type === "state_change"}
@@ -62,7 +63,7 @@
                     {/if}
                   </small>
                   {#if /state_change|import_document/.test(event.event_type)}
-                    <div class="border-1 border p-1 text-xs text-gray-800">
+                    <div class="border-1 border p-1 text-xs text-gray-800 dark:text-gray-200">
                       {event.state}
                     </div>
                   {/if}
@@ -85,7 +86,9 @@
     </TableBody>
   </Table>
   {#if historyEntries.length === 0}
-    <span class="ml-auto mr-auto text-gray-400">{fullHistory ? "No entries" : "No comments"}</span>
+    <span class="ml-auto mr-auto text-gray-400 dark:text-gray-600"
+      >{fullHistory ? "No entries" : "No comments"}</span
+    >
   {/if}
   <div class="mt-6 flex flex-row justify-end gap-2">
     <slot name="additionalButtons"></slot>
@@ -93,7 +96,7 @@
       <Button
         size="xs"
         color="light"
-        class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
         on:click={() => {
           fullHistory = false;
         }}>Comments</Button
@@ -101,7 +104,7 @@
       <Button
         size="xs"
         color="light"
-        class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100" : ""}`}
+        class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
         on:click={() => {
           fullHistory = true;
         }}>History</Button

@@ -12,7 +12,7 @@
   const activeClass =
     "h-7 py-1 px-3 border-gray-300 dark:bg-gray-600 border text-xs bg-gray-200 hover:bg-gray-100 rounded-lg max-w-max";
   const inactiveClass =
-    "h-7 py-1 px-3 border-gray-300 border text-xs dark:bg-gray-800 hover:bg-gray-100 rounded-lg max-w-max";
+    "h-7 py-1 px-3 border-gray-300 border text-xs dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-100 rounded-lg max-w-max";
 </script>
 
 <div class={active ? activeClass : inactiveClass}>
