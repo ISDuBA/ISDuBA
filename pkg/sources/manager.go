@@ -547,8 +547,13 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 	for i := range urlIDs {
 		s := &urlIDs[i]
 		if cpmd := m.PMD(s.url); cpmd.Valid() {
-			url := cpmd.Loaded.URL
-			sources[url] = append(sources[url], s.id)
+			model, _ := cpmd.Model()
+			curl := model.CanonicalURL
+			u := cpmd.Loaded.URL
+			if curl != nil {
+				u = string(*curl)
+			}
+			sources[u] = append(sources[u], s.id)
 		}
 	}
 
