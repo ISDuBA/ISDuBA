@@ -182,11 +182,38 @@ export interface CSAFPublisherMetadata {
 }
 
 /**
+ * Contains information about the subscribed feed.
+ */
+export interface FeedSubscription {
+  id: number;
+  url: string;
+}
+
+/**
+ * Contains information about the subscribed source.
+ */
+export interface SourceSubscription {
+  id: number;
+  name: string;
+  subscripted?: FeedSubscription[];
+}
+
+/**
+ * Contains information about all subscribed sources.
+ */
+export interface SourceSubscriptions {
+  url: string;
+  available?: string[];
+  subscriptions: SourceSubscription[];
+}
+
+/**
  * Contains information about all subscriptions.
  */
 export interface Subscription {
   url: string;
   available: string[];
+  subscriptions: SourceSubscriptions[];
 }
 
 /**
@@ -195,6 +222,7 @@ export interface Subscription {
 export interface Custom {
   id: number;
   name: string;
+  attention?: boolean;
   subscriptions: Subscription[];
 }
 
