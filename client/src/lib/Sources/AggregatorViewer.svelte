@@ -23,22 +23,33 @@
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
-  import { type AggregatorMetadata } from "$lib/aggregatorTypes";
+  import { type AggregatorMetadata, type Subscription } from "$lib/aggregatorTypes";
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
 
-  type AggregatorInfo = {
-    name: string;
+  type FeedReference = {
+    feedID: number;
+    sourceID: number;
+  };
+
+  type FeedInfo = {
     url: string;
-    availableFeeds: string[];
+    subscribedID: FeedReference[];
+  };
+
+  type SourceInfo = {
+    name: string;
+    subscribedID: number[];
+    url: string;
+    availableFeeds: FeedInfo[];
     publisher: boolean;
     expand: boolean;
   };
 
   let loadingAggregators: boolean = false;
   let aggregators: Aggregator[] = [];
-  let aggregatorData = new Map<number, AggregatorInfo[]>();
+  let aggregatorData = new Map<number, SourceInfo[]>();
 
   let aggregatorError: ErrorDetails | null;
   let aggregatorSaveError: ErrorDetails | null;
@@ -106,30 +117,87 @@
     }
   };
 
-  const parseAggregatorData = (data: AggregatorMetadata): AggregatorInfo[] => {
+  const findSubscribedSources = (sourceURL: string, sub: Subscription[]): number[] => {
+    let found = sub.find((i) => i.url === sourceURL);
+    if (found) {
+      if (found.subscriptions) {
+        return found.subscriptions.map((i) => i.id);
+      }
+    }
+    return [];
+  };
+
+  const findSubscribedFeeds = (
+    sourceURL: string,
+    feedURL: string,
+    sub: Subscription[]
+  ): FeedReference[] => {
+    let found = sub.find((i) => i.url === sourceURL);
+    if (found) {
+      if (found.subscriptions) {
+        type SourceFeedReference = {
+          sourceID: number;
+          feedID: number[];
+        };
+
+        let feeds = found.subscriptions
+          .filter((s) => s.subscripted !== undefined)
+          .map(
+            (s) =>
+              <SourceFeedReference>{
+                sourceID: s.id,
+                feedID: s.subscripted!.filter((i) => i.url === feedURL).map((i) => i.id)
+              }
+          );
+
+        return feeds.flatMap((f) =>
+          f.feedID.map((singleID) => <FeedReference>{ feedID: singleID, sourceID: f.sourceID })
+        );
+      }
+    }
+    return [];
+  };
+
+  const parseAggregatorData = (data: AggregatorMetadata): SourceInfo[] => {
     const csafProviders = data.aggregator.csaf_providers.map(
       (i) =>
-        <AggregatorInfo>{
+        <SourceInfo>{
           name: i.metadata.publisher.name,
           url: i.metadata.url,
-          publisher: false
+          publisher: false,
+          subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
+          availableFeeds: <Array<FeedInfo>>[]
         }
     );
     const csafPublisher =
       data.aggregator.csaf_publishers?.map(
         (i) =>
-          <AggregatorInfo>{
+          <SourceInfo>{
             name: i.metadata.publisher.name,
             url: i.metadata.url,
-            publisher: true
+            publisher: true,
+            subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
+            availableFeeds: <Array<FeedInfo>>[]
           }
       ) ?? [];
 
     const list = [...csafProviders, ...csafPublisher];
-    list.forEach((i) => {
-      let found = data.custom.subscriptions.find((s) => s.url === i.url);
+
+    list.forEach((sourceInfo) => {
+      let found = data.custom.subscriptions.find((s) => s.url === sourceInfo.url);
       if (found) {
-        i.availableFeeds = found.available;
+        sourceInfo.availableFeeds =
+          found.available?.map(
+            (feedURL) =>
+              <FeedInfo>{
+                url: feedURL,
+                subscribedID: findSubscribedFeeds(
+                  sourceInfo.url,
+                  feedURL,
+                  data.custom.subscriptions
+                )
+              }
+          ) ?? [];
       }
     });
     return list;
@@ -271,8 +339,19 @@
               color="light"
             >
               <i class="bx bx-folder-plus"></i>
-            </Button></TableBodyCell
-          >
+            </Button>
+            {#each entry.subscribedID as id}
+              <Button
+                on:click={async () => {
+                  push(`/sources/${id}`);
+                }}
+                class="!p-2"
+                color="light"
+              >
+                <i class="bx bx-folder-open"></i>
+              </Button>
+            {/each}
+          </TableBodyCell>
           <TableBodyCell {tdClass}
             >{entry.name}{#if entry.publisher}
               &nbsp; <i class="bx bx-book"></i>{/if}</TableBodyCell
@@ -283,8 +362,20 @@
           {#each entry.availableFeeds as feed}
             <tr class="bg-slate-200">
               <TableBodyCell {tdClass}></TableBodyCell>
-              <TableBodyCell {tdClass}></TableBodyCell>
-              <TableBodyCell colspan={2} {tdClass}>{feed}</TableBodyCell>
+              <TableBodyCell {tdClass}>
+                {#each feed.subscribedID as feedReference}
+                  <Button
+                    on:click={async () => {
+                      push(`/sources/${feedReference.sourceID}`);
+                    }}
+                    class="!p-2"
+                    color="light"
+                  >
+                    <i class="bx bx-folder-open"></i>
+                  </Button>
+                {/each}
+              </TableBodyCell>
+              <TableBodyCell colspan={2} {tdClass}>{feed.url}</TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
             </tr>
           {/each}

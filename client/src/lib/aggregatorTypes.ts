@@ -190,21 +190,12 @@ export interface FeedSubscription {
 }
 
 /**
- * Contains information about the subscribed source.
- */
-export interface SourceSubscription {
-  id: number;
-  name: string;
-  subscripted?: FeedSubscription[];
-}
-
-/**
  * Contains information about all subscribed sources.
  */
-export interface SourceSubscriptions {
+export interface SourceSubscription {
   url: string;
-  available?: string[];
-  subscriptions: SourceSubscription[];
+  id: number;
+  subscripted?: FeedSubscription[];
 }
 
 /**
@@ -212,8 +203,8 @@ export interface SourceSubscriptions {
  */
 export interface Subscription {
   url: string;
-  available: string[];
-  subscriptions: SourceSubscriptions[];
+  available?: string[];
+  subscriptions?: SourceSubscription[];
 }
 
 /**
