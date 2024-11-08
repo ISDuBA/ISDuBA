@@ -122,7 +122,7 @@ func (f *feed) refresh(m *Manager) {
 	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
 	// Fetching the index is too expensive for the manager main loop.
-	// So we do it async and call back if its is done.
+	// So we do it async and call back when its is done.
 	f.fetchIndex(m, func(candidates []location, err error) {
 		if err != nil {
 			f.log(m, config.ErrorFeedLogLevel, "fetching feed index failed: %v", err)
@@ -220,7 +220,7 @@ func (f *feed) fetchIndex(m *Manager, fn func([]location, error)) {
 		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
 	client := f.source.httpClient(m)
-	// Copy needed data to avoid races.
+	// Copy relevant data to avoid races.
 	fi := feedIndex{
 		base:           f.url,
 		age:            f.source.age,
