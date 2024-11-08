@@ -379,17 +379,9 @@
       <div class="mt-4 flex flex-col">
         <div class="ml-auto flex flex-row gap-x-3">
           {#if currentStep > 0}
-            <Button color="light" size="xs" title="Step back" class="h-6 p-3" on:click={stepBack}
-              >Back</Button
-            >
+            <Button color="light" size="xs" class="h-6 p-3" on:click={stepBack}>Back</Button>
           {/if}
-          <Button
-            size="xs"
-            color="light"
-            title="Restart process"
-            class="h-6 text-nowrap p-3"
-            on:click={resetUserDecisions}
-          >
+          <Button size="xs" color="light" class="h-6 text-nowrap p-3" on:click={resetUserDecisions}>
             Restart
           </Button>
           {#if isComplex || result}
