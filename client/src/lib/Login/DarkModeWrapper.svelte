@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { DarkMode } from "flowbite-svelte";
-  import { appStore } from "./store";
+  import { appStore } from "../store";
   import { onMount } from "svelte";
   export let btnClass: string =
     "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none rounded-lg text-sm p-2.5";

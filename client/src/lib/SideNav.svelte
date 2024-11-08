@@ -21,7 +21,6 @@
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
   import { truncate } from "$lib/utils";
-  import DarkMode from "./DarkModeWrapper.svelte";
 
   $: activeUrl = "/" + $page.url.hash;
 
@@ -112,9 +111,6 @@
             {/if}
           </SidebarGroup>
         </SidebarWrapper>
-        <DarkMode
-          btnClass="absolute bottom-2 hover:bg-primary-100 dark:text-white hover:text-primary-900 dark:hover:bg-primary-900 text-white w-full px-[1.35rem] py-2.5"
-        />
       </Sidebar>
     </Drawer>
     <div class="h-screen bg-white p-2 dark:bg-gray-800">

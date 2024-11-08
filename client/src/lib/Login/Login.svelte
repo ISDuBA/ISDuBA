@@ -15,6 +15,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import DarkMode from "$lib/Login/DarkModeWrapper.svelte";
 
   let viewError: ErrorDetails | null;
   let versionError: ErrorDetails | null;
@@ -75,7 +76,7 @@
 
 <div class="mt-60 flex items-center justify-center">
   <div class="flex w-96 flex-col gap-4">
-    <div><Heading class="mb-2">ISDuBA</Heading></div>
+    <div class="inline-flex flex-row"><Heading class="mb-2">ISDuBA</Heading><DarkMode /></div>
     <Card>
       <div class="flex flex-col gap-4">
         <P class="flex flex-col"
