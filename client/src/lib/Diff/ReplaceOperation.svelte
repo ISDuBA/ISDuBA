@@ -29,7 +29,7 @@
     <div class="flex justify-between gap-2">
       <div class="flex w-6/12 items-center gap-1">
         <i class="bx bx-minus"></i>
-        <div class="h-fit w-fit bg-red-200 dark:bg-[#522630]">
+        <div class="h-fit w-fit bg-red-200 dark:bg-[#412732]">
           {#each sideBySideContent[0] as part}
             <span>{part.t}</span>
           {/each}
@@ -37,7 +37,7 @@
       </div>
       <div class="flex w-6/12 items-center gap-1">
         <i class="bx bx-plus"></i>
-        <div class="h-fit w-fit bg-green-200 dark:bg-[#173d3e]">
+        <div class="h-fit w-fit bg-green-200 dark:bg-[#1a363c]">
           {#each sideBySideContent[1] as part}
             <span>{part.t}</span>
           {/each}

@@ -21,7 +21,7 @@
   import { appStore } from "$lib/store";
   import { page } from "$app/stores";
   import { truncate } from "$lib/utils";
-  import { DarkMode } from "flowbite-svelte";
+  import DarkMode from "./DarkModeWrapper.svelte";
 
   $: activeUrl = "/" + $page.url.hash;
 
