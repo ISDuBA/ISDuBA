@@ -282,7 +282,6 @@
           outline
           size="xs"
           class="h-8"
-          title="Cancel"
           on:click={() => {
             isEditing = false;
           }}
@@ -293,15 +292,12 @@
           outline
           size="xs"
           class="h-8"
-          title="Evaluate"
           {disabled}
           on:click={() => (startedCalculation = true)}
         >
           Evaluate
         </Button>
-        <Button size="xs" class="h-8" title="Save" on:click={() => saveSSVC(vectorInput)}>
-          Save
-        </Button>
+        <Button size="xs" class="h-8" on:click={() => saveSSVC(vectorInput)}>Save</Button>
       </div>
     </div>
   {:else}
@@ -358,7 +354,6 @@
                 <Button
                   class="h-6"
                   outline
-                  title="Custom"
                   size="xs"
                   on:click={() => {
                     isComplex = true;
@@ -384,17 +379,9 @@
       <div class="mt-4 flex flex-col">
         <div class="ml-auto flex flex-row gap-x-3">
           {#if currentStep > 0}
-            <Button color="light" size="xs" title="Step back" class="h-6 p-3" on:click={stepBack}
-              >Back</Button
-            >
+            <Button color="light" size="xs" class="h-6 p-3" on:click={stepBack}>Back</Button>
           {/if}
-          <Button
-            size="xs"
-            color="light"
-            title="Restart process"
-            class="h-6 text-nowrap p-3"
-            on:click={resetUserDecisions}
-          >
+          <Button size="xs" color="light" class="h-6 text-nowrap p-3" on:click={resetUserDecisions}>
             Restart
           </Button>
           {#if isComplex || result}

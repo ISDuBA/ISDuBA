@@ -158,7 +158,6 @@
                   <TableBodyCell tdClass={tdClass + " sticky left-0 bg-inherit"}>
                     <div class="max-w-1/2 min-w-56 whitespace-normal text-wrap break-all">
                       <a
-                        title={$appStore.webview.doc?.productsByID[column.content]}
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
                         class={innerLinkStyle}
