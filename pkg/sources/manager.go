@@ -521,56 +521,53 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 
 // Subscriptions return a list of subscription infos for a given list of source URLs.
 func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
-
-	// Extract data needed to figure out real urls.
+	// Extract data needed to figure out real URLs.
 	type urlID struct {
 		url string
 		id  int64
 	}
-	var urlIDs []urlID
+	var (
+		urlIDs []urlID
+		rps    resolvedPMDs
+	)
 	m.inManager(func(m *Manager, _ context.Context) {
 		urlIDs = make([]urlID, len(m.sources))
 		for i, s := range m.sources {
 			urlIDs[i] = urlID{s.url, s.id}
+			rps.add(s.url)
 		}
 	})
-
+	// We also need the PMDs of the URLs.
+	for _, url := range urls {
+		rps.add(url)
+	}
 	// Resolving external PMDs is too time consuming for the
 	// manager run loop. So do it before.
-	var (
-		sources   = make(map[string][]int64, len(urlIDs))
-		available = make([][]string, len(urls))
-	)
+	rps.resolve(m.pmdCache, m.cfg.Sources.Timeout)
 
-	for i := range urlIDs {
-		s := &urlIDs[i]
-		if cpmd := m.PMD(s.url); cpmd.Valid() {
-			model, _ := cpmd.Model()
-			curl := model.CanonicalURL
-			u := cpmd.Loaded.URL
-			if curl != nil {
-				u = string(*curl)
-			}
-			sources[u] = append(sources[u], s.id)
-		}
-	}
-
-	for i, url := range urls {
-		if pmd, err := m.PMD(url).Model(); err == nil {
-			available[i] = availableFeeds(pmd)
+	// We can subscribe a source more than once.
+	sources := make(map[string][]int64, len(urlIDs))
+	for _, urlID := range urlIDs {
+		if pmd := rps.pmd(urlID.url); pmd != nil && pmd.CanonicalURL != nil {
+			url := string(*pmd.CanonicalURL)
+			sources[url] = append(sources[url], urlID.id)
 		}
 	}
 
 	result := make(chan []SourceSubscriptions)
 	m.fns <- func(m *Manager, _ context.Context) {
-		// We can subscribe a source more than once.
 		subs := make([]SourceSubscriptions, 0, len(urls))
-		for i, url := range urls {
+		for _, url := range urls {
+			pmd := rps.pmd(url)
+			if pmd == nil || pmd.CanonicalURL == nil {
+				// loading failed
+				continue
+			}
 			var subscriptions []SourceSubscription
-			for _, sourceID := range sources[url] {
+			// Look sources up by the canonical URL
+			for _, sourceID := range sources[string(*pmd.CanonicalURL)] {
 				s := m.findSourceByID(sourceID)
 				if s == nil {
-					// Should not happen.
 					continue
 				}
 				var subscripted []FeedSubscription
@@ -590,7 +587,7 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 			}
 			subs = append(subs, SourceSubscriptions{
 				URL:           url,
-				Available:     available[i],
+				Available:     availableFeeds(pmd),
 				Subscriptions: subscriptions,
 			})
 		}
@@ -1048,7 +1045,7 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 
 // PMD returns the provider metadata from the given url.
 func (m *Manager) PMD(url string) *CachedProviderMetadata {
-	return m.pmdCache.pmd(m, url)
+	return m.pmdCache.pmd(url, m.cfg.Sources.Timeout)
 }
 
 // updater collects updates so that only the first update on
