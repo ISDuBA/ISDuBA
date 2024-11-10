@@ -39,13 +39,20 @@ type pmdCache struct {
 	*cache.ExpirationCache[string, *CachedProviderMetadata]
 }
 
+type resolvedPMD struct {
+	url string
+	pmd *csaf.ProviderMetadata
+}
+
+type resolvedPMDs []resolvedPMD
+
 func newPMDCache() *pmdCache {
 	return &pmdCache{
 		ExpirationCache: cache.NewExpirationCache[string, *CachedProviderMetadata](holdingPMDsDuration),
 	}
 }
 
-func (pc *pmdCache) pmd(m *Manager, url string) *CachedProviderMetadata {
+func (pc *pmdCache) pmd(url string, timeout time.Duration) *CachedProviderMetadata {
 
 	if cpmd, ok := pc.Get(url); ok {
 		return cpmd
@@ -55,8 +62,8 @@ func (pc *pmdCache) pmd(m *Manager, url string) *CachedProviderMetadata {
 	header.Add("User-Agent", UserAgent)
 
 	baseClient := &http.Client{}
-	if m.cfg.Sources.Timeout > 0 {
-		baseClient.Timeout = m.cfg.Sources.Timeout
+	if timeout > 0 {
+		baseClient.Timeout = timeout
 	}
 
 	client := util.Client(&util.HeaderClient{
@@ -171,4 +178,57 @@ func isDirectoryFeed(pmd *csaf.ProviderMetadata, url string) bool {
 		}
 	}
 	return false
+}
+
+// add deduplicates urls as each lookup is expensive.
+func (rps *resolvedPMDs) add(urls ...string) {
+	for _, url := range urls {
+		if !slices.ContainsFunc(*rps, func(rp resolvedPMD) bool {
+			return rp.url == url
+		}) {
+			*rps = append(*rps, resolvedPMD{url: url})
+		}
+	}
+}
+
+const numURLResolvers = 5
+
+// resolve resolves all urls added with add to PMDs.
+func (rps resolvedPMDs) resolve(cache *pmdCache, timeout time.Duration) {
+	var (
+		wg        sync.WaitGroup
+		toResolve = make(chan *resolvedPMD)
+	)
+	worker := func() {
+		defer wg.Done()
+		for tr := range toResolve {
+			cpmd := cache.pmd(tr.url, timeout)
+			if !cpmd.Valid() {
+				slog.Debug("Invalid PMD", "url", tr.url)
+				continue
+			}
+			pmd, err := cpmd.Model()
+			if err != nil {
+				slog.Debug("Invalid PMD model", "url", tr.url, "err", err)
+				continue
+			}
+			tr.pmd = pmd
+		}
+	}
+	for range max(1, min(len(rps), numURLResolvers)) {
+		wg.Add(1)
+		go worker()
+	}
+	for i := range rps {
+		toResolve <- &rps[i]
+	}
+	close(toResolve)
+	wg.Wait()
+}
+
+func (rps resolvedPMDs) pmd(url string) *csaf.ProviderMetadata {
+	if idx := slices.IndexFunc(rps, func(rp resolvedPMD) bool { return rp.url == url }); idx >= 0 {
+		return rps[idx].pmd
+	}
+	return nil
 }
