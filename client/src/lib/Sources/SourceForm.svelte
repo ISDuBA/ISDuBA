@@ -16,6 +16,7 @@
   import CFileinput from "$lib/Components/CFileinput.svelte";
   export let formClass: string = "";
   export let source: Source;
+  export let oldSource: Source | undefined = undefined;
   export let enableActive: boolean = false;
   export let parseSource: boolean = true;
   export const updateSource = async () => {
@@ -223,6 +224,7 @@
       <Label>Private cert</Label>
       <CFileinput
         bind:files={privateCert}
+        oldFile={oldSource?.client_cert_private}
         on:change={inputChange}
         id="private-cert"
         titleClearButton="Remove private cert"
@@ -230,6 +232,7 @@
       <Label>Public cert</Label>
       <CFileinput
         bind:files={publicCert}
+        oldFile={oldSource?.client_cert_public}
         on:change={inputChange}
         id="public-cert"
         titleClearButton="Remove public cert"

@@ -18,6 +18,7 @@
   export let files: FileList | undefined = undefined;
   export let id: string;
   export let multiple = true;
+  export let oldFile: string | null | undefined = undefined;
   export let titleClearButton = "";
 
   const dispatch = createEventDispatcher();
@@ -47,6 +48,8 @@
       {:else if files.length > 0}
         <span>{files.item(0)?.name}</span>
       {/if}
+    {:else if oldFile}
+      <span>{oldFile}</span>
     {:else}
       <span>No file selected</span>
     {/if}
@@ -56,6 +59,7 @@
     <Button
       on:click={() => {
         files = undefined;
+        oldFile = undefined;
         dispatch("change");
       }}
       title={titleClearButton}
