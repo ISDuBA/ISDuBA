@@ -38,7 +38,7 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 		return keys, nil
 	}
 	keys, _ := crypto.NewKeyRing(nil)
-	cpmd := m.pmdCache.pmd(m, source.url)
+	cpmd := m.pmdCache.pmd(source.url, m.cfg.Sources.Timeout)
 	if !cpmd.Valid() {
 		// Try again soon.
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
