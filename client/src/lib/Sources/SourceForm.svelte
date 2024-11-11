@@ -191,9 +191,13 @@
   const loadCerts = async () => {
     if (privateCert) {
       source.client_cert_private = await privateCert.item(0)?.text();
+    } else {
+      source.client_cert_private = null;
     }
     if (publicCert) {
       source.client_cert_public = await publicCert.item(0)?.text();
+    } else {
+      source.client_cert_public = null;
     }
   };
 </script>
