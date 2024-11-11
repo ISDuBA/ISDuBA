@@ -19,7 +19,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/samber/slog-gin v1.13.6
 	github.com/sergi/go-diff v1.3.1
-	golang.org/x/oauth2 v0.23.0
+	golang.org/x/oauth2 v0.24.0
 	golang.org/x/time v0.8.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/square/go-jose.v2 v2.6.0
