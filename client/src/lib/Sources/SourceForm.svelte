@@ -158,8 +158,11 @@
   };
 
   const removePattern = (index: number) => {
-    if (source.ignore_patterns.length === 1) source.ignore_patterns = [""];
-    source.ignore_patterns = source.ignore_patterns.toSpliced(index, 1);
+    if (source.ignore_patterns.length === 1) {
+      source.ignore_patterns = [""];
+    } else {
+      source.ignore_patterns = source.ignore_patterns.toSpliced(index, 1);
+    }
     inputChange();
   };
 
@@ -328,7 +331,8 @@
             title="Remove pattern"
             class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
             color="light"
-            disabled={source.ignore_patterns.length <= 1}
+            disabled={source.ignore_patterns.length === 0 ||
+              (source.ignore_patterns.length === 1 && source.ignore_patterns[0] === "")}
           >
             <i class="bx bx-x"></i>
           </Button>
