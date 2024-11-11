@@ -23,8 +23,8 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/gin-gonic/gin"
+	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 

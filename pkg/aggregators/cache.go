@@ -21,7 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/internal/cache"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
-	"github.com/csaf-poc/csaf_distribution/v3/csaf"
+	"github.com/gocsaf/csaf/v3/csaf"
 )
 
 // holdingDuration is the duration how long PMDs are cached.

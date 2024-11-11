@@ -11,7 +11,7 @@
 all: build_isdubad build_importer build_client test
 
 # See comment here (2024-04-05)
-# https://github.com/csaf-poc/csaf_distribution/blob/d909e9de151d5845fe0c0d5b9db2152f9db25e90/Makefile#L40-L49
+# https://github.com/gocsaf/csaf/blob/d909e9de151d5845fe0c0d5b9db2152f9db25e90/Makefile#L40-L49
 
 GITDESC := $(shell git describe --tags --always)
 GITDESCPATCH := $(shell echo '$(GITDESC)' | sed -E 's/v?[0-9]+\.[0-9]+\.([0-9]+)[-+]?.*/\1/')
