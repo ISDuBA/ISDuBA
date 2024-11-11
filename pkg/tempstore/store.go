@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
-	"github.com/csaf-poc/csaf_distribution/v3/util"
+	"github.com/gocsaf/csaf/v3/util"
 )
 
 const cleanupDuration = 5 * time.Minute

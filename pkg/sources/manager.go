@@ -24,7 +24,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
-	"github.com/csaf-poc/csaf_distribution/v3/csaf"
+	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
