@@ -127,9 +127,13 @@
           {:else}
             <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}></TableBodyCell>
           {/if}
-          <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
+          <TableBodyCell tdClass={`${tdClass} break-words whitespace-normal`}
+            >{source.name}</TableBodyCell
+          >
           {#if source.id !== 0}
-            <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
+            <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
+              >{source.url}</TableBodyCell
+            >
             <TableBodyCell {tdClass}
               ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
             >

@@ -113,7 +113,10 @@
               ></CIconButton>
             {/if}
           </TableBodyCell>
-          <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+          <TableBodyCell
+            on:click={async () => await clickFeed(feed)}
+            tdClass={`${tdClass} break-all whitespace-normal`}
+          >
             {#if edit && feed.enable}
               <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}
                 >{feed.url}</a
