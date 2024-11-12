@@ -195,6 +195,7 @@ export interface FeedSubscription {
 export interface SourceSubscription {
   url: string;
   id: number;
+  name: string;
   subscripted?: FeedSubscription[];
 }
 

@@ -23,34 +23,47 @@
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
-  import { type AggregatorMetadata, type Subscription } from "$lib/aggregatorTypes";
+  import {
+    type AggregatorMetadata,
+    type CSAFProviderEntry,
+    type CSAFPublisherEntry,
+    type Custom,
+    type FeedSubscription,
+    type Subscription
+  } from "$lib/aggregatorTypes";
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
 
-  type FeedReference = {
-    feedID: number;
-    sourceID: number;
-  };
-
   type FeedInfo = {
+    id?: number;
+    sourceID?: number;
     url: string;
-    subscribedID: FeedReference[];
+    subscribed: boolean;
   };
 
   type SourceInfo = {
+    id?: number;
+    name: string;
+    isSource: boolean;
+    feedsAvailable: number;
+    feedsSubscribed: number;
+    feeds: FeedInfo[];
+    expand: boolean;
+  };
+
+  type AggregatorEntry = {
     name: string;
     role: string;
     subscribedID: number[];
     url: string;
-    availableFeeds: FeedInfo[];
-    publisher: boolean;
+    availableSources: SourceInfo[];
     expand: boolean;
   };
 
   let loadingAggregators: boolean = false;
   let aggregators: Aggregator[] = [];
-  let aggregatorData = new Map<number, SourceInfo[]>();
+  let aggregatorData = new Map<number, AggregatorEntry[]>();
 
   let aggregatorError: ErrorDetails | null;
   let aggregatorSaveError: ErrorDetails | null;
@@ -118,92 +131,71 @@
     }
   };
 
-  const findSubscribedSources = (sourceURL: string, sub: Subscription[]): number[] => {
-    let found = sub.find((i) => i.url === sourceURL);
-    if (found) {
-      if (found.subscriptions) {
-        return found.subscriptions.map((i) => i.id);
-      }
-    }
-    return [];
-  };
-
-  const findSubscribedFeeds = (
-    sourceURL: string,
-    feedURL: string,
-    sub: Subscription[]
-  ): FeedReference[] => {
-    let found = sub.find((i) => i.url === sourceURL);
-    if (found) {
-      if (found.subscriptions) {
-        type SourceFeedReference = {
-          sourceID: number;
-          feedID: number[];
-        };
-
-        let feeds = found.subscriptions
-          .filter((s) => s.subscripted !== undefined)
-          .map(
-            (s) =>
-              <SourceFeedReference>{
-                sourceID: s.id,
-                feedID: s.subscripted!.filter((i) => i.url === feedURL).map((i) => i.id)
-              }
-          );
-
-        return feeds.flatMap((f) =>
-          f.feedID.map((singleID) => <FeedReference>{ feedID: singleID, sourceID: f.sourceID })
-        );
-      }
-    }
-    return [];
-  };
-
-  const parseAggregatorData = (data: AggregatorMetadata): SourceInfo[] => {
-    const csafProviders = data.aggregator.csaf_providers.map(
-      (i) =>
-        <SourceInfo>{
-          name: i.metadata.publisher.name,
-          url: i.metadata.url,
-          publisher: false,
-          subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
-          availableFeeds: <Array<FeedInfo>>[],
-          role: i.metadata.role?.replace("csaf_", "").replace("_", " ")
+  const getFeeds = (feeds: FeedSubscription[], sourceID: number): FeedInfo[] =>
+    feeds.map(
+      (f) =>
+        <FeedInfo>{
+          id: f.id,
+          url: f.url,
+          sourceID: sourceID,
+          subscribed: true
         }
     );
-    const csafPublisher =
-      data.aggregator.csaf_publishers?.map(
-        (i) =>
-          <SourceInfo>{
-            name: i.metadata.publisher.name,
-            url: i.metadata.url,
-            publisher: true,
-            subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
-            availableFeeds: <Array<FeedInfo>>[],
-            role: i.metadata.role?.replace("csaf_", "").replace("_", " ")
-          }
-      ) ?? [];
 
-    const list = [...csafProviders, ...csafPublisher];
-
-    list.forEach((sourceInfo) => {
-      let found = data.custom.subscriptions.find((s) => s.url === sourceInfo.url);
-      if (found) {
-        sourceInfo.availableFeeds =
-          found.available?.map(
+  const getSources = (entry: Subscription): SourceInfo[] =>
+    entry.subscriptions?.map(
+      (s) =>
+        <SourceInfo>{
+          id: s.id,
+          name: s.name,
+          isSource: true,
+          expand: false,
+          feedsAvailable: entry.available?.length ?? 0,
+          feedsSubscribed: s.subscripted?.length ?? 0,
+          feeds: getFeeds(s.subscripted ?? [], s.id)
+        }
+    ) ?? [
+      <SourceInfo>{
+        name: "Not configured",
+        isSource: false,
+        feedsAvailable: entry.available?.length ?? 0,
+        feedsSubscribed: entry.available?.length ?? 0,
+        feeds:
+          entry.available?.map(
             (feedURL) =>
               <FeedInfo>{
                 url: feedURL,
-                subscribedID: findSubscribedFeeds(
-                  sourceInfo.url,
-                  feedURL,
-                  data.custom.subscriptions
-                )
+                subscribed: false
               }
-          ) ?? [];
+          ) ?? []
       }
-    });
-    return list;
+    ];
+
+  const findSubscription = (url: string, custom: Custom) =>
+    custom.subscriptions.find((i) => i.url === url);
+
+  const getAvailableSources = (url: string, custom: Custom) => {
+    const subscription = findSubscription(url, custom);
+    if (subscription) {
+      return getSources(subscription);
+    } else {
+      return [];
+    }
+  };
+
+  const parseAggregatorData = (data: AggregatorMetadata): AggregatorEntry[] => {
+    const extractEntry = (i: CSAFProviderEntry | CSAFPublisherEntry) =>
+      <AggregatorEntry>{
+        name: i.metadata.publisher.name,
+        url: i.metadata.url,
+        availableSources: getAvailableSources(i.metadata.url, data.custom),
+        role: i.metadata.role?.replace("csaf_", "").replace("_", " ")
+      };
+
+    const csafProviders = data.aggregator.csaf_providers.map(extractEntry);
+    const csafPublisher = data.aggregator.csaf_publishers?.map(extractEntry) ?? [];
+
+    return [...csafProviders, ...csafPublisher];
   };
 
   const resetAttention = async (aggregator: Aggregator) => {
@@ -350,7 +342,7 @@
             >
               <i class="bx bx-folder-plus"></i>
             </Button>
-            {#each entry.subscribedID as id}
+            {#each entry.availableSources as id}
               <Button
                 on:click={async () => {
                   await push(`/sources/${id}`);
@@ -377,24 +369,29 @@
           <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
         </tr>
         {#if entry.expand}
-          {#each entry.availableFeeds as feed}
+          {#each entry.availableSources as source}
             <tr class="bg-slate-200 dark:bg-gray-700">
               <TableBodyCell {tdClass}></TableBodyCell>
-              <TableBodyCell {tdClass}>
-                {#each feed.subscribedID as feedReference}
-                  <Button
-                    on:click={async () => {
-                      sessionStorage.setItem("feedBlinkID", String(feedReference.feedID));
-                      await push(`/sources/${feedReference.sourceID}`);
-                    }}
-                    class="!p-2"
-                    color="light"
-                  >
-                    <i class="bx bx-folder-open"></i>
-                  </Button>
+              <TableBodyCell {tdClass}></TableBodyCell>
+              {#if source.expand}
+                {#each source.feeds as feed}
+                  <tr class="bg-slate-200 dark:bg-gray-700">
+                    <TableBodyCell {tdClass}>
+                      <Button
+                        on:click={async () => {
+                          sessionStorage.setItem("feedBlinkID", String(feed.id));
+                          await push(`/sources/${feed.sourceID}`);
+                        }}
+                        class="!p-2"
+                        color="light"
+                      >
+                        <i class="bx bx-folder-open"></i>
+                      </Button>
+                    </TableBodyCell>
+                  </tr>
                 {/each}
-              </TableBodyCell>
-              <TableBodyCell colspan={3} {tdClass}>{feed.url}</TableBodyCell>
+              {/if}
+              <TableBodyCell colspan={3} {tdClass}>{source.name}</TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
             </tr>
           {/each}
