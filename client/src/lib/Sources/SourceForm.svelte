@@ -90,7 +90,9 @@
 
   let headers: [string, string][] = [["", ""]];
   let privateCert: FileList | undefined;
+  let privateCertReset: boolean = false;
   let publicCert: FileList | undefined;
+  let publicCertReset: boolean = false;
 
   let ageUnit: AgeUnit;
   let ageNumber: number | undefined;
@@ -196,12 +198,20 @@
     if (privateCert) {
       source.client_cert_private = await privateCert.item(0)?.text();
     } else {
-      source.client_cert_private = null;
+      if (oldSource?.client_cert_private === "***" && privateCertReset) {
+        source.client_cert_private = null;
+      } else {
+        source.client_cert_private = "***";
+      }
     }
     if (publicCert) {
       source.client_cert_public = await publicCert.item(0)?.text();
     } else {
-      source.client_cert_public = null;
+      if (oldSource?.client_cert_public === "***" && publicCertReset) {
+        source.client_cert_public = null;
+      } else {
+        source.client_cert_public = "***";
+      }
     }
   };
 </script>
@@ -227,6 +237,7 @@
       <Label>Private cert</Label>
       <CFileinput
         bind:files={privateCert}
+        bind:isFileReset={privateCertReset}
         oldFile={oldSource?.client_cert_private}
         on:change={inputChange}
         id="private-cert"
@@ -235,6 +246,7 @@
       <Label>Public cert</Label>
       <CFileinput
         bind:files={publicCert}
+        bind:isFileReset={publicCertReset}
         oldFile={oldSource?.client_cert_public}
         on:change={inputChange}
         id="public-cert"
