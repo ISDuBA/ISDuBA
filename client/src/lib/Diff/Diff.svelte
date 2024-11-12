@@ -80,11 +80,11 @@
   const getBodyClass = (operation: string) => {
     let bodyClass = "mb-4 p-2";
     if (operation === "add") {
-      return `${bodyClass} bg-green-100`;
+      return `${bodyClass} bg-green-100 dark:bg-[#1a363c]`;
     } else if (operation === "remove") {
-      return `${bodyClass} bg-red-100`;
+      return `${bodyClass} bg-red-100 dark:bg-[#412732]`;
     } else {
-      return `${bodyClass} bg-gray-100`;
+      return `${bodyClass} bg-gray-100 dark:bg-gray-700`;
     }
   };
 </script>
@@ -105,7 +105,8 @@
     {#if showTitle}
       <Label class="text-lg">{title}</Label>
     {/if}
-    <span class={`${title ? "text-gray-700" : "text-sm text-gray-500"}`}>{diff.length} changes</span
+    <span class={`${title ? "text-gray-700 dark:text-gray-300" : "text-sm text-gray-500"}`}
+      >{diff.length} changes</span
     >
     <Accordion flush multiple class={title ? "mt-8" : "mt-1"}>
       <AccordionItem

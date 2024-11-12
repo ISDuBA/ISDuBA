@@ -252,7 +252,7 @@
         <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
       </tr>
       {#each list as entry}
-        <tr class="bg-slate-100" on:click={() => (entry.expand = !entry.expand)}>
+        <tr class="bg-slate-100 dark:bg-gray-700" on:click={() => (entry.expand = !entry.expand)}>
           <TableBodyCell {tdClass}>
             {#if entry.expand}
               <i class="bx bx-minus"></i>
@@ -281,7 +281,7 @@
         </tr>
         {#if entry.expand}
           {#each entry.availableFeeds as feed}
-            <tr class="bg-slate-200">
+            <tr class="bg-slate-200 dark:bg-gray-700">
               <TableBodyCell {tdClass}></TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
               <TableBodyCell colspan={2} {tdClass}>{feed}</TableBodyCell>

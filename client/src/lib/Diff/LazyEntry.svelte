@@ -38,7 +38,7 @@
 
 <div>
   <Button
-    class="flex items-end gap-x-2 bg-inherit pl-1 text-gray-500 hover:bg-inherit"
+    class="flex items-end gap-x-2 bg-inherit pl-1 text-gray-500 hover:bg-inherit dark:bg-inherit dark:hover:bg-inherit"
     on:click={loadEntry}
   >
     {#if isOpen}

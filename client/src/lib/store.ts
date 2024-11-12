@@ -49,6 +49,7 @@ type AppStore = {
       docA: any | undefined;
       docB: any | undefined;
     };
+    isDarkMode: boolean;
   };
   webview: {
     doc: DocModel | null;
@@ -105,7 +106,8 @@ const generateInitialState = (): AppStore => {
       documentsToDelete: null,
       isDeleteModalOpen: false,
       selectedDocumentIDs: new Set<number>(),
-      isToolboxOpen: false
+      isToolboxOpen: false,
+      isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false
     },
     webview: {
       doc: null,
@@ -271,6 +273,12 @@ function createStore() {
     setUploadedFile: () => {
       update((settings) => {
         settings.webview.ui.uploadedFile = true;
+        return settings;
+      });
+    },
+    updateDarkMode: () => {
+      update((settings) => {
+        settings.app.isDarkMode = document.documentElement.classList.contains("dark") ?? false;
         return settings;
       });
     },
