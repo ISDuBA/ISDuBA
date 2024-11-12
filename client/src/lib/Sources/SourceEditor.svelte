@@ -392,6 +392,7 @@
         bind:parseSource={loadSource}
         {inputChange}
         {source}
+        {oldSource}
         {formClass}
         enableActive={true}
       ></SourceForm>

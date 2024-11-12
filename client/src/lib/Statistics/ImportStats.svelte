@@ -151,6 +151,7 @@
 
   const loadStats = async () => {
     if (!from || !to) return;
+    isLoading = true;
     error = null;
     let response: any;
     const toParameter = isToday(new Date(to))
@@ -220,6 +221,7 @@
       }
     }
     stats = newStats;
+    isLoading = false;
   };
 
   const getCriticalStatistic = async (to: Date): Promise<ErrorDetails | undefined> => {

@@ -66,9 +66,12 @@ type feed struct {
 	queue     []location
 	source    *source
 
-	lastETag     string
-	lastModified time.Time
+	refreshBlocked bool
+	lastETag       string
+	lastModified   time.Time
 }
+
+type ignorePatterns []*regexp.Regexp
 
 type source struct {
 	id        int64
@@ -87,7 +90,7 @@ type source struct {
 	secure         *bool
 	signatureCheck *bool
 	age            *time.Duration
-	ignorePatterns []*regexp.Regexp
+	ignorePatterns ignorePatterns
 
 	clientCertPublic     []byte
 	clientCertPrivate    []byte
@@ -99,47 +102,69 @@ type source struct {
 	checksumUpdated time.Time
 }
 
+// ignore returns true if the given url should be ignored.
+func (ip ignorePatterns) ignore(u *url.URL) bool {
+	if len(ip) == 0 {
+		return false
+	}
+	p := u.String()
+	for _, pattern := range ip {
+		if pattern.MatchString(p) {
+			return true
+		}
+	}
+	return false
+}
+
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
-func (f *feed) refresh(m *Manager) error {
+func (f *feed) refresh(m *Manager) {
 	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
 
-	candidates, err := f.fetchIndex(m)
-	if err != nil {
-		return fmt.Errorf("fetching feed index failed: %w", err)
-	}
-	if candidates == nil {
-		slog.Debug("feed has not changed", "feed", f.id)
-		f.log(m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
-		f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
-		return nil
-	}
+	// Fetching the index is too expensive for the manager main loop.
+	// So we do it async and call back when its is done.
+	f.fetchIndex(m, func(candidates []location, err error) {
+		if err != nil {
+			f.log(m, config.ErrorFeedLogLevel, "fetching feed index failed: %v", err)
+			return
+		}
+		if candidates == nil {
+			slog.Debug("feed has not changed", "feed", f.id)
+			f.log(m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
+			f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
+			return
+		}
 
-	slog.Debug("feed has new candidates", "feed", f.id, "candidates", len(candidates))
+		slog.Debug("feed has new candidates", "feed", f.id, "candidates", len(candidates))
 
-	// Filter out candidates which are already in the database with same or newer.
-	if candidates, err = f.removeOlder(m.db, candidates); err != nil {
-		return fmt.Errorf("removing candidates by looking at database failed: %w", err)
-	}
+		// The manager is the owner of the feed so let it do the changes.
+		m.fns <- func(m *Manager, ctx context.Context) {
+			// Filter out candidates which are already in the database with same or newer.
+			if candidates, err = f.removeOlder(ctx, m.db, candidates); err != nil {
+				f.log(m, config.ErrorFeedLogLevel,
+					"feed refresh failed with database error: %v", err)
+				return
+			}
 
-	if len(candidates) == 0 { // Nothing to do.
-		slog.Debug("feed has no candidates left", "feed", f.id)
-		return nil
-	}
+			if len(candidates) == 0 { // Nothing to do.
+				slog.Debug("feed has no candidates left", "feed", f.id)
+				return
+			}
 
-	// Candidates may pile up on same urls so only keep
-	// the latest ones.
-	f.removeOutdatedWaiting(candidates)
+			// Candidates may pile up on same urls so only keep
+			// the latest ones.
+			f.removeOutdatedWaiting(candidates)
 
-	// Merge candidates into list of locations.
-	f.queue = append(f.queue, candidates...)
-	slices.SortFunc(f.queue, func(a, b location) int {
-		return a.updated.Compare(b.updated)
+			// Merge candidates into list of locations.
+			f.queue = append(f.queue, candidates...)
+			slices.SortFunc(f.queue, func(a, b location) int {
+				return a.updated.Compare(b.updated)
+			})
+
+			slog.Debug("feed entries to download", "feed", f.id, "queue", len(f.queue))
+			f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
+		}
 	})
-
-	slog.Debug("feed entries to download", "feed", f.id, "queue", len(f.queue))
-	f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
-	return nil
 }
 
 // removeOutdatedWaiting removes locations with urls from queue which
@@ -170,18 +195,23 @@ func (f *feed) resetIndexTags() {
 }
 
 // fetchIndex fetches the content of the feed index.
-func (f *feed) fetchIndex(m *Manager) ([]location, error) {
+func (f *feed) fetchIndex(m *Manager, fn func([]location, error)) {
+	// Prevent stacked calling
+	f.refreshBlocked = true
+
 	indexURL := f.url.String()
 	if !f.rolie {
 		var err error
 		if indexURL, err = url.JoinPath(indexURL, "changes.csv"); err != nil {
-			return nil, err
+			fn(nil, err)
+			return
 		}
 	}
 	slog.Debug("fetching index", "url", indexURL, "rolie", f.rolie)
 	req, err := http.NewRequest(http.MethodGet, indexURL, nil)
 	if err != nil {
-		return nil, err
+		fn(nil, err)
+		return
 	}
 	if f.lastETag != "" {
 		req.Header.Add("If-None-Match", f.lastETag)
@@ -190,38 +220,61 @@ func (f *feed) fetchIndex(m *Manager) ([]location, error) {
 		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
 	client := f.source.httpClient(m)
-	defer client.CloseIdleConnections()
-	resp, err := f.source.doRequestDirectly(client, m, req)
-	if err != nil {
-		return nil, err
+	// Copy relevant data to avoid races.
+	fi := feedIndex{
+		base:           f.url,
+		age:            f.source.age,
+		ignorePatterns: f.source.ignorePatterns,
+		sameOrNewer:    f.sameOrNewer(),
 	}
-	defer resp.Body.Close()
-	// Nothing changed since last call.
-	if resp.StatusCode == http.StatusNotModified {
-		return nil, nil
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code %d", resp.StatusCode)
-	}
-	var locations []location
-	if f.rolie {
-		locations, err = f.rolieLocations(resp.Body)
-	} else {
-		locations, err = f.directoryLocations(resp.Body)
-	}
-	if err != nil {
-		return nil, err
-	}
-	f.lastETag = resp.Header.Get("Etag")
-	if m := resp.Header.Get("Last-Modified"); m != "" {
-		f.lastModified, _ = time.Parse(http.TimeFormat, m)
-	}
-	return locations, nil
+	// Do the actual fetching async.
+	go func() {
+		defer func() {
+			client.CloseIdleConnections()
+			// Re-enable refreshing
+			m.fns <- func(*Manager, context.Context) { f.refreshBlocked = false }
+		}()
+		resp, err := f.source.doRequest(client, m, req)
+		if err != nil {
+			fn(nil, err)
+			return
+		}
+		defer resp.Body.Close()
+		// Nothing changed since last call.
+		if resp.StatusCode == http.StatusNotModified {
+			fn(nil, nil)
+			return
+		}
+		if resp.StatusCode != http.StatusOK {
+			fn(nil, fmt.Errorf("status code %d", resp.StatusCode))
+			return
+		}
+		var locations []location
+		if f.rolie {
+			locations, err = fi.rolieLocations(resp.Body)
+		} else {
+			locations, err = fi.directoryLocations(resp.Body)
+		}
+		if err != nil {
+			fn(nil, err)
+			return
+		}
+		fn(locations, nil)
+		m.fns <- func(*Manager, context.Context) {
+			f.lastETag = resp.Header.Get("Etag")
+			if m := resp.Header.Get("Last-Modified"); m != "" {
+				f.lastModified, _ = time.Parse(http.TimeFormat, m)
+			}
+		}
+	}()
 }
 
 // removeOlder takes a list of locations and removes the items which are already
 // in the database with a same or newer update time.
-func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, error) {
+func (f *feed) removeOlder(
+	ctx context.Context, db *database.DB,
+	candidates []location,
+) ([]location, error) {
 	var remove [][2]int
 
 	exists := func(idx int) func(pgx.Row) error {
@@ -252,7 +305,7 @@ func (f *feed) removeOlder(db *database.DB, candidates []location) ([]location, 
 	}
 
 	if err := db.Run(
-		context.Background(),
+		ctx,
 		func(ctx context.Context, conn *pgxpool.Conn) error {
 			return conn.SendBatch(ctx, &batch).Close()
 		}, 0,
@@ -353,20 +406,6 @@ func (s *source) deleteTooOld() {
 	}
 }
 
-// ignore returns true if the given url should be ignored.
-func (s *source) ignore(u *url.URL) bool {
-	if len(s.ignorePatterns) == 0 {
-		return false
-	}
-	p := u.String()
-	for _, pattern := range s.ignorePatterns {
-		if pattern.MatchString(p) {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *source) setAge(age *time.Duration) {
 	s.age = age
 	s.deleteTooOld()
@@ -384,7 +423,7 @@ func (s *source) deleteIgnore() {
 			continue
 		}
 		f.queue = slices.DeleteFunc(f.queue, func(l location) bool {
-			return l.state == waiting && s.ignore(l.doc)
+			return l.state == waiting && s.ignorePatterns.ignore(l.doc)
 		})
 	}
 }
@@ -444,18 +483,6 @@ func (s *source) applyHeaders(req *http.Request) {
 	if req.Header.Get("User-Agent") == "" {
 		req.Header.Add("User-Agent", UserAgent)
 	}
-}
-
-// doRequestDirectly executes an HTTP request with the source specific parameters.
-func (s *source) doRequestDirectly(client *http.Client, m *Manager, req *http.Request) (*http.Response, error) {
-	s.applyHeaders(req)
-	if client == nil {
-		client = s.httpClient(m)
-	}
-	if limiter := s.wait(); limiter != nil {
-		limiter.Wait(context.Background())
-	}
-	return client.Do(req)
 }
 
 // doRequest executes an HTTP request with the source specific parameters.
