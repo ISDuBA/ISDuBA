@@ -168,7 +168,7 @@
           publisher: false,
           subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
           availableFeeds: <Array<FeedInfo>>[],
-          role: i.metadata.role
+          role: i.metadata.role?.replace("csaf_", "").replace("_", " ")
         }
     );
     const csafPublisher =
@@ -180,7 +180,7 @@
             publisher: true,
             subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
             availableFeeds: <Array<FeedInfo>>[],
-            role: i.metadata.role
+            role: i.metadata.role?.replace("csaf_", "").replace("_", " ")
           }
       ) ?? [];
 
