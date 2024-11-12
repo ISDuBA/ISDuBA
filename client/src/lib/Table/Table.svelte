@@ -626,7 +626,7 @@
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
-                      <div class="m-2 table w-full text-wrap">
+                      <div class="m-2 table w-16 text-wrap">
                         {#if item[column]}
                           <SsvcBadge vector={item[column]}></SsvcBadge>
                         {/if}
@@ -718,7 +718,7 @@
                         >
                         </a>
                       {/if}
-                      <div class="w-38">
+                      <div class="w-32">
                         <div class="z-50 table text-wrap p-2">
                           {#if item[column] && item[column][0]}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
