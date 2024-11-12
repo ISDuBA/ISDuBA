@@ -37,12 +37,8 @@ type argumentedAggregator struct {
 }
 
 func (c *Controller) aggregatorProxy(ctx *gin.Context) {
-	validate, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("validate", "false"))
-	if !ok {
-		return
-	}
 	url := ctx.Query("url")
-	ca, err := c.am.Cache.GetAggregator(url, validate)
+	ca, err := c.am.Cache.GetAggregator(url, true)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
