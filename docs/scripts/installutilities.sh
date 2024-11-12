@@ -21,14 +21,14 @@ sudo apt install -y openjdk-21-jre-headless
 # Install or update Go
 
 # look up current go version
-go_version="$(curl https://go.dev/VERSION\?m=text| head -1)"
+go_version="$(curl https://go.dev/VERSION\?m=text | head -1)"
 
 if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
-    sudo apt install xkcdpass
+  sudo apt install xkcdpass
 fi
 
 # if go exists and is the newest version
-if [ -x "$(command -v go version)" ] && [[ `go version` == *"$go_version"* ]]; then
+if [ -x "$(command -v go version)" ] && [[ $(go version) == *"$go_version"* ]]; then
   echo "Newest go version already installed."
 # if not, download the newest go version
 else
