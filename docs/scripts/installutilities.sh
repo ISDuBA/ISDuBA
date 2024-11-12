@@ -10,6 +10,8 @@
 
 set -e # to exit if a command in the script fails
 
+sudo apt-get update
+
 # Install base packages
 sudo apt install -y make bash curl sed tar
 
