@@ -49,6 +49,7 @@ type source struct {
 	Name                 string         `json:"name" form:"name" binding:"required,min=1"`
 	URL                  string         `json:"url" form:"url" binding:"required,min=1"`
 	Active               bool           `json:"active" form:"active"`
+	Attention            bool           `json:"attention" form:"attention"`
 	Status               []string       `json:"status,omitempty"`
 	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gte=0"`
 	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=0"`
@@ -92,6 +93,7 @@ func newSource(si *sources.SourceInfo) *source {
 		Name:                 si.Name,
 		URL:                  si.URL,
 		Active:               si.Active,
+		Attention:            si.Attention,
 		Status:               si.Status,
 		Rate:                 si.Rate,
 		Slots:                si.Slots,
@@ -327,6 +329,17 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 					fmt.Sprintf("parsing 'active' failed: %v", err.Error()))
 			}
 			if err := su.UpdateActive(act); err != nil {
+				return err
+			}
+		}
+		// attention
+		if attention, ok := ctx.GetPostForm("attention"); ok {
+			att, err := strconv.ParseBool(attention)
+			if err != nil {
+				return sources.InvalidArgumentError(
+					fmt.Sprintf("parsing 'attention' failed: %v", err.Error()))
+			}
+			if err := su.UpdateAttention(att); err != nil {
 				return err
 			}
 		}
@@ -680,6 +693,23 @@ func (c *Controller) defaultMessage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
 }
 
+// attentionSources returns a list of sources that need attention.
+func (c *Controller) attentionSources(ctx *gin.Context) {
+	all, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("all", "false"))
+	if !ok {
+		return
+	}
+	type attention struct {
+		ID   int64  `json:"id"`
+		Name string `json:"name"`
+	}
+	list := []attention{}
+	c.sm.AttentionSources(all, func(id int64, name string) {
+		list = append(list, attention{ID: id, Name: name})
+	})
+	ctx.JSON(http.StatusOK, list)
+}
+
 // defaultSourceConfig returns the default source configuration.
 func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 	cfg := c.cfg.Sources
@@ -702,18 +732,19 @@ func (c *Controller) pmd(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	lpmd := c.sm.PMD(input.URL)
-	if !lpmd.Valid() {
+	cpmd := c.sm.PMD(input.URL)
+	if !cpmd.Valid() {
 		h := gin.H{}
-		if n := len(lpmd.Messages); n > 0 {
-			msgs := make([]string, 0, n)
-			for i := range lpmd.Messages {
-				msgs = append(msgs, lpmd.Messages[i].Message)
+		msgs := cpmd.Loaded.Messages
+		if n := len(msgs); n > 0 {
+			txts := make([]string, 0, n)
+			for i := range msgs {
+				txts = append(txts, msgs[i].Message)
 			}
-			h["messages"] = msgs
+			h["messages"] = txts
 		}
 		ctx.JSON(http.StatusBadGateway, h)
 		return
 	}
-	ctx.JSON(http.StatusOK, lpmd.Document)
+	ctx.JSON(http.StatusOK, cpmd.Loaded.Document)
 }

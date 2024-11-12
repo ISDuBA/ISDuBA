@@ -196,17 +196,17 @@ const fetchStatistic = async (
   feed: boolean = false
 ): Promise<Result<any, ErrorDetails>> => {
   let path = `/api/stats/${type}`;
-  if (id && !feed) {
+  if (id !== undefined && !feed) {
     path += `/source/${id}`;
   }
-  if (id && feed) {
+  if (id !== undefined && feed) {
     path += `/feed/${id}`;
   }
   let filterQuery = "";
   if (filter) {
     filterQuery += filter.downloadFailed ? `&download_failed=true` : "";
     filterQuery += filter.filenameFailed ? `&filename_failed=true` : "";
-    filterQuery += filter.schemaFailed ? `&schmema_failed=true` : "";
+    filterQuery += filter.schemaFailed ? `&schema_failed=true` : "";
     filterQuery += filter.remoteFailed ? `&remote_failed=true` : "";
     filterQuery += filter.checksumFailed ? `&checksum_failed=true` : "";
     filterQuery += filter.signatureFailed ? `&signature_failed=true` : "";

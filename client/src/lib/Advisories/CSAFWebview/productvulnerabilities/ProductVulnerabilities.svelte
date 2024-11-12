@@ -21,6 +21,7 @@
     TableBodyRow,
     Button
   } from "flowbite-svelte";
+  import { innerLinkStyle } from "./../helpers";
   const tdClass = "whitespace-nowrap py-1 px-2 font-normal";
   const tablePadding = "px-2";
   let renderAllCVEs = false;
@@ -116,6 +117,7 @@
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
                         <a
+                          class={innerLinkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
                           >{column.content}</a
@@ -135,6 +137,7 @@
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
                         <a
+                          class={innerLinkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
                           >{column.content}
@@ -155,9 +158,9 @@
                   <TableBodyCell tdClass={tdClass + " sticky left-0 bg-inherit"}>
                     <div class="max-w-1/2 min-w-56 whitespace-normal text-wrap break-all">
                       <a
-                        title={$appStore.webview.doc?.productsByID[column.content]}
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
+                        class={innerLinkStyle}
                         >{$appStore.webview.doc?.productsByID[column.content]}
                         ({column.content.length > 20
                           ? column.content.substring(0, 20) + "..."

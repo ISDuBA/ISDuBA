@@ -19,6 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 	sloggin "github.com/samber/slog-gin"
 
+	"github.com/ISDuBA/ISDuBA/pkg/aggregators"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 	"github.com/ISDuBA/ISDuBA/pkg/forwarder"
@@ -35,6 +36,7 @@ type Controller struct {
 	fm  *forwarder.ForwardManager
 	ts  *tempstore.Store
 	sm  *sources.Manager
+	am  *aggregators.Manager
 	val csaf.RemoteValidator
 }
 
@@ -45,6 +47,7 @@ func NewController(
 	fm *forwarder.ForwardManager,
 	ts *tempstore.Store,
 	dl *sources.Manager,
+	am *aggregators.Manager,
 	val csaf.RemoteValidator,
 ) *Controller {
 	return &Controller{
@@ -53,6 +56,7 @@ func NewController(
 		fm:  fm,
 		ts:  ts,
 		sm:  dl,
+		am:  am,
 		val: val,
 	}
 }
@@ -164,6 +168,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/sources", authEdSM, c.viewSources)
 	api.POST("/sources", authSM, c.createSource)
 	api.GET("/sources/message", authAll, c.defaultMessage)
+	api.GET("/sources/attention", authSM, c.attentionSources)
 	api.GET("/sources/default", authSM, c.defaultSourceConfig)
 	api.DELETE("/sources/:id", authSM, c.deleteSource)
 	api.GET("/sources/:id", authSM, c.viewSource)
@@ -188,6 +193,15 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/stats/critical/feed/:id", authAll, c.criticalStatsFeed)
 	api.GET("/stats/critical", authAll, c.criticalStatsAllSources)
 	api.GET("/stats/totals", authAll, c.statsTotal)
+
+	// Aggregators
+	api.GET("/aggregator", authEdSM, c.aggregatorProxy)
+	api.GET("/aggregators", authEdSM, c.viewAggregators)
+	api.GET("/aggregators/:id", authEdSM, c.viewAggregator)
+	api.PUT("/aggregators/:id", authSM, c.updateAggregator)
+	api.GET("/aggregators/attention", authSM, c.attentionAggregators)
+	api.POST("/aggregators", authSM, c.createAggregator)
+	api.DELETE("/aggregators/:id", authSM, c.deleteAggregator)
 
 	return r
 }

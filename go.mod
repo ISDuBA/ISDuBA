@@ -12,15 +12,15 @@ go 1.22
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/ProtonMail/gopenpgp/v2 v2.7.5
+	github.com/ProtonMail/gopenpgp/v2 v2.8.0
 	github.com/csaf-poc/csaf_distribution/v3 v3.0.0
 	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/jackc/pgx/v5 v5.7.1
-	github.com/samber/slog-gin v1.13.5
+	github.com/samber/slog-gin v1.13.6
 	github.com/sergi/go-diff v1.3.1
-	golang.org/x/oauth2 v0.23.0
-	golang.org/x/time v0.7.0
+	golang.org/x/oauth2 v0.24.0
+	golang.org/x/time v0.8.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
@@ -28,7 +28,7 @@ require (
 require (
 	github.com/Intevation/gval v1.3.0 // indirect
 	github.com/Intevation/jsonpath v0.2.1 // indirect
-	github.com/ProtonMail/go-crypto v1.0.0 // indirect
+	github.com/ProtonMail/go-crypto v1.1.0 // indirect
 	github.com/ProtonMail/go-mime v0.0.0-20230322103455-7d82a3887f2f // indirect
 	github.com/bytedance/sonic v1.12.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect

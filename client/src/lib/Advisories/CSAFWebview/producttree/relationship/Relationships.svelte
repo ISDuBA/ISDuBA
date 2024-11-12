@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import type { Relationship } from "$lib/types";
+  import type { Relationship } from "$lib/pmdTypes";
   import Relation from "./Relation.svelte";
   export let relationships: Relationship[];
   export let basePath = "";

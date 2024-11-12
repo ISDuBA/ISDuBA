@@ -20,8 +20,15 @@ import (
 	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 )
 
+type feedIndex struct {
+	base           *url.URL
+	age            *time.Duration
+	ignorePatterns ignorePatterns
+	sameOrNewer    func(*location) bool
+}
+
 // rolieLocations assumes that the feed index is ROLIE.
-func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
+func (fi *feedIndex) rolieLocations(r io.Reader) ([]location, error) {
 	rolie, err := csaf.LoadROLIEFeed(r)
 	if err != nil {
 		return nil, fmt.Errorf("loading rolie feed from data failed: %w", err)
@@ -32,27 +39,25 @@ func (f *feed) rolieLocations(r io.Reader) ([]location, error) {
 			return fmt.Errorf("invalid href: %v", href)
 		}
 		if !u.IsAbs() {
-			u = f.url.ResolveReference(u)
+			u = fi.base.ResolveReference(u)
 		}
 		*store = u
 		return nil
 	}
-	sameOrNewer := f.sameOrNewer()
 	// If we have a max age set calculate the cut time.
 	var cut time.Time
-	if f.source.age != nil {
-		cut = time.Now().Add(-*f.source.age)
+	if fi.age != nil {
+		cut = time.Now().Add(-*fi.age)
 	}
 	// Extract the locations
 	entries := rolie.Feed.Entry
-	slog.Debug("rolie feed entries", "num", len(entries), "feed", f.id)
 	dls := make([]location, 0, len(entries))
 nextEntry:
 	for _, entry := range entries {
 		links := entry.Link
 		updated := time.Time(entry.Updated)
 		// Apply age filter
-		if f.source.age != nil && updated.Before(cut) {
+		if fi.age != nil && updated.Before(cut) {
 			continue
 		}
 		dl := location{updated: updated}
@@ -66,7 +71,7 @@ nextEntry:
 					return nil, err
 				}
 				// Apply ignore patterns
-				if f.source.ignore(dl.doc) {
+				if fi.ignorePatterns.ignore(dl.doc) {
 					continue nextEntry
 				}
 			case "signature":
@@ -95,7 +100,10 @@ nextEntry:
 		}
 		// Only append if we don't have already the same or we are
 		// waiting to request a new one.
-		if dl.doc != nil && !sameOrNewer(&dl) {
+		if dl.doc != nil {
+			if fi.sameOrNewer != nil && fi.sameOrNewer(&dl) {
+				continue
+			}
 			dls = append(dls, dl)
 		}
 	}
@@ -103,17 +111,15 @@ nextEntry:
 }
 
 // directoryLocations assumes that the feed index is changes.csv
-func (f *feed) directoryLocations(r io.Reader) ([]location, error) {
+func (fi *feedIndex) directoryLocations(r io.Reader) ([]location, error) {
 	c := csv.NewReader(r)
 	c.FieldsPerRecord = 2
 	c.ReuseRecord = true
 
-	sameOrNewer := f.sameOrNewer()
-
 	// If we have a max age set calculate the cut time.
 	var cut time.Time
-	if f.source.age != nil {
-		cut = time.Now().Add(-*f.source.age)
+	if fi.age != nil {
+		cut = time.Now().Add(-*fi.age)
 	}
 
 	var dls []location
@@ -135,23 +141,24 @@ func (f *feed) directoryLocations(r io.Reader) ([]location, error) {
 			return nil, fmt.Errorf("column 2 in line %d is not a valid RFC3339 time: %w", lineNo, err)
 		}
 		if !doc.IsAbs() {
-			doc = f.url.ResolveReference(doc)
+			doc = fi.base.ResolveReference(doc)
 		}
 		// Apply age filter
-		if f.source.age != nil && updated.Before(cut) {
+		if fi.age != nil && updated.Before(cut) {
 			continue
 		}
 		// Apply ignore patterns
-		if f.source.ignore(doc) {
+		if fi.ignorePatterns.ignore(doc) {
 			continue
 		}
 		dl := location{
 			updated: updated,
 			doc:     doc,
 		}
-		if !sameOrNewer(&dl) {
-			dls = append(dls, dl)
+		if fi.sameOrNewer != nil && fi.sameOrNewer(&dl) {
+			continue
 		}
+		dls = append(dls, dl)
 	}
 
 	return dls, nil

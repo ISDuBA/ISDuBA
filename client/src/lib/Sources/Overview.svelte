@@ -28,6 +28,7 @@
   let sourcesError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
+  const smallColumnClass = "w-7 max-w-7 min-w-7";
 
   let sources: Source[] = [];
   async function getMessage() {
@@ -82,6 +83,11 @@
       title="CSAF Provider"
       headers={[
         {
+          label: "",
+          attribute: "attention",
+          class: smallColumnClass
+        },
+        {
           label: "Name",
           attribute: "name"
         },
@@ -114,9 +120,20 @@
           on:focus={() => {}}
           class={appStore.isSourceManager() ? "cursor-pointer" : ""}
         >
-          <TableBodyCell {tdClass}>{source.name}</TableBodyCell>
+          {#if source.attention}
+            <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
+              <i class="bx bx-info-square text-lg"></i>
+            </TableBodyCell>
+          {:else}
+            <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}></TableBodyCell>
+          {/if}
+          <TableBodyCell tdClass={`${tdClass} break-words whitespace-normal`}
+            >{source.name}</TableBodyCell
+          >
           {#if source.id !== 0}
-            <TableBodyCell {tdClass}>{source.url}</TableBodyCell>
+            <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
+              >{source.url}</TableBodyCell
+            >
             <TableBodyCell {tdClass}
               ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
             >
@@ -161,6 +178,12 @@
   <ErrorMessage error={sourcesError}></ErrorMessage>
   <ErrorMessage error={messageError}></ErrorMessage>
 
+  <br />
+  {#if appStore.isSourceManager()}
+    <Button href="/#/sources/aggregators" class="my-2" color="primary" size="xs">
+      <span>Aggregator List</span>
+    </Button>
+  {/if}
   <br />
   {#if appStore.isImporter()}
     <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">

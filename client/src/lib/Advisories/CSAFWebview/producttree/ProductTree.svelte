@@ -53,7 +53,7 @@
 {/if}
 
 {#if $appStore.webview.doc?.productTree.relationships}
-  <Collapsible header="Relationships" open={!selectedProduct && openRelationships}>
+  <Collapsible header="Relationships" open={!!selectedProduct || openRelationships}>
     <Relationships {basePath} relationships={$appStore.webview.doc?.productTree.relationships} />
   </Collapsible>
 {/if}

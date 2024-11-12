@@ -120,6 +120,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
    `dd if=/dev/urandom bs=32 count=1 status=none | xxd -p -c 32`
 - `timeout`: How long should be waited for HTTP responses in sources manager? Defaults to `"30s"`.
 - `default_age`: The default maximum age of the downloaded documents. A value of 0 means that there is no limit. Defaults to `"17520h"`, i.e. 2 years.
+- `checking`: Time interval of re-checking the sources for changes. Defaults to `"2h"`.
 
 ### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
 
@@ -200,6 +201,7 @@ Documents that are discarded because of failed validation are not forwarded.
 | `ISDUBA_SOURCES_AES_KEY`              | `sources aes_key`                    |
 | `ISDUBA_SOURCES_TIMEOUT`              | `sources timeout`                    |
 | `ISDUBA_SOURCES_DEFAULT_AGE`          | `sources default_age`                |
+| `ISDUBA_SOURCES_CHECKING`             | `sources checking`                   |
 | `ISDUBA_REMOTE_VALIDATOR_URL`         | `remote_validator url`               |
 | `ISDUBA_REMOTE_VALIDATOR_CACHE`       | `remote_validator cache`             |
 | `ISDUBA_CLIENT_KEYCLOAK_URL`          | `client keycloak_url`                |

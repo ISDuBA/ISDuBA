@@ -27,7 +27,11 @@
   }
 
   async function login() {
-    await $appStore.app.userManager?.signinRedirect();
+    try {
+      await $appStore.app.userManager?.signinRedirect();
+    } catch (e: any) {
+      viewError = getErrorDetails(`Could not load login information: ` + e.message);
+    }
   }
 
   let profileUrl = `${appStore.getKeycloakURL()}/realms/${appStore.getKeycloakRealm()}/account/?referrer=${appStore.getKeycloakClientID()}&referrer_uri=${encodeURIComponent(window.location.href)}`;

@@ -18,7 +18,8 @@
     fetchFeeds,
     calculateMissingFeeds,
     parseFeeds,
-    saveFeeds
+    saveFeeds,
+    resetSourceAttention
   } from "$lib/Sources/source";
   import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -71,7 +72,8 @@
     slots: 2,
     strict_mode: true,
     headers: [""],
-    ignore_patterns: [""]
+    ignore_patterns: [""],
+    attention: false
   };
 
   let oldSource = structuredClone(source);
@@ -180,9 +182,19 @@
       if (id) {
         feed.id = id;
       }
+      await markAsDone();
     } else {
       saveFeedError = result.error;
     }
+  };
+
+  const markAsDone = async () => {
+    let result = await resetSourceAttention(source);
+    if (!result.ok) {
+      saveSourceError = result.error;
+    }
+
+    await loadSourceInfo(source.id ?? 0);
   };
 
   const sourceEqual = (a: Source, b: Source) => {
@@ -380,6 +392,7 @@
         bind:parseSource={loadSource}
         {inputChange}
         {source}
+        {oldSource}
         {formClass}
         enableActive={true}
       ></SourceForm>
@@ -402,6 +415,10 @@
       >
         <i class="bx bx-trash me-2 text-red-500"></i>
         <span>Delete source</span>
+      </Button>
+      <Button disabled={!source.attention} on:click={markAsDone} color="light">
+        <i class="bx bx-check me-2"></i>
+        <span>Mark as done</span>
       </Button>
       <ErrorMessage error={saveSourceError}></ErrorMessage>
     </div>

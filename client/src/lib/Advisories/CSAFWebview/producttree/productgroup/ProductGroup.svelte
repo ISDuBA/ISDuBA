@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import type { ProductGroup } from "$lib/types";
+  import type { ProductGroup } from "$lib/pmdTypes";
   import ValueField from "$lib/Advisories/CSAFWebview/ValueField.svelte";
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
   export let productGroup: ProductGroup;

@@ -93,7 +93,7 @@ func (l *location) download(m *Manager, f *feed) {
 	)
 
 	// The manager owns the configuration so extract the parameters beforehand.
-	m.inManager(func(m *Manager) {
+	m.inManager(func(m *Manager, _ context.Context) {
 		strictMode = f.source.useStrictMode(m)
 		signatureCheck = f.source.checkSignature(m)
 		client = f.source.httpClient(m)

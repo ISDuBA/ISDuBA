@@ -14,16 +14,20 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
-  import type { Relationship } from "$lib/types";
+  import type { Relationship } from "$lib/pmdTypes";
   import { A } from "flowbite-svelte";
   export let relation: Relationship;
   let highlight = false;
+  let blink = false;
   export let basePath = "";
   async function updateUI() {
     await tick();
     document
       .getElementById(`${relation.full_product_name.product_id}`)
       ?.scrollIntoView({ behavior: "smooth" });
+    blink = true;
+    await new Promise((res) => setTimeout(res, 5000));
+    blink = false;
   }
   $: selectedProduct = $appStore.webview.ui.selectedProduct;
   $: productID = relation.full_product_name.product_id;
@@ -46,7 +50,7 @@
     }
   }}
 >
-  <div id={relation.full_product_name.product_id}>
+  <div id={relation.full_product_name.product_id} class={blink ? "blink" : ""}>
     <KeyValue
       keys={["Category", "Name", "Product ID"]}
       values={[
@@ -66,7 +70,7 @@
           <td>Product reference</td>
           <td
             ><A
-              color="text-blue-700"
+              color="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.product_reference)}`}
               >{relation.product_reference}</A
@@ -77,7 +81,7 @@
           <td>Relates to</td>
           <td
             ><A
-              color="text-blue-700"
+              color="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.relates_to_product_reference)}`}
               >{relation.relates_to_product_reference}</A
