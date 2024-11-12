@@ -40,6 +40,7 @@
 
   type SourceInfo = {
     name: string;
+    role: string;
     subscribedID: number[];
     url: string;
     availableFeeds: FeedInfo[];
@@ -166,7 +167,8 @@
           url: i.metadata.url,
           publisher: false,
           subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
-          availableFeeds: <Array<FeedInfo>>[]
+          availableFeeds: <Array<FeedInfo>>[],
+          role: i.metadata.role
         }
     );
     const csafPublisher =
@@ -177,7 +179,8 @@
             url: i.metadata.url,
             publisher: true,
             subscribedID: findSubscribedSources(i.metadata.url, data.custom.subscriptions),
-            availableFeeds: <Array<FeedInfo>>[]
+            availableFeeds: <Array<FeedInfo>>[],
+            role: i.metadata.role
           }
       ) ?? [];
 
@@ -274,6 +277,10 @@
         attribute: "name"
       },
       {
+        label: "Role",
+        attribute: "role"
+      },
+      {
         label: "URL",
         attribute: "url"
       }
@@ -317,6 +324,7 @@
           </Button>
         </TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
+        <TableBodyCell {tdClass}></TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
       </tr>
       {#each list as entry}
@@ -352,10 +360,8 @@
               </Button>
             {/each}
           </TableBodyCell>
-          <TableBodyCell {tdClass}
-            >{entry.name}{#if entry.publisher}
-              &nbsp; <i class="bx bx-book"></i>{/if}</TableBodyCell
-          >
+          <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
+          <TableBodyCell {tdClass}>{entry.role}</TableBodyCell>
           <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
         </tr>
         {#if entry.expand}
@@ -376,7 +382,7 @@
                   </Button>
                 {/each}
               </TableBodyCell>
-              <TableBodyCell colspan={2} {tdClass}>{feed.url}</TableBodyCell>
+              <TableBodyCell colspan={3} {tdClass}>{feed.url}</TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
             </tr>
           {/each}
