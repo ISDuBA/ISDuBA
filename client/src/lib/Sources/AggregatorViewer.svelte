@@ -206,6 +206,15 @@
     return list;
   };
 
+  const resetAttention = async (aggregator: Aggregator) => {
+    let resetResult = await resetAggregatorAttention(aggregator);
+    if (resetResult.ok) {
+      aggregator.attention = false;
+    } else {
+      aggregatorError = resetResult.error;
+    }
+  };
+
   const toggleAggregatorView = async (aggregator: Aggregator) => {
     if (aggregatorData.get(aggregator.id ?? -1)) {
       aggregatorData.delete(aggregator.id ?? -1);
@@ -217,12 +226,7 @@
     loadingAggregators = false;
     if (resp.ok) {
       aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value));
-      let resetResult = await resetAggregatorAttention(aggregator);
-      if (resetResult.ok) {
-        aggregator.attention = false;
-      } else {
-        aggregatorError = resetResult.error;
-      }
+
       aggregatorData = aggregatorData;
     } else {
       aggregatorError = resp.error;
@@ -323,7 +327,9 @@
         </TableBodyCell>
         {#if aggregator.attention}
           <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}>
-            <i class="bx bx-info-square text-lg"></i>
+            <button on:click={async () => resetAttention(aggregator)}>
+              <i class="bx bx-info-square text-lg"></i>
+            </button>
           </TableBodyCell>
         {:else}
           <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}></TableBodyCell>
