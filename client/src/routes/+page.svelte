@@ -38,6 +38,7 @@
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
   import AggregatorViewer from "$lib/Sources/AggregatorViewer.svelte";
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
+  import { onMount } from "svelte";
 
   let loadConfigError: ErrorDetails | null;
 
@@ -250,6 +251,20 @@
       push("/login");
     }
   };
+
+  onMount(() => {
+    appStore.updateDarkMode();
+    const darkModeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "class") {
+          appStore.updateDarkMode();
+        }
+      });
+    });
+    darkModeObserver.observe(document.documentElement, {
+      attributes: true
+    });
+  });
 </script>
 
 <!--

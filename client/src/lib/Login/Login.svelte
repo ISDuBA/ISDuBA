@@ -15,7 +15,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import DarkMode from "$lib/Login/DarkModeWrapper.svelte";
+  import DarkMode from "flowbite-svelte/DarkMode.svelte";
 
   let viewError: ErrorDetails | null;
   let versionError: ErrorDetails | null;
