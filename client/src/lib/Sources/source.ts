@@ -201,10 +201,13 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
       }
     }
   }
-  for (const pattern of source.ignore_patterns) {
-    if (pattern != "") {
+  const patterns = source.ignore_patterns.filter((i) => i !== "");
+  if (patterns.length > 0) {
+    for (const pattern of patterns) {
       formData.append("ignore_patterns", pattern);
     }
+  } else {
+    formData.append("ignore_patterns", "");
   }
   formData.append("attention", "false");
   const resp = await request(path, method, formData);

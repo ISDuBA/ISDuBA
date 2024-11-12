@@ -35,7 +35,7 @@
       stickyHeaders
     >
       {#each dates as date, index}
-        <tr class="odd:bg-white even:bg-gray-100">
+        <tr class="odd:bg-white even:bg-gray-100 dark:odd:bg-gray-800 dark:even:bg-gray-700">
           {#if date instanceof Date}
             <TableBodyCell {tdClass}>{toLocaleISOString(date)}</TableBodyCell>
           {/if}
