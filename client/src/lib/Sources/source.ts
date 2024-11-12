@@ -442,13 +442,9 @@ const deleteAggregator = async (id: number): Promise<Result<null, ErrorDetails>>
 };
 
 const fetchAggregatorData = async (
-  url: string,
-  validate: boolean = false
+  url: string
 ): Promise<Result<AggregatorMetadata, ErrorDetails>> => {
-  const resp = await request(
-    `/api/aggregator?url=${encodeURIComponent(url)}&validate=${validate}`,
-    "GET"
-  );
+  const resp = await request(`/api/aggregator?url=${encodeURIComponent(url)}`, "GET");
   if (resp.ok) {
     return {
       ok: true,
