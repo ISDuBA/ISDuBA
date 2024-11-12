@@ -591,6 +591,17 @@ const fetchFeedLogs = async (
   return { ok: false, error: getErrorDetails(`Could not load feed logs`, resp) };
 };
 
+const fetchAllFeedLogs = async (
+  id: number,
+  count: boolean = false
+): Promise<Result<[any[], number], ErrorDetails>> => {
+  const resp = await request(`/api/sources/feeds/${id}/log?count=${count}`, "GET");
+  if (resp.ok) {
+    return { ok: true, value: [resp.content.entries, resp.content.count ?? 0] };
+  }
+  return { ok: false, error: getErrorDetails(`Could not load feed logs`, resp) };
+};
+
 const isSameFeed = (a: Feed, b: Feed) => a.url === b.url && a.rolie === b.rolie;
 
 const calculateMissingFeeds = (pmdFeeds: Feed[], feeds: Feed[]): Feed[] => {
@@ -624,6 +635,7 @@ export {
   getSourceName,
   calculateMissingFeeds,
   fetchFeedLogs,
+  fetchAllFeedLogs,
   parseHeaders,
   parseFeeds,
   deleteFeed,

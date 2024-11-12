@@ -16,9 +16,10 @@
   import type { ErrorDetails } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { onMount } from "svelte";
-  import { fetchFeedLogs, fetchFeed, type Feed } from "./source";
+  import { fetchFeedLogs, fetchAllFeedLogs, fetchFeed, type Feed } from "./source";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import { DAY_MS } from "$lib/time";
+  import Button from "flowbite-svelte/Button.svelte";
 
   export let params: any = null;
 
@@ -96,6 +97,32 @@
     }
   };
 
+  const downloadFeedLogs = async () => {
+    if (!feed) {
+      return;
+    }
+    if (!feed.id) {
+      return;
+    }
+    let result = await fetchAllFeedLogs(feed.id, false);
+    if (result.ok) {
+      let resultstring = JSON.stringify(result.value);
+      let file = new Blob([resultstring], { type: "application/json" });
+      let a = document.createElement("a"),
+        url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = feed.label;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 0);
+    } else {
+      loadLogsError = result.error;
+    }
+  };
+
   onMount(async () => {
     let id = params?.id;
     if (id) {
@@ -148,7 +175,7 @@
 
       <div class="flex flex-row flex-wrap items-center">
         <input
-          class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right`}
+          class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:text-black`}
           on:change={() => {
             if (!parseInt("" + currentPage)) currentPage = 1;
             currentPage = Math.floor(currentPage);
@@ -180,6 +207,13 @@
           <i class="bx bx-arrow-to-right"></i>
         </PaginationItem>
       </div>
+
+      <Button
+        title="Download all logs"
+        on:click={downloadFeedLogs}
+        color="light"
+        class={`ml-3 h-8 py-1 text-xs`}><i class="bx bx-download"></i></Button
+      >
     </div>
   </div>
 
