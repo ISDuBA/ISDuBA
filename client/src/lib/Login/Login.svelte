@@ -74,7 +74,7 @@
   <title>Login</title>
 </svelte:head>
 
-<div class="mt-60 flex items-center justify-center">
+<div class="flex h-screen items-center justify-center">
   <div class="flex w-96 flex-col gap-4">
     <div class="inline-flex flex-row"><Heading class="mb-2">ISDuBA</Heading><DarkMode /></div>
     <Card>

@@ -252,6 +252,25 @@
   };
 </script>
 
+<!--
+  To ensure current darkmode setting is always processed,
+  not only when the DarkMode button is on screen.
+-->
+<svelte:head>
+  <script>
+    if ("color-theme" in localStorage) {
+      // explicit preference - overrides author's choice
+      localStorage.getItem("color-theme") === "dark"
+        ? window.document.documentElement.classList.add("dark")
+        : window.document.documentElement.classList.remove("dark");
+    } else {
+      // browser preference - does not overrides
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches)
+        window.document.documentElement.classList.add("dark");
+    }
+  </script>
+</svelte:head>
+
 <div class="flex bg-primary-700 dark:bg-gray-800 dark:text-white">
   <div>
     <SideNav></SideNav>

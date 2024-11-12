@@ -34,7 +34,7 @@
     </SectionHeader>
   {/if}
   <Table divClass="relative" hoverable={true} noborder={true}>
-    <TableHead theadClass={stickyHeaders ? "sticky top-[0] bg-white" : ""}>
+    <TableHead theadClass={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : ""}>
       {#each headers as header}
         <TableHeadCell class={header.class ?? ""} padding={tablePadding} on:click={() => {}}>
           <span>{header.label}</span>

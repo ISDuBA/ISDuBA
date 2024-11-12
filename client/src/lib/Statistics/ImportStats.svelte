@@ -81,7 +81,7 @@
   const pressedButtonClass = `${basicButtonClass} bg-gray-200 dark:text-white text-black hover:!bg-gray-100`;
   const updateInterval = 1000 * 60 * (updateIntervalInMinutes ?? 0);
   const categoryColors = [
-    "#000000",
+    "#AA0000",
     "#E69F00",
     "#56B4E9",
     "#009E73",
