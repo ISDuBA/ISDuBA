@@ -263,6 +263,11 @@
     headers={[
       {
         label: "",
+        attribute: "delete",
+        class: smallColumnClass
+      },
+      {
+        label: "",
         attribute: "expand",
         class: smallColumnClass
       },
@@ -271,7 +276,6 @@
         attribute: "attention",
         class: extraSmallColumnClass
       },
-      { label: "", attribute: "delete", class: smallColumnClass },
       {
         label: "Name",
         attribute: "name"
@@ -296,6 +300,20 @@
         }}
         class={appStore.isSourceManager() ? "cursor-pointer" : ""}
       >
+        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}
+          ><Button
+            on:click={async () => {
+              if (aggregator.id) {
+                await removeAggregator(aggregator.id);
+              }
+            }}
+            class="!p-2"
+            color="light"
+          >
+            <i class="bx bx-trash text-red-600"></i>
+          </Button>
+        </TableBodyCell>
+
         <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
           {#if list.length === 0}
             <i class="bx bx-plus"></i>
@@ -310,34 +328,12 @@
         {:else}
           <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}></TableBodyCell>
         {/if}
-        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}
-          ><Button
-            on:click={async () => {
-              if (aggregator.id) {
-                await removeAggregator(aggregator.id);
-              }
-            }}
-            class="!p-2"
-            color="light"
-          >
-            <i class="bx bx-trash text-red-600"></i>
-          </Button>
-        </TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
         <TableBodyCell {tdClass}></TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
       </tr>
       {#each list as entry}
         <tr class="bg-slate-100" on:click={() => (entry.expand = !entry.expand)}>
-          <TableBodyCell {tdClass}>
-            {#if entry.expand}
-              <i class="bx bx-minus"></i>
-            {:else}
-              <i class="bx bx-plus"></i>
-            {/if}
-          </TableBodyCell>
-
-          <TableBodyCell {tdClass}></TableBodyCell>
           <TableBodyCell {tdClass}>
             <Button
               on:click={async () => {
@@ -360,6 +356,16 @@
               </Button>
             {/each}
           </TableBodyCell>
+
+          <TableBodyCell {tdClass}>
+            {#if entry.expand}
+              <i class="bx bx-minus"></i>
+            {:else}
+              <i class="bx bx-plus"></i>
+            {/if}
+          </TableBodyCell>
+
+          <TableBodyCell {tdClass}></TableBodyCell>
           <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
           <TableBodyCell {tdClass}>{entry.role}</TableBodyCell>
           <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
