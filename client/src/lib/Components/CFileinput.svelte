@@ -19,6 +19,7 @@
   export let id: string;
   export let multiple = true;
   export let oldFile: string | null | undefined = undefined;
+  export let isFileReset: boolean = false;
   export let titleClearButton = "";
 
   const dispatch = createEventDispatcher();
@@ -34,12 +35,12 @@
     on:click={() => {
       document.getElementById(id)?.click();
     }}
-    class="rounded-none rounded-l-lg"
+    class="rounded-none rounded-l-lg border border-r-0 dark:border-gray-700 dark:bg-gray-800"
     color="primary"
     {disabled}>Browse...</Button
   >
   <Label
-    class={`flex min-h-full w-full min-w-48 items-center border border-gray-300 ps-4 ${clearable ? "" : "rounded-r-lg"}`}
+    class={`flex min-h-full w-full min-w-48 items-center border border-gray-300 ps-4 dark:border-gray-500 dark:bg-gray-600 ${clearable ? "" : "rounded-r-lg"}`}
     for={id}
   >
     {#if files}
@@ -48,7 +49,7 @@
       {:else if files.length > 0}
         <span>{files.item(0)?.name}</span>
       {/if}
-    {:else if oldFile}
+    {:else if oldFile && !isFileReset}
       <span>{oldFile}</span>
     {:else}
       <span>No file selected</span>
@@ -60,10 +61,11 @@
       on:click={() => {
         files = undefined;
         oldFile = undefined;
+        isFileReset = true;
         dispatch("change");
       }}
       title={titleClearButton}
-      class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
+      class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
       color="light"
     >
       <i class="bx bx-x"></i>

@@ -188,7 +188,7 @@
                 <div>
                   {activity.title ?? "Title undefined"}
                 </div>
-                <div class="text-sm text-gray-700">
+                <div class="text-sm text-gray-700 dark:text-gray-400">
                   {activity.tracking_id ?? "Trackind ID undefined"}
                 </div>
               {/if}

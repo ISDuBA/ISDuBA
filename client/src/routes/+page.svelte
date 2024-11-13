@@ -38,6 +38,7 @@
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
   import AggregatorViewer from "$lib/Sources/AggregatorViewer.svelte";
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
+  import { onMount } from "svelte";
 
   let loadConfigError: ErrorDetails | null;
 
@@ -250,13 +251,46 @@
       push("/login");
     }
   };
+
+  onMount(() => {
+    appStore.updateDarkMode();
+    const darkModeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "class") {
+          appStore.updateDarkMode();
+        }
+      });
+    });
+    darkModeObserver.observe(document.documentElement, {
+      attributes: true
+    });
+  });
 </script>
 
-<div class="flex bg-primary-700">
+<!--
+  To ensure current darkmode setting is always processed,
+  not only when the DarkMode button is on screen.
+-->
+<svelte:head>
+  <script>
+    if ("color-theme" in localStorage) {
+      // explicit preference - overrides author's choice
+      localStorage.getItem("color-theme") === "dark"
+        ? window.document.documentElement.classList.add("dark")
+        : window.document.documentElement.classList.remove("dark");
+    } else {
+      // browser preference - does not overrides
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches)
+        window.document.documentElement.classList.add("dark");
+    }
+  </script>
+</svelte:head>
+
+<div class="flex bg-primary-700 dark:bg-gray-800 dark:text-white">
   <div>
     <SideNav></SideNav>
   </div>
-  <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 pb-0">
+  <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 pb-0 dark:bg-gray-800">
     {#if $appStore.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}

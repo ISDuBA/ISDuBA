@@ -29,7 +29,7 @@
   axes={[{ label: "", types: ["totals"] }]}
 ></ImportStats>
 <ImportStats
-  colors={["#5fcc57", "#c64f08", "#1c2c5e"]}
+  colors={["#5fcc57", "#c64f08", "#2e4899"]}
   height="300pt"
   initialFrom={new Date(Date.now() - DAY_MS)}
   showRangeSelection

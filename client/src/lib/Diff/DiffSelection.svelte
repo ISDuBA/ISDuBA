@@ -385,7 +385,7 @@
                       class={`${
                         docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons
                           ? "invert-[70%]"
-                          : ""
+                          : "dark:invert"
                       } min-h-4 min-w-6`}
                     />
                   </button>

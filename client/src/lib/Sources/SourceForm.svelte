@@ -90,7 +90,9 @@
 
   let headers: [string, string][] = [["", ""]];
   let privateCert: FileList | undefined;
+  let privateCertReset: boolean = false;
   let publicCert: FileList | undefined;
+  let publicCertReset: boolean = false;
 
   let ageUnit: AgeUnit;
   let ageNumber: number | undefined;
@@ -196,12 +198,20 @@
     if (privateCert) {
       source.client_cert_private = await privateCert.item(0)?.text();
     } else {
-      source.client_cert_private = null;
+      if (oldSource?.client_cert_private === "***" && privateCertReset) {
+        source.client_cert_private = null;
+      } else {
+        source.client_cert_private = "***";
+      }
     }
     if (publicCert) {
       source.client_cert_public = await publicCert.item(0)?.text();
     } else {
-      source.client_cert_public = null;
+      if (oldSource?.client_cert_public === "***" && publicCertReset) {
+        source.client_cert_public = null;
+      } else {
+        source.client_cert_public = "***";
+      }
     }
   };
 </script>
@@ -227,6 +237,7 @@
       <Label>Private cert</Label>
       <CFileinput
         bind:files={privateCert}
+        bind:isFileReset={privateCertReset}
         oldFile={oldSource?.client_cert_private}
         on:change={inputChange}
         id="private-cert"
@@ -235,6 +246,7 @@
       <Label>Public cert</Label>
       <CFileinput
         bind:files={publicCert}
+        bind:isFileReset={publicCertReset}
         oldFile={oldSource?.client_cert_public}
         on:change={inputChange}
         id="public-cert"
@@ -252,7 +264,7 @@
             source.client_cert_passphrase = null;
           }}
           title="Remove passphrase"
-          class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
+          class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
           color="light"
         >
           <i class="bx bx-x"></i>
@@ -329,7 +341,7 @@
           <Button
             on:click={() => removePattern(index)}
             title="Remove pattern"
-            class="w-fit rounded-none rounded-r-lg border-l-0 p-1"
+            class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
             color="light"
             disabled={source.ignore_patterns.length === 0 ||
               (source.ignore_patterns.length === 1 && source.ignore_patterns[0] === "")}
@@ -363,7 +375,7 @@
             <Button
               on:click={() => removeHeader(index)}
               title="Remove key-value-pair"
-              class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
+              class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 dark:border-gray-500 dark:bg-gray-600 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
               color="light"
             >
               <i class="bx bx-x"></i>
@@ -371,7 +383,7 @@
           {:else}
             <Button
               title="Remove key-value-pair"
-              class=" row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
+              class=" row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 dark:border-gray-500 dark:bg-gray-600 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
               color="light"
               disabled={true}
             >

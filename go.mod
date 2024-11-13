@@ -13,9 +13,9 @@ go 1.22
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/ProtonMail/gopenpgp/v2 v2.8.0
-	github.com/csaf-poc/csaf_distribution/v3 v3.0.0
 	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
+	github.com/gocsaf/csaf/v3 v3.0.1-0.20241105082235-3e9b5e1ebb64
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/samber/slog-gin v1.13.6
 	github.com/sergi/go-diff v1.3.1

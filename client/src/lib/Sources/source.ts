@@ -186,10 +186,18 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
     formData.append("age", source.age.toString());
   }
   if (source.client_cert_public) {
-    formData.append("client_cert_public", source.client_cert_public);
+    if (source.client_cert_public !== "***") {
+      formData.append("client_cert_public", source.client_cert_public);
+    }
+  } else {
+    formData.append("client_cert_public", "");
   }
   if (source.client_cert_private) {
-    formData.append("client_cert_private", source.client_cert_private);
+    if (source.client_cert_private !== "***") {
+      formData.append("client_cert_private", source.client_cert_private);
+    }
+  } else {
+    formData.append("client_cert_private", "");
   }
   if (source.client_cert_passphrase && source.client_cert_passphrase !== "***") {
     formData.append("client_cert_passphrase", source.client_cert_passphrase);
@@ -442,13 +450,9 @@ const deleteAggregator = async (id: number): Promise<Result<null, ErrorDetails>>
 };
 
 const fetchAggregatorData = async (
-  url: string,
-  validate: boolean = false
+  url: string
 ): Promise<Result<AggregatorMetadata, ErrorDetails>> => {
-  const resp = await request(
-    `/api/aggregator?url=${encodeURIComponent(url)}&validate=${validate}`,
-    "GET"
-  );
+  const resp = await request(`/api/aggregator?url=${encodeURIComponent(url)}`, "GET");
   if (resp.ok) {
     return {
       ok: true,

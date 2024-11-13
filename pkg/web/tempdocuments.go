@@ -18,8 +18,8 @@ import (
 	"strings"
 
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
-	"github.com/csaf-poc/csaf_distribution/v3/csaf"
 	"github.com/gin-gonic/gin"
+	"github.com/gocsaf/csaf/v3/csaf"
 )
 
 func (c *Controller) importTempDocument(ctx *gin.Context) {

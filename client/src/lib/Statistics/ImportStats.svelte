@@ -39,6 +39,7 @@
     toLocaleISOString
   } from "$lib/time";
   import chroma from "chroma-js";
+  import { appStore } from "$lib/store";
 
   export let chartType: "bar" | "line" | "scatter" = "bar";
   export let divContainerClass = "mb-16";
@@ -77,10 +78,10 @@
   let mode: StatisticsMode = "diagram";
   const basicButtonClass = "py-1 px-3";
   const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
-  const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100`;
+  const pressedButtonClass = `${basicButtonClass} bg-gray-200 dark:text-white text-black hover:!bg-gray-100`;
   const updateInterval = 1000 * 60 * (updateIntervalInMinutes ?? 0);
   const categoryColors = [
-    "#000000",
+    "#AA0000",
     "#E69F00",
     "#56B4E9",
     "#009E73",
@@ -90,6 +91,15 @@
     "#CC79A7"
   ];
   const rangeColors = ["#ddd", "#FFEFB0", "#E6A776", "#CD5D3A", "#B41500"];
+
+  let darkMode = $appStore.app.isDarkMode;
+
+  $: {
+    if ($appStore.app.isDarkMode !== darkMode) {
+      darkMode = $appStore.app.isDarkMode;
+      updateChartColors();
+    }
+  }
 
   $: types = axes.map((axis) => axis.types).flat();
   $: datasets = Object.keys(stats).map((key: string, index: number) => {
@@ -353,7 +363,26 @@
     return label;
   };
 
+  const getCurrentChartLabelColors = () => {
+    return darkMode
+      ? { lineColor: "#414955", scaleLabelColor: "#bcbfc3", legendLabelColor: "white" }
+      : { lineColor: "#e5e5e5", scaleLabelColor: "#666666", legendLabelColor: "black" };
+  };
+
+  const updateChartColors = () => {
+    const styleColors = getCurrentChartLabelColors();
+    for (let key of Object.keys(chart.options.scales)) {
+      chart.options.scales[key].border.color = styleColors.lineColor;
+      chart.options.scales[key].grid.color = styleColors.lineColor;
+      chart.options.scales[key].ticks.color = styleColors.scaleLabelColor;
+      chart.options.scales[key].title.color = styleColors.scaleLabelColor;
+    }
+    chart.options.plugins.legend.labels.generateLabels(chart);
+    chart.update();
+  };
+
   const initChart = () => {
+    const { lineColor, scaleLabelColor, ..._ } = getCurrentChartLabelColors();
     chart = new Chart(chartComponentRef, {
       type: chartType,
       data: {
@@ -397,19 +426,22 @@
         },
         scales: {
           x: {
+            border: { color: lineColor },
             type: "time",
             grid: {
               display: true,
               drawOnChartArea: false,
               drawTicks: true,
               tickLength: 6,
-              tickWidth: 2
+              tickWidth: 2,
+              color: lineColor
             },
             stacked: isStacked,
             ticks: {
               callback: (tickValue: string | number, _index: number, _ticks: any[]): string => {
                 return createLabelForXAxis(new Date(tickValue)) ?? "";
-              }
+              },
+              color: scaleLabelColor
             },
             time: {
               // Overwrite to keep exact time.
@@ -419,6 +451,7 @@
               }
             },
             afterBuildTicks: (axis: any) => {
+              const labelColor = getCurrentChartLabelColors().scaleLabelColor;
               const newTicks: any[] = [];
               const firstProperty = Object.keys(stats)[0];
               stats?.[firstProperty]?.forEach((stat, index) => {
@@ -426,7 +459,8 @@
                   newTicks.push({
                     value: stat[0].getTime(),
                     major: false,
-                    label: toLocaleISOString(stat[0])
+                    label: toLocaleISOString(stat[0]),
+                    color: labelColor
                   });
                 }
               });
@@ -434,9 +468,16 @@
             }
           },
           y: {
+            border: { color: lineColor },
             beginAtZero: true,
             stacked: isStacked,
-            title: { display: axes[0].label.length > 0, text: axes[0].label }
+            title: {
+              display: axes[0].label.length > 0,
+              text: axes[0].label,
+              color: scaleLabelColor
+            },
+            ticks: { color: scaleLabelColor },
+            grid: { color: lineColor }
           }
         }
       }
@@ -444,17 +485,21 @@
     if (axes[1]) {
       const showLabel = axes[1].label.length > 0;
       chart.options.scales.y1 = {
+        border: { color: lineColor },
         beginAtZero: true,
         grid: {
-          drawOnChartArea: false // only want the grid lines for one axis to show up
+          drawOnChartArea: false, // only want the grid lines for one axis to show up
+          color: lineColor
         },
-        title: { display: showLabel, text: axes[1].label },
+        ticks: { color: scaleLabelColor },
+        title: { display: showLabel, text: axes[1].label, color: scaleLabelColor },
         position: "right"
       };
     }
     // Remove "Crit" from legend labels because otherwise it would appear in front of every crit label
     // which would be too much "noise".
     chart.options.plugins.legend.labels.generateLabels = (chart: any) => {
+      const labelColor = getCurrentChartLabelColors().legendLabelColor;
       const items: any[] = [];
       chart.legend.legendItems.forEach((item: any, index: number) => {
         const datasetMeta = chart.getDatasetMeta(item.datasetIndex);
@@ -463,7 +508,8 @@
           text: label,
           datasetIndex: index,
           fillStyle: getColor(index),
-          hidden: datasetMeta.hidden
+          hidden: datasetMeta.hidden,
+          fontColor: labelColor
         });
       });
       return items;
@@ -474,6 +520,9 @@
     from = initialFrom.toISOString().split("T")[0];
     to = new Date().toISOString().split("T")[0];
     await loadStats();
+    if (!chartComponentRef) {
+      return;
+    }
     initChart();
     if (updateIntervalInMinutes) {
       intervalID = setInterval(async () => {
