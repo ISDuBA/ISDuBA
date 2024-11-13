@@ -18,7 +18,7 @@
     resetAggregatorAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
+  import { Badge, Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -95,7 +95,6 @@
   };
 
   let formClass = "max-w-[800pt]";
-  const extraSmallColumnClass = "w-7 max-w-7 min-w-7";
   const smallColumnClass = "w-10 max-w-10 min-w-10";
 
   const checkUrl = () => {
@@ -306,11 +305,6 @@
         class: smallColumnClass
       },
       {
-        label: "",
-        attribute: "attention",
-        class: extraSmallColumnClass
-      },
-      {
         label: "Name",
         attribute: "name"
       },
@@ -355,16 +349,30 @@
             <i class="bx bx-minus"></i>
           {/if}
         </TableBodyCell>
-        {#if aggregator.attention}
-          <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}>
-            <button on:click={async () => resetAttention(aggregator)}>
-              <i class="bx bx-info-square text-lg"></i>
-            </button>
-          </TableBodyCell>
-        {:else}
-          <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}></TableBodyCell>
-        {/if}
-        <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
+        <TableBodyCell {tdClass}>
+          <div class="flex items-center gap-2">
+            {#if aggregator.attention}
+              <Badge dismissable
+                >Feeds changed
+                <Button
+                  slot="close-button"
+                  let:close
+                  color="light"
+                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50"
+                  on:click={async (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    resetAttention(aggregator);
+                    close();
+                  }}
+                >
+                  <i class="bx bx-x"></i>
+                </Button>
+              </Badge>
+            {/if}
+            <span>{aggregator.name}</span>
+          </div>
+        </TableBodyCell>
         <TableBodyCell {tdClass}></TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
       </tr>
@@ -390,7 +398,6 @@
             {/if}
           </TableBodyCell>
 
-          <TableBodyCell {tdClass}></TableBodyCell>
           <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
           <TableBodyCell {tdClass}>{entry.role}</TableBodyCell>
           <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
@@ -419,7 +426,6 @@
                   <i class="bx bx-plus"></i>
                 {/if}
               </TableBodyCell>
-              <TableBodyCell {tdClass}></TableBodyCell>
               <TableBodyCell colspan={3} {tdClass}
                 >{`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}</TableBodyCell
               >
@@ -443,7 +449,6 @@
                       </Button>
                     {/if}
                   </TableBodyCell>
-                  <TableBodyCell tdClass={feedClass}></TableBodyCell>
                   <TableBodyCell colspan={4} tdClass={feedClass}>{feed.url}</TableBodyCell>
                 </tr>
               {/each}
