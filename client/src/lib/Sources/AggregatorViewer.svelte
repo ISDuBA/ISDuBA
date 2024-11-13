@@ -18,27 +18,50 @@
     resetAggregatorAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
+  import { Badge, Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
-  import { type AggregatorMetadata } from "$lib/aggregatorTypes";
+  import {
+    type AggregatorMetadata,
+    type CSAFProviderEntry,
+    type CSAFPublisherEntry,
+    type Custom,
+    type FeedSubscription,
+    type Subscription
+  } from "$lib/aggregatorTypes";
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
 
-  type AggregatorInfo = {
-    name: string;
+  type FeedInfo = {
+    id?: number;
+    sourceID?: number;
     url: string;
-    availableFeeds: string[];
-    publisher: boolean;
+    highlight: boolean;
+  };
+
+  type SourceInfo = {
+    id?: number;
+    name: string;
+    feedsAvailable: number;
+    feedsSubscribed: number;
+    feeds: FeedInfo[];
+    expand: boolean;
+  };
+
+  type AggregatorEntry = {
+    name: string;
+    role: string;
+    url: string;
+    availableSources: SourceInfo[];
     expand: boolean;
   };
 
   let loadingAggregators: boolean = false;
   let aggregators: Aggregator[] = [];
-  let aggregatorData = new Map<number, AggregatorInfo[]>();
+  let aggregatorData = new Map<number, AggregatorEntry[]>();
 
   let aggregatorError: ErrorDetails | null;
   let aggregatorSaveError: ErrorDetails | null;
@@ -72,7 +95,6 @@
   };
 
   let formClass = "max-w-[800pt]";
-  const extraSmallColumnClass = "w-7 max-w-7 min-w-7";
   const smallColumnClass = "w-10 max-w-10 min-w-10";
 
   const checkUrl = () => {
@@ -106,39 +128,106 @@
     }
   };
 
-  const parseAggregatorData = (data: AggregatorMetadata): AggregatorInfo[] => {
-    const csafProviders = data.aggregator.csaf_providers.map(
-      (i) =>
-        <AggregatorInfo>{
-          name: i.metadata.publisher.name,
-          url: i.metadata.url,
-          publisher: false
+  const getSubsribedFeeds = (feeds: FeedSubscription[], sourceID: number): FeedInfo[] =>
+    feeds.map(
+      (f) =>
+        <FeedInfo>{
+          id: f.id,
+          url: f.url,
+          highlight: false,
+          sourceID: sourceID
         }
     );
-    const csafPublisher =
-      data.aggregator.csaf_publishers?.map(
-        (i) =>
-          <AggregatorInfo>{
-            name: i.metadata.publisher.name,
-            url: i.metadata.url,
-            publisher: true
+
+  const getFeeds = (
+    sourceID: number | undefined,
+    feeds: FeedSubscription[],
+    availableFeeds?: string[]
+  ) => {
+    let unsubscribedFeeds =
+      availableFeeds?.map(
+        (feedURL) =>
+          <FeedInfo>{
+            url: feedURL,
+            highlight: true
           }
       ) ?? [];
+    let subscribedFeeds = sourceID !== undefined ? getSubsribedFeeds(feeds, sourceID) : [];
 
-    const list = [...csafProviders, ...csafPublisher];
-    list.forEach((i) => {
-      let found = data.custom.subscriptions.find((s) => s.url === i.url);
-      if (found) {
-        i.availableFeeds = found.available;
+    // Highlight the case, when a feed is configured that is no longer available
+    subscribedFeeds.forEach((f) => {
+      if (!unsubscribedFeeds.map((i) => i.url).includes(f.url)) {
+        f.highlight = true;
       }
     });
-    return list;
+
+    unsubscribedFeeds = unsubscribedFeeds.filter(
+      (f) => !subscribedFeeds.map((i) => i.url).includes(f.url)
+    );
+    return [...unsubscribedFeeds, ...subscribedFeeds];
+  };
+
+  const getSources = (entry: Subscription): SourceInfo[] =>
+    entry.subscriptions?.map(
+      (s) =>
+        <SourceInfo>{
+          id: s.id,
+          name: s.name,
+          expand: false,
+          feedsAvailable: entry.available?.length ?? 0,
+          feedsSubscribed: s.subscripted?.length ?? 0,
+          feeds: getFeeds(s.id, s.subscripted ?? [], entry.available)
+        }
+    ) ?? [
+      <SourceInfo>{
+        name: "Not configured",
+        feedsAvailable: entry.available?.length ?? 0,
+        feedsSubscribed: entry.available?.length ?? 0,
+        feeds: getFeeds(undefined, [], entry.available)
+      }
+    ];
+
+  const findSubscription = (url: string, custom: Custom) =>
+    custom.subscriptions.find((i) => i.url === url);
+
+  const getAvailableSources = (url: string, custom: Custom) => {
+    const subscription = findSubscription(url, custom);
+    if (subscription) {
+      return getSources(subscription);
+    } else {
+      return [];
+    }
+  };
+
+  const parseAggregatorData = (data: AggregatorMetadata): AggregatorEntry[] => {
+    const extractEntry = (i: CSAFProviderEntry | CSAFPublisherEntry) =>
+      <AggregatorEntry>{
+        name: i.metadata.publisher.name,
+        url: i.metadata.url,
+        availableSources: getAvailableSources(i.metadata.url, data.custom),
+        role: i.metadata.role?.replace("csaf_", "").replace("_", " ")
+      };
+
+    const csafProviders = data.aggregator.csaf_providers.map(extractEntry);
+    const csafPublisher = data.aggregator.csaf_publishers?.map(extractEntry) ?? [];
+
+    return [...csafProviders, ...csafPublisher];
+  };
+
+  const resetAttention = async (aggregator: Aggregator) => {
+    let resetResult = await resetAggregatorAttention(aggregator);
+    if (resetResult.ok) {
+      aggregator.attention = false;
+    } else {
+      aggregatorError = resetResult.error;
+    }
   };
 
   const toggleAggregatorView = async (aggregator: Aggregator) => {
     if (aggregatorData.get(aggregator.id ?? -1)) {
       aggregatorData.delete(aggregator.id ?? -1);
       aggregatorData = aggregatorData;
+      saveAggregatorExpand();
       return;
     }
     loadingAggregators = true;
@@ -146,13 +235,9 @@
     loadingAggregators = false;
     if (resp.ok) {
       aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value));
-      let resetResult = await resetAggregatorAttention(aggregator);
-      if (resetResult.ok) {
-        aggregator.attention = false;
-      } else {
-        aggregatorError = resetResult.error;
-      }
+
       aggregatorData = aggregatorData;
+      saveAggregatorExpand();
     } else {
       aggregatorError = resp.error;
     }
@@ -177,8 +262,27 @@
       await getAggregators();
     }
   };
+
+  const saveAggregatorExpand = () => {
+    let idList = [...aggregatorData.keys()];
+    sessionStorage.setItem("openAggregator", JSON.stringify(idList));
+  };
+
+  const restoreAggregatorExpand = () => {
+    let idList = JSON.parse(sessionStorage.getItem("openAggregator") ?? "[]");
+    if (idList) {
+      for (let id of idList) {
+        let aggregator = aggregators.find((a) => a.id === id);
+        if (aggregator) {
+          toggleAggregatorView(aggregator);
+        }
+      }
+    }
+  };
+
   onMount(async () => {
     await getAggregators();
+    restoreAggregatorExpand();
   });
 </script>
 
@@ -192,18 +296,21 @@
     headers={[
       {
         label: "",
-        attribute: "expand",
+        attribute: "delete",
         class: smallColumnClass
       },
       {
         label: "",
-        attribute: "attention",
-        class: extraSmallColumnClass
+        attribute: "expand",
+        class: smallColumnClass
       },
-      { label: "", attribute: "delete", class: smallColumnClass },
       {
         label: "Name",
         attribute: "name"
+      },
+      {
+        label: "Role",
+        attribute: "role"
       },
       {
         label: "URL",
@@ -221,20 +328,6 @@
         }}
         class={appStore.isSourceManager() ? "cursor-pointer" : ""}
       >
-        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
-          {#if list.length === 0}
-            <i class="bx bx-plus"></i>
-          {:else}
-            <i class="bx bx-minus"></i>
-          {/if}
-        </TableBodyCell>
-        {#if aggregator.attention}
-          <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}>
-            <i class="bx bx-info-square text-lg"></i>
-          </TableBodyCell>
-        {:else}
-          <TableBodyCell tdClass={`${tdClass} ${extraSmallColumnClass}`}></TableBodyCell>
-        {/if}
         <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}
           ><Button
             on:click={async () => {
@@ -248,11 +341,55 @@
             <i class="bx bx-trash text-red-600"></i>
           </Button>
         </TableBodyCell>
-        <TableBodyCell {tdClass}>{aggregator.name}</TableBodyCell>
+
+        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
+          {#if list.length === 0}
+            <i class="bx bx-plus"></i>
+          {:else}
+            <i class="bx bx-minus"></i>
+          {/if}
+        </TableBodyCell>
+        <TableBodyCell {tdClass}>
+          <div class="flex items-center gap-2">
+            {#if aggregator.attention}
+              <Badge dismissable
+                >Feeds changed
+                <Button
+                  slot="close-button"
+                  let:close
+                  color="light"
+                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50"
+                  on:click={async (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    resetAttention(aggregator);
+                    close();
+                  }}
+                >
+                  <i class="bx bx-x"></i>
+                </Button>
+              </Badge>
+            {/if}
+            <span>{aggregator.name}</span>
+          </div>
+        </TableBodyCell>
+        <TableBodyCell {tdClass}></TableBodyCell>
         <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
       </tr>
       {#each list as entry}
         <tr class="bg-slate-100 dark:bg-gray-700" on:click={() => (entry.expand = !entry.expand)}>
+          <TableBodyCell {tdClass}>
+            <Button
+              on:click={async () => {
+                await push(`/sources/new/${encodeURIComponent(entry.url)}`);
+              }}
+              class="!p-2"
+              color="light"
+            >
+              <i class="bx bx-folder-plus"></i>
+            </Button>
+          </TableBodyCell>
+
           <TableBodyCell {tdClass}>
             {#if entry.expand}
               <i class="bx bx-minus"></i>
@@ -261,32 +398,61 @@
             {/if}
           </TableBodyCell>
 
-          <TableBodyCell {tdClass}></TableBodyCell>
-          <TableBodyCell {tdClass}>
-            <Button
-              on:click={async () => {
-                push(`/sources/new/${encodeURIComponent(entry.url)}`);
-              }}
-              class="!p-2"
-              color="light"
-            >
-              <i class="bx bx-folder-plus"></i>
-            </Button></TableBodyCell
-          >
-          <TableBodyCell {tdClass}
-            >{entry.name}{#if entry.publisher}
-              &nbsp; <i class="bx bx-book"></i>{/if}</TableBodyCell
-          >
+          <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
+          <TableBodyCell {tdClass}>{entry.role}</TableBodyCell>
           <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
         </tr>
         {#if entry.expand}
-          {#each entry.availableFeeds as feed}
-            <tr class="bg-slate-200 dark:bg-gray-700">
-              <TableBodyCell {tdClass}></TableBodyCell>
-              <TableBodyCell {tdClass}></TableBodyCell>
-              <TableBodyCell colspan={2} {tdClass}>{feed}</TableBodyCell>
-              <TableBodyCell {tdClass}></TableBodyCell>
+          {#each entry.availableSources as source}
+            <tr
+              class="bg-slate-300 dark:bg-gray-600"
+              on:click={() => (source.expand = !source.expand)}
+            >
+              <TableBodyCell {tdClass}
+                >{#if source.id !== undefined}<Button
+                    on:click={async () => {
+                      await push(`/sources/${source.id}`);
+                    }}
+                    class="!p-2"
+                    color="light"
+                  >
+                    <i class="bx bx-folder-open"></i>
+                  </Button>{/if}
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>
+                {#if source.expand}
+                  <i class="bx bx-minus"></i>
+                {:else}
+                  <i class="bx bx-plus"></i>
+                {/if}
+              </TableBodyCell>
+              <TableBodyCell colspan={3} {tdClass}
+                >{`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}</TableBodyCell
+              >
             </tr>
+            {#if source.expand}
+              {#each source.feeds as feed}
+                {@const feedClass =
+                  tdClass + (feed.highlight ? " bg-amber-300 dark:bg-amber-600" : "")}
+                <tr class="bg-slate-400 dark:bg-gray-500">
+                  <TableBodyCell tdClass={feedClass}>
+                    {#if feed.id !== undefined}
+                      <Button
+                        on:click={async () => {
+                          sessionStorage.setItem("feedBlinkID", String(feed.id));
+                          await push(`/sources/${feed.sourceID}`);
+                        }}
+                        class="!p-2"
+                        color="light"
+                      >
+                        <i class="bx bx-folder-open"></i>
+                      </Button>
+                    {/if}
+                  </TableBodyCell>
+                  <TableBodyCell colspan={4} tdClass={feedClass}>{feed.url}</TableBodyCell>
+                </tr>
+              {/each}
+            {/if}
           {/each}
         {/if}
       {/each}

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, Spinner, TableBodyCell } from "flowbite-svelte";
+  import { Badge, Button, Spinner, TableBodyCell } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { push } from "svelte-spa-router";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -28,7 +28,6 @@
   let sourcesError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
-  const smallColumnClass = "w-7 max-w-7 min-w-7";
 
   let sources: Source[] = [];
   async function getMessage() {
@@ -83,11 +82,6 @@
       title="CSAF Provider"
       headers={[
         {
-          label: "",
-          attribute: "attention",
-          class: smallColumnClass
-        },
-        {
           label: "Name",
           attribute: "name"
         },
@@ -120,16 +114,14 @@
           on:focus={() => {}}
           class={appStore.isSourceManager() ? "cursor-pointer" : ""}
         >
-          {#if source.attention}
-            <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
-              <i class="bx bx-info-square text-lg"></i>
-            </TableBodyCell>
-          {:else}
-            <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}></TableBodyCell>
-          {/if}
-          <TableBodyCell tdClass={`${tdClass} break-words whitespace-normal`}
-            >{source.name}</TableBodyCell
-          >
+          <TableBodyCell tdClass={`${tdClass} break-words whitespace-normal`}>
+            <div class="flex items-center gap-2">
+              {#if source.attention}
+                <Badge class="min-w-fit">Feeds changed</Badge>
+              {/if}
+              <span>{source.name}</span>
+            </div>
+          </TableBodyCell>
           {#if source.id !== 0}
             <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
               >{source.url}</TableBodyCell

@@ -103,7 +103,7 @@
         color="light"
         class="h-fit w-fit rounded-md !px-2 !py-1"
       >
-        <i class="bx bx-spreadsheet text-lg"></i>
+        <i class="bx bx-git-repo-forked text-lg"></i>
       </Button>
       {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
     </div>
