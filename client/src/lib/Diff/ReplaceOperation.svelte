@@ -19,8 +19,8 @@
     : [];
 
   const getSpanClass = (type: string) => {
-    if (type === "i") return "bg-green-200";
-    if (type === "d") return "bg-red-200";
+    if (type === "i") return "bg-green-200 dark:bg-[#1a363c]";
+    if (type === "d") return "bg-red-200 dark:bg-[#412732]";
   };
 </script>
 
