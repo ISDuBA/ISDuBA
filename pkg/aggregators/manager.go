@@ -10,7 +10,6 @@
 package aggregators
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha1"
@@ -68,9 +67,8 @@ func (m *Manager) Run(ctx context.Context) {
 
 func aggregatorChecksum(cagg *CachedAggregator) []byte {
 	hash := sha1.New()
-	w := bufio.NewWriter(hash)
 	for _, url := range cagg.SourceURLs() {
-		w.WriteString(url)
+		hash.Write([]byte(url))
 	}
 	return hash.Sum(nil)
 }

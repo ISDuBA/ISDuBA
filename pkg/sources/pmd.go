@@ -9,7 +9,6 @@
 package sources
 
 import (
-	"bufio"
 	"context"
 	"crypto/sha1"
 	"fmt"
@@ -146,9 +145,8 @@ func availableFeeds(pmd *csaf.ProviderMetadata) []string {
 func checksumPMD(pmd *csaf.ProviderMetadata) []byte {
 	feeds := availableFeeds(pmd)
 	hash := sha1.New()
-	w := bufio.NewWriter(hash)
 	for _, feed := range feeds {
-		w.WriteString(feed)
+		hash.Write([]byte(feed))
 	}
 	return hash.Sum(nil)
 }
