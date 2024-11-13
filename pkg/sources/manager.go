@@ -395,9 +395,13 @@ type prefetchedPMD struct {
 func (m *Manager) prefetchPMDs() {
 	// The loading of the PMD is time consuming
 	// so the fetching is off-loaded from the main loop.
-	urls := make([]prefetchedPMD, len(m.sources))
-	for i, s := range m.sources {
-		urls[i] = prefetchedPMD{id: s.id, url: s.url}
+	urls := make([]prefetchedPMD, 0, len(m.sources))
+	for _, s := range m.sources {
+		// Ignore placeholder source
+		if s.id == 0 {
+			continue
+		}
+		urls = append(urls, prefetchedPMD{id: s.id, url: s.url})
 	}
 	go func() {
 		prefetched := make([]prefetchedPMD, 0, len(urls))
