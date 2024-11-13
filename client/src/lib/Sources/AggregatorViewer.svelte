@@ -45,7 +45,6 @@
   type SourceInfo = {
     id?: number;
     name: string;
-    isSource: boolean;
     feedsAvailable: number;
     feedsSubscribed: number;
     feeds: FeedInfo[];
@@ -148,7 +147,6 @@
         <SourceInfo>{
           id: s.id,
           name: s.name,
-          isSource: true,
           expand: false,
           feedsAvailable: entry.available?.length ?? 0,
           feedsSubscribed: s.subscripted?.length ?? 0,
@@ -157,7 +155,6 @@
     ) ?? [
       <SourceInfo>{
         name: "Not configured",
-        isSource: false,
         feedsAvailable: entry.available?.length ?? 0,
         feedsSubscribed: entry.available?.length ?? 0,
         feeds:
@@ -342,17 +339,6 @@
             >
               <i class="bx bx-folder-plus"></i>
             </Button>
-            {#each entry.availableSources as id}
-              <Button
-                on:click={async () => {
-                  await push(`/sources/${id}`);
-                }}
-                class="!p-2"
-                color="light"
-              >
-                <i class="bx bx-folder-open"></i>
-              </Button>
-            {/each}
           </TableBodyCell>
 
           <TableBodyCell {tdClass}>
@@ -370,13 +356,38 @@
         </tr>
         {#if entry.expand}
           {#each entry.availableSources as source}
-            <tr class="bg-slate-200 dark:bg-gray-700">
+            <tr
+              class="bg-slate-300 dark:bg-gray-600"
+              on:click={() => (source.expand = !source.expand)}
+            >
+              <TableBodyCell {tdClass}
+                >{#if source.id !== undefined}<Button
+                    on:click={async () => {
+                      await push(`/sources/${source.id}`);
+                    }}
+                    class="!p-2"
+                    color="light"
+                  >
+                    <i class="bx bx-folder-open"></i>
+                  </Button>{/if}
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>
+                {#if source.expand}
+                  <i class="bx bx-minus"></i>
+                {:else}
+                  <i class="bx bx-plus"></i>
+                {/if}
+              </TableBodyCell>
               <TableBodyCell {tdClass}></TableBodyCell>
-              <TableBodyCell {tdClass}></TableBodyCell>
-              {#if source.expand}
-                {#each source.feeds as feed}
-                  <tr class="bg-slate-200 dark:bg-gray-700">
-                    <TableBodyCell {tdClass}>
+              <TableBodyCell colspan={3} {tdClass}
+                >{`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}</TableBodyCell
+              >
+            </tr>
+            {#if source.expand}
+              {#each source.feeds as feed}
+                <tr class="bg-slate-400 dark:bg-gray-500">
+                  <TableBodyCell {tdClass}>
+                    {#if feed.id !== undefined}
                       <Button
                         on:click={async () => {
                           sessionStorage.setItem("feedBlinkID", String(feed.id));
@@ -387,13 +398,13 @@
                       >
                         <i class="bx bx-folder-open"></i>
                       </Button>
-                    </TableBodyCell>
-                  </tr>
-                {/each}
-              {/if}
-              <TableBodyCell colspan={3} {tdClass}>{source.name}</TableBodyCell>
-              <TableBodyCell {tdClass}></TableBodyCell>
-            </tr>
+                    {/if}
+                  </TableBodyCell>
+                  <TableBodyCell {tdClass}></TableBodyCell>
+                  <TableBodyCell colspan={4} {tdClass}>{feed.url}</TableBodyCell>
+                </tr>
+              {/each}
+            {/if}
           {/each}
         {/if}
       {/each}
