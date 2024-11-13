@@ -18,7 +18,16 @@
     resetAggregatorAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Badge, Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
+  import {
+    Accordion,
+    AccordionItem,
+    Badge,
+    Input,
+    Spinner,
+    Label,
+    Button,
+    TableBodyCell
+  } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -59,6 +68,8 @@
     expand: boolean;
   };
 
+  const accordionItemDefaultClass = "flex items-center gap-x-4 text-gray-700 font-semibold w-full";
+  const textFlushOpen = "text-gray-500 dark:text-white";
   let loadingAggregators: boolean = false;
   let aggregators: Aggregator[] = [];
   let aggregatorData = new Map<number, AggregatorEntry[]>();
@@ -292,183 +303,189 @@
 
 <div>
   <SectionHeader title="Aggregator"></SectionHeader>
-  <CustomTable
-    headers={[
-      {
-        label: "",
-        attribute: "delete",
-        class: smallColumnClass
-      },
-      {
-        label: "",
-        attribute: "expand",
-        class: smallColumnClass
-      },
-      {
-        label: "Name",
-        attribute: "name"
-      },
-      {
-        label: "Role",
-        attribute: "role"
-      },
-      {
-        label: "URL",
-        attribute: "url"
-      }
-    ]}
-  >
+  <Accordion flush multiple class="my-8">
     {#each aggregators as aggregator, index (index)}
       {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
-      <tr
-        on:click={async () => {
-          if (appStore.isSourceManager()) {
-            await toggleAggregatorView(aggregator);
-          }
-        }}
-        class={appStore.isSourceManager() ? "cursor-pointer" : ""}
+      <AccordionItem
+        paddingFlush="pt-0 pb-3"
+        defaultClass={accordionItemDefaultClass}
+        {textFlushOpen}
       >
-        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}
-          ><Button
-            on:click={async () => {
-              if (aggregator.id) {
-                await removeAggregator(aggregator.id);
-              }
-            }}
-            class="!p-2"
-            color="light"
-          >
-            <i class="bx bx-trash text-red-600"></i>
-          </Button>
-        </TableBodyCell>
-
-        <TableBodyCell tdClass={`${tdClass} ${smallColumnClass}`}>
-          {#if list.length === 0}
-            <i class="bx bx-plus"></i>
-          {:else}
-            <i class="bx bx-minus"></i>
-          {/if}
-        </TableBodyCell>
-        <TableBodyCell {tdClass}>
-          <div class="flex items-center gap-2">
-            {#if aggregator.attention}
-              <Badge dismissable
-                >Feeds changed
-                <Button
-                  slot="close-button"
-                  let:close
-                  color="light"
-                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50"
-                  on:click={async (event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    resetAttention(aggregator);
-                    close();
-                  }}
-                >
-                  <i class="bx bx-x"></i>
-                </Button>
-              </Badge>
-            {/if}
-            <span>{aggregator.name}</span>
+        <button
+          slot="header"
+          class="my-1 w-full"
+          on:click={async (event) => {
+            event.preventDefault();
+            if (appStore.isSourceManager()) {
+              await toggleAggregatorView(aggregator);
+            }
+          }}
+        >
+          <div class="flex flex-col gap-2">
+            <div class="flex gap-2">
+              <span class="me-4">{aggregator.name}</span>
+              {#if aggregator.attention}
+                <Badge dismissable
+                  >Feeds changed
+                  <Button
+                    slot="close-button"
+                    let:close
+                    color="light"
+                    class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                    on:click={async (event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      resetAttention(aggregator);
+                      close();
+                    }}
+                  >
+                    <i class="bx bx-x"></i>
+                  </Button>
+                </Badge>
+              {/if}
+              <Button
+                on:click={async () => {
+                  if (aggregator.id) {
+                    await removeAggregator(aggregator.id);
+                  }
+                }}
+                class="!p-2"
+                color="light"
+              >
+                <i class="bx bx-trash text-red-600"></i>
+              </Button>
+            </div>
+            <div class="flex gap-4">
+              <span class="text-sm text-gray-800 dark:text-gray-300">{aggregator.url}</span>
+            </div>
           </div>
-        </TableBodyCell>
-        <TableBodyCell {tdClass}></TableBodyCell>
-        <TableBodyCell {tdClass}>{aggregator.url}</TableBodyCell>
-      </tr>
-      {#each list as entry}
-        <tr class="bg-slate-100 dark:bg-gray-700" on:click={() => (entry.expand = !entry.expand)}>
-          <TableBodyCell {tdClass}>
-            <Button
-              on:click={async () => {
-                await push(`/sources/new/${encodeURIComponent(entry.url)}`);
-              }}
-              class="!p-2"
-              color="light"
-            >
-              <i class="bx bx-folder-plus"></i>
-            </Button>
-          </TableBodyCell>
-
-          <TableBodyCell {tdClass}>
-            {#if entry.expand}
-              <i class="bx bx-minus"></i>
-            {:else}
-              <i class="bx bx-plus"></i>
-            {/if}
-          </TableBodyCell>
-
-          <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
-          <TableBodyCell {tdClass}>{entry.role}</TableBodyCell>
-          <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
-        </tr>
-        {#if entry.expand}
-          {#each entry.availableSources as source}
-            <tr
-              class="bg-slate-300 dark:bg-gray-600"
-              on:click={() => (source.expand = !source.expand)}
-            >
-              <TableBodyCell {tdClass}
-                >{#if source.id !== undefined}<Button
+        </button>
+        {#if list.length !== 0}
+          <CustomTable
+            headers={[
+              {
+                label: "",
+                attribute: "delete",
+                class: smallColumnClass
+              },
+              {
+                label: "",
+                attribute: "expand",
+                class: smallColumnClass
+              },
+              {
+                label: "Name",
+                attribute: "name"
+              },
+              {
+                label: "Role",
+                attribute: "role"
+              },
+              {
+                label: "URL",
+                attribute: "url"
+              }
+            ]}
+          >
+            {#each list as entry}
+              <tr
+                class="bg-slate-100 dark:bg-gray-700"
+                on:click={() => (entry.expand = !entry.expand)}
+              >
+                <TableBodyCell {tdClass}>
+                  <Button
                     on:click={async () => {
-                      await push(`/sources/${source.id}`);
+                      await push(`/sources/new/${encodeURIComponent(entry.url)}`);
                     }}
                     class="!p-2"
                     color="light"
                   >
-                    <i class="bx bx-folder-open"></i>
-                  </Button>{/if}
-              </TableBodyCell>
-              <TableBodyCell {tdClass}>
-                {#if source.expand}
-                  <i class="bx bx-minus"></i>
-                {:else}
-                  <i class="bx bx-plus"></i>
-                {/if}
-              </TableBodyCell>
-              <TableBodyCell colspan={3} {tdClass}
-                >{`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}</TableBodyCell
+                    <i class="bx bx-folder-plus"></i>
+                  </Button>
+                </TableBodyCell>
+
+                <TableBodyCell {tdClass}>
+                  {#if entry.expand}
+                    <i class="bx bx-minus"></i>
+                  {:else}
+                    <i class="bx bx-plus"></i>
+                  {/if}
+                </TableBodyCell>
+
+                <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
+                <TableBodyCell {tdClass}>{entry.role}</TableBodyCell>
+                <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
+              </tr>
+              {#if entry.expand}
+                {#each entry.availableSources as source}
+                  <tr
+                    class="bg-slate-300 dark:bg-gray-600"
+                    on:click={() => (source.expand = !source.expand)}
+                  >
+                    <TableBodyCell {tdClass}
+                      >{#if source.id !== undefined}<Button
+                          on:click={async () => {
+                            await push(`/sources/${source.id}`);
+                          }}
+                          class="!p-2"
+                          color="light"
+                        >
+                          <i class="bx bx-folder-open"></i>
+                        </Button>{/if}
+                    </TableBodyCell>
+                    <TableBodyCell {tdClass}>
+                      {#if source.expand}
+                        <i class="bx bx-minus"></i>
+                      {:else}
+                        <i class="bx bx-plus"></i>
+                      {/if}
+                    </TableBodyCell>
+                    <TableBodyCell colspan={3} {tdClass}
+                      >{`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}</TableBodyCell
+                    >
+                  </tr>
+                  {#if source.expand}
+                    {#each source.feeds as feed}
+                      {@const feedClass =
+                        tdClass + (feed.highlight ? " bg-amber-300 dark:bg-amber-600" : "")}
+                      <tr class="bg-slate-400 dark:bg-gray-500">
+                        <TableBodyCell tdClass={feedClass}>
+                          {#if feed.id !== undefined}
+                            <Button
+                              on:click={async () => {
+                                sessionStorage.setItem("feedBlinkID", String(feed.id));
+                                await push(`/sources/${feed.sourceID}`);
+                              }}
+                              class="!p-2"
+                              color="light"
+                            >
+                              <i class="bx bx-folder-open"></i>
+                            </Button>
+                          {/if}
+                        </TableBodyCell>
+                        <TableBodyCell colspan={4} tdClass={feedClass}>{feed.url}</TableBodyCell>
+                      </tr>
+                    {/each}
+                  {/if}
+                {/each}
+              {/if}
+            {/each}
+            <div slot="bottom">
+              <div
+                class:invisible={!loadingAggregators}
+                class={loadingAggregators ? "loadingFadeIn" : ""}
+                class:mb-4={true}
               >
-            </tr>
-            {#if source.expand}
-              {#each source.feeds as feed}
-                {@const feedClass =
-                  tdClass + (feed.highlight ? " bg-amber-300 dark:bg-amber-600" : "")}
-                <tr class="bg-slate-400 dark:bg-gray-500">
-                  <TableBodyCell tdClass={feedClass}>
-                    {#if feed.id !== undefined}
-                      <Button
-                        on:click={async () => {
-                          sessionStorage.setItem("feedBlinkID", String(feed.id));
-                          await push(`/sources/${feed.sourceID}`);
-                        }}
-                        class="!p-2"
-                        color="light"
-                      >
-                        <i class="bx bx-folder-open"></i>
-                      </Button>
-                    {/if}
-                  </TableBodyCell>
-                  <TableBodyCell colspan={4} tdClass={feedClass}>{feed.url}</TableBodyCell>
-                </tr>
-              {/each}
-            {/if}
-          {/each}
+                Loading ...
+                <Spinner color="gray" size="4"></Spinner>
+              </div>
+              <ErrorMessage error={aggregatorError}></ErrorMessage>
+            </div>
+          </CustomTable>
         {/if}
-      {/each}
+      </AccordionItem>
     {/each}
-    <div slot="bottom">
-      <div
-        class:invisible={!loadingAggregators}
-        class={loadingAggregators ? "loadingFadeIn" : ""}
-        class:mb-4={true}
-      >
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
-      </div>
-      <ErrorMessage error={aggregatorError}></ErrorMessage>
-    </div>
-  </CustomTable>
+  </Accordion>
   {#if appStore.isSourceManager()}
     <form on:submit={submitAggregator} class={formClass}>
       <div class="flex w-96 flex-col gap-2">
