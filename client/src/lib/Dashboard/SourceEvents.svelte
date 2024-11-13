@@ -95,7 +95,7 @@
             </Activity>
           {/each}
         {:else}
-          <div class="text-gray-600">No source changes found.</div>
+          <div class="text-gray-600 dark:text-gray-400">No source changes found.</div>
         {/if}
       {/if}
       <Button
