@@ -102,3 +102,7 @@
 ## url = "https://example.org/api/v1/import"
 ## header = [ "x-api-key:secret" ]
 ## timeout = "5s"
+
+# [aggregators]
+# timeout = "30s"
+# update_interval = "2h"
