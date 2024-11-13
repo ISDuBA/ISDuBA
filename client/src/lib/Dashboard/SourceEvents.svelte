@@ -98,15 +98,15 @@
           <div class="text-gray-600 dark:text-gray-400">No source changes found.</div>
         {/if}
       {/if}
-      <Button
-        on:click={async () => await push(`/sources/`)}
-        color="light"
-        class="h-fit w-fit rounded-md !px-2 !py-1"
-      >
-        <i class="bx bx-git-repo-forked text-lg"></i>
-      </Button>
-      {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
     </div>
+    <Button
+      on:click={async () => await push(`/sources/`)}
+      color="light"
+      class="h-fit w-fit rounded-md !px-2 !py-1"
+    >
+      <i class="bx bx-git-repo-forked text-lg"></i>
+    </Button>
+    {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
     <ErrorMessage error={loadAttentionError}></ErrorMessage>
   </div>
 {/if}
