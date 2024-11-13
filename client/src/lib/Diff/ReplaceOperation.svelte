@@ -26,7 +26,7 @@
 
 <div>
   {#if sideBySideContent.length > 0}
-    <div class="flex justify-between gap-2">
+    <div class="flex justify-between gap-2 dark:text-gray-300">
       <div class="flex w-6/12 items-center gap-1">
         <i class="bx bx-minus"></i>
         <div class="h-fit w-fit bg-red-200 dark:bg-[#412732]">

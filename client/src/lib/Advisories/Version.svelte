@@ -26,9 +26,9 @@
   let nextColor = "red";
   const diffButtonBaseClass = "!p-2 h-8 w-8 mb-2";
   const versionButtonClass = "dark:text-white text-black hover:text-black border border-solid";
-  const redButtonClass = `${versionButtonClass} bg-red-100 group-hover:bg-red-300 border-red-700`;
-  const greenButtonClass = `${versionButtonClass} bg-green-100 group-hover:bg-green-300 border-green-700`;
-  const lightButtonClass = `${versionButtonClass} bg-white group-hover:bg-gray-200 border-gray-700`;
+  const redButtonClass = `${versionButtonClass} bg-red-100 group-hover:bg-red-300 border-red-700 dark:bg-red-700 dark:group-hover:bg-red-500 dark:border-red-100`;
+  const greenButtonClass = `${versionButtonClass} bg-green-100 group-hover:bg-green-300 border-green-700 dark:bg-green-700 dark:group-hover:bg-green-500 dark:border-green-100`;
+  const lightButtonClass = `${versionButtonClass} bg-white group-hover:bg-gray-200 border-gray-700 dark:bg-gray-800 dark:group-hover:bg-gray-600 dark:border-gray-300`;
 
   const dispatch = createEventDispatcher();
   const navigateToVersion = (version: any) => {

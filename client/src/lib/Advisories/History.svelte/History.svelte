@@ -86,7 +86,7 @@
     </TableBody>
   </Table>
   {#if historyEntries.length === 0}
-    <span class="ml-auto mr-auto text-gray-400 dark:text-gray-600"
+    <span class="ml-auto mr-auto text-gray-400 dark:text-gray-400"
       >{fullHistory ? "No entries" : "No comments"}</span
     >
   {/if}
