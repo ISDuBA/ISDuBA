@@ -39,7 +39,6 @@
     id?: number;
     sourceID?: number;
     url: string;
-    subscribed: boolean;
   };
 
   type SourceInfo = {
@@ -54,7 +53,6 @@
   type AggregatorEntry = {
     name: string;
     role: string;
-    subscribedID: number[];
     url: string;
     availableSources: SourceInfo[];
     expand: boolean;
@@ -130,16 +128,34 @@
     }
   };
 
-  const getFeeds = (feeds: FeedSubscription[], sourceID: number): FeedInfo[] =>
+  const getSubsribedFeeds = (feeds: FeedSubscription[], sourceID: number): FeedInfo[] =>
     feeds.map(
       (f) =>
         <FeedInfo>{
           id: f.id,
           url: f.url,
-          sourceID: sourceID,
-          subscribed: true
+          sourceID: sourceID
         }
     );
+
+  const getFeeds = (
+    sourceID: number | undefined,
+    feeds: FeedSubscription[],
+    availableFeeds?: string[]
+  ) => {
+    let subscribedFeeds = sourceID !== undefined ? getSubsribedFeeds(feeds, sourceID) : [];
+    let unsubscribedFeeds =
+      availableFeeds?.map(
+        (feedURL) =>
+          <FeedInfo>{
+            url: feedURL
+          }
+      ) ?? [];
+    unsubscribedFeeds = unsubscribedFeeds.filter(
+      (f) => !subscribedFeeds.map((i) => i.url).includes(f.url)
+    );
+    return [...unsubscribedFeeds, ...subscribedFeeds];
+  };
 
   const getSources = (entry: Subscription): SourceInfo[] =>
     entry.subscriptions?.map(
@@ -150,21 +166,14 @@
           expand: false,
           feedsAvailable: entry.available?.length ?? 0,
           feedsSubscribed: s.subscripted?.length ?? 0,
-          feeds: getFeeds(s.subscripted ?? [], s.id)
+          feeds: getFeeds(s.id, s.subscripted ?? [], entry.available)
         }
     ) ?? [
       <SourceInfo>{
         name: "Not configured",
         feedsAvailable: entry.available?.length ?? 0,
         feedsSubscribed: entry.available?.length ?? 0,
-        feeds:
-          entry.available?.map(
-            (feedURL) =>
-              <FeedInfo>{
-                url: feedURL,
-                subscribed: false
-              }
-          ) ?? []
+        feeds: getFeeds(undefined, [], entry.available)
       }
     ];
 
