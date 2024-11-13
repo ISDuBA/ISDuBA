@@ -697,14 +697,16 @@ func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
 // FeedLog sends the log of the feed with the given id to the given function.
 func (m *Manager) FeedLog(
 	feedID *int64,
+	from, to *time.Time,
+	limit, offset int64,
+	logLevels []config.FeedLogLevel,
+	count bool,
 	fn func(
 		id int64,
 		t time.Time,
 		lvl config.FeedLogLevel,
-		msg string),
-	limit, offset int64,
-	logLevels []config.FeedLogLevel,
-	count bool,
+		msg string,
+	),
 ) (int64, error) {
 	const (
 		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
@@ -719,6 +721,20 @@ func (m *Manager) FeedLog(
 		args = append(args, *feedID)
 	} else {
 		cond.WriteString(`TRUE`)
+	}
+
+	if from != nil && to != nil && from.After(*to) {
+		from, to = to, from
+	}
+
+	if from != nil {
+		fmt.Fprintf(&cond, " AND time >= $%d", len(args)+1)
+		args = append(args, *from)
+	}
+
+	if to != nil {
+		fmt.Fprintf(&cond, " AND time <= $%d", len(args)+1)
+		args = append(args, *to)
 	}
 
 	if len(logLevels) > 0 {

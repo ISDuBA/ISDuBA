@@ -633,6 +633,7 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 		Message string              `json:"msg"`
 	}
 	var (
+		from, to      *time.Time
 		limit, offset int64 = -1, -1
 		logLevels     []config.FeedLogLevel
 		count, ok     bool
@@ -666,9 +667,27 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 		}
 	}
 
+	if f := ctx.Query("from"); f != "" {
+		fp, ok := parse(ctx, parseTime, f)
+		if !ok {
+			return
+		}
+		from = &fp
+	}
+
+	if t := ctx.Query("to"); t != "" {
+		tp, ok := parse(ctx, parseTime, t)
+		if !ok {
+			return
+		}
+		to = &tp
+	}
+
 	entries := []entry{}
 	counter, err := c.sm.FeedLog(
 		feedID,
+		from, to,
+		limit, offset, logLevels, count,
 		func(
 			id int64,
 			t time.Time,
@@ -682,7 +701,6 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 				Message: msg,
 			})
 		},
-		limit, offset, logLevels, count,
 	)
 	if err != nil {
 		slog.Error("database error", "err", err)
