@@ -219,3 +219,4 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_CLIENT_IDLE_TIMEOUT`          | `client idle_timeout`                |
 | `ISDUBA_FORWARDER_UPDATE_INTERVAL`    | `forwarder update_interval`          |
 | `ISDUBA_AGGREGATORS_UPDATE_INTERVAL`  | `aggregators update_interval`        |
+| `ISDUBA_AGGREGATORS_TIMEOUT`          | `aggregators timeout`                |
