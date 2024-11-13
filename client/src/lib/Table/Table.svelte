@@ -618,7 +618,9 @@
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
-                        <span class:text-red-500={Number(item[column]) > 5.0}
+                        <span
+                          class:text-red-500={Number(item[column]) > 5.0}
+                          class:dark:text-red-300={Number(item[column]) > 5.0}
                           >{item[column] == null ? "" : item[column]}</span
                         >
                       </div></TableBodyCell
@@ -765,7 +767,9 @@
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
-                        <span class:text-red-500={Number(item[column]) > 5.0}
+                        <span
+                          class:text-red-500={Number(item[column]) > 5.0}
+                          class:dark:text-red-300={Number(item[column]) > 5.0}
                           >{item[column] == null ? "" : item[column]}</span
                         >
                       </div></TableBodyCell

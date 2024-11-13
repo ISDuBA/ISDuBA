@@ -106,7 +106,7 @@
               <span slot="top-right" class="ml-auto">{getPublisher(doc.publisher)}</span>
               <div class="text-black dark:text-white">{doc.title ?? "Title: undefined"}</div>
               <div class="text-sm text-gray-700 dark:text-gray-400">{doc.tracking_id}</div>
-              <div slot="bottom-left" class="flex items-center gap-4 text-gray-500">
+              <div slot="bottom-left" class="flex items-center gap-4 text-slate-400">
                 {#if doc.comments !== undefined}
                   <div class="flex items-center gap-1">
                     <i class="bx bx-comment"></i>
@@ -123,7 +123,7 @@
                   <SsvcBadge vector={doc.ssvc}></SsvcBadge>
                 {/if}
               </div>
-              <div slot="bottom-right" class="text-gray-500">
+              <div slot="bottom-right" class="text-slate-400">
                 {#if doc.recent !== undefined}
                   <span>{getRelativeTime(new Date(doc.recent))}</span>
                 {/if}
@@ -142,7 +142,7 @@
             </Activity>
           {/each}
         {:else}
-          <div class="text-gray-600">No matching advisories found.</div>
+          <div class="text-gray-600 dark:text-gray-400">No matching advisories found.</div>
         {/if}
       {/if}
       <ShowMoreButton id={storedQuery.id}></ShowMoreButton>

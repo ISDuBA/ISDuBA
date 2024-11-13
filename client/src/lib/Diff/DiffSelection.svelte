@@ -281,8 +281,12 @@
             <div class="md:mb-1" title={docA.document.title}>
               {docA.document.title}
             </div>
-            <span class="text-sm text-gray-600">{getPublisher(docA.document.publisher.name)}</span>
-            <span class="text-sm text-gray-600">Version: {docA.document.tracking.version}</span>
+            <span class="text-sm text-gray-600 dark:text-slate-300"
+              >{getPublisher(docA.document.publisher.name)}</span
+            >
+            <span class="text-sm text-gray-600 dark:text-slate-300"
+              >Version: {docA.document.tracking.version}</span
+            >
           </div>
         {:else}
           <div class="flex flex-col gap-2">
@@ -316,8 +320,12 @@
             <div class="md:mb-1" title={docB.document.title}>
               {docB.document.title}
             </div>
-            <span class="text-sm text-gray-600">{getPublisher(docB.document.publisher.name)}</span>
-            <span class="text-sm text-gray-600">Version: {docB.document.tracking.version}</span>
+            <span class="text-sm text-gray-600 dark:text-slate-300"
+              >{getPublisher(docB.document.publisher.name)}</span
+            >
+            <span class="text-sm text-gray-600 dark:text-slate-300"
+              >Version: {docB.document.tracking.version}</span
+            >
           </div>
         {:else}
           <div class:flex={true} class:flex-col={true} class:gap-2={true} class:invisible={!docA}>

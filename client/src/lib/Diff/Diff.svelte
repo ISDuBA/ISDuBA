@@ -28,7 +28,7 @@
   let isRemoveSectionOpen = false;
   let isEditedSectionOpen = true;
   let isSideBySideViewActivated = true;
-  let pressedButtonClass = "bg-gray-200 hover:bg-gray-100";
+  let pressedButtonClass = "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700";
   let accordionItemDefaultClass =
     "flex justify-start items-center gap-x-4 text-gray-700 font-semibold w-full";
   let textFlushOpen = "text-gray-500 dark:text-white";
@@ -197,7 +197,7 @@
         {#each replaceChanges as change}
           <div class={getBodyClass("replace")}>
             {#if change.value}
-              <div class="mb-1 text-sm font-bold">
+              <div class="mb-1 text-sm font-bold dark:text-gray-200">
                 <code>
                   {change.path}
                 </code>

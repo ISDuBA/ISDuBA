@@ -198,7 +198,7 @@
                   : ""}
               </span>
               <div slot="bottom-bottom" class="mt-2">
-                <div class="flex items-center gap-4 text-xs text-gray-500">
+                <div class="flex items-center gap-4 text-xs text-slate-400">
                   {#if activity.comments !== undefined}
                     <div class="flex items-center gap-1">
                       <i class="bx bx-comment"></i>
@@ -216,7 +216,7 @@
                   {/if}
                 </div>
                 {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}
-                  <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
+                  <div class="my-2 rounded-sm border p-2 text-xs text-gray-800 dark:text-gray-200">
                     {#each Object.keys(activity).sort() as key}
                       {#if !ignoredColumns.includes(key) && activity[key] !== undefined && activity[key] !== null}
                         <div>{key}: {activity[key]}</div>
@@ -228,7 +228,7 @@
             </Activity>
           {/each}
         {:else}
-          <div class="text-gray-600">No matching events found.</div>
+          <div class="text-gray-600 dark:text-gray-400">No matching events found.</div>
         {/if}
       {/if}
       <ShowMoreButton id={storedQuery.id}></ShowMoreButton>
