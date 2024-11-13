@@ -30,6 +30,7 @@ The configuration consists of the following sections:
 - [`[remote_validator]`](#section_remote_validator) Remote validator
 - [`[client]`](#section_client) Client configuration
 - [`[forwarder]`](#section_forwarder) Forwarder configuration
+- [`[aggregators]`](#section_aggregators) Aggregators configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
@@ -154,6 +155,13 @@ Documents that are discarded because of failed validation are not forwarded.
 - `public_cert`: The location of the public client certificate.
 - `timeout`: Sets the http client timeout. Set this value if the network is unstable.
 
+### <a name="section_aggregators"></a> Section `[aggregators]` Aggregators configuration
+
+Aggregators are checked for updates in regular intervals.
+
+- `update_interval`: Time interval to check aggregators for updates. Defaults to `"2h"`.
+- `timeout`: The duration before fetching an aggregator.json fails. Defaults to `"30s"`.
+
 ## <a name="env_vars"></a>Environment variables
 
 | Env variable                          | Overwrites                           |
@@ -210,3 +218,5 @@ Documents that are discarded because of failed validation are not forwarded.
 | `ISDUBA_CLIENT_UPDATE_INTERVAL`       | `client update_interval`             |
 | `ISDUBA_CLIENT_IDLE_TIMEOUT`          | `client idle_timeout`                |
 | `ISDUBA_FORWARDER_UPDATE_INTERVAL`    | `forwarder update_interval`          |
+| `ISDUBA_AGGREGATORS_UPDATE_INTERVAL`  | `aggregators update_interval`        |
+| `ISDUBA_AGGREGATORS_TIMEOUT`          | `aggregators timeout`                |
