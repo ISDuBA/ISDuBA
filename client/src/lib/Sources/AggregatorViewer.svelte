@@ -39,6 +39,7 @@
     id?: number;
     sourceID?: number;
     url: string;
+    highlight: boolean;
   };
 
   type SourceInfo = {
@@ -134,6 +135,7 @@
         <FeedInfo>{
           id: f.id,
           url: f.url,
+          highlight: false,
           sourceID: sourceID
         }
     );
@@ -143,14 +145,23 @@
     feeds: FeedSubscription[],
     availableFeeds?: string[]
   ) => {
-    let subscribedFeeds = sourceID !== undefined ? getSubsribedFeeds(feeds, sourceID) : [];
     let unsubscribedFeeds =
       availableFeeds?.map(
         (feedURL) =>
           <FeedInfo>{
-            url: feedURL
+            url: feedURL,
+            highlight: true
           }
       ) ?? [];
+    let subscribedFeeds = sourceID !== undefined ? getSubsribedFeeds(feeds, sourceID) : [];
+
+    // Highlight the case, when a feed is configured that is no longer available
+    subscribedFeeds.forEach((f) => {
+      if (!unsubscribedFeeds.map((i) => i.url).includes(f.url)) {
+        f.highlight = true;
+      }
+    });
+
     unsubscribedFeeds = unsubscribedFeeds.filter(
       (f) => !subscribedFeeds.map((i) => i.url).includes(f.url)
     );
@@ -416,7 +427,7 @@
             {#if source.expand}
               {#each source.feeds as feed}
                 {@const feedClass =
-                  tdClass + (feed.id === undefined ? " bg-amber-300 dark:bg-amber-600" : "")}
+                  tdClass + (feed.highlight ? " bg-amber-300 dark:bg-amber-600" : "")}
                 <tr class="bg-slate-400 dark:bg-gray-500">
                   <TableBodyCell tdClass={feedClass}>
                     {#if feed.id !== undefined}
