@@ -696,8 +696,9 @@ func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
 
 // FeedLog sends the log of the feed with the given id to the given function.
 func (m *Manager) FeedLog(
-	feedID int64,
+	feedID *int64,
 	fn func(
+		id int64,
 		t time.Time,
 		lvl config.FeedLogLevel,
 		msg string),
@@ -707,13 +708,19 @@ func (m *Manager) FeedLog(
 ) (int64, error) {
 	const (
 		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
-		selectSQL = `SELECT time, lvl::text, msg FROM feed_logs WHERE `
+		selectSQL = `SELECT feeds_id, time, lvl::text, msg FROM feed_logs WHERE `
 	)
 
 	var cond strings.Builder
-	cond.WriteString(`feeds_id = $1`)
+	var args []any
 
-	args := []any{feedID}
+	if feedID != nil {
+		cond.WriteString(`feeds_id = $1`)
+		args = append(args, *feedID)
+	} else {
+		cond.WriteString(`TRUE`)
+	}
+
 	if len(logLevels) > 0 {
 		cond.WriteString(` AND (`)
 		for i, lvl := range logLevels {
@@ -769,15 +776,16 @@ func (m *Manager) FeedLog(
 			}
 			defer rows.Close()
 			var (
+				id  int64
 				t   time.Time
 				lvl config.FeedLogLevel
 				msg string
 			)
 			for rows.Next() {
-				if err := rows.Scan(&t, &lvl, &msg); err != nil {
+				if err := rows.Scan(&id, &t, &lvl, &msg); err != nil {
 					return fmt.Errorf("scanning log failed: %w", err)
 				}
-				fn(t, lvl, msg)
+				fn(id, t, lvl, msg)
 			}
 			return rows.Err()
 		}, 0,

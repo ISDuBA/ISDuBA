@@ -614,14 +614,20 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 }
 
 func (c *Controller) feedLog(ctx *gin.Context) {
-	var input struct {
-		FeedID int64 `uri:"id"`
-	}
-	if err := ctx.ShouldBindUri(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	feedID, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
 		return
 	}
+	c.feedLogs(ctx, &feedID)
+}
+
+func (c *Controller) allFeedsLog(ctx *gin.Context) {
+	c.feedLogs(ctx, nil)
+}
+
+func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 	type entry struct {
+		FeedID  int64               `json:"feed_id"`
 		Time    time.Time           `json:"time"`
 		Level   config.FeedLogLevel `json:"level"`
 		Message string              `json:"msg"`
@@ -662,14 +668,16 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 
 	entries := []entry{}
 	counter, err := c.sm.FeedLog(
-		input.FeedID,
+		feedID,
 		func(
+			id int64,
 			t time.Time,
 			lvl config.FeedLogLevel,
 			msg string,
 		) {
 			entries = append(entries, entry{
-				Time:    t,
+				FeedID:  id,
+				Time:    t.UTC(),
 				Level:   lvl,
 				Message: msg,
 			})
