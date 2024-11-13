@@ -81,10 +81,7 @@
   };
 
   const loadLogs = async () => {
-    if (!feed) {
-      return;
-    }
-    if (!feed.id) {
+    if (!feed || !feed.id) {
       return;
     }
     loadingLogs = true;
@@ -98,10 +95,7 @@
   };
 
   const downloadFeedLogs = async () => {
-    if (!feed) {
-      return;
-    }
-    if (!feed.id) {
+    if (!feed || !feed.id) {
       return;
     }
     let result = await fetchAllFeedLogs(feed.id, false);
