@@ -46,7 +46,7 @@
     </div>
   {:else if content}
     {#each content as part}
-      <span class={getSpanClass(part.m)}>{part.t}</span>
+      <span class={"dark:text-gray-200 " + getSpanClass(part.m)}>{part.t}</span>
     {/each}
   {/if}
 </div>
