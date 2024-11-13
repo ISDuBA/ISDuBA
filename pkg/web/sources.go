@@ -634,6 +634,7 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 	}
 	var (
 		from, to      *time.Time
+		search              = ctx.Query("search")
 		limit, offset int64 = -1, -1
 		logLevels     []config.FeedLogLevel
 		count, ok     bool
@@ -687,6 +688,7 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 	counter, err := c.sm.FeedLog(
 		feedID,
 		from, to,
+		search,
 		limit, offset, logLevels, count,
 		func(
 			id int64,

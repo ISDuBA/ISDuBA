@@ -24,6 +24,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -698,6 +699,7 @@ func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
 func (m *Manager) FeedLog(
 	feedID *int64,
 	from, to *time.Time,
+	search string,
 	limit, offset int64,
 	logLevels []config.FeedLogLevel,
 	count bool,
@@ -737,14 +739,18 @@ func (m *Manager) FeedLog(
 		args = append(args, *to)
 	}
 
+	if search != "" {
+		fmt.Fprintf(&cond, " AND msg ILIKE $%d", len(args)+1)
+		args = append(args, query.LikeEscape(search))
+	}
+
 	if len(logLevels) > 0 {
 		cond.WriteString(` AND (`)
 		for i, lvl := range logLevels {
 			if i > 0 {
 				cond.WriteString(` OR `)
 			}
-			cond.WriteString(`lvl = $`)
-			cond.WriteString(strconv.Itoa(len(args) + 1))
+			fmt.Fprintf(&cond, "lvl = $%d", len(args)+1)
 			args = append(args, lvl)
 		}
 		cond.WriteByte(')')
