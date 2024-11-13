@@ -217,6 +217,7 @@
     if (aggregatorData.get(aggregator.id ?? -1)) {
       aggregatorData.delete(aggregator.id ?? -1);
       aggregatorData = aggregatorData;
+      saveAggregatorExpand();
       return;
     }
     loadingAggregators = true;
@@ -226,6 +227,7 @@
       aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value));
 
       aggregatorData = aggregatorData;
+      saveAggregatorExpand();
     } else {
       aggregatorError = resp.error;
     }
@@ -250,8 +252,27 @@
       await getAggregators();
     }
   };
+
+  const saveAggregatorExpand = () => {
+    let idList = [...aggregatorData.keys()];
+    sessionStorage.setItem("openAggregator", JSON.stringify(idList));
+  };
+
+  const restoreAggregatorExpand = () => {
+    let idList = JSON.parse(sessionStorage.getItem("openAggregator") ?? "[]");
+    if (idList) {
+      for (let id of idList) {
+        let aggregator = aggregators.find((a) => a.id === id);
+        if (aggregator) {
+          toggleAggregatorView(aggregator);
+        }
+      }
+    }
+  };
+
   onMount(async () => {
     await getAggregators();
+    restoreAggregatorExpand();
   });
 </script>
 
