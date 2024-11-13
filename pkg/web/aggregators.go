@@ -38,7 +38,7 @@ type argumentedAggregator struct {
 
 func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	url := ctx.Query("url")
-	ca, err := c.am.Cache.GetAggregator(url, true)
+	ca, err := c.am.Cache.GetAggregator(url)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -113,10 +113,6 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-	validate, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("validate", "false"))
-	if !ok {
-		return
-	}
 	var (
 		name      string
 		url       string
@@ -139,7 +135,7 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ca, err := c.am.Cache.GetAggregator(url, validate)
+	ca, err := c.am.Cache.GetAggregator(url)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
