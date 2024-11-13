@@ -11,7 +11,7 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, ButtonGroup, Label, Spinner } from "flowbite-svelte";
   import DiffEntry from "./DiffEntry.svelte";
-  import type { JsonDiffResult, JsonDiffResultWrapper } from "./Diff";
+  import { fetchDiffEntry, type JsonDiffResult, type JsonDiffResultWrapper } from "./Diff";
   import LazyEntry from "./LazyEntry.svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -34,12 +34,23 @@
     "flex justify-start items-center gap-x-4 text-gray-700 font-semibold w-full";
   let textFlushOpen = "text-gray-500 dark:text-white";
   let isLoading = false;
+  let isLoadingRemovedChanges = false;
   $: addChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "add") : [];
   let groupedAddChanges: JsonDiffResultWrapper[] = [];
   $: if (addChanges) {
-    groupedAddChanges = groupChanges(addChanges);
+    groupChanges(addChanges).then((result) => {
+      groupedAddChanges = result;
+    });
   }
+  let groupedRemoveChanges: JsonDiffResultWrapper[] = [];
   $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
+  $: if (removeChanges) {
+    isLoadingRemovedChanges = true;
+    groupChanges(removeChanges).then((result) => {
+      isLoadingRemovedChanges = false;
+      groupedRemoveChanges = result;
+    });
+  }
   $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
   $: docA_ID = $appStore.app.diff.docA_ID;
   $: docB_ID = $appStore.app.diff.docB_ID;
@@ -64,13 +75,22 @@
     isLoading = false;
   };
 
-  const groupChanges = (changes: JsonDiffResult[]) => {
+  const groupChanges = async (changes: JsonDiffResult[]) => {
     const list: JsonDiffResultWrapper[] = [];
     const groupedChanges: any = {};
-    changes.forEach((change: any) => {
+    for (let i = 0; i < changes.length; i++) {
+      const change: any = structuredClone(changes[i]);
       const splitted = change.path.split("/");
       const lastPart = Number(splitted[splitted.length - 1]);
       let containsNestedObject = false;
+      if (!change.value && change.op === "remove") {
+        const response = await fetchDiffEntry(urlPath, change.op, change.path);
+        if (response.ok) {
+          change.value = response.content;
+        } else if (response.error) {
+          error = getErrorDetails(`Could not load entry.`, response);
+        }
+      }
       if (change.value && typeof change.value === "object") {
         containsNestedObject = Object.keys(change.value).some((key) => {
           return (
@@ -88,7 +108,7 @@
         if (!groupedChanges[key]) groupedChanges[key] = [];
         groupedChanges[key].push(change);
       }
-    });
+    }
     Object.keys(groupedChanges).forEach((key) => {
       list.push({ result: groupedChanges[key] });
     });
@@ -193,22 +213,40 @@
         <div slot="header">
           <div class="flex items-center gap-2">
             <span>Removed ({removeChanges.length})</span>
-          </div>
-        </div>
-        {#each removeChanges as change}
-          <div class={getBodyClass("remove")}>
-            {#if change.value}
-              <div class="mb-1 text-sm font-bold">
-                <code>
-                  {change.path}
-                </code>
-              </div>
-              <DiffEntry content={change.value} {isSideBySideViewActivated} operation={change.op}
-              ></DiffEntry>
-            {:else}
-              <LazyEntry operation={change.op} {urlPath} path={change.path}></LazyEntry>
+            {#if isLoadingRemovedChanges}
+              <span
+                class:invisible={!isLoadingRemovedChanges}
+                class={isLoadingRemovedChanges ? "loadingFadeIn" : ""}
+              >
+                <Spinner color="gray" size="4"></Spinner>
+              </span>
             {/if}
           </div>
+        </div>
+        {#each groupedRemoveChanges as change}
+          {#if !Array.isArray(change.result)}
+            <div class={getBodyClass("remove")}>
+              {#if change.result.value}
+                <div class="mb-1 text-sm font-bold">
+                  <code>
+                    {change.result.path}
+                  </code>
+                </div>
+                <DiffEntry
+                  content={change.result.value}
+                  {isSideBySideViewActivated}
+                  operation={change.result.op}
+                ></DiffEntry>
+              {:else}
+                <LazyEntry operation={change.result.op} {urlPath} path={change.result.path}
+                ></LazyEntry>
+              {/if}
+            </div>
+          {:else}
+            <div class={getBodyClass("remove")}>
+              <DiffGroupedEntry {change} isClosable></DiffGroupedEntry>
+            </div>
+          {/if}
         {/each}
       </AccordionItem>
       <AccordionItem

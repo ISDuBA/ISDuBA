@@ -10,11 +10,12 @@
 
 <script lang="ts">
   import { isArrayOfString } from "$lib/utils";
+  import type { DiffOperation } from "./Diff";
   import ReplaceOperation from "./ReplaceOperation.svelte";
 
   export let content: any;
   export let isSideBySideViewActivated: boolean = true;
-  export let operation: string;
+  export let operation: DiffOperation;
   export let depth = 0;
 
   $: containerStyle = `padding-left: ${depth > 1 ? 6 * depth : 0}pt`;
