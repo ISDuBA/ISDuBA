@@ -231,9 +231,9 @@
           <div class="text-gray-600 dark:text-gray-400">No matching events found.</div>
         {/if}
       {/if}
-      <ShowMoreButton id={storedQuery.id}></ShowMoreButton>
-      {#if activityCount > 10}<div class="">…There are more events</div>{/if}
     </div>
+    <ShowMoreButton id={storedQuery.id}></ShowMoreButton>
+    {#if activityCount > 10}<div class="">…There are more events</div>{/if}
     <ErrorMessage error={loadActivityError}></ErrorMessage>
     <ErrorMessage error={loadCommentsError}></ErrorMessage>
     <ErrorMessage error={loadDocumentsError}></ErrorMessage>

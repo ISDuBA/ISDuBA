@@ -65,7 +65,7 @@
 </script>
 
 {#if $appStore.app.isUserLoggedIn && appStore.isSourceManager()}
-  <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
+  <div class="mb-8 flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title="Changed sources"></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
       {#if isLoading}
@@ -95,18 +95,18 @@
             </Activity>
           {/each}
         {:else}
-          <div class="text-gray-600">No source changes found.</div>
+          <div class="text-gray-600 dark:text-gray-400">No source changes found.</div>
         {/if}
       {/if}
-      <Button
-        on:click={async () => await push(`/sources/`)}
-        color="light"
-        class="h-fit w-fit rounded-md !px-2 !py-1"
-      >
-        <i class="bx bx-git-repo-forked text-lg"></i>
-      </Button>
-      {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
     </div>
+    <Button
+      on:click={async () => await push(`/sources/`)}
+      color="light"
+      class="h-fit w-fit rounded-md !px-2 !py-1"
+    >
+      <i class="bx bx-git-repo-forked text-lg"></i>
+    </Button>
+    {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
     <ErrorMessage error={loadAttentionError}></ErrorMessage>
   </div>
 {/if}

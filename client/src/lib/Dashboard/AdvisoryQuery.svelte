@@ -145,8 +145,8 @@
           <div class="text-gray-600 dark:text-gray-400">No matching advisories found.</div>
         {/if}
       {/if}
-      <ShowMoreButton id={storedQuery.id}></ShowMoreButton>
     </div>
+    <ShowMoreButton id={storedQuery.id}></ShowMoreButton>
     <ErrorMessage error={newDocumentsError}></ErrorMessage>
   </div>
 {/if}
