@@ -35,12 +35,13 @@
   let ignoredQueries: Query[] = [];
   let errorMessage: ErrorDetails | null;
   let advancedQueryErrorMessage: ErrorDetails | null;
-  let globalQueryButtonColor = "primary";
-  let defaultQueryButtonClass = "flex flex-col p-0 focus:text-black hover:text-black";
-  let queryButtonClass = "bg-white hover:bg-gray-100";
-  let pressedQueryButtonClass = "bg-gray-200 text-black hover:!bg-gray-100";
-  let globalQueryButtonClass = `border-${globalQueryButtonColor}-500 hover:!text-black`;
-  let pressedGlobalQueryButtonClass = `border-${globalQueryButtonColor}-500 bg-${globalQueryButtonColor}-600 focus:text-white text-white hover:text-black`;
+  const globalQueryButtonColor = "primary";
+  const defaultQueryButtonClass = "flex flex-col p-0";
+  const queryButtonClass = "bg-white hover:bg-gray-100";
+  const pressedQueryButtonClass =
+    "bg-gray-200 text-black hover:text-black hover:!bg-gray-100 dark:bg-gray-600 dark:hover:!bg-gray-700";
+  const globalQueryButtonClass = `border-${globalQueryButtonColor}-500 dark:border-${globalQueryButtonColor}-500 dark:hover:border-${globalQueryButtonColor}-500 hover:!text-black dark:hover:!text-white`;
+  const pressedGlobalQueryButtonClass = `border-${globalQueryButtonColor}-500 bg-${globalQueryButtonColor}-600 dark:bg-${globalQueryButtonColor}-600 dark:border-${globalQueryButtonColor}-500 dark:hover:border-${globalQueryButtonColor}-500 focus:text-white hover:focus:text-black text-white hover:text-black dark:hover:text-white dark:hover:focus:text-white dark:focus:text-white`;
 
   const getClass = (isGlobal: boolean, isPressed: boolean) => {
     const addition = isGlobal
