@@ -520,6 +520,9 @@
     from = initialFrom.toISOString().split("T")[0];
     to = new Date().toISOString().split("T")[0];
     await loadStats();
+    if (!chartComponentRef) {
+      return;
+    }
     initChart();
     if (updateIntervalInMinutes) {
       intervalID = setInterval(async () => {
