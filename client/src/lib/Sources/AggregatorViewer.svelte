@@ -394,8 +394,10 @@
             </tr>
             {#if source.expand}
               {#each source.feeds as feed}
+                {@const feedClass =
+                  tdClass + (feed.id === undefined ? " bg-amber-300 dark:bg-amber-600" : "")}
                 <tr class="bg-slate-400 dark:bg-gray-500">
-                  <TableBodyCell {tdClass}>
+                  <TableBodyCell tdClass={feedClass}>
                     {#if feed.id !== undefined}
                       <Button
                         on:click={async () => {
@@ -409,8 +411,8 @@
                       </Button>
                     {/if}
                   </TableBodyCell>
-                  <TableBodyCell {tdClass}></TableBodyCell>
-                  <TableBodyCell colspan={4} {tdClass}>{feed.url}</TableBodyCell>
+                  <TableBodyCell tdClass={feedClass}></TableBodyCell>
+                  <TableBodyCell colspan={4} tdClass={feedClass}>{feed.url}</TableBodyCell>
                 </tr>
               {/each}
             {/if}
