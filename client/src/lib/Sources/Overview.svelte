@@ -117,7 +117,7 @@
           <TableBodyCell tdClass={`${tdClass} break-words whitespace-normal`}>
             <div class="flex items-center gap-2">
               {#if source.attention}
-                <Badge class="min-w-fit">Feeds changed</Badge>
+                <Badge class="min-w-fit">Source changed</Badge>
               {/if}
               <span>{source.name}</span>
             </div>
