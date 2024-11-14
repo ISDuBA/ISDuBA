@@ -18,16 +18,7 @@
     resetAggregatorAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import {
-    Accordion,
-    AccordionItem,
-    Badge,
-    Input,
-    Spinner,
-    Label,
-    Button,
-    TableBodyCell
-  } from "flowbite-svelte";
+  import { Accordion, Badge, Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -43,6 +34,7 @@
   import { appStore } from "$lib/store";
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
+  import CAccordionItem from "$lib/Components/CAccordionItem.svelte";
 
   type FeedInfo = {
     id?: number;
@@ -306,60 +298,54 @@
   <Accordion flush multiple class="my-8">
     {#each aggregators as aggregator, index (index)}
       {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
-      <AccordionItem
+      <CAccordionItem
         paddingFlush="pt-0 pb-3"
         defaultClass={accordionItemDefaultClass}
         {textFlushOpen}
+        openCallback={async () => {
+          if (appStore.isSourceManager()) {
+            await toggleAggregatorView(aggregator);
+          }
+        }}
       >
-        <button
-          slot="header"
-          class="my-1 w-full"
-          on:click={async (event) => {
-            event.preventDefault();
-            if (appStore.isSourceManager()) {
-              await toggleAggregatorView(aggregator);
-            }
-          }}
-        >
-          <div class="flex flex-col gap-2">
-            <div class="flex gap-2">
-              <span class="me-4">{aggregator.name}</span>
-              {#if aggregator.attention}
-                <Badge dismissable
-                  >Feeds changed
-                  <Button
-                    slot="close-button"
-                    let:close
-                    color="light"
-                    class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
-                    on:click={async (event) => {
-                      event.stopPropagation();
-                      event.preventDefault();
-                      resetAttention(aggregator);
-                      close();
-                    }}
-                  >
-                    <i class="bx bx-x"></i>
-                  </Button>
-                </Badge>
-              {/if}
-              <Button
-                on:click={async () => {
-                  if (aggregator.id) {
-                    await removeAggregator(aggregator.id);
-                  }
-                }}
-                class="!p-2"
-                color="light"
-              >
-                <i class="bx bx-trash text-red-600"></i>
-              </Button>
-            </div>
-            <div class="flex gap-4">
-              <span class="text-sm text-gray-800 dark:text-gray-300">{aggregator.url}</span>
-            </div>
+        <div slot="header" class="flex flex-col gap-2">
+          <div class="flex gap-2">
+            <span class="me-4">{aggregator.name}</span>
+            {#if aggregator.attention}
+              <Badge dismissable
+                >Feeds changed
+                <Button
+                  slot="close-button"
+                  let:close
+                  color="light"
+                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                  on:click={async (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    resetAttention(aggregator);
+                    close();
+                  }}
+                >
+                  <i class="bx bx-x"></i>
+                </Button>
+              </Badge>
+            {/if}
+            <Button
+              on:click={async () => {
+                if (aggregator.id) {
+                  await removeAggregator(aggregator.id);
+                }
+              }}
+              class="!p-2"
+              color="light"
+            >
+              <i class="bx bx-trash text-red-600"></i>
+            </Button>
           </div>
-        </button>
+          <div class="flex gap-4">
+            <span class="text-sm text-gray-800 dark:text-gray-300">{aggregator.url}</span>
+          </div>
+        </div>
         {#if list.length !== 0}
           <CustomTable
             headers={[
@@ -483,7 +469,7 @@
             </div>
           </CustomTable>
         {/if}
-      </AccordionItem>
+      </CAccordionItem>
     {/each}
   </Accordion>
   {#if appStore.isSourceManager()}
