@@ -334,7 +334,7 @@ func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 		b.WriteString(`documents`)
 	case EventMode:
 		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
-			`LEFT JOIN (SELECT message, id AS comment_id FROM comments) ON events_log.comments_id = comment_id`)
+			`LEFT JOIN (SELECT message, id FROM comments) AS comment ON events_log.comments_id = comment.id`)
 	}
 
 	if sb.TextTables {
