@@ -595,7 +595,7 @@ const fetchAllFeedLogs = async (
   id: number,
   count: boolean = false
 ): Promise<Result<[any[], number], ErrorDetails>> => {
-  const resp = await request(`/api/sources/feeds/${id}/log?count=${count}`, "GET");
+  const resp = await request(`/api/sources/feeds/${id}/log?offset=0&count=${count}`, "GET");
   if (resp.ok) {
     return { ok: true, value: [resp.content.entries, resp.content.count ?? 0] };
   }
