@@ -205,13 +205,27 @@
     }
   };
 
+  const getRoleAbbreviation = (role: string | undefined) => {
+    if (role) {
+      switch (role) {
+        case "csaf_publisher":
+          return "M";
+        case "csaf_trusted_provider":
+          return "TP";
+        case "csaf_provider":
+          return "P";
+      }
+    }
+    return "";
+  };
+
   const parseAggregatorData = (data: AggregatorMetadata): AggregatorEntry[] => {
     const extractEntry = (i: CSAFProviderEntry | CSAFPublisherEntry) =>
       <AggregatorEntry>{
         name: i.metadata.publisher.name,
         url: i.metadata.url,
         availableSources: getAvailableSources(i.metadata.url, data.custom),
-        role: i.metadata.role?.replace("csaf_", "").replace("_", " ")
+        role: getRoleAbbreviation(i.metadata.role)
       };
 
     const csafProviders = data.aggregator.csaf_providers.map(extractEntry);
