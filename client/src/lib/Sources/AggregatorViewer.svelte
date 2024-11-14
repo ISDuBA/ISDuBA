@@ -378,7 +378,7 @@
             <span class="me-4">{aggregator.name}</span>
             {#if aggregator.attention}
               <Badge dismissable
-                >Feeds changed
+                >Sources changed
                 <Button
                   slot="close-button"
                   let:close
