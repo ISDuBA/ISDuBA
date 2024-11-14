@@ -188,7 +188,7 @@
           name: s.name,
           expand: false,
           feedsAvailable: entry.available?.length ?? 0,
-          feedsSubscribed: s.subscripted?.length ?? 0,
+          feedsSubscribed: getSubsribedValidFeedCount(entry.available ?? [], s.subscripted ?? []),
           feeds: getFeeds(s.id, s.subscripted ?? [], entry.available)
         }
     ) ?? [
@@ -244,6 +244,10 @@
       return subscription.available?.length ?? 0;
     }
     return 0;
+  };
+
+  const getSubsribedValidFeedCount = (available: string[], subscribedFeeds: FeedSubscription[]) => {
+    return subscribedFeeds.filter((f) => available.includes(f.url)).length;
   };
 
   const getSubsribedFeedCount = (url: string, custom: Custom) => {
