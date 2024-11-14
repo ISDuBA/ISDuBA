@@ -210,7 +210,7 @@
     }
   };
 
-  const getRoleAbbreviation = (role: string | undefined): AggregatorRole | undefined => {
+  const getRoleAbbreviation = (role: string | undefined): AggregatorRole => {
     if (role) {
       switch (role) {
         case "csaf_publisher":
@@ -230,7 +230,10 @@
           };
       }
     }
-    return undefined;
+    return {
+      label: role ?? "",
+      abbreviation: role?.substring(0, 1) ?? ""
+    };
   };
 
   const parseAggregatorData = (data: AggregatorMetadata): AggregatorEntry[] => {
