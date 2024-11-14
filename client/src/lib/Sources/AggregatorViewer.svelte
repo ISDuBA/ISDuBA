@@ -97,6 +97,8 @@
     url: ""
   };
 
+  let openAggregator: boolean[] = [];
+
   let formClass = "max-w-[800pt]";
   const smallColumnClass = "w-10 max-w-10 min-w-10";
 
@@ -125,6 +127,7 @@
     const result = await fetchAggregators();
     loadingAggregators = false;
     if (result.ok) {
+      openAggregator = new Array(result.value.length).fill(false);
       aggregators = result.value;
     } else {
       aggregatorError = result.error;
@@ -227,8 +230,11 @@
   };
 
   const toggleAggregatorView = async (aggregator: Aggregator) => {
-    if (aggregatorData.get(aggregator.id ?? -1)) {
-      aggregatorData.delete(aggregator.id ?? -1);
+    if (aggregator.id === undefined) {
+      return;
+    }
+    if (aggregatorData.get(aggregator.id)) {
+      aggregatorData.delete(aggregator.id);
       aggregatorData = aggregatorData;
       saveAggregatorExpand();
       return;
@@ -237,7 +243,7 @@
     const resp = await fetchAggregatorData(aggregator.url);
     loadingAggregators = false;
     if (resp.ok) {
-      aggregatorData.set(aggregator.id ?? -1, parseAggregatorData(resp.value));
+      aggregatorData.set(aggregator.id, parseAggregatorData(resp.value));
 
       aggregatorData = aggregatorData;
       saveAggregatorExpand();
@@ -271,13 +277,14 @@
     sessionStorage.setItem("openAggregator", JSON.stringify(idList));
   };
 
-  const restoreAggregatorExpand = () => {
+  const restoreAggregatorExpand = async () => {
     let idList = JSON.parse(sessionStorage.getItem("openAggregator") ?? "[]");
     if (idList) {
       for (let id of idList) {
-        let aggregator = aggregators.find((a) => a.id === id);
-        if (aggregator) {
-          toggleAggregatorView(aggregator);
+        let index = aggregators.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          openAggregator[index] = true;
+          await toggleAggregatorView(aggregators[index]);
         }
       }
     }
@@ -285,7 +292,7 @@
 
   onMount(async () => {
     await getAggregators();
-    restoreAggregatorExpand();
+    await restoreAggregatorExpand();
   });
 </script>
 
@@ -301,11 +308,10 @@
       <CAccordionItem
         paddingFlush="pt-0 pb-3"
         defaultClass={accordionItemDefaultClass}
+        bind:open={openAggregator[index]}
         {textFlushOpen}
-        openCallback={async () => {
-          if (appStore.isSourceManager()) {
-            await toggleAggregatorView(aggregator);
-          }
+        toggleCallback={async () => {
+          await toggleAggregatorView(aggregator);
         }}
       >
         <div slot="header" class="flex flex-col gap-2">

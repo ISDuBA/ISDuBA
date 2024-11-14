@@ -62,7 +62,7 @@
     borderSharedClass?: string;
     classActive?: string;
     classInactive?: string;
-    openCallback?: () => Promise<any>;
+    toggleCallback?: () => Promise<any>;
   }
 
   export let tag: $$Props["tag"] = "h2";
@@ -86,7 +86,7 @@
   export let classActive: $$Props["classActive"] = undefined;
   export let classInactive: $$Props["classInactive"] = undefined;
 
-  export let openCallback: $$Props["openCallback"] = undefined;
+  export let toggleCallback: $$Props["toggleCallback"] = undefined;
 
   let activeCls = twMerge(activeClass, classActive);
   let inactiveCls = twMerge(inactiveClass, classInactive);
@@ -122,8 +122,8 @@
   });
 
   const handleToggle = async (_: Event) => {
-    if (openCallback && !open) {
-      await openCallback();
+    if (toggleCallback) {
+      await toggleCallback();
     }
     selected.set(open ? {} : self);
   };
