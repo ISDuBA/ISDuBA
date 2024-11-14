@@ -61,6 +61,8 @@
     name: string;
     role: AggregatorRole;
     url: string;
+    feedsAvailable: number;
+    feedsSubscribed: number;
     availableSources: SourceInfo[];
     expand: boolean;
   };
@@ -236,11 +238,34 @@
     };
   };
 
+  const getAvailableFeedCount = (url: string, custom: Custom) => {
+    const subscription = findSubscription(url, custom);
+    if (subscription) {
+      return subscription.available?.length ?? 0;
+    }
+    return 0;
+  };
+
+  const getSubsribedFeedCount = (url: string, custom: Custom) => {
+    const subscription = findSubscription(url, custom);
+    if (subscription) {
+      let available = subscription?.available ?? [];
+      let subscribed = subscription.subscriptions ?? [];
+      let subscribedFeeds = subscribed.flatMap((s) => s.subscripted ?? []).map((f) => f.url);
+      let uniqueSubscribedFeeds = [...new Set(subscribedFeeds)];
+
+      return uniqueSubscribedFeeds.filter((s) => available.includes(s)).length;
+    }
+    return 0;
+  };
+
   const parseAggregatorData = (data: AggregatorMetadata): AggregatorEntry[] => {
     const extractEntry = (i: CSAFProviderEntry | CSAFPublisherEntry) =>
       <AggregatorEntry>{
         name: i.metadata.publisher.name,
         url: i.metadata.url,
+        feedsAvailable: getAvailableFeedCount(i.metadata.url, data.custom),
+        feedsSubscribed: getSubsribedFeedCount(i.metadata.url, data.custom),
         availableSources: getAvailableSources(i.metadata.url, data.custom),
         role: getRoleAbbreviation(i.metadata.role)
       };
@@ -435,7 +460,9 @@
                   {/if}
                 </TableBodyCell>
 
-                <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
+                <TableBodyCell {tdClass}
+                  >{`${entry.name} (${entry.feedsSubscribed}/${entry.feedsAvailable})`}</TableBodyCell
+                >
                 <TableBodyCell {tdClass}>
                   <div class="min-w-6" title={entry.role.label}>{entry.role.abbreviation}</div>
                 </TableBodyCell>
