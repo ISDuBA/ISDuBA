@@ -24,6 +24,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -696,32 +697,60 @@ func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
 
 // FeedLog sends the log of the feed with the given id to the given function.
 func (m *Manager) FeedLog(
-	feedID int64,
-	fn func(
-		t time.Time,
-		lvl config.FeedLogLevel,
-		msg string),
+	feedID *int64,
+	from, to *time.Time,
+	search string,
 	limit, offset int64,
 	logLevels []config.FeedLogLevel,
 	count bool,
+	fn func(
+		id int64,
+		t time.Time,
+		lvl config.FeedLogLevel,
+		msg string,
+	),
 ) (int64, error) {
 	const (
 		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
-		selectSQL = `SELECT time, lvl::text, msg FROM feed_logs WHERE `
+		selectSQL = `SELECT feeds_id, time, lvl::text, msg FROM feed_logs WHERE `
 	)
 
 	var cond strings.Builder
-	cond.WriteString(`feeds_id = $1`)
+	var args []any
 
-	args := []any{feedID}
+	if feedID != nil {
+		cond.WriteString(`feeds_id = $1`)
+		args = append(args, *feedID)
+	} else {
+		cond.WriteString(`TRUE`)
+	}
+
+	if from != nil && to != nil && from.After(*to) {
+		from, to = to, from
+	}
+
+	if from != nil {
+		fmt.Fprintf(&cond, " AND time >= $%d", len(args)+1)
+		args = append(args, *from)
+	}
+
+	if to != nil {
+		fmt.Fprintf(&cond, " AND time <= $%d", len(args)+1)
+		args = append(args, *to)
+	}
+
+	if search != "" {
+		fmt.Fprintf(&cond, " AND msg ILIKE $%d", len(args)+1)
+		args = append(args, query.LikeEscape(search))
+	}
+
 	if len(logLevels) > 0 {
 		cond.WriteString(` AND (`)
 		for i, lvl := range logLevels {
 			if i > 0 {
 				cond.WriteString(` OR `)
 			}
-			cond.WriteString(`lvl = $`)
-			cond.WriteString(strconv.Itoa(len(args) + 1))
+			fmt.Fprintf(&cond, "lvl = $%d", len(args)+1)
 			args = append(args, lvl)
 		}
 		cond.WriteByte(')')
@@ -769,15 +798,16 @@ func (m *Manager) FeedLog(
 			}
 			defer rows.Close()
 			var (
+				id  int64
 				t   time.Time
 				lvl config.FeedLogLevel
 				msg string
 			)
 			for rows.Next() {
-				if err := rows.Scan(&t, &lvl, &msg); err != nil {
+				if err := rows.Scan(&id, &t, &lvl, &msg); err != nil {
 					return fmt.Errorf("scanning log failed: %w", err)
 				}
-				fn(t, lvl, msg)
+				fn(id, t, lvl, msg)
 			}
 			return rows.Err()
 		}, 0,

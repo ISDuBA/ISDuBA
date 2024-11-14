@@ -40,7 +40,9 @@ var (
 	whiteSpaces = regexp.MustCompile(`\s+`)
 )
 
-func likeQuery(query string) string {
+// LikeEscape quotes a query string to be more convenient
+// to use with LIKE filters.
+func LikeEscape(query string) string {
 	query = strings.TrimSpace(query)
 	query = escapeLike(query)
 	query = whiteSpaces.ReplaceAllString(query, `%`)
@@ -49,7 +51,7 @@ func likeQuery(query string) string {
 
 func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	fmt.Fprintf(b, "txt ILIKE $%d",
-		sb.replacementIndex(likeQuery(e.stringValue))+1)
+		sb.replacementIndex(LikeEscape(e.stringValue))+1)
 
 	// We need the text tables to be joined.
 	sb.TextTables = true
@@ -71,15 +73,15 @@ func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 			"ON comments.documents_id = docs.id "+
 			"WHERE message ILIKE $%d "+
 			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
-			sb.replacementIndex(likeQuery(e.stringValue))+1)
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
 			"AND comments.documents_id = documents.id)",
-			sb.replacementIndex(likeQuery(e.stringValue))+1)
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 	case EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
 			"AND comments.id = events_log.comments_id)",
-			sb.replacementIndex(likeQuery(e.stringValue))+1)
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 	}
 }
 

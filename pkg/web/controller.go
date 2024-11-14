@@ -180,6 +180,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/sources/feeds/:id", authEdSM, c.viewFeed)
 	api.PUT("/sources/feeds/:id", authSM, c.updateFeed)
 	api.DELETE("/sources/feeds/:id", authSM, c.deleteFeed)
+	api.GET("/sources/feeds/log", authSM, c.allFeedsLog)
 	api.GET("/sources/feeds/:id/log", authSM, c.feedLog)
 
 	// Import stats
