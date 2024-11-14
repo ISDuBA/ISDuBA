@@ -18,7 +18,7 @@
     resetAggregatorAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Badge, Input, Spinner, Label, Button, TableBodyCell } from "flowbite-svelte";
+  import { Badge, Input, Spinner, Label, Button, TableBodyCell, Modal } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -93,6 +93,8 @@
     name: "",
     url: ""
   };
+
+  let openAddModal = false;
 
   let formClass = "max-w-[800pt]";
   const smallColumnClass = "w-10 max-w-10 min-w-10";
@@ -261,6 +263,7 @@
       aggregator.url = "";
       await getAggregators();
     }
+    openAddModal = false;
   };
 
   const saveAggregatorExpand = () => {
@@ -290,8 +293,42 @@
   <title>Sources - Aggregator</title>
 </svelte:head>
 
+<Modal size="sm" bind:open={openAddModal}>
+  <form on:submit={submitAggregator} class={formClass}>
+    <div class="mx-auto flex flex-col gap-2">
+      <Label class="text-lg">Add aggregator</Label>
+      <div>
+        <Label>Name</Label>
+        <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
+      </div>
+      <div>
+        <Label>URL</Label>
+        <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
+      </div>
+      <Button
+        type="submit"
+        class="mt-2 w-fit"
+        color="light"
+        disabled={validUrl === false ||
+          validName === false ||
+          aggregator.name === "" ||
+          aggregator.url === ""}
+      >
+        <i class="bx bx-check me-2"></i>
+        <span>Save aggregator</span>
+      </Button>
+    </div>
+  </form>
+</Modal>
+
 <div>
-  <SectionHeader title="Aggregator"></SectionHeader>
+  <SectionHeader title="Aggregator">
+    {#if appStore.isSourceManager()}
+      <Button on:click={() => (openAddModal = true)} class="ml-3 !p-2" color="light">
+        <i class="bx bx-plus"></i>
+      </Button>
+    {/if}
+  </SectionHeader>
   <CustomTable
     headers={[
       {
@@ -469,32 +506,6 @@
       <ErrorMessage error={aggregatorError}></ErrorMessage>
     </div>
   </CustomTable>
-  {#if appStore.isSourceManager()}
-    <form on:submit={submitAggregator} class={formClass}>
-      <div class="flex w-96 flex-col gap-2">
-        <div>
-          <Label>Name</Label>
-          <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
-        </div>
-        <div>
-          <Label>URL</Label>
-          <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
-        </div>
-        <Button
-          type="submit"
-          class="mt-2 w-fit"
-          color="light"
-          disabled={validUrl === false ||
-            validName === false ||
-            aggregator.name === "" ||
-            aggregator.url === ""}
-        >
-          <i class="bx bx-check me-2"></i>
-          <span>Save aggregator</span>
-        </Button>
-      </div>
-    </form>
-  {/if}
   <ErrorMessage error={aggregatorSaveError}></ErrorMessage>
 
   <br />

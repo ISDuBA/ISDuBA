@@ -49,6 +49,7 @@
   let position = "";
   let processRunning = false;
   let lastSuccessfulForwardTarget: number | undefined;
+  let openForwardModal = false;
 
   $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
     if (appStore.isReviewer() && [REVIEW].includes(advisoryState)) {
@@ -352,7 +353,6 @@
       appStore.setSelectedCVE("");
     }
   }
-  let openForwardModal = false;
 </script>
 
 <svelte:head>
