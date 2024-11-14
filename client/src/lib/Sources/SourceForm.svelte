@@ -374,7 +374,7 @@
           {#if headers.length > 1}
             <Button
               on:click={() => removeHeader(index)}
-              title="Remove key-value-pair"
+              title="Remove field-name-field-value-pair"
               class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 dark:border-gray-500 dark:bg-gray-600 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
               color="light"
             >
