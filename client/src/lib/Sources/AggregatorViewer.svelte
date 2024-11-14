@@ -328,11 +328,13 @@
     } else {
       aggregator.name = "";
       aggregator.url = "";
+      sessionStorage.setItem(
+        "openAggregator",
+        JSON.stringify([...aggregatorData.keys(), result.value])
+      );
       await getAggregators();
-      const agg = aggregators.find((a) => a.id === result.value);
-      if (agg) {
-        await toggleAggregatorView(agg);
-      }
+      await restoreAggregatorExpand();
+      await new Promise((res) => setTimeout(res, 500));
       document.getElementById(`aggregator-${result.value}`)?.scrollIntoView({ behavior: "smooth" });
       blinkId = result.value;
       await new Promise((res) => setTimeout(res, 5000));
