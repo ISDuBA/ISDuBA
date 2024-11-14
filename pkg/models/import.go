@@ -17,6 +17,7 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/jackc/pgx/v5"
@@ -32,6 +33,9 @@ var (
 	// TLP restrictions are not met.
 	ErrNotAllowed = errors.New("not allowed")
 )
+
+// Allow only one insert at a time.
+var globalInsertLock sync.Mutex
 
 type replacer func([]string, string) (any, bool)
 
@@ -329,7 +333,13 @@ func ImportDocumentData(
 		return 0, nil
 	}
 
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	// Allow only one insert at a time.
+	// There are transaction serialization issues with the unique texts.
+	// TODO: This has to be investigated!
+	globalInsertLock.Lock()
+	defer globalInsertLock.Unlock()
+
+	tx, err := conn.Begin(ctx)
 	if err != nil {
 		return 0, err
 	}
