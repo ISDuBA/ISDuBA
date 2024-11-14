@@ -52,9 +52,14 @@
     expand: boolean;
   };
 
+  type AggregatorRole = {
+    label: string;
+    abbreviation: string;
+  };
+
   type AggregatorEntry = {
     name: string;
-    role: string;
+    role: AggregatorRole;
     url: string;
     availableSources: SourceInfo[];
     expand: boolean;
@@ -205,18 +210,27 @@
     }
   };
 
-  const getRoleAbbreviation = (role: string | undefined) => {
+  const getRoleAbbreviation = (role: string | undefined): AggregatorRole | undefined => {
     if (role) {
       switch (role) {
         case "csaf_publisher":
-          return "M";
+          return {
+            label: "Publisher",
+            abbreviation: "M"
+          };
         case "csaf_trusted_provider":
-          return "TP";
+          return {
+            label: "Trusted provider",
+            abbreviation: "TP"
+          };
         case "csaf_provider":
-          return "P";
+          return {
+            label: "Provider",
+            abbreviation: "P"
+          };
       }
     }
-    return "";
+    return undefined;
   };
 
   const parseAggregatorData = (data: AggregatorMetadata): AggregatorEntry[] => {
@@ -419,7 +433,9 @@
                 </TableBodyCell>
 
                 <TableBodyCell {tdClass}>{entry.name}</TableBodyCell>
-                <TableBodyCell {tdClass}>{entry.role}</TableBodyCell>
+                <TableBodyCell {tdClass}>
+                  <div class="min-w-6" title={entry.role.label}>{entry.role.abbreviation}</div>
+                </TableBodyCell>
                 <TableBodyCell {tdClass}>{entry.url}</TableBodyCell>
               </tr>
               {#if entry.expand}
