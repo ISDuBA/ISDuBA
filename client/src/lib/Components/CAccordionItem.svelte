@@ -45,6 +45,7 @@
   }
 
   interface $$Props {
+    id?: string;
     tag?: string;
     open?: boolean;
     activeClass?: string;
@@ -65,6 +66,7 @@
     toggleCallback?: () => Promise<any>;
   }
 
+  export let id: $$Props["id"] = undefined;
   export let tag: $$Props["tag"] = "h2";
   export let open: NonNullable<$$Props["open"]> = false;
   export let activeClass: $$Props["activeClass"] = undefined;
@@ -149,7 +151,7 @@
 </script>
 
 <svelte:element this={tag} class="group">
-  <button on:click={handleToggle} type="button" class={buttonClass} aria-expanded={open}>
+  <button on:click={handleToggle} type="button" {id} class={buttonClass} aria-expanded={open}>
     <slot name="header" />
     {#if open}
       <slot name="arrowup">

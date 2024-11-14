@@ -104,6 +104,7 @@
     url: ""
   };
 
+  let blinkId: number | undefined = undefined;
   let openAggregator: boolean[] = [];
 
   let formClass = "max-w-[800pt]";
@@ -328,6 +329,14 @@
       aggregator.name = "";
       aggregator.url = "";
       await getAggregators();
+      const agg = aggregators.find((a) => a.id === result.value);
+      if (agg) {
+        await toggleAggregatorView(agg);
+      }
+      document.getElementById(`aggregator-${result.value}`)?.scrollIntoView({ behavior: "smooth" });
+      blinkId = result.value;
+      await new Promise((res) => setTimeout(res, 5000));
+      blinkId = undefined;
     }
   };
 
@@ -365,8 +374,9 @@
     {#each aggregators as aggregator, index (index)}
       {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
       <CAccordionItem
+        id={`aggregator-${aggregator.id}`}
         paddingFlush="pt-0 pb-3"
-        defaultClass={accordionItemDefaultClass}
+        defaultClass={`${accordionItemDefaultClass} ${aggregator.id === blinkId ? "blink" : ""}`}
         bind:open={openAggregator[index]}
         {textFlushOpen}
         toggleCallback={async () => {
@@ -383,7 +393,7 @@
                   slot="close-button"
                   let:close
                   color="light"
-                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                  class="text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
                   on:click={async (event) => {
                     event.stopPropagation();
                     event.preventDefault();
