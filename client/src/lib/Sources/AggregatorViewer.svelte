@@ -438,7 +438,7 @@
               </div>
               {#each entry.availableSources as source}
                 <Collapsible header="">
-                  <div class="mb-1 text-sm text-black dark:text-white" slot="header">
+                  <div class="mb-2 text-sm text-black dark:text-white" slot="header">
                     {#if source.id !== undefined}<Button
                         on:click={async () => {
                           await push(`/sources/${source.id}`);
@@ -447,7 +447,8 @@
                         color="light"
                       >
                         <i class="bx bx-folder-open"></i>
-                      </Button>{/if}
+                      </Button>
+                    {/if}
                     {`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}
                   </div>
                   {#each source.feeds as feed}
@@ -463,6 +464,15 @@
                           color="light"
                         >
                           <i class="bx bx-folder-open"></i>
+                        </Button>
+                      {:else if entry.url}<Button
+                          on:click={async () => {
+                            await push(`/sources/new/${encodeURIComponent(entry.url)}`);
+                          }}
+                          class="!p-2"
+                          color="light"
+                        >
+                          <i class="bx bx-folder-plus"></i>
                         </Button>
                       {/if}
                       <span class={feedClass}>{feed.url}</span>
