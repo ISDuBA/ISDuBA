@@ -51,7 +51,7 @@
 
   const basicButtonClass = "h-8";
   const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
-  const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100`;
+  const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100 dark:bg-gray-600 dark:hover:!bg-gray-700`;
 
   // Prop items of (Multi-)Select doesn't accept simple strings
   const roles = [{ name: "<no role>", value: "" }].concat(
