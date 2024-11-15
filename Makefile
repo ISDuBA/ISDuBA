@@ -10,16 +10,15 @@
 
 all: build_isdubad build_importer build_client test
 
-# See comment here (2024-04-05)
-# https://github.com/gocsaf/csaf/blob/d909e9de151d5845fe0c0d5b9db2152f9db25e90/Makefile#L40-L49
-
-GITDESC := $(shell git describe --tags --always | sed -E 's/^v//')
-GITDESCPATCH := $(shell echo '$(GITDESC)' | sed -E 's/[0-9]+\.[0-9]+\.([0-9]+)[-+]?.*/\1/')
+# See comment here (2024-11-15)
+# https://github.com/gocsaf/csaf/blob/3093f717817b9369d390e56d1012eaedcfa19e32/Makefile#L40-L49
+GITDESC := $(shell git describe --tags --always)
+GITDESCPATCH := $(shell echo '$(GITDESC)' | sed -E 's/v?[0-9]+\.[0-9]+\.([0-9]+)[-+]?.*/\1/')
 SEMVERPATCH := $(shell echo $$(( $(GITDESCPATCH) + 1 )))
-# Hint: The regexp in the next line only matches if there is a hyphen (`-`)
-#       followed by a number, by which we assume that git describe
-#       has added a string after the tag
-SEMVER := $(shell echo '$(GITDESC)' | sed -E 's/([0-9]+\.[0-9]+\.)([0-9]+)(-[1-9].*)/\1$(SEMVERPATCH)\3/' )
+# Hint: The second regexp in the next line only matches
+#       if there is a hyphen (`-`) followed by a number,
+#       by which we assume that git describe has added a string after the tag
+SEMVER := $(shell echo '$(GITDESC)' | sed -E -e 's/^v//' -e 's/([0-9]+\.[0-9]+\.)([0-9]+)(-[1-9].*)/\1$(SEMVERPATCH)\3/' )
 testsemver:
 	@echo from \'$(GITDESC)\' transformed to \'$(SEMVER)\'
 
