@@ -74,7 +74,12 @@ export const request = async (
       await push("/login");
     }
     if (contentType && isJson) {
-      return { error: `${response.status}`, content: json.error, ok: false };
+      // Handle pmd proxy errors
+      if (json.messages) {
+        return { error: `${response.status}`, content: json.messages, ok: false };
+      } else {
+        return { error: `${response.status}`, content: json.error, ok: false };
+      }
     }
     return { error: `${response.status}`, content: content, ok: false };
   } catch (error: any) {
