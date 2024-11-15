@@ -10,21 +10,24 @@
 
 # ISDuBA
 
-**Under development -
-a number of major features are implemented and can be tried**
-
 A web application
 for downloading and evaluating security advisories in the CSAF 2.0 format.
-ISDuBA wants to support teams that are responsible
+ISDuBA is designed to support teams that are responsible
 for the IT security of a group of products.
+
+**In beta quality since v0.5.0,
+  having all of the planned functionality, but there may be defects.**
+
+We appreciate your problem reports, please check the list of issues first.
+
 
 ISDuBA uses:
 
-- Go as programming language for the backend.
 - PostgreSQL as database
-- [keycloak](https://www.keycloak.org/) as identify provider
+- [keycloak](https://www.keycloak.org/) as identity provider
 - [svelte-flowbite](https://flowbite-svelte.com/)
   for the single page web application frontend
+- Go as programming language for the backend.
 - a downloading kernel that is close to
   [gocsaf](https://github.com/gocsaf/csaf)
 - an extended version of
@@ -62,7 +65,7 @@ the dependencies are upwards compatible with the ISDuBA main license.
 
 The top level dependencies can be seen from
 
-- [go.mod](./go.mod) for the `isduad` backend and server tools.
+- [go.mod](./go.mod) for the `isdubad` backend and server tools.
 - [package.json](./client/package.json) for the web application frontend.
 - The build and setup descriptions (linked above).
 
