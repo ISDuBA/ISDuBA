@@ -84,7 +84,7 @@ type Manager struct {
 	usedSlots int
 	uniqueID  int64
 
-	sourceChecker func(*Manager)
+	blockSourceChecking bool
 }
 
 // SourceUpdateResult is return by UpdateSource.
@@ -181,16 +181,15 @@ func NewManager(
 		return nil, fmt.Errorf("creating cipher failed: %w", err)
 	}
 	return &Manager{
-		cfg:           cfg,
-		db:            db,
-		fns:           make(chan func(*Manager, context.Context)),
-		jobs:          make(chan downloadJob),
-		rnd:           rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())),
-		cipherKey:     cipherKey,
-		pmdCache:      newPMDCache(),
-		keysCache:     newKeysCache(cfg.Sources.OpenPGPCaching),
-		val:           val,
-		sourceChecker: (*Manager).prefetchPMDs,
+		cfg:       cfg,
+		db:        db,
+		fns:       make(chan func(*Manager, context.Context)),
+		jobs:      make(chan downloadJob),
+		rnd:       rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())),
+		cipherKey: cipherKey,
+		pmdCache:  newPMDCache(),
+		keysCache: newKeysCache(cfg.Sources.OpenPGPCaching),
+		val:       val,
 	}, nil
 }
 
@@ -377,9 +376,7 @@ out:
 		case <-ctx.Done():
 			break out
 		case <-checkingTicker.C:
-			if m.sourceChecker != nil {
-				m.sourceChecker(m)
-			}
+			m.checkSources()
 		case <-refreshTicker.C:
 		}
 	}
@@ -393,7 +390,14 @@ type prefetchedPMD struct {
 	checksum []byte
 }
 
-func (m *Manager) prefetchPMDs() {
+func (m *Manager) checkSources() {
+	// Check if not already running.
+	if m.blockSourceChecking {
+		return
+	}
+	// prevent stacking checks.
+	m.blockSourceChecking = true
+
 	// The loading of the PMD is time consuming
 	// so the fetching is off-loaded from the main loop.
 	urls := make([]prefetchedPMD, 0, len(m.sources))
@@ -426,16 +430,14 @@ func (m *Manager) prefetchPMDs() {
 		// Run the real checking in the manager.
 		m.fns <- func(m *Manager, ctx context.Context) {
 			// Only check the sources where prefetching worked.
-			m.checkSources(ctx, prefetched)
+			m.realCheckSources(ctx, prefetched)
 			// re-enable checking
-			m.sourceChecker = (*Manager).prefetchPMDs
+			m.blockSourceChecking = false
 		}
 	}()
-	// prevent stacking checks.
-	m.sourceChecker = nil
 }
 
-func (m *Manager) checkSources(ctx context.Context, prefetched []prefetchedPMD) {
+func (m *Manager) realCheckSources(ctx context.Context, prefetched []prefetchedPMD) {
 	now := time.Now().UTC()
 	updates := pgx.Batch{}
 
