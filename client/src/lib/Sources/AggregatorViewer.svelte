@@ -15,10 +15,21 @@
     fetchAggregators,
     deleteAggregator,
     type Aggregator,
-    resetAggregatorAttention
+    resetAggregatorAttention,
+    dtClass,
+    ddClass
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Accordion, Badge, Input, Spinner, Label, Button } from "flowbite-svelte";
+  import {
+    Accordion,
+    Badge,
+    DescriptionList,
+    Input,
+    List,
+    Spinner,
+    Label,
+    Button
+  } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
@@ -73,6 +84,7 @@
   let loadingAggregators: boolean = false;
   let aggregators: Aggregator[] = [];
   let aggregatorData = new Map<number, AggregatorEntry[]>();
+  let aggregatorMetaData = new Map<number, AggregatorMetadata>();
 
   let aggregatorError: ErrorDetails | null;
   let aggregatorSaveError: ErrorDetails | null;
@@ -309,8 +321,9 @@
     loadingAggregators = false;
     if (resp.ok) {
       aggregatorData.set(aggregator.id, parseAggregatorData(resp.value));
-
       aggregatorData = aggregatorData;
+      aggregatorMetaData.set(aggregator.id, resp.value);
+      aggregatorMetaData = aggregatorMetaData;
       saveAggregatorExpand();
     } else {
       aggregatorError = resp.error;
@@ -381,6 +394,7 @@
   <Accordion flush multiple class="my-8">
     {#each aggregators as aggregator, index (index)}
       {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
+      {@const metadata = aggregatorMetaData.get(aggregator.id ?? -1)}
       <CAccordionItem
         id={`aggregator-${aggregator.id}`}
         paddingFlush="pt-0 py-3"
@@ -393,50 +407,74 @@
       >
         <span slot="arrowup"></span>
         <span slot="arrowdown"> </span>
-        <div slot="header" class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            {#if list.length > 0}
-              <i class="bx bx-chevron-up text-xl"></i>
-            {:else}
-              <i class="bx bx-chevron-down text-xl"></i>
-            {/if}
-            <span class="me-4">{aggregator.name}</span>
-            {#if aggregator.attention}
-              <Badge dismissable
-                >Sources changed
-                <Button
-                  slot="close-button"
-                  let:close
-                  color="light"
-                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
-                  on:click={async (event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    resetAttention(aggregator);
-                    close();
-                  }}
-                >
-                  <i class="bx bx-x"></i>
-                </Button>
-              </Badge>
-            {/if}
-            <Button
-              on:click={async () => {
-                if (aggregator.id) {
-                  await removeAggregator(aggregator.id);
-                }
-              }}
-              class="!p-2"
-              color="light"
-            >
-              <i class="bx bx-trash text-red-600"></i>
-            </Button>
-          </div>
-          <div class="flex gap-4">
-            <span class="text-sm text-gray-800 dark:text-gray-300">{aggregator.url}</span>
-          </div>
+        <div slot="header" class="flex items-center gap-2">
+          {#if list.length > 0}
+            <i class="bx bx-chevron-up text-xl"></i>
+          {:else}
+            <i class="bx bx-chevron-down text-xl"></i>
+          {/if}
+          <span class="me-4">{aggregator.name}</span>
+          {#if aggregator.attention}
+            <Badge dismissable
+              >Sources changed
+              <Button
+                slot="close-button"
+                let:close
+                color="light"
+                class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                on:click={async (event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                  resetAttention(aggregator);
+                  close();
+                }}
+              >
+                <i class="bx bx-x"></i>
+              </Button>
+            </Badge>
+          {/if}
+          <Button
+            on:click={async () => {
+              if (aggregator.id) {
+                await removeAggregator(aggregator.id);
+              }
+            }}
+            class="!p-2"
+            color="light"
+          >
+            <i class="bx bx-trash text-red-600"></i>
+          </Button>
         </div>
         {#if list.length !== 0}
+          <div
+            class="mb-2 flex flex-col justify-between break-all rounded-md border border-solid border-gray-500 px-4 py-2 shadow-md"
+          >
+            <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
+              <div>
+                <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
+                <DescriptionList tag="dd" {ddClass}>{aggregator.url}</DescriptionList>
+              </div>
+              {#if metadata?.aggregator}
+                {@const data = metadata.aggregator.aggregator}
+                <div>
+                  <DescriptionList tag="dt" {dtClass}>Category</DescriptionList>
+                  <DescriptionList tag="dd" {ddClass}>{data.category}</DescriptionList>
+                </div>
+                <div>
+                  <DescriptionList tag="dt" {dtClass}>Namespace</DescriptionList>
+                  <DescriptionList tag="dd" {ddClass}>{data.namespace}</DescriptionList>
+                </div>
+                <div>
+                  <DescriptionList tag="dt" {dtClass}>Contact details</DescriptionList>
+                  <DescriptionList tag="dd" {ddClass}>{data.contact_details}</DescriptionList>
+                </div>
+                <div>
+                  <DescriptionList tag="dt" {dtClass}>Issuing authority</DescriptionList>
+                  <DescriptionList tag="dd" {ddClass}>{data.issuing_authority}</DescriptionList>
+                </div>
+              {/if}
+            </List>
+          </div>
           {#each list as entry}
             <Collapsible header="">
               <div slot="header" class="mb-2 flex items-center gap-2">

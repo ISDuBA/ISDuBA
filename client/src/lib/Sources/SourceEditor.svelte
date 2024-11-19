@@ -19,7 +19,9 @@
     calculateMissingFeeds,
     parseFeeds,
     saveFeeds,
-    resetSourceAttention
+    resetSourceAttention,
+    dtClass,
+    ddClass
   } from "$lib/Sources/source";
   import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -77,9 +79,6 @@
   };
 
   let oldSource = structuredClone(source);
-
-  const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
-  const ddClass: string = "break-words font-semibold ml-2 mb-1";
 
   let updateStats = setInterval(async () => {
     if (!source.id || source.id === 0) {
