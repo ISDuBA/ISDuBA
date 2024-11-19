@@ -92,6 +92,11 @@
                   <i class="bx bx-git-repo-forked"></i>
                 </svelte:fragment>
               </SidebarItem>
+              <SidebarItem class="px-6 py-2.5" label="Aggregators" href="/#/sources/aggregators">
+                <svelte:fragment slot="icon">
+                  <i class="bx bx-sitemap"></i>
+                </svelte:fragment>
+              </SidebarItem>
             {/if}
             <SidebarItem class="px-6 py-2.5" label="Statistics" href="/#/statistics">
               <svelte:fragment slot="icon">
