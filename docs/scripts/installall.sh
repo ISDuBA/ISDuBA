@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -b|--branch)
       if [[ -n "$2" ]]; then
-        NAME="$2"
+        ISDUBA_BRANCH_NAME="$2"
         shift
       else
         echo "Error: Branch requires a value."
@@ -82,8 +82,8 @@ done
 
 prepare
 
-if [ ! -z "$NAME" ]; then # check out branch if given
-  checkout "$NAME"
+if [ ! -z "$ISDUBA_BRANCH_NAME" ]; then # check out branch if given
+  checkout "$ISDUBA_BRANCH_NAME"
 fi
 
 
