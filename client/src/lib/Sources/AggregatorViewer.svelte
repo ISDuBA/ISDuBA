@@ -383,7 +383,7 @@
       {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
       <CAccordionItem
         id={`aggregator-${aggregator.id}`}
-        paddingFlush="pt-0 pb-3"
+        paddingFlush="pt-0 py-3"
         defaultClass={`${accordionItemDefaultClass} ${aggregator.id === blinkId ? "blink" : ""}`}
         bind:open={openAggregator[index]}
         {textFlushOpen}
@@ -391,8 +391,15 @@
           await toggleAggregatorView(aggregator);
         }}
       >
+        <span slot="arrowup"></span>
+        <span slot="arrowdown"> </span>
         <div slot="header" class="flex flex-col gap-2">
-          <div class="flex gap-2">
+          <div class="flex items-center gap-2">
+            {#if list.length > 0}
+              <i class="bx bx-chevron-up text-xl"></i>
+            {:else}
+              <i class="bx bx-chevron-down text-xl"></i>
+            {/if}
             <span class="me-4">{aggregator.name}</span>
             {#if aggregator.attention}
               <Badge dismissable
