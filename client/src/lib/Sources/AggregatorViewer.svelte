@@ -487,16 +487,14 @@
                 >
                   <i class="bx bx-folder-plus"></i>
                 </Button>
-                <div class="flex flex-col gap-1">
-                  <div class="flex gap-3 text-sm">
-                    <span class="text-black dark:text-white">
-                      {`${entry.name} (${entry.feedsSubscribed}/${entry.feedsAvailable})`}
-                    </span>
-                    <span class="min-w-6 text-gray-600 dark:text-gray-400" title={entry.role.label}>
-                      {entry.role.abbreviation}
-                    </span>
-                  </div>
-                  <div class="text-xs text-gray-600 dark:text-gray-400">{entry.url}</div>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span class="text-black dark:text-white">
+                    {`${entry.name} (${entry.feedsSubscribed}/${entry.feedsAvailable})`}
+                  </span>
+                  <span class="min-w-6 text-gray-600 dark:text-gray-400" title={entry.role.label}>
+                    {entry.role.abbreviation}
+                  </span>
+                  <span class="text-xs text-gray-600 dark:text-gray-400">{entry.url}</span>
                 </div>
               </div>
               {#each entry.availableSources as source}
