@@ -106,3 +106,4 @@
 # [aggregators]
 # timeout = "30s"
 # update_interval = "2h"
+# default_aggreagtor = "https://wid.cert-bund.de/.well-known/csaf-aggregator/aggregator.json"

@@ -125,8 +125,9 @@ const (
 )
 
 const (
-	defaultAggregatorsTimeout        = 30 * time.Second
-	defaultAggregatorsUpdateInterval = 1 * time.Hour
+	defaultAggregatorsTimeout           = 30 * time.Second
+	defaultAggregatorsUpdateInterval    = 1 * time.Hour
+	defaultAggregatorsDefaultAggregator = "https://wid.cert-bund.de/.well-known/csaf-aggregator/aggregator.json"
 )
 
 // HumanSize de-serializes sizes from integer strings
@@ -227,8 +228,9 @@ type Forwarder struct {
 
 // Aggregators are the config options for the aggregators.
 type Aggregators struct {
-	Timeout        time.Duration `toml:"timeout"`
-	UpdateInterval time.Duration `toml:"update_interval"`
+	Timeout           time.Duration `toml:"timeout"`
+	UpdateInterval    time.Duration `toml:"update_interval"`
+	DefaultAggregator string        `toml:"default_aggregator"`
 }
 
 // Client are the config options for the client.
@@ -385,8 +387,9 @@ func Load(file string) (*Config, error) {
 			IdleTimeout:      defaultClientIdleTimeout,
 		},
 		Aggregators: Aggregators{
-			Timeout:        defaultAggregatorsTimeout,
-			UpdateInterval: defaultAggregatorsUpdateInterval,
+			Timeout:           defaultAggregatorsTimeout,
+			UpdateInterval:    defaultAggregatorsUpdateInterval,
+			DefaultAggregator: defaultAggregatorsDefaultAggregator,
 		},
 	}
 	if file != "" {
@@ -478,6 +481,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
 		envStore{"ISDUBA_AGGREGATORS_TIMEOUT", storeDuration(&cfg.Aggregators.Timeout)},
 		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
+		envStore{"ISDUBA_AGGREGATORS_DEFAULT_AGGREGATOR", storeString(&cfg.Aggregators.DefaultAggregator)},
 	)
 }
 

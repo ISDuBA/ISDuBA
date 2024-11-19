@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
@@ -42,6 +43,9 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+	if url == c.cfg.Aggregators.DefaultAggregator {
+		url = "https://manual.invalid/aggregator.json"
 	}
 	// search in database
 	const sql = `SELECT ` +
@@ -105,6 +109,17 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Display default aggregator if it is configured and aggregator list is empty
+	defaultIndex := slices.IndexFunc(list, func(a aggregator) bool {
+		return a.ID == 0
+	})
+	if len(list) > 1 || c.cfg.Aggregators.DefaultAggregator == "" {
+		list = append(list[:defaultIndex], list[defaultIndex+1:]...)
+	} else {
+		list[defaultIndex].URL = c.cfg.Aggregators.DefaultAggregator
+	}
+
 	ctx.JSON(http.StatusOK, list)
 }
 
@@ -134,6 +149,9 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 		slog.Error("fetching aggregator failed", "err", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if id == 0 {
+		url = c.cfg.Aggregators.DefaultAggregator
 	}
 	ca, err := c.am.Cache.GetAggregator(url)
 	if err != nil {
@@ -189,6 +207,10 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 func (c *Controller) deleteAggregator(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
+		return
+	}
+	if id == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "it is not allowed to delete the default aggregator"})
 		return
 	}
 	const sql = `DELETE FROM aggregators WHERE id = $1`

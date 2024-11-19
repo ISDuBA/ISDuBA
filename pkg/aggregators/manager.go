@@ -14,6 +14,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -105,6 +106,15 @@ func (m *Manager) refresh(ctx context.Context) {
 	}
 	if len(aggregators) == 0 {
 		return
+	}
+	// Use default aggregator if it is configured and aggregator list is empty
+	defaultIndex := slices.IndexFunc(aggregators, func(a aggregator) bool {
+		return a.id == 0
+	})
+	if len(aggregators) > 1 || m.cfg.DefaultAggregator == "" {
+		aggregators = append(aggregators[:defaultIndex], aggregators[defaultIndex+1:]...)
+	} else {
+		aggregators[defaultIndex].url = m.cfg.DefaultAggregator
 	}
 	var (
 		toFetch    = make(chan *aggregator)
