@@ -386,11 +386,11 @@
 </script>
 
 <svelte:head>
-  <title>Sources - Aggregator</title>
+  <title>Sources - Aggregators</title>
 </svelte:head>
 
-<div>
-  <SectionHeader title="Aggregator"></SectionHeader>
+<div class="pb-10">
+  <SectionHeader title="Aggregators"></SectionHeader>
   <Accordion flush multiple class="my-8">
     {#each aggregators as aggregator, index (index)}
       {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
@@ -478,19 +478,19 @@
           {#each list as entry}
             <Collapsible header="">
               <div slot="header" class="mb-2 flex items-center gap-2">
-                <Button
-                  on:click={async () => {
-                    await push(`/sources/new/${encodeURIComponent(entry.url)}`);
-                  }}
-                  class="my-1 !p-2"
-                  color="light"
-                >
-                  <i class="bx bx-folder-plus"></i>
-                </Button>
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                   <span class="text-black dark:text-white">
                     {`${entry.name} (${entry.feedsSubscribed}/${entry.feedsAvailable})`}
                   </span>
+                  <Button
+                    on:click={async () => {
+                      await push(`/sources/new/${encodeURIComponent(entry.url)}`);
+                    }}
+                    class="my-1 !p-2"
+                    color="light"
+                  >
+                    <i class="bx bx-folder-plus"></i>
+                  </Button>
                   <span class="min-w-6 text-gray-600 dark:text-gray-400" title={entry.role.label}>
                     {entry.role.abbreviation}
                   </span>
@@ -499,22 +499,30 @@
               </div>
               {#each entry.availableSources as source}
                 <Collapsible header="">
-                  <div class="mb-2 text-sm text-black dark:text-white" slot="header">
-                    {#if source.id !== undefined}<Button
+                  <div
+                    class="mb-2 flex items-center gap-1 text-sm text-black dark:text-white"
+                    slot="header"
+                  >
+                    {#if source.id !== undefined}
+                      <i class="bx bx-git-repo-forked"></i>
+                    {/if}
+                    {`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}
+                    {#if source.id !== undefined}
+                      <Button
                         on:click={async () => {
                           await push(`/sources/${source.id}`);
                         }}
                         class="!p-2"
                         color="light"
                       >
-                        <i class="bx bx-folder-open"></i>
+                        <i class="bx bx-right-arrow-alt"></i>
                       </Button>
                     {/if}
-                    {`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}
                   </div>
                   {#each source.feeds as feed}
                     {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
                     <div class="mb-2 ms-4">
+                      <span class={feedClass}>{feed.url}</span>
                       {#if feed.id !== undefined}
                         <Button
                           on:click={async () => {
@@ -524,9 +532,10 @@
                           class="!p-2"
                           color="light"
                         >
-                          <i class="bx bx-folder-open"></i>
+                          <i class="bx bx-right-arrow-alt"></i>
                         </Button>
-                      {:else if entry.url}<Button
+                      {:else if entry.url}
+                        <Button
                           on:click={async () => {
                             await push(`/sources/new/${encodeURIComponent(entry.url)}`);
                           }}
@@ -536,7 +545,6 @@
                           <i class="bx bx-folder-plus"></i>
                         </Button>
                       {/if}
-                      <span class={feedClass}>{feed.url}</span>
                     </div>
                   {/each}
                 </Collapsible>
