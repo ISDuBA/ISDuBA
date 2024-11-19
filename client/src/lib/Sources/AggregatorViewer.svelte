@@ -35,6 +35,7 @@
   import { push } from "svelte-spa-router";
   import CAccordionItem from "$lib/Components/CAccordionItem.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import { scale } from "svelte/transition";
 
   type FeedInfo = {
     id?: number;
@@ -106,8 +107,12 @@
 
   let blinkId: number | undefined = undefined;
   let openAggregator: boolean[] = [];
-
+  let showForm = false;
   let formClass = "max-w-[800pt]";
+
+  const toggleForm = () => {
+    showForm = !showForm;
+  };
 
   const checkUrl = () => {
     if (aggregator.url === "") {
@@ -326,6 +331,7 @@
     if (!result.ok) {
       aggregatorSaveError = result.error;
     } else {
+      showForm = false;
       aggregator.name = "";
       aggregator.url = "";
       sessionStorage.setItem(
@@ -395,7 +401,7 @@
                   slot="close-button"
                   let:close
                   color="light"
-                  class="text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
                   on:click={async (event) => {
                     event.stopPropagation();
                     event.preventDefault();
@@ -498,42 +504,50 @@
       </CAccordionItem>
     {/each}
   </Accordion>
-  <div
-    class:invisible={!loadingAggregators}
-    class={loadingAggregators ? "loadingFadeIn" : ""}
-    class:mb-4={true}
-  >
+  <div class:invisible={!loadingAggregators} class={loadingAggregators ? "loadingFadeIn" : ""}>
     Loading ...
     <Spinner color="gray" size="4"></Spinner>
   </div>
   <ErrorMessage error={aggregatorError}></ErrorMessage>
   {#if appStore.isSourceManager()}
-    <form on:submit={submitAggregator} class={formClass}>
-      <div class="flex w-96 flex-col gap-2">
-        <div>
-          <Label>Name</Label>
-          <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
+    {#if !showForm}
+      <Button class="mb-2 mt-3 w-fit" on:click={toggleForm}
+        ><i class="bx bx-plus me-2"></i>New aggregator</Button
+      >
+    {/if}
+    {#if showForm}
+      <form transition:scale on:submit={submitAggregator} class={formClass}>
+        <div class="flex w-96 flex-col gap-2">
+          <div>
+            <Label>Name</Label>
+            <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
+          </div>
+          <div>
+            <Label>URL</Label>
+            <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
+          </div>
+          <div class="mb-2 mt-2 flex gap-2">
+            <Button class="w-fit" on:click={toggleForm} color="red" outline
+              ><i class="bx bx-trash me-2"></i>Cancel</Button
+            >
+            <Button
+              type="submit"
+              class="w-fit"
+              color="light"
+              disabled={validUrl === false ||
+                validName === false ||
+                aggregator.name === "" ||
+                aggregator.url === ""}
+            >
+              <i class="bx bx-check me-2"></i>
+              <span>Save aggregator</span>
+            </Button>
+          </div>
+          <ErrorMessage error={aggregatorSaveError}></ErrorMessage>
         </div>
-        <div>
-          <Label>URL</Label>
-          <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
-        </div>
-        <Button
-          type="submit"
-          class="mt-2 w-fit"
-          color="light"
-          disabled={validUrl === false ||
-            validName === false ||
-            aggregator.name === "" ||
-            aggregator.url === ""}
-        >
-          <i class="bx bx-check me-2"></i>
-          <span>Save aggregator</span>
-        </Button>
-      </div>
-    </form>
+      </form>
+    {/if}
   {/if}
-  <ErrorMessage error={aggregatorSaveError}></ErrorMessage>
 
   <br />
 </div>
