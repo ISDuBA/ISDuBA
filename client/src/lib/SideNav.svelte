@@ -92,6 +92,8 @@
                   <i class="bx bx-git-repo-forked"></i>
                 </svelte:fragment>
               </SidebarItem>
+            {/if}
+            {#if appStore.isSourceManager()}
               <SidebarItem class="px-6 py-2.5" label="Aggregators" href="/#/sources/aggregators">
                 <svelte:fragment slot="icon">
                   <i class="bx bx-sitemap"></i>
