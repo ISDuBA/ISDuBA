@@ -132,9 +132,13 @@
             <TableBodyCell {tdClass}
               >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
             >
+          {:else}
+            <TableBodyCell></TableBodyCell>
+            <TableBodyCell></TableBodyCell>
+            <TableBodyCell></TableBodyCell>
           {/if}
           <TableBodyCell>
-            {#if source.id}
+            {#if source.id !== undefined}
               {@const yesterday = Date.now() - DAY_MS}
               <SourceBasicStats sourceID={source.id}></SourceBasicStats>
               (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
