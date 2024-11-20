@@ -526,7 +526,7 @@
                       toggleEditForm(aggregator.id);
                     }
                   }}
-                  class="!p-2"
+                  class="hidden !p-2"
                   color="light"
                 >
                   <i class="bx bx-pencil"></i>
@@ -570,7 +570,7 @@
               </div>
               <div class="mb-2 mt-2 flex flex-wrap gap-2">
                 <Button
-                  class="h-fit w-fit"
+                  class="w-fit"
                   on:click={(event) => {
                     event.stopPropagation();
                     event.preventDefault();
@@ -578,8 +578,7 @@
                       toggleEditForm(aggregator.id);
                     }
                   }}
-                  color="red"
-                  outline><i class="bx bx-x me-2"></i>Cancel</Button
+                  color="light"><i class="bx bx-x"></i></Button
                 >
                 <Button
                   on:click={() => {
@@ -590,7 +589,7 @@
                       attention: aggregator.attention
                     });
                   }}
-                  class="h-fit w-fit"
+                  class="w-fit"
                   color="light"
                   disabled={validEditedUrl === false ||
                     validEditedName === false ||
@@ -756,8 +755,8 @@
               ></Input>
             </div>
             <div class="mb-2 mt-2 flex gap-2">
-              <Button class="w-fit" on:click={toggleCreateForm} color="red" outline
-                ><i class="bx bx-x me-2"></i>Cancel</Button
+              <Button class="w-fit" on:click={toggleCreateForm} color="light"
+                ><i class="bx bx-x"></i></Button
               >
               <Button
                 type="submit"
