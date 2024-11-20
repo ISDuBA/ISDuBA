@@ -83,27 +83,14 @@ func processFile(
 			_, err := tx.Exec(ctx, insertSQL, docID)
 			return err
 		}
-		// Store filename
-		storeFilename := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
-			if duplicate {
-				return nil
-			}
-			const insertSQL = `UPDATE documents ` +
-				`SET filename = $1 ` +
-				`WHERE id = $2`
-			_, err := tx.Exec(ctx, insertSQL, filepath.Base(path), docID)
-			return err
-		}
-		storeMetadata := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
-			if err := storeStats(ctx, tx, docID, duplicate); err != nil {
-				return err
-			}
-			return storeFilename(ctx, tx, docID, duplicate)
-		}
 
 		var id int64
 		if err = db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
-			id, err = models.ImportDocument(ctx, conn, r, actor, nil, storeMetadata, dry)
+			id, err = models.ImportDocument(
+				ctx, conn, r, actor,
+				nil,
+				models.ChainInTx(storeStats, models.StoreFilename(filepath.Base(path))),
+				dry)
 			return err
 		}, 0); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {

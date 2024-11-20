@@ -166,29 +166,15 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		_, err := tx.Exec(ctx, insertSQL, docID)
 		return err
 	}
-	// Store filename
-	storeFilename := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
-		if duplicate {
-			return nil
-		}
-		const insertSQL = `UPDATE documents ` +
-			`SET filename = $1 ` +
-			`WHERE id = $2`
-		_, err := tx.Exec(ctx, insertSQL, file.Filename, docID)
-		return err
-	}
-	storeMetadata := func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
-		if err := storeStats(ctx, tx, docID, duplicate); err != nil {
-			return err
-		}
-		return storeFilename(ctx, tx, docID, duplicate)
-	}
 	var id int64
 	switch err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			id, err = models.ImportDocumentData(
-				rctx, conn, document, buf.Bytes(), actor, c.tlps(ctx), storeMetadata, false)
+				rctx, conn, document, buf.Bytes(),
+				actor, c.tlps(ctx),
+				models.ChainInTx(storeStats, models.StoreFilename(file.Filename)),
+				false)
 			return err
 		}, 0,
 	); {
