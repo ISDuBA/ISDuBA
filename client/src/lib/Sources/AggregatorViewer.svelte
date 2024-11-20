@@ -643,9 +643,17 @@
           {#each list as entry}
             <Collapsible header="" showBorder={false}>
               <div slot="header" class="mb-2 flex items-center gap-2">
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <span class="text-black dark:text-white">
-                    {`${entry.name} (${entry.feedsSubscribed}/${entry.feedsAvailable})`}
+                <div
+                  class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-black dark:text-white"
+                >
+                  <span>{entry.name}</span>
+                  <span class="flex w-fit gap-1">
+                    {#each new Array(entry.feedsSubscribed) as _a}
+                      <i class="bx bxs-circle"></i>
+                    {/each}
+                    {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
+                      <i class="bx bx-circle"></i>
+                    {/each}
                   </span>
                   <Button
                     on:click={async () => {
@@ -669,11 +677,11 @@
                 <span class="text-xs text-gray-600 dark:text-gray-400">{entry.url}</span>
               </div>
               {#each entry.availableSources as source}
-                <div class="mb-2 flex items-center gap-1 text-sm text-black dark:text-white">
+                <div class="mb-2 flex items-center gap-2 text-sm text-black dark:text-white">
                   {#if source.id !== undefined}
                     <i class="bx bx-git-repo-forked"></i>
                   {/if}
-                  {`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}
+                  {source.name}
                   {#if source.id !== undefined}
                     <Button
                       on:click={async () => {
