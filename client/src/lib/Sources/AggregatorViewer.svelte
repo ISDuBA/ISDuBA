@@ -657,53 +657,67 @@
                   </span>
                 </div>
               </div>
-              <div class="mb-2 flex items-center gap-2">
-                <span
-                  class="min-w-6 text-center text-gray-600 dark:text-gray-400"
-                  title={entry.role.label}
-                >
-                  {entry.role.abbreviation}
-                </span>
-                <span>-</span>
-                <span class="text-xs text-gray-600 dark:text-gray-400">{entry.url}</span>
-              </div>
-              {#each entry.availableSources as source}
-                <div class="mb-2 flex items-center gap-2 text-sm text-black dark:text-white">
-                  {#if source.id !== undefined}
-                    <i class="bx bx-git-repo-forked text-lg"></i>
-                  {/if}
-                  {source.name}
-                  {#if entry.feedsSubscribed === 0}
-                    <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-                      <i class="bx bx-plus"></i>
-                      <span>Add source</span>
-                    </Button>
-                  {/if}
-                  {#if source.id !== undefined}
-                    <Button
-                      on:click={async () => {
-                        await push(`/sources/${source.id}`);
-                      }}
-                      class="!p-2"
-                      color="light"
-                    >
-                      <i class="bx bx-right-arrow-alt"></i>
-                    </Button>
-                  {/if}
-                </div>
-                {#each source.feeds as feed}
-                  {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
-                  <div class="mb-2 ms-4">
-                    <span class={feedClass}>{feed.url}</span>
+              <div class="mb-3 flex flex-col gap-3">
+                <List tag="dl" class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600">
+                  <div>
+                    <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
+                    <DescriptionList tag="dd" {ddClass}>{entry.url}</DescriptionList>
+                  </div>
+                  <div>
+                    <DescriptionList tag="dt" {dtClass}>Role</DescriptionList>
+                    <DescriptionList tag="dd" {ddClass}>{entry.role.label}</DescriptionList>
+                  </div>
+                </List>
+                {#each entry.availableSources as source}
+                  <div
+                    class={entry.feedsSubscribed === 0
+                      ? ""
+                      : "rounded-md border border-solid border-gray-300 p-2 dark:border-0 dark:bg-gray-700"}
+                  >
+                    <div class="mb-1 flex items-center gap-2 text-sm text-black dark:text-white">
+                      {#if source.id !== undefined}
+                        <Button
+                          on:click={async () => {
+                            await push(`/sources/${source.id}`);
+                          }}
+                          class="!p-2"
+                          color="light"
+                        >
+                          <i class="bx bx-git-repo-forked text-lg"></i>
+                        </Button>
+                      {/if}
+                      {source.name}
+                      {#if entry.feedsSubscribed === 0}
+                        <Button
+                          href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
+                          color="primary"
+                          size="xs"
+                        >
+                          <i class="bx bx-plus"></i>
+                          <span>Add source</span>
+                        </Button>
+                      {/if}
+                    </div>
+                    {#each source.feeds as feed}
+                      {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
+                      <div class="mb-2 ms-4">
+                        <span class={feedClass}>{feed.url}</span>
+                      </div>
+                    {/each}
                   </div>
                 {/each}
-              {/each}
-              {#if entry.feedsSubscribed > 0}
-                <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-                  <i class="bx bx-plus"></i>
-                  <span>Add another source</span>
-                </Button>
-              {/if}
+                {#if entry.feedsSubscribed > 0}
+                  <Button
+                    href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
+                    class="mb-2 w-fit"
+                    color="primary"
+                    size="xs"
+                  >
+                    <i class="bx bx-plus"></i>
+                    <span>Add another source</span>
+                  </Button>
+                {/if}
+              </div>
             </Collapsible>
           {/each}
         {/if}
