@@ -359,6 +359,7 @@
     let resetResult = await resetAggregatorAttention(aggregator);
     if (resetResult.ok) {
       aggregator.attention = false;
+      aggregators = aggregators;
     } else {
       aggregatorError = resetResult.error;
     }
@@ -485,23 +486,7 @@
             {/if}
             <span class="me-4">{aggregator.name}</span>
             {#if aggregator.attention}
-              <Badge class="h-fit" dismissable
-                >Sources changed
-                <Button
-                  slot="close-button"
-                  let:close
-                  color="light"
-                  class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
-                  on:click={async (event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    resetAttention(aggregator);
-                    close();
-                  }}
-                >
-                  <i class="bx bx-x"></i>
-                </Button>
-              </Badge>
+              <Badge class="h-fit">Sources changed</Badge>
             {/if}
             <div>
               <Button
@@ -640,6 +625,28 @@
               {/if}
             </List>
           </div>
+          {#if aggregator.attention}
+            <Badge class="mb-2 h-fit" dismissable>
+              <p>
+                These are the currently available providers. Please review their feeds and adjust
+                the sources if needed.
+              </p>
+              <Button
+                slot="close-button"
+                let:close
+                color="light"
+                class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                on:click={async (event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                  resetAttention(aggregator);
+                  close();
+                }}
+              >
+                <i class="bx bx-x"></i>
+              </Button>
+            </Badge>
+          {/if}
           {#each list as entry}
             <Collapsible header="" showBorder={false}>
               <div slot="header" class="mb-2 flex items-center gap-2">

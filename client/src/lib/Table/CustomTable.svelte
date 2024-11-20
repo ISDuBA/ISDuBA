@@ -33,6 +33,7 @@
       </div>
     </SectionHeader>
   {/if}
+  <slot name="top"></slot>
   <Table divClass="relative" hoverable={true} noborder={true}>
     <TableHead theadClass={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : ""}>
       {#each headers as header}

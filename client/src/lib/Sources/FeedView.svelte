@@ -87,6 +87,9 @@
 
 {#if logLevels}
   <CustomTable title="Feeds" headers={tableHeaders}>
+    <div slot="top">
+      <slot name="top"></slot>
+    </div>
     {#each feeds as feed, index (index)}
       <tr class={feed.id === feedBlinkID ? "blink" : ""}>
         {#if placeholderFeed}

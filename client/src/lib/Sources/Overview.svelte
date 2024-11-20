@@ -116,10 +116,10 @@
         >
           <TableBodyCell tdClass={`${tdClass} break-words whitespace-normal`}>
             <div class="flex items-center gap-2">
+              <span>{source.name}</span>
               {#if source.attention}
                 <Badge class="min-w-fit">Source changed</Badge>
               {/if}
-              <span>{source.name}</span>
             </div>
           </TableBodyCell>
           {#if source.id !== 0}
