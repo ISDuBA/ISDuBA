@@ -171,12 +171,6 @@
   <ErrorMessage error={messageError}></ErrorMessage>
 
   <br />
-  {#if appStore.isSourceManager()}
-    <Button href="/#/sources/aggregators" class="my-2" color="primary" size="xs">
-      <span>Aggregator List</span>
-    </Button>
-  {/if}
-  <br />
   {#if appStore.isImporter()}
     <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
       <i class="bx bx-upload"></i>
