@@ -63,11 +63,15 @@ func processFile(
 		}
 		defer file.Close()
 
+		filename := filepath.Base(path)
+
 		var r io.Reader
 		if strings.HasSuffix(lower, ".gz") {
 			if r, err = gzip.NewReader(file); err != nil {
 				return err
 			}
+			// Strip away extension
+			filename = filename[:len(filename)-len(".gz")]
 		} else {
 			r = file
 		}
@@ -89,7 +93,7 @@ func processFile(
 			id, err = models.ImportDocument(
 				ctx, conn, r, actor,
 				nil,
-				models.ChainInTx(storeStats, models.StoreFilename(filepath.Base(path))),
+				models.ChainInTx(storeStats, models.StoreFilename(filename)),
 				dry)
 			return err
 		}, 0); err != nil {

@@ -25,6 +25,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/gocsaf/csaf/v3/util"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -199,17 +200,19 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
-	fields := []string{"original"}
+	fields := []string{"original", "filename"}
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
 	sql := builder.CreateQuery(fields, "", -1, -1)
 
 	var original []byte
+	var filename string
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, builder.Replacements...).Scan(&original)
+			return conn.QueryRow(rctx, sql, builder.Replacements...).
+				Scan(&original, &filename)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -220,8 +223,14 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		return
 	}
 
+	if filename == "" {
+		filename = "document.json"
+	} else {
+		filename = util.CleanFileName(filename)
+	}
+
 	extraHeaders := map[string]string{
-		"Content-Disposition": `attachment; filename="document.json"`,
+		"Content-Disposition": fmt.Sprintf("attachment; filename=\"%s\"", filename),
 	}
 
 	ctx.DataFromReader(
