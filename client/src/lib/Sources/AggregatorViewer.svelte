@@ -655,15 +655,6 @@
                       <i class="bx bx-circle"></i>
                     {/each}
                   </span>
-                  <Button
-                    on:click={async () => {
-                      await push(`/sources/new/${encodeURIComponent(entry.url)}`);
-                    }}
-                    class="my-1 !p-2"
-                    color="light"
-                  >
-                    <i class="bx bx-folder-plus"></i>
-                  </Button>
                 </div>
               </div>
               <div class="mb-2 flex items-center gap-2">
@@ -679,9 +670,15 @@
               {#each entry.availableSources as source}
                 <div class="mb-2 flex items-center gap-2 text-sm text-black dark:text-white">
                   {#if source.id !== undefined}
-                    <i class="bx bx-git-repo-forked"></i>
+                    <i class="bx bx-git-repo-forked text-lg"></i>
                   {/if}
                   {source.name}
+                  {#if entry.feedsSubscribed === 0}
+                    <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+                      <i class="bx bx-plus"></i>
+                      <span>Add source</span>
+                    </Button>
+                  {/if}
                   {#if source.id !== undefined}
                     <Button
                       on:click={async () => {
@@ -698,31 +695,15 @@
                   {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
                   <div class="mb-2 ms-4">
                     <span class={feedClass}>{feed.url}</span>
-                    {#if feed.id !== undefined}
-                      <Button
-                        on:click={async () => {
-                          sessionStorage.setItem("feedBlinkID", String(feed.id));
-                          await push(`/sources/${feed.sourceID}`);
-                        }}
-                        class="!p-2"
-                        color="light"
-                      >
-                        <i class="bx bx-right-arrow-alt"></i>
-                      </Button>
-                    {:else if entry.url}
-                      <Button
-                        on:click={async () => {
-                          await push(`/sources/new/${encodeURIComponent(entry.url)}`);
-                        }}
-                        class="!p-2"
-                        color="light"
-                      >
-                        <i class="bx bx-folder-plus"></i>
-                      </Button>
-                    {/if}
                   </div>
                 {/each}
               {/each}
+              {#if entry.feedsSubscribed > 0}
+                <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+                  <i class="bx bx-plus"></i>
+                  <span>Add another source</span>
+                </Button>
+              {/if}
             </Collapsible>
           {/each}
         {/if}
