@@ -166,13 +166,15 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		_, err := tx.Exec(ctx, insertSQL, docID)
 		return err
 	}
-
 	var id int64
 	switch err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			id, err = models.ImportDocumentData(
-				rctx, conn, document, buf.Bytes(), actor, c.tlps(ctx), storeStats, false)
+				rctx, conn, document, buf.Bytes(),
+				actor, c.tlps(ctx),
+				models.ChainInTx(storeStats, models.StoreFilename(file.Filename)),
+				false)
 			return err
 		}, 0,
 	); {

@@ -83,9 +83,14 @@ func processFile(
 			_, err := tx.Exec(ctx, insertSQL, docID)
 			return err
 		}
+
 		var id int64
 		if err = db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
-			id, err = models.ImportDocument(ctx, conn, r, actor, nil, storeStats, dry)
+			id, err = models.ImportDocument(
+				ctx, conn, r, actor,
+				nil,
+				models.ChainInTx(storeStats, models.StoreFilename(filepath.Base(path))),
+				dry)
 			return err
 		}, 0); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {

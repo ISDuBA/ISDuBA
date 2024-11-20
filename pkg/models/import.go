@@ -251,6 +251,20 @@ func ChainInTx(inTxs ...DocumentStoreChainFunc) DocumentStoreChainFunc {
 	}
 }
 
+// StoreFilename returns a function to store the file name along side the document.
+func StoreFilename(filename string) DocumentStoreChainFunc {
+	return func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
+		if duplicate {
+			return nil
+		}
+		const insertSQL = `UPDATE documents ` +
+			`SET filename = $1 ` +
+			`WHERE id = $2`
+		_, err := tx.Exec(ctx, insertSQL, filename, docID)
+		return err
+	}
+}
+
 // ImportDocument imports a given advisory into the database.
 func ImportDocument(
 	ctx context.Context,
