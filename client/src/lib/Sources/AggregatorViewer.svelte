@@ -80,8 +80,8 @@
     expand: boolean;
   };
 
-  const accordionItemDefaultClass = "flex items-center gap-x-4 text-gray-700 font-semibold w-full";
-  const textFlushOpen = "text-gray-500 dark:text-white";
+  const textFlushOpen = "text-black dark:text-white";
+  const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full`;
   let loadingAggregators: boolean = false;
   let aggregators: Aggregator[] = [];
   let aggregatorData = new Map<number, AggregatorEntry[]>();
@@ -606,9 +606,9 @@
         </div>
         {#if list.length !== 0}
           <div
-            class="mb-2 flex flex-col justify-between break-all rounded-md border border-solid border-gray-500 px-4 py-2 shadow-md"
+            class="mb-2 flex flex-col justify-between break-all rounded-md border border-solid border-gray-300 px-4 py-2 dark:border-gray-500"
           >
-            <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
+            <List tag="dl" class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600">
               <div>
                 <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
                 <DescriptionList tag="dd" {ddClass}>{aggregator.url}</DescriptionList>
@@ -618,6 +618,12 @@
                 <div>
                   <DescriptionList tag="dt" {dtClass}>Category</DescriptionList>
                   <DescriptionList tag="dd" {ddClass}>{data.category}</DescriptionList>
+                </div>
+                <div>
+                  <DescriptionList tag="dt" {dtClass}>Last updated</DescriptionList>
+                  <DescriptionList tag="dd" {ddClass}
+                    >{metadata.aggregator.last_updated}</DescriptionList
+                  >
                 </div>
                 <div>
                   <DescriptionList tag="dt" {dtClass}>Namespace</DescriptionList>
@@ -635,7 +641,7 @@
             </List>
           </div>
           {#each list as entry}
-            <Collapsible header="">
+            <Collapsible header="" showBorder={false}>
               <div slot="header" class="mb-2 flex items-center gap-2">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                   <span class="text-black dark:text-white">
@@ -650,66 +656,64 @@
                   >
                     <i class="bx bx-folder-plus"></i>
                   </Button>
-                  <span
-                    class="min-w-6 text-center text-gray-600 dark:text-gray-400"
-                    title={entry.role.label}
-                  >
-                    {entry.role.abbreviation}
-                  </span>
-                  <span class="text-xs text-gray-600 dark:text-gray-400">{entry.url}</span>
                 </div>
               </div>
+              <div class="mb-2 flex items-center gap-2">
+                <span
+                  class="min-w-6 text-center text-gray-600 dark:text-gray-400"
+                  title={entry.role.label}
+                >
+                  {entry.role.abbreviation}
+                </span>
+                <span>-</span>
+                <span class="text-xs text-gray-600 dark:text-gray-400">{entry.url}</span>
+              </div>
               {#each entry.availableSources as source}
-                <Collapsible header="">
-                  <div
-                    class="mb-2 flex items-center gap-1 text-sm text-black dark:text-white"
-                    slot="header"
-                  >
-                    {#if source.id !== undefined}
-                      <i class="bx bx-git-repo-forked"></i>
-                    {/if}
-                    {`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}
-                    {#if source.id !== undefined}
+                <div class="mb-2 flex items-center gap-1 text-sm text-black dark:text-white">
+                  {#if source.id !== undefined}
+                    <i class="bx bx-git-repo-forked"></i>
+                  {/if}
+                  {`${source.name} (${source.feedsSubscribed}/${source.feedsAvailable})`}
+                  {#if source.id !== undefined}
+                    <Button
+                      on:click={async () => {
+                        await push(`/sources/${source.id}`);
+                      }}
+                      class="!p-2"
+                      color="light"
+                    >
+                      <i class="bx bx-right-arrow-alt"></i>
+                    </Button>
+                  {/if}
+                </div>
+                {#each source.feeds as feed}
+                  {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
+                  <div class="mb-2 ms-4">
+                    <span class={feedClass}>{feed.url}</span>
+                    {#if feed.id !== undefined}
                       <Button
                         on:click={async () => {
-                          await push(`/sources/${source.id}`);
+                          sessionStorage.setItem("feedBlinkID", String(feed.id));
+                          await push(`/sources/${feed.sourceID}`);
                         }}
                         class="!p-2"
                         color="light"
                       >
                         <i class="bx bx-right-arrow-alt"></i>
                       </Button>
+                    {:else if entry.url}
+                      <Button
+                        on:click={async () => {
+                          await push(`/sources/new/${encodeURIComponent(entry.url)}`);
+                        }}
+                        class="!p-2"
+                        color="light"
+                      >
+                        <i class="bx bx-folder-plus"></i>
+                      </Button>
                     {/if}
                   </div>
-                  {#each source.feeds as feed}
-                    {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
-                    <div class="mb-2 ms-4">
-                      <span class={feedClass}>{feed.url}</span>
-                      {#if feed.id !== undefined}
-                        <Button
-                          on:click={async () => {
-                            sessionStorage.setItem("feedBlinkID", String(feed.id));
-                            await push(`/sources/${feed.sourceID}`);
-                          }}
-                          class="!p-2"
-                          color="light"
-                        >
-                          <i class="bx bx-right-arrow-alt"></i>
-                        </Button>
-                      {:else if entry.url}
-                        <Button
-                          on:click={async () => {
-                            await push(`/sources/new/${encodeURIComponent(entry.url)}`);
-                          }}
-                          class="!p-2"
-                          color="light"
-                        >
-                          <i class="bx bx-folder-plus"></i>
-                        </Button>
-                      {/if}
-                    </div>
-                  {/each}
-                </Collapsible>
+                {/each}
               {/each}
             </Collapsible>
           {/each}
