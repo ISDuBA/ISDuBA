@@ -391,7 +391,7 @@
 
 <div class="pb-10">
   <SectionHeader title="Aggregators"></SectionHeader>
-  <Accordion flush multiple class="my-8">
+  <Accordion flush multiple class="my-4">
     {#each aggregators as aggregator, index (index)}
       {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
       {@const metadata = aggregatorMetaData.get(aggregator.id ?? -1)}
@@ -491,7 +491,10 @@
                   >
                     <i class="bx bx-folder-plus"></i>
                   </Button>
-                  <span class="min-w-6 text-gray-600 dark:text-gray-400" title={entry.role.label}>
+                  <span
+                    class="min-w-6 text-center text-gray-600 dark:text-gray-400"
+                    title={entry.role.label}
+                  >
                     {entry.role.abbreviation}
                   </span>
                   <span class="text-xs text-gray-600 dark:text-gray-400">{entry.url}</span>
@@ -561,44 +564,44 @@
   </div>
   <ErrorMessage error={aggregatorError}></ErrorMessage>
   {#if appStore.isSourceManager()}
-    {#if !showForm}
-      <Button class="mb-2 mt-3 w-fit" on:click={toggleForm}
-        ><i class="bx bx-plus me-2"></i>New aggregator</Button
-      >
-    {/if}
-    {#if showForm}
-      <form transition:scale on:submit={submitAggregator} class={formClass}>
-        <div class="flex w-96 flex-col gap-2">
-          <div>
-            <Label>Name</Label>
-            <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
+    <div class="min-h-64">
+      {#if !showForm}
+        <Button class="mb-2 mt-3 w-fit" on:click={toggleForm}
+          ><i class="bx bx-plus me-2"></i>New aggregator</Button
+        >
+      {/if}
+      {#if showForm}
+        <form transition:scale on:submit={submitAggregator} class={formClass}>
+          <div class="flex w-96 flex-col gap-2">
+            <div>
+              <Label>Name</Label>
+              <Input bind:value={aggregator.name} on:input={checkName} color={nameColor}></Input>
+            </div>
+            <div>
+              <Label>URL</Label>
+              <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
+            </div>
+            <div class="mb-2 mt-2 flex gap-2">
+              <Button class="w-fit" on:click={toggleForm} color="red" outline
+                ><i class="bx bx-trash me-2"></i>Cancel</Button
+              >
+              <Button
+                type="submit"
+                class="w-fit"
+                color="light"
+                disabled={validUrl === false ||
+                  validName === false ||
+                  aggregator.name === "" ||
+                  aggregator.url === ""}
+              >
+                <i class="bx bx-check me-2"></i>
+                <span>Save aggregator</span>
+              </Button>
+            </div>
+            <ErrorMessage error={aggregatorSaveError}></ErrorMessage>
           </div>
-          <div>
-            <Label>URL</Label>
-            <Input bind:value={aggregator.url} on:input={checkUrl} color={urlColor}></Input>
-          </div>
-          <div class="mb-2 mt-2 flex gap-2">
-            <Button class="w-fit" on:click={toggleForm} color="red" outline
-              ><i class="bx bx-trash me-2"></i>Cancel</Button
-            >
-            <Button
-              type="submit"
-              class="w-fit"
-              color="light"
-              disabled={validUrl === false ||
-                validName === false ||
-                aggregator.name === "" ||
-                aggregator.url === ""}
-            >
-              <i class="bx bx-check me-2"></i>
-              <span>Save aggregator</span>
-            </Button>
-          </div>
-          <ErrorMessage error={aggregatorSaveError}></ErrorMessage>
-        </div>
-      </form>
-    {/if}
+        </form>
+      {/if}
+    </div>
   {/if}
-
-  <br />
 </div>
