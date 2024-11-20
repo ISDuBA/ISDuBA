@@ -441,6 +441,26 @@ const saveAggregator = async (aggregator: Aggregator): Promise<Result<number, Er
   };
 };
 
+const updateAggregator = async (aggregator: Aggregator): Promise<Result<number, ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("name", aggregator.name);
+  formData.append("url", aggregator.url);
+  if (aggregator.attention !== undefined) {
+    formData.append("attention", `${aggregator.attention}`);
+  }
+  const resp = await request(`/api/aggregators/${aggregator.id}`, "PUT", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content.id
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not save aggregator`, resp)
+  };
+};
+
 const deleteAggregator = async (id: number): Promise<Result<null, ErrorDetails>> => {
   const resp = await request(`/api/aggregators/${id}`, "DELETE");
   if (resp.error) {
@@ -635,6 +655,7 @@ export {
   type Feed,
   saveSource,
   saveAggregator,
+  updateAggregator,
   fetchSource,
   fetchSourceDefaultConfig,
   getLogLevels,
