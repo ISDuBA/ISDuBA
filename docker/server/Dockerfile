@@ -19,7 +19,7 @@ COPY Makefile Makefile
 RUN make build_client
 
 
-FROM library/golang:1.22.1-alpine AS server
+FROM library/golang:1.23-alpine AS server
 RUN apk update && apk add --no-cache make
 
 WORKDIR /app
