@@ -362,9 +362,14 @@ const fetchPMD = async (url: string): Promise<Result<CSAFProviderMetadata, Error
       value: resp.content
     };
   } else {
+    let details = undefined;
+    if (resp.content) {
+      details = resp.content.join("\n");
+    }
+    const errorDetails: ErrorDetails = { message: `Could not load pmd`, details: details };
     return {
       ok: false,
-      error: getErrorDetails(`Could not load PMD.`, resp)
+      error: errorDetails
     };
   }
 };
