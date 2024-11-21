@@ -129,7 +129,9 @@
                 >{feed.url}</a
               >
             {:else}
-              {feed.url}
+              <span class="text-amber-600">
+                {feed.url}
+              </span>
             {/if}
           </TableBodyCell>
           <TableBodyCell {tdClass}

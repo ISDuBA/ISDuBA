@@ -423,7 +423,7 @@
 <FeedView {feeds} placeholderFeed={source.id === 0} {clickFeed} {updateFeed} edit={true}>
   <div slot="top">
     {#if source.attention}
-      <Badge class="mb-2 h-fit w-fit" dismissable>
+      <Badge class="mb-2 h-fit p-1" dismissable>
         <p>
           These are the currently available feeds. Please review them and adjust the subscriptions
           if needed.
@@ -432,13 +432,13 @@
           slot="close-button"
           let:close
           color="light"
-          class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+          class="ms-1 min-h-[26px] min-w-[26px] rounded border border-primary-700/55 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
           on:click={async () => {
             markAsDone();
             close();
           }}
         >
-          <i class="bx bx-x"></i>
+          <i class="bx bx-check"></i>
         </Button>
       </Badge>
     {/if}

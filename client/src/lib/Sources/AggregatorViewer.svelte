@@ -48,6 +48,7 @@
   import CAccordionItem from "$lib/Components/CAccordionItem.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import { scale } from "svelte/transition";
+  import FeedBulletPoint from "./FeedBulletPoint.svelte";
 
   type FeedInfo = {
     id?: number;
@@ -467,7 +468,7 @@
       {@const metadata = aggregatorMetaData.get(aggregator.id ?? -1)}
       <CAccordionItem
         id={`aggregator-${aggregator.id}`}
-        paddingFlush="pt-0 py-3"
+        paddingFlush="pt-0 py-2"
         defaultClass={`${accordionItemDefaultClass} ${aggregator.id === blinkId ? "blink" : ""}`}
         bind:open={openAggregator[index]}
         {textFlushOpen}
@@ -478,13 +479,13 @@
         <span slot="arrowup"></span>
         <span slot="arrowdown"> </span>
         <div slot="header" class="flex flex-col items-start gap-2">
-          <div class="flex flex-wrap gap-1">
+          <div class="flex flex-wrap items-center gap-2">
             {#if list.length > 0}
               <i class="bx bx-chevron-up text-xl"></i>
             {:else}
               <i class="bx bx-chevron-down text-xl"></i>
             {/if}
-            <span class="me-4">{aggregator.name}</span>
+            <span>{aggregator.name}</span>
             {#if aggregator.attention}
               <Badge class="h-fit">Sources changed</Badge>
             {/if}
@@ -626,7 +627,7 @@
             </List>
           </div>
           {#if aggregator.attention}
-            <Badge class="mb-2 h-fit" dismissable>
+            <Badge class="mb-2 h-fit p-1" dismissable>
               <p>
                 These are the currently available providers. Please review their feeds and adjust
                 the sources if needed.
@@ -635,7 +636,7 @@
                 slot="close-button"
                 let:close
                 color="light"
-                class="ms-1 min-h-[26px] min-w-[26px] rounded border-0 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                class="ms-1 min-h-[26px] min-w-[26px] rounded border border-primary-700/55 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
                 on:click={async (event) => {
                   event.stopPropagation();
                   event.preventDefault();
@@ -643,90 +644,98 @@
                   close();
                 }}
               >
-                <i class="bx bx-x"></i>
+                <i class="bx bx-check"></i>
               </Button>
             </Badge>
           {/if}
-          {#each list as entry}
-            <Collapsible header="" showBorder={false}>
-              <div slot="header" class="mb-2 flex items-center gap-2">
-                <div
-                  class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-black dark:text-white"
-                >
-                  <span>{entry.name}</span>
-                  <span class="flex w-fit gap-1">
-                    {#each new Array(entry.feedsSubscribed) as _a}
-                      <i class="bx bxs-circle"></i>
-                    {/each}
-                    {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
-                      <i class="bx bx-circle"></i>
-                    {/each}
-                  </span>
-                </div>
-              </div>
-              <div class="mb-3 flex flex-col gap-3">
-                <List tag="dl" class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600">
-                  <div>
-                    <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
-                    <DescriptionList tag="dd" {ddClass}>{entry.url}</DescriptionList>
-                  </div>
-                  <div>
-                    <DescriptionList tag="dt" {dtClass}>Role</DescriptionList>
-                    <DescriptionList tag="dd" {ddClass}>{entry.role.label}</DescriptionList>
-                  </div>
-                </List>
-                {#each entry.availableSources as source}
+          <div class="ps-4">
+            {#each list as entry}
+              <Collapsible header="" showBorder={false}>
+                <div slot="header" class="mb-2 flex items-center gap-2">
                   <div
-                    class={entry.feedsSubscribed === 0
-                      ? ""
-                      : "rounded-md border border-solid border-gray-300 p-2 dark:border-0 dark:bg-gray-700"}
+                    class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-black dark:text-white"
                   >
-                    <div class="mb-1 flex items-center gap-2 text-sm text-black dark:text-white">
-                      {#if source.id !== undefined}
-                        <Button
-                          on:click={async () => {
-                            await push(`/sources/${source.id}`);
-                          }}
-                          class="!p-2"
-                          color="light"
-                        >
-                          <i class="bx bx-git-repo-forked text-lg"></i>
-                        </Button>
-                      {/if}
-                      {source.name}
-                      {#if entry.feedsSubscribed === 0}
-                        <Button
-                          href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
-                          color="primary"
-                          size="xs"
-                        >
-                          <i class="bx bx-plus"></i>
-                          <span>Add source</span>
-                        </Button>
-                      {/if}
-                    </div>
-                    {#each source.feeds as feed}
-                      {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
-                      <div class="mb-2 ms-4">
-                        <span class={feedClass}>{feed.url}</span>
-                      </div>
-                    {/each}
+                    <span>{entry.name}</span>
+                    <span class="flex w-fit gap-1">
+                      {#each new Array(entry.feedsSubscribed) as _a}
+                        <FeedBulletPoint filled></FeedBulletPoint>
+                      {/each}
+                      {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
+                        <FeedBulletPoint></FeedBulletPoint>
+                      {/each}
+                    </span>
                   </div>
-                {/each}
-                {#if entry.feedsSubscribed > 0}
-                  <Button
-                    href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
-                    class="mb-2 w-fit"
-                    color="primary"
-                    size="xs"
+                </div>
+                <div class="mb-3 flex flex-col gap-3">
+                  <List
+                    tag="dl"
+                    class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600"
                   >
-                    <i class="bx bx-plus"></i>
-                    <span>Add another source</span>
-                  </Button>
-                {/if}
-              </div>
-            </Collapsible>
-          {/each}
+                    <div>
+                      <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
+                      <DescriptionList tag="dd" {ddClass}>{entry.url}</DescriptionList>
+                    </div>
+                    <div>
+                      <DescriptionList tag="dt" {dtClass}>Role</DescriptionList>
+                      <DescriptionList tag="dd" {ddClass}>{entry.role.label}</DescriptionList>
+                    </div>
+                  </List>
+                  {#each entry.availableSources as source}
+                    <div
+                      class={entry.feedsSubscribed === 0
+                        ? ""
+                        : "ms-3 rounded-md border border-solid border-gray-300 p-2 dark:border-0 dark:bg-gray-700"}
+                    >
+                      <div class="mb-1 flex items-center gap-2 text-sm text-black dark:text-white">
+                        {#if source.id !== undefined}
+                          <Button
+                            on:click={async () => {
+                              await push(`/sources/${source.id}`);
+                            }}
+                            class="!p-2"
+                            color="light"
+                          >
+                            <i class="bx bx-git-repo-forked text-lg"></i>
+                          </Button>
+                        {/if}
+                        {source.name}
+                        {#if entry.feedsSubscribed === 0}
+                          <Button
+                            href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
+                            color="primary"
+                            size="xs"
+                          >
+                            <i class="bx bx-plus"></i>
+                            <span>As new source</span>
+                          </Button>
+                        {/if}
+                      </div>
+                      {#each source.feeds as feed}
+                        {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
+                        <div class="mb-2 ms-4">
+                          <div>
+                            <FeedBulletPoint filled={!feed.highlight}></FeedBulletPoint>
+                            <span class={feedClass}>{feed.url}</span>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {/each}
+                  {#if entry.feedsSubscribed > 0}
+                    <Button
+                      href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
+                      class="mb-2 w-fit"
+                      color="light"
+                      size="xs"
+                    >
+                      <i class="bx bx-plus"></i>
+                      <span>Again as another source</span>
+                    </Button>
+                  {/if}
+                </div>
+              </Collapsible>
+            {/each}
+          </div>
         {/if}
       </CAccordionItem>
     {/each}
