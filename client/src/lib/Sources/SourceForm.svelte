@@ -324,7 +324,7 @@
           >Check TLS certificates</CCheckbox
         >
         <CCheckbox on:change={inputChange} bind:checked={source.signature_check}
-          >Check document PGP signature</CCheckbox
+          >Check document OpenPGP signature</CCheckbox
         >
       </div>
 
