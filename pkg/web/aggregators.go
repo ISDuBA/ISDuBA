@@ -248,27 +248,38 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 }
 
 func (c *Controller) updateAggregator(ctx *gin.Context) {
-	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	var (
+		ok        bool
+		name      string
+		url       string
+		active    bool
+		attention bool
+		id        int64
+	)
+	id, ok = parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
-	attention, ok := ctx.GetPostForm("attention")
-	if !ok {
-		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
+	if name, ok = parse(ctx, notEmpty, ctx.PostForm("name")); !ok {
 		return
 	}
-	att, ok := parse(ctx, strconv.ParseBool, attention)
-	if !ok {
+	if url, ok = parse(ctx, endsWith("/aggregator.json"), ctx.PostForm("url")); !ok {
+		return
+	}
+	if active, ok = parse(ctx, strconv.ParseBool, ctx.PostForm("active")); !ok {
+		return
+	}
+	if attention, ok = parse(ctx, strconv.ParseBool, ctx.PostForm("active")); !ok {
 		return
 	}
 	const (
-		prefix   = `UPDATE aggregators SET checksum_ack = checksum_updated`
-		suffix   = ` WHERE id = $1`
+		prefix   = `UPDATE aggregators SET name = $1, url = $2, active = $3, checksum_ack = checksum_updated`
+		suffix   = ` WHERE id = $4`
 		sqlAtt   = prefix + ` - interval '1s'` + suffix
 		sqlNoAtt = prefix + suffix
 	)
 	var updateSQL, msg string
-	if att {
+	if attention {
 		updateSQL = sqlAtt
 	} else {
 		updateSQL = sqlNoAtt
@@ -276,7 +287,7 @@ func (c *Controller) updateAggregator(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			tags, err := conn.Exec(rctx, updateSQL, id)
+			tags, err := conn.Exec(rctx, updateSQL, name, url, active, id)
 			if err != nil {
 				return err
 			}
