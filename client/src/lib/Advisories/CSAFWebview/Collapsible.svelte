@@ -12,6 +12,7 @@
   export let header: string;
   export let title: string | undefined = undefined;
   export let open = false;
+  export let showBorder = true;
   export let level = 2;
   export let highlight = false;
   const uuid = crypto.randomUUID();
@@ -80,7 +81,7 @@
       >
     </div>
     {#if visibility === "block"}
-      <div id={uuid} class="ml-2 border-l-2 border-l-gray-200 pl-2">
+      <div id={uuid} class={`ml-2 pl-2 ${showBorder ? "border-l-2 border-l-gray-200" : ""}`}>
         <slot />
       </div>
     {/if}

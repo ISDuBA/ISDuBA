@@ -12,6 +12,9 @@ import type { Result } from "$lib/types";
 import type { CSAFProviderMetadata } from "$lib/provider";
 import type { AggregatorMetadata } from "$lib/aggregatorTypes";
 
+const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
+const ddClass: string = "break-words font-semibold ml-2 mb-1";
+
 type Source = {
   id?: number;
   name: string;
@@ -81,6 +84,10 @@ type Aggregator = {
   name: string;
   url: string;
   attention?: boolean;
+  category?: string;
+  contact_details?: string;
+  issuing_authority?: string;
+  namespace?: string;
 };
 
 type Attention = {
@@ -434,6 +441,26 @@ const saveAggregator = async (aggregator: Aggregator): Promise<Result<number, Er
   };
 };
 
+const updateAggregator = async (aggregator: Aggregator): Promise<Result<number, ErrorDetails>> => {
+  const formData = new FormData();
+  formData.append("name", aggregator.name);
+  formData.append("url", aggregator.url);
+  if (aggregator.attention !== undefined) {
+    formData.append("attention", `${aggregator.attention}`);
+  }
+  const resp = await request(`/api/aggregators/${aggregator.id}`, "PUT", formData);
+  if (resp.ok) {
+    return {
+      ok: true,
+      value: resp.content.id
+    };
+  }
+  return {
+    ok: false,
+    error: getErrorDetails(`Could not save aggregator`, resp)
+  };
+};
+
 const deleteAggregator = async (id: number): Promise<Result<null, ErrorDetails>> => {
   const resp = await request(`/api/aggregators/${id}`, "DELETE");
   if (resp.error) {
@@ -628,6 +655,7 @@ export {
   type Feed,
   saveSource,
   saveAggregator,
+  updateAggregator,
   fetchSource,
   fetchSourceDefaultConfig,
   getLogLevels,
@@ -649,5 +677,7 @@ export {
   fetchSourceAttentionList,
   resetSourceAttention,
   fetchAggregatorAttentionList,
-  resetAggregatorAttention
+  resetAggregatorAttention,
+  dtClass,
+  ddClass
 };

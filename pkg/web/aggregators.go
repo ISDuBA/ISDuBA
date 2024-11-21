@@ -258,7 +258,7 @@ func (c *Controller) updateAggregator(ctx *gin.Context) {
 	const (
 		prefix   = `UPDATE aggregators SET checksum_ack = checksum_updated`
 		suffix   = ` WHERE id = $1`
-		sqlAtt   = prefix + ` - '1s':interval` + suffix
+		sqlAtt   = prefix + ` - interval '1s'` + suffix
 		sqlNoAtt = prefix + suffix
 	)
 	var updateSQL, msg string

@@ -19,9 +19,11 @@
     calculateMissingFeeds,
     parseFeeds,
     saveFeeds,
-    resetSourceAttention
+    resetSourceAttention,
+    dtClass,
+    ddClass
   } from "$lib/Sources/source";
-  import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
+  import { Button, Spinner, Modal, List, DescriptionList, Badge } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
@@ -77,9 +79,6 @@
   };
 
   let oldSource = structuredClone(source);
-
-  const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
-  const ddClass: string = "break-words font-semibold ml-2 mb-1";
 
   let updateStats = setInterval(async () => {
     if (!source.id || source.id === 0) {
@@ -416,16 +415,35 @@
         <i class="bx bx-trash me-2 text-red-500"></i>
         <span>Delete source</span>
       </Button>
-      <Button disabled={!source.attention} on:click={markAsDone} color="light">
-        <i class="bx bx-check me-2"></i>
-        <span>Mark as done</span>
-      </Button>
       <ErrorMessage error={saveSourceError}></ErrorMessage>
     </div>
   </div>
 {/if}
 
-<FeedView {feeds} placeholderFeed={source.id === 0} {clickFeed} {updateFeed} edit={true}></FeedView>
+<FeedView {feeds} placeholderFeed={source.id === 0} {clickFeed} {updateFeed} edit={true}>
+  <div slot="top">
+    {#if source.attention}
+      <Badge class="mb-2 h-fit p-1" dismissable>
+        <p>
+          These are the currently available feeds. Please review them and adjust the subscriptions
+          if needed.
+        </p>
+        <Button
+          slot="close-button"
+          let:close
+          color="light"
+          class="ms-1 min-h-[26px] min-w-[26px] rounded border border-primary-700/55 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+          on:click={async () => {
+            markAsDone();
+            close();
+          }}
+        >
+          <i class="bx bx-check"></i>
+        </Button>
+      </Badge>
+    {/if}
+  </div>
+</FeedView>
 <div
   class:invisible={!loadingFeeds && !loadingPMD}
   class={!loadingFeeds && !loadingPMD ? "loadingFadeIn" : ""}

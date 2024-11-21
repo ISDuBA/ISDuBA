@@ -82,6 +82,10 @@
       title="CSAF Provider"
       headers={[
         {
+          label: "",
+          attribute: "icon"
+        },
+        {
           label: "Name",
           attribute: "name"
         },
@@ -114,12 +118,15 @@
           on:focus={() => {}}
           class={appStore.isSourceManager() ? "cursor-pointer" : ""}
         >
-          <TableBodyCell tdClass={`${tdClass} break-words whitespace-normal`}>
-            <div class="flex items-center gap-2">
+          <TableBodyCell tdClass="w-fit max-w-10">
+            <i class="bx bx-git-repo-forked"></i>
+          </TableBodyCell>
+          <TableBodyCell tdClass={`${tdClass} break-words hyphens-auto`}>
+            <div class="whitespace-break-spaces">
+              <span>{source.name}</span>
               {#if source.attention}
                 <Badge class="min-w-fit">Source changed</Badge>
               {/if}
-              <span>{source.name}</span>
             </div>
           </TableBodyCell>
           {#if source.id !== 0}
@@ -174,12 +181,6 @@
   <ErrorMessage error={sourcesError}></ErrorMessage>
   <ErrorMessage error={messageError}></ErrorMessage>
 
-  <br />
-  {#if appStore.isSourceManager()}
-    <Button href="/#/sources/aggregators" class="my-2" color="primary" size="xs">
-      <span>Aggregator List</span>
-    </Button>
-  {/if}
   <br />
   {#if appStore.isImporter()}
     <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
