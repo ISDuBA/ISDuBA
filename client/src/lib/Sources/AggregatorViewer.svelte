@@ -29,7 +29,8 @@
     List,
     Spinner,
     Label,
-    Button
+    Button,
+    Toggle
   } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -366,6 +367,16 @@
     }
   };
 
+  const toggleActive = async (aggregator: Aggregator) => {
+    aggregator.active = !aggregator.active;
+    const result = await updateAggregator(aggregator);
+    if (result.ok) {
+      aggregators = aggregators;
+    } else {
+      aggregatorError = result.error;
+    }
+  };
+
   const toggleAggregatorView = async (aggregator: Aggregator) => {
     if (aggregator.id === undefined) {
       return;
@@ -519,6 +530,16 @@
                 </Button>
               {/if}
             </div>
+            {#if aggregator.active !== undefined}
+              <Toggle
+                on:click={(event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                  toggleActive(aggregator);
+                }}
+                bind:checked={aggregator.active}
+              ></Toggle>
+            {/if}
           </div>
           {#if aggregator.id && aggregator.id === aggregatorToEdit}
             <div class="flex flex-wrap gap-4">
