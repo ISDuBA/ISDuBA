@@ -596,14 +596,14 @@
           >
         </ButtonGroup>
       {/if}
+      {#if isLoading}
+        <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
+          Loading ...
+          <Spinner color="gray" size="4"></Spinner>
+        </div>
+      {/if}
     </div>
     <ErrorMessage {error}></ErrorMessage>
-    {#if isLoading}
-      <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
-      </div>
-    {/if}
     <div hidden={mode === "table"} class="border px-2">
       <div style:height>
         <canvas bind:this={chartComponentRef}></canvas>

@@ -87,7 +87,7 @@ const getLabelForKey = (key: string): string => {
   let label = key;
   if (key === "cve") label = "CVEs of documents";
   if (key === "imports") label = "Imports";
-  if (key === "importFailuresCombined") label = "Imports errors";
+  if (key === "importFailuresCombined") label = "Import errors";
   if (key === "signatureFailed") label = "Failed signature checks";
   if (key === "checksumFailed") label = "Failed checksum checks";
   if (key === "filenameFailed") label = "Failed filename checks";
