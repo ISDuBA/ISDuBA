@@ -84,7 +84,7 @@ func (m *Manager) refresh(ctx context.Context) {
 		selectSQL = `SELECT id, url, checksum FROM aggregators`
 		updateSQL = `UPDATE aggregators ` +
 			`SET (checksum, checksum_updated) = ($1, $2) ` +
-			`WHERE id = $3`
+			`WHERE id = $3 AND active = TRUE`
 	)
 	var aggregators []aggregator
 	if err := m.db.Run(

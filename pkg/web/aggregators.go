@@ -82,11 +82,12 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 		ID        int64  `json:"id"`
 		Name      string `json:"name"`
 		URL       string `json:"url"`
+		Active    bool   `json:"active"`
 		Attention bool   `json:"attention"`
 	}
 	var list []aggregator
 	const sql = `SELECT ` +
-		`id, name, url, (checksum_ack < checksum_updated) AS attention ` +
+		`id, name, url, active, (checksum_ack < checksum_updated) AS attention ` +
 		`FROM aggregators ORDER by name`
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -95,7 +96,7 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 			var err error
 			list, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (aggregator, error) {
 				var a aggregator
-				err := row.Scan(&a.ID, &a.Name, &a.URL, &a.Attention)
+				err := row.Scan(&a.ID, &a.Name, &a.URL, &a.Active, &a.Attention)
 				return a, err
 			})
 			return err
@@ -116,15 +117,16 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 	var (
 		name      string
 		url       string
+		active    bool
 		attention bool
 	)
 	const sql = `SELECT ` +
-		`name, url, (checksum_ack < checksum_updated) AS attention ` +
+		`name, url, active, (checksum_ack < checksum_updated) AS attention ` +
 		`FROM aggregators WHERE id = $1`
 	switch err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, id).Scan(&name, &url, &attention)
+			return conn.QueryRow(rctx, sql, id).Scan(&name, &url, &active, &attention)
 		}, 0,
 	); {
 	case errors.Is(err, pgx.ErrNoRows):
@@ -154,10 +156,11 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 
 func (c *Controller) createAggregator(ctx *gin.Context) {
 	var (
-		ok   bool
-		name string
-		url  string
-		id   int64
+		ok     bool
+		name   string
+		url    string
+		active bool
+		id     int64
 	)
 	if name, ok = parse(ctx, notEmpty, ctx.PostForm("name")); !ok {
 		return
@@ -165,11 +168,14 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 	if url, ok = parse(ctx, endsWith("/aggregator.json"), ctx.PostForm("url")); !ok {
 		return
 	}
-	const sql = `INSERT INTO aggregators (name, url) VALUES ($1, $2) RETURNING id`
+	if active, ok = parse(ctx, strconv.ParseBool, ctx.PostForm("active")); !ok {
+		return
+	}
+	const sql = `INSERT INTO aggregators (name, url, active) VALUES ($1, $2, $3) RETURNING id`
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, name, url).Scan(&id)
+			return conn.QueryRow(rctx, sql, name, url, active).Scan(&id)
 		}, 0,
 	); err != nil {
 		var pgErr *pgconn.PgError
