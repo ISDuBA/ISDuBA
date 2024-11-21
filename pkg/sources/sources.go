@@ -451,7 +451,6 @@ func (s *source) wait() *rate.Limiter {
 }
 
 func (s *source) httpClient(m *Manager) *http.Client {
-	client := http.Client{}
 	var tlsConfig tls.Config
 
 	if s.secure != nil {
@@ -464,12 +463,12 @@ func (s *source) httpClient(m *Manager) *http.Client {
 		tlsConfig.Certificates = s.tlsCertificates
 	}
 
+	transport := m.cfg.General.Transport()
+	transport.TLSClientConfig = &tlsConfig
+
+	client := http.Client{Transport: transport}
 	if m.cfg.Sources.Timeout > 0 {
 		client.Timeout = m.cfg.Sources.Timeout
-	}
-
-	client.Transport = &http.Transport{
-		TLSClientConfig: &tlsConfig,
 	}
 	return &client
 }

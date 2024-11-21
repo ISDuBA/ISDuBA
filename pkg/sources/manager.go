@@ -550,7 +550,7 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 	}
 	// Resolving external PMDs is too time consuming for the
 	// manager run loop. So do it before.
-	rps.resolve(m.pmdCache, m.cfg.Sources.Timeout)
+	rps.resolve(m.pmdCache, m.cfg)
 
 	// We can subscribe a source more than once.
 	sources := make(map[string][]int64, len(urlIDs))
@@ -1081,7 +1081,7 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 
 // PMD returns the provider metadata from the given url.
 func (m *Manager) PMD(url string) *CachedProviderMetadata {
-	return m.pmdCache.pmd(url, m.cfg.Sources.Timeout)
+	return m.pmdCache.pmd(url, m.cfg)
 }
 
 // updater collects updates so that only the first update on

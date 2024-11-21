@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/internal/cache"
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gocsaf/csaf/v3/csaf"
 )
@@ -47,7 +48,7 @@ func newCache(timeout time.Duration) *Cache {
 }
 
 // GetAggregator fetches a cached aggregator.
-func (c *Cache) GetAggregator(url string) (*CachedAggregator, error) {
+func (c *Cache) GetAggregator(url string, cfg *config.Config) (*CachedAggregator, error) {
 	if !strings.HasSuffix(url, "/aggregator.json") {
 		return nil, errors.New("invalid aggregator url")
 	}
@@ -59,7 +60,9 @@ func (c *Cache) GetAggregator(url string) (*CachedAggregator, error) {
 		return nil, err
 	}
 	req.Header.Add("User-Agent", sources.UserAgent)
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: cfg.General.Transport(),
+	}
 	if c.timeout > 0 {
 		client.Timeout = c.timeout
 	}

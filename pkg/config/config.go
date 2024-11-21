@@ -12,6 +12,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"strconv"
 	"time"
@@ -29,6 +30,25 @@ const DefaultConfigFile = "isduba.toml"
 const (
 	defaultAdvisoryUploadLimit   = 512 * 1024 * 1024
 	defaultAnonymousEventLogging = false
+)
+
+var (
+	defaultURLPorts      = []PortRange{{80, 80}, {443, 443}}
+	defaultBlockedRanges = []string{
+		// Taken from https://gist.github.com/stefansundin/32e8399f0c67c07c372b5ab51560e004
+		"127.0.0.0/8",    // IPv4 loopback
+		"10.0.0.0/8",     // RFC1918
+		"172.16.0.0/12",  // RFC1918
+		"192.168.0.0/16", // RFC1918
+		"169.254.0.0/16", // RFC3927 link-local
+		"::1/128",        // IPv6 loopback
+		"fe80::/10",      // IPv6 link-local
+		"fc00::/7",       // IPv6 unique local addr
+	}
+)
+
+const (
+	defaultBlockLoopback = true
 )
 
 const (
@@ -136,8 +156,11 @@ type HumanSize int64
 
 // General are the overarching settings.
 type General struct {
-	AdvisoryUploadLimit   HumanSize `toml:"advisory_upload_limit"`
-	AnonymousEventLogging bool      `toml:"anonymous_event_logging"`
+	AdvisoryUploadLimit   HumanSize   `toml:"advisory_upload_limit"`
+	AnonymousEventLogging bool        `toml:"anonymous_event_logging"`
+	AllowedPorts          []PortRange `toml:"allowed_ports"`
+	BlockLoopback         bool        `toml:"block_loopback"`
+	BlockedRanges         []IPRange   `toml:"blocked_ranges"`
 }
 
 // Log are the config options for the logging.
@@ -314,6 +337,9 @@ func Load(file string) (*Config, error) {
 		General: General{
 			AdvisoryUploadLimit:   defaultAdvisoryUploadLimit,
 			AnonymousEventLogging: defaultAnonymousEventLogging,
+			AllowedPorts:          nil,
+			BlockLoopback:         defaultBlockLoopback,
+			BlockedRanges:         nil,
 		},
 		Log: Log{
 			File:   defaultLogFile,
@@ -406,7 +432,25 @@ func Load(file string) (*Config, error) {
 	return cfg, nil
 }
 
+func parsedDefaultBlockedRanges() []IPRange {
+	brs := make([]IPRange, 0, len(defaultBlockedRanges))
+	for _, cidr := range defaultBlockedRanges {
+		_, blocked, err := net.ParseCIDR(cidr)
+		if err != nil {
+			panic(fmt.Sprintf("invalid CIDR %q", cidr))
+		}
+		brs = append(brs, IPRange{IPNet: blocked})
+	}
+	return brs
+}
+
 func (cfg *Config) presetEmptyDefaults() {
+	if cfg.General.AllowedPorts == nil {
+		cfg.General.AllowedPorts = defaultURLPorts
+	}
+	if cfg.General.BlockedRanges == nil {
+		cfg.General.BlockedRanges = parsedDefaultBlockedRanges()
+	}
 	if cfg.Client.KeycloakURL == "" {
 		cfg.Client.KeycloakURL = cfg.Keycloak.URL
 	}

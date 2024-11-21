@@ -38,7 +38,7 @@ type argumentedAggregator struct {
 
 func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	url := ctx.Query("url")
-	ca, err := c.am.Cache.GetAggregator(url)
+	ca, err := c.am.Cache.GetAggregator(url, c.cfg)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -135,7 +135,7 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ca, err := c.am.Cache.GetAggregator(url)
+	ca, err := c.am.Cache.GetAggregator(url, c.cfg)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
