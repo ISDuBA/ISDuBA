@@ -188,9 +188,9 @@
     }
   };
 
-  const checkName = (id: number, edit = false) => {
+  const checkName = (id: number | undefined = undefined, edit = false) => {
     const name = edit ? editedName : aggregator.name;
-    if (aggregators.find((i) => i.name === name && i.id !== id)) {
+    if (aggregators.find((i) => i.name === name && (i.id !== id || !id))) {
       if (edit) {
         validEditedName = false;
       } else {
@@ -760,9 +760,7 @@
               <Input
                 bind:value={aggregator.name}
                 on:input={() => {
-                  if (aggregator.id) {
-                    checkName(aggregator.id);
-                  }
+                  checkName();
                 }}
                 color={nameColor}
               ></Input>
