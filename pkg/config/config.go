@@ -161,6 +161,7 @@ type General struct {
 	AllowedPorts          []PortRange `toml:"allowed_ports"`
 	BlockLoopback         bool        `toml:"block_loopback"`
 	BlockedRanges         []IPRange   `toml:"blocked_ranges"`
+	AllowedIPs            []net.IP    `toml:"allowed_ips"`
 }
 
 // Log are the config options for the logging.

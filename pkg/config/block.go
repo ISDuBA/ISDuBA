@@ -69,6 +69,11 @@ func (g *General) blockedIP(ip net.IP) bool {
 	}
 	for _, blocked := range g.BlockedRanges {
 		if blocked.Contains(ip) {
+			for _, allowed := range g.AllowedIPs {
+				if allowed.Equal(ip) {
+					return false
+				}
+			}
 			return true
 		}
 	}

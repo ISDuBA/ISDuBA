@@ -61,6 +61,8 @@ The configuration consists of the following sections:
   ]
   ```
   Configuring this will replace this preset.
+- `allowed_ips`: Is a list of IPs which are allowed to overrule `blocked_ranges`.
+  This list is empty by default.
 
 ### <a name="section_log"></a> Section `[log]` Logging
 

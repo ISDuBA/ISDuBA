@@ -21,6 +21,7 @@
 #      "fe80::/10",      # IPv6 link-local
 #      "fc00::/7"        # IPv6 unique local addr
 # ]
+# allowed_ips = []
 
 # [log]
 # file = "isduba.log"
