@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gin-gonic/gin"
@@ -168,9 +169,15 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 	if url, ok = parse(ctx, endsWith("/aggregator.json"), ctx.PostForm("url")); !ok {
 		return
 	}
-	if active, ok = parse(ctx, strconv.ParseBool, ctx.PostForm("active")); !ok {
-		return
+	activeParam, ok := ctx.GetPostForm("active")
+	if ok {
+		act, ok := parse(ctx, strconv.ParseBool, activeParam)
+		active = act
+		if !ok {
+			return
+		}
 	}
+
 	const sql = `INSERT INTO aggregators (name, url, active) VALUES ($1, $2, $3) RETURNING id`
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -250,44 +257,98 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 func (c *Controller) updateAggregator(ctx *gin.Context) {
 	var (
 		ok        bool
-		name      string
-		url       string
-		active    bool
-		attention bool
+		name      *string
+		url       *string
+		active    *bool
+		attention *bool
 		id        int64
 	)
 	id, ok = parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
-	if name, ok = parse(ctx, notEmpty, ctx.PostForm("name")); !ok {
+	nameParam, ok := ctx.GetPostForm("name")
+	if ok {
+		n, ok := parse(ctx, notEmpty, nameParam)
+		name = &n
+		if !ok {
+			return
+		}
+	}
+	urlParam, ok := ctx.GetPostForm("url")
+	if ok {
+		u, ok := parse(ctx, endsWith("/aggregator.json"), urlParam)
+		url = &u
+		if !ok {
+			return
+		}
+	}
+	activeParam, ok := ctx.GetPostForm("active")
+	if ok {
+		act, ok := parse(ctx, strconv.ParseBool, activeParam)
+		active = &act
+		if !ok {
+			return
+		}
+	}
+	attentionParam, ok := ctx.GetPostForm("attention")
+	if ok {
+		att, ok := parse(ctx, strconv.ParseBool, attentionParam)
+		attention = &att
+		if !ok {
+			return
+		}
+	}
+
+	if name == nil && url == nil && active == nil && attention == nil {
+		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
 		return
 	}
-	if url, ok = parse(ctx, endsWith("/aggregator.json"), ctx.PostForm("url")); !ok {
-		return
-	}
-	if active, ok = parse(ctx, strconv.ParseBool, ctx.PostForm("active")); !ok {
-		return
-	}
-	if attention, ok = parse(ctx, strconv.ParseBool, ctx.PostForm("active")); !ok {
-		return
-	}
+
 	const (
-		prefix   = `UPDATE aggregators SET name = $1, url = $2, active = $3, checksum_ack = checksum_updated`
-		suffix   = ` WHERE id = $4`
-		sqlAtt   = prefix + ` - interval '1s'` + suffix
-		sqlNoAtt = prefix + suffix
+		prefix      = `UPDATE aggregators SET  `
+		suffix      = ` WHERE id = $`
+		sqlName     = `name = $`
+		sqlUrl      = `url = $`
+		sqlActive   = `active = $`
+		sqlAtt      = `checksum_ack = checksum_updated`
+		sqlAttTrue  = sqlAtt + ` - interval '1s'`
+		sqlAttFalse = sqlAtt
 	)
-	var updateSQL, msg string
-	if attention {
-		updateSQL = sqlAtt
-	} else {
-		updateSQL = sqlNoAtt
+	var msg string
+
+	updateSQL := prefix
+	sqlValues := []string{}
+	values := []any{}
+	i := 1
+	if name != nil {
+		sqlValues = append(sqlValues, sqlName+strconv.Itoa(i))
+		values = append(values, *name)
+		i++
 	}
+	if url != nil {
+		sqlValues = append(sqlValues, sqlUrl+strconv.Itoa(i))
+		values = append(values, *url)
+		i++
+	}
+	if active != nil {
+		sqlValues = append(sqlValues, sqlActive+strconv.Itoa(i))
+		values = append(values, *active)
+		i++
+	}
+	if attention != nil {
+		if *attention {
+			sqlValues = append(sqlValues, sqlAttTrue)
+		} else {
+			sqlValues = append(sqlValues, sqlAttFalse)
+		}
+	}
+	updateSQL += strings.Join(sqlValues, ",") + suffix + strconv.Itoa(i)
+	values = append(values, id)
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			tags, err := conn.Exec(rctx, updateSQL, name, url, active, id)
+			tags, err := conn.Exec(rctx, updateSQL, values...)
 			if err != nil {
 				return err
 			}
