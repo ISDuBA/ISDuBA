@@ -341,6 +341,7 @@ func Load(file string) (*Config, error) {
 			AllowedPorts:          nil,
 			BlockLoopback:         defaultBlockLoopback,
 			BlockedRanges:         nil,
+			AllowedIPs:            nil,
 		},
 		Log: Log{
 			File:   defaultLogFile,
