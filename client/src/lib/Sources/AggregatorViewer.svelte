@@ -503,7 +503,7 @@
             <div>
               <Button
                 on:click={async () => {
-                  if (aggregator.id) {
+                  if (aggregator.id !== undefined) {
                     await removeAggregator(aggregator.id);
                   }
                 }}
@@ -512,14 +512,14 @@
               >
                 <i class="bx bx-trash text-red-600"></i>
               </Button>
-              {#if aggregator.id && aggregator.id !== aggregatorToEdit}
+              {#if aggregator.id !== undefined && aggregator.id !== aggregatorToEdit}
                 <Button
                   on:click={(event) => {
                     event.stopPropagation();
                     event.preventDefault();
                     editedName = aggregator.name;
                     editedUrl = aggregator.url;
-                    if (aggregator.id) {
+                    if (aggregator.id !== undefined) {
                       toggleEditForm(aggregator.id);
                     }
                   }}
@@ -541,7 +541,7 @@
               ></Toggle>
             {/if}
           </div>
-          {#if aggregator.id && aggregator.id === aggregatorToEdit}
+          {#if aggregator.id !== undefined && aggregator.id === aggregatorToEdit}
             <div class="flex flex-wrap gap-4">
               <div class="flex flex-col items-center gap-1 md:flex-row">
                 <Label>Name</Label>
@@ -581,7 +581,7 @@
                   on:click={(event) => {
                     event.stopPropagation();
                     event.preventDefault();
-                    if (aggregator.id) {
+                    if (aggregator.id !== undefined) {
                       toggleEditForm(aggregator.id);
                     }
                   }}
