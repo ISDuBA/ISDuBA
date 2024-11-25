@@ -40,6 +40,29 @@ The configuration consists of the following sections:
   `g`/`G` 1000<sup>3</sup>/1024<sup>3</sup> and none for bytes.
 - `anonymous_event_logging`: Indicates that the event logging of the document
   workflow life cycle should be stored with no user. Defaults to `false`.
+- `allowed_ports`: Is a list of ports and port ranges the source manager and the aggregator
+  are allowed to contact.
+  Defaults to `[80, 443]`. Ranges may be passed as tuples like `[[0, 65535]]`.
+  Mixed entry types as `[80, 8080, [443, 444]]` are possible.
+- `block_loopback`: Is a bool value to block connecting to loopback devices
+  in source manager and aggregator handling. Defaults to `true`.
+- `blocked_ranges`: Is a list of IP ranges which the source manager and the aggregator
+  handling are not allowed to access. Defaults to:
+  ```
+  [
+  	"127.0.0.0/8",    # IPv4 loopback
+	"10.0.0.0/8",     # RFC1918
+	"172.16.0.0/12",  # RFC1918
+	"192.168.0.0/16", # RFC1918
+	"169.254.0.0/16", # RFC3927 link-local
+	"::1/128",        # IPv6 loopback
+	"fe80::/10",      # IPv6 link-local
+	"fc00::/7"        # IPv6 unique local addr
+  ]
+  ```
+  Configuring this will replace this preset.
+- `allowed_ips`: Is a list of IPs which are allowed to overrule `blocked_ranges`.
+  This list is empty by default.
 
 ### <a name="section_log"></a> Section `[log]` Logging
 

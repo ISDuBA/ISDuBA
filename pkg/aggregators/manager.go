@@ -31,14 +31,14 @@ type Manager struct {
 
 	done bool
 	fns  chan func(*Manager)
-	cfg  *config.Aggregators
+	cfg  *config.Config
 	db   *database.DB
 }
 
 // NewManager creates a new aggregators manager.
-func NewManager(cfg *config.Aggregators, db *database.DB) *Manager {
+func NewManager(cfg *config.Config, db *database.DB) *Manager {
 	return &Manager{
-		Cache: newCache(cfg.Timeout),
+		Cache: newCache(cfg.Aggregators.Timeout),
 		fns:   make(chan func(*Manager)),
 		cfg:   cfg,
 		db:    db,
@@ -47,7 +47,7 @@ func NewManager(cfg *config.Aggregators, db *database.DB) *Manager {
 
 // Run runs the aggregators manager.
 func (m *Manager) Run(ctx context.Context) {
-	ticker := time.NewTicker(m.cfg.UpdateInterval)
+	ticker := time.NewTicker(m.cfg.Aggregators.UpdateInterval)
 	defer ticker.Stop()
 	cacheTicker := time.NewTicker(holdingDuration)
 	defer cacheTicker.Stop()
@@ -114,7 +114,7 @@ func (m *Manager) refresh(ctx context.Context) {
 	fetch := func() {
 		defer wg.Done()
 		for agg := range toFetch {
-			cagg, err := m.Cache.GetAggregator(agg.url)
+			cagg, err := m.Cache.GetAggregator(agg.url, m.cfg)
 			if err != nil {
 				slog.Warn("fetching aggregator failed", "url", agg.url, "err", err)
 				continue

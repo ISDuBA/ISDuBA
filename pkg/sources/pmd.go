@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/internal/cache"
+	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/gocsaf/csaf/v3/util"
 )
@@ -51,7 +52,7 @@ func newPMDCache() *pmdCache {
 	}
 }
 
-func (pc *pmdCache) pmd(url string, timeout time.Duration) *CachedProviderMetadata {
+func (pc *pmdCache) pmd(url string, cfg *config.Config) *CachedProviderMetadata {
 
 	if cpmd, ok := pc.Get(url); ok {
 		return cpmd
@@ -60,8 +61,10 @@ func (pc *pmdCache) pmd(url string, timeout time.Duration) *CachedProviderMetada
 	header := http.Header{}
 	header.Add("User-Agent", UserAgent)
 
-	baseClient := &http.Client{}
-	if timeout > 0 {
+	baseClient := &http.Client{
+		Transport: cfg.General.Transport(),
+	}
+	if timeout := cfg.Sources.Timeout; timeout > 0 {
 		baseClient.Timeout = timeout
 	}
 
@@ -192,7 +195,7 @@ func (rps *resolvedPMDs) add(urls ...string) {
 const numURLResolvers = 5
 
 // resolve resolves all urls added with add to PMDs.
-func (rps resolvedPMDs) resolve(cache *pmdCache, timeout time.Duration) {
+func (rps resolvedPMDs) resolve(cache *pmdCache, cfg *config.Config) {
 	var (
 		wg        sync.WaitGroup
 		toResolve = make(chan *resolvedPMD)
@@ -200,7 +203,7 @@ func (rps resolvedPMDs) resolve(cache *pmdCache, timeout time.Duration) {
 	worker := func() {
 		defer wg.Done()
 		for tr := range toResolve {
-			cpmd := cache.pmd(tr.url, timeout)
+			cpmd := cache.pmd(tr.url, cfg)
 			if !cpmd.Valid() {
 				slog.Debug("Invalid PMD", "url", tr.url)
 				continue
