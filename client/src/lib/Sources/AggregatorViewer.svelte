@@ -502,7 +502,9 @@
             {/if}
             <div>
               <Button
-                on:click={async () => {
+                on:click={async (event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
                   if (aggregator.id !== undefined) {
                     await removeAggregator(aggregator.id);
                   }
@@ -523,7 +525,7 @@
                       toggleEditForm(aggregator.id);
                     }
                   }}
-                  class="hidden !p-2"
+                  class="!p-2"
                   color="light"
                 >
                   <i class="bx bx-pencil"></i>
@@ -531,14 +533,37 @@
               {/if}
             </div>
             {#if aggregator.active !== undefined}
-              <Toggle
+              <!-- svelte-ignore a11y-click-events-have-key-events -->
+              <!-- svelte-ignore a11y-no-static-element-interactions -->
+              <!--
+                Stopping the event propagation in the click event of the Toggle doesn't work when using
+                the mouse because it also consists of a span and a label element. These elements also fire
+                click events which aren't stopped.
+                Still, the Toggle needs the event listener so it can be toggled via keyboard.
+              -->
+              <div
                 on:click={(event) => {
-                  event.stopPropagation();
                   event.preventDefault();
+                  event.stopPropagation();
                   toggleActive(aggregator);
                 }}
-                bind:checked={aggregator.active}
-              ></Toggle>
+                class="mx-2 cursor-pointer p-2"
+              >
+                <Toggle
+                  on:click={(event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    toggleActive(aggregator);
+                  }}
+                  bind:checked={aggregator.active}
+                >
+                  {#if aggregator.active === true}
+                    <span>Active</span>
+                  {:else}
+                    <span>Not active</span>
+                  {/if}
+                </Toggle>
+              </div>
             {/if}
           </div>
           {#if aggregator.id !== undefined && aggregator.id === aggregatorToEdit}
