@@ -19,6 +19,9 @@
     TableHeadCell
   } from "flowbite-svelte";
   import { tablePadding } from "$lib/Table/defaults";
+  import { getReadableDateString } from "../helpers";
+
+  const intlFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "long" });
   const baseCellStyle = "py-0 px-2";
   const cellStyle = "whitespace-nowrap " + baseCellStyle;
 </script>
@@ -36,7 +39,9 @@
         {#each $appStore.webview.doc?.revisionHistory as entry}
           <TableBodyRow>
             <TableBodyCell tdClass={cellStyle}>{entry.number}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}>{entry.date}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}
+              >{getReadableDateString(entry.date, intlFormat)}</TableBodyCell
+            >
             <TableBodyCell tdClass={baseCellStyle + " min-w-52"}>{entry.summary}</TableBodyCell>
             <TableBodyCell
               >{#if entry.legacyVersion}{entry.legacyVersion}{/if}</TableBodyCell
