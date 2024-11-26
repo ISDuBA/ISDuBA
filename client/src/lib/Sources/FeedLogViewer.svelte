@@ -9,25 +9,44 @@
 -->
 
 <script lang="ts">
-  import { TableBodyCell, Spinner, Label, Select, PaginationItem } from "flowbite-svelte";
+  import {
+    TableBodyCell,
+    Spinner,
+    Label,
+    MultiSelect,
+    PaginationItem,
+    Select
+  } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { onMount } from "svelte";
-  import { fetchFeedLogs, fetchAllFeedLogs, fetchFeed, type Feed } from "./source";
+  import {
+    fetchFeedLogs,
+    fetchAllFeedLogs,
+    fetchFeed,
+    type Feed,
+    getLogLevels,
+    LogLevel
+  } from "./source";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import { DAY_MS } from "$lib/time";
   import Button from "flowbite-svelte/Button.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";
+  import DateRange from "$lib/Components/DateRange.svelte";
 
   export let params: any = null;
 
+  type LogLevelItem = { value: LogLevel; name: string };
+
   let logs: any[] = [];
+  let logLevels: LogLevelItem[] = [];
   let loadingLogs: boolean = false;
   let loadFeedError: ErrorDetails | null = null;
   let loadLogsError: ErrorDetails | null = null;
+  let loadConfigError: ErrorDetails | null = null;
 
   let feed: Feed | null = null;
 
@@ -37,6 +56,9 @@
   let currentPage = 1;
   let numberOfPages = 1000;
   let searchTerm = "";
+  let selectedLogLevels: LogLevel[] = [];
+  let from = new Date(0).toISOString().split("T")[0];
+  let to = new Date(Date.now()).toISOString().split("T")[0];
 
   $: numberOfPages = Math.ceil(count / limit);
 
@@ -87,7 +109,16 @@
       return;
     }
     loadingLogs = true;
-    let result = await fetchFeedLogs(feed.id, offset, limit, searchTerm, true);
+    let result = await fetchFeedLogs(
+      feed.id,
+      offset,
+      limit,
+      new Date(from),
+      new Date(to),
+      searchTerm,
+      selectedLogLevels,
+      true
+    );
     loadingLogs = false;
     if (result.ok) {
       [logs, count] = result.value;
@@ -120,6 +151,13 @@
   };
 
   onMount(async () => {
+    const resp = await getLogLevels();
+    if (resp.ok) {
+      logLevels = resp.value;
+      selectedLogLevels = logLevels.map((l) => l.value);
+    } else {
+      loadConfigError = resp.error;
+    }
     let id = params?.id;
     if (id) {
       await loadFeed(id);
@@ -132,7 +170,21 @@
   <SectionHeader title={feed.label}></SectionHeader>
 
   <div class="mb-2 flex flex-col gap-4">
-    <CSearch on:search={loadLogs} bind:searchTerm></CSearch>
+    <div class="flex flex-wrap gap-6">
+      <CSearch on:search={loadLogs} bind:searchTerm></CSearch>
+      <DateRange on:change={loadLogs} bind:from bind:to></DateRange>
+      <div class="flex w-full items-center gap-1">
+        <Label for="log-level-selection">Log levels:</Label>
+        <MultiSelect
+          class="min-w-96"
+          id="log-level-selection"
+          items={logLevels}
+          placeholder="(all)"
+          bind:value={selectedLogLevels}
+          on:change={loadLogs}
+        />
+      </div>
+    </div>
     <div class="flex w-full flex-row flex-wrap items-center justify-between gap-3">
       <div class="flex items-baseline gap-2">
         <Select
@@ -259,6 +311,7 @@
 
 <ErrorMessage error={loadLogsError}></ErrorMessage>
 <ErrorMessage error={loadFeedError}></ErrorMessage>
+<ErrorMessage error={loadConfigError}></ErrorMessage>
 
 {#if feed?.id}
   <ImportStats

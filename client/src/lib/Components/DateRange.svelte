@@ -25,15 +25,21 @@
   };
 </script>
 
-<Label for={fromId}
-  ><span>From:</span>
-  <Input let:props>
-    <input on:change={onChange} id={fromId} type="date" {...props} bind:value={from} />
-  </Input>
-</Label>
-<Label for={toId}
-  ><span>To:</span>
-  <Input let:props>
-    <input on:change={onChange} id={toId} type="date" {...props} bind:value={to} />
-  </Input>
-</Label>
+<div class="flex gap-4">
+  <div class="flex items-center gap-1">
+    <Label for={fromId}>
+      <span>From:</span>
+    </Label>
+    <Input class="h-fit" let:props>
+      <input on:change={onChange} id={fromId} type="date" {...props} bind:value={from} />
+    </Input>
+  </div>
+  <div class="flex items-center gap-1">
+    <Label for={toId}>
+      <span>To:</span>
+    </Label>
+    <Input class="h-fit" let:props>
+      <input on:change={onChange} id={toId} type="date" {...props} bind:value={to} />
+    </Input>
+  </div>
+</div>
