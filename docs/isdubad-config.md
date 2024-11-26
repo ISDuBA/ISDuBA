@@ -50,7 +50,7 @@ The configuration consists of the following sections:
   handling are not allowed to access. Defaults to:
   ```
   [
-  	"127.0.0.0/8",    # IPv4 loopback
+	"127.0.0.0/8",    # IPv4 loopback
 	"10.0.0.0/8",     # RFC1918
 	"172.16.0.0/12",  # RFC1918
 	"192.168.0.0/16", # RFC1918

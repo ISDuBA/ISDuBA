@@ -15,14 +15,14 @@
 ISDuBA is built to download CSAF documents from the internet.
 The places where these are searched for are configured by users
 with role `source-manager` and external documents like the
-`provider-metadata.json`.
+`provider-metadata.json` files.
 
 As regular operation the `isdubad` daemon does the downloading
-in the backgroud.
+in the background.
 
 This combination may be misused as a scanning device in form of blind
 [Server Side Request Forgery (SSRF)](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery).
-_Blind_ because users may see that those scanning requests for CSAF things
+_Blind_ because users may see that those scanning requests for CSAF contents
 fail, but do not get the contents back.
 
 To reduce the risk, `isdubad` comes with a predefined set of rules which
