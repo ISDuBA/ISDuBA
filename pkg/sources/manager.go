@@ -58,8 +58,8 @@ func (InvalidArgumentError) Is(target error) bool {
 const (
 	// refreshDuration is the fallback duration for feeds to be checked for refresh.
 	refreshDuration = time.Minute
-	// logCleaningDuration is the interval to remove out-dated log entries.
-	logCleaningDuration = 20 * time.Minute
+	// feedLogCleaningDuration is the interval to remove out-dated log entries.
+	feedLogCleaningDuration = 20 * time.Minute
 )
 
 type downloadJob struct {
@@ -364,12 +364,15 @@ func (m *Manager) Run(ctx context.Context) {
 		go m.download(&wg)
 	}
 
+	// Cleaning feed logs at start.
+	m.cleanFeedLogs(ctx)
+
 	refreshTicker := time.NewTicker(refreshDuration)
 	defer refreshTicker.Stop()
 	checkingTicker := time.NewTicker(m.cfg.Sources.Checking)
 	defer checkingTicker.Stop()
-	logCleaningTicker := time.NewTicker(logCleaningDuration)
-	defer logCleaningTicker.Stop()
+	feedLogCleaningTicker := time.NewTicker(feedLogCleaningDuration)
+	defer feedLogCleaningTicker.Stop()
 
 out:
 	for !m.done {
@@ -385,7 +388,7 @@ out:
 			break out
 		case <-checkingTicker.C:
 			m.checkSources()
-		case <-logCleaningTicker.C:
+		case <-feedLogCleaningTicker.C:
 			m.cleanFeedLogs(ctx)
 		case <-refreshTicker.C:
 		}
@@ -413,7 +416,7 @@ func (m *Manager) cleanFeedLogs(ctx context.Context) {
 		// Re-enable log cleaning.
 		defer func() { m.fns <- (*Manager).enableFeedLogCleaning }()
 		const deleteSQL = `DELETE FROM feed_logs ` +
-			`WHERE time < current_timestamp - $1`
+			`WHERE time < current_timestamp - $1::interval`
 		if err := m.db.Run(
 			ctx,
 			func(ctx context.Context, conn *pgxpool.Conn) error {
