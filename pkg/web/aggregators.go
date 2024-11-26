@@ -255,96 +255,70 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 }
 
 func (c *Controller) updateAggregator(ctx *gin.Context) {
-	var (
-		ok        bool
-		name      *string
-		url       *string
-		active    *bool
-		attention *bool
-		id        int64
-	)
-	id, ok = parse(ctx, toInt64, ctx.Param("id"))
-	if !ok {
-		return
-	}
-	nameParam, ok := ctx.GetPostForm("name")
-	if ok {
-		n, ok := parse(ctx, notEmpty, nameParam)
-		name = &n
-		if !ok {
-			return
-		}
-	}
-	urlParam, ok := ctx.GetPostForm("url")
-	if ok {
-		u, ok := parse(ctx, endsWith("/aggregator.json"), urlParam)
-		url = &u
-		if !ok {
-			return
-		}
-	}
-	activeParam, ok := ctx.GetPostForm("active")
-	if ok {
-		act, ok := parse(ctx, strconv.ParseBool, activeParam)
-		active = &act
-		if !ok {
-			return
-		}
-	}
-	attentionParam, ok := ctx.GetPostForm("attention")
-	if ok {
-		att, ok := parse(ctx, strconv.ParseBool, attentionParam)
-		attention = &att
-		if !ok {
-			return
-		}
-	}
-
-	if name == nil && url == nil && active == nil && attention == nil {
-		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
-		return
-	}
-
 	const (
-		prefix      = `UPDATE aggregators SET  `
-		suffix      = ` WHERE id = $`
-		sqlName     = `name = $`
-		sqlUrl      = `url = $`
-		sqlActive   = `active = $`
+		prefix      = `UPDATE aggregators SET `
+		suffix      = ` WHERE id = $1`
 		sqlAtt      = `checksum_ack = checksum_updated`
 		sqlAttTrue  = sqlAtt + ` - interval '1s'`
 		sqlAttFalse = sqlAtt
 	)
-	var msg string
+	var (
+		values []any
+		fields []string
+		add    = func(field string, value any) {
+			values = append(values, value)
+			fields = append(fields, fmt.Sprintf("%s = $%d", field, len(values)))
+		}
+	)
+	id, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
+		return
+	}
+	values = append(values, id)
 
-	updateSQL := prefix
-	sqlValues := []string{}
-	values := []any{}
-	i := 1
-	if name != nil {
-		sqlValues = append(sqlValues, sqlName+strconv.Itoa(i))
-		values = append(values, *name)
-		i++
+	if nameParam, ok := ctx.GetPostForm("name"); ok {
+		name, ok := parse(ctx, notEmpty, nameParam)
+		if !ok {
+			return
+		}
+		add("name", name)
 	}
-	if url != nil {
-		sqlValues = append(sqlValues, sqlUrl+strconv.Itoa(i))
-		values = append(values, *url)
-		i++
+	if urlParam, ok := ctx.GetPostForm("url"); ok {
+		u, ok := parse(ctx, endsWith("/aggregator.json"), urlParam)
+		if !ok {
+			return
+		}
+		add("url", u)
 	}
-	if active != nil {
-		sqlValues = append(sqlValues, sqlActive+strconv.Itoa(i))
-		values = append(values, *active)
-		i++
+	if activeParam, ok := ctx.GetPostForm("active"); ok {
+		act, ok := parse(ctx, strconv.ParseBool, activeParam)
+		if !ok {
+			return
+		}
+		add("active", act)
 	}
-	if attention != nil {
-		if *attention {
-			sqlValues = append(sqlValues, sqlAttTrue)
+	if attentionParam, ok := ctx.GetPostForm("attention"); ok {
+		att, ok := parse(ctx, strconv.ParseBool, attentionParam)
+		if !ok {
+			return
+		}
+		if att {
+			fields = append(fields, sqlAttTrue)
 		} else {
-			sqlValues = append(sqlValues, sqlAttFalse)
+			fields = append(fields, sqlAttFalse)
 		}
 	}
-	updateSQL += strings.Join(sqlValues, ",") + suffix + strconv.Itoa(i)
-	values = append(values, id)
+
+	if len(fields) == 0 {
+		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
+		return
+	}
+
+	var changed bool
+
+	updateSQL := prefix + strings.Join(fields, ",") + suffix
+	slog.Debug("update aggregators", "sql", updateSQL, "values", values)
+
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
@@ -352,17 +326,23 @@ func (c *Controller) updateAggregator(ctx *gin.Context) {
 			if err != nil {
 				return err
 			}
-			if tags.RowsAffected() > 0 {
-				msg = "changed"
-			} else {
-				msg = "unchanged"
-			}
+			changed = tags.RowsAffected() > 0
 			return nil
 		}, 0,
 	); err != nil {
+		var pgErr *pgconn.PgError
+		// Unique constraint violation
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		slog.Error("updating aggregator failed", "error", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"msg": msg})
+	if changed {
+		ctx.JSON(http.StatusOK, gin.H{"msg": "changed"})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
+	}
 }
