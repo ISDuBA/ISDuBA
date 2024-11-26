@@ -36,7 +36,7 @@
   import type { HttpResponse } from "$lib/types";
   import DocumentUpload from "$lib/Sources/DocumentUpload.svelte";
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
-  import AggregatorViewer from "$lib/Sources/AggregatorViewer.svelte";
+  import AggregatorViewer from "$lib/Sources/Aggregators/AggregatorViewer.svelte";
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
   import { onMount } from "svelte";
 

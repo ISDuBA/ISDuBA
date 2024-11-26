@@ -50,37 +50,7 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import { scale } from "svelte/transition";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
-
-  type FeedInfo = {
-    id?: number;
-    sourceID?: number;
-    url: string;
-    highlight: boolean;
-  };
-
-  type SourceInfo = {
-    id?: number;
-    name: string;
-    feedsAvailable: number;
-    feedsSubscribed: number;
-    feeds: FeedInfo[];
-    expand: boolean;
-  };
-
-  type AggregatorRole = {
-    label: string;
-    abbreviation: string;
-  };
-
-  type AggregatorEntry = {
-    name: string;
-    role: AggregatorRole;
-    url: string;
-    feedsAvailable: number;
-    feedsSubscribed: number;
-    availableSources: SourceInfo[];
-    expand: boolean;
-  };
+  import type { AggregatorEntry, AggregatorRole, FeedInfo, SourceInfo } from "./aggregator";
 
   const textFlushOpen = "text-black dark:text-white";
   const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full`;
