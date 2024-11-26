@@ -23,6 +23,7 @@
 
   const clearInput = () => {
     searchTerm = "";
+    dispatchSearchEvent();
   };
 </script>
 
