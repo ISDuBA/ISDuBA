@@ -167,9 +167,20 @@
 </script>
 
 {#if feed}
-  <SectionHeader title={feed.label}></SectionHeader>
+  <SectionHeader title={feed.label}>
+    <div slot="right">
+      <Button
+        title="Download all logs"
+        on:click={downloadFeedLogs}
+        color="light"
+        class={`ml-3 h-8 py-1 text-xs`}
+      >
+        <i class="bx bx-download text-lg"></i>
+      </Button>
+    </div>
+  </SectionHeader>
 
-  <div class="mb-2 flex flex-col gap-4">
+  <div class="mb-4 flex flex-col gap-4">
     <div class="flex flex-wrap gap-6">
       <CSearch on:search={loadLogs} bind:searchTerm></CSearch>
       <DateRange on:change={loadLogs} bind:from bind:to></DateRange>
@@ -258,13 +269,6 @@
             <i class="bx bx-arrow-to-right"></i>
           </PaginationItem>
         </div>
-
-        <Button
-          title="Download all logs"
-          on:click={downloadFeedLogs}
-          color="light"
-          class={`ml-3 h-8 py-1 text-xs`}><i class="bx bx-download"></i></Button
-        >
       </div>
       <div class="mr-3 text-nowrap">
         {count} entries found
