@@ -257,6 +257,15 @@
     return [...unsubscribedFeeds, ...subscribedFeeds];
   };
 
+  const sortFeeds = (a: FeedInfo, b: FeedInfo) => {
+    if (a.highlight && !b.highlight) {
+      return 1;
+    } else if (!a.highlight && b.highlight) {
+      return -1;
+    }
+    return 0;
+  };
+
   const getSources = (entry: Subscription): SourceInfo[] =>
     entry.subscriptions?.map(
       (s) =>
@@ -730,7 +739,7 @@
                     <div
                       class={entry.feedsSubscribed === 0
                         ? ""
-                        : "ms-3 rounded-md border border-solid border-gray-300 p-2 dark:border-0 dark:bg-gray-700"}
+                        : "rounded-md border border-solid border-gray-300 p-2 dark:border-0 dark:bg-gray-700"}
                     >
                       <div class="mb-1 flex items-center gap-2 text-sm text-black dark:text-white">
                         {#if source.id !== undefined}
@@ -756,7 +765,7 @@
                           </Button>
                         {/if}
                       </div>
-                      {#each source.feeds as feed}
+                      {#each source.feeds.toSorted(sortFeeds) as feed}
                         {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
                         <div class="mb-2 ms-4">
                           <div>

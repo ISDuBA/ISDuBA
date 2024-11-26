@@ -12,7 +12,7 @@
   export let filled = false;
 
   const background = "bg-gray-600 dark:bg-gray-600";
-  $: borderColor = filled ? "gray" : "amber";
+  const borderColor = "gray";
   $: border = `border border-${borderColor}-600 dark:border-${borderColor}-700`;
 </script>
 
