@@ -13,7 +13,7 @@
 
   const background = "bg-gray-600 dark:bg-gray-600";
   const borderColor = "gray";
-  $: border = `border border-${borderColor}-600 dark:border-${borderColor}-700`;
+  $: border = `border border-${borderColor}-600`;
 </script>
 
 <span class={`${filled ? background : ""} ${border} inline-block h-3 w-3 rounded-[3pt]`}></span>
