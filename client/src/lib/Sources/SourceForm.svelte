@@ -294,7 +294,7 @@
           </div>
         </div>
         <div>
-          <Label>Rate</Label>
+          <Label>Downloads/s</Label>
           <Input
             type="number"
             step="0.01"
@@ -305,7 +305,7 @@
           />
         </div>
         <div>
-          <Label>Slots</Label>
+          <Label>Concurrent downloads</Label>
           <Input
             type="number"
             step="1"
