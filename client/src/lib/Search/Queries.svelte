@@ -33,8 +33,8 @@
   export let selectedIndex = -1;
   export let queryString: any;
   let ignoredQueries: Query[] = [];
-  let errorMessage: ErrorDetails | null;
-  let advancedQueryErrorMessage: ErrorDetails | null;
+  let errorMessage: ErrorDetails | null = null;
+  let advancedQueryErrorMessage: ErrorDetails | null = null;
   const globalQueryButtonColor = "primary";
   const defaultQueryButtonClass = "flex flex-col p-0";
   const queryButtonClass = "bg-white hover:bg-gray-100";

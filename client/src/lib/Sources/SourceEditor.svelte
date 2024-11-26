@@ -45,12 +45,12 @@
   let modalTitle = "";
   let modalCallback: any;
 
-  let saveSourceError: ErrorDetails | null;
-  let loadSourceError: ErrorDetails | null;
-  let loadFeedError: ErrorDetails | null;
-  let saveFeedError: ErrorDetails | null;
-  let loadPmdError: ErrorDetails | null;
-  let feedError: ErrorDetails | null;
+  let saveSourceError: ErrorDetails | null = null;
+  let loadSourceError: ErrorDetails | null = null;
+  let loadFeedError: ErrorDetails | null = null;
+  let saveFeedError: ErrorDetails | null = null;
+  let loadPmdError: ErrorDetails | null = null;
+  let feedError: ErrorDetails | null = null;
   let pmd: CSAFProviderMetadata;
   let feeds: Feed[] = [];
 
