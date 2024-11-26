@@ -17,7 +17,8 @@
     parseFeeds,
     saveSource,
     saveFeeds,
-    fetchSourceDefaultConfig
+    fetchSourceDefaultConfig,
+    resetSourceAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Input, Label, Button, Spinner, List, DescriptionList } from "flowbite-svelte";
@@ -110,6 +111,11 @@
     let feedResult = await saveFeeds(source, pmdFeeds);
     if (!feedResult.ok) {
       errorMessage = feedResult.error;
+    } else {
+      let attenttionResult = await resetSourceAttention(source);
+      if (!attenttionResult.ok) {
+        errorMessage = attenttionResult.error;
+      }
     }
     push(`/sources/${result.value.id}`);
   };
