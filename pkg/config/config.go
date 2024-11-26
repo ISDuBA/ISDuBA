@@ -124,6 +124,7 @@ const (
 	defaultSourcesAge            = 17520 * time.Hour
 	defaultSourcesAESKey         = ""
 	defaultSourcesChecking       = 2 * time.Hour
+	defaultKeepFeedLogs          = 3 * 31 * 24 * time.Hour
 )
 
 const (
@@ -229,6 +230,7 @@ type Sources struct {
 	DefaultAge        time.Duration         `toml:"default_age"`
 	AESKey            string                `toml:"aes_key"`
 	Checking          time.Duration         `toml:"checking"`
+	KeepFeedLogs      time.Duration         `toml:"keep_feed_logs"`
 }
 
 // ForwardTarget are the config options for the forward target.
@@ -397,6 +399,7 @@ func Load(file string) (*Config, error) {
 			SignatureCheck:    defaultSourcesSignatureCheck,
 			DefaultAge:        defaultSourcesAge,
 			Checking:          defaultSourcesChecking,
+			KeepFeedLogs:      defaultKeepFeedLogs,
 		},
 		Forwarder: Forwarder{
 			UpdateInterval: defaultForwarderUpdateInterval,
@@ -514,6 +517,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_DEFAULT_AGE", storeDuration(&cfg.Sources.DefaultAge)},
 		envStore{"ISDUBA_SOURCES_AES_KEY", storeString(&cfg.Sources.AESKey)},
 		envStore{"ISDUBA_SOURCES_CHECKING", storeDuration(&cfg.Sources.Checking)},
+		envStore{"ISDUBA_SOURCES_KEEP_FEED_LOGS", storeDuration(&cfg.Sources.KeepFeedLogs)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_URL", storeString(&cfg.RemoteValidator.URL)},
 		envStore{"ISDUBA_REMOTE_VALIDATOR_CACHE", storeString(&cfg.RemoteValidator.Cache)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_URL", storeString(&cfg.Client.KeycloakURL)},

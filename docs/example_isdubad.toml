@@ -83,6 +83,7 @@
 # timeout = "30s"
 # default_age = "17520h"
 # checking = "2h"
+# keep_feed_logs = "2232h"
 
 # [remote_validator]
 # url = ""

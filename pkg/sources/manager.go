@@ -55,8 +55,12 @@ func (InvalidArgumentError) Is(target error) bool {
 	return ok
 }
 
-// refreshDuration is the fallback duration for feeds to be checked for refresh.
-const refreshDuration = time.Minute
+const (
+	// refreshDuration is the fallback duration for feeds to be checked for refresh.
+	refreshDuration = time.Minute
+	// logCleaningDuration is the interval to remove out-dated log entries.
+	logCleaningDuration = 20 * time.Minute
+)
 
 type downloadJob struct {
 	l location
@@ -84,7 +88,8 @@ type Manager struct {
 	usedSlots int
 	uniqueID  int64
 
-	blockSourceChecking bool
+	blockSourceChecking  bool
+	blockFeedLogCleaning bool
 }
 
 // SourceUpdateResult is return by UpdateSource.
@@ -363,6 +368,9 @@ func (m *Manager) Run(ctx context.Context) {
 	defer refreshTicker.Stop()
 	checkingTicker := time.NewTicker(m.cfg.Sources.Checking)
 	defer checkingTicker.Stop()
+	logCleaningTicker := time.NewTicker(logCleaningDuration)
+	defer logCleaningTicker.Stop()
+
 out:
 	for !m.done {
 		m.pmdCache.Cleanup()
@@ -377,11 +385,45 @@ out:
 			break out
 		case <-checkingTicker.C:
 			m.checkSources()
+		case <-logCleaningTicker.C:
+			m.cleanFeedLogs(ctx)
 		case <-refreshTicker.C:
 		}
 	}
 	close(m.jobs)
 	wg.Wait()
+}
+
+func (m *Manager) enableFeedLogCleaning(context.Context) {
+	m.blockFeedLogCleaning = false
+}
+
+func (m *Manager) cleanFeedLogs(ctx context.Context) {
+	// Check if feed log cleaning is forbidden.
+	if m.cfg.Sources.KeepFeedLogs <= 0 {
+		return
+	}
+	// Check if we are already cleaning the logs.
+	if m.blockFeedLogCleaning {
+		return
+	}
+	// Prevent stacking calls.
+	m.blockFeedLogCleaning = true
+	go func() {
+		// Re-enable log cleaning.
+		defer func() { m.fns <- (*Manager).enableFeedLogCleaning }()
+		const deleteSQL = `DELETE FROM feed_logs ` +
+			`WHERE time < current_timestamp - $1`
+		if err := m.db.Run(
+			ctx,
+			func(ctx context.Context, conn *pgxpool.Conn) error {
+				_, err := conn.Exec(ctx, deleteSQL, m.cfg.Sources.KeepFeedLogs)
+				return err
+			}, 0,
+		); err != nil {
+			slog.Error("Cleaning feed logs failed", "err", err)
+		}
+	}()
 }
 
 type prefetchedPMD struct {
