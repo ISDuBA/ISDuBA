@@ -614,10 +614,11 @@ const fetchFeedLogs = async (
   id: number,
   offset: number,
   limit: number,
+  search: string = "",
   count: boolean = false
 ): Promise<Result<[any[], number], ErrorDetails>> => {
   const resp = await request(
-    `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}`,
+    `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}&search=${search}`,
     "GET"
   );
   if (resp.ok) {
