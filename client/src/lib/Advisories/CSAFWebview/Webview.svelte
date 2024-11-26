@@ -158,7 +158,9 @@
         </div>
       {/if}
       {#if aliases}
-        <ValueList label="Aliases" values={aliases} />
+        <div class="mb-4">
+          <ValueList label="Aliases" values={aliases} />
+        </div>
       {/if}
       {#if showTab(placeToPhase.revisionHistory)}
         <Tabs
