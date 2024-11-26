@@ -276,41 +276,46 @@
     </div>
   </div>
 
-  <CustomTable
-    title="Logs"
-    headers={[
-      {
-        label: "Time",
-        attribute: "time"
-      },
-      {
-        label: "level",
-        attribute: "level"
-      },
-      {
-        label: "Message",
-        attribute: "msg"
-      }
-    ]}
+  <div
+    class="mb-8 overflow-scroll"
+    style={limit === 10 ? "min-height: 350pt;" : "min-height: 500pt;"}
   >
-    {#each logs as log, index (index)}
-      <tr>
-        <TableBodyCell {tdClass}>{log.time}</TableBodyCell>
-        <TableBodyCell {tdClass}>{log.level}</TableBodyCell>
-        <TableBodyCell {tdClass}>{log.msg}</TableBodyCell>
-      </tr>
-    {/each}
-    <div slot="bottom">
-      <div
-        class:invisible={!loadingLogs}
-        class={loadingLogs ? "loadingFadeIn" : ""}
-        class:mb-4={true}
-      >
-        Loading ...
-        <Spinner color="gray" size="4"></Spinner>
+    <CustomTable
+      title="Logs"
+      headers={[
+        {
+          label: "Time",
+          attribute: "time"
+        },
+        {
+          label: "level",
+          attribute: "level"
+        },
+        {
+          label: "Message",
+          attribute: "msg"
+        }
+      ]}
+    >
+      {#each logs as log, index (index)}
+        <tr>
+          <TableBodyCell {tdClass}>{log.time}</TableBodyCell>
+          <TableBodyCell {tdClass}>{log.level}</TableBodyCell>
+          <TableBodyCell {tdClass}>{log.msg}</TableBodyCell>
+        </tr>
+      {/each}
+      <div slot="bottom">
+        <div
+          class:invisible={!loadingLogs}
+          class={loadingLogs ? "loadingFadeIn" : ""}
+          class:mb-4={true}
+        >
+          Loading ...
+          <Spinner color="gray" size="4"></Spinner>
+        </div>
       </div>
-    </div>
-  </CustomTable>
+    </CustomTable>
+  </div>
 {/if}
 
 <ErrorMessage error={loadLogsError}></ErrorMessage>
