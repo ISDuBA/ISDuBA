@@ -27,8 +27,8 @@
   };
 </script>
 
-<div class={containerClass ?? "relative flex"}>
-  <div class="relative w-96">
+<div class={containerClass ?? "relative flex w-full md:w-fit"}>
+  <div class="relative w-full md:w-96">
     <Input
       defaultClass="w-full disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right !rounded-e-none"
       size="md"

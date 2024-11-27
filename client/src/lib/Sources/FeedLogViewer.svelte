@@ -196,10 +196,10 @@
   </SectionHeader>
 
   <div class="mb-4 flex flex-col gap-4">
-    <div class="flex flex-wrap gap-6">
+    <div class="flex flex-wrap gap-x-8 gap-y-6">
       <CSearch on:search={loadLogs} bind:searchTerm></CSearch>
       <DateRange clearable on:change={loadLogs} bind:from bind:to></DateRange>
-      <div class="flex w-full items-center gap-1">
+      <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
         {#each logLevels as level}
           <CCheckbox

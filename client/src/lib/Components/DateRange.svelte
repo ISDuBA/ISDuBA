@@ -50,7 +50,7 @@
   };
 </script>
 
-<div class="flex gap-4">
+<div class="flex flex-wrap gap-4">
   <div class="flex items-center gap-1">
     <Label for={fromId}>
       <span>From:</span>
