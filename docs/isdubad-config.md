@@ -145,6 +145,9 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `timeout`: How long should be waited for HTTP responses in sources manager? Defaults to `"30s"`.
 - `default_age`: The default maximum age of the downloaded documents. A value of 0 means that there is no limit. Defaults to `"17520h"`, i.e. 2 years.
 - `checking`: Time interval of re-checking the sources for changes. Defaults to `"2h"`.
+- `keep_feed_logs`: Time interval to keep the feed log entries. Defaults to `"2232h"` 3 * 31 * 24 hours ~ 3 month.
+   Setting this to a duration less or equal zero (e.g. `"0s"`) disables the removal of feed log entries.
+   The database is checked three times an hour if entries are outdated.
 
 ### <a name="section_remote_validator"></a> Section `[remote_validator]` Remote validator
 
