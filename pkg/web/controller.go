@@ -117,9 +117,9 @@ func (c *Controller) Bind() http.Handler {
 	api.DELETE("/advisory/:publisher/:trackingid", authAdm, c.deleteAdvisory)
 
 	// Comments
-	api.POST("/comments/:document", authEdRe, c.createComment)
+	api.POST("/comments/:document", authEdReAd, c.createComment)
 	api.GET("/comments/:publisher/:trackingid", authEdReAdAu, c.viewComments)
-	api.PUT("/comments/post/:id", authEdRe, c.updateComment)
+	api.PUT("/comments/post/:id", authEdReAd, c.updateComment)
 	api.GET("/comments/post/:id", authEdReAdAu, c.viewComment)
 
 	// Stored queries

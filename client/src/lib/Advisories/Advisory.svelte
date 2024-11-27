@@ -50,22 +50,26 @@
   let processRunning = false;
   let lastSuccessfulForwardTarget: number | undefined;
 
-  $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(advisoryState)) {
-    if (appStore.isReviewer() && [REVIEW].includes(advisoryState)) {
-      isCommentingAllowed = true;
-    } else {
-      isCommentingAllowed = appStore.isEditor();
-    }
+  $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
+    isCommentingAllowed = appStore.isEditor();
+  } else if ([REVIEW].includes(advisoryState)) {
+    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+  } else if ([ARCHIVED].includes(advisoryState)) {
+    isCommentingAllowed = appStore.isEditor() || appStore.isAdmin();
+  } else if ([DELETE].includes(advisoryState)) {
+    isCommentingAllowed = appStore.isAdmin();
   } else {
     isCommentingAllowed = false;
   }
+
   let isCalculatingAllowed: boolean;
   $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
     isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
   } else {
     isCalculatingAllowed = false;
   }
-  $: canSeeCommentArea = appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor();
+  $: canSeeCommentArea =
+    appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin();
 
   const setAsReadTimeout: number[] = [];
   let isDiffOpen = false;
@@ -431,7 +435,9 @@
           {#if isCommentingAllowed && !isSSVCediting}
             <div class="mt-6">
               <Label class="mb-2" for="comment-textarea"
-                >{advisoryState === ARCHIVED ? "Reactivate with comment" : "New Comment"}</Label
+                >{advisoryState === ARCHIVED && appStore.isEditor()
+                  ? "Reactivate with comment"
+                  : "New Comment"}</Label
               >
               <CommentTextArea
                 on:focus={() => {
