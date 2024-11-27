@@ -201,7 +201,7 @@
           clearSearch();
         }}>Documents</Button
       >
-      {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+      {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAdmin() || appStore.isAuditor()}
         <Button
           size="xs"
           color="light"
