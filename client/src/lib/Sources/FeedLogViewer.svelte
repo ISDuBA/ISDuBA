@@ -179,6 +179,7 @@
       selectedLogLevels.push(level);
     }
     isAllSelected = selectedLogLevels.length === 0;
+    loadLogs();
   };
 
   const toggleAllCheckbox = (event: any) => {
@@ -186,6 +187,7 @@
       selectedLogLevels = [logLevels[0].value];
     }
     isAllSelected = !isAllSelected;
+    loadLogs();
   };
 </script>
 
