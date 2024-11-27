@@ -201,17 +201,19 @@
           clearSearch();
         }}>Documents</Button
       >
-      <Button
-        size="xs"
-        color="light"
-        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.EVENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
-          query.queryType = SEARCHTYPES.EVENT;
-          query.columns = SEARCHPAGECOLUMNS.EVENT;
-          query.orders = ["-time"];
-          clearSearch();
-        }}>Events</Button
-      >
+      {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()}
+        <Button
+          size="xs"
+          color="light"
+          class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.EVENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
+          on:click={() => {
+            query.queryType = SEARCHTYPES.EVENT;
+            query.columns = SEARCHPAGECOLUMNS.EVENT;
+            query.orders = ["-time"];
+            clearSearch();
+          }}>Events</Button
+        >
+      {/if}
     </ButtonGroup>
   {/if}
 </div>
