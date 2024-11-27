@@ -29,7 +29,8 @@
     List,
     Spinner,
     Label,
-    Button
+    Button,
+    Toggle
   } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -366,6 +367,16 @@
     }
   };
 
+  const toggleActive = async (aggregator: Aggregator) => {
+    aggregator.active = !aggregator.active;
+    const result = await updateAggregator(aggregator);
+    if (result.ok) {
+      aggregators = aggregators;
+    } else {
+      aggregatorError = result.error;
+    }
+  };
+
   const toggleAggregatorView = async (aggregator: Aggregator) => {
     if (aggregator.id === undefined) {
       return;
@@ -491,8 +502,10 @@
             {/if}
             <div>
               <Button
-                on:click={async () => {
-                  if (aggregator.id) {
+                on:click={async (event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                  if (aggregator.id !== undefined) {
                     await removeAggregator(aggregator.id);
                   }
                 }}
@@ -501,26 +514,59 @@
               >
                 <i class="bx bx-trash text-red-600"></i>
               </Button>
-              {#if aggregator.id && aggregator.id !== aggregatorToEdit}
+              {#if aggregator.id !== undefined && aggregator.id !== aggregatorToEdit}
                 <Button
                   on:click={(event) => {
                     event.stopPropagation();
                     event.preventDefault();
                     editedName = aggregator.name;
                     editedUrl = aggregator.url;
-                    if (aggregator.id) {
+                    if (aggregator.id !== undefined) {
                       toggleEditForm(aggregator.id);
                     }
                   }}
-                  class="hidden !p-2"
+                  class="!p-2"
                   color="light"
                 >
                   <i class="bx bx-pencil"></i>
                 </Button>
               {/if}
             </div>
+            {#if aggregator.active !== undefined}
+              <!-- svelte-ignore a11y-click-events-have-key-events -->
+              <!-- svelte-ignore a11y-no-static-element-interactions -->
+              <!--
+                Stopping the event propagation in the click event of the Toggle doesn't work when using
+                the mouse because it also consists of a span and a label element. These elements also fire
+                click events which aren't stopped.
+                Still, the Toggle needs the event listener so it can be toggled via keyboard.
+              -->
+              <div
+                on:click={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  toggleActive(aggregator);
+                }}
+                class="mx-2 cursor-pointer p-2"
+              >
+                <Toggle
+                  on:click={(event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    toggleActive(aggregator);
+                  }}
+                  bind:checked={aggregator.active}
+                >
+                  {#if aggregator.active === true}
+                    <span>Active</span>
+                  {:else}
+                    <span>Not active</span>
+                  {/if}
+                </Toggle>
+              </div>
+            {/if}
           </div>
-          {#if aggregator.id && aggregator.id === aggregatorToEdit}
+          {#if aggregator.id !== undefined && aggregator.id === aggregatorToEdit}
             <div class="flex flex-wrap gap-4">
               <div class="flex flex-col items-center gap-1 md:flex-row">
                 <Label>Name</Label>
@@ -560,7 +606,7 @@
                   on:click={(event) => {
                     event.stopPropagation();
                     event.preventDefault();
-                    if (aggregator.id) {
+                    if (aggregator.id !== undefined) {
                       toggleEditForm(aggregator.id);
                     }
                   }}

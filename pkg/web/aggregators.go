@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gin-gonic/gin"
@@ -82,11 +83,12 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 		ID        int64  `json:"id"`
 		Name      string `json:"name"`
 		URL       string `json:"url"`
+		Active    bool   `json:"active"`
 		Attention bool   `json:"attention"`
 	}
 	var list []aggregator
 	const sql = `SELECT ` +
-		`id, name, url, (checksum_ack < checksum_updated) AS attention ` +
+		`id, name, url, active, (checksum_ack < checksum_updated) AS attention ` +
 		`FROM aggregators ORDER by name`
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -95,7 +97,7 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 			var err error
 			list, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (aggregator, error) {
 				var a aggregator
-				err := row.Scan(&a.ID, &a.Name, &a.URL, &a.Attention)
+				err := row.Scan(&a.ID, &a.Name, &a.URL, &a.Active, &a.Attention)
 				return a, err
 			})
 			return err
@@ -116,15 +118,16 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 	var (
 		name      string
 		url       string
+		active    bool
 		attention bool
 	)
 	const sql = `SELECT ` +
-		`name, url, (checksum_ack < checksum_updated) AS attention ` +
+		`name, url, active, (checksum_ack < checksum_updated) AS attention ` +
 		`FROM aggregators WHERE id = $1`
 	switch err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, id).Scan(&name, &url, &attention)
+			return conn.QueryRow(rctx, sql, id).Scan(&name, &url, &active, &attention)
 		}, 0,
 	); {
 	case errors.Is(err, pgx.ErrNoRows):
@@ -154,10 +157,11 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 
 func (c *Controller) createAggregator(ctx *gin.Context) {
 	var (
-		ok   bool
-		name string
-		url  string
-		id   int64
+		ok     bool
+		name   string
+		url    string
+		active bool
+		id     int64
 	)
 	if name, ok = parse(ctx, notEmpty, ctx.PostForm("name")); !ok {
 		return
@@ -165,11 +169,20 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 	if url, ok = parse(ctx, endsWith("/aggregator.json"), ctx.PostForm("url")); !ok {
 		return
 	}
-	const sql = `INSERT INTO aggregators (name, url) VALUES ($1, $2) RETURNING id`
+	activeParam, ok := ctx.GetPostForm("active")
+	if ok {
+		act, ok := parse(ctx, strconv.ParseBool, activeParam)
+		active = act
+		if !ok {
+			return
+		}
+	}
+
+	const sql = `INSERT INTO aggregators (name, url, active) VALUES ($1, $2, $3) RETURNING id`
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			return conn.QueryRow(rctx, sql, name, url).Scan(&id)
+			return conn.QueryRow(rctx, sql, name, url, active).Scan(&id)
 		}, 0,
 	); err != nil {
 		var pgErr *pgconn.PgError
@@ -242,49 +255,94 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 }
 
 func (c *Controller) updateAggregator(ctx *gin.Context) {
+	const (
+		prefix      = `UPDATE aggregators SET `
+		suffix      = ` WHERE id = $1`
+		sqlAtt      = `checksum_ack = checksum_updated`
+		sqlAttTrue  = sqlAtt + ` - interval '1s'`
+		sqlAttFalse = sqlAtt
+	)
+	var (
+		values []any
+		fields []string
+		add    = func(field string, value any) {
+			values = append(values, value)
+			fields = append(fields, fmt.Sprintf("%s = $%d", field, len(values)))
+		}
+	)
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
-	attention, ok := ctx.GetPostForm("attention")
-	if !ok {
+	values = append(values, id)
+
+	if nameParam, ok := ctx.GetPostForm("name"); ok {
+		name, ok := parse(ctx, notEmpty, nameParam)
+		if !ok {
+			return
+		}
+		add("name", name)
+	}
+	if urlParam, ok := ctx.GetPostForm("url"); ok {
+		u, ok := parse(ctx, endsWith("/aggregator.json"), urlParam)
+		if !ok {
+			return
+		}
+		add("url", u)
+	}
+	if activeParam, ok := ctx.GetPostForm("active"); ok {
+		act, ok := parse(ctx, strconv.ParseBool, activeParam)
+		if !ok {
+			return
+		}
+		add("active", act)
+	}
+	if attentionParam, ok := ctx.GetPostForm("attention"); ok {
+		att, ok := parse(ctx, strconv.ParseBool, attentionParam)
+		if !ok {
+			return
+		}
+		if att {
+			fields = append(fields, sqlAttTrue)
+		} else {
+			fields = append(fields, sqlAttFalse)
+		}
+	}
+
+	if len(fields) == 0 {
 		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
 		return
 	}
-	att, ok := parse(ctx, strconv.ParseBool, attention)
-	if !ok {
-		return
-	}
-	const (
-		prefix   = `UPDATE aggregators SET checksum_ack = checksum_updated`
-		suffix   = ` WHERE id = $1`
-		sqlAtt   = prefix + ` - interval '1s'` + suffix
-		sqlNoAtt = prefix + suffix
-	)
-	var updateSQL, msg string
-	if att {
-		updateSQL = sqlAtt
-	} else {
-		updateSQL = sqlNoAtt
-	}
+
+	var changed bool
+
+	updateSQL := prefix + strings.Join(fields, ",") + suffix
+	slog.Debug("update aggregators", "sql", updateSQL, "values", values)
+
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			tags, err := conn.Exec(rctx, updateSQL, id)
+			tags, err := conn.Exec(rctx, updateSQL, values...)
 			if err != nil {
 				return err
 			}
-			if tags.RowsAffected() > 0 {
-				msg = "changed"
-			} else {
-				msg = "unchanged"
-			}
+			changed = tags.RowsAffected() > 0
 			return nil
 		}, 0,
 	); err != nil {
+		var pgErr *pgconn.PgError
+		// Unique constraint violation
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		slog.Error("updating aggregator failed", "error", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"msg": msg})
+	if changed {
+		ctx.JSON(http.StatusOK, gin.H{"msg": "changed"})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
+	}
 }

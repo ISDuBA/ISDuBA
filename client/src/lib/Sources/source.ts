@@ -84,10 +84,12 @@ type Aggregator = {
   name: string;
   url: string;
   attention?: boolean;
+  active?: boolean;
   category?: string;
   contact_details?: string;
   issuing_authority?: string;
   namespace?: string;
+  [key: string]: string | boolean | number | undefined;
 };
 
 type Attention = {
@@ -448,11 +450,12 @@ const saveAggregator = async (aggregator: Aggregator): Promise<Result<number, Er
 
 const updateAggregator = async (aggregator: Aggregator): Promise<Result<number, ErrorDetails>> => {
   const formData = new FormData();
-  formData.append("name", aggregator.name);
-  formData.append("url", aggregator.url);
-  if (aggregator.attention !== undefined) {
-    formData.append("attention", `${aggregator.attention}`);
-  }
+  const keys = ["name", "url", "attention", "active"];
+  keys.forEach((key) => {
+    if (aggregator[key] !== undefined) {
+      formData.append(key, `${aggregator[key]}`);
+    }
+  });
   const resp = await request(`/api/aggregators/${aggregator.id}`, "PUT", formData);
   if (resp.ok) {
     return {
