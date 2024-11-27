@@ -53,7 +53,6 @@
   let numberOfPages = 1000;
   let searchTerm = "";
   let selectedLogLevels: LogLevel[] = [];
-  let isAllSelected = true;
   let from: string | undefined = undefined;
   let to: string | undefined = undefined;
 
@@ -158,7 +157,6 @@
     if (resp.ok) {
       logLevels = resp.value;
       selectedLogLevels = logLevels.map((l) => l.value);
-      isAllSelected = selectedLogLevels.length === 0;
     } else {
       loadConfigError = resp.error;
     }
@@ -172,21 +170,19 @@
   const toggleLevel = (level: LogLevel) => {
     if (selectedLogLevels.includes(level)) {
       const index = selectedLogLevels.findIndex((l) => l === level);
-      if (index !== -1) {
+      if (index !== -1 && selectedLogLevels.length > 1) {
         selectedLogLevels = selectedLogLevels.toSpliced(index, 1);
+      } else if (selectedLogLevels.length === 1) {
+        selectedLogLevels = logLevels.map((l) => l.value);
       }
     } else {
       selectedLogLevels.push(level);
     }
-    isAllSelected = selectedLogLevels.length === 0;
-    loadLogs();
-  };
-
-  const toggleAllCheckbox = (event: any) => {
-    if (!event.detail.target.checked && selectedLogLevels.length === 0) {
-      selectedLogLevels = [logLevels[0].value];
-    }
-    isAllSelected = !isAllSelected;
+    // Necessary in case the last checkbox was deselected. Otherwise, the last checkbox would appear as if it
+    // was deselected although this isn't the case.
+    setTimeout(() => {
+      selectedLogLevels = selectedLogLevels;
+    }, 0);
     loadLogs();
   };
 </script>
@@ -219,7 +215,6 @@
             }}>{level.name}</CCheckbox
           >
         {/each}
-        <CCheckbox on:change={toggleAllCheckbox} checked={isAllSelected}>all</CCheckbox>
       </div>
     </div>
     <div class="flex w-full flex-row flex-wrap items-center justify-between gap-3">
