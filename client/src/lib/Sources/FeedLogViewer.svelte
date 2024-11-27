@@ -9,14 +9,7 @@
 -->
 
 <script lang="ts">
-  import {
-    TableBodyCell,
-    Spinner,
-    Label,
-    MultiSelect,
-    PaginationItem,
-    Select
-  } from "flowbite-svelte";
+  import { TableBodyCell, Spinner, Label, PaginationItem, Select } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
@@ -36,6 +29,7 @@
   import Button from "flowbite-svelte/Button.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";
   import DateRange from "$lib/Components/DateRange.svelte";
+  import CCheckbox from "$lib/Components/CCheckbox.svelte";
 
   export let params: any = null;
 
@@ -57,6 +51,7 @@
   let numberOfPages = 1000;
   let searchTerm = "";
   let selectedLogLevels: LogLevel[] = [];
+  let isAllSelected = true;
   let from = new Date(0).toISOString().split("T")[0];
   let to = new Date(Date.now()).toISOString().split("T")[0];
 
@@ -155,6 +150,7 @@
     if (resp.ok) {
       logLevels = resp.value;
       selectedLogLevels = logLevels.map((l) => l.value);
+      isAllSelected = selectedLogLevels.length === 0;
     } else {
       loadConfigError = resp.error;
     }
@@ -164,6 +160,25 @@
       await loadLogs();
     }
   });
+
+  const toggleLevel = (level: LogLevel) => {
+    if (selectedLogLevels.includes(level)) {
+      const index = selectedLogLevels.findIndex((l) => l === level);
+      if (index !== -1) {
+        selectedLogLevels = selectedLogLevels.toSpliced(index, 1);
+      }
+    } else {
+      selectedLogLevels.push(level);
+    }
+    isAllSelected = selectedLogLevels.length === 0;
+  };
+
+  const toggleAllCheckbox = (event: any) => {
+    if (!event.detail.target.checked && selectedLogLevels.length === 0) {
+      selectedLogLevels = [logLevels[0].value];
+    }
+    isAllSelected = !isAllSelected;
+  };
 </script>
 
 {#if feed}
@@ -186,14 +201,15 @@
       <DateRange on:change={loadLogs} bind:from bind:to></DateRange>
       <div class="flex w-full items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
-        <MultiSelect
-          class="min-w-96"
-          id="log-level-selection"
-          items={logLevels}
-          placeholder="(all)"
-          bind:value={selectedLogLevels}
-          on:change={loadLogs}
-        />
+        {#each logLevels as level}
+          <CCheckbox
+            checked={selectedLogLevels.includes(level.value)}
+            on:click={() => {
+              toggleLevel(level.value);
+            }}>{level.name}</CCheckbox
+          >
+        {/each}
+        <CCheckbox on:change={toggleAllCheckbox} checked={isAllSelected}>all</CCheckbox>
       </div>
     </div>
     <div class="flex w-full flex-row flex-wrap items-center justify-between gap-3">
