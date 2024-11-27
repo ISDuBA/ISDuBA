@@ -11,9 +11,9 @@
 <script lang="ts">
   export let filled = false;
 
-  const background = "bg-gray-600 dark:bg-gray-600";
+  const background = "bg-gray-600 dark:bg-gray-500";
   const borderColor = "gray";
-  $: border = `border border-${borderColor}-600`;
+  $: border = `border border-${borderColor}-800 dark:border-${borderColor}-500`;
 </script>
 
 <span class={`${filled ? background : ""} ${border} inline-block h-3 w-3 rounded-[3pt]`}></span>
