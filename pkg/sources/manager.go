@@ -803,6 +803,12 @@ func (m *Manager) FeedLog(
 		cond.WriteByte(')')
 	}
 
+	// Ignore entries before keeping cut-off.
+	if keepFeedLogs := m.cfg.Sources.KeepFeedLogs; keepFeedLogs > 0 {
+		fmt.Fprintf(&cond, " AND time >= current_timestamp - $%d::interval", len(args)+1)
+		args = append(args, keepFeedLogs)
+	}
+
 	var cntSQL string
 	var cntArgs []any
 
