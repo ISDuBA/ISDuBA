@@ -32,6 +32,8 @@ func (c *Controller) isCommentingAllowed(ctx *gin.Context, state models.Workflow
 		return c.hasAnyRole(ctx, models.Reviewer, models.Editor, models.Admin)
 	case models.ArchivedWorkflow:
 		return c.hasAnyRole(ctx, models.Editor, models.Admin)
+	case models.DeleteWorkflow:
+		return c.hasAnyRole(ctx, models.Admin)
 	default:
 		return false
 	}
