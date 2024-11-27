@@ -615,15 +615,17 @@ const fetchFeedLogs = async (
   id: number,
   offset: number,
   limit: number,
-  from: Date,
-  to: Date,
+  from: Date | undefined = undefined,
+  to: Date | undefined = undefined,
   search: string = "",
   logLevels: LogLevel[],
   count: boolean = false
 ): Promise<Result<[any[], number], ErrorDetails>> => {
   const levels = `&levels=${logLevels.join(" ")}`;
+  const fromParameter = from ? `&from=${from.toISOString()}` : "";
+  const toParameter = to ? `&to=${setToEndOfDay(new Date(to)).toISOString()}` : "";
   const resp = await request(
-    `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}&search=${search}&from=${from.toISOString()}&to=${setToEndOfDay(new Date(to)).toISOString()}${levels}`,
+    `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}&search=${search}${fromParameter}${toParameter}${levels}`,
     "GET"
   );
   if (resp.ok) {

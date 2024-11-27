@@ -52,8 +52,8 @@
   let searchTerm = "";
   let selectedLogLevels: LogLevel[] = [];
   let isAllSelected = true;
-  let from = new Date(0).toISOString().split("T")[0];
-  let to = new Date(Date.now()).toISOString().split("T")[0];
+  let from: string | undefined = undefined;
+  let to: string | undefined = undefined;
 
   $: numberOfPages = Math.ceil(count / limit);
 
@@ -108,8 +108,8 @@
       feed.id,
       offset,
       limit,
-      new Date(from),
-      new Date(to),
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
       searchTerm,
       selectedLogLevels,
       true
@@ -198,7 +198,7 @@
   <div class="mb-4 flex flex-col gap-4">
     <div class="flex flex-wrap gap-6">
       <CSearch on:search={loadLogs} bind:searchTerm></CSearch>
-      <DateRange on:change={loadLogs} bind:from bind:to></DateRange>
+      <DateRange clearable on:change={loadLogs} bind:from bind:to></DateRange>
       <div class="flex w-full items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
         {#each logLevels as level}
