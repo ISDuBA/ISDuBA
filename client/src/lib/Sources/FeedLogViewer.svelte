@@ -48,7 +48,7 @@
 
   let offset = 0;
   let limit = 10;
-  let count = 0;
+  let count: number | undefined = undefined;
   let currentPage = 1;
   let numberOfPages = 1000;
   let searchTerm = "";
@@ -57,7 +57,7 @@
   let from: string | undefined = undefined;
   let to: string | undefined = undefined;
 
-  $: numberOfPages = Math.ceil(count / limit);
+  $: numberOfPages = Math.max(1, Math.ceil(count ?? 0 / limit));
 
   const paginationItemClass =
     "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white";
@@ -82,7 +82,7 @@
   };
 
   const next = async () => {
-    if (offset + limit <= count) {
+    if (offset + limit <= (count ?? 0)) {
       offset = offset + limit;
       currentPage += 1;
     }
@@ -297,51 +297,57 @@
         </div>
       </div>
       <div class="mr-3 text-nowrap">
-        {count} entries found
+        {#if count !== undefined}
+          {count} entries found
+        {/if}
       </div>
     </div>
   </div>
 
-  <div
-    class="mb-8 overflow-scroll"
-    style={limit === 10 ? "min-height: 350pt;" : "min-height: 500pt;"}
-  >
-    <CustomTable
-      title="Logs"
-      headers={[
-        {
-          label: "Time",
-          attribute: "time"
-        },
-        {
-          label: "level",
-          attribute: "level"
-        },
-        {
-          label: "Message",
-          attribute: "msg"
-        }
-      ]}
+  {#if count}
+    <div
+      class="mb-8 overflow-scroll"
+      style={limit === 10 ? "min-height: 350pt;" : "min-height: 500pt;"}
     >
-      {#each logs as log, index (index)}
-        <tr>
-          <TableBodyCell {tdClass}>{log.time}</TableBodyCell>
-          <TableBodyCell {tdClass}>{log.level}</TableBodyCell>
-          <TableBodyCell {tdClass}>{log.msg}</TableBodyCell>
-        </tr>
-      {/each}
-      <div slot="bottom">
-        <div
-          class:invisible={!loadingLogs}
-          class={loadingLogs ? "loadingFadeIn" : ""}
-          class:mb-4={true}
-        >
-          Loading ...
-          <Spinner color="gray" size="4"></Spinner>
+      <CustomTable
+        title="Logs"
+        headers={[
+          {
+            label: "Time",
+            attribute: "time"
+          },
+          {
+            label: "level",
+            attribute: "level"
+          },
+          {
+            label: "Message",
+            attribute: "msg"
+          }
+        ]}
+      >
+        {#each logs as log, index (index)}
+          <tr>
+            <TableBodyCell {tdClass}>{log.time}</TableBodyCell>
+            <TableBodyCell {tdClass}>{log.level}</TableBodyCell>
+            <TableBodyCell {tdClass}>{log.msg}</TableBodyCell>
+          </tr>
+        {/each}
+        <div slot="bottom">
+          <div
+            class:invisible={!loadingLogs}
+            class={loadingLogs ? "loadingFadeIn" : ""}
+            class:mb-4={true}
+          >
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
         </div>
-      </div>
-    </CustomTable>
-  </div>
+      </CustomTable>
+    </div>
+  {:else}
+    <div class="mb-8"></div>
+  {/if}
 {/if}
 
 <ErrorMessage error={loadLogsError}></ErrorMessage>
