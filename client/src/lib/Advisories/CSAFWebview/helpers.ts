@@ -10,14 +10,18 @@ export const innerLinkStyle = "hover:underline text-primary-700 dark:text-primar
 
 export const getReadableDateString: (
   datetime: string | undefined,
-  intlFormat: Intl.DateTimeFormat
-) => string | undefined = (datetime: string | undefined, intlFormat: Intl.DateTimeFormat) => {
+  intlFormat?: Intl.DateTimeFormat
+) => string | undefined = (datetime: string | undefined, intlFormat?: Intl.DateTimeFormat) => {
   if (!datetime) {
     return datetime;
   }
   try {
-    const date = intlFormat.format(new Date(datetime));
-    return date;
+    if (intlFormat) {
+      const date = intlFormat.format(new Date(datetime));
+      return date;
+    }
+    const date = new Date(datetime).toISOString(); // Ensure UTC by converting to Date and then back to ISO
+    return date.replace(/\.[0]+Z$/, "Z").replace("T", " ");
   } catch (_e) {
     return datetime;
   }

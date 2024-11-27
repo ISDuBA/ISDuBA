@@ -12,8 +12,6 @@
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { getReadableDateString } from "../helpers";
 
-  const intlFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "long" });
-
   $: trackingVersion = $appStore.webview.doc?.trackingVersion;
   $: generator = $appStore.webview.doc?.generator;
   $: publisherName = $appStore.webview.doc?.publisher.name;
@@ -68,9 +66,9 @@
       <div class={cellStyleKey}>Publisher category</div>
       <div class={cellStyleValue}>{publisherCategory}</div>
       <div class={cellStyleKey}>Published</div>
-      <div class={cellStyleValue}>{getReadableDateString(published, intlFormat)}</div>
+      <div class={cellStyleValue}>{getReadableDateString(published)}</div>
       <div class={cellStyleKey}>Last update</div>
-      <div class={cellStyleValue}>{getReadableDateString(lastUpdate, intlFormat)}</div>
+      <div class={cellStyleValue}>{getReadableDateString(lastUpdate)}</div>
       <div class={cellStyleKey}>CSAF-Version</div>
       <div class={cellStyleValue}>{csafVersion}</div>
       <div class={cellStyleKey}>Category</div>
@@ -109,7 +107,7 @@
         {$appStore.webview.doc?.generator?.engine.version}
       {/if}
       {#if generator?.date}
-        {getReadableDateString(generator.date, intlFormat)}
+        · {getReadableDateString(generator.date)}
       {/if}
     </span>
   </div>

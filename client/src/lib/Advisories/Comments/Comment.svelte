@@ -24,7 +24,10 @@
   export let comment: any;
   export let fullHistory: boolean;
   export let state = "";
-  const intlFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "long" });
+  const intlFormat = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "medium"
+  });
   let updatedComment = comment.message;
   let isEditing = false;
   let updateCommentError: ErrorDetails | null;

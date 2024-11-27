@@ -20,7 +20,10 @@
   import { createEventDispatcher } from "svelte";
   import { getReadableDateString } from "../CSAFWebview/helpers";
 
-  const intlFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "long" });
+  const intlFormat = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "medium"
+  });
 
   const dispatch = createEventDispatcher();
   export let entries;
