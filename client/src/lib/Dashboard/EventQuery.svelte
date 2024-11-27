@@ -45,9 +45,9 @@
 
   let activityCount = 0;
   let resultingActivities: any;
-  let loadActivityError: ErrorDetails | null;
-  let loadCommentsError: ErrorDetails | null;
-  let loadDocumentsError: ErrorDetails | null;
+  let loadActivityError: ErrorDetails | null = null;
+  let loadCommentsError: ErrorDetails | null = null;
+  let loadDocumentsError: ErrorDetails | null = null;
   let isLoading = false;
 
   const aggregateNewest = (events: any) => {
