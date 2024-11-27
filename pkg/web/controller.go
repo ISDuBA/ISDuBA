@@ -88,14 +88,15 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
-		authAdm    = authRoles(models.Admin)
-		authIm     = authRoles(models.Importer)
-		authEdRe   = authRoles(models.Editor, models.Reviewer)
-		authEdReAu = authRoles(models.Editor, models.Reviewer, models.Auditor)
-		authEdReAd = authRoles(models.Editor, models.Reviewer, models.Admin)
-		authSM     = authRoles(models.SourceManager)
-		authEdSM   = authRoles(models.Editor, models.SourceManager)
-		authAll    = authRoles(models.Admin, models.Importer, models.Editor,
+		authAdm      = authRoles(models.Admin)
+		authIm       = authRoles(models.Importer)
+		authEdRe     = authRoles(models.Editor, models.Reviewer)
+		authEdReAdAu = authRoles(models.Editor, models.Reviewer, models.Admin, models.Auditor)
+		authEdReAu   = authRoles(models.Editor, models.Reviewer, models.Auditor)
+		authEdReAd   = authRoles(models.Editor, models.Reviewer, models.Admin)
+		authSM       = authRoles(models.SourceManager)
+		authEdSM     = authRoles(models.Editor, models.SourceManager)
+		authAll      = authRoles(models.Admin, models.Importer, models.Editor,
 			models.Reviewer, models.Auditor, models.SourceManager)
 	)
 
@@ -117,9 +118,9 @@ func (c *Controller) Bind() http.Handler {
 
 	// Comments
 	api.POST("/comments/:document", authEdRe, c.createComment)
-	api.GET("/comments/:publisher/:trackingid", authEdReAu, c.viewComments)
+	api.GET("/comments/:publisher/:trackingid", authEdReAdAu, c.viewComments)
 	api.PUT("/comments/post/:id", authEdRe, c.updateComment)
-	api.GET("/comments/post/:id", authEdReAu, c.viewComment)
+	api.GET("/comments/post/:id", authEdReAdAu, c.viewComment)
 
 	// Stored queries
 	api.POST("/queries", authAll, c.createStoredQuery)
@@ -133,8 +134,8 @@ func (c *Controller) Bind() http.Handler {
 	api.DELETE("/queries/ignore/:query", authAll, c.deleteDefaultQueryExclusion)
 
 	// Events
-	api.GET("/events", authEdReAu, c.overviewEvents)
-	api.GET("/events/:publisher/:trackingid", authEdReAu, c.viewEvents)
+	api.GET("/events", authEdReAdAu, c.overviewEvents)
+	api.GET("/events/:publisher/:trackingid", authEdReAdAu, c.viewEvents)
 
 	// State change
 	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)

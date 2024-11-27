@@ -25,10 +25,16 @@ import (
 
 func (c *Controller) isCommentingAllowed(ctx *gin.Context, state models.Workflow) bool {
 	// Check if we are in a state in which commenting is allowed.
-	return state == models.ReadWorkflow ||
-		state == models.AssessingWorkflow ||
-		(state == models.ReviewWorkflow && c.hasAnyRole(ctx, models.Reviewer, models.Editor)) ||
-		(state == models.ArchivedWorkflow && c.hasAnyRole(ctx, models.Editor))
+	switch state {
+	case models.ReadWorkflow, models.AssessingWorkflow:
+		return true
+	case models.ReviewWorkflow:
+		return c.hasAnyRole(ctx, models.Reviewer, models.Editor, models.Admin)
+	case models.ArchivedWorkflow:
+		return c.hasAnyRole(ctx, models.Editor, models.Admin)
+	default:
+		return false
+	}
 }
 
 func (c *Controller) createComment(ctx *gin.Context) {
@@ -309,7 +315,9 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		return
 	}
 
-	expr := c.andTLPExpr(ctx, query.FieldEqString("tracking_id", key.TrackingID).And(query.FieldEqString("publisher", key.Publisher)))
+	expr := c.andTLPExpr(ctx,
+		query.FieldEqString("tracking_id", key.TrackingID).And(
+			query.FieldEqString("publisher", key.Publisher)))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -330,7 +338,9 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 				return nil
 			}
 			fetchSQL := `SELECT id, documents_id, time, commentator, message FROM comments ` +
-				`WHERE documents_id in (SELECT id FROM documents WHERE ` + builder.WhereClause + ` ) ORDER BY time DESC`
+				`WHERE documents_id in (SELECT id FROM documents WHERE ` +
+				builder.WhereClause +
+				` ) ORDER BY time DESC`
 			rows, _ := conn.Query(rctx, fetchSQL, builder.Replacements...)
 			var err error
 			comments, err = pgx.CollectRows(
