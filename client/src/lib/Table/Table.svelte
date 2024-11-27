@@ -632,7 +632,7 @@
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
-                      <div class="m-2 table w-full text-wrap">
+                      <div class="m-2 table w-16 text-wrap">
                         {#if item[column]}
                           <SsvcBadge vector={item[column]}></SsvcBadge>
                         {/if}
@@ -687,7 +687,7 @@
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
-                      <div class="m-2 table w-full text-wrap">
+                      <div class="m-2 table w-[min(250px)] text-wrap">
                         <span title={item[column]}>{item[column]}</span>
                       </div></TableBodyCell
                     >
@@ -724,39 +724,41 @@
                         >
                         </a>
                       {/if}
-                      <div class="z-50 table w-full text-wrap p-2">
-                        {#if item[column] && item[column][0]}
-                          <!-- svelte-ignore a11y-click-events-have-key-events -->
-                          <!-- svelte-ignore a11y-no-static-element-interactions -->
-                          {#if item[column].length > 1}
-                            <div
-                              class="mr-2 flex cursor-pointer items-center"
-                              on:click|stopPropagation={() => toggleRow(i)}
-                            >
-                              <div class="flex-grow">
-                                {item[column][0]}
-                                {#if openRow === i}
-                                  <div>
-                                    {#each item.four_cves as cve, i}
-                                      {#if i !== 0}
-                                        <p>{cve}</p>
-                                      {/if}
-                                    {/each}
-                                  </div>
-                                {/if}
+                      <div class="w-32">
+                        <div class="z-50 table text-wrap p-2">
+                          {#if item[column] && item[column][0]}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            {#if item[column].length > 1}
+                              <div
+                                class="mr-2 flex cursor-pointer items-center"
+                                on:click|stopPropagation={() => toggleRow(i)}
+                              >
+                                <div class="flex-grow">
+                                  {item[column][0]}
+                                  {#if openRow === i}
+                                    <div>
+                                      {#each item.four_cves as cve, i}
+                                        {#if i !== 0}
+                                          <p>{cve}</p>
+                                        {/if}
+                                      {/each}
+                                    </div>
+                                  {/if}
+                                </div>
+                                <span>
+                                  {#if openRow === i}
+                                    <i class="bx bx-minus"></i>
+                                  {:else}
+                                    <i class="bx bx-plus"></i>
+                                  {/if}
+                                </span>
                               </div>
-                              <span>
-                                {#if openRow === i}
-                                  <i class="bx bx-minus"></i>
-                                {:else}
-                                  <i class="bx bx-plus"></i>
-                                {/if}
-                              </span>
-                            </div>
-                          {:else}
-                            <span>{item[column][0]}</span>
+                            {:else}
+                              <span>{item[column][0]}</span>
+                            {/if}
                           {/if}
-                        {/if}
+                        </div>
                       </div></TableBodyCell
                     >
                   {:else if column === "critical"}
@@ -772,6 +774,17 @@
                           class:dark:text-red-300={Number(item[column]) > 5.0}
                           >{item[column] == null ? "" : item[column]}</span
                         >
+                      </div></TableBodyCell
+                    >
+                  {:else if column === "tracking_id"}
+                    <TableBodyCell {tdClass}
+                      ><a
+                        class="absolute bottom-0 left-0 right-0 top-0"
+                        href={getAdvisoryAnchorLink(item)}
+                      >
+                      </a>
+                      <div class="m-2 table w-40 text-wrap">
+                        {item[column] ?? ""}
                       </div></TableBodyCell
                     >
                   {:else}
