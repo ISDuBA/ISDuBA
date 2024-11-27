@@ -32,7 +32,6 @@
     Button,
     Toggle
   } from "flowbite-svelte";
-  import { tdClass } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
   import {
@@ -50,37 +49,8 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import { scale } from "svelte/transition";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
-
-  type FeedInfo = {
-    id?: number;
-    sourceID?: number;
-    url: string;
-    highlight: boolean;
-  };
-
-  type SourceInfo = {
-    id?: number;
-    name: string;
-    feedsAvailable: number;
-    feedsSubscribed: number;
-    feeds: FeedInfo[];
-    expand: boolean;
-  };
-
-  type AggregatorRole = {
-    label: string;
-    abbreviation: string;
-  };
-
-  type AggregatorEntry = {
-    name: string;
-    role: AggregatorRole;
-    url: string;
-    feedsAvailable: number;
-    feedsSubscribed: number;
-    availableSources: SourceInfo[];
-    expand: boolean;
-  };
+  import type { AggregatorEntry, AggregatorRole, FeedInfo, SourceInfo } from "./aggregator";
+  import SourceContent from "./SourceContent.svelte";
 
   const textFlushOpen = "text-black dark:text-white";
   const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full`;
@@ -727,45 +697,22 @@
                     </div>
                   </List>
                   {#each entry.availableSources as source}
-                    <div
-                      class={entry.feedsSubscribed === 0
-                        ? ""
-                        : "ms-3 rounded-md border border-solid border-gray-300 p-2 dark:border-0 dark:bg-gray-700"}
-                    >
-                      <div class="mb-1 flex items-center gap-2 text-sm text-black dark:text-white">
-                        {#if source.id !== undefined}
-                          <Button
-                            on:click={async () => {
-                              await push(`/sources/${source.id}`);
-                            }}
-                            class="!p-2"
-                            color="light"
-                          >
-                            <i class="bx bx-git-repo-forked text-lg"></i>
-                          </Button>
-                        {/if}
-                        {source.name}
-                        {#if entry.feedsSubscribed === 0}
-                          <Button
-                            href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
-                            color="primary"
-                            size="xs"
-                          >
-                            <i class="bx bx-plus"></i>
-                            <span>As new source</span>
-                          </Button>
-                        {/if}
+                    {#if source.id === undefined}
+                      <div class="p-2">
+                        <SourceContent {entry} {source}></SourceContent>
                       </div>
-                      {#each source.feeds as feed}
-                        {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
-                        <div class="mb-2 ms-4">
-                          <div>
-                            <FeedBulletPoint filled={!feed.highlight}></FeedBulletPoint>
-                            <span class={feedClass}>{feed.url}</span>
-                          </div>
-                        </div>
-                      {/each}
-                    </div>
+                    {:else}
+                      <button
+                        on:click={async () => {
+                          await push(`/sources/${source.id}`);
+                        }}
+                        class={entry.feedsSubscribed === 0
+                          ? ""
+                          : "rounded-md border border-solid border-gray-300 p-2 hover:bg-gray-200 dark:hover:bg-gray-700"}
+                      >
+                        <SourceContent {entry} {source}></SourceContent>
+                      </button>
+                    {/if}
                   {/each}
                   {#if entry.feedsSubscribed > 0}
                     <Button
