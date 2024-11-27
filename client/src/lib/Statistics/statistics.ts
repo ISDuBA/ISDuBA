@@ -111,13 +111,29 @@ const fetchBasicStatistic = async (
   step: number,
   type: StatisticType,
   id?: number,
-  isFeed: boolean = false
+  isFeed: boolean = false,
+  abortController: AbortController | undefined = undefined
 ): Promise<Result<StatisticGroup, ErrorDetails>> => {
   const stats: StatisticGroup = {};
-  const response = await fetchStatistic(new Date(from), new Date(to), step, type, {}, id, isFeed);
+  const response = await fetchStatistic(
+    new Date(from),
+    new Date(to),
+    step,
+    type,
+    {},
+    id,
+    isFeed,
+    abortController
+  );
   if (response.ok) {
     stats[type] = response.value;
   } else if (response.error) {
+    if (response.error.message === "AbortError") {
+      return {
+        ok: true,
+        value: stats
+      };
+    }
     return {
       ok: false,
       error: response.error
@@ -131,7 +147,8 @@ const fetchImportFailuresStatistic = async (
   to: Date,
   step: number,
   id?: number,
-  isFeed: boolean = false
+  isFeed: boolean = false,
+  abortController: AbortController | undefined = undefined
 ): Promise<Result<StatisticGroup, ErrorDetails>> => {
   const importStats: StatisticGroup = {};
   const failureTypes = [
@@ -154,11 +171,22 @@ const fetchImportFailuresStatistic = async (
       "imports",
       filter,
       id,
-      isFeed
+      isFeed,
+      abortController
     );
     if (response.ok) {
-      importStats[type] = response.value;
+      if (response.value) {
+        importStats[type] = response.value;
+      } else {
+        importStats[type] = [];
+      }
     } else if (response.error) {
+      if (response.error.message === "AbortError") {
+        return {
+          ok: true,
+          value: importStats
+        };
+      }
       return {
         ok: false,
         error: response.error
@@ -193,7 +221,8 @@ const fetchStatistic = async (
   type: StatisticType,
   filter?: StatisticFilter,
   id?: number,
-  feed: boolean = false
+  feed: boolean = false,
+  abortController: AbortController | undefined = undefined
 ): Promise<Result<any, ErrorDetails>> => {
   let path = `/api/stats/${type}`;
   if (id !== undefined && !feed) {
@@ -215,7 +244,9 @@ const fetchStatistic = async (
 
   const resp = await request(
     `${path}?from=${from.toISOString()}&to=${to.toISOString()}&step=${step}ms` + filterQuery,
-    "GET"
+    "GET",
+    undefined,
+    abortController
   );
   if (resp.ok) {
     if (resp.content) {
@@ -228,6 +259,14 @@ const fetchStatistic = async (
         value: fillGaps(from, to, step, resp.content)
       };
     }
+  }
+  if (resp.error === "AbortError") {
+    return {
+      ok: false,
+      error: {
+        message: "AbortError"
+      }
+    };
   }
   return {
     ok: false,
@@ -253,7 +292,8 @@ const fetchTotals = async (
   from?: Date,
   to?: Date,
   step?: number,
-  imports = false
+  imports = false,
+  abortController: AbortController | undefined = undefined
 ): Promise<Result<StatisticGroup, ErrorDetails>> => {
   let query = "";
   if (from) {
@@ -266,7 +306,7 @@ const fetchTotals = async (
     query += `&step=${step}ms`;
   }
   query += `&imports=${imports}`;
-  const resp = await request(`/api/stats/totals?${query}`, "GET");
+  const resp = await request(`/api/stats/totals?${query}`, "GET", undefined, abortController);
   if (resp.ok) {
     if (resp.content) {
       const stats: StatisticGroup = {};
@@ -295,6 +335,12 @@ const fetchTotals = async (
         value: stats
       };
     }
+  }
+  if (resp.error === "AbortError") {
+    return {
+      ok: true,
+      value: {}
+    };
   }
   return {
     ok: false,

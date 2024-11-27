@@ -44,7 +44,7 @@ const requestData = async (
 export const request = async (
   path: string,
   requestMethod: string,
-  formData?: FormData | string,
+  formData?: FormData | string | undefined,
   abortController?: AbortController
 ): Promise<HttpResponse> => {
   try {
@@ -83,6 +83,12 @@ export const request = async (
     }
     return { error: `${response.status}`, content: content, ok: false };
   } catch (error: any) {
+    if (error.name === "AbortError") {
+      return {
+        error: error.name,
+        ok: false
+      };
+    }
     if (/fetch/.test(error)) {
       return {
         error: "600",

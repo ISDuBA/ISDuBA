@@ -40,6 +40,7 @@
   } from "$lib/time";
   import chroma from "chroma-js";
   import { appStore } from "$lib/store";
+  import debounce from "debounce";
 
   export let chartType: "bar" | "line" | "scatter" = "bar";
   export let divContainerClass = "mb-16";
@@ -76,6 +77,7 @@
   let intervalID: ReturnType<typeof setInterval> | null;
   let stepsInMilliseconds = 1000 * 60 * stepsInMinutes;
   let mode: StatisticsMode = "diagram";
+  let abortController: AbortController | undefined = undefined;
   const basicButtonClass = "py-1 px-3";
   const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
   const pressedButtonClass = `${basicButtonClass} bg-gray-200 hover:!bg-gray-100 dark:bg-gray-500 dark:hover:!bg-gray-600 dark:text-white text-black`;
@@ -165,7 +167,8 @@
         stepsInMilliseconds,
         "imports",
         source?.id,
-        source?.isFeed
+        source?.isFeed,
+        abortController
       );
       if (response.ok) {
         Object.assign(newStats, response.value);
@@ -179,7 +182,8 @@
         toParameter,
         stepsInMilliseconds,
         source?.id,
-        source?.isFeed
+        source?.isFeed,
+        abortController
       );
       if (response.ok) {
         if (types.includes("importFailuresCombined")) {
@@ -198,7 +202,8 @@
         stepsInMilliseconds,
         "cve",
         source?.id,
-        source?.isFeed
+        source?.isFeed,
+        abortController
       );
       if (response.ok) {
         Object.assign(newStats, response.value);
@@ -213,7 +218,13 @@
       }
     }
     if (types.includes("totals")) {
-      response = await fetchTotals(new Date(from), toParameter, stepsInMilliseconds);
+      response = await fetchTotals(
+        new Date(from),
+        toParameter,
+        stepsInMilliseconds,
+        false,
+        abortController
+      );
       if (response.ok) {
         Object.assign(newStats, response.value);
       } else {
@@ -232,7 +243,8 @@
       stepsInMilliseconds,
       "critical",
       source?.id,
-      source?.isFeed
+      source?.isFeed,
+      abortController
     );
     if (response.ok) {
       const crit: any = response.value.critical;
@@ -503,14 +515,16 @@
       const items: any[] = [];
       chart.legend.legendItems.forEach((item: any, index: number) => {
         const datasetMeta = chart.getDatasetMeta(item.datasetIndex);
-        const label = datasetMeta.label.replace("cvss_", "");
-        items.push({
-          text: label,
-          datasetIndex: index,
-          fillStyle: getColor(index),
-          hidden: datasetMeta.hidden,
-          fontColor: labelColor
-        });
+        if (datasetMeta.label) {
+          const label = datasetMeta.label.replace("cvss_", "");
+          items.push({
+            text: label,
+            datasetIndex: index,
+            fillStyle: getColor(index),
+            hidden: datasetMeta.hidden,
+            fontColor: labelColor
+          });
+        }
       });
       return items;
     };
@@ -578,6 +592,22 @@
     updateSteps();
     updateChart();
   };
+
+  const abortRequests = () => {
+    if (abortController) {
+      abortController.abort();
+    }
+  };
+
+  const delayedUpdate = debounce(() => {
+    abortController = new AbortController();
+    updateSteps();
+  }, 600);
+
+  const onSelectedDate = () => {
+    abortRequests();
+    delayedUpdate();
+  };
 </script>
 
 <div class={divContainerClass}>
@@ -617,13 +647,13 @@
         <Label for="from"
           ><span>From:</span>
           <Input let:props>
-            <input on:change={updateSteps} id="from" type="date" {...props} bind:value={from} />
+            <input on:change={onSelectedDate} id="from" type="date" {...props} bind:value={from} />
           </Input>
         </Label>
         <Label for="to"
           ><span>To:</span>
           <Input let:props>
-            <input on:change={updateSteps} id="to" type="date" {...props} bind:value={to} />
+            <input on:change={onSelectedDate} id="to" type="date" {...props} bind:value={to} />
           </Input>
         </Label>
         <ButtonGroup class="h-fit">
