@@ -30,6 +30,7 @@
   import CSearch from "$lib/Components/CSearch.svelte";
   import DateRange from "$lib/Components/DateRange.svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
+  import debounce from "debounce";
 
   export let params: any = null;
 
@@ -38,6 +39,7 @@
   let logs: any[] = [];
   let logLevels: LogLevelItem[] = [];
   let loadingLogs: boolean = false;
+  let abortController: AbortController | undefined = undefined;
   let loadFeedError: ErrorDetails | null = null;
   let loadLogsError: ErrorDetails | null = null;
   let loadConfigError: ErrorDetails | null = null;
@@ -112,7 +114,8 @@
       to ? new Date(to) : undefined,
       searchTerm,
       selectedLogLevels,
-      true
+      true,
+      abortController
     );
     loadingLogs = false;
     if (result.ok) {
@@ -121,6 +124,11 @@
       loadLogsError = result.error;
     }
   };
+
+  const delayedLoadLogs = debounce(() => {
+    abortController = new AbortController();
+    loadLogs();
+  }, 600);
 
   const downloadFeedLogs = async () => {
     if (!feed || !feed.id) {
@@ -198,7 +206,7 @@
   <div class="mb-4 flex flex-col gap-4">
     <div class="flex flex-wrap gap-x-8 gap-y-6">
       <CSearch on:search={loadLogs} bind:searchTerm></CSearch>
-      <DateRange clearable on:change={loadLogs} bind:from bind:to></DateRange>
+      <DateRange clearable on:change={delayedLoadLogs} bind:from bind:to></DateRange>
       <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
         {#each logLevels as level}
