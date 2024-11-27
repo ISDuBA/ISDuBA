@@ -11,7 +11,6 @@ import { request } from "$lib/request";
 import type { Result } from "$lib/types";
 import type { CSAFProviderMetadata } from "$lib/provider";
 import type { AggregatorMetadata } from "$lib/aggregatorTypes";
-import { setToEndOfDay } from "$lib/time";
 
 const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
 const ddClass: string = "break-words font-semibold ml-2 mb-1";
@@ -624,7 +623,7 @@ const fetchFeedLogs = async (
 ): Promise<Result<[any[], number], ErrorDetails>> => {
   const levels = `&levels=${logLevels.join(" ")}`;
   const fromParameter = from ? `&from=${from.toISOString()}` : "";
-  const toParameter = to ? `&to=${setToEndOfDay(new Date(to)).toISOString()}` : "";
+  const toParameter = to ? `&to=${to.toISOString()}` : "";
   const resp = await request(
     `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}&search=${search}${fromParameter}${toParameter}${levels}`,
     "GET",
