@@ -51,7 +51,7 @@
   let searchTerm = "";
   let selectedLogLevels: LogLevel[] = [];
   let from: string | undefined = undefined;
-  let to: string | undefined = undefined;
+  let to: string | undefined = new Date().toISOString().split("T")[0];
 
   $: numberOfPages = Math.max(1, Math.ceil((count ?? 0) / limit));
   $: realLogLevels = logLevels.filter((l) => l.name !== "Default");
