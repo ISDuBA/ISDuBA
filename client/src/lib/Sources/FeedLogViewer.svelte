@@ -159,6 +159,17 @@
     }
   });
 
+  const onRangeChanged = () => {
+    resetPagination();
+    resetPagination();
+    delayedLoadLogs();
+  };
+
+  const resetPagination = () => {
+    offset = 0;
+    currentPage = 1;
+  };
+
   const toggleLevel = (level: LogLevel) => {
     if (selectedLogLevels.includes(level)) {
       const index = selectedLogLevels.findIndex((l) => l === level);
@@ -175,6 +186,7 @@
     setTimeout(() => {
       selectedLogLevels = selectedLogLevels;
     }, 0);
+    resetPagination();
     loadLogs();
   };
 </script>
@@ -195,8 +207,14 @@
 
   <div class="mb-4 flex flex-col gap-4">
     <div class="flex flex-wrap gap-x-8 gap-y-6">
-      <CSearch on:search={loadLogs} bind:searchTerm></CSearch>
-      <DateRange clearable on:change={delayedLoadLogs} bind:from bind:to></DateRange>
+      <CSearch
+        on:search={() => {
+          resetPagination();
+          loadLogs();
+        }}
+        bind:searchTerm
+      ></CSearch>
+      <DateRange clearable on:change={onRangeChanged} bind:from bind:to></DateRange>
       <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
         {#each realLogLevels as level}
@@ -225,8 +243,7 @@
           ]}
           bind:value={limit}
           on:change={async () => {
-            offset = 0;
-            currentPage = 1;
+            resetPagination();
             await loadLogs();
           }}
         ></Select>
