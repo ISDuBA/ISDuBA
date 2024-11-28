@@ -315,7 +315,7 @@
       >
         {#each logs as log, index (index)}
           <tr>
-            <TableBodyCell {tdClass}>{log.time}</TableBodyCell>
+            <TableBodyCell tdClass={`${tdClass} min-w-[170pt]`}>{log.time}</TableBodyCell>
             <TableBodyCell {tdClass}>{log.level}</TableBodyCell>
             <TableBodyCell {tdClass}>{log.msg}</TableBodyCell>
           </tr>
