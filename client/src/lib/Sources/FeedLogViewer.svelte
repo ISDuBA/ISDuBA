@@ -21,7 +21,7 @@
     fetchAllFeedLogs,
     fetchFeed,
     type Feed,
-    getLogLevels,
+    logLevels,
     LogLevel
   } from "./source";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
@@ -34,10 +34,7 @@
 
   export let params: any = null;
 
-  type LogLevelItem = { value: LogLevel; name: string };
-
   let logs: any[] = [];
-  let logLevels: LogLevelItem[] = [];
   let loadingLogs: boolean = false;
   let abortController: AbortController | undefined = undefined;
   let loadFeedError: ErrorDetails | null = null;
@@ -57,6 +54,7 @@
   let to: string | undefined = undefined;
 
   $: numberOfPages = Math.max(1, Math.ceil(count ?? 0 / limit));
+  $: realLogLevels = logLevels.filter((l) => l.name !== "Default");
 
   const paginationItemClass =
     "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white";
@@ -153,13 +151,7 @@
   };
 
   onMount(async () => {
-    const resp = await getLogLevels();
-    if (resp.ok) {
-      logLevels = resp.value;
-      selectedLogLevels = logLevels.map((l) => l.value);
-    } else {
-      loadConfigError = resp.error;
-    }
+    selectedLogLevels = realLogLevels.map((l) => l.value);
     let id = params?.id;
     if (id) {
       await loadFeed(id);
@@ -207,7 +199,7 @@
       <DateRange clearable on:change={delayedLoadLogs} bind:from bind:to></DateRange>
       <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
-        {#each logLevels as level}
+        {#each realLogLevels as level}
           <CCheckbox
             checked={selectedLogLevels.includes(level.value)}
             on:click={() => {
