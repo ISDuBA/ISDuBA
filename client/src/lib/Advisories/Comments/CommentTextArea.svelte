@@ -77,6 +77,7 @@
         {/if}
         {#if !((state === REVIEW || state === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
           <Button
+            color="green"
             size="xs"
             on:click={() => dispatch("saveComment")}
             disabled={count > 10000 || count === 0 || value === old}

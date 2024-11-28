@@ -182,7 +182,7 @@
     <SourceForm bind:this={sourceForm} {inputChange} {formClass} {source}></SourceForm>
     <FeedView feeds={pmdFeeds}></FeedView>
 
-    <Button on:click={saveAll} color="light">
+    <Button on:click={saveAll} color="green">
       <i class="bx bxs-save me-2"></i>
       <span>Save source</span>
     </Button>

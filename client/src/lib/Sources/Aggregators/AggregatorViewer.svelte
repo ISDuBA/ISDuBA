@@ -592,7 +592,7 @@
                     });
                   }}
                   class="w-fit"
-                  color="light"
+                  color="green"
                   disabled={validEditedUrl === false ||
                     validEditedName === false ||
                     editedName === "" ||
@@ -775,7 +775,7 @@
               <Button
                 type="submit"
                 class="w-fit"
-                color="light"
+                color="green"
                 disabled={validUrl === false ||
                   validName === false ||
                   aggregator.name === "" ||

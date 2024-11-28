@@ -519,7 +519,7 @@
             }}
             color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
           >
-          <Button disabled={disableSave} on:click={saveQuery} color="light"
+          <Button disabled={disableSave} on:click={saveQuery} color="green"
             ><i class="bx bxs-save me-2"></i> Save</Button
           >
         </div>
