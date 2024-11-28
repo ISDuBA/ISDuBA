@@ -53,7 +53,7 @@
   let from: string | undefined = undefined;
   let to: string | undefined = undefined;
 
-  $: numberOfPages = Math.max(1, Math.ceil(count ?? 0 / limit));
+  $: numberOfPages = Math.max(1, Math.ceil((count ?? 0) / limit));
   $: realLogLevels = logLevels.filter((l) => l.name !== "Default");
 
   const paginationItemClass =
