@@ -293,7 +293,7 @@
 
   {#if count}
     <div
-      class="mb-8 overflow-scroll"
+      class="mb-8 overflow-y-scroll"
       style={limit === 10 ? "min-height: 350pt;" : "min-height: 500pt;"}
     >
       <CustomTable
@@ -315,9 +315,13 @@
       >
         {#each logs as log, index (index)}
           <tr>
-            <TableBodyCell tdClass={`${tdClass} min-w-[170pt]`}>{log.time}</TableBodyCell>
-            <TableBodyCell {tdClass}>{log.level}</TableBodyCell>
-            <TableBodyCell {tdClass}>{log.msg}</TableBodyCell>
+            <TableBodyCell tdClass={`${tdClass} min-w-[170pt] align-baseline`}
+              >{log.time}</TableBodyCell
+            >
+            <TableBodyCell tdClass={`${tdClass} align-baseline`}>{log.level}</TableBodyCell>
+            <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
+              >{log.msg}</TableBodyCell
+            >
           </tr>
         {/each}
         <div slot="bottom">
