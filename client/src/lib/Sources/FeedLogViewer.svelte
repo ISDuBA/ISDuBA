@@ -165,7 +165,7 @@
       if (index !== -1 && selectedLogLevels.length > 1) {
         selectedLogLevels = selectedLogLevels.toSpliced(index, 1);
       } else if (selectedLogLevels.length === 1) {
-        selectedLogLevels = logLevels.map((l) => l.value);
+        selectedLogLevels = realLogLevels.map((l) => l.value);
       }
     } else {
       selectedLogLevels.push(level);
