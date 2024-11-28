@@ -339,7 +339,11 @@ func ImportDocumentData(
 		return 0, errors.New("missing /document/tracking/id")
 	}
 
-	if pstlps != nil && (!tlpOk || !pstlps.Allowed(publisher, TLP(tlp))) {
+	if pstlps != nil && !tlpOk {
+		return 0, errors.New("missing /document/distribution/tlp/label")
+	}
+
+	if pstlps != nil && !pstlps.Allowed(publisher, TLP(tlp)) {
 		return 0, ErrNotAllowed
 	}
 
