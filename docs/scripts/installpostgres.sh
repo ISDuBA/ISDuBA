@@ -10,5 +10,10 @@
 
 set -e # to exit if a command in the script fails
 
-# install PostgreSQL 16
-sudo apt install postgresql -y
+# install PostgreSQL 15
+sudo apt install ca-certificates -y
+curl -L https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+sudo apt update
+
+sudo apt install postgresql-15 -y
