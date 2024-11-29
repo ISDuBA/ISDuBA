@@ -11,6 +11,7 @@ import { request } from "$lib/request";
 import type { Result } from "$lib/types";
 import type { CSAFProviderMetadata } from "$lib/provider";
 import type { AggregatorMetadata } from "$lib/aggregatorTypes";
+import { setToEndOfDay } from "$lib/time";
 
 const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
 const ddClass: string = "break-words font-semibold ml-2 mb-1";
@@ -73,7 +74,7 @@ type Feed = {
 
 const logLevels = [
   { value: LogLevel.default, name: "Default" },
-  { value: LogLevel.error, name: "Errors only" },
+  { value: LogLevel.error, name: "Errors" },
   { value: LogLevel.info, name: "Info" },
   { value: LogLevel.warn, name: "Errors and warnings" },
   { value: LogLevel.debug, name: "Debug (verbose)" }
@@ -614,11 +615,21 @@ const fetchFeedLogs = async (
   id: number,
   offset: number,
   limit: number,
-  count: boolean = false
+  from: Date | undefined = undefined,
+  to: Date | undefined = undefined,
+  search: string = "",
+  logLevels: LogLevel[],
+  count: boolean = false,
+  abortController: AbortController | undefined = undefined
 ): Promise<Result<[any[], number], ErrorDetails>> => {
+  const levels = `&levels=${logLevels.join(" ")}`;
+  const fromParameter = from ? `&from=${from.toISOString()}` : "";
+  const toParameter = to ? `&to=${setToEndOfDay(new Date(to)).toISOString()}` : "";
   const resp = await request(
-    `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}`,
-    "GET"
+    `/api/sources/feeds/${id}/log?limit=${limit}&offset=${offset}&count=${count}&search=${search}${fromParameter}${toParameter}${levels}`,
+    "GET",
+    undefined,
+    abortController
   );
   if (resp.ok) {
     return { ok: true, value: [resp.content.entries, resp.content.count ?? 0] };
@@ -687,5 +698,6 @@ export {
   fetchAggregatorAttentionList,
   resetAggregatorAttention,
   dtClass,
-  ddClass
+  ddClass,
+  logLevels
 };

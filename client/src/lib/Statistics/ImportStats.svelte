@@ -24,7 +24,7 @@
     getLabelForKey
   } from "$lib/Statistics/statistics";
   import Chart from "chart.js/auto";
-  import { Button, ButtonGroup, Input, Label, Spinner } from "flowbite-svelte";
+  import { Button, ButtonGroup, Spinner } from "flowbite-svelte";
   import { onDestroy, onMount } from "svelte";
   import "chartjs-adapter-moment";
   import StatsTable from "./StatsTable.svelte";
@@ -40,6 +40,7 @@
   } from "$lib/time";
   import chroma from "chroma-js";
   import { appStore } from "$lib/store";
+  import DateRange from "$lib/Components/DateRange.svelte";
   import debounce from "debounce";
 
   export let chartType: "bar" | "line" | "scatter" = "bar";
@@ -644,18 +645,7 @@
     {/if}
     {#if showRangeSelection}
       <div class="my-2 flex flex-wrap items-end justify-start gap-4 md:justify-center">
-        <Label for="from"
-          ><span>From:</span>
-          <Input let:props>
-            <input on:change={onSelectedDate} id="from" type="date" {...props} bind:value={from} />
-          </Input>
-        </Label>
-        <Label for="to"
-          ><span>To:</span>
-          <Input let:props>
-            <input on:change={onSelectedDate} id="to" type="date" {...props} bind:value={to} />
-          </Input>
-        </Label>
+        <DateRange on:change={onSelectedDate} bind:from bind:to></DateRange>
         <ButtonGroup class="h-fit">
           <Button
             on:click={() => {
