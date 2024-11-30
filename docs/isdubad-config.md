@@ -88,7 +88,8 @@ The configuration consists of the following sections:
 
 ### <a name="section_database"></a> Section `[database]` Database credentials
 
-- `host`: Host of the database server. Defaults to `"localhost"`.
+- `host`: Host of the database server. Defaults to `"localhost"`. If this is an empty string or starts with a slash (`/`)
+it is assumed that this is unix domain socket and the port is omitted during connect.
 - `port`: Port of the database server. Defaults to `5432`.
 - `database`: Name of the database. Defaults to `"isduba"`.
 - `user`: Name of the database user. Defaults to `"isduba"`.

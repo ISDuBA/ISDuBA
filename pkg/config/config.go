@@ -282,12 +282,19 @@ type Config struct {
 	Aggregators     Aggregators                 `toml:"aggregators"`
 }
 
+func (db *Database) joinHostPort() string {
+	if db.Host == "" || db.Host[0] == '/' {
+		return db.Host
+	}
+	return net.JoinHostPort(db.Host, strconv.Itoa(db.Port))
+}
+
 // URL creates a connection URL from the configured credentials.
 func (db *Database) URL() string {
 	url := url.URL{
 		Scheme: "postgresql",
 		User:   url.UserPassword(db.User, db.Password),
-		Host:   fmt.Sprintf("%s:%d", db.Host, db.Port),
+		Host:   db.joinHostPort(),
 		Path:   db.Database,
 	}
 	return url.String()
@@ -298,7 +305,7 @@ func (db *Database) AdminURL() string {
 	url := url.URL{
 		Scheme: "postgresql",
 		User:   url.UserPassword(db.AdminUser, db.AdminPassword),
-		Host:   fmt.Sprintf("%s:%d", db.Host, db.Port),
+		Host:   db.joinHostPort(),
 		Path:   db.AdminDatabase,
 	}
 	return url.String()
@@ -309,7 +316,7 @@ func (db *Database) AdminUserURL() string {
 	url := url.URL{
 		Scheme: "postgresql",
 		User:   url.UserPassword(db.AdminUser, db.AdminPassword),
-		Host:   fmt.Sprintf("%s:%d", db.Host, db.Port),
+		Host:   db.joinHostPort(),
 		Path:   db.Database,
 	}
 	return url.String()
@@ -317,7 +324,7 @@ func (db *Database) AdminUserURL() string {
 
 // Addr returns the combined address the web server should bind to.
 func (w *Web) Addr() string {
-	return fmt.Sprintf("%s:%d", w.Host, w.Port)
+	return net.JoinHostPort(w.Host, strconv.Itoa(w.Port))
 }
 
 // Config returns a Keycloak Config configured by the given settings.
