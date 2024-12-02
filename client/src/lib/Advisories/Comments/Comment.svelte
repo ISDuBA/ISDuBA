@@ -19,10 +19,15 @@
   import { createEventDispatcher } from "svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
+  import { getReadableDateString } from "../CSAFWebview/helpers";
 
   export let comment: any;
   export let fullHistory: boolean;
   export let state = "";
+  const intlFormat = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "medium"
+  });
   let updatedComment = comment.message;
   let isEditing = false;
   let updateCommentError: ErrorDetails | null;
@@ -76,8 +81,8 @@
 <TableBodyCell {tdClass}>
   <div class="flex flex-col">
     <div class="flex flex-row items-baseline">
-      <small class="w-32 text-xs text-slate-400" title={comment.time}
-        >{comment.time.replace("T", " ").split(".")[0]}</small
+      <small class="w-40 text-xs text-slate-400" title={comment.time}
+        >{getReadableDateString(comment.time, intlFormat)}</small
       >
       <small class="ml-1 flex-grow"
         >{fullHistory ? `Comment (${comment.actor})` : `${comment.actor}`}
