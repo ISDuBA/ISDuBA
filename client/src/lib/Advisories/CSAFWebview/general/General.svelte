@@ -10,6 +10,7 @@
 <script lang="ts">
   import { appStore } from "$lib/store";
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import { getReadableDateString } from "../helpers";
 
   $: trackingVersion = $appStore.webview.doc?.trackingVersion;
   $: generator = $appStore.webview.doc?.generator;
@@ -65,9 +66,9 @@
       <div class={cellStyleKey}>Publisher category</div>
       <div class={cellStyleValue}>{publisherCategory}</div>
       <div class={cellStyleKey}>Published</div>
-      <div class={cellStyleValue}>{published}</div>
+      <div class={cellStyleValue}>{getReadableDateString(published)}</div>
       <div class={cellStyleKey}>Last update</div>
-      <div class={cellStyleValue}>{lastUpdate}</div>
+      <div class={cellStyleValue}>{getReadableDateString(lastUpdate)}</div>
       <div class={cellStyleKey}>CSAF-Version</div>
       <div class={cellStyleValue}>{csafVersion}</div>
       <div class={cellStyleKey}>Category</div>
@@ -106,7 +107,7 @@
         {$appStore.webview.doc?.generator?.engine.version}
       {/if}
       {#if generator?.date}
-        {generator?.date.replace("T", " ").split(".")[0]}
+        · {getReadableDateString(generator.date)}
       {/if}
     </span>
   </div>
