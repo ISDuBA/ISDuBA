@@ -18,6 +18,7 @@
     attribute: string | undefined;
     class?: string;
     clickCallBack?: () => void;
+    progressDuration?: number;
   };
   export let title: string | undefined = undefined;
   export let headers: TableHeader[];
@@ -44,6 +45,18 @@
             class:bx-caret-up={orderBy == header.attribute}
             class:bx-caret-down={orderBy == `-${header.attribute}`}
           ></i>
+          {#if header.progressDuration}
+            <div class="mt-1 h-1 min-h-1">
+              <div class="progressmeter">
+                <span class="w-full"
+                  ><span
+                    style="animation-duration: {header.progressDuration}s"
+                    class="infiniteprogress bg-primary-500"
+                  ></span></span
+                >
+              </div>
+            </div>
+          {/if}
         </TableHeadCell>{/each}
     </TableHead>
     <TableBody>

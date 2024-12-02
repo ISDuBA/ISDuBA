@@ -49,3 +49,37 @@ Webview styles
   animation-duration: 4s;
   border-radius: 0.5rem;
 }
+
+.progressmeter {
+  height: 100%;
+  position: relative;
+  background: inherit;
+  overflow: hidden;
+}
+
+.progressmeter span {
+  display: block;
+  height: 100%;
+}
+
+@keyframes progressBar {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.progress {
+  animation-name: progressBar;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.infiniteprogress {
+  animation-name: progressBar;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-iteration-count: infinite;
+}

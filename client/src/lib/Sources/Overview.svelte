@@ -28,8 +28,11 @@
   let sourcesError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
+  let table: CustomTable;
 
   let sources: Source[] = [];
+  let statsComponents: { [idToRole: string]: SourceBasicStats } = {};
+
   async function getMessage() {
     const response = await request("api/sources/message", "GET");
     if (response.ok) {
@@ -40,11 +43,18 @@
     return new Map<string, [string]>();
   }
 
+  let updateIteration = 0;
   let sourceUpdate = setInterval(async () => {
+    updateIteration = (updateIteration + 1) % 6;
+    if (updateIteration == 0) {
+      for (let comp of Object.values(statsComponents)) {
+        comp.reload();
+      }
+    }
     if (appStore.isEditor() || appStore.isSourceManager()) {
       getSources();
     }
-  }, 30 * 1000);
+  }, 5 * 1000);
 
   const getSources = async () => {
     loadingSources = true;
@@ -79,6 +89,7 @@
   ></ImportStats>
   {#if appStore.isEditor() || appStore.isSourceManager()}
     <CustomTable
+      bind:this={table}
       title="CSAF Provider"
       headers={[
         {
@@ -99,11 +110,13 @@
         },
         {
           label: "Loading/Queued",
-          attribute: "stats"
+          attribute: "stats",
+          progressDuration: 5
         },
         {
           label: "Imported (last 24h)",
-          attribute: "statsHistory"
+          attribute: "statsHistory",
+          progressDuration: 30
         }
       ]}
     >
@@ -147,8 +160,12 @@
           <TableBodyCell>
             {#if source.id !== undefined}
               {@const yesterday = Date.now() - DAY_MS}
-              <SourceBasicStats sourceID={source.id}></SourceBasicStats>
-              (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
+              <SourceBasicStats bind:this={statsComponents[`${source.id}full`]} sourceID={source.id}
+              ></SourceBasicStats>
+              (<SourceBasicStats
+                bind:this={statsComponents[`${source.id}last`]}
+                from={new Date(yesterday)}
+                sourceID={source.id}
               ></SourceBasicStats>)
             {/if}
           </TableBodyCell>
