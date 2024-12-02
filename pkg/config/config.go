@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -282,44 +282,36 @@ type Config struct {
 	Aggregators     Aggregators                 `toml:"aggregators"`
 }
 
-func (db *Database) joinHostPort() string {
-	if db.Host == "" || db.Host[0] == '/' {
-		return db.Host
-	}
-	return net.JoinHostPort(db.Host, strconv.Itoa(db.Port))
+func escape(s string) string {
+	return `'` + strings.ReplaceAll(s, `'`, `\'`) + `'`
 }
 
-// URL creates a connection URL from the configured credentials.
-func (db *Database) URL() string {
-	url := url.URL{
-		Scheme: "postgresql",
-		User:   url.UserPassword(db.User, db.Password),
-		Host:   db.joinHostPort(),
-		Path:   db.Database,
-	}
-	return url.String()
+func connString(user, password, host string, port int, database string) string {
+	return fmt.Sprintf("user=%s "+
+		"password=%s "+
+		"host=%s "+
+		"port=%d "+
+		"database=%s",
+		escape(user),
+		escape(password),
+		escape(host),
+		port,
+		escape(database))
 }
 
-// AdminURL creates a connection URL from the configured credentials.
-func (db *Database) AdminURL() string {
-	url := url.URL{
-		Scheme: "postgresql",
-		User:   url.UserPassword(db.AdminUser, db.AdminPassword),
-		Host:   db.joinHostPort(),
-		Path:   db.AdminDatabase,
-	}
-	return url.String()
+// ConnString creates a connection ConnString from the configured credentials.
+func (db *Database) ConnString() string {
+	return connString(db.User, db.Password, db.Host, db.Port, db.Database)
 }
 
-// AdminUserURL a connection URL from the configured credentials.
-func (db *Database) AdminUserURL() string {
-	url := url.URL{
-		Scheme: "postgresql",
-		User:   url.UserPassword(db.AdminUser, db.AdminPassword),
-		Host:   db.joinHostPort(),
-		Path:   db.Database,
-	}
-	return url.String()
+// AdminConnString creates a connection URL from the configured credentials.
+func (db *Database) AdminConnString() string {
+	return connString(db.AdminUser, db.AdminPassword, db.Host, db.Port, db.AdminDatabase)
+}
+
+// AdminUserConnString a connection URL from the configured credentials.
+func (db *Database) AdminUserConnString() string {
+	return connString(db.AdminUser, db.AdminPassword, db.Host, db.Port, db.Database)
 }
 
 // Addr returns the combined address the web server should bind to.

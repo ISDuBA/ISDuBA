@@ -122,7 +122,7 @@ func process(creds *config.Database, dry bool, importer string, files []string) 
 	}
 	defer db.Close(ctx)
 
-	conn, err := pgx.Connect(ctx, creds.URL())
+	conn, err := pgx.Connect(ctx, creds.ConnString())
 	if err != nil {
 		return err
 	}
