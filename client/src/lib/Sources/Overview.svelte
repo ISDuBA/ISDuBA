@@ -24,11 +24,13 @@
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceBasicStats from "./SourceBasicStats.svelte";
 
+  const shortLoadInterval = 5;
+  const longLoadMultiplier = 6;
+
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
-  let table: CustomTable;
 
   let sources: Source[] = [];
   let statsComponents: { [idToRole: string]: SourceBasicStats } = {};
@@ -45,7 +47,7 @@
 
   let updateIteration = 0;
   let sourceUpdate = setInterval(async () => {
-    updateIteration = (updateIteration + 1) % 6;
+    updateIteration = (updateIteration + 1) % longLoadMultiplier;
     if (updateIteration == 0) {
       for (let comp of Object.values(statsComponents)) {
         comp.reload();
@@ -54,7 +56,7 @@
     if (appStore.isEditor() || appStore.isSourceManager()) {
       getSources();
     }
-  }, 5 * 1000);
+  }, shortLoadInterval * 1000);
 
   const getSources = async () => {
     loadingSources = true;
@@ -89,7 +91,6 @@
   ></ImportStats>
   {#if appStore.isEditor() || appStore.isSourceManager()}
     <CustomTable
-      bind:this={table}
       title="CSAF Provider"
       headers={[
         {
@@ -111,12 +112,12 @@
         {
           label: "Loading/Queued",
           attribute: "stats",
-          progressDuration: 5
+          progressDuration: shortLoadInterval
         },
         {
           label: "Imported (last 24h)",
           attribute: "statsHistory",
-          progressDuration: 30
+          progressDuration: shortLoadInterval * longLoadMultiplier
         }
       ]}
     >

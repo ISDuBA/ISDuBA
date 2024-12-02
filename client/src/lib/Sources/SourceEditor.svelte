@@ -38,6 +38,9 @@
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   export let params: any = null;
 
+  const shortLoadInterval = 5;
+  const longLoadMultiplier = 6;
+
   let sourceEdited: boolean = false;
 
   let modalOpen: boolean = false;
@@ -80,7 +83,16 @@
 
   let oldSource = structuredClone(source);
 
+  let sourceStatFull: SourceBasicStats;
+  let sourceStatLast: SourceBasicStats;
+
+  let updateIteration = 0;
   let updateStats = setInterval(async () => {
+    updateIteration = (updateIteration + 1) % 6;
+    if (updateIteration == 0) {
+      sourceStatFull.reload();
+      sourceStatLast.reload();
+    }
     if (!source.id || source.id === 0) {
       return;
     }
@@ -98,7 +110,7 @@
       }
     }
     feeds = feeds;
-  }, 30 * 1000);
+  }, shortLoadInterval * 1000);
 
   const loadSourceInfo = async (id: number) => {
     loadingSource = true;
@@ -342,27 +354,45 @@
       </List>
       {#if source.stats}
         <h4 class="mt-3">Status</h4>
-        <List tag="dl" class="flex w-full flex-wrap text-sm">
-          <div>
-            <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
+        <div class="grid w-full grid-cols-[max-content_max-content_max-content] gap-x-4 text-sm">
+          <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
+          <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}>Queued</DescriptionList>
+          <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}>Imported (last 24h)</DescriptionList
+          >
+          <div class="col-span-2 mb-1 mt-1 h-1 min-h-1">
+            <div class="progressmeter">
+              <span class="w-full"
+                ><span
+                  style="animation-duration: {shortLoadInterval}s"
+                  class="infiniteprogress bg-primary-500"
+                ></span></span
+              >
+            </div>
           </div>
-          <div class="pl-4">
-            <DescriptionList tag="dt" {dtClass}>Queued</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
+          <div class="mb-1 mt-1 h-1 min-h-1">
+            <div class="progressmeter">
+              <span class="w-full"
+                ><span
+                  style="animation-duration: {shortLoadInterval * longLoadMultiplier}s"
+                  class="infiniteprogress bg-primary-500"
+                ></span></span
+              >
+            </div>
           </div>
-          <div class="pl-4">
-            <DescriptionList tag="dt" {dtClass}>Imported (last 24h)</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>
-              {#if source.id}
-                {@const yesterday = Date.now() - DAY_MS}
-                <SourceBasicStats sourceID={source.id}></SourceBasicStats>
-                (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
-                ></SourceBasicStats>)
-              {/if}
-            </DescriptionList>
-          </div>
-        </List>
+          <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
+          <DescriptionList tag="dd" {ddClass}>
+            {#if source.id}
+              {@const yesterday = Date.now() - DAY_MS}
+              <SourceBasicStats bind:this={sourceStatFull} sourceID={source.id}></SourceBasicStats>
+              (<SourceBasicStats
+                bind:this={sourceStatLast}
+                from={new Date(yesterday)}
+                sourceID={source.id}
+              ></SourceBasicStats>)
+            {/if}
+          </DescriptionList>
+        </div>
       {/if}
       <ErrorMessage error={loadSourceError}></ErrorMessage>
       <ErrorMessage error={loadPmdError}></ErrorMessage>
@@ -420,7 +450,14 @@
   </div>
 {/if}
 
-<FeedView {feeds} placeholderFeed={source.id === 0} {clickFeed} {updateFeed} edit={true}>
+<FeedView
+  showProgress
+  {feeds}
+  placeholderFeed={source.id === 0}
+  {clickFeed}
+  {updateFeed}
+  edit={true}
+>
   <div slot="top">
     {#if source.attention}
       <Badge class="mb-2 h-fit p-1" dismissable>

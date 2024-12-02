@@ -11,15 +11,7 @@
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Table, TableBody, TableHead, TableHeadCell } from "flowbite-svelte";
-  import { tablePadding } from "./defaults";
-
-  type TableHeader = {
-    label: string;
-    attribute: string | undefined;
-    class?: string;
-    clickCallBack?: () => void;
-    progressDuration?: number;
-  };
+  import { tablePadding, type TableHeader } from "./defaults";
   export let title: string | undefined = undefined;
   export let headers: TableHeader[];
   export let stickyHeaders = false;
