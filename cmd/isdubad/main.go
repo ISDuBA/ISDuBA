@@ -14,9 +14,11 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/ISDuBA/ISDuBA/pkg/aggregators"
@@ -103,12 +105,27 @@ func run(cfg *config.Config) error {
 		Handler: ctrl.Bind(),
 	}
 
+	// Check if we should serve on an unix domain socket.
+	var listener net.Listener
+	if host := cfg.Web.Host; filepath.IsAbs(host) {
+		l, err := net.Listen("unix", host)
+		if err != nil {
+			return fmt.Errorf("cannot listen on domain socket: %w", err)
+		}
+		defer l.Close()
+		listener = l
+	}
+
 	srvErrors := make(chan error)
 
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		serve := srv.ListenAndServe
+		if listener != nil {
+			serve = func() error { return srv.Serve(listener) }
+		}
+		if err := serve(); err != http.ErrServerClosed {
 			srvErrors <- err
 		}
 	}()

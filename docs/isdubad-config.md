@@ -82,6 +82,7 @@ The configuration consists of the following sections:
 ### <a name="section_web"></a> Section `[web]` Web interface
 
 - `host`: Interface the web server listens on. Defaults to `"localhost"`.
+If the value starts with a slash (`/`) it is assumed to serve on an unix domain socket.
 - `port`: Port the web server listens on. Defaults to `8081`.
 - `gin_mode`: Mode the Gin middleware is running in. Defaults to `"release"`.
 - `static`: Folder to be served under **<http://host:port/>**. Defaults to `"web"`.
