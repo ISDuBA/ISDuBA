@@ -35,10 +35,10 @@ else
 fi
 
 # Adjust keycloak configuration
-sed -i "s/$LAB/$LAA/g" /etc/postgresql/16/main/postgresql.conf
-if ! grep -q -F "# ISDuBA configuration" /etc/postgresql/16/main/pg_hba.conf;
+sed -i "s/$LAB/$LAA/g" /etc/postgresql/15/main/postgresql.conf
+if ! grep -q -F "# ISDuBA configuration" /etc/postgresql/15/main/pg_hba.conf;
 then
-tee -a /etc/postgresql/16/main/pg_hba.conf <<block_to_insert > /dev/null
+tee -a /etc/postgresql/15/main/pg_hba.conf <<block_to_insert > /dev/null
 # ISDuBA configuration
 host    all             all             127.0.0.1/32            scram-sha-256
 block_to_insert
