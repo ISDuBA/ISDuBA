@@ -11,7 +11,7 @@ services:
     image: keycloak/keycloak:26.0
     container_name: "isduba-keycloak"
     ports:
-      - "${KC_HOSTNAME_PORT}:8080"
+      - "${KEYCLOAK_PORT}:8080"
     command: ["start-dev"]
     environment:
       KC_DB: postgres
@@ -21,10 +21,10 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
 
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: secret
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: secret
 
-      KC_HOSTNAME_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
+      KC_HOSTNAME: ${PROTOCOL}://${KEYCLOAK_HOSTNAME}:${KEYCLOAK_PORT}
       # Optional, reduce memory usage
       JAVA_OPTS: >
         -XX:MaxHeapFreeRatio=10
@@ -47,15 +47,15 @@ services:
         condition: service_healthy
 
   keycloak-setup:
-    image: keycloak/keycloak:24.0
+    image: keycloak/keycloak:26.0
     container_name: "isduba-keycloak-setup"
     restart: "no"
     entrypoint: ["bash", "/opt/keycloak/init.sh"]
     networks:
       - isduba
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: secret
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: secret
       CLIENT_HOSTNAME_URL: ${PROTOCOL}://${CLIENT_HOST}:${CLIENT_PORT}
     volumes:
       - ./keycloak/init.sh:/opt/keycloak/init.sh
@@ -89,7 +89,7 @@ services:
     networks:
       - isduba
     environment:
-      ISDUBA_CLIENT_KEYCLOAK_URL: ${PROTOCOL}://${KC_HOSTNAME}:${KC_HOSTNAME_PORT}
+      ISDUBA_CLIENT_KEYCLOAK_URL: ${PROTOCOL}://${KEYCLOAK_HOSTNAME}:${KEYCLOAK_PORT}
       ISDUBA_CLIENT_KEYCLOAK_REALM: "isduba"
       ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID: "auth"
       ISDUBA_CLIENT_IDLE_TIMEOUT: "30m"

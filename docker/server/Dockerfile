@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-FROM library/node:20.10-alpine as client
+FROM library/node:20.10-alpine AS client
 RUN apk update && apk add --no-cache make
 
 WORKDIR /app
@@ -19,7 +19,7 @@ COPY Makefile Makefile
 RUN make build_client
 
 
-FROM library/golang:1.22.1-alpine as server
+FROM library/golang:1.23-alpine AS server
 RUN apk update && apk add --no-cache make
 
 WORKDIR /app
