@@ -395,7 +395,7 @@
         {formClass}
         enableActive={true}
       ></SourceForm>
-      <Button disabled={!sourceEdited} on:click={updateSource} color="light">
+      <Button disabled={!sourceEdited} on:click={updateSource} color="green">
         <i class="bx bxs-save me-2"></i>
         <span>Save source</span>
       </Button>

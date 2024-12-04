@@ -279,6 +279,7 @@
       />
       <div class="ml-auto mt-28 flex flex-row gap-x-3">
         <Button
+          color="light"
           outline
           size="xs"
           class="h-8"
@@ -289,6 +290,7 @@
           Cancel
         </Button>
         <Button
+          color="light"
           outline
           size="xs"
           class="h-8"
@@ -297,7 +299,9 @@
         >
           Evaluate
         </Button>
-        <Button size="xs" class="h-8" on:click={() => saveSSVC(vectorInput)}>Save</Button>
+        <Button color="green" size="xs" class="h-8" on:click={() => saveSSVC(vectorInput)}
+          >Save</Button
+        >
       </div>
     </div>
   {:else}
@@ -386,7 +390,7 @@
           </Button>
           {#if isComplex || result}
             <Button
-              color="light"
+              color={currentStep === steps.length - 1 ? "green" : "primary"}
               on:click={() => {
                 if (currentStep === steps.length - 1) {
                   saveSSVC(vector);
@@ -399,6 +403,7 @@
             >
           {/if}
           <Button
+            color="light"
             size="xs"
             class="h-6 p-3"
             title="Cancel SSVC input"
