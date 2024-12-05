@@ -22,6 +22,7 @@
     "prepare": "cd .. && husky client/.husky"
   },
   "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@playwright/test": "^1.49.0",
     "@sveltejs/adapter-auto": "^3.3.1",
     "@sveltejs/adapter-static": "^3.0.6",
@@ -49,9 +50,11 @@
     "prettier": "^3.4.1",
     "prettier-plugin-svelte": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
+    "source-map-support": "^0.5.21",
     "svelte": "^4.2.19",
     "svelte-check": "^4.1.0",
     "tailwindcss": "^3.4.15",
+    "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.7.2",
     "vite": "^5.4.11",

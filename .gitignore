@@ -42,6 +42,7 @@ client/vite.config.ts.timestamp-*
 client/.env
 client/coverage
 client/test-results
+client/.nyc_output/
 build/
 dist/
 cov/

@@ -15,3 +15,5 @@ build/
 coverage/
 test-results/
 playwright/.auth/
+.nyc_output/
+coverage/
