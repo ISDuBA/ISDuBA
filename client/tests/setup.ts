@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { test as setup } from "playwright-test-coverage";
+import { test as setup } from "@playwright/test";
 import { fileURLToPath } from "url";
 import path from "path";
 
