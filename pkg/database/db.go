@@ -26,7 +26,7 @@ type DB struct {
 
 // NewDB creates a new connection pool.
 func NewDB(ctx context.Context, cfg *config.Database) (*DB, error) {
-	cc, err := pgxpool.ParseConfig(cfg.URL())
+	cc, err := pgxpool.ParseConfig(cfg.ConnString())
 	if err != nil {
 		return nil, err
 	}

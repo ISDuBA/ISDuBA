@@ -52,7 +52,7 @@ func CheckMigrations(ctx context.Context, cfg *config.Database) (bool, error) {
 	}
 
 	checkVersion := func() (int64, error) {
-		conn, err := pgx.Connect(ctx, cfg.URL())
+		conn, err := pgx.Connect(ctx, cfg.ConnString())
 		if err != nil {
 			return -1, err
 		}
@@ -94,7 +94,7 @@ func doMigrations(
 	migs []migration,
 ) (bool, error) {
 	if err := func() error {
-		conn, err := pgx.Connect(ctx, cfg.AdminURL())
+		conn, err := pgx.Connect(ctx, cfg.AdminConnString())
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func doMigrations(
 		return true, err
 	}
 
-	conn, err := pgx.Connect(ctx, cfg.AdminUserURL())
+	conn, err := pgx.Connect(ctx, cfg.AdminUserConnString())
 	if err != nil {
 		return true, err
 	}
