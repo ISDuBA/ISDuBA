@@ -32,7 +32,6 @@ jobs:
           ./start_all.sh
           cd ../../client
           npm run cover
-          cd ../
           killall "-2" --wait isdubad
           go tool covdata percent -i=/tmp/cov
         shell: bash
