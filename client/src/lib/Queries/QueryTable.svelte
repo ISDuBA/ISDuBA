@@ -181,9 +181,11 @@
                 {/if}
               </TableBodyCell>
               <TableBodyCell {tdClass}>
-                <span class="columnName">{query.name ?? "-"}</span>
+                <div class="text-wrap"><span class="columnName">{query.name ?? "-"}</span></div>
               </TableBodyCell>
-              <TableBodyCell {tdClass}>{query.description ?? "-"}</TableBodyCell>
+              <TableBodyCell {tdClass}
+                ><div class="text-wrap">{query.description ?? "-"}</div></TableBodyCell
+              >
               <TableBodyCell {tdClass}>
                 <CCheckbox
                   on:change={() => {
