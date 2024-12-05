@@ -23,16 +23,22 @@ testsemver:
 	@echo from \'$(GITDESC)\' transformed to \'$(SEMVER)\'
 
 LDFLAGS=-ldflags "-X github.com/ISDuBA/ISDuBA/pkg/version.SemVersion=$(SEMVER)"
+GO_FLAGS=$(LDFLAGS)
+
+# Build for coverage profile generation
+ifeq ($(BUILD_COVER), true)
+GO_FLAGS += "-cover"
+endif
 
 
 build_importer: build_pkg
-	cd cmd/bulkimport && go build $(LDFLAGS)
+	cd cmd/bulkimport && go build $(GO_FLAGS)
 
 build_isdubad: build_pkg
-	cd cmd/isdubad && go build $(LDFLAGS)
+	cd cmd/isdubad && go build $(GO_FLAGS)
 
 build_pkg:
-	cd pkg && go build $(LDFLAGS) ./...
+	cd pkg && go build $(GO_FLAGS) ./...
 
 build_client:
 	cd client && npm install && npm run build

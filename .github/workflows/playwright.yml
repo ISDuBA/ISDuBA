@@ -15,6 +15,9 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-24.04
+    env:
+      BUILD_COVER: "true"
+      GOCOVERDIR: "/tmp/cov"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,11 +25,15 @@ jobs:
           node-version: lts/*
       - name: test installation scripts and playwright tests
         run: |
+          mkdir /tmp/cov
           cd docs/scripts
           ./setup.sh
           ./start_all.sh
           cd ../../client
-          npx playwright test
+          npm run cover
+          cd ../
+          killall "-2" --wait isdubad
+          go tool covdata percent -i=/tmp/cov
         shell: bash
       - uses: actions/upload-artifact@v3
         if: always()

@@ -1,0 +1,15 @@
+{
+  "extends": "@istanbuljs/nyc-config-typescript",
+  "extension": [".svelte", ".html", ".ts"],
+  "exclude": [
+    "*.config.js",
+    "**/*spec.js",
+    "**/*.d.ts",
+    ".eslintrc.js",
+    "node_modules",
+    "coverage/**"
+  ],
+  "reporter": ["html"],
+  "compact": false,
+  "all": true
+}
