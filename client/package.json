@@ -18,7 +18,7 @@
     "cover": "npm run cover:unit && npm run cover:integration && npm run cover:report",
     "cover:unit": "nyc --silent npm run test:unit",
     "cover:integration": "nyc --silent --no-clean npm run test:integration",
-    "cover:report": "nyc report --reporter=lcov --reporter=text",
+    "cover:report": "nyc report --reporter=lcov --reporter=text --exclude-after-remap false",
     "prepare": "cd .. && husky client/.husky"
   },
   "devDependencies": {
