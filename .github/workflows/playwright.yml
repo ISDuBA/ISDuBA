@@ -30,7 +30,7 @@ jobs:
           ./setup.sh
           ./start_all.sh
           cd ../../client
-          npx playwright test
+          npm run test
           cd ../
           killall --wait isdubad
           go tool covdata percent -i=cov

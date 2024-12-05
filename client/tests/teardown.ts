@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { test as teardown } from "@playwright/test";
+import { test as teardown } from "playwright-test-coverage";
 
 // TODO: delete document
 teardown("Delete document", async ({ page }) => {
