@@ -12,7 +12,7 @@ A collection of scripts which allows to set up ISDuBA on a Ubuntu 24.04 setup an
 some important setup-steps.
 
 ## [installall.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/installall.sh)
-This script will install git if needed and download the ISDuBA repository in the current directory unless it already exists, in which case it will update it.
+This script will download the ISDuBA repository in the current directory unless it already exists, in which case it will update it.
 Then it will call the setup.sh script that calls all other scripts to set up a testing environment.
 
 installall.sh can be downloaded via:
@@ -28,8 +28,8 @@ Then you can make it executable (e.g. via chmod) and use it to set up the testin
 ```
 Usage: installall.sh [OPTIONS]
 where OPTIONS:
-  -h, --help                       show this help text (optional)
-  -b, --branch=name                set up ISDuBA on branch 'name' instead of main (optional)
+  -h, --help                       show this help text and exit script (optional)
+  -b, --branch=name                set up on branch 'name' instead of main (optional)
   -k, --keycloakRunning            signal the script that there is a keycloak running on port 8080 (optional)
 ```
 

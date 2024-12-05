@@ -47,6 +47,9 @@ cd ..
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
 
-ISDUBA_DB_MIGRATE=true ./../../cmd/isdubad/isdubad -c ../../isduba.toml # migrate the database so it is up-to-date
+cd ../..
+
+# migrate the database so it is up-to-date
+ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c ./isduba.toml
 
 echo "All set up!"
