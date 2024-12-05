@@ -44,6 +44,7 @@ client/coverage
 client/test-results
 build/
 dist/
+cov/
 /web/
 client/playwright/.auth
 
