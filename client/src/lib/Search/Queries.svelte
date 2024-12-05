@@ -30,7 +30,7 @@
     }
     return 0;
   });
-  export let selectedIndex = -1;
+  export let selectedIndex = -2;
   export let queryString: any;
   let ignoredQueries: Query[] = [];
   let errorMessage: ErrorDetails | null = null;
@@ -79,6 +79,8 @@
         // Probably a dashboard query
         if (index === -1) {
           const query = response.content.filter((q: any) => `${q.id}` === queryString.query)?.[0];
+          selectedIndex = -2;
+          currentQueryTitle = query.name;
           if (query) {
             dispatch("querySelected", query);
           }
@@ -89,12 +91,16 @@
     }
   });
 
+  let currentQueryTitle: string | undefined;
+
   const selectQuery = (index: number) => {
-    if (selectedIndex == index) {
+    if (selectedIndex == index || index == -1) {
       selectedIndex = -1;
+      currentQueryTitle = undefined;
     } else {
       selectedIndex = index;
       dispatch("querySelected", sortedQueries[selectedIndex]);
+      currentQueryTitle = sortedQueries[selectedIndex].name;
     }
   };
 </script>
@@ -113,6 +119,11 @@
           </Button>
         {/if}
       {/each}
+      {#if currentQueryTitle && selectedIndex < 0}
+        <Button size="xs" on:click={() => selectQuery(-1)} class={getClass(false, true)}>
+          <span class="p-2">{truncate(currentQueryTitle, 30)}</span>
+        </Button>
+      {/if}
       <Button
         title="Configure queries"
         size="xs"
