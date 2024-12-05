@@ -24,12 +24,17 @@
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceBasicStats from "./SourceBasicStats.svelte";
 
+  const shortLoadInterval = 5;
+  const longLoadMultiplier = 6;
+
   let messageError: ErrorDetails | null;
   let sourcesError: ErrorDetails | null;
 
   let loadingSources: boolean = false;
 
   let sources: Source[] = [];
+  let statsComponents: { [idToRole: string]: SourceBasicStats } = {};
+
   async function getMessage() {
     const response = await request("api/sources/message", "GET");
     if (response.ok) {
@@ -40,11 +45,18 @@
     return new Map<string, [string]>();
   }
 
+  let updateIteration = 0;
   let sourceUpdate = setInterval(async () => {
+    updateIteration = (updateIteration + 1) % longLoadMultiplier;
+    if (updateIteration == 0) {
+      for (let comp of Object.values(statsComponents)) {
+        comp.reload();
+      }
+    }
     if (appStore.isEditor() || appStore.isSourceManager()) {
       getSources();
     }
-  }, 30 * 1000);
+  }, shortLoadInterval * 1000);
 
   const getSources = async () => {
     loadingSources = true;
@@ -99,11 +111,13 @@
         },
         {
           label: "Loading/Queued",
-          attribute: "stats"
+          attribute: "stats",
+          progressDuration: shortLoadInterval
         },
         {
           label: "Imported (last 24h)",
-          attribute: "statsHistory"
+          attribute: "statsHistory",
+          progressDuration: shortLoadInterval * longLoadMultiplier
         }
       ]}
     >
@@ -147,8 +161,12 @@
           <TableBodyCell>
             {#if source.id !== undefined}
               {@const yesterday = Date.now() - DAY_MS}
-              <SourceBasicStats sourceID={source.id}></SourceBasicStats>
-              (<SourceBasicStats from={new Date(yesterday)} sourceID={source.id}
+              <SourceBasicStats bind:this={statsComponents[`${source.id}full`]} sourceID={source.id}
+              ></SourceBasicStats>
+              (<SourceBasicStats
+                bind:this={statsComponents[`${source.id}last`]}
+                from={new Date(yesterday)}
+                sourceID={source.id}
               ></SourceBasicStats>)
             {/if}
           </TableBodyCell>

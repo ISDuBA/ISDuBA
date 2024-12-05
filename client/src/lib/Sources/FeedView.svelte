@@ -13,7 +13,7 @@
   import { Select, Input, TableBodyCell } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { onMount } from "svelte";
-  import { tdClass } from "$lib/Table/defaults";
+  import { tdClass, type TableHeader } from "$lib/Table/defaults";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
   import CIconButton from "$lib/Components/CIconButton.svelte";
@@ -24,8 +24,22 @@
 
   export let updateFeed = async (_feed: Feed) => {};
   export let clickFeed = async (_feed: Feed) => {};
+  export let showProgress = false;
 
-  let headers = [
+  $: {
+    let loadingHeader = headersEdit.find((header) => header.label == "Loading/Queued");
+    if (loadingHeader) {
+      if (showProgress) {
+        loadingHeader.progressDuration = shortLoadInterval;
+      } else {
+        loadingHeader.progressDuration = undefined;
+      }
+    }
+  }
+
+  const shortLoadInterval = 5;
+
+  let headers: TableHeader[] = [
     {
       label: "",
       attribute: "enable"
@@ -46,9 +60,9 @@
     }
   ];
 
-  let headersEdit = [
+  let headersEdit: TableHeader[] = [
     ...headers,
-    { label: "Loading/Queued", attribute: "stats" },
+    { label: "Loading/Queued", attribute: "stats", progressDuration: shortLoadInterval },
     { label: "Logs", attribute: "logs" }
   ];
 

@@ -8,15 +8,40 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { fetchBasicStatistic } from "$lib/Statistics/statistics";
+  import { fetchBasicStatistic, type StatisticGroup } from "$lib/Statistics/statistics";
   import { Spinner } from "flowbite-svelte";
+  import type { Result } from "$lib/types";
+  import type { ErrorDetails } from "$lib/Errors/error";
 
   export let from: Date = new Date(0);
   export let sourceID: number;
+  let oldResponse: Result<StatisticGroup, ErrorDetails> | null = null;
+  export const reload = async () => {
+    promise = fetch();
+  };
+  const fetch = async () => {
+    oldResponse = await fetchBasicStatistic(
+      from,
+      new Date(),
+      Date.now() - from.getTime(),
+      "imports",
+      sourceID
+    );
+    return oldResponse;
+  };
+  let promise = fetch();
 </script>
 
-{#await fetchBasicStatistic(from, new Date(), Date.now() - from.getTime(), "imports", sourceID)}
-  <Spinner color="gray" size="4"></Spinner>
+{#await promise}
+  {#if oldResponse}
+    {#if oldResponse.ok}
+      {oldResponse.value.imports?.[0][1] ?? 0}
+    {:else}
+      <span class="text-red-700">Couldn't load value.</span>
+    {/if}
+  {:else}
+    <Spinner color="gray" size="4"></Spinner>
+  {/if}
 {:then response}
   {#if response.ok}
     {response.value.imports?.[0][1] ?? 0}

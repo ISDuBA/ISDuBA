@@ -14,4 +14,12 @@ const publisher = "whitespace-nowrap w-48 max-w-48 overflow-clip text-ellipsis";
 
 const searchColumnName = "_clientSearch";
 
-export { tdClass, tablePadding, title, publisher, searchColumnName };
+type TableHeader = {
+  label: string;
+  attribute: string | undefined;
+  class?: string;
+  clickCallBack?: () => void;
+  progressDuration?: number;
+};
+
+export { tdClass, tablePadding, title, publisher, searchColumnName, type TableHeader };
