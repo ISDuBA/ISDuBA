@@ -18,6 +18,7 @@ jobs:
     env:
       BUILD_COVER: "true"
       GOCOVERDIR: "/tmp/cov"
+      VITE_COVERAGE: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
