@@ -9,13 +9,13 @@
 -->
 
 <script lang="ts">
-  import { request } from "$lib/request";
   import DiffEntry from "./DiffEntry.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { Button } from "flowbite-svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { fetchDiffEntry, type DiffOperation } from "./Diff";
 
-  export let operation: string;
+  export let operation: DiffOperation;
   export let path: string;
   export let urlPath: string;
   let result: any;
@@ -26,8 +26,7 @@
     isOpen = !isOpen;
     if (result) return;
     error = null;
-    const requestPath = encodeURI(`${urlPath}&item_op=${operation}&item_path=${path}`);
-    const response = await request(requestPath, "GET");
+    const response = await fetchDiffEntry(urlPath, operation, path);
     if (response.ok) {
       result = response.content;
     } else if (response.error) {

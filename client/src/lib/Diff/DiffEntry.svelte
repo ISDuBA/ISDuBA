@@ -9,11 +9,13 @@
 -->
 
 <script lang="ts">
+  import { isArrayOfString } from "$lib/utils";
+  import type { DiffOperation } from "./Diff";
   import ReplaceOperation from "./ReplaceOperation.svelte";
 
   export let content: any;
   export let isSideBySideViewActivated: boolean = true;
-  export let operation: string;
+  export let operation: DiffOperation;
   export let depth = 0;
 
   $: containerStyle = `padding-left: ${depth > 1 ? 6 * depth : 0}pt`;
@@ -30,14 +32,22 @@
     <ReplaceOperation {content} {isSideBySideViewActivated}></ReplaceOperation>
   {:else if typeof content === "object"}
     {#each Object.keys(content) as key}
-      <div>
-        {key}:&ensp;
-        {#if typeof content[key] === "string"}
-          {content[key]}
-        {:else}
+      {#if ["string", "number"].includes(typeof content[key])}
+        <div>
+          <span>{key}:&ensp;</span>
+          <span>{content[key]}</span>
+        </div>
+      {:else if isArrayOfString(content[key])}
+        <div>
+          <span>{key}:&ensp;</span>
+          <span>{content[key].join(", ")}</span>
+        </div>
+      {:else}
+        <div>
+          {key}:&ensp;
           <svelte:self content={content[key]} depth={depth + 1} {operation}></svelte:self>
-        {/if}
-      </div>
+        </div>
+      {/if}
     {/each}
   {:else}
     <span>{content}</span>
