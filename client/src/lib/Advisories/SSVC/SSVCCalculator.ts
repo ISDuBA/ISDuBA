@@ -66,6 +66,8 @@ interface SSVCObject {
   label: SSVCAction;
 }
 
+const vectorStart = "SSVCv2/";
+
 function parseDecisionTree(): ParsedDecisionTree {
   const json: SSVCDecisionTree = decisionTree;
   const addedPoints: string[] = [];
@@ -144,5 +146,6 @@ export {
   createIsoTimeStringForSSVC,
   getOptionViaKey,
   getDecision,
-  parseDecisionTree
+  parseDecisionTree,
+  vectorStart
 };
