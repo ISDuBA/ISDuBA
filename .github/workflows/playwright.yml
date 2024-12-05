@@ -32,7 +32,7 @@ jobs:
           cd ../../client
           npm run test
           cd ../
-          killall --wait isdubad
+          killall "-2" --wait isdubad
           go tool covdata percent -i=/tmp/cov
         shell: bash
       - uses: actions/upload-artifact@v3
