@@ -19,6 +19,8 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/ISDuBA/ISDuBA/pkg/aggregators"
@@ -42,7 +44,7 @@ func check(err error) {
 func run(cfg *config.Config) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGKILL)
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGKILL, syscall.SIGTERM)
 	defer stop()
 
 	terminate, err := database.CheckMigrations(ctx, &cfg.Database)
@@ -108,11 +110,20 @@ func run(cfg *config.Config) error {
 	// Check if we should serve on an unix domain socket.
 	var listener net.Listener
 	if host := cfg.Web.Host; filepath.IsAbs(host) {
+		host = strings.ReplaceAll(host, "{port}", strconv.Itoa(cfg.Web.Port))
 		l, err := net.Listen("unix", host)
 		if err != nil {
 			return fmt.Errorf("cannot listen on domain socket: %w", err)
 		}
-		defer l.Close()
+		defer func() {
+			l.Close()
+			// Cleanup socket file
+			os.Remove(host)
+		}()
+		// Enable writing to socket
+		if err := os.Chmod(host, 0777); err != nil {
+			return fmt.Errorf("cannot change rights on socket: %w", err)
+		}
 		listener = l
 	}
 
