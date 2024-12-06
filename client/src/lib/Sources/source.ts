@@ -639,13 +639,25 @@ const fetchFeedLogs = async (
 
 const fetchAllFeedLogs = async (
   id: number,
-  count: boolean = false
+  count: boolean = false,
+  abortController: AbortController | undefined = undefined
 ): Promise<Result<[any[], number], ErrorDetails>> => {
-  const resp = await request(`/api/sources/feeds/${id}/log?offset=0&count=${count}`, "GET");
+  const resp = await request(
+    `/api/sources/feeds/${id}/log?offset=0&count=${count}`,
+    "GET",
+    undefined,
+    abortController
+  );
   if (resp.ok) {
     return { ok: true, value: [resp.content.entries, resp.content.count ?? 0] };
   }
-  return { ok: false, error: getErrorDetails(`Could not load feed logs`, resp) };
+  return {
+    ok: false,
+    error:
+      resp.error === "AbortError"
+        ? { message: "AbortError" }
+        : getErrorDetails(`Could not load feed logs`, resp)
+  };
 };
 
 const isSameFeed = (a: Feed, b: Feed) => a.url === b.url && a.rolie === b.rolie;
