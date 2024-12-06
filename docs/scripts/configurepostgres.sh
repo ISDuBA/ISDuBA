@@ -34,7 +34,7 @@ else
   createdb -O keycloak -E 'UTF-8' keycloak
 fi
 
-# Adjust keycloak configuration
+# Adjust postgresql configuration
 sed -i "s/$LAB/$LAA/g" /etc/postgresql/15/main/postgresql.conf
 if ! grep -q -F "# ISDuBA configuration" /etc/postgresql/15/main/pg_hba.conf;
 then
@@ -44,4 +44,4 @@ host    all             all             127.0.0.1/32            scram-sha-256
 block_to_insert
 fi
 
-echo "Adjusted keycloak configuration"
+echo "Adjusted postgresql configuration"
