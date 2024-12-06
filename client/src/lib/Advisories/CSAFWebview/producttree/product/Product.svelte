@@ -32,6 +32,7 @@
   $: productID = product?.product_id;
   $: if (selectedProduct === productID) {
     highlight = true;
+    appStore.resetSelectedProduct();
     updateUI();
   } else {
     highlight = false;
