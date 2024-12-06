@@ -47,13 +47,13 @@
     advisoryTable.fetchData();
   };
 
-  $: if (selectedCustomQuery === -1) {
+  $: if (selectedCustomQuery < 0) {
     setQueryBack();
   }
 
   const triggerSearch = async () => {
     if (!advancedSearch) {
-      if (selectedCustomQuery === -1) {
+      if (selectedCustomQuery < 0) {
         query.query = searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
       } else {
         query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
@@ -74,7 +74,7 @@
       query.columns = query.columns.filter((c) => {
         return c !== searchColumnName;
       });
-      if (selectedCustomQuery === -1) {
+      if (selectedCustomQuery < 0) {
         query.query = searchTerm || "";
       } else {
         query.query = `${query.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
@@ -161,7 +161,7 @@
       <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
     </div>
   </div>
-  {#if selectedCustomQuery === -1}
+  {#if selectedCustomQuery < 0}
     <ButtonGroup class="ml-auto h-7">
       <Button
         size="xs"
