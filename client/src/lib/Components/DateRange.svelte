@@ -11,10 +11,12 @@
 <script lang="ts">
   import { Button, Input, Label } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
+  import TimeInput from "./TimeInput.svelte";
 
   export let clearable = false;
-  export let from: string | undefined;
-  export let to: string | undefined;
+  export let from: Date | undefined;
+  export let to: Date | undefined;
+  export let showTimeControls = false;
 
   const dispatch = createEventDispatcher();
   const uuid = crypto.randomUUID();
@@ -23,9 +25,20 @@
   const iconClass = "bx bx-x text-lg";
   const resetButtonClass = "rounded-s-none px-3";
   const defaultInputClass = "h-fit";
-  const inputClass = `${defaultInputClass} ${clearable ? "rounded-e-none" : ""}`;
+  const inputClass = `${defaultInputClass} ${clearable || showTimeControls ? "rounded-e-none" : ""}`;
   let hideFrom = false;
   let hideTo = false;
+  let fromString: string | undefined;
+  let toString: string | undefined;
+  let fromTimeInput: any;
+  let toTimeInput: any;
+
+  $: if (from) {
+    fromString = from.toISOString().split("T")[0];
+  }
+  $: if (to) {
+    toString = to.toISOString().split("T")[0];
+  }
 
   const onChange = () => {
     dispatch("change");
@@ -37,29 +50,104 @@
   */
   const clearFrom = () => {
     hideFrom = true;
-    from = undefined;
+    fromString = undefined;
     hideFrom = false;
+    from = undefined;
+    fromTimeInput.clearInput();
     onChange();
   };
 
   const clearTo = () => {
     hideTo = true;
-    to = undefined;
+    toString = undefined;
     hideTo = false;
+    to = undefined;
+    toTimeInput.clearInput();
     onChange();
+  };
+
+  const onDateChanged = () => {
+    if (fromString) {
+      const fromDate = new Date(fromString);
+      if (!from) {
+        from = fromDate;
+      } else {
+        from.setDate(fromDate.getDate());
+        from.setMonth(fromDate.getMonth());
+        from.setFullYear(fromDate.getFullYear());
+      }
+    }
+    if (toString) {
+      const toDate = new Date(toString);
+      if (!to) {
+        to = toDate;
+      } else {
+        to.setDate(toDate.getDate());
+        to.setMonth(toDate.getMonth());
+        to.setFullYear(toDate.getFullYear());
+      }
+    }
+    onChange();
+  };
+
+  const onFromTimeChanged = (event: any) => {
+    if (event.detail) {
+      const detail = event.detail;
+      if (!from) from = new Date();
+      if (detail.hours !== undefined) {
+        from.setUTCHours(Number(detail.hours));
+      }
+      if (detail.minutes !== undefined) {
+        from.setUTCMinutes(Number(detail.minutes));
+      }
+      from = from;
+      onChange();
+    }
+  };
+
+  const onToTimeChanged = (event: any) => {
+    if (event.detail) {
+      const detail = event.detail;
+      if (!to) to = new Date();
+      if (detail.hours !== undefined) {
+        to.setUTCHours(Number(detail.hours));
+      }
+      if (detail.minutes !== undefined) {
+        to.setUTCMinutes(Number(detail.minutes));
+      }
+      to = to;
+      onChange();
+    }
   };
 </script>
 
 <div class="flex flex-wrap gap-4">
   <div class="flex items-center gap-1">
     <Label for={fromId}>
-      <span>From:</span>
+      <span>From</span>
+      {#if showTimeControls}
+        <span>(UTC)</span>
+      {/if}
+      <span>:</span>
     </Label>
     <div class="flex">
       {#if !hideFrom}
         <Input class={inputClass} let:props>
-          <input on:change={onChange} id={fromId} type="date" {...props} bind:value={from} />
+          <input
+            on:change={onDateChanged}
+            id={fromId}
+            type="date"
+            {...props}
+            bind:value={fromString}
+          />
         </Input>
+      {/if}
+      {#if showTimeControls}
+        <TimeInput
+          bind:this={fromTimeInput}
+          on:timeChanged={onFromTimeChanged}
+          roundEnd={!clearable}
+        ></TimeInput>
       {/if}
       {#if clearable}
         <Button color="light" class={resetButtonClass} on:click={clearFrom}>
@@ -70,13 +158,21 @@
   </div>
   <div class="flex items-center gap-1">
     <Label for={toId}>
-      <span>To:</span>
+      <span>To</span>
+      {#if showTimeControls}
+        <span>(UTC)</span>
+      {/if}
+      <span>:</span>
     </Label>
     <div class="flex">
       {#if !hideTo}
         <Input class={inputClass} let:props>
-          <input on:change={onChange} id={toId} type="date" {...props} bind:value={to} />
+          <input on:change={onDateChanged} id={toId} type="date" {...props} bind:value={toString} />
         </Input>
+      {/if}
+      {#if showTimeControls}
+        <TimeInput bind:this={toTimeInput} on:timeChanged={onToTimeChanged} roundEnd={!clearable}
+        ></TimeInput>
       {/if}
       {#if clearable}
         <Button color="light" class={resetButtonClass} on:click={clearTo}>

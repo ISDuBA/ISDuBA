@@ -50,8 +50,8 @@
   let numberOfPages = 1000;
   let searchTerm = "";
   let selectedLogLevels: LogLevel[] = [];
-  let from: string | undefined = undefined;
-  let to: string | undefined = new Date().toISOString().split("T")[0];
+  let from: Date | undefined;
+  let to: Date | undefined = new Date();
 
   $: numberOfPages = Math.max(1, Math.ceil((count ?? 0) / limit));
   $: realLogLevels = logLevels.filter((l) => l.name !== "Default");
@@ -214,7 +214,8 @@
         }}
         bind:searchTerm
       ></CSearch>
-      <DateRange clearable on:change={onRangeChanged} bind:from bind:to></DateRange>
+      <DateRange clearable showTimeControls on:change={onRangeChanged} bind:from bind:to
+      ></DateRange>
       <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
         {#each realLogLevels as level}
