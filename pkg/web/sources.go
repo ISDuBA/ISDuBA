@@ -718,7 +718,7 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 
 // defaultMessage returns the default message.
 func (c *Controller) defaultMessage(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
+	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage, "keep_feed_logs": c.cfg.Sources.KeepFeedLogs})
 }
 
 // attentionSources returns a list of sources that need attention.
