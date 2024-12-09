@@ -36,6 +36,8 @@
 
   let logs: any[] = [];
   let loadingLogs: boolean = false;
+  let isDownloadingLogs: boolean = false;
+  let downloadAbortController = new AbortController();
   let abortController: AbortController | undefined = undefined;
   let loadFeedError: ErrorDetails | null = null;
   let loadLogsError: ErrorDetails | null = null;
@@ -131,7 +133,10 @@
     if (!feed || !feed.id) {
       return;
     }
-    let result = await fetchAllFeedLogs(feed.id, false);
+    downloadAbortController = new AbortController();
+    isDownloadingLogs = true;
+    let result = await fetchAllFeedLogs(feed.id, false, downloadAbortController);
+    isDownloadingLogs = false;
     if (result.ok) {
       let resultstring = JSON.stringify(result.value);
       let file = new Blob([resultstring], { type: "application/json" });
@@ -145,7 +150,7 @@
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       }, 0);
-    } else {
+    } else if (result.error.message !== "AbortError") {
       loadLogsError = result.error;
     }
   };
@@ -193,15 +198,34 @@
 
 {#if feed}
   <SectionHeader title={feed.label}>
-    <div slot="right">
+    <div slot="right" class="flex items-center gap-4">
       <Button
         title="Download all logs"
-        on:click={downloadFeedLogs}
-        color="light"
+        on:click={() => {
+          if (isDownloadingLogs) {
+            downloadAbortController.abort();
+          } else {
+            downloadFeedLogs();
+          }
+        }}
+        color={isDownloadingLogs ? "red" : "light"}
         class={`ml-3 h-8 py-1 text-xs`}
+        outline={isDownloadingLogs}
       >
-        <i class="bx bx-download text-lg"></i>
+        {#if isDownloadingLogs}
+          <i class="bx bx-x text-lg"></i>
+        {:else}
+          <i class="bx bx-download text-lg"></i>
+        {/if}
       </Button>
+      {#if isDownloadingLogs}
+        <div class="flex items-center gap-2">
+          <Spinner color="gray" size="4"></Spinner>
+          <span class="text-sm text-gray-400"
+            >Preparing logs. Depending on the amount of logs this may take a while.</span
+          >
+        </div>
+      {/if}
     </div>
   </SectionHeader>
 
