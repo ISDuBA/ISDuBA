@@ -22,7 +22,6 @@ echo "isdubad is running:"
 echo $isdubad
 
 cd client
-
 npm run dev &
 
 client=$!
