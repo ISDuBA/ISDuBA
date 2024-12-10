@@ -68,8 +68,8 @@
     isFeed: boolean;
   };
 
-  let from: string | undefined;
-  let to: string | undefined;
+  let from: Date = initialFrom;
+  let to: Date = new Date();
   let error: ErrorDetails | null = null;
   let chartComponentRef: any;
   let chart: any;
@@ -153,17 +153,14 @@
   };
 
   const loadStats = async () => {
-    if (!from || !to) return;
     isLoading = true;
     error = null;
     let response: any;
-    const toParameter = isToday(new Date(to))
-      ? new Date(Date.now() + HOUR_MS)
-      : setToEndOfDay(new Date(to));
+    const toParameter = isToday(to) ? new Date(Date.now() + HOUR_MS) : setToEndOfDay(to);
     const newStats: StatisticGroup = {};
     if (types.includes("imports")) {
       response = await fetchBasicStatistic(
-        new Date(from),
+        from,
         toParameter,
         stepsInMilliseconds,
         "imports",
@@ -179,7 +176,7 @@
     }
     if (types.includes("importFailures") || types.includes("importFailuresCombined")) {
       response = await fetchImportFailuresStatistic(
-        new Date(from),
+        from,
         toParameter,
         stepsInMilliseconds,
         source?.id,
@@ -198,7 +195,7 @@
     }
     if (types.includes("cve")) {
       response = await fetchBasicStatistic(
-        new Date(from),
+        from,
         toParameter,
         stepsInMilliseconds,
         "cve",
@@ -219,13 +216,7 @@
       }
     }
     if (types.includes("totals")) {
-      response = await fetchTotals(
-        new Date(from),
-        toParameter,
-        stepsInMilliseconds,
-        false,
-        abortController
-      );
+      response = await fetchTotals(from, toParameter, stepsInMilliseconds, false, abortController);
       if (response.ok) {
         Object.assign(newStats, response.value);
       } else {
@@ -237,9 +228,8 @@
   };
 
   const getCriticalStatistic = async (to: Date): Promise<ErrorDetails | undefined> => {
-    if (!from) return;
     const response = await fetchBasicStatistic(
-      new Date(from),
+      from,
       to,
       stepsInMilliseconds,
       "critical",
@@ -304,28 +294,19 @@
   };
 
   const updateOptions = () => {
-    if (from) {
-      const minFrom = new Date(from);
-      minFrom.setHours(0);
-      minFrom.setMinutes(0);
-      minFrom.setSeconds(0);
-      minFrom.setMilliseconds(0);
-      chart.options.scales.x.min = minFrom;
+    chart.options.scales.x.min = from;
+    let maxTo = to;
+    let diff = to.getTime() - from.getTime();
+    if (diff >= YEAR_MS) {
+      maxTo.setMonth(maxTo.getMonth() + 1);
+    } else if (diff >= MONTH_MS) {
+      maxTo.setDate(maxTo.getDate() + 2);
+    } else if (isToday(maxTo)) {
+      maxTo = new Date(Date.now() + HOUR_MS * 0);
+    } else {
+      maxTo = setToEndOfDay(new Date(to.getTime()));
     }
-    if (to && from) {
-      let maxTo = new Date(to);
-      let diff = new Date(to).getTime() - new Date(from).getTime();
-      if (diff >= YEAR_MS) {
-        maxTo.setMonth(maxTo.getMonth() + 1);
-      } else if (diff >= MONTH_MS) {
-        maxTo.setDate(maxTo.getDate() + 2);
-      } else if (isToday(maxTo)) {
-        maxTo = new Date(Date.now() + HOUR_MS * 0);
-      } else {
-        maxTo = setToEndOfDay(new Date(to));
-      }
-      chart.options.scales.x.max = maxTo;
-    }
+    chart.options.scales.x.max = maxTo;
   };
 
   const updateData = async () => {
@@ -355,13 +336,12 @@
   }
 
   const createLabelForXAxis = (date: Date): string | undefined => {
-    if (!from || !to) return;
     let label = "";
     const paddedMonth = pad(date.getMonth() + 1);
     const paddedDate = pad(date.getDate());
     const paddedHours = pad(date.getHours());
     const paddedMinutes = pad(date.getMinutes());
-    let diff = new Date(to).getTime() - new Date(from).getTime();
+    let diff = to.getTime() - from.getTime();
     if (diff >= YEAR_MS) {
       label = `${date.getFullYear()}-${paddedMonth}`;
     } else if (diff > MONTH_MS + 3 * DAY_MS) {
@@ -532,8 +512,8 @@
   };
 
   onMount(async () => {
-    from = initialFrom.toISOString().split("T")[0];
-    to = new Date().toISOString().split("T")[0];
+    from = initialFrom;
+    to = new Date();
     await loadStats();
     if (!chartComponentRef) {
       return;
@@ -561,8 +541,7 @@
 
   // Fit steps to selected time range so the bars don't become to thin.
   const updateSteps = () => {
-    if (!from || !to) return;
-    let diff = new Date(to).getTime() - new Date(from).getTime();
+    let diff = to.getTime() - from.getTime();
     if (diff >= YEAR_MS) {
       stepsInMilliseconds = MONTH_MS;
     } else if (diff >= MONTH_MS) {
@@ -588,8 +567,8 @@
       diff = 365;
     }
     newFrom.setDate(newFrom.getDate() - diff);
-    from = newFrom.toISOString().split("T")[0];
-    to = newTo.toISOString().split("T")[0];
+    from = newFrom;
+    to = newTo;
     updateSteps();
     updateChart();
   };
