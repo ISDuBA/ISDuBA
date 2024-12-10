@@ -59,8 +59,8 @@ tools, like GNU Make are required. At the root of the repo run `make dist` to
 build the frontend and backend; this will result in a Tar-file inside `dist/`
 that contains the application. It can also be useful to look inside the
 Dockerfile of the application to see how individual components of the
-application can be built. If if there are no special requirements it can be
-enough to use already built Tar-file from the release page.
+application can be built. If there are no special requirements it can be
+enough to use the already built tar-file from the release page.
 
 ### Running
 
