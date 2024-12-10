@@ -9,11 +9,12 @@
 -->
 
 <script lang="ts">
-  import { Button, Label, Input, StepIndicator } from "flowbite-svelte";
+  import { Button, Label, StepIndicator } from "flowbite-svelte";
   import {
     createIsoTimeStringForSSVC,
     getDecision,
     parseDecisionTree,
+    vectorStart,
     type SSVCAction,
     type SSVCDecision,
     type SSVCDecisionChild,
@@ -27,6 +28,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import ComplexDecision from "./ComplexDecision.svelte";
+  import SsvcInput from "./SSVCInput.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -36,6 +38,7 @@
   export let isEditing = false;
   export let vectorInput = "";
 
+  let isVectorInputValid = false;
   let startedCalculation = false;
   let isComplex = false;
   let currentStep = 0;
@@ -44,7 +47,6 @@
   let decisionPoints: SSVCDecision[] = [];
   let decisionsTable: SSVCDecisionCombination[] = [];
   let userDecisions: SSVCDecisionCombination;
-  const vectorBeginning = "SSVCv2/";
   let vector: string;
   let result: SSVCObject | null = null;
   let saveSSVCError: ErrorDetails | null;
@@ -70,7 +72,7 @@
   function resetUserDecisions() {
     userDecisions = {};
     currentStep = 0;
-    vector = vectorBeginning;
+    vector = vectorStart;
     isComplex = false;
   }
 
@@ -265,19 +267,18 @@
       <Label class="mb-4">
         <span>Enter a SSVC directly</span>
       </Label>
-      <Input
+      <SsvcInput
         autofocus
-        class="h-6 w-96"
         disabled={disabled || !isEditing}
         on:keyup={(e) => {
-          if (e.key === "Enter") saveSSVC(vectorInput);
-          if (e.key === "Escape") toggleEditing();
+          if (e.detail.key === "Enter") saveSSVC(vectorInput);
+          if (e.detail.key === "Escape") toggleEditing();
         }}
         on:input={resetError}
-        type="text"
         bind:value={vectorInput}
-      />
-      <div class="ml-auto mt-28 flex flex-row gap-x-3">
+        bind:isValid={isVectorInputValid}
+      ></SsvcInput>
+      <div class="ml-auto flex flex-row gap-x-3">
         <Button
           color="light"
           outline
@@ -299,8 +300,12 @@
         >
           Evaluate
         </Button>
-        <Button color="green" size="xs" class="h-8" on:click={() => saveSSVC(vectorInput)}
-          >Save</Button
+        <Button
+          color="green"
+          disabled={!isVectorInputValid}
+          size="xs"
+          class="h-8"
+          on:click={() => saveSSVC(vectorInput)}>Save</Button
         >
       </div>
     </div>
