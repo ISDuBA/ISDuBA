@@ -30,7 +30,7 @@
     }
     return 0;
   });
-  export let selectedIndex = -1;
+  export let selectedIndex = -2;
   export let queryString: any;
   let ignoredQueries: Query[] = [];
   let errorMessage: ErrorDetails | null = null;
@@ -41,7 +41,7 @@
   const pressedQueryButtonClass =
     "bg-gray-200 text-black hover:text-black hover:!bg-gray-100 dark:bg-gray-600 dark:hover:!bg-gray-700";
   const globalQueryButtonClass = `border-${globalQueryButtonColor}-500 dark:border-${globalQueryButtonColor}-500 dark:hover:border-${globalQueryButtonColor}-500 hover:!text-black dark:hover:!text-white`;
-  const pressedGlobalQueryButtonClass = `border-${globalQueryButtonColor}-500 bg-${globalQueryButtonColor}-600 dark:bg-${globalQueryButtonColor}-600 dark:border-${globalQueryButtonColor}-500 dark:hover:border-${globalQueryButtonColor}-500 focus:text-white hover:focus:text-black text-white hover:text-black dark:hover:text-white dark:hover:focus:text-white dark:focus:text-white`;
+  const pressedGlobalQueryButtonClass = `border-${globalQueryButtonColor}-500 bg-${globalQueryButtonColor}-600 hover:bg-${globalQueryButtonColor}-700 hover:text-white dark:bg-${globalQueryButtonColor}-600 dark:hover:bg-${globalQueryButtonColor}-500 dark:border-${globalQueryButtonColor}-700 dark:hover:border-${globalQueryButtonColor}-700 text-white focus:text-white`;
 
   const getClass = (isGlobal: boolean, isPressed: boolean) => {
     const addition = isGlobal
@@ -79,6 +79,8 @@
         // Probably a dashboard query
         if (index === -1) {
           const query = response.content.filter((q: any) => `${q.id}` === queryString.query)?.[0];
+          selectedIndex = -2;
+          currentQueryTitle = query.name;
           if (query) {
             dispatch("querySelected", query);
           }
@@ -89,12 +91,16 @@
     }
   });
 
+  let currentQueryTitle: string | undefined;
+
   const selectQuery = (index: number) => {
-    if (selectedIndex == index) {
+    if (selectedIndex == index || index == -1) {
       selectedIndex = -1;
+      currentQueryTitle = undefined;
     } else {
       selectedIndex = index;
       dispatch("querySelected", sortedQueries[selectedIndex]);
+      currentQueryTitle = sortedQueries[selectedIndex].name;
     }
   };
 </script>
@@ -113,6 +119,11 @@
           </Button>
         {/if}
       {/each}
+      {#if currentQueryTitle && selectedIndex < 0}
+        <Button size="xs" on:click={() => selectQuery(-1)} class={getClass(true, true)}>
+          <span class="p-2">{truncate(currentQueryTitle, 30)}</span>
+        </Button>
+      {/if}
       <Button
         title="Configure queries"
         size="xs"
