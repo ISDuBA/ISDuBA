@@ -380,7 +380,7 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 		case "version":
 			// TODO: This is not optimal (SemVer).
 			b.WriteString(
-				`CASE WHEN pg_input_is_valid(version, 'integer') THEN version::int END`)
+				`CASE WHEN version ~ '^[[:digit:]]+$' THEN version::int END`)
 		default:
 			b.WriteString(field)
 		}
