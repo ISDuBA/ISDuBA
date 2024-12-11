@@ -70,8 +70,18 @@ kcadm.sh update groups/$WHITE_GREEN_ID --target-realm isduba \
 # Create roles
 kcadm.sh create roles --target-realm=isduba --set name=editor \
   --set "description=editor"
+kcadm.sh create roles --target-realm=isduba --set name=reviewer \
+  --set "description=reviewer"
+kcadm.sh create roles --target-realm=isduba --set name=auditor \
+  --set "description=auditor"
+kcadm.sh create roles --target-realm=isduba --set name=admin \
+  --set "description=admin"
+kcadm.sh create roles --target-realm=isduba --set name=source-manager \
+  --set "description=source-manager"
+kcadm.sh create roles --target-realm=isduba --set name=importer \
+  --set "description=importer"
 
-#creating  a user
+# Create a user
 ALEX_ID=$(kcadm.sh create users --target-realm isduba \
   --set username=alex --set enabled=true \
   --set firstName=Alex --set lastName=Klein \
