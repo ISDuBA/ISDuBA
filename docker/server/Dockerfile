@@ -21,6 +21,8 @@ RUN make build_client
 
 FROM library/golang:1.23-alpine AS server
 RUN apk update && apk add --no-cache make
+# This required to download from https locations, like CSAF trusted provider or CSAF aggregator
+RUN apk add -U --no-cache ca-certificates && update-ca-certificates
 
 WORKDIR /app
 
@@ -39,6 +41,7 @@ ENV ISDUBA_DB_MIGRATE true
 
 FROM scratch
 
+COPY --from=server /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=server /app/cmd/isdubad/isdubad /app/isdubad
 COPY --from=client /app/web /app/web
 COPY ./docker/server/isdubad.toml /app/isdubad.toml
