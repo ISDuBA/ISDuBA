@@ -183,6 +183,7 @@ func (c *Controller) Bind() http.Handler {
 	api.DELETE("/sources/feeds/:id", authSM, c.deleteFeed)
 	api.GET("/sources/feeds/log", authSM, c.allFeedsLog)
 	api.GET("/sources/feeds/:id/log", authSM, c.feedLog)
+	api.GET("/sources/feeds/keep", authAll, c.keepFeedTime)
 
 	// Import stats
 	api.GET("/stats/imports/source/:id", authAll, c.importStatsSource)
