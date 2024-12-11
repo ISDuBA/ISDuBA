@@ -721,6 +721,12 @@ func (c *Controller) defaultMessage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
 }
 
+// keepFeedTime returns how long feeds logs are kept before being deleted
+func (c *Controller) keepFeedTime(ctx *gin.Context) {
+      ctx.JSON(http.StatusOK, gin.H{"keep_feed_time": c.cfg.KeepFeedLogs})
+}
+
+
 // attentionSources returns a list of sources that need attention.
 func (c *Controller) attentionSources(ctx *gin.Context) {
 	all, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("all", "false"))
