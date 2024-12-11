@@ -29,6 +29,11 @@
     timeStyle: "medium"
   });
   let updatedComment = comment.message;
+  let commentID = comment.comment_id;
+  $: if (commentID !== comment.comment_id) {
+    updatedComment = comment.message;
+    commentID = comment.comment_id;
+  }
   let isEditing = false;
   let updateCommentError: ErrorDetails | null;
   let lastEdited = "";
