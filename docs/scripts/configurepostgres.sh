@@ -11,9 +11,6 @@
 set -e # to exit if a command in the script fails
 
 
-LAB="#listen_addresses = 'localhost'" # Listen Adress Before
-LAA="listen_addresses = '*'"          # Listen Adress After
-
 # Alter PostgreSQL as postgres user
 psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
 
@@ -35,12 +32,12 @@ else
 fi
 
 # Adjust postgresql configuration
-sed -i "s/$LAB/$LAA/g" /etc/postgresql/15/main/postgresql.conf
 if ! grep -q -F "# ISDuBA configuration" /etc/postgresql/15/main/pg_hba.conf;
 then
 tee -a /etc/postgresql/15/main/pg_hba.conf <<block_to_insert > /dev/null
 # ISDuBA configuration
 host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
 block_to_insert
 fi
 
