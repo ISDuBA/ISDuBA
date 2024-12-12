@@ -66,7 +66,12 @@
     onChange();
   };
 
-  const onDateChanged = () => {
+  const onDateChanged = (event: any) => {
+    if (event.target.id.startsWith("from")) {
+      fromString = event.target.value;
+    } else if (event.target.id.startsWith("to")) {
+      toString = event.target.value;
+    }
     if (fromString) {
       const fromDate = new Date(fromString);
       if (!from) {
@@ -133,13 +138,7 @@
     <div class="flex">
       {#if !hideFrom}
         <Input class={inputClass} let:props>
-          <input
-            on:change={onDateChanged}
-            id={fromId}
-            type="date"
-            {...props}
-            bind:value={fromString}
-          />
+          <input on:input={onDateChanged} id={fromId} type="date" {...props} value={fromString} />
         </Input>
       {/if}
       {#if showTimeControls}
@@ -167,7 +166,7 @@
     <div class="flex">
       {#if !hideTo}
         <Input class={inputClass} let:props>
-          <input on:change={onDateChanged} id={toId} type="date" {...props} bind:value={toString} />
+          <input on:input={onDateChanged} id={toId} type="date" {...props} value={toString} />
         </Input>
       {/if}
       {#if showTimeControls}
