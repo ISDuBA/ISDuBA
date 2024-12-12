@@ -22,9 +22,12 @@ Initially there is a migration needed to configure the database
 by starting isdubad with the `ISDUBA_DB_MIGRATE` environment variable
 set to true or by adjusting the toml-configuration file, e.g.
 
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=../docs/scripts/setup.sh&lines=53-53) -->
+<!-- The below code snippet is automatically added from ../docs/scripts/setup.sh -->
 ```sh
-ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c isduba.toml
+ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c ./isduba.toml
 ```
+<!-- MARKDOWN-AUTO-DOCS:END -->
 
 Create additional users via [createUsers script.](./scripts/keycloak/createUsers.sh) A list of users created by the setup scripts can be found in [the users.txt.](./developer/users.txt)
 
