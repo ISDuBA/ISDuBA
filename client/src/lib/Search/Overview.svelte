@@ -23,7 +23,7 @@
   let searchTerm: string | null;
   let advisoryTable: any;
   let advancedSearch = false;
-  let selectedCustomQuery: any;
+  let selectedCustomQuery: boolean;
   let queryString: any;
   // let searchqueryTimer: any = null;
 
@@ -47,13 +47,13 @@
     advisoryTable.fetchData();
   };
 
-  $: if (selectedCustomQuery < 0) {
+  $: if (!selectedCustomQuery) {
     setQueryBack();
   }
 
   const triggerSearch = async () => {
     if (!advancedSearch) {
-      if (selectedCustomQuery < 0) {
+      if (!selectedCustomQuery) {
         query.query = searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
       } else {
         query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
@@ -74,7 +74,7 @@
       query.columns = query.columns.filter((c) => {
         return c !== searchColumnName;
       });
-      if (selectedCustomQuery < 0) {
+      if (!selectedCustomQuery) {
         query.query = searchTerm || "";
       } else {
         query.query = `${query.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
@@ -121,7 +121,7 @@
     advisoryTable.fetchData();
   }}
   {queryString}
-  bind:selectedIndex={selectedCustomQuery}
+  bind:selectedQuery={selectedCustomQuery}
 ></Queries>
 <div class="mb-3 flex">
   <div class="flex w-2/3 flex-row">
@@ -161,7 +161,7 @@
       <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
     </div>
   </div>
-  {#if selectedCustomQuery < 0}
+  {#if !selectedCustomQuery}
     <ButtonGroup class="ml-auto h-7">
       <Button
         size="xs"
