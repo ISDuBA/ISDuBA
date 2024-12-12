@@ -29,7 +29,8 @@ go.work
 cmd/bulkimport/bulkimport
 cmd/isdubad/isdubad
 *.log
-isduba-bsi.toml
+*.toml
+!docs/example_isduba.toml
 
 
 # Client
