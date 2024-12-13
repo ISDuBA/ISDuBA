@@ -56,7 +56,7 @@
   let to: Date | undefined = new Date();
 
   $: numberOfPages = Math.max(1, Math.ceil((count ?? 0) / limit));
-  $: realLogLevels = logLevels.filter((l) => l.name !== "Default");
+  $: realLogLevels = logLevels.filter((l) => l.value !== LogLevel.default);
 
   const paginationItemClass =
     "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white";
