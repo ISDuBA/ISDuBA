@@ -30,7 +30,8 @@
     }
     return 0;
   });
-  export let selectedIndex = -2;
+  let selectedIndex = -2;
+  export let selectedQuery: boolean = false;
   export let queryString: any;
   let ignoredQueries: Query[] = [];
   let errorMessage: ErrorDetails | null = null;
@@ -83,6 +84,7 @@
           currentQueryTitle = query.name;
           if (query) {
             dispatch("querySelected", query);
+            selectedQuery = true;
           }
         } else {
           selectQuery(index);
@@ -94,13 +96,15 @@
   let currentQueryTitle: string | undefined;
 
   const selectQuery = (index: number) => {
-    if (selectedIndex == index || index == -1) {
+    if (selectedIndex === index || index === -1) {
       selectedIndex = -1;
       currentQueryTitle = undefined;
+      selectedQuery = false;
     } else {
       selectedIndex = index;
       dispatch("querySelected", sortedQueries[selectedIndex]);
       currentQueryTitle = sortedQueries[selectedIndex].name;
+      selectedQuery = true;
     }
   };
 </script>
