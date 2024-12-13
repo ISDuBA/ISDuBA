@@ -15,6 +15,7 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { request } from "$lib/request";
   import { onMount } from "svelte";
   import {
     fetchFeedLogs,
@@ -155,6 +156,19 @@
     }
   };
 
+  // calcDefaultKeepLogStartDate sets the from value for the logs to the chronologically first date for which logs are currently kept
+  const calcDefaultKeepLogStartDate = async () => {
+    // get the time for which logs are kept from the server
+    const result = await request(`/api/sources/feeds/keep`, "GET");
+    if (result.ok) {
+      // calculate the from date by subtracting the keep feed time (converted from ns to ms) from today
+      from = new Date(new Date().getTime() - result.content.keep_feed_time / 1000000);
+      return;
+    }
+    // default value
+    from = new Date(new Date().getTime() - 8035200000);
+  };
+
   onMount(async () => {
     selectedLogLevels = realLogLevels.map((l) => l.value);
     let id = params?.id;
@@ -162,6 +176,7 @@
       await loadFeed(id);
       await loadLogs();
     }
+    calcDefaultKeepLogStartDate();
   });
 
   const onRangeChanged = () => {
