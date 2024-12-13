@@ -163,7 +163,7 @@
     const result = await request(`/api/sources/feeds/keep`, "GET");
     if (result.ok) {
       // calculate the from date by subtracting the keep feed time (converted from ns to ms) from today
-      from = new Date(new Date().getTime() - result.content.keep_feed_time / 1000000);
+      from = new Date(Date.now() - result.content.keep_feed_time / 1000000);
       return;
     } else if (result.error) {
       loadKeepLogsError = getErrorDetails(
@@ -172,7 +172,7 @@
       );
     }
     // default value
-    from = new Date(new Date().getTime() - 8035200000);
+    from = new Date(Date.now() - 8035200000);
   };
 
   onMount(async () => {
