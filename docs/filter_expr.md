@@ -113,7 +113,7 @@ in the last 31 days and where I was metioned in the comments or I triggered an e
 | `>`         | **A** **B** | `bool` **A** greater than **B** |,
 | `>=`        | **A** **B** | `bool` **A** greater or equal than **B** |
 | `ilike`     | `string` `string` | `bool` First argument is case insensitive like second argument |
-| `ilikepid`  | `string` | `bool` Is there a product in the product tree with a name like the argument? |
+| `ilikepid`  | `string` | `bool` Is there a product in the product tree with a product id like the argument? |
 | `now`       | | `timestamp` Current timestamp.`
 | `duration`  | `string` | `duration` Converts argument to `duration` |
 | `+`         | **A** **B** | **C**: **A** plus **B** |
