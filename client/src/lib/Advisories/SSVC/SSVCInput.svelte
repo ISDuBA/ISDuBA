@@ -11,7 +11,7 @@
 <script lang="ts">
   import { Label, Input } from "flowbite-svelte";
   import { vectorStart } from "./SSVCCalculator";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher, onMount, tick } from "svelte";
 
   export let autofocus = false;
   export let disabled = false;
@@ -27,24 +27,25 @@
   let inputValue = "";
 
   onMount(() => {
-    inputValue = value.replace(vectorStart, "");
-    validateVector();
+    const newValue = value.replace(vectorStart, "");
+    isValid = isVectorValid(newValue);
+    inputValue = newValue;
   });
 
   /**
    * Checks if the vector has a valid format. It doesn't validate the semantic value.
    */
-  const validateVector = () => {
-    const parts = value.split("/");
+  const isVectorValid = (valueToValidate: string): boolean => {
+    const parts = valueToValidate.split("/");
     const decisions = parts.filter((p) => p.length === 3 && p.charAt(1) === ":");
     minLengthReached = decisions.length >= 5;
-    endsWithSlash = inputValue.charAt(inputValue.length - 1) === "/";
+    endsWithSlash = valueToValidate.charAt(inputValue.length - 1) === "/";
     const lastPart = parts[parts.length - 1];
     const secondToLastPart = parts[parts.length - 2];
     containsValidDate =
       (lastPart === "" && secondToLastPart !== undefined && isDateValid(secondToLastPart)) ||
       (lastPart !== undefined && isDateValid(lastPart));
-    isValid = minLengthReached && endsWithSlash && containsValidDate;
+    return minLengthReached && endsWithSlash && containsValidDate;
   };
 
   const isDateValid = (date: string) => {
@@ -78,13 +79,27 @@
     }
   };
 
+  const handleInput = async (event: any) => {
+    await tick();
+    const newInput = event.target.value;
+    value = `${vectorStart}${inputValue}`;
+    isValid = isVectorValid(newInput);
+    dispatch("keyup", event);
+  };
+
+  const handlePasteEvent = async (event: any) => {
+    handleInput(event);
+  };
+
   const handleKeyEvent = (event: any) => {
+    if (event.key === "v" && event.ctrlKey === true) {
+      // Already handled by listener of the paste event
+      return;
+    }
     if (!["Backspace", "Escape"].includes(event.key)) {
       autoAddCharacters();
     }
-    value = `${vectorStart}${inputValue}`;
-    validateVector();
-    dispatch("keyup", event);
+    handleInput(event);
   };
 </script>
 
@@ -96,6 +111,7 @@
   <div class="flex w-full flex-col gap-y-2">
     <Input
       on:keyup={handleKeyEvent}
+      on:paste={handlePasteEvent}
       bind:value={inputValue}
       {autofocus}
       {disabled}
