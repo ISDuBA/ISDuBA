@@ -278,7 +278,7 @@
         bind:value={vectorInput}
         bind:isValid={isVectorInputValid}
       ></SsvcInput>
-      <div class="ml-auto flex flex-row gap-x-3">
+      <div class="mb-2 ml-auto flex flex-row gap-x-3">
         <Button
           color="light"
           outline
