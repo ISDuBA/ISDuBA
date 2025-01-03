@@ -41,7 +41,7 @@ const (
 )
 
 // Transitions is a matrix to tell who is allowed to change between certain states.
-// Please call "go generate ./..." in the root dir to update docs/workflow.svg
+// Please call "go generate ./..." in the root dir to update docs/images/workflow.svg
 // if you change this.
 var Transitions = map[[2]Workflow][]WorkflowRole{
 	{"", NewWorkflow}:                     {Importer}, // Forward
