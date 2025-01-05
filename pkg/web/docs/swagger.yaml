@@ -1,3 +1,4 @@
+basePath: /api
 definitions:
   results.Error:
     properties:
@@ -27,6 +28,7 @@ paths:
     post:
       consumes:
       - application/json
+      description: Upload endpoint for CSAF documents.
       produces:
       - application/json
       responses:
@@ -42,4 +44,5 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/results.Error'
+      summary: Imports a CSAF document.
 swagger: "2.0"

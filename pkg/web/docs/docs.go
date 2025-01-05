@@ -25,12 +25,14 @@ const docTemplate = `{
     "paths": {
         "/documents": {
             "post": {
+                "description": "Upload endpoint for CSAF documents.",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
+                "summary": "Imports a CSAF document.",
                 "responses": {
                     "201": {
                         "description": "Created",
@@ -81,7 +83,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "",
+	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "ISDuBA API",
 	Description:      "This is the ISDuBA API.",

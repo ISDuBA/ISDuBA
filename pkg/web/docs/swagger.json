@@ -14,15 +14,18 @@
         },
         "version": "1.0"
     },
+    "basePath": "/api",
     "paths": {
         "/documents": {
             "post": {
+                "description": "Upload endpoint for CSAF documents.",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
+                "summary": "Imports a CSAF document.",
                 "responses": {
                     "201": {
                         "description": "Created",

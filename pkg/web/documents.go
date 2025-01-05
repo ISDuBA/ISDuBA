@@ -99,6 +99,8 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 }
 
 // importDocument is an end point to import a document.
+// @Summary           Imports a CSAF document.
+// @Description       Upload endpoint for CSAF documents.
 // @Accept            json
 // @Produce           json
 // @Success           201 {object} results.ID
