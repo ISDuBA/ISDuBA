@@ -31,6 +31,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/ISDuBA/ISDuBA/pkg/web/results"
 )
 
 // MinSearchLength enforces a minimal length of search phrases.
@@ -98,6 +99,12 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 }
 
 // importDocument is an end point to import a document.
+// @Accept            json
+// @Produce           json
+// @Success           201 {object} results.ID
+// @Failure           400 {object} results.Error
+// @Failure           500 {object} results.Error
+// @Router /documents [post]
 func (c *Controller) importDocument(ctx *gin.Context) {
 	var actor *string
 	if user := c.currentUser(ctx); user.Valid {
@@ -106,12 +113,12 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	limited := http.MaxBytesReader(
@@ -123,18 +130,18 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var document any
 	if err := json.NewDecoder(tee).Decode(&document); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "document is not JSON: " + err.Error()})
+		ctx.JSON(http.StatusBadRequest, results.Error{Error: "document is not JSON: " + err.Error()})
 		return
 	}
 
 	msgs, err := csaf.ValidateCSAF(document)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "schema validation failed: " + err.Error()})
+		ctx.JSON(http.StatusBadRequest, results.Error{Error: "schema validation failed: " + err.Error()})
 		return
 	}
 	if len(msgs) > 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "schema validation failed: " + strings.Join(msgs, ", "),
+		ctx.JSON(http.StatusBadRequest, results.Error{
+			Error: "schema validation failed: " + strings.Join(msgs, ", "),
 		})
 		return
 	}
@@ -144,14 +151,14 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		rvr, err := c.val.Validate(document)
 		if err != nil {
 			slog.Error("remote validation failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "remote validation failed: " + err.Error(),
+			ctx.JSON(http.StatusInternalServerError, results.Error{
+				Error: "remote validation failed: " + err.Error(),
 			})
 			return
 		}
 		if !rvr.Valid {
 			// XXX: Maybe we should tell, what's exactly wrong?
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "remote validation"})
+			ctx.JSON(http.StatusBadRequest, results.Error{Error: "remote validation"})
 			return
 		}
 	}
@@ -180,14 +187,14 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		}, 0,
 	); {
 	case err == nil:
-		ctx.JSON(http.StatusCreated, gin.H{"id": id})
+		ctx.JSON(http.StatusCreated, results.ID{ID: id})
 	case errors.Is(err, models.ErrAlreadyInDatabase):
-		ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+		ctx.JSON(http.StatusConflict, results.Error{Error: "already in database"})
 	case errors.Is(err, models.ErrNotAllowed):
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "wrong publisher/tlp"})
+		ctx.JSON(http.StatusForbidden, results.Error{Error: "wrong publisher/tlp"})
 	default:
 		slog.Error("storing document failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 

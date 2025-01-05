@@ -27,7 +27,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 
-	_ "github.com/ISDuBA/ISDuBA/pkg/web/docs"
+	_ "github.com/ISDuBA/ISDuBA/pkg/web/docs" // include generated swagger data.
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

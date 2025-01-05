@@ -1,10 +1,45 @@
+definitions:
+  results.Error:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+    type: object
+  results.ID:
+    properties:
+      id:
+        type: integer
+    type: object
 info:
   contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
+    email: info@intevation.de
+    name: ISDuBA team
+    url: https://github.com/ISDuBA/ISDuBA
+  description: This is the ISDuBA API.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-paths: {}
+  title: ISDuBA API
+  version: "1.0"
+paths:
+  /documents:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/results.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/results.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/results.Error'
 swagger: "2.0"
