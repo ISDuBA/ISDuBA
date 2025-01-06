@@ -22,11 +22,26 @@ type Error struct {
 	Code  int    `json:"code"`
 }
 
-// SendError sends a Go error to a gin context.
-func SendError(ctx *gin.Context, status int, err error) {
+// Success represents a success message.
+type Success struct {
+	Message string `json:"message"`
+}
+
+// SendSuccess sends a success message to a gin context.
+func SendSuccess(ctx *gin.Context, status int, msg string) {
+	ctx.JSON(status, Success{Message: msg})
+}
+
+// SendErrorMessage sends an error message to a gin context.
+func SendErrorMessage(ctx *gin.Context, status int, msg string) {
 	e := Error{
-		Error: err.Error(),
+		Error: msg,
 		Code:  status,
 	}
 	ctx.JSON(status, e)
+}
+
+// SendError sends a Go error to a gin context.
+func SendError(ctx *gin.Context, status int, err error) {
+	SendErrorMessage(ctx, status, err.Error())
 }

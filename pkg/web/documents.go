@@ -38,6 +38,15 @@ import (
 const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 
 // deleteDocument is an end point for deleting a document.
+// @Summary           Deletes a CSAF document.
+// @Description       Delete endpoint for CSAF documents.
+// @Produce           json
+// @Param             id path int true "Document ID"
+// @Success           201 {object} results.ID
+// @Failure           400 {object} results.Error
+// @Failure           404 {object} results.Error
+// @Failure           500 {object} results.Error
+// @Router /documents/{id} [delete]
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -88,13 +97,13 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	if deleted {
-		ctx.JSON(http.StatusOK, gin.H{"message": "document deleted"})
+		results.SendSuccess(ctx, http.StatusOK, "document deleted")
 	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		results.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 	}
 }
 
@@ -105,6 +114,8 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 // @Produce           json
 // @Success           201 {object} results.ID
 // @Failure           400 {object} results.Error
+// @Failure           403 {object} results.Error "False TLP or publisher"
+// @Failure           409 {object} results.Error "Already in database"
 // @Failure           500 {object} results.Error
 // @Router /documents [post]
 func (c *Controller) importDocument(ctx *gin.Context) {
@@ -132,19 +143,18 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var document any
 	if err := json.NewDecoder(tee).Decode(&document); err != nil {
-		ctx.JSON(http.StatusBadRequest, results.Error{Error: "document is not JSON: " + err.Error()})
+		results.SendErrorMessage(ctx, http.StatusBadRequest, "document is not JSON: "+err.Error())
 		return
 	}
 
 	msgs, err := csaf.ValidateCSAF(document)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, results.Error{Error: "schema validation failed: " + err.Error()})
+		results.SendErrorMessage(ctx, http.StatusBadRequest, "schema validation failed: "+err.Error())
 		return
 	}
 	if len(msgs) > 0 {
-		ctx.JSON(http.StatusBadRequest, results.Error{
-			Error: "schema validation failed: " + strings.Join(msgs, ", "),
-		})
+		results.SendErrorMessage(ctx, http.StatusBadRequest,
+			"schema validation failed: "+strings.Join(msgs, ", "))
 		return
 	}
 
@@ -153,14 +163,13 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		rvr, err := c.val.Validate(document)
 		if err != nil {
 			slog.Error("remote validation failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, results.Error{
-				Error: "remote validation failed: " + err.Error(),
-			})
+			results.SendErrorMessage(ctx, http.StatusInternalServerError,
+				"remote validation failed: "+err.Error())
 			return
 		}
 		if !rvr.Valid {
 			// XXX: Maybe we should tell, what's exactly wrong?
-			ctx.JSON(http.StatusBadRequest, results.Error{Error: "remote validation"})
+			results.SendErrorMessage(ctx, http.StatusBadRequest, "remote validation failed")
 			return
 		}
 	}
@@ -191,9 +200,9 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 	case err == nil:
 		ctx.JSON(http.StatusCreated, results.ID{ID: id})
 	case errors.Is(err, models.ErrAlreadyInDatabase):
-		ctx.JSON(http.StatusConflict, results.Error{Error: "already in database"})
+		results.SendErrorMessage(ctx, http.StatusConflict, "already in database")
 	case errors.Is(err, models.ErrNotAllowed):
-		ctx.JSON(http.StatusForbidden, results.Error{Error: "wrong publisher/tlp"})
+		results.SendErrorMessage(ctx, http.StatusForbidden, "wrong publisher/tlp")
 	default:
 		slog.Error("storing document failed", "err", err)
 		results.SendError(ctx, http.StatusInternalServerError, err)

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/ISDuBA/ISDuBA/pkg/web/results"
 	"github.com/gin-gonic/gin"
 )
 
@@ -69,7 +70,7 @@ func toInt64(s string) (int64, error) { return strconv.ParseInt(s, 10, 64) }
 func parse[T any](ctx *gin.Context, conv func(string) (T, error), s string) (T, bool) {
 	v, err := conv(s)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusBadRequest, err)
 		return v, false
 	}
 	return v, true

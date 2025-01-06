@@ -46,6 +46,62 @@ const docTemplate = `{
                             "$ref": "#/definitions/results.Error"
                         }
                     },
+                    "403": {
+                        "description": "False TLP or publisher",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "Already in database",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/{id}": {
+            "delete": {
+                "description": "Delete endpoint for CSAF documents.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a CSAF document.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/results.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
