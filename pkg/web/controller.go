@@ -89,6 +89,7 @@ func (c *Controller) Bind() http.Handler {
 
 	var (
 		authAdm      = authRoles(models.Admin)
+		authEd       = authRoles(models.Editor)
 		authIm       = authRoles(models.Importer)
 		authEdRe     = authRoles(models.Editor, models.Reviewer)
 		authEdReAdAu = authRoles(models.Editor, models.Reviewer, models.Admin, models.Auditor)
@@ -106,10 +107,10 @@ func (c *Controller) Bind() http.Handler {
 	// Importer can import (POST) documents
 	api.POST("/documents", authIm, c.importDocument)
 	// Everyone can view (GET) overviewDocuments and viewDocuments?
-	api.GET("/documents", authAll /* authEdReAu */, c.overviewDocuments)
-	api.GET("/documents/:id", authAll /* authEdReAu */, c.viewDocument)
-	api.GET("/documents/forward", authAll /* authEdReAu */, c.viewForwardTargets)
-	api.POST("/documents/forward/:id/:target", authAll /* authEdReAu */, c.forwardDocument)
+	api.GET("/documents", authAll, c.overviewDocuments)
+	api.GET("/documents/:id", authAll, c.viewDocument)
+	api.GET("/documents/forward", authAll, c.viewForwardTargets)
+	api.POST("/documents/forward/:id/:target", authAll, c.forwardDocument)
 	// Admin can delete documents
 	api.DELETE("/documents/:id", authAdm, c.deleteDocument)
 
@@ -142,7 +143,7 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/status", authEdReAd, c.changeStatusBulk)
 
 	// SSVC change
-	api.PUT("/ssvc/:document", authEdRe, c.changeSSVC)
+	api.PUT("/ssvc/:document", authEd, c.changeSSVC)
 
 	// Calculate diff
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)

@@ -64,7 +64,7 @@
 
   let isCalculatingAllowed: boolean;
   $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
-    isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
+    isCalculatingAllowed = appStore.isEditor();
   } else {
     isCalculatingAllowed = false;
   }
