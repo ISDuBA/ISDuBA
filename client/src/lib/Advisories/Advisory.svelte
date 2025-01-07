@@ -391,7 +391,7 @@
       </Label>
     </div>
     <div
-      class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_400px]"
+      class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
     >
       <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
         >{params.publisherNamespace}</Label

@@ -649,7 +649,7 @@
                         <i
                           title={item[column]}
                           class:bx={true}
-                          class:bxs-star={item[column] === "new"}
+                          class:bxs-certification={item[column] === "new"}
                           class:bx-show={item[column] === "read"}
                           class:bxs-analyse={item[column] === "assessing"}
                           class:bx-book-open={item[column] === "review"}
