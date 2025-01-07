@@ -71,14 +71,14 @@ dependencies are required to start the application. By default the backend will
 serve the contents of `web/`.
 
 For a quick start copy `example_isdubad.toml` to the
-folder where the application is conatined. Configure the postgres and keycloak
+folder where the application is contained. Configure the postgres and keycloak
 settings and rename the file to `isduba.toml`. The application can now be
 started. For exposing the application to the network it is recommended to use
 a TLS-terminating reverse proxy.
 
 ## Docker/Container setup
 
-This repo conatins an example docker compose setup. The isduba container is
+This repo contains an example docker compose setup. The isduba container is
 built for production usage. All other components are configured for ease of
 setup, it is recommended to use another configuration or setup own
 containers/server for production usage.
