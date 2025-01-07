@@ -14,13 +14,21 @@
 
 As generally recommended with any IT-system,
 keep a backup of your ISDuBA instance's data and configuration.
-This includes a backup of the external identify management system.
+This includes a backup of the external identity management system.
 
 As documents and comments can be permanently deleted from the system,
 consider your auditing needs for the backup strategy.
 For instance make sure that in addition to incremental backups,
 you have the ability to restore a full backup often enough for your
 auditing needs.
+
+It is recommended to store the `aes_key` that is specified in the
+ISDuBA backend configuration, in a safe location. The used PostgreSQL database
+besides the external identity management system, contains all relevant
+application data. This data can be backed up using standard PostgreSQL tools.
+For more information and backup strategies see the official
+PostgreSQL documentation for backup and restore:
+<https://www.postgresql.org/docs/current/backup.html>
 
 ## Audit work which was done with ISDuBA
 
