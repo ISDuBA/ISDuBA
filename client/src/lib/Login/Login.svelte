@@ -93,8 +93,9 @@
           {/if}
           <Button on:click={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
           <P>
+            ISDuBA is Free Software.
             <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
-              >Visit the ISDuBA project on Github</A
+              >The source code is available on Github.</A
             ></P
           >
         {/if}
