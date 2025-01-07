@@ -88,7 +88,7 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
-		authAd      = authRoles(models.Admin)
+		authAd       = authRoles(models.Admin)
 		authAdAuEdRe = authRoles(models.Admin, models.Auditor, models.Editor, models.Reviewer)
 		authAdEdRe   = authRoles(models.Admin, models.Editor, models.Reviewer)
 		authAuEdRe   = authRoles(models.Auditor, models.Editor, models.Reviewer)
