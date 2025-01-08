@@ -64,7 +64,7 @@
 
   let isCalculatingAllowed: boolean;
   $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
-    isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
+    isCalculatingAllowed = appStore.isEditor();
   } else {
     isCalculatingAllowed = false;
   }
@@ -343,7 +343,15 @@
   });
 
   onMount(async () => {
-    await fetchForwardTargets();
+    if (
+      appStore.isAdmin() ||
+      appStore.isEditor() ||
+      appStore.isImporter() ||
+      appStore.isReviewer() ||
+      appStore.isSourceManager()
+    ) {
+      await fetchForwardTargets();
+    }
   });
 
   $: if (params) {
