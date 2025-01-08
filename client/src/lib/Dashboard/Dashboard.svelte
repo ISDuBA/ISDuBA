@@ -82,10 +82,10 @@
         <EventQuery storedQuery={query}></EventQuery>
       {/if}
     {/each}
+    <SourceEvents></SourceEvents>
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
   <ErrorMessage error={loadIgnoredError}></ErrorMessage>
-  <SourceEvents></SourceEvents>
   <div class="mb-8 flex w-full max-w-[96%] flex-col gap-4 2xl:w-[46%]">
     <ImportStats updateIntervalInMinutes={10}></ImportStats>
   </div>
