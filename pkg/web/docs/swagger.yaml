@@ -1,30 +1,56 @@
 basePath: /api
 definitions:
-  models.AdvisoryKey:
-    properties:
-      publisher:
-        type: string
-      tracking_id:
-        type: string
-    required:
-    - publisher
-    - tracking_id
-    type: object
-  results.Error:
+  config.FeedLogLevel:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 1
+    type: integer
+    x-enum-varnames:
+    - DebugFeedLogLevel
+    - InfoFeedLogLevel
+    - WarnFeedLogLevel
+    - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
+  models.Error:
     properties:
       code:
         type: integer
       error:
         type: string
     type: object
-  results.ID:
+  models.ID:
     properties:
       id:
         type: integer
     type: object
-  results.Success:
+  models.Success:
     properties:
       message:
+        type: string
+    type: object
+  sources.Stats:
+    properties:
+      downloading:
+        type: integer
+      waiting:
+        type: integer
+    type: object
+  web.feed:
+    properties:
+      id:
+        type: integer
+      label:
+        type: string
+      log_level:
+        $ref: '#/definitions/config.FeedLogLevel'
+      rolie:
+        type: boolean
+      stats:
+        $ref: '#/definitions/sources.Stats'
+      url:
         type: string
     type: object
 info:
@@ -50,23 +76,23 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/results.ID'
+            $ref: '#/definitions/models.ID'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "403":
           description: False TLP or publisher
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "409":
           description: Already in database
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Imports a CSAF document.
   /documents/{id}:
     delete:
@@ -83,19 +109,19 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/results.ID'
+            $ref: '#/definitions/models.ID'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Deletes a CSAF document.
   /sources/{id}:
     delete:
@@ -112,19 +138,19 @@ paths:
         "200":
           description: source deleted
           schema:
-            $ref: '#/definitions/results.Success'
+            $ref: '#/definitions/models.Success'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Deletes a source.
     get:
       description: Returns the source configuration and metadata.
@@ -144,15 +170,15 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/results.Success'
+            $ref: '#/definitions/models.Success'
         "400":
           description: could not parse stats
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Get source information.
     put:
       consumes:
@@ -170,24 +196,22 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/results.Success'
+            $ref: '#/definitions/models.Success'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "404":
           description: not found
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Update source configuration.
   /sources/{id}/feeds:
     get:
-      consumes:
-      - application/json
       description: Returns all feed configurations and metadata.
       parameters:
       - description: Source ID
@@ -206,19 +230,53 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.AdvisoryKey'
+              $ref: '#/definitions/web.feed'
             type: array
         "400":
           description: could not parse stats
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Returns feeds.
+    post:
+      description: Creates a feed with the specified configuration.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.feed'
+            type: array
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a feed.
 swagger: "2.0"
