@@ -21,6 +21,7 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
+	"github.com/ISDuBA/ISDuBA/pkg/web/results"
 	"github.com/gin-gonic/gin"
 )
 
@@ -129,9 +130,19 @@ func showStats(ctx *gin.Context) (bool, bool) {
 	return parse(ctx, strconv.ParseBool, st)
 }
 
+// viewSources is an endpoint that returns information about the source.
+// @Summary           Get source information.
+// @Description       Returns the source configuration and metadata of all sources.
+// @Param             stats query  bool    false  "Enable statistic"
+// @Produce           json
+// @Success           201 {object} results.Success
+// @Failure           400 {object} results.Error "could not parse stats"
+// @Router /sources [get]
+
 func (c *Controller) viewSources(ctx *gin.Context) {
 	stats, ok := showStats(ctx)
 	if !ok {
+		results.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse stats")
 		return
 	}
 	srcs := []*source{}
@@ -229,25 +240,45 @@ func (c *Controller) createSource(ctx *gin.Context) {
 	}
 }
 
+// deleteSource is an endpoint that deletes the source with specified id.
+// @Summary           Deletes a source.
+// @Description       Deletes the source configuration with the specified id.
+// @Param             id   path      int  true  "Source ID"
+// @Produce           json
+// @Success           200 {object} results.Success "source deleted"
+// @Failure           400 {object} results.Error
+// @Failure           404 {object} results.Error
+// @Failure           500 {object} results.Error
+// @Router /sources/{id} [delete]
 func (c *Controller) deleteSource(ctx *gin.Context) {
 	var input struct {
 		ID int64 `uri:"id" binding:"required"`
 	}
 	if err := ctx.ShouldBindUri(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	switch err := c.sm.RemoveSource(input.ID); {
 	case err == nil:
-		ctx.JSON(http.StatusOK, gin.H{"message": "source deleted"})
+		results.SendSuccess(ctx, http.StatusOK, "source deleted")
 	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusNotFound, err)
 	default:
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 
+// viewSource is an endpoint that returns information about the source.
+// @Summary           Get source information.
+// @Description       Returns the source configuration and metadata.
+// @Param             id    path   int     true  "Source ID"
+// @Param             stats query  bool    false  "Enable statistic"
+// @Produce           json
+// @Success           201 {object} results.Success
+// @Failure           400 {object} results.Error "could not parse stats"
+// @Failure           404 {object} results.Error
+// @Router /sources/{id} [get]
 func (c *Controller) viewSource(ctx *gin.Context) {
 	var input struct {
 		ID int64 `uri:"id" binding:"required"`
@@ -258,6 +289,7 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 	}
 	stats, ok := showStats(ctx)
 	if !ok {
+		results.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse stats")
 		return
 	}
 	si := c.sm.Source(input.ID, stats)
@@ -268,12 +300,24 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, newSource(si))
 }
 
+// updateSource is an endpoint that updates the source configuration.
+// @Summary           Update source configuration.
+// @Description       Updates the source configuration.
+// @Param             id    path   int     true  "Source ID"
+// @Param             stats query  bool    false  "Enable statistic"
+// @Accept            json
+// @Produce           json
+// @Success           201 {object} results.Success
+// @Failure           400 {object} results.Error
+// @Failure           404 {object} results.Error "not found"
+// @Failure           500 {object} results.Error
+// @Router /sources/{id} [put]
 func (c *Controller) updateSource(ctx *gin.Context) {
 	var input struct {
 		SourceID int64 `uri:"id"`
 	}
 	if err := ctx.ShouldBindUri(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	switch ur, err := c.sm.UpdateSource(input.SourceID, func(su *sources.SourceUpdater) error {
@@ -445,14 +489,14 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 		return nil
 	}); {
 	case err == nil:
-		ctx.JSON(http.StatusOK, gin.H{"message": ur.String()})
+		results.SendSuccess(ctx, http.StatusOK, ur.String())
 	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		results.SendErrorMessage(ctx, http.StatusNotFound, "not found")
 	case errors.Is(err, sources.InvalidArgumentError("")):
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusBadRequest, err)
 	default:
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 

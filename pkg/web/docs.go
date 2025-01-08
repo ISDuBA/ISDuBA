@@ -11,15 +11,15 @@ package web
 
 //go:generate swag init -g docs.go
 
-// @description This is the ISDuBA API.
-// @title       ISDuBA API
-// @version     1.0
+//	@description	This is the ISDuBA API.
+//	@title			ISDuBA API
+//	@version		1.0
 
-// @contact.name   ISDuBA team
-// @contact.url    https://github.com/ISDuBA/ISDuBA
-// @contact.email  info@intevation.de
+//	@contact.name	ISDuBA team
+//	@contact.url	https://github.com/ISDuBA/ISDuBA
+//	@contact.email	info@intevation.de
 
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @BasePath /api
+//	@BasePath	/api

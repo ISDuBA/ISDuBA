@@ -38,15 +38,15 @@ import (
 const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 
 // deleteDocument is an end point for deleting a document.
-// @Summary           Deletes a CSAF document.
-// @Description       Delete endpoint for CSAF documents.
-// @Produce           json
-// @Param             id path int true "Document ID"
-// @Success           201 {object} results.ID
-// @Failure           400 {object} results.Error
-// @Failure           404 {object} results.Error
-// @Failure           500 {object} results.Error
-// @Router /documents/{id} [delete]
+//	@Summary		Deletes a CSAF document.
+//	@Description	Delete endpoint for CSAF documents.
+//	@Produce		json
+//	@Param			id	path		int	true	"Document ID"
+//	@Success		201	{object}	results.ID
+//	@Failure		400	{object}	results.Error
+//	@Failure		404	{object}	results.Error
+//	@Failure		500	{object}	results.Error
+//	@Router			/documents/{id} [delete]
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -108,16 +108,16 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 }
 
 // importDocument is an end point to import a document.
-// @Summary           Imports a CSAF document.
-// @Description       Upload endpoint for CSAF documents.
-// @Accept            json
-// @Produce           json
-// @Success           201 {object} results.ID
-// @Failure           400 {object} results.Error
-// @Failure           403 {object} results.Error "False TLP or publisher"
-// @Failure           409 {object} results.Error "Already in database"
-// @Failure           500 {object} results.Error
-// @Router /documents [post]
+//	@Summary		Imports a CSAF document.
+//	@Description	Upload endpoint for CSAF documents.
+//	@Accept			json
+//	@Produce		json
+//	@Success		201	{object}	results.ID
+//	@Failure		400	{object}	results.Error
+//	@Failure		403	{object}	results.Error	"False TLP or publisher"
+//	@Failure		409	{object}	results.Error	"Already in database"
+//	@Failure		500	{object}	results.Error
+//	@Router			/documents [post]
 func (c *Controller) importDocument(ctx *gin.Context) {
 	var actor *string
 	if user := c.currentUser(ctx); user.Valid {

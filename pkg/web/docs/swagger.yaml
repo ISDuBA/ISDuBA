@@ -12,6 +12,11 @@ definitions:
       id:
         type: integer
     type: object
+  results.Success:
+    properties:
+      message:
+        type: string
+    type: object
 info:
   contact:
     email: info@intevation.de
@@ -82,4 +87,95 @@ paths:
           schema:
             $ref: '#/definitions/results.Error'
       summary: Deletes a CSAF document.
+  /sources/{id}:
+    delete:
+      description: Deletes the source configuration with the specified id.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: source deleted
+          schema:
+            $ref: '#/definitions/results.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/results.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/results.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/results.Error'
+      summary: Deletes a source.
+    get:
+      description: Returns the source configuration and metadata.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/results.Success'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/results.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/results.Error'
+      summary: Get source information.
+    put:
+      consumes:
+      - application/json
+      description: Updates the source configuration.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/results.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/results.Error'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/results.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/results.Error'
+      summary: Update source configuration.
 swagger: "2.0"
