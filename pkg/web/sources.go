@@ -131,13 +131,13 @@ func showStats(ctx *gin.Context) (bool, bool) {
 }
 
 // viewSources is an endpoint that returns information about the source.
-// @Summary           Get source information.
-// @Description       Returns the source configuration and metadata of all sources.
-// @Param             stats query  bool    false  "Enable statistic"
-// @Produce           json
-// @Success           201 {object} models.Success
-// @Failure           400 {object} models.Error "could not parse stats"
-// @Router /sources [get]
+//	@Summary		Get source information.
+//	@Description	Returns the source configuration and metadata of all sources.
+//	@Param			stats	query	bool	false	"Enable statistic"
+//	@Produce		json
+//	@Success		201	{object}	models.Success
+//	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Router			/sources [get]
 
 func (c *Controller) viewSources(ctx *gin.Context) {
 	stats, ok := showStats(ctx)
@@ -241,15 +241,15 @@ func (c *Controller) createSource(ctx *gin.Context) {
 }
 
 // deleteSource is an endpoint that deletes the source with specified id.
-// @Summary           Deletes a source.
-// @Description       Deletes the source configuration with the specified id.
-// @Param             id   path      int  true  "Source ID"
-// @Produce           json
-// @Success           200 {object} models.Success "source deleted"
-// @Failure           400 {object} models.Error
-// @Failure           404 {object} models.Error
-// @Failure           500 {object} models.Error
-// @Router /sources/{id} [delete]
+//	@Summary		Deletes a source.
+//	@Description	Deletes the source configuration with the specified id.
+//	@Param			id	path	int	true	"Source ID"
+//	@Produce		json
+//	@Success		200	{object}	models.Success	"source deleted"
+//	@Failure		400	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/{id} [delete]
 func (c *Controller) deleteSource(ctx *gin.Context) {
 	var input struct {
 		ID int64 `uri:"id" binding:"required"`
@@ -270,15 +270,15 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 }
 
 // viewSource is an endpoint that returns information about the source.
-// @Summary           Get source information.
-// @Description       Returns the source configuration and metadata.
-// @Param             id    path   int     true  "Source ID"
-// @Param             stats query  bool    false  "Enable statistic"
-// @Produce           json
-// @Success           201 {object} models.Success
-// @Failure           400 {object} models.Error "could not parse stats"
-// @Failure           404 {object} models.Error
-// @Router /sources/{id} [get]
+//	@Summary		Get source information.
+//	@Description	Returns the source configuration and metadata.
+//	@Param			id		path	int		true	"Source ID"
+//	@Param			stats	query	bool	false	"Enable statistic"
+//	@Produce		json
+//	@Success		201	{object}	models.Success
+//	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Failure		404	{object}	models.Error
+//	@Router			/sources/{id} [get]
 func (c *Controller) viewSource(ctx *gin.Context) {
 	var input struct {
 		ID int64 `uri:"id" binding:"required"`
@@ -301,16 +301,16 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 }
 
 // updateSource is an endpoint that updates the source configuration.
-// @Summary           Update source configuration.
-// @Description       Updates the source configuration.
-// @Param             id    path   int     true  "Source ID"
-// @Accept            json
-// @Produce           json
-// @Success           201 {object} models.Success
-// @Failure           400 {object} models.Error
-// @Failure           404 {object} models.Error "not found"
-// @Failure           500 {object} models.Error
-// @Router /sources/{id} [put]
+//	@Summary		Update source configuration.
+//	@Description	Updates the source configuration.
+//	@Param			id	path	int	true	"Source ID"
+//	@Accept			json
+//	@Produce		json
+//	@Success		201	{object}	models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		404	{object}	models.Error	"not found"
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/{id} [put]
 func (c *Controller) updateSource(ctx *gin.Context) {
 	var input struct {
 		SourceID int64 `uri:"id"`
@@ -510,16 +510,16 @@ func validateHeaders(headers []string) error {
 }
 
 // viewFeeds is an endpoint that returns all feeds.
-// @Summary           Returns feeds.
-// @Description       Returns all feed configurations and metadata.
-// @Param             id    path   int     true  "Source ID"
-// @Param             stats query  bool    false  "Enable statistic"
-// @Produce           json
-// @Success           200 {array} feed
-// @Failure           400 {object} models.Error "could not parse stats"
-// @Failure           404 {object} models.Error
-// @Failure           500 {object} models.Error
-// @Router /sources/{id}/feeds [get]
+//	@Summary		Returns feeds.
+//	@Description	Returns all feed configurations and metadata.
+//	@Param			id		path	int		true	"Source ID"
+//	@Param			stats	query	bool	false	"Enable statistic"
+//	@Produce		json
+//	@Success		200	{array}		feed
+//	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/{id}/feeds [get]
 func (c *Controller) viewFeeds(ctx *gin.Context) {
 	var input struct {
 		SourceID int64 `uri:"id"`
@@ -548,16 +548,16 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 }
 
 // createFeed is an endpoint that creates a feed.
-// @Summary           Creates a feed.
-// @Description       Creates a feed with the specified configuration.
-// @Param             id    path   int     true  "Source ID"
-// @Param             stats query  bool    false  "Enable statistic"
-// @Produce           json
-// @Success           200 {array} feed
-// @Failure           400 {object} models.Error "could not parse stats"
-// @Failure           404 {object} models.Error
-// @Failure           500 {object} models.Error
-// @Router /sources/{id}/feeds [post]
+//	@Summary		Creates a feed.
+//	@Description	Creates a feed with the specified configuration.
+//	@Param			id		path	int		true	"Source ID"
+//	@Param			stats	query	bool	false	"Enable statistic"
+//	@Produce		json
+//	@Success		200	{array}		feed
+//	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/{id}/feeds [post]
 func (c *Controller) createFeed(ctx *gin.Context) {
 	var input struct {
 		SourceID int64  `uri:"id"`
