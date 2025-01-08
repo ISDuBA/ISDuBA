@@ -181,8 +181,6 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Get source information.
     put:
-      consumes:
-      - application/json
       description: Updates the source configuration.
       parameters:
       - description: Source ID
@@ -209,12 +207,12 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Update source configuration.
+      summary: Updates source configuration.
   /sources/{id}/feeds:
     get:
       description: Returns all feed configurations and metadata.
       parameters:
-      - description: Source ID
+      - description: Feed ID
         in: path
         name: id
         required: true
@@ -279,4 +277,35 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Creates a feed.
+  /sources/feeds/{id}:
+    put:
+      description: Updates a feed with the specified configuration.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.feed'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a feed.
 swagger: "2.0"

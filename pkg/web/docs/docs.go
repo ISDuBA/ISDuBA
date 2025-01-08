@@ -111,6 +111,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/sources/feeds/{id}": {
+            "put": {
+                "description": "Updates a feed with the specified configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a feed.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.feed"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/sources/{id}": {
             "get": {
                 "description": "Returns the source configuration and metadata.",
@@ -156,13 +203,10 @@ const docTemplate = `{
             },
             "put": {
                 "description": "Updates the source configuration.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Update source configuration.",
+                "summary": "Updates source configuration.",
                 "parameters": [
                     {
                         "type": "integer",
@@ -252,7 +296,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Source ID",
+                        "description": "Feed ID",
                         "name": "id",
                         "in": "path",
                         "required": true

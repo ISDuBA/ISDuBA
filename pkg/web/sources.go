@@ -241,6 +241,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 }
 
 // deleteSource is an endpoint that deletes the source with specified id.
+//
 //	@Summary		Deletes a source.
 //	@Description	Deletes the source configuration with the specified id.
 //	@Param			id	path	int	true	"Source ID"
@@ -270,6 +271,7 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 }
 
 // viewSource is an endpoint that returns information about the source.
+//
 //	@Summary		Get source information.
 //	@Description	Returns the source configuration and metadata.
 //	@Param			id		path	int		true	"Source ID"
@@ -301,10 +303,10 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 }
 
 // updateSource is an endpoint that updates the source configuration.
-//	@Summary		Update source configuration.
+//
+//	@Summary		Updates source configuration.
 //	@Description	Updates the source configuration.
 //	@Param			id	path	int	true	"Source ID"
-//	@Accept			json
 //	@Produce		json
 //	@Success		201	{object}	models.Success
 //	@Failure		400	{object}	models.Error
@@ -510,9 +512,10 @@ func validateHeaders(headers []string) error {
 }
 
 // viewFeeds is an endpoint that returns all feeds.
+//
 //	@Summary		Returns feeds.
 //	@Description	Returns all feed configurations and metadata.
-//	@Param			id		path	int		true	"Source ID"
+//	@Param			id		path	int		true	"Feed ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Produce		json
 //	@Success		200	{array}		feed
@@ -548,6 +551,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 }
 
 // createFeed is an endpoint that creates a feed.
+//
 //	@Summary		Creates a feed.
 //	@Description	Creates a feed with the specified configuration.
 //	@Param			id		path	int		true	"Source ID"
@@ -594,12 +598,23 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 	}
 }
 
+// updateFeed is an endpoint that updates a feed.
+//
+//	@Summary		Updates a feed.
+//	@Description	Updates a feed with the specified configuration.
+//	@Param			id	path	int	true	"Feed ID"
+//	@Produce		json
+//	@Success		200	{array}		feed
+//	@Failure		400	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/feeds/{id} [put]
 func (c *Controller) updateFeed(ctx *gin.Context) {
 	var input struct {
 		FeedID int64 `uri:"id"`
 	}
 	if err := ctx.ShouldBindUri(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	switch updated, err := c.sm.UpdateFeed(input.FeedID, func(fu *sources.FeedUpdater) error {
@@ -631,12 +646,12 @@ func (c *Controller) updateFeed(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusOK, gin.H{"message": msg})
 	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusNotFound, err)
 	case errors.Is(err, sources.InvalidArgumentError("")):
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 	default:
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 
