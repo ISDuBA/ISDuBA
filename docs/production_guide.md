@@ -14,13 +14,21 @@
 
 As generally recommended with any IT-system,
 keep a backup of your ISDuBA instance's data and configuration.
-This includes a backup of the external identify management system.
+This includes a backup of the external identity management system.
 
 As documents and comments can be permanently deleted from the system,
 consider your auditing needs for the backup strategy.
 For instance make sure that in addition to incremental backups,
 you have the ability to restore a full backup often enough for your
 auditing needs.
+
+It is recommended to store the `aes_key` that is specified in the
+ISDuBA backend configuration, in a safe location. The used PostgreSQL database
+besides the external identity management system, contains all relevant
+application data. This data can be backed up using standard PostgreSQL tools.
+For more information and backup strategies see the official
+PostgreSQL documentation for backup and restore:
+<https://www.postgresql.org/docs/current/backup.html>
 
 ## Audit work which was done with ISDuBA
 
@@ -71,14 +79,14 @@ dependencies are required to start the application. By default the backend will
 serve the contents of `web/`.
 
 For a quick start copy `example_isdubad.toml` to the
-folder where the application is conatined. Configure the postgres and keycloak
+folder where the application is contained. Configure the postgres and keycloak
 settings and rename the file to `isduba.toml`. The application can now be
 started. For exposing the application to the network it is recommended to use
 a TLS-terminating reverse proxy.
 
 ## Docker/Container setup
 
-This repo conatins an example docker compose setup. The isduba container is
+This repo contains an example docker compose setup. The isduba container is
 built for production usage. All other components are configured for ease of
 setup, it is recommended to use another configuration or setup own
 containers/server for production usage.
