@@ -88,16 +88,18 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
-		authAd       = authRoles(models.Admin)
-		authAdAuEdRe = authRoles(models.Admin, models.Auditor, models.Editor, models.Reviewer)
-		authAdEdRe   = authRoles(models.Admin, models.Editor, models.Reviewer)
-		authAuEdRe   = authRoles(models.Auditor, models.Editor, models.Reviewer)
-		authEd       = authRoles(models.Editor)
-		authEdRe     = authRoles(models.Editor, models.Reviewer)
-		authEdSM     = authRoles(models.Editor, models.SourceManager)
-		authIm       = authRoles(models.Importer)
-		authSM       = authRoles(models.SourceManager)
-		authAll      = authRoles(models.Admin, models.Auditor, models.Editor, models.Importer,
+		authAd         = authRoles(models.Admin)
+		authAdAuEdRe   = authRoles(models.Admin, models.Auditor, models.Editor, models.Reviewer)
+		authAdEdImReSM = authRoles(models.Admin, models.Editor, models.Importer, models.Reviewer,
+			models.SourceManager)
+		authAdEdRe = authRoles(models.Admin, models.Editor, models.Reviewer)
+		authAuEdRe = authRoles(models.Auditor, models.Editor, models.Reviewer)
+		authEd     = authRoles(models.Editor)
+		authEdRe   = authRoles(models.Editor, models.Reviewer)
+		authEdSM   = authRoles(models.Editor, models.SourceManager)
+		authIm     = authRoles(models.Importer)
+		authSM     = authRoles(models.SourceManager)
+		authAll    = authRoles(models.Admin, models.Auditor, models.Editor, models.Importer,
 			models.Reviewer, models.SourceManager)
 	)
 
@@ -109,8 +111,8 @@ func (c *Controller) Bind() http.Handler {
 	// Everyone can view (GET) overviewDocuments and viewDocuments?
 	api.GET("/documents", authAll, c.overviewDocuments)
 	api.GET("/documents/:id", authAll, c.viewDocument)
-	api.GET("/documents/forward", authAll, c.viewForwardTargets)
-	api.POST("/documents/forward/:id/:target", authAll, c.forwardDocument)
+	api.GET("/documents/forward", authAdEdImReSM, c.viewForwardTargets)
+	api.POST("/documents/forward/:id/:target", authAdEdImReSM, c.forwardDocument)
 	// Admin can delete documents
 	api.DELETE("/documents/:id", authAd, c.deleteDocument)
 

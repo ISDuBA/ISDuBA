@@ -343,7 +343,15 @@
   });
 
   onMount(async () => {
-    await fetchForwardTargets();
+    if (
+      appStore.isAdmin() ||
+      appStore.isEditor() ||
+      appStore.isImporter() ||
+      appStore.isReviewer() ||
+      appStore.isSourceManager()
+    ) {
+      await fetchForwardTargets();
+    }
   });
 
   $: if (params) {
