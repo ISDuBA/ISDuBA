@@ -170,12 +170,6 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Enable statistic",
-                        "name": "stats",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -247,9 +241,80 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/sources/{id}/feeds": {
+            "get": {
+                "description": "Returns all feed configurations and metadata.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns feeds.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable statistic",
+                        "name": "stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.AdvisoryKey"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse stats",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/results.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "models.AdvisoryKey": {
+            "type": "object",
+            "required": [
+                "publisher",
+                "tracking_id"
+            ],
+            "properties": {
+                "publisher": {
+                    "type": "string"
+                },
+                "tracking_id": {
+                    "type": "string"
+                }
+            }
+        },
         "results.Error": {
             "type": "object",
             "properties": {

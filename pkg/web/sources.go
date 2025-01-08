@@ -304,7 +304,6 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 // @Summary           Update source configuration.
 // @Description       Updates the source configuration.
 // @Param             id    path   int     true  "Source ID"
-// @Param             stats query  bool    false  "Enable statistic"
 // @Accept            json
 // @Produce           json
 // @Success           201 {object} results.Success
@@ -510,6 +509,17 @@ func validateHeaders(headers []string) error {
 	return nil
 }
 
+// viewFeeds is an endpoint that returns all feeds.
+// @Summary           Returns feeds.
+// @Description       Returns all feed configurations and metadata.
+// @Param             id    path   int     true  "Source ID"
+// @Param             stats query  bool    false  "Enable statistic"
+// @Produce           json
+// @Success           200 {array} feed
+// @Failure           400 {object} results.Error "could not parse stats"
+// @Failure           404 {object} results.Error
+// @Failure           500 {object} results.Error
+// @Router /sources/{id}/feeds [get]
 func (c *Controller) viewFeeds(ctx *gin.Context) {
 	var input struct {
 		SourceID int64 `uri:"id"`
@@ -520,6 +530,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 	}
 	stats, ok := showStats(ctx)
 	if !ok {
+		results.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse stats")
 		return
 	}
 	feeds := []*feed{}
@@ -529,13 +540,24 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 	case err == nil:
 		ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
 	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusNotFound, err)
 	default:
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		results.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 
+// createFeed is an endpoint that creates a feed.
+// @Summary           Returns feeds.
+// @Description       Returns all feed configurations and metadata.
+// @Param             id    path   int     true  "Source ID"
+// @Param             stats query  bool    false  "Enable statistic"
+// @Produce           json
+// @Success           200 {array} feed
+// @Failure           400 {object} results.Error "could not parse stats"
+// @Failure           404 {object} results.Error
+// @Failure           500 {object} results.Error
+// @Router /sources/{id}/feeds [get]
 func (c *Controller) createFeed(ctx *gin.Context) {
 	var input struct {
 		SourceID int64  `uri:"id"`

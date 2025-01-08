@@ -7,7 +7,7 @@
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 // Package results represents the models used at the HTTP interface.
-package results
+package models
 
 import "github.com/gin-gonic/gin"
 

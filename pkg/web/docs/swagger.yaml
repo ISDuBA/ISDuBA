@@ -1,5 +1,15 @@
 basePath: /api
 definitions:
+  models.AdvisoryKey:
+    properties:
+      publisher:
+        type: string
+      tracking_id:
+        type: string
+    required:
+    - publisher
+    - tracking_id
+    type: object
   results.Error:
     properties:
       code:
@@ -154,10 +164,6 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Enable statistic
-        in: query
-        name: stats
-        type: boolean
       produces:
       - application/json
       responses:
@@ -178,4 +184,41 @@ paths:
           schema:
             $ref: '#/definitions/results.Error'
       summary: Update source configuration.
+  /sources/{id}/feeds:
+    get:
+      consumes:
+      - application/json
+      description: Returns all feed configurations and metadata.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.AdvisoryKey'
+            type: array
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/results.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/results.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/results.Error'
+      summary: Returns feeds.
 swagger: "2.0"
