@@ -31,22 +31,22 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
-	"github.com/ISDuBA/ISDuBA/pkg/web/results"
 )
 
 // MinSearchLength enforces a minimal length of search phrases.
 const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 
 // deleteDocument is an end point for deleting a document.
-// @Summary           Deletes a CSAF document.
-// @Description       Delete endpoint for CSAF documents.
-// @Produce           json
-// @Param             id path int true "Document ID"
-// @Success           201 {object} results.ID
-// @Failure           400 {object} results.Error
-// @Failure           404 {object} results.Error
-// @Failure           500 {object} results.Error
-// @Router /documents/{id} [delete]
+//
+//	@Summary		Deletes a CSAF document.
+//	@Description	Delete endpoint for CSAF documents.
+//	@Produce		json
+//	@Param			id	path		int	true	"Document ID"
+//	@Success		201	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/{id} [delete]
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -97,27 +97,28 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		results.SendError(ctx, http.StatusInternalServerError, err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	if deleted {
-		results.SendSuccess(ctx, http.StatusOK, "document deleted")
+		models.SendSuccess(ctx, http.StatusOK, "document deleted")
 	} else {
-		results.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
+		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 	}
 }
 
 // importDocument is an end point to import a document.
-// @Summary           Imports a CSAF document.
-// @Description       Upload endpoint for CSAF documents.
-// @Accept            json
-// @Produce           json
-// @Success           201 {object} results.ID
-// @Failure           400 {object} results.Error
-// @Failure           403 {object} results.Error "False TLP or publisher"
-// @Failure           409 {object} results.Error "Already in database"
-// @Failure           500 {object} results.Error
-// @Router /documents [post]
+//
+//	@Summary		Imports a CSAF document.
+//	@Description	Upload endpoint for CSAF documents.
+//	@Accept			json
+//	@Produce		json
+//	@Success		201	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		403	{object}	models.Error	"False TLP or publisher"
+//	@Failure		409	{object}	models.Error	"Already in database"
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents [post]
 func (c *Controller) importDocument(ctx *gin.Context) {
 	var actor *string
 	if user := c.currentUser(ctx); user.Valid {
@@ -126,12 +127,12 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		results.SendError(ctx, http.StatusBadRequest, err)
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	f, err := file.Open()
 	if err != nil {
-		results.SendError(ctx, http.StatusBadRequest, err)
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	limited := http.MaxBytesReader(
@@ -143,17 +144,17 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var document any
 	if err := json.NewDecoder(tee).Decode(&document); err != nil {
-		results.SendErrorMessage(ctx, http.StatusBadRequest, "document is not JSON: "+err.Error())
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "document is not JSON: "+err.Error())
 		return
 	}
 
 	msgs, err := csaf.ValidateCSAF(document)
 	if err != nil {
-		results.SendErrorMessage(ctx, http.StatusBadRequest, "schema validation failed: "+err.Error())
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "schema validation failed: "+err.Error())
 		return
 	}
 	if len(msgs) > 0 {
-		results.SendErrorMessage(ctx, http.StatusBadRequest,
+		models.SendErrorMessage(ctx, http.StatusBadRequest,
 			"schema validation failed: "+strings.Join(msgs, ", "))
 		return
 	}
@@ -163,13 +164,13 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		rvr, err := c.val.Validate(document)
 		if err != nil {
 			slog.Error("remote validation failed", "err", err)
-			results.SendErrorMessage(ctx, http.StatusInternalServerError,
+			models.SendErrorMessage(ctx, http.StatusInternalServerError,
 				"remote validation failed: "+err.Error())
 			return
 		}
 		if !rvr.Valid {
 			// XXX: Maybe we should tell, what's exactly wrong?
-			results.SendErrorMessage(ctx, http.StatusBadRequest, "remote validation failed")
+			models.SendErrorMessage(ctx, http.StatusBadRequest, "remote validation failed")
 			return
 		}
 	}
@@ -198,14 +199,14 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		}, 0,
 	); {
 	case err == nil:
-		ctx.JSON(http.StatusCreated, results.ID{ID: id})
+		ctx.JSON(http.StatusCreated, models.ID{ID: id})
 	case errors.Is(err, models.ErrAlreadyInDatabase):
-		results.SendErrorMessage(ctx, http.StatusConflict, "already in database")
+		models.SendErrorMessage(ctx, http.StatusConflict, "already in database")
 	case errors.Is(err, models.ErrNotAllowed):
-		results.SendErrorMessage(ctx, http.StatusForbidden, "wrong publisher/tlp")
+		models.SendErrorMessage(ctx, http.StatusForbidden, "wrong publisher/tlp")
 	default:
 		slog.Error("storing document failed", "err", err)
-		results.SendError(ctx, http.StatusInternalServerError, err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 

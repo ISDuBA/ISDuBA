@@ -1,16 +1,246 @@
 basePath: /api
 definitions:
-  results.Error:
+  config.FeedLogLevel:
+    enum:
+    - 1
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - defaultSourcesFeedLogLevel
+    - DebugFeedLogLevel
+    - InfoFeedLogLevel
+    - WarnFeedLogLevel
+    - ErrorFeedLogLevel
+  models.Error:
     properties:
       code:
         type: integer
       error:
         type: string
     type: object
-  results.ID:
+  models.ID:
     properties:
       id:
         type: integer
+    type: object
+  models.Success:
+    properties:
+      message:
+        type: string
+    type: object
+  sources.Stats:
+    properties:
+      downloading:
+        type: integer
+      waiting:
+        type: integer
+    type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+  web.attentionSources.attention:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  web.defaultSourceConfig.sourceConfig:
+    properties:
+      age:
+        $ref: '#/definitions/web.sourceAge'
+      log_level:
+        $ref: '#/definitions/config.FeedLogLevel'
+      rate:
+        type: number
+      secure:
+        type: boolean
+      signature_check:
+        type: boolean
+      slots:
+        type: integer
+      strict_mode:
+        type: boolean
+    type: object
+  web.feed:
+    properties:
+      id:
+        type: integer
+      label:
+        type: string
+      log_level:
+        $ref: '#/definitions/config.FeedLogLevel'
+      rolie:
+        type: boolean
+      stats:
+        $ref: '#/definitions/sources.Stats'
+      url:
+        type: string
+    type: object
+  web.feedLogs.entry:
+    properties:
+      feed_id:
+        type: integer
+      level:
+        $ref: '#/definitions/config.FeedLogLevel'
+      msg:
+        type: string
+      time:
+        type: string
+    type: object
+  web.feedLogs.feedLogEntries:
+    properties:
+      count:
+        type: integer
+      entries:
+        items:
+          $ref: '#/definitions/web.feedLogs.entry'
+        type: array
+    type: object
+  web.feedResult:
+    properties:
+      feeds:
+        items:
+          $ref: '#/definitions/web.feed'
+        type: array
+    type: object
+  web.keepFeedTime.keepFeedTimeConfig:
+    properties:
+      keep_feed_time:
+        $ref: '#/definitions/time.Duration'
+    type: object
+  web.pmd.messages:
+    properties:
+      messages:
+        items:
+          type: string
+        type: array
+    type: object
+  web.source:
+    properties:
+      active:
+        type: boolean
+      age:
+        $ref: '#/definitions/web.sourceAge'
+      attention:
+        type: boolean
+      client_cert_passphrase:
+        type: string
+      client_cert_private:
+        type: string
+      client_cert_public:
+        type: string
+      headers:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      ignore_patterns:
+        items:
+          type: string
+        type: array
+      name:
+        minLength: 1
+        type: string
+      rate:
+        minimum: 0
+        type: number
+      secure:
+        type: boolean
+      signature_check:
+        type: boolean
+      slots:
+        minimum: 0
+        type: integer
+      stats:
+        $ref: '#/definitions/sources.Stats'
+      status:
+        items:
+          type: string
+        type: array
+      strict_mode:
+        type: boolean
+      url:
+        minLength: 1
+        type: string
+    required:
+    - name
+    - url
+    type: object
+  web.sourceAge:
+    properties:
+      time.Duration:
+        enum:
+        - -9223372036854775808
+        - 9223372036854775807
+        - 1
+        - 1000
+        - 1000000
+        - 1000000000
+        - 60000000000
+        - 3600000000000
+        - 1
+        - 1000
+        - 1000000
+        - 1000000000
+        - 60000000000
+        - 3600000000000
+        type: integer
+        x-enum-varnames:
+        - minDuration
+        - maxDuration
+        - Nanosecond
+        - Microsecond
+        - Millisecond
+        - Second
+        - Minute
+        - Hour
+        - Nanosecond
+        - Microsecond
+        - Millisecond
+        - Second
+        - Minute
+        - Hour
+    type: object
+  web.viewSources.sourcesResult:
+    properties:
+      sources:
+        items:
+          $ref: '#/definitions/web.source'
+        type: array
     type: object
 info:
   contact:
@@ -35,23 +265,23 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/results.ID'
+            $ref: '#/definitions/models.ID'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "403":
           description: False TLP or publisher
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "409":
           description: Already in database
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Imports a CSAF document.
   /documents/{id}:
     delete:
@@ -68,18 +298,496 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/results.ID'
+            $ref: '#/definitions/models.ID'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/results.Error'
+            $ref: '#/definitions/models.Error'
       summary: Deletes a CSAF document.
+  /pmd:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Fetches and returns the provider metadata for the specified URL.
+      parameters:
+      - in: formData
+        minLength: 1
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: could not parse url
+          schema:
+            $ref: '#/definitions/models.Error'
+        "502":
+          description: could not fetch pmd
+          schema:
+            $ref: '#/definitions/web.pmd.messages'
+      summary: Return the pmd.
+  /sources:
+    get:
+      description: Returns the source configuration and metadata of all sources.
+      parameters:
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.viewSources.sourcesResult'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Return all sources.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a source with the specified configuration.
+      parameters:
+      - in: formData
+        name: active
+        type: boolean
+      - in: formData
+        name: attention
+        type: boolean
+      - in: formData
+        name: client_cert_passphrase
+        type: string
+      - in: formData
+        name: client_cert_private
+        type: string
+      - in: formData
+        name: client_cert_public
+        type: string
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: headers
+        type: array
+      - in: formData
+        name: id
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: ignore_patterns
+        type: array
+      - in: formData
+        minLength: 1
+        name: name
+        required: true
+        type: string
+      - in: formData
+        minimum: 0
+        name: rate
+        type: number
+      - in: formData
+        name: secure
+        type: boolean
+      - in: formData
+        name: signature_check
+        type: boolean
+      - in: formData
+        minimum: 0
+        name: slots
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: status
+        type: array
+      - in: formData
+        name: strict_mode
+        type: boolean
+      - in: formData
+        minLength: 1
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/models.ID'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a source.
+  /sources/{id}:
+    delete:
+      description: Deletes the source configuration with the specified id.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: source deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a source.
+    get:
+      description: Returns the source configuration and metadata.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get source information.
+    put:
+      description: Updates the source configuration.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates source configuration.
+  /sources/{id}/feeds:
+    get:
+      description: Returns all feed configurations and metadata.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feedResult'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns feeds.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a feed with the specified configuration.
+      parameters:
+      - in: formData
+        minLength: 1
+        name: label
+        required: true
+        type: string
+      - enum:
+        - debug
+        - info
+        - warn
+        - error
+        - ""
+        in: formData
+        name: log_level
+        type: string
+      - in: formData
+        name: sourceID
+        type: integer
+      - in: formData
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ID'
+            type: array
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a feed.
+  /sources/attention:
+    get:
+      description: All sources that had a change and should be reviewed are returned.
+      parameters:
+      - description: Return all sources
+        in: query
+        name: all
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.attentionSources.attention'
+            type: array
+        "400":
+          description: could not parse all
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a list of sources that need attention.
+  /sources/default:
+    get:
+      description: Returns the default parameters for the source configuration.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.defaultSourceConfig.sourceConfig'
+      summary: Returns the default configuration.
+  /sources/feeds/{id}:
+    delete:
+      description: Deletes the feed configuration with the specified id.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a feed.
+    get:
+      description: Returns all feed configurations and metadata.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feed'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: feed not found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns feeds.
+    put:
+      description: Updates a feed with the specified configuration.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a feed.
+  /sources/feeds/{id}/log:
+    get:
+      description: Updates a feed with the specified configuration.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feedLogs.feedLogEntries'
+        "400":
+          description: could not parse id
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a feed.
+  /sources/feeds/keep:
+    get:
+      description: Returns the time it takes until old feed entries are deleted.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.keepFeedTime.keepFeedTimeConfig'
+      summary: Returns how long feed logs are kept.
+  /sources/feeds/log:
+    get:
+      description: Updates a feed with the specified configuration.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feedLogs.feedLogEntries'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a feed.
+  /sources/message:
+    get:
+      description: Returns the message that is displayed on visiting the sources page.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+      summary: Returns the default message.
 swagger: "2.0"
