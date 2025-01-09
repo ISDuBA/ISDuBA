@@ -16,16 +16,38 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/version"
 )
 
-// about return the backend version number.
+// about returns the backend version number.
+//
+//	@Summary		Returns application information.
+//	@Description	Returns general information about the application, like version.
+//	@Produce		json
+//	@Success		200	{object}	web.about.info
+//	@Router			/about [get]
 func (c *Controller) about(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"version": version.SemVersion})
+	type info struct {
+		Version string `json:"version"`
+	}
+	ctx.JSON(http.StatusOK, info{Version: version.SemVersion})
 }
 
-// view Returns the publisher and tlp levels that are visible.
+// view returns the publisher and tlp levels that are visible.
+//
+//	@Summary		Returns publisher and levels that are visible.
+//	@Description	Returns information what documents the user can view and comment.
+//	@Produce		json
+//	@Success		200	{object}	models.PublishersTLPs
+//	@Router			/view [get]
 func (c *Controller) view(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, c.tlps(ctx))
 }
 
+// clientConfig returns client configuration.
+//
+//	@Summary		Returns client configuration.
+//	@Description	Returns information that the client needs to operate.
+//	@Produce		json
+//	@Success		200	{object}	config.Client
+//	@Router			/client-config [get]
 func (c *Controller) clientConfig(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, c.cfg.Client)
 }

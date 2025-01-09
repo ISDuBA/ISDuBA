@@ -1,19 +1,32 @@
 basePath: /api
 definitions:
+  config.Client:
+    properties:
+      idle_timeout:
+        $ref: '#/definitions/time.Duration'
+      keycloak_client_id:
+        type: string
+      keycloak_realm:
+        type: string
+      keycloak_url:
+        type: string
+      update_interval:
+        $ref: '#/definitions/time.Duration'
+    type: object
   config.FeedLogLevel:
     enum:
+    - 1
     - 0
     - 1
     - 2
     - 3
-    - 1
     type: integer
     x-enum-varnames:
+    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
-    - defaultSourcesFeedLogLevel
   models.Error:
     properties:
       code:
@@ -26,11 +39,34 @@ definitions:
       id:
         type: integer
     type: object
+  models.PublishersTLPs:
+    additionalProperties:
+      items:
+        $ref: '#/definitions/models.TLP'
+      type: array
+    type: object
   models.Success:
     properties:
       message:
         type: string
     type: object
+  models.TLP:
+    enum:
+    - WHITE
+    - GREEN
+    - AMBER
+    - RED
+    type: string
+    x-enum-comments:
+      TLPAmber: TLPAmber represents TLP:AMBER
+      TLPGreen: TLPGreen represents TLP:GREEN
+      TLPRed: TLPRed   represents TLP:RED
+      TLPWhite: TLPWhite represents TLP:WHITE
+    x-enum-varnames:
+    - TLPWhite
+    - TLPGreen
+    - TLPAmber
+    - TLPRed
   sources.Stats:
     properties:
       downloading:
@@ -53,8 +89,6 @@ definitions:
     type: object
   time.Duration:
     enum:
-    - -9223372036854775808
-    - 9223372036854775807
     - 1
     - 1000
     - 1000000
@@ -74,8 +108,6 @@ definitions:
     - 60000000000
     type: integer
     x-enum-varnames:
-    - minDuration
-    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -93,6 +125,11 @@ definitions:
     - Millisecond
     - Second
     - Minute
+  web.about.info:
+    properties:
+      version:
+        type: string
+    type: object
   web.attentionSources.attention:
     properties:
       id:
@@ -236,8 +273,6 @@ definitions:
     properties:
       time.Duration:
         enum:
-        - -9223372036854775808
-        - 9223372036854775807
         - 1
         - 1000
         - 1000000
@@ -257,8 +292,6 @@ definitions:
         - 60000000000
         type: integer
         x-enum-varnames:
-        - minDuration
-        - maxDuration
         - Nanosecond
         - Microsecond
         - Millisecond
@@ -296,6 +329,28 @@ info:
   title: ISDuBA API
   version: "1.0"
 paths:
+  /about:
+    get:
+      description: Returns general information about the application, like version.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.about.info'
+      summary: Returns application information.
+  /client-config:
+    get:
+      description: Returns information that the client needs to operate.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/config.Client'
+      summary: Returns client configuration.
   /documents:
     post:
       consumes:
@@ -918,4 +973,15 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Returns a temporary documents.
+  /view:
+    get:
+      description: Returns information what documents the user can view and comment.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PublishersTLPs'
+      summary: Returns publisher and levels that are visible.
 swagger: "2.0"

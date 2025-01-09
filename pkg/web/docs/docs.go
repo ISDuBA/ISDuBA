@@ -23,6 +23,40 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/about": {
+            "get": {
+                "description": "Returns general information about the application, like version.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns application information.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.about.info"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-config": {
+            "get": {
+                "description": "Returns information that the client needs to operate.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns client configuration.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/config.Client"
+                        }
+                    }
+                }
+            }
+        },
         "/documents": {
             "post": {
                 "description": "Upload endpoint for CSAF documents.",
@@ -964,24 +998,61 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/view": {
+            "get": {
+                "description": "Returns information what documents the user can view and comment.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns publisher and levels that are visible.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.PublishersTLPs"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "config.Client": {
+            "type": "object",
+            "properties": {
+                "idle_timeout": {
+                    "$ref": "#/definitions/time.Duration"
+                },
+                "keycloak_client_id": {
+                    "type": "string"
+                },
+                "keycloak_realm": {
+                    "type": "string"
+                },
+                "keycloak_url": {
+                    "type": "string"
+                },
+                "update_interval": {
+                    "$ref": "#/definitions/time.Duration"
+                }
+            }
+        },
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
+                1,
                 0,
                 1,
                 2,
-                3,
-                1
+                3
             ],
             "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel",
-                "defaultSourcesFeedLogLevel"
+                "ErrorFeedLogLevel"
             ]
         },
         "models.Error": {
@@ -1003,6 +1074,15 @@ const docTemplate = `{
                 }
             }
         },
+        "models.PublishersTLPs": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/models.TLP"
+                }
+            }
+        },
         "models.Success": {
             "type": "object",
             "properties": {
@@ -1010,6 +1090,27 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "models.TLP": {
+            "type": "string",
+            "enum": [
+                "WHITE",
+                "GREEN",
+                "AMBER",
+                "RED"
+            ],
+            "x-enum-comments": {
+                "TLPAmber": "TLPAmber represents TLP:AMBER",
+                "TLPGreen": "TLPGreen represents TLP:GREEN",
+                "TLPRed": "TLPRed   represents TLP:RED",
+                "TLPWhite": "TLPWhite represents TLP:WHITE"
+            },
+            "x-enum-varnames": [
+                "TLPWhite",
+                "TLPGreen",
+                "TLPAmber",
+                "TLPRed"
+            ]
         },
         "sources.Stats": {
             "type": "object",
@@ -1045,8 +1146,6 @@ const docTemplate = `{
         "time.Duration": {
             "type": "integer",
             "enum": [
-                -9223372036854775808,
-                9223372036854775807,
                 1,
                 1000,
                 1000000,
@@ -1066,8 +1165,6 @@ const docTemplate = `{
                 60000000000
             ],
             "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
@@ -1086,6 +1183,14 @@ const docTemplate = `{
                 "Second",
                 "Minute"
             ]
+        },
+        "web.about.info": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "string"
+                }
+            }
         },
         "web.attentionSources.attention": {
             "type": "object",
@@ -1304,8 +1409,6 @@ const docTemplate = `{
                 "time.Duration": {
                     "type": "integer",
                     "enum": [
-                        -9223372036854775808,
-                        9223372036854775807,
                         1,
                         1000,
                         1000000,
@@ -1325,8 +1428,6 @@ const docTemplate = `{
                         60000000000
                     ],
                     "x-enum-varnames": [
-                        "minDuration",
-                        "maxDuration",
                         "Nanosecond",
                         "Microsecond",
                         "Millisecond",
