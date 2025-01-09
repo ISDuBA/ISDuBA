@@ -104,6 +104,209 @@
                 }
             }
         },
+        "/pmd": {
+            "get": {
+                "description": "Fetches and returns the provider metadata for the specified URL.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Return the pmd.",
+                "parameters": [
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "could not parse url",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "502": {
+                        "description": "could not fetch pmd",
+                        "schema": {
+                            "$ref": "#/definitions/web.pmd.messages"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources": {
+            "get": {
+                "description": "Returns the source configuration and metadata of all sources.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Return all sources.",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Enable statistic",
+                        "name": "stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.viewSources.sourcesResult"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse stats",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a source with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a source.",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "attention",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_passphrase",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_private",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_public",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "headers",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "ignore_patterns",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "number",
+                        "name": "rate",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "secure",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "signature_check",
+                        "in": "formData"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "strict_mode",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ID"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/sources/attention": {
             "get": {
                 "description": "All sources that had a change and should be reviewed are returned.",
@@ -196,6 +399,48 @@
             }
         },
         "/sources/feeds/{id}": {
+            "get": {
+                "description": "Returns all feed configurations and metadata.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns feeds.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable statistic",
+                        "name": "stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.feed"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "feed not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Updates a feed with the specified configuration.",
                 "produces": [
@@ -214,6 +459,48 @@
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the feed configuration with the specified id.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a feed.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
                         "schema": {
                             "$ref": "#/definitions/models.Success"
                         }
@@ -272,6 +559,23 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/message": {
+            "get": {
+                "description": "Returns the message that is displayed on visiting the sources page.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the default message.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
                         }
                     }
                 }
@@ -456,23 +760,43 @@
             },
             "post": {
                 "description": "Creates a feed with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "summary": "Creates a feed.",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Source ID",
-                        "name": "id",
-                        "in": "path",
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "label",
+                        "in": "formData",
                         "required": true
                     },
                     {
-                        "type": "boolean",
-                        "description": "Enable statistic",
-                        "name": "stats",
-                        "in": "query"
+                        "enum": [
+                            "debug",
+                            "info",
+                            "warn",
+                            "error",
+                            ""
+                        ],
+                        "type": "string",
+                        "name": "log_level",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "sourceID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -511,18 +835,18 @@
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "models.Error": {
@@ -571,12 +895,18 @@
                 1000000,
                 1000000000,
                 60000000000,
+                3600000000000,
                 1,
                 1000,
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000
+                3600000000000,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000
             ],
             "x-enum-varnames": [
                 "Nanosecond",
@@ -584,12 +914,18 @@
                 "Millisecond",
                 "Second",
                 "Minute",
+                "Hour",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
                 "Minute",
-                "Hour"
+                "Hour",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute"
             ]
         },
         "web.attentionSources.attention": {
@@ -702,6 +1038,93 @@
                 }
             }
         },
+        "web.pmd.messages": {
+            "type": "object",
+            "properties": {
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "web.source": {
+            "type": "object",
+            "required": [
+                "name",
+                "url"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "age": {
+                    "$ref": "#/definitions/web.sourceAge"
+                },
+                "attention": {
+                    "type": "boolean"
+                },
+                "client_cert_passphrase": {
+                    "type": "string"
+                },
+                "client_cert_private": {
+                    "type": "string"
+                },
+                "client_cert_public": {
+                    "type": "string"
+                },
+                "headers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ignore_patterns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "rate": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "secure": {
+                    "type": "boolean"
+                },
+                "signature_check": {
+                    "type": "boolean"
+                },
+                "slots": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "stats": {
+                    "$ref": "#/definitions/sources.Stats"
+                },
+                "status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "strict_mode": {
+                    "type": "boolean"
+                },
+                "url": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
         "web.sourceAge": {
             "type": "object",
             "properties": {
@@ -713,12 +1136,18 @@
                         1000000,
                         1000000000,
                         60000000000,
+                        3600000000000,
                         1,
                         1000,
                         1000000,
                         1000000000,
                         60000000000,
-                        3600000000000
+                        3600000000000,
+                        1,
+                        1000,
+                        1000000,
+                        1000000000,
+                        60000000000
                     ],
                     "x-enum-varnames": [
                         "Nanosecond",
@@ -726,13 +1155,30 @@
                         "Millisecond",
                         "Second",
                         "Minute",
+                        "Hour",
                         "Nanosecond",
                         "Microsecond",
                         "Millisecond",
                         "Second",
                         "Minute",
-                        "Hour"
+                        "Hour",
+                        "Nanosecond",
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute"
                     ]
+                }
+            }
+        },
+        "web.viewSources.sourcesResult": {
+            "type": "object",
+            "properties": {
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.source"
+                    }
                 }
             }
         }
