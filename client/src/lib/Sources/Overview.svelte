@@ -193,7 +193,7 @@
   {/if}
   {#await getMessage() then resp}
     {#if resp.message}
-      {#if appStore.isAdmin() || appStore.isAuditor() || appStore.isEditor() || appStore.isReviewer()}
+      {#if !appStore.isSourceManager() && !appStore.isImporter()}
         {resp.message}
       {/if}
     {/if}
