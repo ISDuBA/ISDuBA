@@ -35,11 +35,15 @@
 
 {#if advisoryState}
   <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(NEW)}>
-    <Badge title="Mark as new" class="w-fit" color={getBadgeColor(NEW, advisoryState)}>{NEW}</Badge>
+    <Badge title="Mark as new" class="flex w-fit gap-1" color={getBadgeColor(NEW, advisoryState)}>
+      <i class="bx bxs-certification"></i>
+      <span>{NEW}</span>
+    </Badge>
   </a>
   <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(READ)}>
-    <Badge title="Mark as read" class="w-fit" color={getBadgeColor(READ, advisoryState)}
-      >{READ}</Badge
+    <Badge title="Mark as read" class="flex w-fit gap-1" color={getBadgeColor(READ, advisoryState)}>
+      <i class="bx bx-show"></i>
+      <span>{READ}</span></Badge
     >
   </a>
   {#if isRoleIncluded(appStore.getRoles(), [EDITOR, REVIEWER]) && advisoryState === REVIEW}
@@ -50,7 +54,10 @@
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Mark as assesing" class="w-fit" color="dark">{ASSESSING}</Badge>
+      <Badge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
+        <i class="bx bxs-analyse"></i>
+        <span>{ASSESSING}</span></Badge
+      >
     </a>
   {:else if isRoleIncluded(appStore.getRoles(), [EDITOR]) && advisoryState === ARCHIVED}
     <a
@@ -60,7 +67,10 @@
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Mark as assesing" class="w-fit" color="dark">{ASSESSING}</Badge>
+      <Badge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
+        <i class="bx bxs-analyse"></i>
+        <span>{ASSESSING}</span>
+      </Badge>
     </a>
   {:else}
     <a
@@ -68,9 +78,14 @@
       class="inline-flex"
       on:click={() => updateStateIfAllowed(ASSESSING)}
     >
-      <Badge title="Mark as assesing" class="w-fit" color={getBadgeColor(ASSESSING, advisoryState)}
-        >{ASSESSING}</Badge
+      <Badge
+        title="Mark as assesing"
+        class="flex w-fit gap-1"
+        color={getBadgeColor(ASSESSING, advisoryState)}
       >
+        <i class="bx bxs-analyse"></i>
+        <span>{ASSESSING}</span>
+      </Badge>
     </a>
   {/if}
   {#if advisoryState === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
@@ -81,7 +96,10 @@
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Release for review" class="w-fit" color="dark">{REVIEW}</Badge>
+      <Badge title="Release for review" class="flex w-fit gap-1" color="dark">
+        <i class="bx bx-book-open"></i>
+        <span>{REVIEW}</span>
+      </Badge>
     </a>
   {:else}
     <a
@@ -89,9 +107,14 @@
       class="inline-flex"
       on:click={() => updateStateIfAllowed(REVIEW)}
     >
-      <Badge title="Release for review" class="w-fit" color={getBadgeColor(REVIEW, advisoryState)}
-        >{REVIEW}</Badge
+      <Badge
+        title="Release for review"
+        class="flex w-fit gap-1"
+        color={getBadgeColor(REVIEW, advisoryState)}
       >
+        <i class="bx bx-book-open"></i>
+        <span>{REVIEW}</span>
+      </Badge>
     </a>
   {/if}
   <a
@@ -99,16 +122,20 @@
     class="inline-flex"
     on:click={() => updateStateIfAllowed(ARCHIVED)}
   >
-    <Badge title="Archive" class="w-fit" color={getBadgeColor(ARCHIVED, advisoryState)}
-      >{ARCHIVED}</Badge
-    >
+    <Badge title="Archive" class="flex w-fit gap-1" color={getBadgeColor(ARCHIVED, advisoryState)}>
+      <i class="bx bx-archive"></i>
+      <span>{ARCHIVED}</span>
+    </Badge>
   </a>
   <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(DELETE)}>
     <Badge
       title="Mark for deletion"
       on:click={() => updateStateFn(DELETE)}
-      class="w-fit"
-      color={getBadgeColor(DELETE, advisoryState)}>{DELETE}</Badge
+      class="flex w-fit gap-1"
+      color={getBadgeColor(DELETE, advisoryState)}
     >
+      <i class="bx bx-trash"></i>
+      <span>{DELETE}</span>
+    </Badge>
   </a>
 {/if}
