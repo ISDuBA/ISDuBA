@@ -511,6 +511,10 @@ func validateHeaders(headers []string) error {
 	return nil
 }
 
+type feedResult struct {
+	Feeds []*feed `json:"feeds"`
+}
+
 // viewFeeds is an endpoint that returns all feeds.
 //
 //	@Summary		Returns feeds.
@@ -518,7 +522,7 @@ func validateHeaders(headers []string) error {
 //	@Param			id		path	int		true	"Feed ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Produce		json
-//	@Success		200	{array}		feed
+//	@Success		200	{object}		feedResult
 //	@Failure		400	{object}	models.Error	"could not parse stats"
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
@@ -541,7 +545,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 		feeds = append(feeds, newFeed(fi))
 	}, stats); {
 	case err == nil:
-		ctx.JSON(http.StatusOK, gin.H{"feeds": feeds})
+		ctx.JSON(http.StatusOK, feedResult{Feeds: feeds})
 	case errors.Is(err, sources.NoSuchEntryError("")):
 		models.SendError(ctx, http.StatusNotFound, err)
 	default:
@@ -557,7 +561,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 //	@Param			id		path	int		true	"Source ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Produce		json
-//	@Success		200	{array}		feed
+//	@Success		200	{array}		models.ID
 //	@Failure		400	{object}	models.Error	"could not parse stats"
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
@@ -570,7 +574,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		LogLevel string `form:"log_level" binding:"oneof=debug info warn error ''"`
 	}
 	if err := errors.Join(ctx.ShouldBind(&input), ctx.ShouldBindUri(&input)); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	var logLevel config.FeedLogLevel
@@ -587,14 +591,14 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 		logLevel,
 	); {
 	case err == nil:
-		ctx.JSON(http.StatusCreated, gin.H{"id": feedID})
+		ctx.JSON(http.StatusCreated, models.ID{ID: feedID})
 	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusNotFound, err)
 	case errors.Is(err, sources.InvalidArgumentError("")):
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 	default:
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 
@@ -604,7 +608,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 //	@Description	Updates a feed with the specified configuration.
 //	@Param			id	path	int	true	"Feed ID"
 //	@Produce		json
-//	@Success		200	{array}		feed
+//	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
@@ -644,7 +648,7 @@ func (c *Controller) updateFeed(ctx *gin.Context) {
 		} else {
 			msg = "not updated"
 		}
-		ctx.JSON(http.StatusOK, gin.H{"message": msg})
+		models.SendSuccess(ctx, http.StatusOK, msg)
 	case errors.Is(err, sources.NoSuchEntryError("")):
 		models.SendError(ctx, http.StatusNotFound, err)
 	case errors.Is(err, sources.InvalidArgumentError("")):
@@ -660,7 +664,7 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 		FeedID int64 `uri:"id"`
 	}
 	if err := ctx.ShouldBindUri(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	stats, ok := showStats(ctx)
@@ -669,7 +673,7 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 	}
 	fi := c.sm.Feed(input.FeedID, stats)
 	if fi == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "feed not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "feed not found")
 		return
 	}
 	ctx.JSON(http.StatusOK, newFeed(fi))
@@ -685,23 +689,42 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 	}
 	switch err := c.sm.RemoveFeed(input.FeedID); {
 	case err == nil:
-		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "deleted")
 	case errors.Is(err, sources.NoSuchEntryError("")):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusNotFound, err)
 	default:
 		slog.Error("removing feed failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 
+// feedLog is an endpoint that returns all logs for a feed.
+//
+//	@Summary		Updates a feed.
+//	@Description	Updates a feed with the specified configuration.
+//	@Param			id	path	int	true	"Feed ID"
+//	@Produce		json
+//	@Success		200	{object}	web.feedLogs.feedLogEntries
+//	@Failure		400	{object}	models.Error "could not parse id"
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/feeds/{id}/log [get]
 func (c *Controller) feedLog(ctx *gin.Context) {
 	feedID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	c.feedLogs(ctx, &feedID)
 }
 
+// allFeedLog is an endpoint that returns all logs for all feeds.
+//
+//	@Summary		Updates a feed.
+//	@Description	Updates a feed with the specified configuration.
+//	@Produce		json
+//	@Success		200	{object}	web.feedLogs.feedLogEntries
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/feeds/log [get]
 func (c *Controller) allFeedsLog(ctx *gin.Context) {
 	c.feedLogs(ctx, nil)
 }
@@ -712,6 +735,10 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 		Time    time.Time           `json:"time"`
 		Level   config.FeedLogLevel `json:"level"`
 		Message string              `json:"msg"`
+	}
+	type feedLogEntries struct {
+		Entries []entry `json:"entries"`
+		Count   *int64  `json:"count,omitempty"`
 	}
 	var (
 		from, to      *time.Time
@@ -787,30 +814,48 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 	)
 	if err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	h := gin.H{"entries": entries}
+	h := feedLogEntries{Entries: entries}
 	if count {
-		h["count"] = counter
+		h.Count = &counter
 	}
 	ctx.JSON(http.StatusOK, h)
 }
 
 // defaultMessage returns the default message.
 func (c *Controller) defaultMessage(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": c.cfg.Sources.DefaultMessage})
+	models.SendSuccess(ctx, http.StatusOK, c.cfg.Sources.DefaultMessage)
 }
 
 // keepFeedTime returns how long feeds logs are kept before being deleted
+//
+//	@Summary		Returns how long feed logs are kept.
+//	@Description	Returns the time it takes until old feed entries are deleted.
+//	@Produce		json
+//	@Success		200	{object}	web.keepFeedTime.keepFeedTimeConfig
+//	@Router			/sources/feeds/keep [get]
 func (c *Controller) keepFeedTime(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"keep_feed_time": c.cfg.Sources.KeepFeedLogs})
+	type keepFeedTimeConfig struct {
+		KeepFeedTime time.Duration `json:"keep_feed_time"`
+	}
+	ctx.JSON(http.StatusOK, keepFeedTimeConfig{KeepFeedTime: c.cfg.Sources.KeepFeedLogs})
 }
 
 // attentionSources returns a list of sources that need attention.
+//
+//	@Summary		Returns a list of sources that need attention.
+//	@Description	All sources that had a change and should be reviewed are returned.
+//	@Param			all	query	int	false	"Return all sources"
+//	@Produce		json
+//	@Success		200	{array}	web.attentionSources.attention
+//	@Failure		400	{object}	models.Error "could not parse all"
+//	@Router			/sources/attention [get]
 func (c *Controller) attentionSources(ctx *gin.Context) {
 	all, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("all", "false"))
 	if !ok {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse all")
 		return
 	}
 	type attention struct {
@@ -825,16 +870,31 @@ func (c *Controller) attentionSources(ctx *gin.Context) {
 }
 
 // defaultSourceConfig returns the default source configuration.
+//
+//	@Summary		Returns the default configuration.
+//	@Description	Returns the default parameters for the source configuration.
+//	@Produce		json
+//	@Success		200	{object}	web.defaultSourceConfig.sourceConfig
+//	@Router			/sources/default [get]
 func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
+	type sourceConfig struct {
+		Slots          int                 `json:"slots"`
+		Rate           float64             `json:"rate"`
+		LogLevel       config.FeedLogLevel `json:"log_level"`
+		StrictMode     bool                `json:"strict_mode"`
+		Secure         bool                `json:"secure"`
+		SignatureCheck bool                `json:"signature_check"`
+		Age            sourceAge           `json:"age"`
+	}
 	cfg := c.cfg.Sources
-	ctx.JSON(http.StatusOK, gin.H{
-		"slots":           cfg.MaxSlotsPerSource,
-		"rate":            cfg.MaxRatePerSource,
-		"log_level":       cfg.FeedLogLevel,
-		"strict_mode":     cfg.StrictMode,
-		"secure":          cfg.Secure,
-		"signature_check": cfg.SignatureCheck,
-		"age":             sourceAge{cfg.DefaultAge},
+	ctx.JSON(http.StatusOK, sourceConfig{
+		Slots:          cfg.MaxSlotsPerSource,
+		Rate:           cfg.MaxRatePerSource,
+		LogLevel:       cfg.FeedLogLevel,
+		StrictMode:     cfg.StrictMode,
+		Secure:         cfg.Secure,
+		SignatureCheck: cfg.SignatureCheck,
+		Age:            sourceAge{cfg.DefaultAge},
 	})
 }
 

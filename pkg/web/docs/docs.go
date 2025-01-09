@@ -111,6 +111,97 @@ const docTemplate = `{
                 }
             }
         },
+        "/sources/attention": {
+            "get": {
+                "description": "All sources that had a change and should be reviewed are returned.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a list of sources that need attention.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Return all sources",
+                        "name": "all",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.attentionSources.attention"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse all",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/default": {
+            "get": {
+                "description": "Returns the default parameters for the source configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the default configuration.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.defaultSourceConfig.sourceConfig"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/feeds/keep": {
+            "get": {
+                "description": "Returns the time it takes until old feed entries are deleted.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns how long feed logs are kept.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.keepFeedTime.keepFeedTimeConfig"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/feeds/log": {
+            "get": {
+                "description": "Updates a feed with the specified configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a feed.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.feedLogs.feedLogEntries"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/sources/feeds/{id}": {
             "put": {
                 "description": "Updates a feed with the specified configuration.",
@@ -131,10 +222,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/web.feed"
-                            }
+                            "$ref": "#/definitions/models.Success"
                         }
                     },
                     "400": {
@@ -145,6 +233,44 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/feeds/{id}/log": {
+            "get": {
+                "description": "Updates a feed with the specified configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a feed.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.feedLogs.feedLogEntries"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse id",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -312,10 +438,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/web.feed"
-                            }
+                            "$ref": "#/definitions/web.feedResult"
                         }
                     },
                     "400": {
@@ -365,7 +488,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/web.feed"
+                                "$ref": "#/definitions/models.ID"
                             }
                         }
                     },
@@ -395,18 +518,18 @@ const docTemplate = `{
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
+                1,
                 0,
                 1,
                 2,
-                3,
-                1
+                3
             ],
             "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel",
-                "defaultSourcesFeedLogLevel"
+                "ErrorFeedLogLevel"
             ]
         },
         "models.Error": {
@@ -447,6 +570,72 @@ const docTemplate = `{
                 }
             }
         },
+        "time.Duration": {
+            "type": "integer",
+            "enum": [
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
+            ],
+            "x-enum-varnames": [
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
+        },
+        "web.attentionSources.attention": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.defaultSourceConfig.sourceConfig": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "$ref": "#/definitions/web.sourceAge"
+                },
+                "log_level": {
+                    "$ref": "#/definitions/config.FeedLogLevel"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "secure": {
+                    "type": "boolean"
+                },
+                "signature_check": {
+                    "type": "boolean"
+                },
+                "slots": {
+                    "type": "integer"
+                },
+                "strict_mode": {
+                    "type": "boolean"
+                }
+            }
+        },
         "web.feed": {
             "type": "object",
             "properties": {
@@ -467,6 +656,90 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "web.feedLogs.entry": {
+            "type": "object",
+            "properties": {
+                "feed_id": {
+                    "type": "integer"
+                },
+                "level": {
+                    "$ref": "#/definitions/config.FeedLogLevel"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.feedLogs.feedLogEntries": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.feedLogs.entry"
+                    }
+                }
+            }
+        },
+        "web.feedResult": {
+            "type": "object",
+            "properties": {
+                "feeds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.feed"
+                    }
+                }
+            }
+        },
+        "web.keepFeedTime.keepFeedTimeConfig": {
+            "type": "object",
+            "properties": {
+                "keep_feed_time": {
+                    "$ref": "#/definitions/time.Duration"
+                }
+            }
+        },
+        "web.sourceAge": {
+            "type": "object",
+            "properties": {
+                "time.Duration": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        1000,
+                        1000000,
+                        1000000000,
+                        60000000000,
+                        1,
+                        1000,
+                        1000000,
+                        1000000000,
+                        60000000000,
+                        3600000000000
+                    ],
+                    "x-enum-varnames": [
+                        "Nanosecond",
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute",
+                        "Nanosecond",
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute",
+                        "Hour"
+                    ]
                 }
             }
         }
