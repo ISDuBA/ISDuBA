@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
+    - 1
     - 0
     - 1
     - 2
     - 3
-    - 1
     type: integer
     x-enum-varnames:
+    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
-    - defaultSourcesFeedLogLevel
   models.Error:
     properties:
       code:
@@ -34,6 +34,38 @@ definitions:
       error:
         type: string
     type: object
+  models.Event:
+    enum:
+    - import_document
+    - delete_document
+    - state_change
+    - add_sscv
+    - change_sscv
+    - delete_sscv
+    - add_comment
+    - change_comment
+    - delete_comment
+    type: string
+    x-enum-comments:
+      AddCommentEvent: AddCommentEvent represents the addition of a comment.
+      AddSSVCEvent: AddSSVCEvent represents the addtion of a SSVC score.
+      ChangeCommentEvent: ChangeCommentEvent represents the change of a comment.
+      ChangeSSVCEvent: ChangeSSVCEvent represents the change of a SSVC score.
+      DeleteCommentEvent: DeleteCommentEvent represents the deletion of a comment.
+      DeleteDocumentEvent: DeleteDocumentEvent represents a document deletion.
+      DeleteSSVCEvent: DeleteSSVCEvent represents the deletion of a SSVC score.
+      ImportDocumentEvent: ImportDocumentEvent represents a document import.
+      StateChangeEvent: StateChangeEvent represents changing the advisory state.
+    x-enum-varnames:
+    - ImportDocumentEvent
+    - DeleteDocumentEvent
+    - StateChangeEvent
+    - AddSSVCEvent
+    - ChangeSSVCEvent
+    - DeleteSSVCEvent
+    - AddCommentEvent
+    - ChangeCommentEvent
+    - DeleteCommentEvent
   models.ID:
     properties:
       id:
@@ -67,6 +99,29 @@ definitions:
     - TLPGreen
     - TLPAmber
     - TLPRed
+  models.Workflow:
+    enum:
+    - new
+    - read
+    - assessing
+    - review
+    - archived
+    - delete
+    type: string
+    x-enum-comments:
+      ArchivedWorkflow: ArchivedWorkflow represents 'archived'.
+      AssessingWorkflow: AssessingWorkflow represents 'assessing',
+      DeleteWorkflow: DeleteWorkflow represents 'delete'.
+      NewWorkflow: NewWorkflow represents 'new'.
+      ReadWorkflow: ReadWorkflow represents 'read'.
+      ReviewWorkflow: ReviewWorkflow represents 'review'.
+    x-enum-varnames:
+    - NewWorkflow
+    - ReadWorkflow
+    - AssessingWorkflow
+    - ReviewWorkflow
+    - ArchivedWorkflow
+    - DeleteWorkflow
   sources.Stats:
     properties:
       downloading:
@@ -113,8 +168,12 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
     - 1
     - 1000
     - 1000000
@@ -147,8 +206,12 @@ definitions:
     - Second
     - Minute
     - Hour
-    - minDuration
-    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -230,6 +293,16 @@ definitions:
     properties:
       keep_feed_time:
         $ref: '#/definitions/time.Duration'
+    type: object
+  web.overviewEvents.events:
+    properties:
+      count:
+        type: integer
+      events:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
     type: object
   web.overviewTempDocuments.tempDocuments:
     properties:
@@ -327,8 +400,12 @@ definitions:
         - 1000000000
         - 60000000000
         - 3600000000000
-        - -9223372036854775808
-        - 9223372036854775807
+        - 1
+        - 1000
+        - 1000000
+        - 1000000000
+        - 60000000000
+        - 3600000000000
         - 1
         - 1000
         - 1000000
@@ -361,14 +438,33 @@ definitions:
         - Second
         - Minute
         - Hour
-        - minDuration
-        - maxDuration
         - Nanosecond
         - Microsecond
         - Millisecond
         - Second
         - Minute
         - Hour
+        - Nanosecond
+        - Microsecond
+        - Millisecond
+        - Second
+        - Minute
+        - Hour
+    type: object
+  web.viewEvents.event:
+    properties:
+      actor:
+        type: string
+      comment_id:
+        type: integer
+      document_id:
+        type: integer
+      event_type:
+        $ref: '#/definitions/models.Event'
+      state:
+        $ref: '#/definitions/models.Workflow'
+      time:
+        type: string
     type: object
   web.viewSources.sourcesResult:
     properties:
@@ -469,6 +565,70 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Deletes a CSAF document.
+  /events:
+    get:
+      description: Returns all events that match the specified query.
+      parameters:
+      - description: Event query
+        in: query
+        name: query
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.overviewEvents.events'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a list of events.
+  /events/{publisher}/{trackingid}:
+    get:
+      description: Returns all events from the specified advisory.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.viewEvents.event'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Return all events.
   /pmd:
     get:
       consumes:

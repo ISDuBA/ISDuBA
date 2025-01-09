@@ -138,6 +138,103 @@
                 }
             }
         },
+        "/events": {
+            "get": {
+                "description": "Returns all events that match the specified query.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a list of events.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event query",
+                        "name": "query",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.overviewEvents.events"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{publisher}/{trackingid}": {
+            "get": {
+                "description": "Returns all events from the specified advisory.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Return all events.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Publisher",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tracking ID",
+                        "name": "trackingid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.viewEvents.event"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/pmd": {
             "get": {
                 "description": "Fetches and returns the provider metadata for the specified URL.",
@@ -1091,18 +1188,18 @@
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
+                1,
                 0,
                 1,
                 2,
-                3,
-                1
+                3
             ],
             "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel",
-                "defaultSourcesFeedLogLevel"
+                "ErrorFeedLogLevel"
             ]
         },
         "models.Error": {
@@ -1115,6 +1212,42 @@
                     "type": "string"
                 }
             }
+        },
+        "models.Event": {
+            "type": "string",
+            "enum": [
+                "import_document",
+                "delete_document",
+                "state_change",
+                "add_sscv",
+                "change_sscv",
+                "delete_sscv",
+                "add_comment",
+                "change_comment",
+                "delete_comment"
+            ],
+            "x-enum-comments": {
+                "AddCommentEvent": "AddCommentEvent represents the addition of a comment.",
+                "AddSSVCEvent": "AddSSVCEvent represents the addtion of a SSVC score.",
+                "ChangeCommentEvent": "ChangeCommentEvent represents the change of a comment.",
+                "ChangeSSVCEvent": "ChangeSSVCEvent represents the change of a SSVC score.",
+                "DeleteCommentEvent": "DeleteCommentEvent represents the deletion of a comment.",
+                "DeleteDocumentEvent": "DeleteDocumentEvent represents a document deletion.",
+                "DeleteSSVCEvent": "DeleteSSVCEvent represents the deletion of a SSVC score.",
+                "ImportDocumentEvent": "ImportDocumentEvent represents a document import.",
+                "StateChangeEvent": "StateChangeEvent represents changing the advisory state."
+            },
+            "x-enum-varnames": [
+                "ImportDocumentEvent",
+                "DeleteDocumentEvent",
+                "StateChangeEvent",
+                "AddSSVCEvent",
+                "ChangeSSVCEvent",
+                "DeleteSSVCEvent",
+                "AddCommentEvent",
+                "ChangeCommentEvent",
+                "DeleteCommentEvent"
+            ]
         },
         "models.ID": {
             "type": "object",
@@ -1160,6 +1293,33 @@
                 "TLPGreen",
                 "TLPAmber",
                 "TLPRed"
+            ]
+        },
+        "models.Workflow": {
+            "type": "string",
+            "enum": [
+                "new",
+                "read",
+                "assessing",
+                "review",
+                "archived",
+                "delete"
+            ],
+            "x-enum-comments": {
+                "ArchivedWorkflow": "ArchivedWorkflow represents 'archived'.",
+                "AssessingWorkflow": "AssessingWorkflow represents 'assessing',",
+                "DeleteWorkflow": "DeleteWorkflow represents 'delete'.",
+                "NewWorkflow": "NewWorkflow represents 'new'.",
+                "ReadWorkflow": "ReadWorkflow represents 'read'.",
+                "ReviewWorkflow": "ReviewWorkflow represents 'review'."
+            },
+            "x-enum-varnames": [
+                "NewWorkflow",
+                "ReadWorkflow",
+                "AssessingWorkflow",
+                "ReviewWorkflow",
+                "ArchivedWorkflow",
+                "DeleteWorkflow"
             ]
         },
         "sources.Stats": {
@@ -1220,8 +1380,12 @@
                 1000000000,
                 60000000000,
                 3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000,
                 1,
                 1000,
                 1000000,
@@ -1254,8 +1418,12 @@
                 "Second",
                 "Minute",
                 "Hour",
-                "minDuration",
-                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
@@ -1379,6 +1547,21 @@
             "properties": {
                 "keep_feed_time": {
                     "$ref": "#/definitions/time.Duration"
+                }
+            }
+        },
+        "web.overviewEvents.events": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    }
                 }
             }
         },
@@ -1513,8 +1696,12 @@
                         1000000000,
                         60000000000,
                         3600000000000,
-                        -9223372036854775808,
-                        9223372036854775807,
+                        1,
+                        1000,
+                        1000000,
+                        1000000000,
+                        60000000000,
+                        3600000000000,
                         1,
                         1000,
                         1000000,
@@ -1547,8 +1734,12 @@
                         "Second",
                         "Minute",
                         "Hour",
-                        "minDuration",
-                        "maxDuration",
+                        "Nanosecond",
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute",
+                        "Hour",
                         "Nanosecond",
                         "Microsecond",
                         "Millisecond",
@@ -1556,6 +1747,29 @@
                         "Minute",
                         "Hour"
                     ]
+                }
+            }
+        },
+        "web.viewEvents.event": {
+            "type": "object",
+            "properties": {
+                "actor": {
+                    "type": "string"
+                },
+                "comment_id": {
+                    "type": "integer"
+                },
+                "document_id": {
+                    "type": "integer"
+                },
+                "event_type": {
+                    "$ref": "#/definitions/models.Event"
+                },
+                "state": {
+                    "$ref": "#/definitions/models.Workflow"
+                },
+                "time": {
+                    "type": "string"
                 }
             }
         },
