@@ -53,7 +53,7 @@
         comp.reload();
       }
     }
-    if (appStore.isEditor() || appStore.isSourceManager()) {
+    if (appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()) {
       getSources();
     }
   }, shortLoadInterval * 1000);
@@ -71,7 +71,7 @@
   };
 
   onMount(async () => {
-    if (appStore.isEditor() || appStore.isSourceManager()) {
+    if (appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()) {
       await getSources();
     }
   });
@@ -89,7 +89,7 @@
   <SectionHeader title="Sources"></SectionHeader>
   <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-8" title=""
   ></ImportStats>
-  {#if appStore.isEditor() || appStore.isSourceManager()}
+  {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
     <CustomTable
       title="CSAF Provider"
       headers={[

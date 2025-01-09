@@ -94,9 +94,9 @@ func (c *Controller) Bind() http.Handler {
 			models.SourceManager)
 		authAdEdRe = authRoles(models.Admin, models.Editor, models.Reviewer)
 		authAuEdRe = authRoles(models.Auditor, models.Editor, models.Reviewer)
+		authAuEdSM = authRoles(models.Auditor, models.Editor, models.SourceManager)
 		authEd     = authRoles(models.Editor)
 		authEdRe   = authRoles(models.Editor, models.Reviewer)
-		authEdSM   = authRoles(models.Editor, models.SourceManager)
 		authIm     = authRoles(models.Importer)
 		authSM     = authRoles(models.SourceManager)
 		authAll    = authRoles(models.Admin, models.Auditor, models.Editor, models.Importer,
@@ -169,7 +169,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/pmd", authSM, c.pmd)
 
 	// Source manager
-	api.GET("/sources", authEdSM, c.viewSources)
+	api.GET("/sources", authAuEdSM, c.viewSources)
 	api.POST("/sources", authSM, c.createSource)
 	api.GET("/sources/message", authAll, c.defaultMessage)
 	api.GET("/sources/attention", authSM, c.attentionSources)
@@ -179,9 +179,9 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/sources/:id", authSM, c.updateSource)
 
 	// Source feeds
-	api.GET("/sources/:id/feeds", authEdSM, c.viewFeeds)
+	api.GET("/sources/:id/feeds", authAuEdSM, c.viewFeeds)
 	api.POST("/sources/:id/feeds", authSM, c.createFeed)
-	api.GET("/sources/feeds/:id", authEdSM, c.viewFeed)
+	api.GET("/sources/feeds/:id", authAuEdSM, c.viewFeed)
 	api.PUT("/sources/feeds/:id", authSM, c.updateFeed)
 	api.DELETE("/sources/feeds/:id", authSM, c.deleteFeed)
 	api.GET("/sources/feeds/log", authSM, c.allFeedsLog)
@@ -201,9 +201,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/stats/totals", authAll, c.statsTotal)
 
 	// Aggregators
-	api.GET("/aggregator", authEdSM, c.aggregatorProxy)
-	api.GET("/aggregators", authEdSM, c.viewAggregators)
-	api.GET("/aggregators/:id", authEdSM, c.viewAggregator)
+	api.GET("/aggregator", authSM, c.aggregatorProxy)
+	api.GET("/aggregators", authSM, c.viewAggregators)
+	api.GET("/aggregators/:id", authSM, c.viewAggregator)
 	api.PUT("/aggregators/:id", authSM, c.updateAggregator)
 	api.GET("/aggregators/attention", authSM, c.attentionAggregators)
 	api.POST("/aggregators", authSM, c.createAggregator)
