@@ -13,8 +13,9 @@
   import { tdClass } from "$lib/Table/defaults";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { request } from "$lib/request";
   import { onMount } from "svelte";
   import {
     fetchFeedLogs,
@@ -42,6 +43,7 @@
   let loadFeedError: ErrorDetails | null = null;
   let loadLogsError: ErrorDetails | null = null;
   let loadConfigError: ErrorDetails | null = null;
+  let loadKeepLogsError: ErrorDetails | null = null;
 
   let feed: Feed | null = null;
 
@@ -155,6 +157,24 @@
     }
   };
 
+  // calcDefaultKeepLogStartDate sets the from value for the logs to the chronologically first date for which logs are currently kept
+  const calcDefaultKeepLogStartDate = async () => {
+    // get the time for which logs are kept from the server
+    const result = await request(`/api/sources/feeds/keep`, "GET");
+    if (result.ok) {
+      // calculate the from date by subtracting the keep feed time (converted from ns to ms) from today
+      from = new Date(Date.now() - result.content.keep_feed_time / 1000000);
+      return;
+    } else if (result.error) {
+      loadKeepLogsError = getErrorDetails(
+        `Could not load value for how long to keep the logs.`,
+        result
+      );
+    }
+    // default value using default keep_feed_logs value (2232h)
+    from = new Date(Date.now() - 8035200000);
+  };
+
   onMount(async () => {
     selectedLogLevels = realLogLevels.map((l) => l.value);
     let id = params?.id;
@@ -162,6 +182,7 @@
       await loadFeed(id);
       await loadLogs();
     }
+    calcDefaultKeepLogStartDate();
   });
 
   const onRangeChanged = () => {
@@ -240,6 +261,7 @@
       ></CSearch>
       <DateRange clearable showTimeControls on:change={onRangeChanged} bind:from bind:to
       ></DateRange>
+      <ErrorMessage error={loadKeepLogsError}></ErrorMessage>
       <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
         {#each realLogLevels as level}
