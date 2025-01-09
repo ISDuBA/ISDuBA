@@ -615,6 +615,63 @@
                 }
             }
         },
+        "/sources/{document}": {
+            "delete": {
+                "description": "This updates the SSVC of the specified document.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Changes the SSVC.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "document",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SSVC vector",
+                        "name": "vector",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/sources/{id}": {
             "get": {
                 "description": "Returns the source configuration and metadata.",
@@ -1034,18 +1091,18 @@
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "models.Error": {
@@ -1139,42 +1196,72 @@
         "time.Duration": {
             "type": "integer",
             "enum": [
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
                 60000000000,
                 3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
                 60000000000,
                 3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
-                60000000000
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
             ],
             "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
                 "Minute",
                 "Hour",
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
                 "Minute",
                 "Hour",
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
-                "Minute"
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
             ]
         },
         "web.about.info": {
@@ -1402,42 +1489,72 @@
                 "time.Duration": {
                     "type": "integer",
                     "enum": [
+                        -9223372036854775808,
+                        9223372036854775807,
                         1,
                         1000,
                         1000000,
                         1000000000,
                         60000000000,
                         3600000000000,
+                        -9223372036854775808,
+                        9223372036854775807,
                         1,
                         1000,
                         1000000,
                         1000000000,
                         60000000000,
                         3600000000000,
+                        -9223372036854775808,
+                        9223372036854775807,
                         1,
                         1000,
                         1000000,
                         1000000000,
-                        60000000000
+                        60000000000,
+                        3600000000000,
+                        -9223372036854775808,
+                        9223372036854775807,
+                        1,
+                        1000,
+                        1000000,
+                        1000000000,
+                        60000000000,
+                        3600000000000
                     ],
                     "x-enum-varnames": [
+                        "minDuration",
+                        "maxDuration",
                         "Nanosecond",
                         "Microsecond",
                         "Millisecond",
                         "Second",
                         "Minute",
                         "Hour",
+                        "minDuration",
+                        "maxDuration",
                         "Nanosecond",
                         "Microsecond",
                         "Millisecond",
                         "Second",
                         "Minute",
                         "Hour",
+                        "minDuration",
+                        "maxDuration",
                         "Nanosecond",
                         "Microsecond",
                         "Millisecond",
                         "Second",
-                        "Minute"
+                        "Minute",
+                        "Hour",
+                        "minDuration",
+                        "maxDuration",
+                        "Nanosecond",
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute",
+                        "Hour"
                     ]
                 }
             }

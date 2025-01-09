@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
-    - 1
     - 0
     - 1
     - 2
     - 3
+    - 1
     type: integer
     x-enum-varnames:
-    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
   models.Error:
     properties:
       code:
@@ -89,42 +89,72 @@ definitions:
     type: object
   time.Duration:
     enum:
+    - -9223372036854775808
+    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
     - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
     - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
+    - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
     type: integer
     x-enum-varnames:
+    - minDuration
+    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
     - Hour
+    - minDuration
+    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
     - Hour
+    - minDuration
+    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
+    - Hour
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
   web.about.info:
     properties:
       version:
@@ -273,42 +303,72 @@ definitions:
     properties:
       time.Duration:
         enum:
+        - -9223372036854775808
+        - 9223372036854775807
         - 1
         - 1000
         - 1000000
         - 1000000000
         - 60000000000
         - 3600000000000
+        - -9223372036854775808
+        - 9223372036854775807
         - 1
         - 1000
         - 1000000
         - 1000000000
         - 60000000000
         - 3600000000000
+        - -9223372036854775808
+        - 9223372036854775807
         - 1
         - 1000
         - 1000000
         - 1000000000
         - 60000000000
+        - 3600000000000
+        - -9223372036854775808
+        - 9223372036854775807
+        - 1
+        - 1000
+        - 1000000
+        - 1000000000
+        - 60000000000
+        - 3600000000000
         type: integer
         x-enum-varnames:
+        - minDuration
+        - maxDuration
         - Nanosecond
         - Microsecond
         - Millisecond
         - Second
         - Minute
         - Hour
+        - minDuration
+        - maxDuration
         - Nanosecond
         - Microsecond
         - Millisecond
         - Second
         - Minute
         - Hour
+        - minDuration
+        - maxDuration
         - Nanosecond
         - Microsecond
         - Millisecond
         - Second
         - Minute
+        - Hour
+        - minDuration
+        - maxDuration
+        - Nanosecond
+        - Microsecond
+        - Millisecond
+        - Second
+        - Minute
+        - Hour
     type: object
   web.viewSources.sourcesResult:
     properties:
@@ -541,6 +601,44 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Creates a source.
+  /sources/{document}:
+    delete:
+      description: This updates the SSVC of the specified document.
+      parameters:
+      - description: Document ID
+        in: path
+        name: document
+        required: true
+        type: integer
+      - description: SSVC vector
+        in: query
+        name: vector
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Changes the SSVC.
   /sources/{id}:
     delete:
       description: Deletes the source configuration with the specified id.
