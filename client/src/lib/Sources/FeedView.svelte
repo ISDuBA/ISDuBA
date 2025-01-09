@@ -30,14 +30,14 @@
     let loadingHeader = headersEdit.find((header) => header.label == "Loading/Queued");
     if (loadingHeader) {
       if (showProgress) {
-        loadingHeader.progressDuration = shortLoadInterval;
+        // loadingHeader.progressDuration = shortLoadInterval;
       } else {
         loadingHeader.progressDuration = undefined;
       }
     }
   }
 
-  const shortLoadInterval = 5;
+  // const shortLoadInterval = 5;
 
   let headers: TableHeader[] = [
     {
@@ -62,7 +62,7 @@
 
   let headersEdit: TableHeader[] = [
     ...headers,
-    { label: "Loading/Queued", attribute: "stats", progressDuration: shortLoadInterval },
+    { label: "Loading/Queued", attribute: "stats" },
     { label: "Logs", attribute: "logs" }
   ];
 

@@ -357,26 +357,19 @@
         <div class="grid w-full grid-cols-[max-content_max-content_max-content] gap-x-4 text-sm">
           <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
           <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}>Queued</DescriptionList>
-          <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}>Imported (last 24h)</DescriptionList
-          >
-          <div class="col-span-2 mb-1 mt-1 h-1 min-h-1">
-            <div class="progressmeter">
-              <span class="w-full"
-                ><span
-                  style="animation-duration: {shortLoadInterval}s"
-                  class="infiniteprogress bg-primary-500"
-                ></span></span
-              >
-            </div>
-          </div>
-          <div class="mb-1 mt-1 h-1 min-h-1">
-            <div class="progressmeter">
-              <span class="w-full"
-                ><span
-                  style="animation-duration: {shortLoadInterval * longLoadMultiplier}s"
-                  class="infiniteprogress bg-primary-500"
-                ></span></span
-              >
+          <div>
+            <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}
+              >Imported (last 24h)</DescriptionList
+            >
+            <div class="mb-1 mt-1 h-1 min-h-1">
+              <div class="progressmeter">
+                <span class="w-full"
+                  ><span
+                    style="animation-duration: {shortLoadInterval * longLoadMultiplier}s"
+                    class="infiniteprogress bg-primary-500"
+                  ></span></span
+                >
+              </div>
             </div>
           </div>
           <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
