@@ -193,7 +193,9 @@
   {/if}
   {#await getMessage() then resp}
     {#if resp.message}
-      {resp.message}
+      {#if appStore.isAdmin() || appStore.isAuditor() || appStore.isEditor() || appStore.isReviewer()}
+        {resp.message}
+      {/if}
     {/if}
   {/await}
   <ErrorMessage error={sourcesError}></ErrorMessage>
