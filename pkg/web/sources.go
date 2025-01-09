@@ -161,7 +161,7 @@ func hasBlock(data []byte) bool {
 	return block != nil
 }
 
-// createFeed is an endpoint that creates a source.
+// createSource is an endpoint that creates a source.
 //
 //	@Summary		Creates a source.
 //	@Description	Creates a source with the specified configuration.
