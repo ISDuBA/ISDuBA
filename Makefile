@@ -54,6 +54,6 @@ dist: build_isdubad build_client
 	cp -r web/* dist/web
 	mkdir -p dist/docs
 	cp -r docs/*.md dist/docs
-	cp -r docs/*.svg dist/docs
+	cp -r docs/images/*.svg dist/docs
 	cp -r docs/*.toml dist/docs
 	cd dist/ ; tar -cvmlzf $(DISTDIR)-gnulinux-amd64.tar.gz *
