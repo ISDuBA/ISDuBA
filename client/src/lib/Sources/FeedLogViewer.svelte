@@ -171,7 +171,7 @@
         result
       );
     }
-    // default value
+    // default value using default keep_feed_logs value (2232h)
     from = new Date(Date.now() - 8035200000);
   };
 
