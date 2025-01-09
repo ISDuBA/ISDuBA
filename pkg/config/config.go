@@ -117,7 +117,7 @@ const (
 	defaultSourcesFeedLogLevel      = InfoFeedLogLevel
 	defaultSourcesFeedImporter      = "feedimporter"
 	defaultSourcesDefaultMessage    = "Missing something? To suggest new CSAF sources, " +
-		"please contact your CSAF source manager or your administrator."
+		"please contact your CSAF source manager."
 	defaultSourcesStrictMode     = true
 	defaultSourcesSecure         = true
 	defaultSourcesSignatureCheck = true
