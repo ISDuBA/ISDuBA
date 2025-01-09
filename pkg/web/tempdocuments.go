@@ -17,20 +17,31 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/gin-gonic/gin"
 	"github.com/gocsaf/csaf/v3/csaf"
 )
 
+// importTempDocument is an endpoint saves a temporary document.
+//
+//	@Summary		Uploads a temporary document.
+//	@Description	Uploads a temporary document, that can be used to create diff views.
+//	@Param			file	formData	file	true	"Temporary document"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		200	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Router			/tempdocuments [post]
 func (c *Controller) importTempDocument(ctx *gin.Context) {
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	limited := http.MaxBytesReader(
@@ -55,38 +66,61 @@ func (c *Controller) importTempDocument(ctx *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{"id": id})
+	ctx.JSON(http.StatusCreated, models.ID{ID: id})
 }
 
+// overviewTempDocuments is an endpoint returns an overview over all temporary documents.
+//
+//	@Summary		Returns an overview of all temporary documents.
+//	@Description	An overview of all temporary documents that are uploaded by the user are returned.
+//	@Produce		json
+//	@Success		200	{object}	web.overviewTempDocuments.tempDocuments
+//	@Router			/tempdocuments [get]
 func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
+	type tempDocuments struct {
+		Files []tempstore.Entry `json:"files"`
+		Free  int               `json:"free"`
+	}
 	user := ctx.GetString("uid")
 	files := c.ts.List(user)
 	free := max(0, min(
 		c.cfg.TempStore.FilesTotal-c.ts.Total(),
 		c.cfg.TempStore.FilesUser-len(files)))
-	ctx.JSON(http.StatusOK, gin.H{
-		"files": files,
-		"free":  free,
+	ctx.JSON(http.StatusOK, tempDocuments{
+		Files: files,
+		Free:  free,
 	})
 }
 
+// viewTempDocument is an endpoint returns a temporary document with the specified id.
+//
+//	@Summary		Returns a temporary documents.
+//	@Description	Returns a temporary document with the specified id.
+//	@Param			id	path	int	true	"Document ID"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Success		400	{object}	models.Error
+//	@Success		404	{object}	models.Error
+//	@Success		500	{object}	models.Error
+//	@Router			/tempdocuments/{id} [get]
 func (c *Controller) viewTempDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	user := ctx.GetString("uid")
 	r, entry, err := c.ts.Fetch(user, id)
 	switch {
 	case errors.Is(err, tempstore.ErrFileNotFound):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusNotFound, err)
 		return
 	case err != nil:
 		slog.Error("fetch temp file failed", "err", err, "id", id)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	extraHeaders := map[string]string{
@@ -100,15 +134,26 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 		extraHeaders)
 }
 
+// deleteTempDocument is an endpoint deletes a temporary document with the specified id.
+//
+//	@Summary		Deletes a temporary documents.
+//	@Description	Deletes a temporary document with the specified id.
+//	@Param			id	path	int	true	"Document ID"
+//	@Produce		json
+//	@Success		200	{object}	models.Success	"deleted"
+//	@Success		400	{object}	models.Error
+//	@Success		404	{object}	models.Error
+//	@Router			/tempdocuments/{id} [delete]
 func (c *Controller) deleteTempDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	user := ctx.GetString("uid")
 	if c.ts.Delete(user, id) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "deleted")
 	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "not found")
 	}
 }

@@ -807,8 +807,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -836,24 +836,152 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/tempdocuments": {
+            "get": {
+                "description": "An overview of all temporary documents that are uploaded by the user are returned.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns an overview of all temporary documents.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.overviewTempDocuments.tempDocuments"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Uploads a temporary document, that can be used to create diff views.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Uploads a temporary document.",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Temporary document",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/tempdocuments/{id}": {
+            "get": {
+                "description": "Returns a temporary document with the specified id.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a temporary documents.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a temporary document with the specified id.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a temporary documents.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "models.Error": {
@@ -894,6 +1022,26 @@ const docTemplate = `{
                 }
             }
         },
+        "tempstore.Entry": {
+            "type": "object",
+            "properties": {
+                "expired": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inserted": {
+                    "type": "string"
+                },
+                "length": {
+                    "type": "integer"
+                }
+            }
+        },
         "time.Duration": {
             "type": "integer",
             "enum": [
@@ -910,7 +1058,12 @@ const docTemplate = `{
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000
+                3600000000000,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -926,7 +1079,12 @@ const docTemplate = `{
                 "Millisecond",
                 "Second",
                 "Minute",
-                "Hour"
+                "Hour",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute"
             ]
         },
         "web.attentionSources.attention": {
@@ -1039,6 +1197,20 @@ const docTemplate = `{
                 }
             }
         },
+        "web.overviewTempDocuments.tempDocuments": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tempstore.Entry"
+                    }
+                },
+                "free": {
+                    "type": "integer"
+                }
+            }
+        },
         "web.pmd.messages": {
             "type": "object",
             "properties": {
@@ -1145,7 +1317,12 @@ const docTemplate = `{
                         1000000,
                         1000000000,
                         60000000000,
-                        3600000000000
+                        3600000000000,
+                        1,
+                        1000,
+                        1000000,
+                        1000000000,
+                        60000000000
                     ],
                     "x-enum-varnames": [
                         "minDuration",
@@ -1161,7 +1338,12 @@ const docTemplate = `{
                         "Millisecond",
                         "Second",
                         "Minute",
-                        "Hour"
+                        "Hour",
+                        "Nanosecond",
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute"
                     ]
                 }
             }

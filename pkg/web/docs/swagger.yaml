@@ -2,18 +2,18 @@ basePath: /api
 definitions:
   config.FeedLogLevel:
     enum:
-    - 1
     - 0
     - 1
     - 2
     - 3
+    - 1
     type: integer
     x-enum-varnames:
-    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
   models.Error:
     properties:
       code:
@@ -38,6 +38,19 @@ definitions:
       waiting:
         type: integer
     type: object
+  tempstore.Entry:
+    properties:
+      expired:
+        type: string
+      filename:
+        type: string
+      id:
+        type: integer
+      inserted:
+        type: string
+      length:
+        type: integer
+    type: object
   time.Duration:
     enum:
     - -9223372036854775808
@@ -54,6 +67,11 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -70,6 +88,11 @@ definitions:
     - Second
     - Minute
     - Hour
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
   web.attentionSources.attention:
     properties:
       id:
@@ -140,6 +163,15 @@ definitions:
     properties:
       keep_feed_time:
         $ref: '#/definitions/time.Duration'
+    type: object
+  web.overviewTempDocuments.tempDocuments:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/tempstore.Entry'
+        type: array
+      free:
+        type: integer
     type: object
   web.pmd.messages:
     properties:
@@ -218,6 +250,11 @@ definitions:
         - 1000000000
         - 60000000000
         - 3600000000000
+        - 1
+        - 1000
+        - 1000000
+        - 1000000000
+        - 60000000000
         type: integer
         x-enum-varnames:
         - minDuration
@@ -234,6 +271,11 @@ definitions:
         - Second
         - Minute
         - Hour
+        - Nanosecond
+        - Microsecond
+        - Millisecond
+        - Second
+        - Minute
     type: object
   web.viewSources.sourcesResult:
     properties:
@@ -591,8 +633,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             items:
               $ref: '#/definitions/models.ID'
@@ -790,4 +832,90 @@ paths:
           schema:
             $ref: '#/definitions/models.Success'
       summary: Returns the default message.
+  /tempdocuments:
+    get:
+      description: An overview of all temporary documents that are uploaded by the
+        user are returned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.overviewTempDocuments.tempDocuments'
+      summary: Returns an overview of all temporary documents.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a temporary document, that can be used to create diff views.
+      parameters:
+      - description: Temporary document
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Uploads a temporary document.
+  /tempdocuments/{id}:
+    delete:
+      description: Deletes a temporary document with the specified id.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a temporary documents.
+    get:
+      description: Returns a temporary document with the specified id.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a temporary documents.
 swagger: "2.0"
