@@ -111,8 +111,7 @@
         },
         {
           label: "Loading/Queued",
-          attribute: "stats",
-          progressDuration: shortLoadInterval
+          attribute: "stats"
         },
         {
           label: "Imported (last 24h)",
