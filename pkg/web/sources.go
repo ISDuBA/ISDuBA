@@ -142,7 +142,6 @@ func showStats(ctx *gin.Context) (bool, bool) {
 func (c *Controller) viewSources(ctx *gin.Context) {
 	stats, ok := showStats(ctx)
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse stats")
 		return
 	}
 	type sourcesResult struct {
@@ -306,7 +305,6 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 	}
 	stats, ok := showStats(ctx)
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse stats")
 		return
 	}
 	si := c.sm.Source(input.ID, stats)
@@ -552,7 +550,6 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 	}
 	stats, ok := showStats(ctx)
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse stats")
 		return
 	}
 	feeds := []*feed{}
@@ -749,7 +746,6 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 func (c *Controller) feedLog(ctx *gin.Context) {
 	feedID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	c.feedLogs(ctx, &feedID)
@@ -899,7 +895,6 @@ func (c *Controller) keepFeedTime(ctx *gin.Context) {
 func (c *Controller) attentionSources(ctx *gin.Context) {
 	all, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("all", "false"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse all")
 		return
 	}
 	type attention struct {

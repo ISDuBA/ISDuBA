@@ -267,13 +267,11 @@ func (c *Controller) viewForwardTargets(ctx *gin.Context) {
 func (c *Controller) forwardDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no valid document id specified"})
 		return
 	}
 
 	targetID, ok := parse(ctx, toInt64, ctx.Param("target"))
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no target specified"})
 		return
 	}
 

@@ -38,7 +38,6 @@ import (
 func (c *Controller) changeSSVC(ctx *gin.Context) {
 	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse document")
 		return
 	}
 

@@ -46,7 +46,6 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	// The query to filter the documents.
 	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse query")
 		return
 	}
 

@@ -109,7 +109,6 @@ func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 func (c *Controller) viewTempDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	user := ctx.GetString("uid")
@@ -147,7 +146,6 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 func (c *Controller) deleteTempDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	user := ctx.GetString("uid")

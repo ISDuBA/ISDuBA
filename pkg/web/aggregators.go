@@ -144,7 +144,6 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 func (c *Controller) viewAggregator(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	var (
@@ -258,7 +257,6 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 func (c *Controller) deleteAggregator(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	const sql = `DELETE FROM aggregators WHERE id = $1`
@@ -343,7 +341,6 @@ func (c *Controller) updateAggregator(ctx *gin.Context) {
 	)
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	values = append(values, id)

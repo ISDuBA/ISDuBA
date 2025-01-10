@@ -215,18 +215,15 @@ func (c *Controller) importStatsSourceTmpl(
 ) {
 	sourcesID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	from, to, step, ok := importStatsInterval(ctx, importStatsDefaultInterval)
 	if !ok {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse time interval")
 		return
 	}
 	var cond strings.Builder
 	cond.WriteString(`AND feeds.sources_id = $4`)
 	if !filterImportStats(ctx, &cond) {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse flags")
 		return
 	}
 	c.serveImportStats(ctx,
@@ -248,7 +245,6 @@ func (c *Controller) importStatsAllSourcesTmpl(
 	}
 	var cond strings.Builder
 	if !filterImportStats(ctx, &cond) {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse flags")
 		return
 	}
 	c.serveImportStats(ctx,
@@ -274,7 +270,6 @@ func (c *Controller) importStatsFeedTmpl(
 	var cond strings.Builder
 	cond.WriteString(`AND feeds_id = $4`)
 	if !filterImportStats(ctx, &cond) {
-		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse flags")
 		return
 	}
 	c.serveImportStats(ctx,
