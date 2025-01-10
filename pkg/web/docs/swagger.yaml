@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
-    - 1
     - 0
     - 1
     - 2
     - 3
+    - 1
     type: integer
     x-enum-varnames:
-    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -135,6 +135,37 @@ definitions:
     - ReviewWorkflow
     - ArchivedWorkflow
     - DeleteWorkflow
+  sources.FeedSubscription:
+    properties:
+      id:
+        type: integer
+      url:
+        type: string
+    type: object
+  sources.SourceSubscription:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      subscripted:
+        items:
+          $ref: '#/definitions/sources.FeedSubscription'
+        type: array
+    type: object
+  sources.SourceSubscriptions:
+    properties:
+      available:
+        items:
+          type: string
+        type: array
+      subscriptions:
+        items:
+          $ref: '#/definitions/sources.SourceSubscription'
+        type: array
+      url:
+        type: string
+    type: object
   sources.Stats:
     properties:
       downloading:
@@ -165,66 +196,10 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
     type: integer
     x-enum-varnames:
     - minDuration
     - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -236,12 +211,34 @@ definitions:
       version:
         type: string
     type: object
+  web.argumentedAggregator:
+    properties:
+      aggregator:
+        items:
+          type: integer
+        type: array
+      custom:
+        $ref: '#/definitions/web.custom'
+    type: object
   web.attentionSources.attention:
     properties:
       id:
         type: integer
       name:
         type: string
+    type: object
+  web.custom:
+    properties:
+      attention:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      subscriptions:
+        items:
+          $ref: '#/definitions/sources.SourceSubscriptions'
+        type: array
     type: object
   web.defaultSourceConfig.sourceConfig:
     properties:
@@ -397,34 +394,6 @@ definitions:
         - 1000000000
         - 60000000000
         - 3600000000000
-        - -9223372036854775808
-        - 9223372036854775807
-        - 1
-        - 1000
-        - 1000000
-        - 1000000000
-        - 60000000000
-        - 3600000000000
-        - -9223372036854775808
-        - 9223372036854775807
-        - 1
-        - 1000
-        - 1000000
-        - 1000000000
-        - 60000000000
-        - 3600000000000
-        - 1
-        - 1000
-        - 1000000
-        - 1000000000
-        - 60000000000
-        - 3600000000000
-        - 1
-        - 1000
-        - 1000000
-        - 1000000000
-        - 60000000000
-        - 3600000000000
         type: integer
         x-enum-varnames:
         - minDuration
@@ -435,34 +404,19 @@ definitions:
         - Second
         - Minute
         - Hour
-        - minDuration
-        - maxDuration
-        - Nanosecond
-        - Microsecond
-        - Millisecond
-        - Second
-        - Minute
-        - Hour
-        - minDuration
-        - maxDuration
-        - Nanosecond
-        - Microsecond
-        - Millisecond
-        - Second
-        - Minute
-        - Hour
-        - Nanosecond
-        - Microsecond
-        - Millisecond
-        - Second
-        - Minute
-        - Hour
-        - Nanosecond
-        - Microsecond
-        - Millisecond
-        - Second
-        - Minute
-        - Hour
+    type: object
+  web.viewAggregators.aggregator:
+    properties:
+      active:
+        type: boolean
+      attention:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      url:
+        type: string
     type: object
   web.viewEvents.event:
     properties:
@@ -549,6 +503,180 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Deletes a advisory.
+  /aggregator:
+    get:
+      description: Fetches and returns the aggregator metadata for the specified URL.
+      parameters:
+      - description: Aggregator URL
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.argumentedAggregator'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Return the aggregator metadata.
+  /aggregators:
+    get:
+      description: Returns all aggregators that are configured.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.viewAggregators.aggregator'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Return all aggregators.
+  /aggregators/{id}:
+    delete:
+      description: Deletes the aggregator configuration with the specified id.
+      parameters:
+      - description: Aggregator ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: could not parse id
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes an aggregator.
+    get:
+      description: Returns metadata and configuration of the specified aggregator.
+      parameters:
+      - description: Aggregator ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.argumentedAggregator'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns the aggregator.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates an aggregator with specified configuration.
+      parameters:
+      - description: Aggregator name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Aggregator URL
+        in: formData
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates an aggregator.
+    put:
+      description: Updates the aggregator configuration.
+      parameters:
+      - description: Aggregator ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Aggregator name
+        in: formData
+        name: name
+        type: string
+      - description: Aggregator URL
+        in: formData
+        name: url
+        type: string
+      - description: Aggregator active flag
+        in: formData
+        name: active
+        type: boolean
+      - description: Aggregator attention flag
+        in: formData
+        name: attention
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates aggregator configuration.
   /client-config:
     get:
       description: Returns information that the client needs to operate.
@@ -684,12 +812,10 @@ paths:
       summary: Return all events.
   /pmd:
     get:
-      consumes:
-      - multipart/form-data
       description: Fetches and returns the provider metadata for the specified URL.
       parameters:
-      - in: formData
-        minLength: 1
+      - description: PMD URL
+        in: query
         name: url
         required: true
         type: string
@@ -896,8 +1022,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/models.Success'
         "400":
@@ -920,8 +1046,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/models.Success'
         "400":

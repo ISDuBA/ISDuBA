@@ -292,7 +292,7 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 //	@Param			id		path	int		true	"Source ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Produce		json
-//	@Success		201	{object}	models.Success
+//	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error	"could not parse stats"
 //	@Failure		404	{object}	models.Error
 //	@Router			/sources/{id} [get]
@@ -323,7 +323,7 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 //	@Description	Updates the source configuration.
 //	@Param			id	path	int	true	"Source ID"
 //	@Produce		json
-//	@Success		201	{object}	models.Success
+//	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
 //	@Failure		404	{object}	models.Error	"not found"
 //	@Failure		500	{object}	models.Error
@@ -573,7 +573,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 //
 //	@Summary		Creates a feed.
 //	@Description	Creates a feed with the specified configuration.
-//	@Param			url	formData	web.createFeed.inputForm	true	"feed configuration"
+//	@Param			inputForm	formData	web.createFeed.inputForm	true	"feed configuration"
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		201	{array}		models.ID
@@ -946,8 +946,7 @@ func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 //
 //	@Summary		Return the pmd.
 //	@Description	Fetches and returns the provider metadata for the specified URL.
-//	@Param			url	formData	web.pmd.inputForm	true	"PMD URL"
-//	@Accept			multipart/form-data
+//	@Param			url	query	string	true	"PMD URL"
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error		"could not parse url"
