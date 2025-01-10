@@ -18,8 +18,8 @@
   let files: FileList;
 </script>
 
-<Card size="lg" class="h-96">
-  <div class="flex flex-col">
+<Card size="lg">
+  <div class={`flex flex-col ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
     <Label class="pb-2">{label}</Label>
     <Fileupload value="" bind:files multiple />
     <Listgroup class="mt-6">
