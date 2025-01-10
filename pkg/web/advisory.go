@@ -110,53 +110,92 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "advisory not found")
 		} else {
 			slog.Error("state change failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
 	switch {
 	case bad:
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "bad input"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "bad input")
 	case forbidden:
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
 	case noTransition:
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "state transition not possible"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "state transition not possible")
 	default:
-		ctx.JSON(http.StatusOK, gin.H{"message": "transition done"})
+		models.SendSuccess(ctx, http.StatusOK, "transition done")
 	}
 }
 
+// changeStatus changes the status the specified advisories.
+//
+//	@Summary		Changes the status of the advisory.
+//	@Description	Changes the status of the specified advisory, if allowed.
+//	@Param			publisher	path	string	true	"Publisher"
+//	@Param			trackingid	path	string	true	"Tracking ID"
+//	@Param			state	path	string	true	"Advisory status"
+//	@Produce		json
+//	@Success		200	{object}		models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		403	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/status/{publisher}/{trackingid}/{state} [put]
 func (c *Controller) changeStatus(ctx *gin.Context) {
 	var input models.AdvisoryState
 	if err := ctx.ShouldBindUri(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	c.changeStatusAll(ctx, advisoryStates{input})
 }
 
+// changeStatusBulk changes the status of multiple advisories.
+//
+//	@Summary		Bulk changes status.
+//	@Description	Changes the status of multiple advisories, if allowed.
+//	@Param			input	body	advisoryStates	true	"Advisory states"
+//	@Accept		json
+//	@Produce		json
+//	@Success		200	{object}		models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		403	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/status [put]
 func (c *Controller) changeStatusBulk(ctx *gin.Context) {
 	var inputs advisoryStates
 	if err := ctx.ShouldBindJSON(&inputs); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	c.changeStatusAll(ctx, inputs)
 }
 
 // deleteAdvisory deletes a given advisory.
+//
+//	@Summary		Deletes a advisory.
+//	@Description	Deletes the specified advisory.
+//	@Param			publisher	path	string	true	"Publisher"
+//	@Param			trackingid	path	string	true	"Tracking ID"
+//	@Produce		json
+//	@Success		200	{array}		web.viewEvents.event
+//	@Failure		400	{object}	models.Error
+//	@Failure		403	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/advisory/{publisher}/{trackingid} [delete]
 func (c *Controller) deleteAdvisory(ctx *gin.Context) {
 	var key models.AdvisoryKey
 	if err := ctx.ShouldBindUri(&key); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	if key.Publisher == "" || key.TrackingID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing publisher or tracking_id"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "missing publisher or tracking_id")
 		return
 	}
 
@@ -208,19 +247,19 @@ func (c *Controller) deleteAdvisory(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "advisory not found")
 		} else {
 			slog.Error("deleting advisory failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
 	switch {
 	case forbidden:
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "not allowed to delete advisory"})
+		models.SendErrorMessage(ctx, http.StatusForbidden, "not allowed to delete advisory")
 	case !deleted:
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "advisory not found")
 	default:
-		ctx.JSON(http.StatusOK, gin.H{"message": "advisory deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "advisory deleted")
 	}
 }

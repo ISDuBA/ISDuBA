@@ -27,6 +27,19 @@ definitions:
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+  models.AdvisoryState:
+    properties:
+      publisher:
+        type: string
+      state:
+        $ref: '#/definitions/models.Workflow'
+      tracking_id:
+        type: string
+    required:
+    - publisher
+    - state
+    - tracking_id
+    type: object
   models.Error:
     properties:
       code:
@@ -160,20 +173,11 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
-    - 3600000000000
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
     - 1
     - 1000
     - 1000000
@@ -198,20 +202,11 @@ definitions:
     - Second
     - Minute
     - Hour
-    - minDuration
-    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
-    - Hour
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -392,20 +387,11 @@ definitions:
         - 1000000000
         - 60000000000
         - 3600000000000
-        - -9223372036854775808
-        - 9223372036854775807
         - 1
         - 1000
         - 1000000
         - 1000000000
         - 60000000000
-        - 3600000000000
-        - 1
-        - 1000
-        - 1000000
-        - 1000000000
-        - 60000000000
-        - 3600000000000
         - 1
         - 1000
         - 1000000
@@ -430,20 +416,11 @@ definitions:
         - Second
         - Minute
         - Hour
-        - minDuration
-        - maxDuration
         - Nanosecond
         - Microsecond
         - Millisecond
         - Second
         - Minute
-        - Hour
-        - Nanosecond
-        - Microsecond
-        - Millisecond
-        - Second
-        - Minute
-        - Hour
         - Nanosecond
         - Microsecond
         - Millisecond
@@ -496,6 +473,46 @@ paths:
           schema:
             $ref: '#/definitions/web.about.info'
       summary: Returns application information.
+  /advisory/{publisher}/{trackingid}:
+    delete:
+      description: Deletes the specified advisory.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.viewEvents.event'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a advisory.
   /client-config:
     get:
       description: Returns information that the client needs to operate.
@@ -1145,6 +1162,87 @@ paths:
           schema:
             $ref: '#/definitions/models.Success'
       summary: Returns the default message.
+  /status:
+    put:
+      consumes:
+      - application/json
+      description: Changes the status of multiple advisories, if allowed.
+      parameters:
+      - description: Advisory states
+        in: body
+        name: input
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/models.AdvisoryState'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Bulk changes status.
+  /status/{publisher}/{trackingid}/{state}:
+    put:
+      description: Changes the status of the specified advisory, if allowed.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      - description: Advisory status
+        in: path
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Changes the status of the advisory.
   /tempdocuments:
     get:
       description: An overview of all temporary documents that are uploaded by the
