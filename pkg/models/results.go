@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-// Package results represents the models used at the HTTP interface.
+// Package models represents the models used at the HTTP interface.
 package models
 
 import "github.com/gin-gonic/gin"

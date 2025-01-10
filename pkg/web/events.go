@@ -146,7 +146,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, h)
 }
 
-// viewEvents is an endpoint that returns events of the specified advisory.
+// viewEvents is an endpoint that returns the events of the specified advisory.
 //
 //	@Summary		Return all events.
 //	@Description	Returns all events from the specified advisory.

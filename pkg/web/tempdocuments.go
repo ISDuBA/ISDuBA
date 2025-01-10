@@ -23,7 +23,7 @@ import (
 	"github.com/gocsaf/csaf/v3/csaf"
 )
 
-// importTempDocument is an endpoint saves a temporary document.
+// importTempDocument is an endpoint that saves a temporary document.
 //
 //	@Summary		Uploads a temporary document.
 //	@Description	Uploads a temporary document, that can be used to create diff views.
@@ -72,7 +72,7 @@ func (c *Controller) importTempDocument(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, models.ID{ID: id})
 }
 
-// overviewTempDocuments is an endpoint returns an overview over all temporary documents.
+// overviewTempDocuments is an endpoint that returns an overview over all temporary documents.
 //
 //	@Summary		Returns an overview of all temporary documents.
 //	@Description	An overview of all temporary documents that are uploaded by the user are returned.
@@ -95,7 +95,7 @@ func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 	})
 }
 
-// viewTempDocument is an endpoint returns a temporary document with the specified id.
+// viewTempDocument is an endpoint that returns a temporary document with the specified id.
 //
 //	@Summary		Returns a temporary documents.
 //	@Description	Returns a temporary document with the specified id.
@@ -134,7 +134,7 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 		extraHeaders)
 }
 
-// deleteTempDocument is an endpoint deletes a temporary document with the specified id.
+// deleteTempDocument is an endpoint that deletes a temporary document with the specified id.
 //
 //	@Summary		Deletes a temporary documents.
 //	@Description	Deletes a temporary document with the specified id.
