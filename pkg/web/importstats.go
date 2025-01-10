@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -55,38 +56,152 @@ const (
 		`ORDER BY bucket, critical`
 )
 
+// cveStatsSource is an endpoint that returns statistics for source CVEs.
+//
+//	@Summary		Returns cve statistics.
+//	@Description	Returns cve statistics for the specified source.
+//	@Param			id		path	int		true	"Source ID"
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/cve/source/{id} [get]
 func (c *Controller) cveStatsSource(ctx *gin.Context) {
 	c.importStatsSourceTmpl(ctx, selectCVEStatsSQL, collectBuckets)
 }
 
+// cveStatsFeed is an endpoint that returns statistics for feed CVEs.
+//
+//	@Summary		Returns cve statistics.
+//	@Description	Returns cve statistics for the specified feed.
+//	@Param			id		path	int		true	"Feed ID"
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/cve/feed/{id} [get]
 func (c *Controller) cveStatsFeed(ctx *gin.Context) {
 	c.importStatsFeedTmpl(ctx, selectCVEStatsSQL, collectBuckets)
 }
 
+// cveStatsAllSources is an endpoint that returns statistics from all sources CVEs.
+//
+//	@Summary		Returns cve statistics.
+//	@Description	Returns cve statistics for all sources.
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/cve [get]
 func (c *Controller) cveStatsAllSources(ctx *gin.Context) {
 	c.importStatsAllSourcesTmpl(ctx, selectCVEStatsSQL, collectBuckets)
 }
 
+// importStatsSource is an endpoint that returns import statistics for the source.
+//
+//	@Summary		Returns import statistics.
+//	@Description	Returns import statistics for the specified source.
+//	@Param			id		path	int		true	"Source ID"
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/imports/source/{id} [get]
 func (c *Controller) importStatsSource(ctx *gin.Context) {
 	c.importStatsSourceTmpl(ctx, selectImportStatsSQL, collectBuckets)
 }
 
+// importStatsAllSources is an endpoint that returns import statistics for all sources.
+//
+//	@Summary		Returns import statistics.
+//	@Description	Returns import statistics for all sources.
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/imports [get]
 func (c *Controller) importStatsAllSources(ctx *gin.Context) {
 	c.importStatsAllSourcesTmpl(ctx, selectImportStatsSQL, collectBuckets)
 }
 
+// importStatsFeed is an endpoint that returns import statistics for the feed.
+//
+//	@Summary		Returns import statistics.
+//	@Description	Returns import statistics for the specified feed.
+//	@Param			id		path	int		true	"Feed ID"
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/imports/feed/{id} [get]
 func (c *Controller) importStatsFeed(ctx *gin.Context) {
 	c.importStatsFeedTmpl(ctx, selectImportStatsSQL, collectBuckets)
 }
 
+// criticalStatsSource is an endpoint that returns critical statistics for the source.
+//
+//	@Summary		Returns criticality statistics.
+//	@Description	Returns criticality statistics for the specified source.
+//	@Param			id		path	int		true	"Source ID"
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/critical/source/{id} [get]
 func (c *Controller) criticalStatsSource(ctx *gin.Context) {
 	c.importStatsSourceTmpl(ctx, selectCriticalSQL, collectCritcalBuckets)
 }
 
+// criticalStatsAllSources is an endpoint that returns criticality statistics for all sources.
+//
+//	@Summary		Returns criticality statistics.
+//	@Description	Returns criticality statistics for all sources.
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/critical [get]
 func (c *Controller) criticalStatsAllSources(ctx *gin.Context) {
 	c.importStatsAllSourcesTmpl(ctx, selectCriticalSQL, collectCritcalBuckets)
 }
 
+// criticalStatsFeed is an endpoint that returns crtiticality statistics for the feed.
+//
+//	@Summary		Returns criticality statistics.
+//	@Description	Returns criticality statistics for the specified feed.
+//	@Param			id		path	int		true	"Feed ID"
+//	@Param			from	query	string	false	"Timerange start"
+//	@Param			to		query	string	false	"Timerange end"
+//	@Param			step	query	string	false	"Time step"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/stats/critical/feed/{id} [get]
 func (c *Controller) criticalStatsFeed(ctx *gin.Context) {
 	c.importStatsFeedTmpl(ctx, selectCriticalSQL, collectCritcalBuckets)
 }
@@ -100,15 +215,18 @@ func (c *Controller) importStatsSourceTmpl(
 ) {
 	sourcesID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse id")
 		return
 	}
 	from, to, step, ok := importStatsInterval(ctx, importStatsDefaultInterval)
 	if !ok {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse time interval")
 		return
 	}
 	var cond strings.Builder
 	cond.WriteString(`AND feeds.sources_id = $4`)
 	if !filterImportStats(ctx, &cond) {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse flags")
 		return
 	}
 	c.serveImportStats(ctx,
@@ -130,6 +248,7 @@ func (c *Controller) importStatsAllSourcesTmpl(
 	}
 	var cond strings.Builder
 	if !filterImportStats(ctx, &cond) {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse flags")
 		return
 	}
 	c.serveImportStats(ctx,
@@ -155,6 +274,7 @@ func (c *Controller) importStatsFeedTmpl(
 	var cond strings.Builder
 	cond.WriteString(`AND feeds_id = $4`)
 	if !filterImportStats(ctx, &cond) {
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "could not parse flags")
 		return
 	}
 	c.serveImportStats(ctx,
@@ -180,7 +300,7 @@ func (c *Controller) serveImportStats(
 		}, 0,
 	); err != nil {
 		slog.Error("Cannot fetch import stats", "error", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, list)

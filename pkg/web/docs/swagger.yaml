@@ -173,11 +173,20 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
+    - 3600000000000
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
     - 1
     - 1000
     - 1000000
@@ -202,11 +211,20 @@ definitions:
     - Second
     - Minute
     - Hour
+    - minDuration
+    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
+    - Hour
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -387,11 +405,20 @@ definitions:
         - 1000000000
         - 60000000000
         - 3600000000000
+        - -9223372036854775808
+        - 9223372036854775807
         - 1
         - 1000
         - 1000000
         - 1000000000
         - 60000000000
+        - 3600000000000
+        - 1
+        - 1000
+        - 1000000
+        - 1000000000
+        - 60000000000
+        - 3600000000000
         - 1
         - 1000
         - 1000000
@@ -416,11 +443,20 @@ definitions:
         - Second
         - Minute
         - Hour
+        - minDuration
+        - maxDuration
         - Nanosecond
         - Microsecond
         - Millisecond
         - Second
         - Minute
+        - Hour
+        - Nanosecond
+        - Microsecond
+        - Millisecond
+        - Second
+        - Minute
+        - Hour
         - Nanosecond
         - Microsecond
         - Millisecond
@@ -1162,6 +1198,315 @@ paths:
           schema:
             $ref: '#/definitions/models.Success'
       summary: Returns the default message.
+  /stats/critical:
+    get:
+      description: Returns criticality statistics for all sources.
+      parameters:
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns criticality statistics.
+  /stats/critical/feed/{id}:
+    get:
+      description: Returns criticality statistics for the specified feed.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns criticality statistics.
+  /stats/critical/source/{id}:
+    get:
+      description: Returns criticality statistics for the specified source.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns criticality statistics.
+  /stats/cve:
+    get:
+      description: Returns cve statistics for all sources.
+      parameters:
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns cve statistics.
+  /stats/cve/feed/{id}:
+    get:
+      description: Returns cve statistics for the specified feed.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns cve statistics.
+  /stats/cve/source/{id}:
+    get:
+      description: Returns cve statistics for the specified source.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns cve statistics.
+  /stats/imports:
+    get:
+      description: Returns import statistics for all sources.
+      parameters:
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns import statistics.
+  /stats/imports/feed/{id}:
+    get:
+      description: Returns import statistics for the specified feed.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns import statistics.
+  /stats/imports/source/{id}:
+    get:
+      description: Returns import statistics for the specified source.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns import statistics.
   /status:
     put:
       consumes:
