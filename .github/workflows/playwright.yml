@@ -33,15 +33,16 @@ jobs:
           npm run cover
           cd ../
           killall "-2" --wait isdubad
-          go tool covdata percent -i=/tmp/cov
+          go tool covdata textfmt -i=/tmp/cov -o coverage.out
+          go tool cover -func=coverage.out
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-output

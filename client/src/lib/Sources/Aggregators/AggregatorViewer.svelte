@@ -443,352 +443,354 @@
 
 <div class="pb-10">
   <SectionHeader title="Aggregators"></SectionHeader>
-  <Accordion flush multiple class="my-4">
-    {#each aggregators as aggregator, index (index)}
-      {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
-      {@const metadata = aggregatorMetaData.get(aggregator.id ?? -1)}
-      <CAccordionItem
-        id={`aggregator-${aggregator.id}`}
-        paddingFlush="pt-0 py-2"
-        defaultClass={`${accordionItemDefaultClass} ${aggregator.id === blinkId ? "blink" : ""}`}
-        bind:open={openAggregator[index]}
-        {textFlushOpen}
-        toggleCallback={async () => {
-          await toggleAggregatorView(aggregator);
-        }}
-      >
-        <span slot="arrowup"></span>
-        <span slot="arrowdown"> </span>
-        <div slot="header" class="flex flex-col items-start gap-2">
-          <div class="flex flex-wrap items-center gap-2">
-            {#if list.length > 0}
-              <i class="bx bx-chevron-up text-xl"></i>
-            {:else}
-              <i class="bx bx-chevron-down text-xl"></i>
-            {/if}
-            <span>{aggregator.name}</span>
-            {#if aggregator.attention}
-              <Badge class="h-fit">Sources changed</Badge>
-            {/if}
-            <div>
-              <Button
-                on:click={async (event) => {
-                  event.stopPropagation();
-                  event.preventDefault();
-                  if (aggregator.id !== undefined) {
-                    await removeAggregator(aggregator.id);
-                  }
-                }}
-                class="!p-2"
-                color="light"
-              >
-                <i class="bx bx-trash text-red-600"></i>
-              </Button>
-              {#if aggregator.id !== undefined && aggregator.id !== aggregatorToEdit}
+  {#if appStore.isSourceManager()}
+    <Accordion flush multiple class="my-4">
+      {#each aggregators as aggregator, index (index)}
+        {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
+        {@const metadata = aggregatorMetaData.get(aggregator.id ?? -1)}
+        <CAccordionItem
+          id={`aggregator-${aggregator.id}`}
+          paddingFlush="pt-0 py-2"
+          defaultClass={`${accordionItemDefaultClass} ${aggregator.id === blinkId ? "blink" : ""}`}
+          bind:open={openAggregator[index]}
+          {textFlushOpen}
+          toggleCallback={async () => {
+            await toggleAggregatorView(aggregator);
+          }}
+        >
+          <span slot="arrowup"></span>
+          <span slot="arrowdown"> </span>
+          <div slot="header" class="flex flex-col items-start gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              {#if list.length > 0}
+                <i class="bx bx-chevron-up text-xl"></i>
+              {:else}
+                <i class="bx bx-chevron-down text-xl"></i>
+              {/if}
+              <span>{aggregator.name}</span>
+              {#if aggregator.attention}
+                <Badge class="h-fit">Sources changed</Badge>
+              {/if}
+              <div>
                 <Button
-                  on:click={(event) => {
+                  on:click={async (event) => {
                     event.stopPropagation();
                     event.preventDefault();
-                    editedName = aggregator.name;
-                    editedUrl = aggregator.url;
                     if (aggregator.id !== undefined) {
-                      toggleEditForm(aggregator.id);
+                      await removeAggregator(aggregator.id);
                     }
                   }}
                   class="!p-2"
                   color="light"
                 >
-                  <i class="bx bx-pencil"></i>
+                  <i class="bx bx-trash text-red-600"></i>
                 </Button>
-              {/if}
-            </div>
-            {#if aggregator.active !== undefined}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <!-- svelte-ignore a11y-no-static-element-interactions -->
-              <!--
+                {#if aggregator.id !== undefined && aggregator.id !== aggregatorToEdit}
+                  <Button
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      editedName = aggregator.name;
+                      editedUrl = aggregator.url;
+                      if (aggregator.id !== undefined) {
+                        toggleEditForm(aggregator.id);
+                      }
+                    }}
+                    class="!p-2"
+                    color="light"
+                  >
+                    <i class="bx bx-pencil"></i>
+                  </Button>
+                {/if}
+              </div>
+              {#if aggregator.active !== undefined}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!--
                 Stopping the event propagation in the click event of the Toggle doesn't work when using
                 the mouse because it also consists of a span and a label element. These elements also fire
                 click events which aren't stopped.
                 Still, the Toggle needs the event listener so it can be toggled via keyboard.
               -->
-              <div
-                on:click={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  toggleActive(aggregator);
-                }}
-                class="mx-2 cursor-pointer p-2"
-              >
-                <Toggle
+                <div
                   on:click={(event) => {
-                    event.stopPropagation();
                     event.preventDefault();
+                    event.stopPropagation();
                     toggleActive(aggregator);
                   }}
-                  bind:checked={aggregator.active}
+                  class="mx-2 cursor-pointer p-2"
                 >
-                  {#if aggregator.active === true}
-                    <span>Active</span>
-                  {:else}
-                    <span>Not active</span>
-                  {/if}
-                </Toggle>
+                  <Toggle
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      toggleActive(aggregator);
+                    }}
+                    bind:checked={aggregator.active}
+                  >
+                    {#if aggregator.active === true}
+                      <span>Active</span>
+                    {:else}
+                      <span>Not active</span>
+                    {/if}
+                  </Toggle>
+                </div>
+              {/if}
+            </div>
+            {#if aggregator.id !== undefined && aggregator.id === aggregatorToEdit}
+              <div class="flex flex-wrap gap-4">
+                <div class="flex flex-col items-center gap-1 md:flex-row">
+                  <Label>Name</Label>
+                  <Input
+                    class="h-fit w-fit"
+                    bind:value={editedName}
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                    }}
+                    on:input={() => {
+                      if (aggregatorToEdit) {
+                        checkName(aggregatorToEdit, true);
+                      }
+                    }}
+                    color={editedNameColor}
+                  ></Input>
+                </div>
+                <div class="flex flex-col items-center gap-1 md:flex-row">
+                  <Label>URL</Label>
+                  <Input
+                    class="h-fit w-fit"
+                    bind:value={editedUrl}
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                    }}
+                    on:input={() => {
+                      checkUrl(true);
+                    }}
+                    color={editedUrlColor}
+                  ></Input>
+                </div>
+                <div class="mb-2 mt-2 flex flex-wrap gap-2">
+                  <Button
+                    class="w-fit"
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      if (aggregator.id !== undefined) {
+                        toggleEditForm(aggregator.id);
+                      }
+                    }}
+                    color="light"><i class="bx bx-x"></i></Button
+                  >
+                  <Button
+                    on:click={() => {
+                      editAggregator({
+                        id: aggregatorToEdit,
+                        name: editedName,
+                        url: editedUrl,
+                        attention: aggregator.attention
+                      });
+                    }}
+                    class="w-fit"
+                    color="green"
+                    disabled={validEditedUrl === false ||
+                      validEditedName === false ||
+                      editedName === "" ||
+                      editedUrl === ""}
+                  >
+                    <i class="bx bx-check me-2"></i>
+                    <span>Save</span>
+                  </Button>
+                </div>
+                <ErrorMessage error={aggregatorEditError}></ErrorMessage>
               </div>
             {/if}
           </div>
-          {#if aggregator.id !== undefined && aggregator.id === aggregatorToEdit}
-            <div class="flex flex-wrap gap-4">
-              <div class="flex flex-col items-center gap-1 md:flex-row">
+          {#if list.length !== 0}
+            <div
+              class="mb-2 flex flex-col justify-between break-all rounded-md border border-solid border-gray-300 px-4 py-2 dark:border-gray-500"
+            >
+              <List tag="dl" class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600">
+                <div>
+                  <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
+                  <DescriptionList tag="dd" {ddClass}>{aggregator.url}</DescriptionList>
+                </div>
+                {#if metadata?.aggregator}
+                  {@const data = metadata.aggregator.aggregator}
+                  <div>
+                    <DescriptionList tag="dt" {dtClass}>Category</DescriptionList>
+                    <DescriptionList tag="dd" {ddClass}>{data.category}</DescriptionList>
+                  </div>
+                  <div>
+                    <DescriptionList tag="dt" {dtClass}>Last updated</DescriptionList>
+                    <DescriptionList tag="dd" {ddClass}
+                      >{metadata.aggregator.last_updated}</DescriptionList
+                    >
+                  </div>
+                  <div>
+                    <DescriptionList tag="dt" {dtClass}>Namespace</DescriptionList>
+                    <DescriptionList tag="dd" {ddClass}>{data.namespace}</DescriptionList>
+                  </div>
+                  <div>
+                    <DescriptionList tag="dt" {dtClass}>Contact details</DescriptionList>
+                    <DescriptionList tag="dd" {ddClass}>{data.contact_details}</DescriptionList>
+                  </div>
+                  <div>
+                    <DescriptionList tag="dt" {dtClass}>Issuing authority</DescriptionList>
+                    <DescriptionList tag="dd" {ddClass}>{data.issuing_authority}</DescriptionList>
+                  </div>
+                {/if}
+              </List>
+            </div>
+            {#if aggregator.attention}
+              <Badge class="mb-2 h-fit p-1" dismissable>
+                <p>
+                  These are the currently available providers. Please review their feeds and adjust
+                  the sources if needed.
+                </p>
+                <Button
+                  slot="close-button"
+                  let:close
+                  color="light"
+                  class="ms-1 min-h-[26px] min-w-[26px] rounded border border-primary-700/55 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                  on:click={async (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    resetAttention(aggregator);
+                    close();
+                  }}
+                >
+                  <i class="bx bx-check"></i>
+                </Button>
+              </Badge>
+            {/if}
+            <div class="ps-4">
+              {#each list as entry}
+                <Collapsible header="" showBorder={false}>
+                  <div slot="header" class="mb-2 flex items-center gap-2">
+                    <div
+                      class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-black dark:text-white"
+                    >
+                      <span>{entry.name}</span>
+                      <span class="flex w-fit gap-1">
+                        {#each new Array(entry.feedsSubscribed) as _a}
+                          <FeedBulletPoint filled></FeedBulletPoint>
+                        {/each}
+                        {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
+                          <FeedBulletPoint></FeedBulletPoint>
+                        {/each}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="mb-3 flex flex-col gap-3">
+                    <List
+                      tag="dl"
+                      class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600"
+                    >
+                      <div>
+                        <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
+                        <DescriptionList tag="dd" {ddClass}>{entry.url}</DescriptionList>
+                      </div>
+                      <div>
+                        <DescriptionList tag="dt" {dtClass}>Role</DescriptionList>
+                        <DescriptionList tag="dd" {ddClass}>{entry.role.label}</DescriptionList>
+                      </div>
+                    </List>
+                    {#each entry.availableSources as source}
+                      {#if source.id === undefined}
+                        <div class="p-2">
+                          <SourceContent {entry} {source}></SourceContent>
+                        </div>
+                      {:else}
+                        <button
+                          on:click={async () => {
+                            await push(`/sources/${source.id}`);
+                          }}
+                          class={entry.feedsSubscribed === 0
+                            ? ""
+                            : "rounded-md border border-solid border-gray-300 p-2 hover:bg-gray-200 dark:hover:bg-gray-700"}
+                        >
+                          <SourceContent {entry} {source}></SourceContent>
+                        </button>
+                      {/if}
+                    {/each}
+                    {#if entry.feedsSubscribed > 0}
+                      <Button
+                        href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
+                        class="mb-2 w-fit"
+                        color="light"
+                        size="xs"
+                      >
+                        <i class="bx bx-plus"></i>
+                        <span>Again as another source</span>
+                      </Button>
+                    {/if}
+                  </div>
+                </Collapsible>
+              {/each}
+            </div>
+          {/if}
+        </CAccordionItem>
+      {/each}
+    </Accordion>
+    <div class:invisible={!loadingAggregators} class={loadingAggregators ? "loadingFadeIn" : ""}>
+      Loading ...
+      <Spinner color="gray" size="4"></Spinner>
+    </div>
+    <ErrorMessage error={aggregatorError}></ErrorMessage>
+    {#if appStore.isSourceManager()}
+      <div class="min-h-64">
+        {#if !showCreateForm}
+          <Button class="mb-2 mt-3 w-fit" on:click={toggleCreateForm}
+            ><i class="bx bx-plus me-2"></i>New aggregator</Button
+          >
+        {/if}
+        {#if showCreateForm}
+          <form transition:scale on:submit={submitAggregator} class={formClass}>
+            <div class="flex w-96 flex-col gap-2">
+              <div>
                 <Label>Name</Label>
                 <Input
-                  class="h-fit w-fit"
-                  bind:value={editedName}
-                  on:click={(event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                  }}
+                  bind:value={aggregator.name}
                   on:input={() => {
-                    if (aggregatorToEdit) {
-                      checkName(aggregatorToEdit, true);
-                    }
+                    checkName();
                   }}
-                  color={editedNameColor}
+                  color={nameColor}
                 ></Input>
               </div>
-              <div class="flex flex-col items-center gap-1 md:flex-row">
+              <div>
                 <Label>URL</Label>
                 <Input
-                  class="h-fit w-fit"
-                  bind:value={editedUrl}
-                  on:click={(event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                  }}
+                  bind:value={aggregator.url}
                   on:input={() => {
-                    checkUrl(true);
+                    checkUrl();
                   }}
-                  color={editedUrlColor}
+                  color={urlColor}
                 ></Input>
               </div>
-              <div class="mb-2 mt-2 flex flex-wrap gap-2">
-                <Button
-                  class="w-fit"
-                  on:click={(event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    if (aggregator.id !== undefined) {
-                      toggleEditForm(aggregator.id);
-                    }
-                  }}
-                  color="light"><i class="bx bx-x"></i></Button
+              <div class="mb-2 mt-2 flex gap-2">
+                <Button class="w-fit" on:click={toggleCreateForm} color="light"
+                  ><i class="bx bx-x"></i></Button
                 >
                 <Button
-                  on:click={() => {
-                    editAggregator({
-                      id: aggregatorToEdit,
-                      name: editedName,
-                      url: editedUrl,
-                      attention: aggregator.attention
-                    });
-                  }}
+                  type="submit"
                   class="w-fit"
                   color="green"
-                  disabled={validEditedUrl === false ||
-                    validEditedName === false ||
-                    editedName === "" ||
-                    editedUrl === ""}
+                  disabled={validUrl === false ||
+                    validName === false ||
+                    aggregator.name === "" ||
+                    aggregator.url === ""}
                 >
                   <i class="bx bx-check me-2"></i>
-                  <span>Save</span>
+                  <span>Save aggregator</span>
                 </Button>
               </div>
-              <ErrorMessage error={aggregatorEditError}></ErrorMessage>
+              <ErrorMessage error={aggregatorSaveError}></ErrorMessage>
             </div>
-          {/if}
-        </div>
-        {#if list.length !== 0}
-          <div
-            class="mb-2 flex flex-col justify-between break-all rounded-md border border-solid border-gray-300 px-4 py-2 dark:border-gray-500"
-          >
-            <List tag="dl" class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600">
-              <div>
-                <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
-                <DescriptionList tag="dd" {ddClass}>{aggregator.url}</DescriptionList>
-              </div>
-              {#if metadata?.aggregator}
-                {@const data = metadata.aggregator.aggregator}
-                <div>
-                  <DescriptionList tag="dt" {dtClass}>Category</DescriptionList>
-                  <DescriptionList tag="dd" {ddClass}>{data.category}</DescriptionList>
-                </div>
-                <div>
-                  <DescriptionList tag="dt" {dtClass}>Last updated</DescriptionList>
-                  <DescriptionList tag="dd" {ddClass}
-                    >{metadata.aggregator.last_updated}</DescriptionList
-                  >
-                </div>
-                <div>
-                  <DescriptionList tag="dt" {dtClass}>Namespace</DescriptionList>
-                  <DescriptionList tag="dd" {ddClass}>{data.namespace}</DescriptionList>
-                </div>
-                <div>
-                  <DescriptionList tag="dt" {dtClass}>Contact details</DescriptionList>
-                  <DescriptionList tag="dd" {ddClass}>{data.contact_details}</DescriptionList>
-                </div>
-                <div>
-                  <DescriptionList tag="dt" {dtClass}>Issuing authority</DescriptionList>
-                  <DescriptionList tag="dd" {ddClass}>{data.issuing_authority}</DescriptionList>
-                </div>
-              {/if}
-            </List>
-          </div>
-          {#if aggregator.attention}
-            <Badge class="mb-2 h-fit p-1" dismissable>
-              <p>
-                These are the currently available providers. Please review their feeds and adjust
-                the sources if needed.
-              </p>
-              <Button
-                slot="close-button"
-                let:close
-                color="light"
-                class="ms-1 min-h-[26px] min-w-[26px] rounded border border-primary-700/55 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
-                on:click={async (event) => {
-                  event.stopPropagation();
-                  event.preventDefault();
-                  resetAttention(aggregator);
-                  close();
-                }}
-              >
-                <i class="bx bx-check"></i>
-              </Button>
-            </Badge>
-          {/if}
-          <div class="ps-4">
-            {#each list as entry}
-              <Collapsible header="" showBorder={false}>
-                <div slot="header" class="mb-2 flex items-center gap-2">
-                  <div
-                    class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-black dark:text-white"
-                  >
-                    <span>{entry.name}</span>
-                    <span class="flex w-fit gap-1">
-                      {#each new Array(entry.feedsSubscribed) as _a}
-                        <FeedBulletPoint filled></FeedBulletPoint>
-                      {/each}
-                      {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
-                        <FeedBulletPoint></FeedBulletPoint>
-                      {/each}
-                    </span>
-                  </div>
-                </div>
-                <div class="mb-3 flex flex-col gap-3">
-                  <List
-                    tag="dl"
-                    class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600"
-                  >
-                    <div>
-                      <DescriptionList tag="dt" {dtClass}>URL</DescriptionList>
-                      <DescriptionList tag="dd" {ddClass}>{entry.url}</DescriptionList>
-                    </div>
-                    <div>
-                      <DescriptionList tag="dt" {dtClass}>Role</DescriptionList>
-                      <DescriptionList tag="dd" {ddClass}>{entry.role.label}</DescriptionList>
-                    </div>
-                  </List>
-                  {#each entry.availableSources as source}
-                    {#if source.id === undefined}
-                      <div class="p-2">
-                        <SourceContent {entry} {source}></SourceContent>
-                      </div>
-                    {:else}
-                      <button
-                        on:click={async () => {
-                          await push(`/sources/${source.id}`);
-                        }}
-                        class={entry.feedsSubscribed === 0
-                          ? ""
-                          : "rounded-md border border-solid border-gray-300 p-2 hover:bg-gray-200 dark:hover:bg-gray-700"}
-                      >
-                        <SourceContent {entry} {source}></SourceContent>
-                      </button>
-                    {/if}
-                  {/each}
-                  {#if entry.feedsSubscribed > 0}
-                    <Button
-                      href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
-                      class="mb-2 w-fit"
-                      color="light"
-                      size="xs"
-                    >
-                      <i class="bx bx-plus"></i>
-                      <span>Again as another source</span>
-                    </Button>
-                  {/if}
-                </div>
-              </Collapsible>
-            {/each}
-          </div>
+          </form>
         {/if}
-      </CAccordionItem>
-    {/each}
-  </Accordion>
-  <div class:invisible={!loadingAggregators} class={loadingAggregators ? "loadingFadeIn" : ""}>
-    Loading ...
-    <Spinner color="gray" size="4"></Spinner>
-  </div>
-  <ErrorMessage error={aggregatorError}></ErrorMessage>
-  {#if appStore.isSourceManager()}
-    <div class="min-h-64">
-      {#if !showCreateForm}
-        <Button class="mb-2 mt-3 w-fit" on:click={toggleCreateForm}
-          ><i class="bx bx-plus me-2"></i>New aggregator</Button
-        >
-      {/if}
-      {#if showCreateForm}
-        <form transition:scale on:submit={submitAggregator} class={formClass}>
-          <div class="flex w-96 flex-col gap-2">
-            <div>
-              <Label>Name</Label>
-              <Input
-                bind:value={aggregator.name}
-                on:input={() => {
-                  checkName();
-                }}
-                color={nameColor}
-              ></Input>
-            </div>
-            <div>
-              <Label>URL</Label>
-              <Input
-                bind:value={aggregator.url}
-                on:input={() => {
-                  checkUrl();
-                }}
-                color={urlColor}
-              ></Input>
-            </div>
-            <div class="mb-2 mt-2 flex gap-2">
-              <Button class="w-fit" on:click={toggleCreateForm} color="light"
-                ><i class="bx bx-x"></i></Button
-              >
-              <Button
-                type="submit"
-                class="w-fit"
-                color="green"
-                disabled={validUrl === false ||
-                  validName === false ||
-                  aggregator.name === "" ||
-                  aggregator.url === ""}
-              >
-                <i class="bx bx-check me-2"></i>
-                <span>Save aggregator</span>
-              </Button>
-            </div>
-            <ErrorMessage error={aggregatorSaveError}></ErrorMessage>
-          </div>
-        </form>
-      {/if}
-    </div>
+      </div>
+    {/if}
   {/if}
 </div>

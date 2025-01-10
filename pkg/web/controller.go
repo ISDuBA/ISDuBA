@@ -93,16 +93,19 @@ func (c *Controller) Bind() http.Handler {
 	}
 
 	var (
-		authAdm      = authRoles(models.Admin)
-		authIm       = authRoles(models.Importer)
-		authEdRe     = authRoles(models.Editor, models.Reviewer)
-		authEdReAdAu = authRoles(models.Editor, models.Reviewer, models.Admin, models.Auditor)
-		authEdReAu   = authRoles(models.Editor, models.Reviewer, models.Auditor)
-		authEdReAd   = authRoles(models.Editor, models.Reviewer, models.Admin)
-		authSM       = authRoles(models.SourceManager)
-		authEdSM     = authRoles(models.Editor, models.SourceManager)
-		authAll      = authRoles(models.Admin, models.Importer, models.Editor,
-			models.Reviewer, models.Auditor, models.SourceManager)
+		authAd         = authRoles(models.Admin)
+		authAdAuEdRe   = authRoles(models.Admin, models.Auditor, models.Editor, models.Reviewer)
+		authAdEdImReSM = authRoles(models.Admin, models.Editor, models.Importer, models.Reviewer,
+			models.SourceManager)
+		authAdEdRe = authRoles(models.Admin, models.Editor, models.Reviewer)
+		authAuEdRe = authRoles(models.Auditor, models.Editor, models.Reviewer)
+		authAuEdSM = authRoles(models.Auditor, models.Editor, models.SourceManager)
+		authEd     = authRoles(models.Editor)
+		authEdRe   = authRoles(models.Editor, models.Reviewer)
+		authIm     = authRoles(models.Importer)
+		authSM     = authRoles(models.SourceManager)
+		authAll    = authRoles(models.Admin, models.Auditor, models.Editor, models.Importer,
+			models.Reviewer, models.SourceManager)
 	)
 
 	api := r.Group("/api")
@@ -111,21 +114,21 @@ func (c *Controller) Bind() http.Handler {
 	// Importer can import (POST) documents
 	api.POST("/documents", authIm, c.importDocument)
 	// Everyone can view (GET) overviewDocuments and viewDocuments?
-	api.GET("/documents", authAll /* authEdReAu */, c.overviewDocuments)
-	api.GET("/documents/:id", authAll /* authEdReAu */, c.viewDocument)
-	api.GET("/documents/forward", authAll /* authEdReAu */, c.viewForwardTargets)
-	api.POST("/documents/forward/:id/:target", authAll /* authEdReAu */, c.forwardDocument)
+	api.GET("/documents", authAll, c.overviewDocuments)
+	api.GET("/documents/:id", authAll, c.viewDocument)
+	api.GET("/documents/forward", authAdEdImReSM, c.viewForwardTargets)
+	api.POST("/documents/forward/:id/:target", authAdEdImReSM, c.forwardDocument)
 	// Admin can delete documents
-	api.DELETE("/documents/:id", authAdm, c.deleteDocument)
+	api.DELETE("/documents/:id", authAd, c.deleteDocument)
 
 	// Advisories
-	api.DELETE("/advisory/:publisher/:trackingid", authAdm, c.deleteAdvisory)
+	api.DELETE("/advisory/:publisher/:trackingid", authAd, c.deleteAdvisory)
 
 	// Comments
-	api.POST("/comments/:document", authEdReAd, c.createComment)
-	api.GET("/comments/:publisher/:trackingid", authEdReAdAu, c.viewComments)
-	api.PUT("/comments/post/:id", authEdReAd, c.updateComment)
-	api.GET("/comments/post/:id", authEdReAdAu, c.viewComment)
+	api.POST("/comments/:document", authAdEdRe, c.createComment)
+	api.GET("/comments/:publisher/:trackingid", authAdAuEdRe, c.viewComments)
+	api.PUT("/comments/post/:id", authAdEdRe, c.updateComment)
+	api.GET("/comments/post/:id", authAdAuEdRe, c.viewComment)
 
 	// Stored queries
 	api.POST("/queries", authAll, c.createStoredQuery)
@@ -139,24 +142,24 @@ func (c *Controller) Bind() http.Handler {
 	api.DELETE("/queries/ignore/:query", authAll, c.deleteDefaultQueryExclusion)
 
 	// Events
-	api.GET("/events", authEdReAdAu, c.overviewEvents)
-	api.GET("/events/:publisher/:trackingid", authEdReAdAu, c.viewEvents)
+	api.GET("/events", authAdAuEdRe, c.overviewEvents)
+	api.GET("/events/:publisher/:trackingid", authAdAuEdRe, c.viewEvents)
 
 	// State change
-	api.PUT("/status/:publisher/:trackingid/:state", authEdReAd, c.changeStatus)
-	api.PUT("/status", authEdReAd, c.changeStatusBulk)
+	api.PUT("/status/:publisher/:trackingid/:state", authAdEdRe, c.changeStatus)
+	api.PUT("/status", authAdEdRe, c.changeStatusBulk)
 
 	// SSVC change
-	api.PUT("/ssvc/:document", authEdRe, c.changeSSVC)
+	api.PUT("/ssvc/:document", authEd, c.changeSSVC)
 
 	// Calculate diff
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)
 
 	// Manage temporary documents
-	api.POST("/tempdocuments", authEdReAu, c.importTempDocument)
-	api.GET("/tempdocuments", authEdReAu, c.overviewTempDocuments)
-	api.GET("/tempdocuments/:id", authEdReAu, c.viewTempDocument)
-	api.DELETE("/tempdocuments/:id", authEdReAu, c.deleteTempDocument)
+	api.POST("/tempdocuments", authAuEdRe, c.importTempDocument)
+	api.GET("/tempdocuments", authAuEdRe, c.overviewTempDocuments)
+	api.GET("/tempdocuments/:id", authAuEdRe, c.viewTempDocument)
+	api.DELETE("/tempdocuments/:id", authAuEdRe, c.deleteTempDocument)
 
 	// Backend information
 	api.GET("/about", authAll, c.about)
@@ -171,7 +174,7 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/pmd", authSM, c.pmd)
 
 	// Source manager
-	api.GET("/sources", authEdSM, c.viewSources)
+	api.GET("/sources", authAuEdSM, c.viewSources)
 	api.POST("/sources", authSM, c.createSource)
 	api.GET("/sources/message", authAll, c.defaultMessage)
 	api.GET("/sources/attention", authSM, c.attentionSources)
@@ -181,9 +184,9 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/sources/:id", authSM, c.updateSource)
 
 	// Source feeds
-	api.GET("/sources/:id/feeds", authEdSM, c.viewFeeds)
+	api.GET("/sources/:id/feeds", authAuEdSM, c.viewFeeds)
 	api.POST("/sources/:id/feeds", authSM, c.createFeed)
-	api.GET("/sources/feeds/:id", authEdSM, c.viewFeed)
+	api.GET("/sources/feeds/:id", authAuEdSM, c.viewFeed)
 	api.PUT("/sources/feeds/:id", authSM, c.updateFeed)
 	api.DELETE("/sources/feeds/:id", authSM, c.deleteFeed)
 	api.GET("/sources/feeds/log", authSM, c.allFeedsLog)
@@ -203,9 +206,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/stats/totals", authAll, c.statsTotal)
 
 	// Aggregators
-	api.GET("/aggregator", authEdSM, c.aggregatorProxy)
-	api.GET("/aggregators", authEdSM, c.viewAggregators)
-	api.GET("/aggregators/:id", authEdSM, c.viewAggregator)
+	api.GET("/aggregator", authSM, c.aggregatorProxy)
+	api.GET("/aggregators", authSM, c.viewAggregators)
+	api.GET("/aggregators/:id", authSM, c.viewAggregator)
 	api.PUT("/aggregators/:id", authSM, c.updateAggregator)
 	api.GET("/aggregators/attention", authSM, c.attentionAggregators)
 	api.POST("/aggregators", authSM, c.createAggregator)

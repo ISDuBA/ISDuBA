@@ -64,7 +64,7 @@
 
   let isCalculatingAllowed: boolean;
   $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
-    isCalculatingAllowed = appStore.isEditor() || appStore.isReviewer();
+    isCalculatingAllowed = appStore.isEditor();
   } else {
     isCalculatingAllowed = false;
   }
@@ -343,7 +343,15 @@
   });
 
   onMount(async () => {
-    await fetchForwardTargets();
+    if (
+      appStore.isAdmin() ||
+      appStore.isEditor() ||
+      appStore.isImporter() ||
+      appStore.isReviewer() ||
+      appStore.isSourceManager()
+    ) {
+      await fetchForwardTargets();
+    }
   });
 
   $: if (params) {
@@ -391,7 +399,7 @@
       </Label>
     </div>
     <div
-      class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_400px]"
+      class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
     >
       <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
         >{params.publisherNamespace}</Label
