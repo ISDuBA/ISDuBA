@@ -147,7 +147,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 
 // viewEvents is an endpoint that returns the events of the specified advisory.
 //
-//	@Summary		Return all events.
+//	@Summary		Returns all events.
 //	@Description	Returns all events from the specified advisory.
 //	@Param			publisher	path	string	true	"Publisher"
 //	@Param			trackingid	path	string	true	"Tracking ID"

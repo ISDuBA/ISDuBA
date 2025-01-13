@@ -516,7 +516,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Return all events.",
+                "summary": "Returns all events.",
                 "parameters": [
                     {
                         "type": "string",
@@ -570,7 +570,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Return the pmd.",
+                "summary": "Returns the pmd.",
                 "parameters": [
                     {
                         "type": "string",
@@ -606,7 +606,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Return all sources.",
+                "summary": "Returns all sources.",
                 "parameters": [
                     {
                         "type": "boolean",
@@ -773,7 +773,7 @@ const docTemplate = `{
                 "summary": "Returns a list of sources that need attention.",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "boolean",
                         "description": "Return all sources",
                         "name": "all",
                         "in": "query"
@@ -857,11 +857,11 @@ const docTemplate = `{
         },
         "/sources/feeds/{id}": {
             "get": {
-                "description": "Returns all feed configurations and metadata.",
+                "description": "Returns all configurations and metadata of the specified feed ID.",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Returns feeds.",
+                "summary": "Returns feed.",
                 "parameters": [
                     {
                         "type": "integer",
@@ -924,19 +924,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            1,
                             0,
                             1,
                             2,
-                            3,
-                            1
+                            3
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
+                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel",
-                            "defaultSourcesFeedLogLevel"
+                            "ErrorFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -980,7 +980,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Deletes the feed configuration with the specified id.",
+                "description": "Deletes the feed configuration with the specified ID.",
                 "produces": [
                     "application/json"
                 ],
@@ -1140,7 +1140,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get source information.",
+                "summary": "Returns source information.",
                 "parameters": [
                     {
                         "type": "integer",
@@ -2022,7 +2022,7 @@ const docTemplate = `{
         },
         "/tempdocuments/{id}": {
             "get": {
-                "description": "Returns a temporary document with the specified id.",
+                "description": "Returns a temporary document with the specified ID.",
                 "produces": [
                     "application/json"
                 ],
@@ -2140,18 +2140,18 @@ const docTemplate = `{
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
+                1,
                 0,
                 1,
                 2,
-                3,
-                1
+                3
             ],
             "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel",
-                "defaultSourcesFeedLogLevel"
+                "ErrorFeedLogLevel"
             ]
         },
         "models.AdvisoryState": {

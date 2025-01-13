@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
+    - 1
     - 0
     - 1
     - 2
     - 3
-    - 1
     type: integer
     x-enum-varnames:
+    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
-    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -809,7 +809,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Return all events.
+      summary: Returns all events.
   /pmd:
     get:
       description: Fetches and returns the provider metadata for the specified URL.
@@ -833,7 +833,7 @@ paths:
           description: could not fetch pmd
           schema:
             $ref: '#/definitions/web.pmd.messages'
-      summary: Return the pmd.
+      summary: Returns the pmd.
   /sources:
     get:
       description: Returns the source configuration and metadata of all sources.
@@ -853,7 +853,7 @@ paths:
           description: could not parse stats
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Return all sources.
+      summary: Returns all sources.
     post:
       consumes:
       - multipart/form-data
@@ -1034,7 +1034,7 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Get source information.
+      summary: Returns source information.
     put:
       description: Updates the source configuration.
       parameters:
@@ -1151,7 +1151,7 @@ paths:
       - description: Return all sources
         in: query
         name: all
-        type: integer
+        type: boolean
       produces:
       - application/json
       responses:
@@ -1179,7 +1179,7 @@ paths:
       summary: Returns the default configuration.
   /sources/feeds/{id}:
     delete:
-      description: Deletes the feed configuration with the specified id.
+      description: Deletes the feed configuration with the specified ID.
       parameters:
       - description: Feed ID
         in: path
@@ -1207,7 +1207,7 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Deletes a feed.
     get:
-      description: Returns all feed configurations and metadata.
+      description: Returns all configurations and metadata of the specified feed ID.
       parameters:
       - description: Feed ID
         in: path
@@ -1233,7 +1233,7 @@ paths:
           description: feed not found
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Returns feeds.
+      summary: Returns feed.
     put:
       description: Updates a feed with the specified configuration.
       parameters:
@@ -1249,20 +1249,20 @@ paths:
         name: label
         type: string
       - enum:
+        - 1
         - 0
         - 1
         - 2
         - 3
-        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
+        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
-        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
@@ -1801,7 +1801,7 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Deletes a temporary document.
     get:
-      description: Returns a temporary document with the specified id.
+      description: Returns a temporary document with the specified ID.
       parameters:
       - description: Document ID
         in: path

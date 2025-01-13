@@ -132,7 +132,7 @@ func showStats(ctx *gin.Context) (bool, bool) {
 
 // viewSources is an endpoint that returns information about the source.
 //
-//	@Summary		Return all sources.
+//	@Summary		Returns all sources.
 //	@Description	Returns the source configuration and metadata of all sources.
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Produce		json
@@ -286,7 +286,7 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 
 // viewSource is an endpoint that returns information about the source.
 //
-//	@Summary		Get source information.
+//	@Summary		Returns source information.
 //	@Description	Returns the source configuration and metadata.
 //	@Param			id		path	int		true	"Source ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
@@ -673,10 +673,10 @@ func (c *Controller) updateFeed(ctx *gin.Context) {
 	}
 }
 
-// viewFeed is an endpoint that returns all feeds.
+// viewFeed is an endpoint that returns the specified feed.
 //
-//	@Summary		Returns feeds.
-//	@Description	Returns all feed configurations and metadata.
+//	@Summary		Returns feed.
+//	@Description	Returns all configurations and metadata of the specified feed ID.
 //	@Param			id		path	int		true	"Feed ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Produce		json
@@ -704,10 +704,10 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, newFeed(fi))
 }
 
-// deleteFeed is an endpoint that deletes the feed with specified id.
+// deleteFeed is an endpoint that deletes the feed with specified ID.
 //
 //	@Summary		Deletes a feed.
-//	@Description	Deletes the feed configuration with the specified id.
+//	@Description	Deletes the feed configuration with the specified ID.
 //	@Param			id	path	int	true	"Feed ID"
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"deleted"
@@ -888,7 +888,7 @@ func (c *Controller) keepFeedTime(ctx *gin.Context) {
 //
 //	@Summary		Returns a list of sources that need attention.
 //	@Description	All sources that had a change and should be reviewed are returned.
-//	@Param			all	query	int	false	"Return all sources"
+//	@Param			all	query	bool	false	"Return all sources"
 //	@Produce		json
 //	@Success		200	{array}		web.attentionSources.attention
 //	@Failure		400	{object}	models.Error	"could not parse all"
@@ -940,7 +940,7 @@ func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 
 // pmd is an endpoint the provider metadata for a URL.
 //
-//	@Summary		Return the pmd.
+//	@Summary		Returns the pmd.
 //	@Description	Fetches and returns the provider metadata for the specified URL.
 //	@Param			url	query	string	true	"PMD URL"
 //	@Produce		json
