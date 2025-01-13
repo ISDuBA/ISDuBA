@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
+    - 1
     - 0
     - 1
     - 2
     - 3
-    - 1
     type: integer
     x-enum-varnames:
+    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
-    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -1689,6 +1689,69 @@ paths:
         name: id
         required: true
         type: integer
+      - in: formData
+        name: active
+        type: boolean
+      - in: formData
+        name: attention
+        type: boolean
+      - in: formData
+        name: client_cert_passphrase
+        type: string
+      - in: formData
+        name: client_cert_private
+        type: string
+      - in: formData
+        name: client_cert_public
+        type: string
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: headers
+        type: array
+      - in: formData
+        name: id
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: ignore_patterns
+        type: array
+      - in: formData
+        minLength: 1
+        name: name
+        required: true
+        type: string
+      - in: formData
+        minimum: 0
+        name: rate
+        type: number
+      - in: formData
+        name: secure
+        type: boolean
+      - in: formData
+        name: signature_check
+        type: boolean
+      - in: formData
+        minimum: 0
+        name: slots
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: status
+        type: array
+      - in: formData
+        name: strict_mode
+        type: boolean
+      - in: formData
+        minLength: 1
+        name: url
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -1893,20 +1956,20 @@ paths:
         name: label
         type: string
       - enum:
+        - 1
         - 0
         - 1
         - 2
         - 3
-        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
+        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
-        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean

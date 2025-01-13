@@ -1711,19 +1711,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            1,
                             0,
                             1,
                             2,
-                            3,
-                            1
+                            3
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
+                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel",
-                            "defaultSourcesFeedLogLevel"
+                            "ErrorFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -1976,6 +1976,104 @@ const docTemplate = `{
                         "description": "Source ID",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "attention",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_passphrase",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_private",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_public",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "headers",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "ignore_patterns",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "number",
+                        "name": "rate",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "secure",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "signature_check",
+                        "in": "formData"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "strict_mode",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData",
                         "required": true
                     }
                 ],
@@ -2924,18 +3022,18 @@ const docTemplate = `{
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
+                1,
                 0,
                 1,
                 2,
-                3,
-                1
+                3
             ],
             "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel",
-                "defaultSourcesFeedLogLevel"
+                "ErrorFeedLogLevel"
             ]
         },
         "models.AdvisoryState": {

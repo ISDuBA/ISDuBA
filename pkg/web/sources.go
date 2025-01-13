@@ -164,7 +164,7 @@ func hasBlock(data []byte) bool {
 //
 //	@Summary		Creates a source.
 //	@Description	Creates a source with the specified configuration.
-//	@Param			url	formData	source	true	"source configuration"
+//	@Param			source	formData	source	true	"Source configuration"
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		201	{array}		models.ID
@@ -320,6 +320,7 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 //	@Summary		Updates source configuration.
 //	@Description	Updates the source configuration.
 //	@Param			id	path	int	true	"Source ID"
+//	@Param			source	formData	source	true	"Source configuration"
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
