@@ -379,6 +379,219 @@ const docTemplate = `{
                 }
             }
         },
+        "/comments/post/{id}": {
+            "get": {
+                "description": "Returns the comment with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a comment.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.comment"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the comment with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a comment.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comment message",
+                        "name": "message",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.comment"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{document}": {
+            "post": {
+                "description": "Creates a comment for the specified document.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a comment.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comment message",
+                        "name": "message",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/web.createComment.commentResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{publisher}/{trackingid}": {
+            "get": {
+                "description": "Returns all comments for the specified advisory.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns all comments.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Publisher",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tracking ID",
+                        "name": "trackingid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.comment"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/documents": {
             "post": {
                 "description": "Upload endpoint for CSAF documents.",
@@ -924,19 +1137,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            1,
                             0,
                             1,
                             2,
-                            3
+                            3,
+                            1
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
-                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel"
+                            "ErrorFeedLogLevel",
+                            "defaultSourcesFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -1356,10 +1569,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.ID"
-                            }
+                            "$ref": "#/definitions/models.ID"
                         }
                     },
                     "400": {
@@ -2140,18 +2350,18 @@ const docTemplate = `{
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "models.AdvisoryState": {
@@ -2352,6 +2562,18 @@ const docTemplate = `{
                 }
             }
         },
+        "sql.NullString": {
+            "type": "object",
+            "properties": {
+                "string": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if String is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
         "tempstore.Entry": {
             "type": "object",
             "properties": {
@@ -2424,6 +2646,45 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.comment": {
+            "type": "object",
+            "properties": {
+                "commentator": {
+                    "type": "string"
+                },
+                "document_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.createComment.commentResult": {
+            "type": "object",
+            "properties": {
+                "commentator": {
+                    "description": "TODO: change to string type",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/sql.NullString"
+                        }
+                    ]
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "time": {
                     "type": "string"
                 }
             }

@@ -573,7 +573,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 //	@Param			inputForm	formData	web.createFeed.inputForm	true	"feed configuration"
 //	@Accept			multipart/form-data
 //	@Produce		json
-//	@Success		201	{array}		models.ID
+//	@Success		201	{object}	models.ID
 //	@Failure		400	{object}	models.Error	"could not parse stats"
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error

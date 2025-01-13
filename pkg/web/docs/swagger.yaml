@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
-    - 1
     - 0
     - 1
     - 2
     - 3
+    - 1
     type: integer
     x-enum-varnames:
-    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -173,6 +173,14 @@ definitions:
       waiting:
         type: integer
     type: object
+  sql.NullString:
+    properties:
+      string:
+        type: string
+      valid:
+        description: Valid is true if String is not NULL
+        type: boolean
+    type: object
   tempstore.Entry:
     properties:
       expired:
@@ -225,6 +233,30 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  web.comment:
+    properties:
+      commentator:
+        type: string
+      document_id:
+        type: integer
+      id:
+        type: integer
+      message:
+        type: string
+      time:
+        type: string
+    type: object
+  web.createComment.commentResult:
+    properties:
+      commentator:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: 'TODO: change to string type'
+      id:
+        type: integer
+      time:
         type: string
     type: object
   web.custom:
@@ -688,6 +720,148 @@ paths:
           schema:
             $ref: '#/definitions/config.Client'
       summary: Returns client configuration.
+  /comments/{document}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a comment for the specified document.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment message
+        in: formData
+        name: message
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/web.createComment.commentResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a comment.
+  /comments/{publisher}/{trackingid}:
+    get:
+      description: Returns all comments for the specified advisory.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.comment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns all comments.
+  /comments/post/{id}:
+    get:
+      description: Returns the comment with the specified ID.
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.comment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a comment.
+    put:
+      description: Updates the comment with the specified ID.
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment message
+        in: formData
+        name: message
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.comment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a comment.
   /documents:
     post:
       consumes:
@@ -1128,9 +1302,7 @@ paths:
         "201":
           description: Created
           schema:
-            items:
-              $ref: '#/definitions/models.ID'
-            type: array
+            $ref: '#/definitions/models.ID'
         "400":
           description: could not parse stats
           schema:
@@ -1249,20 +1421,20 @@ paths:
         name: label
         type: string
       - enum:
-        - 1
         - 0
         - 1
         - 2
         - 3
+        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
-        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
+        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
