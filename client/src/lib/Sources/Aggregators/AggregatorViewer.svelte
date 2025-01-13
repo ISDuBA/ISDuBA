@@ -443,7 +443,7 @@
 
 <div class="pb-10">
   <SectionHeader title="Aggregators"></SectionHeader>
-  {#if appStore.isSourceManager()}
+  {#if appStore.isAuditor || appStore.isEditor() || appStore.isSourceManager()}
     <Accordion flush multiple class="my-4">
       {#each aggregators as aggregator, index (index)}
         {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
@@ -472,6 +472,7 @@
                 <Badge class="h-fit">Sources changed</Badge>
               {/if}
               <div>
+                {#if appStore.isSourceManager()}
                 <Button
                   on:click={async (event) => {
                     event.stopPropagation();
@@ -502,8 +503,9 @@
                     <i class="bx bx-pencil"></i>
                   </Button>
                 {/if}
+              {/if}
               </div>
-              {#if aggregator.active !== undefined}
+              {#if aggregator.active !== undefined && ( appStore.isSourceManager())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <!--
@@ -698,7 +700,7 @@
                       </div>
                     </List>
                     {#each entry.availableSources as source}
-                      {#if source.id === undefined}
+                      {#if source.id === undefined || !appStore.isSourceManager()}
                         <div class="p-2">
                           <SourceContent {entry} {source}></SourceContent>
                         </div>
@@ -715,7 +717,7 @@
                         </button>
                       {/if}
                     {/each}
-                    {#if entry.feedsSubscribed > 0}
+                    {#if entry.feedsSubscribed > 0 && appStore.isSourceManager()}
                       <Button
                         href={`/#/sources/new/${encodeURIComponent(entry.url)}`}
                         class="mb-2 w-fit"

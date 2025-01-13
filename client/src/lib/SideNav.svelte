@@ -93,7 +93,7 @@
                 </svelte:fragment>
               </SidebarItem>
             {/if}
-            {#if appStore.isSourceManager()}
+            {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
               <SidebarItem class="px-6 py-2.5" label="Aggregators" href="/#/sources/aggregators">
                 <svelte:fragment slot="icon">
                   <i class="bx bx-sitemap"></i>
