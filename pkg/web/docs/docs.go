@@ -1711,19 +1711,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            1,
                             0,
                             1,
                             2,
-                            3,
-                            1
+                            3
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
+                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel",
-                            "defaultSourcesFeedLogLevel"
+                            "ErrorFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -3022,18 +3022,18 @@ const docTemplate = `{
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
+                1,
                 0,
                 1,
                 2,
-                3,
-                1
+                3
             ],
             "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel",
-                "defaultSourcesFeedLogLevel"
+                "ErrorFeedLogLevel"
             ]
         },
         "models.AdvisoryState": {

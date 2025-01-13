@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
+    - 1
     - 0
     - 1
     - 2
     - 3
-    - 1
     type: integer
     x-enum-varnames:
+    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
-    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -1956,20 +1956,20 @@ paths:
         name: label
         type: string
       - enum:
+        - 1
         - 0
         - 1
         - 2
         - 3
-        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
+        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
-        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
