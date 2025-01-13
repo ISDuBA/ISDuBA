@@ -46,7 +46,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Deletes a advisory.",
+                "summary": "Deletes an advisory.",
                 "parameters": [
                     {
                         "type": "string",
@@ -106,7 +106,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Return the aggregator metadata.",
+                "summary": "Returns the aggregator metadata.",
                 "parameters": [
                     {
                         "type": "string",
@@ -144,7 +144,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Return all aggregators.",
+                "summary": "Returns all aggregators.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -320,7 +320,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Deletes the aggregator configuration with the specified id.",
+                "description": "Deletes the aggregator configuration with the specified ID.",
                 "produces": [
                     "application/json"
                 ],
@@ -911,6 +911,45 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "label",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            1
+                        ],
+                        "type": "integer",
+                        "x-enum-varnames": [
+                            "DebugFeedLogLevel",
+                            "InfoFeedLogLevel",
+                            "WarnFeedLogLevel",
+                            "ErrorFeedLogLevel",
+                            "defaultSourcesFeedLogLevel"
+                        ],
+                        "name": "log_level",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "rolie",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -1181,7 +1220,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Deletes the source configuration with the specified id.",
+                "description": "Deletes the source configuration with the specified ID.",
                 "produces": [
                     "application/json"
                 ],
@@ -1233,7 +1272,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Feed ID",
+                        "description": "Source ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1873,7 +1912,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Changes the status of the advisory.",
+                "summary": "Changes the status of an advisory.",
                 "parameters": [
                     {
                         "type": "string",
@@ -1987,7 +2026,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Returns a temporary documents.",
+                "summary": "Returns a temporary document.",
                 "parameters": [
                     {
                         "type": "integer",
@@ -2023,11 +2062,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Deletes a temporary document with the specified id.",
+                "description": "Deletes a temporary document with the specified ID.",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Deletes a temporary documents.",
+                "summary": "Deletes a temporary document.",
                 "parameters": [
                     {
                         "type": "integer",

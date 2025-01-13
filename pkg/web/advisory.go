@@ -129,9 +129,9 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 	}
 }
 
-// changeStatus changes the status the specified advisories.
+// changeStatus changes the status of an advisory.
 //
-//	@Summary		Changes the status of the advisory.
+//	@Summary		Changes the status of an advisory.
 //	@Description	Changes the status of the specified advisory, if allowed.
 //	@Param			publisher	path	string	true	"Publisher"
 //	@Param			trackingid	path	string	true	"Tracking ID"

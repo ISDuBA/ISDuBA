@@ -97,7 +97,7 @@ func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 
 // viewTempDocument is an endpoint that returns a temporary document with the specified id.
 //
-//	@Summary		Returns a temporary documents.
+//	@Summary		Returns a temporary document.
 //	@Description	Returns a temporary document with the specified id.
 //	@Param			id	path	int	true	"Document ID"
 //	@Produce		json
@@ -135,8 +135,8 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 
 // deleteTempDocument is an endpoint that deletes a temporary document with the specified id.
 //
-//	@Summary		Deletes a temporary documents.
-//	@Description	Deletes a temporary document with the specified id.
+//	@Summary		Deletes a temporary document.
+//	@Description	Deletes a temporary document with the specified ID.
 //	@Param			id	path	int	true	"Document ID"
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"deleted"

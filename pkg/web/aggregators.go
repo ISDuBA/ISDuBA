@@ -40,7 +40,7 @@ type argumentedAggregator struct {
 
 // aggregatorProxy is an endpoint the aggregator metadata for a URL.
 //
-//	@Summary		Return the aggregator metadata.
+//	@Summary		Returns the aggregator metadata.
 //	@Description	Fetches and returns the aggregator metadata for the specified URL.
 //	@Param			url	query	string	true	"Aggregator URL"
 //	@Produce		json
@@ -91,7 +91,7 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 
 // viewAggregators is an endpoint that returns all configured aggregators.
 //
-//	@Summary		Return all aggregators.
+//	@Summary		Returns all aggregators.
 //	@Description	Returns all aggregators that are configured.
 //	@Produce		json
 //	@Success		200	{array}		web.viewAggregators.aggregator
@@ -243,10 +243,10 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, models.ID{ID: id})
 }
 
-// deleteAggregator is an endpoint that deletes the aggregator with specified id.
+// deleteAggregator is an endpoint that deletes the aggregator with specified ID.
 //
 //	@Summary		Deletes an aggregator.
-//	@Description	Deletes the aggregator configuration with the specified id.
+//	@Description	Deletes the aggregator configuration with the specified ID.
 //	@Param			id	path	int	true	"Aggregator ID"
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"deleted"

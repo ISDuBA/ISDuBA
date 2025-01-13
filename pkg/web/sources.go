@@ -254,10 +254,10 @@ func (c *Controller) createSource(ctx *gin.Context) {
 	}
 }
 
-// deleteSource is an endpoint that deletes the source with specified id.
+// deleteSource is an endpoint that deletes the source with specified ID.
 //
 //	@Summary		Deletes a source.
-//	@Description	Deletes the source configuration with the specified id.
+//	@Description	Deletes the source configuration with the specified ID.
 //	@Param			id	path	int	true	"Source ID"
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"source deleted"
@@ -532,7 +532,7 @@ type feedResult struct {
 //
 //	@Summary		Returns feeds.
 //	@Description	Returns all feed configurations and metadata.
-//	@Param			id		path	int		true	"Feed ID"
+//	@Param			id		path	int		true	"Source ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Produce		json
 //	@Success		200	{object}	feedResult
@@ -620,6 +620,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 //	@Summary		Updates a feed.
 //	@Description	Updates a feed with the specified configuration.
 //	@Param			id	path	int	true	"Feed ID"
+//	@Param			feed	formData	feed	true	"Feed configuration"
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
