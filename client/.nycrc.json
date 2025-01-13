@@ -7,9 +7,11 @@
     "**/*.d.ts",
     ".eslintrc.js",
     "node_modules",
-    "coverage/**"
+    ".svelte-kit",
+    "coverage/**",
+    "babel.config.js"
   ],
-  "reporter": ["html"],
+  "reporter": ["html", "text", "lcov"],
   "compact": false,
   "all": true
 }

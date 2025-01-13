@@ -6,16 +6,16 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { test as setup } from "./baseFixtures";
 import { fileURLToPath } from "url";
 import path from "path";
+import { test } from "playwright-test-coverage";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
 
-setup("authenticate and upload document", async ({ page }) => {
+test("authenticate and upload document", async ({ page }) => {
   // Perform authentication steps. Replace these actions with your own.
   await page.goto("/");
   await page.getByRole("button", { name: "Login" }).click();
