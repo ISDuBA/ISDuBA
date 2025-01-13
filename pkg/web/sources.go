@@ -619,7 +619,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 //
 //	@Summary		Updates a feed.
 //	@Description	Updates a feed with the specified configuration.
-//	@Param			id	path	int	true	"Feed ID"
+//	@Param			id		path		int		true	"Feed ID"
 //	@Param			feed	formData	feed	true	"Feed configuration"
 //	@Produce		json
 //	@Success		200	{object}	models.Success
