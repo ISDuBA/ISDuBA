@@ -62,7 +62,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@types/chroma-js": "^2.4.5",
+    "@types/chroma-js": "^3.1.0",
     "boxicons": "^2.1.4",
     "chart.js": "^4.4.7",
     "chartjs-adapter-moment": "^1.0.1",
