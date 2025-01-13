@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
+    - 1
     - 0
     - 1
     - 2
     - 3
-    - 1
     type: integer
     x-enum-varnames:
+    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
-    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -862,6 +862,39 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Updates a comment.
+  /diff/{document1}/{document2}:
+    get:
+      description: Returns a diff between two documents.
+      parameters:
+      - description: Document 1 ID
+        in: path
+        name: document1
+        required: true
+        type: string
+      - description: Document 2 ID
+        in: path
+        name: document2
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a diff.
   /documents:
     post:
       consumes:
@@ -1421,20 +1454,20 @@ paths:
         name: label
         type: string
       - enum:
+        - 1
         - 0
         - 1
         - 2
         - 3
-        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
+        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
-        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
