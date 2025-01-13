@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
-    - 1
     - 0
     - 1
     - 2
     - 3
+    - 1
     type: integer
     x-enum-varnames:
-    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -1956,20 +1956,20 @@ paths:
         name: label
         type: string
       - enum:
-        - 1
         - 0
         - 1
         - 2
         - 3
+        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
-        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
+        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
@@ -1998,7 +1998,7 @@ paths:
       summary: Updates a feed.
   /sources/feeds/{id}/log:
     get:
-      description: Updates a feed with the specified configuration.
+      description: Returns all logs for the specified feed.
       parameters:
       - description: Feed ID
         in: path
@@ -2020,7 +2020,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Updates a feed.
+      summary: Returns all logs.
   /sources/feeds/keep:
     get:
       description: Returns the time it takes until old feed entries are deleted.
@@ -2034,7 +2034,7 @@ paths:
       summary: Returns how long feed logs are kept.
   /sources/feeds/log:
     get:
-      description: Updates a feed with the specified configuration.
+      description: Returns all logs for all feeds.
       produces:
       - application/json
       responses:
@@ -2046,7 +2046,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Updates a feed.
+      summary: Returns all logs.
   /sources/message:
     get:
       description: Returns the message that is displayed on visiting the sources page.

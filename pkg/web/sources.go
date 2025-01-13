@@ -737,8 +737,8 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 
 // feedLog is an endpoint that returns all logs for a feed.
 //
-//	@Summary		Updates a feed.
-//	@Description	Updates a feed with the specified configuration.
+//	@Summary		Returns all logs.
+//	@Description	Returns all logs for the specified feed.
 //	@Param			id	path	int	true	"Feed ID"
 //	@Produce		json
 //	@Success		200	{object}	web.feedLogs.feedLogEntries
@@ -755,8 +755,8 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 
 // allFeedLog is an endpoint that returns all logs for all feeds.
 //
-//	@Summary		Updates a feed.
-//	@Description	Updates a feed with the specified configuration.
+//	@Summary		Returns all logs.
+//	@Description	Returns all logs for all feeds.
 //	@Produce		json
 //	@Success		200	{object}	web.feedLogs.feedLogEntries
 //	@Failure		500	{object}	models.Error

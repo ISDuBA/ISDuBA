@@ -1621,11 +1621,11 @@ const docTemplate = `{
         },
         "/sources/feeds/log": {
             "get": {
-                "description": "Updates a feed with the specified configuration.",
+                "description": "Returns all logs for all feeds.",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Updates a feed.",
+                "summary": "Returns all logs.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1711,19 +1711,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            1,
                             0,
                             1,
                             2,
-                            3
+                            3,
+                            1
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
-                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel"
+                            "ErrorFeedLogLevel",
+                            "defaultSourcesFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -1811,11 +1811,11 @@ const docTemplate = `{
         },
         "/sources/feeds/{id}/log": {
             "get": {
-                "description": "Updates a feed with the specified configuration.",
+                "description": "Returns all logs for the specified feed.",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Updates a feed.",
+                "summary": "Returns all logs.",
                 "parameters": [
                     {
                         "type": "integer",
@@ -3022,18 +3022,18 @@ const docTemplate = `{
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "models.AdvisoryState": {
