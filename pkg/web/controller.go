@@ -201,9 +201,9 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/stats/totals", authAll, c.statsTotal)
 
 	// Aggregators
-	api.GET("/aggregator", authSM, c.aggregatorProxy)
-	api.GET("/aggregators", authSM, c.viewAggregators)
-	api.GET("/aggregators/:id", authSM, c.viewAggregator)
+	api.GET("/aggregator", authAuEdSM, c.aggregatorProxy)
+	api.GET("/aggregators", authAuEdSM, c.viewAggregators)
+	api.GET("/aggregators/:id", authAuEdSM, c.viewAggregator)
 	api.PUT("/aggregators/:id", authSM, c.updateAggregator)
 	api.GET("/aggregators/attention", authSM, c.attentionAggregators)
 	api.POST("/aggregators", authSM, c.createAggregator)
