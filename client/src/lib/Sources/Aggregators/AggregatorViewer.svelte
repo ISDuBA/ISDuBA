@@ -645,7 +645,7 @@
                 {/if}
               </List>
             </div>
-            {#if aggregator.attention}
+            {#if aggregator.attention && appStore.isSourceManager()}
               <Badge class="mb-2 h-fit p-1" dismissable>
                 <p>
                   These are the currently available providers. Please review their feeds and adjust
