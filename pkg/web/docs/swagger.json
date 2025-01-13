@@ -855,6 +855,531 @@
                 }
             }
         },
+        "/queries": {
+            "get": {
+                "description": "Deletes the query with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes the stored query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "query",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Success"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a stored query with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a stored query.",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "columns",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "dashboard",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "definer",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "global",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "x-enum-varnames": [
+                            "DocumentMode",
+                            "AdvisoryMode",
+                            "EventMode"
+                        ],
+                        "name": "kind",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "num",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "orders",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            "admin",
+                            "importer",
+                            "editor",
+                            "reviewer",
+                            "auditor",
+                            "source-manager"
+                        ],
+                        "type": "string",
+                        "x-enum-comments": {
+                            "Admin": "Admin role",
+                            "Auditor": "Auditor role",
+                            "Editor": "Editor role",
+                            "Importer": "Importer role",
+                            "Reviewer": "Reviewer role",
+                            "SourceManager": "Source Manager role"
+                        },
+                        "x-enum-varnames": [
+                            "Admin",
+                            "Importer",
+                            "Editor",
+                            "Reviewer",
+                            "Auditor",
+                            "SourceManager"
+                        ],
+                        "name": "role",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/web.createStoredQuery.createResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries/ignore/{query}": {
+            "get": {
+                "description": "Returns exclusions of all queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns query exclusions.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Ignores the query with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Ignores a query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "query",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.insertDefaultQueryExclusion.createResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the query exclusion with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes query exclusion.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "query",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries/orders": {
+            "post": {
+                "description": "Updates the query order with the specified ordering.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates the query order.",
+                "parameters": [
+                    {
+                        "description": "Query order",
+                        "name": "queryOrder",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.updateOrder.queryOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries/{id}": {
+            "get": {
+                "description": "Updates a feed with the specified configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a stored query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "query",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.StoredQuery"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a stored query with the specified configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a stored query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "columns",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "dashboard",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "definer",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "global",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "x-enum-varnames": [
+                            "DocumentMode",
+                            "AdvisoryMode",
+                            "EventMode"
+                        ],
+                        "name": "kind",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "num",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "orders",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            "admin",
+                            "importer",
+                            "editor",
+                            "reviewer",
+                            "auditor",
+                            "source-manager"
+                        ],
+                        "type": "string",
+                        "x-enum-comments": {
+                            "Admin": "Admin role",
+                            "Auditor": "Auditor role",
+                            "Editor": "Editor role",
+                            "Importer": "Importer role",
+                            "Reviewer": "Reviewer role",
+                            "SourceManager": "Source Manager role"
+                        },
+                        "x-enum-varnames": [
+                            "Admin",
+                            "Importer",
+                            "Editor",
+                            "Reviewer",
+                            "Auditor",
+                            "SourceManager"
+                        ],
+                        "name": "role",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/sources": {
             "get": {
                 "description": "Returns the source configuration and metadata of all sources.",
@@ -1179,19 +1704,19 @@
                     },
                     {
                         "enum": [
-                            1,
                             0,
                             1,
                             2,
-                            3
+                            3,
+                            1
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
-                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel"
+                            "ErrorFeedLogLevel",
+                            "defaultSourcesFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -2392,18 +2917,18 @@
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "models.AdvisoryState": {
@@ -2489,6 +3014,53 @@
                 }
             }
         },
+        "models.StoredQuery": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "dashboard": {
+                    "type": "boolean"
+                },
+                "definer": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "global": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "$ref": "#/definitions/query.ParserMode"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num": {
+                    "type": "integer"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "query": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/models.WorkflowRole"
+                }
+            }
+        },
         "models.Success": {
             "type": "object",
             "properties": {
@@ -2543,6 +3115,46 @@
                 "ReviewWorkflow",
                 "ArchivedWorkflow",
                 "DeleteWorkflow"
+            ]
+        },
+        "models.WorkflowRole": {
+            "type": "string",
+            "enum": [
+                "admin",
+                "importer",
+                "editor",
+                "reviewer",
+                "auditor",
+                "source-manager"
+            ],
+            "x-enum-comments": {
+                "Admin": "Admin role",
+                "Auditor": "Auditor role",
+                "Editor": "Editor role",
+                "Importer": "Importer role",
+                "Reviewer": "Reviewer role",
+                "SourceManager": "Source Manager role"
+            },
+            "x-enum-varnames": [
+                "Admin",
+                "Importer",
+                "Editor",
+                "Reviewer",
+                "Auditor",
+                "SourceManager"
+            ]
+        },
+        "query.ParserMode": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "DocumentMode",
+                "AdvisoryMode",
+                "EventMode"
             ]
         },
         "sources.FeedSubscription": {
@@ -2731,6 +3343,17 @@
                 }
             }
         },
+        "web.createStoredQuery.createResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "num": {
+                    "type": "integer"
+                }
+            }
+        },
         "web.custom": {
             "type": "object",
             "properties": {
@@ -2839,6 +3462,17 @@
                     "items": {
                         "$ref": "#/definitions/web.feed"
                     }
+                }
+            }
+        },
+        "web.insertDefaultQueryExclusion.createResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "user": {
+                    "type": "string"
                 }
             }
         },
@@ -2991,6 +3625,17 @@
                         "Minute",
                         "Hour"
                     ]
+                }
+            }
+        },
+        "web.updateOrder.queryOrder": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "order": {
+                    "type": "integer"
                 }
             }
         },

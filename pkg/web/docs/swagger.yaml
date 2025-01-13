@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
-    - 1
     - 0
     - 1
     - 2
     - 3
+    - 1
     type: integer
     x-enum-varnames:
-    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -90,6 +90,37 @@ definitions:
         $ref: '#/definitions/models.TLP'
       type: array
     type: object
+  models.StoredQuery:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      dashboard:
+        type: boolean
+      definer:
+        type: string
+      description:
+        type: string
+      global:
+        type: boolean
+      id:
+        type: integer
+      kind:
+        $ref: '#/definitions/query.ParserMode'
+      name:
+        type: string
+      num:
+        type: integer
+      orders:
+        items:
+          type: string
+        type: array
+      query:
+        type: string
+      role:
+        $ref: '#/definitions/models.WorkflowRole'
+    type: object
   models.Success:
     properties:
       message:
@@ -135,6 +166,39 @@ definitions:
     - ReviewWorkflow
     - ArchivedWorkflow
     - DeleteWorkflow
+  models.WorkflowRole:
+    enum:
+    - admin
+    - importer
+    - editor
+    - reviewer
+    - auditor
+    - source-manager
+    type: string
+    x-enum-comments:
+      Admin: Admin role
+      Auditor: Auditor role
+      Editor: Editor role
+      Importer: Importer role
+      Reviewer: Reviewer role
+      SourceManager: Source Manager role
+    x-enum-varnames:
+    - Admin
+    - Importer
+    - Editor
+    - Reviewer
+    - Auditor
+    - SourceManager
+  query.ParserMode:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - DocumentMode
+    - AdvisoryMode
+    - EventMode
   sources.FeedSubscription:
     properties:
       id:
@@ -259,6 +323,13 @@ definitions:
       time:
         type: string
     type: object
+  web.createStoredQuery.createResult:
+    properties:
+      id:
+        type: integer
+      num:
+        type: integer
+    type: object
   web.custom:
     properties:
       attention:
@@ -330,6 +401,13 @@ definitions:
         items:
           $ref: '#/definitions/web.feed'
         type: array
+    type: object
+  web.insertDefaultQueryExclusion.createResult:
+    properties:
+      id:
+        type: integer
+      user:
+        type: string
     type: object
   web.keepFeedTime.keepFeedTimeConfig:
     properties:
@@ -436,6 +514,13 @@ definitions:
         - Second
         - Minute
         - Hour
+    type: object
+  web.updateOrder.queryOrder:
+    properties:
+      id:
+        type: integer
+      order:
+        type: integer
     type: object
   web.viewAggregators.aggregator:
     properties:
@@ -1041,6 +1126,360 @@ paths:
           schema:
             $ref: '#/definitions/web.pmd.messages'
       summary: Returns the pmd.
+  /queries:
+    get:
+      description: Deletes the query with the specified ID.
+      parameters:
+      - description: Query ID
+        in: path
+        name: query
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Success'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes the stored query.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a stored query with the specified configuration.
+      parameters:
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: columns
+        type: array
+      - in: formData
+        name: dashboard
+        type: boolean
+      - in: formData
+        name: definer
+        type: string
+      - in: formData
+        name: description
+        type: string
+      - in: formData
+        name: global
+        type: boolean
+      - in: formData
+        name: id
+        type: integer
+      - enum:
+        - 0
+        - 1
+        - 2
+        in: formData
+        name: kind
+        type: integer
+        x-enum-varnames:
+        - DocumentMode
+        - AdvisoryMode
+        - EventMode
+      - in: formData
+        name: name
+        type: string
+      - in: formData
+        name: num
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: orders
+        type: array
+      - in: formData
+        name: query
+        type: string
+      - enum:
+        - admin
+        - importer
+        - editor
+        - reviewer
+        - auditor
+        - source-manager
+        in: formData
+        name: role
+        type: string
+        x-enum-comments:
+          Admin: Admin role
+          Auditor: Auditor role
+          Editor: Editor role
+          Importer: Importer role
+          Reviewer: Reviewer role
+          SourceManager: Source Manager role
+        x-enum-varnames:
+        - Admin
+        - Importer
+        - Editor
+        - Reviewer
+        - Auditor
+        - SourceManager
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/web.createStoredQuery.createResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a stored query.
+  /queries/{id}:
+    get:
+      description: Updates a feed with the specified configuration.
+      parameters:
+      - description: Query ID
+        in: path
+        name: query
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.StoredQuery'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a stored query.
+    put:
+      description: Updates a stored query with the specified configuration.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: columns
+        type: array
+      - in: formData
+        name: dashboard
+        type: boolean
+      - in: formData
+        name: definer
+        type: string
+      - in: formData
+        name: description
+        type: string
+      - in: formData
+        name: global
+        type: boolean
+      - in: formData
+        name: id
+        type: integer
+      - enum:
+        - 0
+        - 1
+        - 2
+        in: formData
+        name: kind
+        type: integer
+        x-enum-varnames:
+        - DocumentMode
+        - AdvisoryMode
+        - EventMode
+      - in: formData
+        name: name
+        type: string
+      - in: formData
+        name: num
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: orders
+        type: array
+      - in: formData
+        name: query
+        type: string
+      - enum:
+        - admin
+        - importer
+        - editor
+        - reviewer
+        - auditor
+        - source-manager
+        in: formData
+        name: role
+        type: string
+        x-enum-comments:
+          Admin: Admin role
+          Auditor: Auditor role
+          Editor: Editor role
+          Importer: Importer role
+          Reviewer: Reviewer role
+          SourceManager: Source Manager role
+        x-enum-varnames:
+        - Admin
+        - Importer
+        - Editor
+        - Reviewer
+        - Auditor
+        - SourceManager
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a stored query.
+  /queries/ignore/{query}:
+    delete:
+      description: Deletes the query exclusion with the specified ID.
+      parameters:
+      - description: Query ID
+        in: path
+        name: query
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes query exclusion.
+    get:
+      description: Returns exclusions of all queries.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns query exclusions.
+    post:
+      description: Ignores the query with the specified ID.
+      parameters:
+      - description: Query ID
+        in: path
+        name: query
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.insertDefaultQueryExclusion.createResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Ignores a query.
+  /queries/orders:
+    post:
+      consumes:
+      - application/json
+      description: Updates the query order with the specified ordering.
+      parameters:
+      - description: Query order
+        in: body
+        name: queryOrder
+        required: true
+        schema:
+          $ref: '#/definitions/web.updateOrder.queryOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates the query order.
   /sources:
     get:
       description: Returns the source configuration and metadata of all sources.
@@ -1454,20 +1893,20 @@ paths:
         name: label
         type: string
       - enum:
-        - 1
         - 0
         - 1
         - 2
         - 3
+        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
-        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
+        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
