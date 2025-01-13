@@ -37,6 +37,16 @@ import (
 const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 
 // deleteDocument is an end point for deleting a document.
+//
+//	@Summary		Deletes a CSAF document.
+//	@Description	Delete endpoint for CSAF documents.
+//	@Produce		json
+//	@Param			id	path		int	true	"Document ID"
+//	@Success		201	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/{id} [delete]
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -87,17 +97,28 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	if deleted {
-		ctx.JSON(http.StatusOK, gin.H{"message": "document deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "document deleted")
 	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 	}
 }
 
 // importDocument is an end point to import a document.
+//
+//	@Summary		Imports a CSAF document.
+//	@Description	Upload endpoint for CSAF documents.
+//	@Accept			json
+//	@Produce		json
+//	@Success		201	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		403	{object}	models.Error	"False TLP or publisher"
+//	@Failure		409	{object}	models.Error	"Already in database"
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents [post]
 func (c *Controller) importDocument(ctx *gin.Context) {
 	var actor *string
 	if user := c.currentUser(ctx); user.Valid {
@@ -106,12 +127,12 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	limited := http.MaxBytesReader(
@@ -123,19 +144,18 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var document any
 	if err := json.NewDecoder(tee).Decode(&document); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "document is not JSON: " + err.Error()})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "document is not JSON: "+err.Error())
 		return
 	}
 
 	msgs, err := csaf.ValidateCSAF(document)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "schema validation failed: " + err.Error()})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "schema validation failed: "+err.Error())
 		return
 	}
 	if len(msgs) > 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "schema validation failed: " + strings.Join(msgs, ", "),
-		})
+		models.SendErrorMessage(ctx, http.StatusBadRequest,
+			"schema validation failed: "+strings.Join(msgs, ", "))
 		return
 	}
 
@@ -144,14 +164,13 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		rvr, err := c.val.Validate(document)
 		if err != nil {
 			slog.Error("remote validation failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "remote validation failed: " + err.Error(),
-			})
+			models.SendErrorMessage(ctx, http.StatusInternalServerError,
+				"remote validation failed: "+err.Error())
 			return
 		}
 		if !rvr.Valid {
 			// XXX: Maybe we should tell, what's exactly wrong?
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "remote validation"})
+			models.SendErrorMessage(ctx, http.StatusBadRequest, "remote validation failed")
 			return
 		}
 	}
@@ -180,14 +199,14 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		}, 0,
 	); {
 	case err == nil:
-		ctx.JSON(http.StatusCreated, gin.H{"id": id})
+		ctx.JSON(http.StatusCreated, models.ID{ID: id})
 	case errors.Is(err, models.ErrAlreadyInDatabase):
-		ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+		models.SendErrorMessage(ctx, http.StatusConflict, "already in database")
 	case errors.Is(err, models.ErrNotAllowed):
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "wrong publisher/tlp"})
+		models.SendErrorMessage(ctx, http.StatusForbidden, "wrong publisher/tlp")
 	default:
 		slog.Error("storing document failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 
@@ -248,13 +267,11 @@ func (c *Controller) viewForwardTargets(ctx *gin.Context) {
 func (c *Controller) forwardDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no valid document id specified"})
 		return
 	}
 
 	targetID, ok := parse(ctx, toInt64, ctx.Param("target"))
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no target specified"})
 		return
 	}
 

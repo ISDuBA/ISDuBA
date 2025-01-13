@@ -66,9 +66,12 @@ const (
 type ParserMode int
 
 const (
-	DocumentMode ParserMode = iota // DocumentMode operates on documents.
-	AdvisoryMode                   // AdvisoryMode operates on advisories.
-	EventMode                      // EventMode operates on events.
+	// DocumentMode operates on documents.
+	DocumentMode ParserMode = iota
+	// AdvisoryMode operates on advisories.
+	AdvisoryMode
+	// EventMode operates on events.
+	EventMode
 )
 
 // UnmarshalText implements [encoding.TextUnmarshaler].

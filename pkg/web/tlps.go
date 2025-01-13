@@ -57,7 +57,7 @@ func (c *Controller) tlps(ctx *gin.Context) models.PublishersTLPs {
 	return tlps
 }
 
-// andTLPExpr adds a filter expressin to only fetch the permitted documents.
+// andTLPExpr adds a filter expressing to only fetch the permitted documents.
 func (c *Controller) andTLPExpr(ctx *gin.Context, expr *query.Expr) *query.Expr {
 	tlps := c.tlps(ctx)
 	return expr.And(tlps.AsExpr())
@@ -72,7 +72,7 @@ func rolesAsStrings(roles []models.WorkflowRole) []string {
 	return s
 }
 
-// hasAnyRole checks if at least one of the roles is fullfilled.
+// hasAnyRole checks if at least one of the roles is fulfilled.
 func (c *Controller) hasAnyRole(ctx *gin.Context, roles ...models.WorkflowRole) bool {
 	token, ok := ctx.Get("token")
 	if !ok {
