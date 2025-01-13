@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:test": "vite build --config vite.test-config.js",
     "preview": "vite preview",
     "test": "npm run test:integration && npm run test:unit",
     "start": "vite",
@@ -15,10 +16,9 @@
     "format": "prettier --write .",
     "test:unit": "vitest run",
     "test:integration": "playwright test",
-    "cover": "npm run cover:unit && npm run cover:integration && npm run cover:report",
+    "cover": "npm run cover:unit && npm run cover:integration",
     "cover:unit": "nyc --silent npm run test:unit",
     "cover:integration": "nyc --silent --no-clean npm run test:integration",
-    "cover:report": "nyc report --reporter=lcov --reporter=text",
     "prepare": "cd .. && husky client/.husky"
   },
   "devDependencies": {
@@ -44,6 +44,7 @@
     "flowbite": "^2.5.2",
     "flowbite-svelte": "^0.47.4",
     "husky": "^9.1.7",
+    "monocart-reporter": "^2.9.13",
     "nyc": "^17.1.0",
     "postcss": "^8.4.49",
     "postcss-load-config": "^6.0.1",
@@ -62,6 +63,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@playwright/experimental-ct-svelte": "^1.49.1",
     "@types/chroma-js": "^3.1.0",
     "boxicons": "^2.1.4",
     "chart.js": "^4.4.7",
