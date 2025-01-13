@@ -26,7 +26,6 @@
     }
     return 0;
   };
-
 </script>
 
 <div class="mb-2 flex items-center gap-2 text-sm text-black dark:text-white">

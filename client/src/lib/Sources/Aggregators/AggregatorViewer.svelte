@@ -443,7 +443,7 @@
 
 <div class="pb-10">
   <SectionHeader title="Aggregators"></SectionHeader>
-  {#if appStore.isAuditor || appStore.isEditor() || appStore.isSourceManager()}
+  {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
     <Accordion flush multiple class="my-4">
       {#each aggregators as aggregator, index (index)}
         {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
@@ -473,39 +473,39 @@
               {/if}
               <div>
                 {#if appStore.isSourceManager()}
-                <Button
-                  on:click={async (event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    if (aggregator.id !== undefined) {
-                      await removeAggregator(aggregator.id);
-                    }
-                  }}
-                  class="!p-2"
-                  color="light"
-                >
-                  <i class="bx bx-trash text-red-600"></i>
-                </Button>
-                {#if aggregator.id !== undefined && aggregator.id !== aggregatorToEdit}
                   <Button
-                    on:click={(event) => {
+                    on:click={async (event) => {
                       event.stopPropagation();
                       event.preventDefault();
-                      editedName = aggregator.name;
-                      editedUrl = aggregator.url;
                       if (aggregator.id !== undefined) {
-                        toggleEditForm(aggregator.id);
+                        await removeAggregator(aggregator.id);
                       }
                     }}
                     class="!p-2"
                     color="light"
                   >
-                    <i class="bx bx-pencil"></i>
+                    <i class="bx bx-trash text-red-600"></i>
                   </Button>
+                  {#if aggregator.id !== undefined && aggregator.id !== aggregatorToEdit}
+                    <Button
+                      on:click={(event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        editedName = aggregator.name;
+                        editedUrl = aggregator.url;
+                        if (aggregator.id !== undefined) {
+                          toggleEditForm(aggregator.id);
+                        }
+                      }}
+                      class="!p-2"
+                      color="light"
+                    >
+                      <i class="bx bx-pencil"></i>
+                    </Button>
+                  {/if}
                 {/if}
-              {/if}
               </div>
-              {#if aggregator.active !== undefined && ( appStore.isSourceManager())}
+              {#if aggregator.active !== undefined && appStore.isSourceManager()}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <!--
