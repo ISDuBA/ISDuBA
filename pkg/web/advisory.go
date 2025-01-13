@@ -176,7 +176,7 @@ func (c *Controller) changeStatusBulk(ctx *gin.Context) {
 
 // deleteAdvisory deletes a given advisory.
 //
-//	@Summary		Deletes a advisory.
+//	@Summary		Deletes an advisory.
 //	@Description	Deletes the specified advisory.
 //	@Param			publisher	path	string	true	"Publisher"
 //	@Param			trackingid	path	string	true	"Tracking ID"

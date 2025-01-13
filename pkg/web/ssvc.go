@@ -22,7 +22,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
-// changeSSVC is a endpoint that changes the SSVC of the specified document.
+// changeSSVC is an endpoint that changes the SSVC of the specified document.
 //
 //	@Summary		Changes the SSVC.
 //	@Description	This updates the SSVC of the specified document.
@@ -89,7 +89,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 				return nil
 			}
 
-			// check if its a real change
+			// check if it's a real change
 			if ssvc.Valid && ssvc.String == vector {
 				unchanged = true
 				return nil
@@ -132,7 +132,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 
 			// Log the SSVC change.
 			event := models.ChangeSSVCEvent
-			if !ssvc.Valid { // Its new.
+			if !ssvc.Valid { // It's new.
 				event = models.AddSSVCEvent
 			}
 			if err := logEvent(event, models.AssessingWorkflow); err != nil {
