@@ -18,6 +18,7 @@ jobs:
     env:
       BUILD_COVER: "true"
       GOCOVERDIR: "/tmp/cov"
+      VITE_COVERAGE: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,7 +32,6 @@ jobs:
           ./start_all.sh
           cd ../../client
           npm run cover
-          cd ../
           killall "-2" --wait isdubad
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
           go tool cover -func=coverage.out

@@ -8,6 +8,7 @@
 
 import { sveltekit } from "@sveltejs/kit/vite";
 import { coverageConfigDefaults, defineConfig } from "vitest/config";
+import istanbul from "vite-plugin-istanbul";
 
 export default defineConfig({
   server: {
@@ -18,7 +19,15 @@ export default defineConfig({
       }
     }
   },
-  plugins: [sveltekit()],
+  plugins: [
+    sveltekit(),
+    istanbul({
+      include: "src/*",
+      exclude: ["node_modules", "test/"],
+      extension: [".ts", ".svelte"],
+      requireEnv: true
+    })
+  ],
   test: {
     include: ["src/**/*.{test,spec}.{js,ts}"],
     coverage: {
