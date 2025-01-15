@@ -138,6 +138,7 @@ func showStats(ctx *gin.Context) (bool, bool) {
 //	@Produce		json
 //	@Success		200	{object}	web.viewSources.sourcesResult
 //	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Failure		401
 //	@Router			/sources [get]
 func (c *Controller) viewSources(ctx *gin.Context) {
 	stats, ok := showStats(ctx)
@@ -169,6 +170,7 @@ func hasBlock(data []byte) bool {
 //	@Produce		json
 //	@Success		201	{array}		models.ID
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources [post]
 func (c *Controller) createSource(ctx *gin.Context) {
@@ -262,6 +264,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"source deleted"
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/{id} [delete]
@@ -293,6 +296,7 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Router			/sources/{id} [get]
 func (c *Controller) viewSource(ctx *gin.Context) {
@@ -325,6 +329,7 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error	"not found"
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/{id} [put]
@@ -539,6 +544,7 @@ type feedResult struct {
 //	@Produce		json
 //	@Success		200	{object}	feedResult
 //	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/{id}/feeds [get]
@@ -578,6 +584,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		201	{object}	models.ID
 //	@Failure		400	{object}	models.Error	"could not parse stats"
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/{id}/feeds [post]
@@ -628,6 +635,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/feeds/{id} [put]
@@ -686,6 +694,7 @@ func (c *Controller) updateFeed(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	feed
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error	"feed not found"
 //	@Router			/sources/feeds/{id} [get]
 func (c *Controller) viewFeed(ctx *gin.Context) {
@@ -716,6 +725,7 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"deleted"
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/feeds/{id} [delete]
@@ -746,6 +756,7 @@ func (c *Controller) deleteFeed(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	web.feedLogs.feedLogEntries
 //	@Failure		400	{object}	models.Error	"could not parse id"
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/feeds/{id}/log [get]
 func (c *Controller) feedLog(ctx *gin.Context) {
@@ -870,6 +881,7 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 //	@Description	Returns the message that is displayed on visiting the sources page.
 //	@Produce		json
 //	@Success		200	{object}	models.Success
+//	@Failure		401
 //	@Router			/sources/message [get]
 func (c *Controller) defaultMessage(ctx *gin.Context) {
 	models.SendSuccess(ctx, http.StatusOK, c.cfg.Sources.DefaultMessage)
@@ -881,6 +893,7 @@ func (c *Controller) defaultMessage(ctx *gin.Context) {
 //	@Description	Returns the time it takes until old feed entries are deleted.
 //	@Produce		json
 //	@Success		200	{object}	web.keepFeedTime.keepFeedTimeConfig
+//	@Failure		401
 //	@Router			/sources/feeds/keep [get]
 func (c *Controller) keepFeedTime(ctx *gin.Context) {
 	type keepFeedTimeConfig struct {
@@ -897,6 +910,7 @@ func (c *Controller) keepFeedTime(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{array}		web.attentionSources.attention
 //	@Failure		400	{object}	models.Error	"could not parse all"
+//	@Failure		401
 //	@Router			/sources/attention [get]
 func (c *Controller) attentionSources(ctx *gin.Context) {
 	all, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("all", "false"))
@@ -920,6 +934,7 @@ func (c *Controller) attentionSources(ctx *gin.Context) {
 //	@Description	Returns the default parameters for the source configuration.
 //	@Produce		json
 //	@Success		200	{object}	web.defaultSourceConfig.sourceConfig
+//	@Failure		401
 //	@Router			/sources/default [get]
 func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 	type sourceConfig struct {
@@ -950,7 +965,8 @@ func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 //	@Param			url	query	string	true	"PMD URL"
 //	@Produce		json
 //	@Success		200	{object}	any
-//	@Failure		400	{object}	models.Error		"could not parse url"
+//	@Failure		400	{object}	models.Error	"could not parse url"
+//	@Failure		401
 //	@Failure		502	{object}	web.pmd.messages	"could not fetch pmd"
 //	@Router			/pmd [get]
 func (c *Controller) pmd(ctx *gin.Context) {

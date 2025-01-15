@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
+    - 1
     - 0
     - 1
     - 2
     - 3
-    - 1
     type: integer
     x-enum-varnames:
+    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
-    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -579,6 +579,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/web.about.info'
+        "401":
+          description: Unauthorized
       summary: Returns application information.
   /advisory/{publisher}/{trackingid}:
     delete:
@@ -607,6 +609,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "403":
           description: Forbidden
           schema:
@@ -640,6 +644,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -657,6 +663,8 @@ paths:
             items:
               $ref: '#/definitions/web.viewAggregators.aggregator'
             type: array
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -688,6 +696,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: not found
           schema:
@@ -717,6 +727,8 @@ paths:
           description: could not parse id
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: not found
           schema:
@@ -745,6 +757,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: not found
           schema:
@@ -791,6 +805,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -834,6 +850,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "403":
           description: Forbidden
           schema:
@@ -874,6 +892,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -905,6 +925,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -942,6 +964,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -975,6 +999,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1000,6 +1026,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "403":
           description: False TLP or publisher
           schema:
@@ -1033,6 +1061,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1042,6 +1072,31 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Deletes a CSAF document.
+    get:
+      description: Returns the document in its original format.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: could not parse id
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: document not found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns the document.
   /events:
     get:
       description: Returns all events that match the specified query.
@@ -1061,6 +1116,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1097,6 +1154,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1125,6 +1184,8 @@ paths:
           description: could not parse url
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "502":
           description: could not fetch pmd
           schema:
@@ -1146,6 +1207,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -1238,6 +1301,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1269,6 +1334,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1297,6 +1364,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1398,6 +1467,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1417,6 +1488,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Success'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1446,6 +1519,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1474,6 +1549,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "409":
           description: Conflict
           schema:
@@ -1502,6 +1579,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Success'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -1526,6 +1605,8 @@ paths:
           description: could not parse stats
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
       summary: Returns all sources.
     post:
       consumes:
@@ -1608,6 +1689,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -1638,6 +1721,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "403":
           description: Forbidden
           schema:
@@ -1671,6 +1756,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1703,6 +1790,8 @@ paths:
           description: could not parse stats
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1792,6 +1881,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: not found
           schema:
@@ -1825,6 +1916,8 @@ paths:
           description: could not parse stats
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1876,6 +1969,8 @@ paths:
           description: could not parse stats
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1906,6 +2001,8 @@ paths:
           description: could not parse all
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
       summary: Returns a list of sources that need attention.
   /sources/default:
     get:
@@ -1917,6 +2014,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/web.defaultSourceConfig.sourceConfig'
+        "401":
+          description: Unauthorized
       summary: Returns the default configuration.
   /sources/feeds/{id}:
     delete:
@@ -1938,6 +2037,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -1970,6 +2071,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: feed not found
           schema:
@@ -1992,20 +2095,20 @@ paths:
         name: label
         type: string
       - enum:
+        - 1
         - 0
         - 1
         - 2
         - 3
-        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
+        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
-        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
@@ -2023,6 +2126,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -2052,6 +2157,8 @@ paths:
           description: could not parse id
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2067,6 +2174,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/web.keepFeedTime.keepFeedTimeConfig'
+        "401":
+          description: Unauthorized
       summary: Returns how long feed logs are kept.
   /sources/feeds/log:
     get:
@@ -2095,6 +2204,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Success'
+        "401":
+          description: Unauthorized
       summary: Returns the default message.
   /stats/critical:
     get:
@@ -2122,6 +2233,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2158,6 +2271,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2194,6 +2309,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2225,6 +2342,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2261,6 +2380,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2297,6 +2418,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2328,6 +2451,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2364,6 +2489,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2400,6 +2527,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
@@ -2430,6 +2559,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "403":
           description: Forbidden
           schema:
@@ -2473,6 +2604,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "403":
           description: Forbidden
           schema:
@@ -2497,6 +2630,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/web.overviewTempDocuments.tempDocuments'
+        "401":
+          description: Unauthorized
       summary: Returns an overview of all temporary documents.
     post:
       consumes:
@@ -2519,6 +2654,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
       summary: Uploads a temporary document.
   /tempdocuments/{id}:
     delete:
@@ -2540,6 +2677,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -2563,6 +2702,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
           schema:
@@ -2582,5 +2723,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.PublishersTLPs'
+        "401":
+          description: Unauthorized
       summary: Returns publisher and levels that are visible.
 swagger: "2.0"

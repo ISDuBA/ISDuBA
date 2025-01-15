@@ -36,6 +36,7 @@ import (
 //	@Produce		json
 //	@Success		201	{object}	web.createStoredQuery.createResult
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries [post]
@@ -192,6 +193,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	models.Success
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries/orders [post]
 func (c *Controller) updateOrder(ctx *gin.Context) {
@@ -251,6 +253,7 @@ func (c *Controller) updateOrder(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{array}		models.StoredQuery
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries [get]
 func (c *Controller) listStoredQueries(ctx *gin.Context) {
@@ -327,6 +330,7 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{array}		models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries/{id} [delete]
@@ -380,6 +384,7 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.StoredQuery
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries/{id} [get]
@@ -448,6 +453,7 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries/{id} [put]
@@ -730,6 +736,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 //	@Description	Returns exclusions of all queries.
 //	@Produce		json
 //	@Success		200	{object}	models.Success
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries/ignore [get]
@@ -776,6 +783,7 @@ func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries/ignore/{query} [delete]
@@ -821,6 +829,7 @@ func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	web.insertDefaultQueryExclusion.createResult
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		409	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/queries/ignore/{query} [post]

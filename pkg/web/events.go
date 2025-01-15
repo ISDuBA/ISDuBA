@@ -33,6 +33,7 @@ import (
 //	@Produce		json
 //	@Success		200	{object}	web.overviewEvents.events
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/events [get]
@@ -154,6 +155,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{array}		web.viewEvents.event
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/events/{publisher}/{trackingid} [get]

@@ -67,6 +67,7 @@ const (
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/cve/source/{id} [get]
 func (c *Controller) cveStatsSource(ctx *gin.Context) {
@@ -83,6 +84,7 @@ func (c *Controller) cveStatsSource(ctx *gin.Context) {
 //	@Param			step	query	string	false	"Time step"
 //	@Produce		json
 //	@Success		200	{object}	any
+//	@Failure		401
 //	@Failure		400	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/cve/feed/{id} [get]
@@ -100,6 +102,7 @@ func (c *Controller) cveStatsFeed(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/cve [get]
 func (c *Controller) cveStatsAllSources(ctx *gin.Context) {
@@ -117,6 +120,7 @@ func (c *Controller) cveStatsAllSources(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/imports/source/{id} [get]
 func (c *Controller) importStatsSource(ctx *gin.Context) {
@@ -133,6 +137,7 @@ func (c *Controller) importStatsSource(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/imports [get]
 func (c *Controller) importStatsAllSources(ctx *gin.Context) {
@@ -150,6 +155,7 @@ func (c *Controller) importStatsAllSources(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/imports/feed/{id} [get]
 func (c *Controller) importStatsFeed(ctx *gin.Context) {
@@ -167,6 +173,7 @@ func (c *Controller) importStatsFeed(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/critical/source/{id} [get]
 func (c *Controller) criticalStatsSource(ctx *gin.Context) {
@@ -183,6 +190,7 @@ func (c *Controller) criticalStatsSource(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/critical [get]
 func (c *Controller) criticalStatsAllSources(ctx *gin.Context) {
@@ -200,6 +208,7 @@ func (c *Controller) criticalStatsAllSources(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/stats/critical/feed/{id} [get]
 func (c *Controller) criticalStatsFeed(ctx *gin.Context) {

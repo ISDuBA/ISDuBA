@@ -22,6 +22,7 @@ import (
 //	@Description	Returns general information about the application, like version.
 //	@Produce		json
 //	@Success		200	{object}	web.about.info
+//	@Failure		401
 //	@Router			/about [get]
 func (c *Controller) about(ctx *gin.Context) {
 	type info struct {
@@ -36,6 +37,7 @@ func (c *Controller) about(ctx *gin.Context) {
 //	@Description	Returns information what documents the user can view and comment.
 //	@Produce		json
 //	@Success		200	{object}	models.PublishersTLPs
+//	@Failure		401
 //	@Router			/view [get]
 func (c *Controller) view(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, c.tlps(ctx))

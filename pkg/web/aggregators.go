@@ -46,6 +46,7 @@ type argumentedAggregator struct {
 //	@Produce		json
 //	@Success		200	{object}	argumentedAggregator
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/aggregator [get]
 func (c *Controller) aggregatorProxy(ctx *gin.Context) {
@@ -94,7 +95,8 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 //	@Summary		Returns all aggregators.
 //	@Description	Returns all aggregators that are configured.
 //	@Produce		json
-//	@Success		200	{array}		web.viewAggregators.aggregator
+//	@Success		200	{array}	web.viewAggregators.aggregator
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/aggregators [get]
 func (c *Controller) viewAggregators(ctx *gin.Context) {
@@ -137,6 +139,7 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	argumentedAggregator
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		404	{object}	models.Error	"not found"
 //	@Failure		500	{object}	models.Error
@@ -196,6 +199,7 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		201	{object}	models.ID
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		404	{object}	models.Error	"not found"
 //	@Failure		500	{object}	models.Error
@@ -251,6 +255,7 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"deleted"
 //	@Failure		400	{object}	models.Error	"could not parse id"
+//	@Failure		401
 //	@Failure		404	{object}	models.Error	"not found"
 //	@Failure		500	{object}	models.Error
 //	@Router			/aggregators/{id} [delete]
@@ -322,6 +327,7 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/aggregators/{id} [put]
 func (c *Controller) updateAggregator(ctx *gin.Context) {

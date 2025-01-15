@@ -51,6 +51,7 @@ func parseDiffID(s string) (int64, bool, error) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/diff/{document1}/{document2} [get]

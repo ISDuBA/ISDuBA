@@ -32,6 +32,7 @@ import (
 //	@Produce		json
 //	@Success		200	{object}	models.ID
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Router			/tempdocuments [post]
 func (c *Controller) importTempDocument(ctx *gin.Context) {
 	file, err := ctx.FormFile("file")
@@ -78,6 +79,7 @@ func (c *Controller) importTempDocument(ctx *gin.Context) {
 //	@Description	An overview of all temporary documents that are uploaded by the user are returned.
 //	@Produce		json
 //	@Success		200	{object}	web.overviewTempDocuments.tempDocuments
+//	@Failure		401
 //	@Router			/tempdocuments [get]
 func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 	type tempDocuments struct {
@@ -102,9 +104,10 @@ func (c *Controller) overviewTempDocuments(ctx *gin.Context) {
 //	@Param			id	path	int	true	"Document ID"
 //	@Produce		json
 //	@Success		200	{object}	any
-//	@Success		400	{object}	models.Error
-//	@Success		404	{object}	models.Error
-//	@Success		500	{object}	models.Error
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
 //	@Router			/tempdocuments/{id} [get]
 func (c *Controller) viewTempDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -140,8 +143,9 @@ func (c *Controller) viewTempDocument(ctx *gin.Context) {
 //	@Param			id	path	int	true	"Document ID"
 //	@Produce		json
 //	@Success		200	{object}	models.Success	"deleted"
-//	@Success		400	{object}	models.Error
-//	@Success		404	{object}	models.Error
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
 //	@Router			/tempdocuments/{id} [delete]
 func (c *Controller) deleteTempDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))

@@ -50,6 +50,7 @@ func (c *Controller) isCommentingAllowed(ctx *gin.Context, state models.Workflow
 //	@Produce		json
 //	@Success		201	{object}	web.createComment.commentResult
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		403	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
@@ -197,6 +198,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{array}		comment
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/comments/post/{id} [put]
@@ -313,6 +315,7 @@ type comment struct {
 //	@Produce		json
 //	@Success		200	{array}		comment
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/comments/post/{id} [get]
@@ -359,6 +362,7 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{array}		comment
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/comments/{publisher}/{trackingid} [get]

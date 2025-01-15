@@ -139,6 +139,7 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 //	@Produce		json
 //	@Success		200	{object}		models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		403	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
@@ -161,6 +162,7 @@ func (c *Controller) changeStatus(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}		models.Success
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		403	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
@@ -183,6 +185,7 @@ func (c *Controller) changeStatusBulk(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{array}		web.viewEvents.event
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		403	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error

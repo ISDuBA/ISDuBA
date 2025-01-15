@@ -44,6 +44,7 @@ const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 //	@Param			id	path		int	true	"Document ID"
 //	@Success		201	{object}	models.ID
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
 //	@Router			/documents/{id} [delete]
@@ -115,6 +116,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		201	{object}	models.ID
 //	@Failure		400	{object}	models.Error
+//	@Failure		401
 //	@Failure		403	{object}	models.Error	"False TLP or publisher"
 //	@Failure		409	{object}	models.Error	"Already in database"
 //	@Failure		500	{object}	models.Error
@@ -211,6 +213,16 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 }
 
 // viewDocument is an end point to export a document.
+//
+//	@Summary		Returns the document.
+//	@Description	Returns the document in its original format.
+//	@Param			id	path	int	true	"Document ID"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error	"could not parse id"
+//	@Failure		404	{object}	models.Error "document not found"
+//	@Failure		401
+//	@Router			/documents/{id} [get]
 func (c *Controller) viewDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
@@ -235,9 +247,9 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
@@ -291,22 +303,26 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
 
 	if err := c.fm.ForwardDocument(ctx.Request.Context(), int(targetID), documentID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"id": documentID})
+	ctx.JSON(http.StatusOK, models.ID{ID: documentID})
 }
 
 // overviewDocuments is an end point to return an overview document.
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
+	type documentResult struct {
+		Count     int64            `json:"count"`
+		Documents []map[string]any `json:"documents"`
+	}
 	// Use the advisories.
 	advisory, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("advisories", "false"))
 	if !ok {
@@ -345,7 +361,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
 	if err := builder.CheckProjections(fields); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -353,7 +369,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
 	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -418,16 +434,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	h := gin.H{}
+	h := documentResult{}
 	if calcCount {
-		h["count"] = count
+		h.Count = count
 	}
 	if len(results) > 0 {
-		h["documents"] = results
+		h.Documents = results
 	}
 	ctx.JSON(http.StatusOK, h)
 }
