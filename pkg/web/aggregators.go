@@ -199,7 +199,7 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 //	@Failure		404	{object}	models.Error
 //	@Failure		404	{object}	models.Error	"not found"
 //	@Failure		500	{object}	models.Error
-//	@Router			/aggregators/{id} [post]
+//	@Router			/aggregators [post]
 func (c *Controller) createAggregator(ctx *gin.Context) {
 	var (
 		ok     bool
@@ -318,6 +318,7 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 //	@Param			url			formData	string	false	"Aggregator URL"
 //	@Param			active		formData	bool	false	"Aggregator active flag"
 //	@Param			attention	formData	bool	false	"Aggregator attention flag"
+//	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error

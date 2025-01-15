@@ -319,8 +319,9 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 //
 //	@Summary		Updates source configuration.
 //	@Description	Updates the source configuration.
-//	@Param			id	path	int	true	"Source ID"
+//	@Param			id		path		int		true	"Source ID"
 //	@Param			source	formData	source	true	"Source configuration"
+//	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
@@ -571,6 +572,7 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 //
 //	@Summary		Creates a feed.
 //	@Description	Creates a feed with the specified configuration.
+//	@Param			id			path		int							true	"Source ID"
 //	@Param			inputForm	formData	web.createFeed.inputForm	true	"feed configuration"
 //	@Accept			multipart/form-data
 //	@Produce		json
@@ -622,6 +624,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 //	@Description	Updates a feed with the specified configuration.
 //	@Param			id		path		int		true	"Feed ID"
 //	@Param			feed	formData	feed	true	"Feed configuration"
+//	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
@@ -759,6 +762,7 @@ func (c *Controller) feedLog(ctx *gin.Context) {
 //	@Description	Returns all logs for all feeds.
 //	@Produce		json
 //	@Success		200	{object}	web.feedLogs.feedLogEntries
+//	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/sources/feeds/log [get]
 func (c *Controller) allFeedsLog(ctx *gin.Context) {

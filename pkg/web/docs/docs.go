@@ -162,6 +162,58 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Creates an aggregator with specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates an aggregator.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aggregator name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Aggregator URL",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
             }
         },
         "/aggregators/{id}": {
@@ -209,6 +261,9 @@ const docTemplate = `{
             },
             "put": {
                 "description": "Updates the aggregator configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -255,58 +310,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Creates an aggregator with specified configuration.",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Creates an aggregator.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Aggregator name",
-                        "name": "name",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Aggregator URL",
-                        "name": "url",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.ID"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -427,6 +430,9 @@ const docTemplate = `{
             },
             "put": {
                 "description": "Updates the comment with the specified ID.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -478,7 +484,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/comments/{document}": {
+        "/comments/{id}": {
             "post": {
                 "description": "Creates a comment for the specified document.",
                 "consumes": [
@@ -864,38 +870,23 @@ const docTemplate = `{
         },
         "/queries": {
             "get": {
-                "description": "Deletes the query with the specified ID.",
+                "description": "Returns all configured stored queries.",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Deletes the stored query.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Query ID",
-                        "name": "query",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Returns stored queries.",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Success"
+                                "$ref": "#/definitions/models.StoredQuery"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -1049,7 +1040,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/queries/ignore/{query}": {
+        "/queries/ignore": {
             "get": {
                 "description": "Returns exclusions of all queries.",
                 "produces": [
@@ -1076,7 +1067,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/queries/ignore/{query}": {
             "post": {
                 "description": "Ignores the query with the specified ID.",
                 "produces": [
@@ -1210,7 +1203,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Query ID",
-                        "name": "query",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -1244,6 +1237,9 @@ const docTemplate = `{
             },
             "put": {
                 "description": "Updates a stored query with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1364,6 +1360,51 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the query with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes the stored query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Success"
+                            }
                         }
                     },
                     "400": {
@@ -1633,6 +1674,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.feedLogs.feedLogEntries"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -1687,6 +1731,9 @@ const docTemplate = `{
             },
             "put": {
                 "description": "Updates a feed with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1711,19 +1758,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            1,
                             0,
                             1,
                             2,
-                            3
+                            3,
+                            1
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
-                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel"
+                            "ErrorFeedLogLevel",
+                            "defaultSourcesFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -1966,6 +2013,9 @@ const docTemplate = `{
             },
             "put": {
                 "description": "Updates the source configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2206,6 +2256,13 @@ const docTemplate = `{
                 ],
                 "summary": "Creates a feed.",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "minLength": 1,
                         "type": "string",
@@ -3022,18 +3079,18 @@ const docTemplate = `{
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "models.AdvisoryState": {

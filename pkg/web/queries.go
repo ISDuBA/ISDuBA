@@ -323,13 +323,13 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 //
 //	@Summary		Deletes the stored query.
 //	@Description	Deletes the query with the specified ID.
-//	@Param			query	path	int	true	"Query ID"
+//	@Param			id	path	int	true	"Query ID"
 //	@Produce		json
 //	@Success		200	{array}		models.Success
 //	@Failure		400	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
-//	@Router			/queries [get]
+//	@Router			/queries/{id} [delete]
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
@@ -376,7 +376,7 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 //
 //	@Summary		Updates a stored query.
 //	@Description	Updates a feed with the specified configuration.
-//	@Param			query	path	int	true	"Query ID"
+//	@Param			id	path	int	true	"Query ID"
 //	@Produce		json
 //	@Success		200	{object}	models.StoredQuery
 //	@Failure		400	{object}	models.Error
@@ -444,6 +444,7 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 //	@Description	Updates a stored query with the specified configuration.
 //	@Param			id		path		int					true	"Query ID"
 //	@Param			query	formData	models.StoredQuery	true	"Query configuration"
+//	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
@@ -731,7 +732,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 //	@Success		200	{object}	models.Success
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
-//	@Router			/queries/ignore/{query} [get]
+//	@Router			/queries/ignore [get]
 func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 	// For which user do we want to get the ignored default queries?
 	user := c.currentUser(ctx).String

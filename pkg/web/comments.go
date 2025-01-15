@@ -53,7 +53,7 @@ func (c *Controller) isCommentingAllowed(ctx *gin.Context, state models.Workflow
 //	@Failure		403	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
-//	@Router			/comments/{document} [post]
+//	@Router			/comments/{id} [post]
 func (c *Controller) createComment(ctx *gin.Context) {
 	type commentResult struct {
 		ID   *int64    `json:"id"`
@@ -193,6 +193,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 //	@Description	Updates the comment with the specified ID.
 //	@Param			id		path		int		true	"Comment ID"
 //	@Param			message	formData	string	true	"Comment message"
+//	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		200	{array}		comment
 //	@Failure		400	{object}	models.Error

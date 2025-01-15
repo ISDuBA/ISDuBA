@@ -15,18 +15,18 @@ definitions:
     type: object
   config.FeedLogLevel:
     enum:
-    - 1
     - 0
     - 1
     - 2
     - 3
+    - 1
     type: integer
     x-enum-varnames:
-    - defaultSourcesFeedLogLevel
     - DebugFeedLogLevel
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+    - defaultSourcesFeedLogLevel
   models.AdvisoryState:
     properties:
       publisher:
@@ -662,6 +662,41 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Returns all aggregators.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates an aggregator with specified configuration.
+      parameters:
+      - description: Aggregator name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Aggregator URL
+        in: formData
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates an aggregator.
   /aggregators/{id}:
     delete:
       description: Deletes the aggregator configuration with the specified ID.
@@ -719,42 +754,9 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Returns the aggregator.
-    post:
+    put:
       consumes:
       - multipart/form-data
-      description: Creates an aggregator with specified configuration.
-      parameters:
-      - description: Aggregator name
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: Aggregator URL
-        in: formData
-        name: url
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.ID'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.Error'
-        "404":
-          description: not found
-          schema:
-            $ref: '#/definitions/models.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      summary: Creates an aggregator.
-    put:
       description: Updates the aggregator configuration.
       parameters:
       - description: Aggregator ID
@@ -805,7 +807,7 @@ paths:
           schema:
             $ref: '#/definitions/config.Client'
       summary: Returns client configuration.
-  /comments/{document}:
+  /comments/{id}:
     post:
       consumes:
       - multipart/form-data
@@ -913,6 +915,8 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Returns a comment.
     put:
+      consumes:
+      - multipart/form-data
       description: Updates the comment with the specified ID.
       parameters:
       - description: Comment ID
@@ -1128,13 +1132,7 @@ paths:
       summary: Returns the pmd.
   /queries:
     get:
-      description: Deletes the query with the specified ID.
-      parameters:
-      - description: Query ID
-        in: path
-        name: query
-        required: true
-        type: integer
+      description: Returns all configured stored queries.
       produces:
       - application/json
       responses:
@@ -1142,21 +1140,17 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Success'
+              $ref: '#/definitions/models.StoredQuery'
             type: array
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/models.Error'
-        "404":
-          description: Not Found
           schema:
             $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Deletes the stored query.
+      summary: Returns stored queries.
     post:
       consumes:
       - multipart/form-data
@@ -1254,12 +1248,42 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Creates a stored query.
   /queries/{id}:
+    delete:
+      description: Deletes the query with the specified ID.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Success'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes the stored query.
     get:
       description: Updates a feed with the specified configuration.
       parameters:
       - description: Query ID
         in: path
-        name: query
+        name: id
         required: true
         type: integer
       produces:
@@ -1283,6 +1307,8 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Updates a stored query.
     put:
+      consumes:
+      - multipart/form-data
       description: Updates a stored query with the specified configuration.
       parameters:
       - description: Query ID
@@ -1381,6 +1407,25 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Updates a stored query.
+  /queries/ignore:
+    get:
+      description: Returns exclusions of all queries.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns query exclusions.
   /queries/ignore/{query}:
     delete:
       description: Deletes the query exclusion with the specified ID.
@@ -1410,24 +1455,6 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Deletes query exclusion.
-    get:
-      description: Returns exclusions of all queries.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Success'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/models.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      summary: Returns query exclusions.
     post:
       description: Ignores the query with the specified ID.
       parameters:
@@ -1682,6 +1709,8 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Returns source information.
     put:
+      consumes:
+      - multipart/form-data
       description: Updates the source configuration.
       parameters:
       - description: Source ID
@@ -1810,6 +1839,11 @@ paths:
       - multipart/form-data
       description: Creates a feed with the specified configuration.
       parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
       - in: formData
         minLength: 1
         name: label
@@ -1942,6 +1976,8 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Returns feed.
     put:
+      consumes:
+      - multipart/form-data
       description: Updates a feed with the specified configuration.
       parameters:
       - description: Feed ID
@@ -1956,20 +1992,20 @@ paths:
         name: label
         type: string
       - enum:
-        - 1
         - 0
         - 1
         - 2
         - 3
+        - 1
         in: formData
         name: log_level
         type: integer
         x-enum-varnames:
-        - defaultSourcesFeedLogLevel
         - DebugFeedLogLevel
         - InfoFeedLogLevel
         - WarnFeedLogLevel
         - ErrorFeedLogLevel
+        - defaultSourcesFeedLogLevel
       - in: formData
         name: rolie
         type: boolean
@@ -2042,6 +2078,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/web.feedLogs.feedLogEntries'
+        "401":
+          description: Unauthorized
         "500":
           description: Internal Server Error
           schema:
