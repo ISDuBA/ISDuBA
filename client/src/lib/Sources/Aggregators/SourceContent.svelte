@@ -13,6 +13,7 @@
   import { Button } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
+  import { appStore } from "$lib/store";
 
   export let source: SourceInfo;
   export let entry: AggregatorEntry;
@@ -32,7 +33,7 @@
     <i class="bx bx-git-repo-forked text-lg"></i>
   {/if}
   {source.name}
-  {#if entry.feedsSubscribed === 0}
+  {#if entry.feedsSubscribed === 0 && appStore.isSourceManager()}
     <Button href={`/#/sources/new/${encodeURIComponent(entry.url)}`} color="primary" size="xs">
       <i class="bx bx-plus"></i>
       <span>As new source</span>
