@@ -35,7 +35,7 @@ ISDuBA uses:
 
 ## How to get started
 
-- [Setup](docs/setup.md)
+- [Setup](docs/test-setup.md)
 - [Operations](docs/operations.md)
 
 ## What does the name ISDuBA mean?
