@@ -6,9 +6,12 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { test } from "./fixtures";
+import { defineConfig } from "vitest/config";
+import config from "./vite.config";
 
-// TODO: delete document
-test("Delete document", async ({ page }) => {
-  await page.goto("/#/search");
+export default defineConfig({
+  ...config,
+  build: {
+    sourcemap: true
+  }
 });
