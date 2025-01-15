@@ -112,7 +112,8 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 //
 //	@Summary		Imports a CSAF document.
 //	@Description	Upload endpoint for CSAF documents.
-//	@Accept			json
+//	@Param			file	formData	file	true	"Document file"
+//	@Accept			multipart/form-data
 //	@Produce		json
 //	@Success		201	{object}	models.ID
 //	@Failure		400	{object}	models.Error
@@ -220,8 +221,9 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 //	@Produce		json
 //	@Success		200	{object}	any
 //	@Failure		400	{object}	models.Error	"could not parse id"
-//	@Failure		404	{object}	models.Error "document not found"
 //	@Failure		401
+//	@Failure		404	{object}	models.Error	"document not found"
+//	@Failure		500	{object}	models.Error
 //	@Router			/documents/{id} [get]
 func (c *Controller) viewDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -271,11 +273,31 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		extraHeaders)
 }
 
+// viewForwardTargets is an endpoint that returns the list of all targets.
+//
+//	@Summary		Returns forward list.
+//	@Description	Returns a list of all forward targets.
+//	@Produce		json
+//	@Success		200	{array}	forwarder.ForwardTarget
+//	@Failure		401
+//	@Router			/documents/forward [get]
 func (c *Controller) viewForwardTargets(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, c.fm.Targets())
 }
 
 // forwardDocument is an end point to forward a document.
+//
+//	@Summary		Forwards a document.
+//	@Description	Forwards a document to the specified target.
+//	@Param			id		path	int	true	"Document ID"
+//	@Param			target	path	int	true	"Target ID"
+//	@Produce		json
+//	@Success		200	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/forward/{id}/{target} [post]
 func (c *Controller) forwardDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
@@ -318,6 +340,22 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 }
 
 // overviewDocuments is an end point to return an overview document.
+//
+//	@Summary		Returns documents.
+//	@Description	Returns all documents that match the specified query.
+//	@Param			advisories	query	bool	false	"Return advisories"
+//	@Param			query		query	string	false	"Document query"
+//	@Param			columns		query	string	false	"Columns"
+//	@Param			orders		query	string	false	"Ordering"
+//	@Param			count		query	bool	false	"Enable counting"
+//	@Param			limit		query	int		false	"Maximum documents"
+//	@Param			offset		query	int		false	"Offset"
+//	@Produce		json
+//	@Success		200	{object}	web.overviewDocuments.documentResult
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents [get]
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	type documentResult struct {
 		Count     int64            `json:"count"`

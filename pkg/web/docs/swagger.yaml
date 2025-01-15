@@ -27,6 +27,15 @@ definitions:
     - InfoFeedLogLevel
     - WarnFeedLogLevel
     - ErrorFeedLogLevel
+  forwarder.ForwardTarget:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      url:
+        type: string
+    type: object
   models.AdvisoryState:
     properties:
       publisher:
@@ -413,6 +422,16 @@ definitions:
     properties:
       keep_feed_time:
         $ref: '#/definitions/time.Duration'
+    type: object
+  web.overviewDocuments.documentResult:
+    properties:
+      count:
+        type: integer
+      documents:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
     type: object
   web.overviewEvents.events:
     properties:
@@ -1011,10 +1030,65 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Returns a diff.
   /documents:
+    get:
+      description: Returns all documents that match the specified query.
+      parameters:
+      - description: Return advisories
+        in: query
+        name: advisories
+        type: boolean
+      - description: Document query
+        in: query
+        name: query
+        type: string
+      - description: Columns
+        in: query
+        name: columns
+        type: string
+      - description: Ordering
+        in: query
+        name: orders
+        type: string
+      - description: Enable counting
+        in: query
+        name: count
+        type: boolean
+      - description: Maximum documents
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.overviewDocuments.documentResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns documents.
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: Upload endpoint for CSAF documents.
+      parameters:
+      - description: Document file
+        in: formData
+        name: file
+        required: true
+        type: file
       produces:
       - application/json
       responses:
@@ -1096,7 +1170,62 @@ paths:
           description: document not found
           schema:
             $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
       summary: Returns the document.
+  /documents/forward:
+    get:
+      description: Returns a list of all forward targets.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/forwarder.ForwardTarget'
+            type: array
+        "401":
+          description: Unauthorized
+      summary: Returns forward list.
+  /documents/forward/{id}/{target}:
+    post:
+      description: Forwards a document to the specified target.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Target ID
+        in: path
+        name: target
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Forwards a document.
   /events:
     get:
       description: Returns all events that match the specified query.
