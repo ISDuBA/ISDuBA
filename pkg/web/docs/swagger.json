@@ -1,0 +1,4261 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the ISDuBA API.",
+        "title": "ISDuBA API",
+        "contact": {
+            "name": "ISDuBA team",
+            "url": "https://github.com/ISDuBA/ISDuBA",
+            "email": "info@intevation.de"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/about": {
+            "get": {
+                "description": "Returns general information about the application, like version.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns application information.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.about.info"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/advisory/{publisher}/{trackingid}": {
+            "delete": {
+                "description": "Deletes the specified advisory.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes an advisory.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Publisher",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tracking ID",
+                        "name": "trackingid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.viewEvents.event"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/aggregator": {
+            "get": {
+                "description": "Fetches and returns the aggregator metadata for the specified URL.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the aggregator metadata.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aggregator URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.argumentedAggregator"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/aggregators": {
+            "get": {
+                "description": "Returns all aggregators that are configured.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns all aggregators.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.viewAggregators.aggregator"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates an aggregator with specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates an aggregator.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aggregator name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Aggregator URL",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/aggregators/{id}": {
+            "get": {
+                "description": "Returns metadata and configuration of the specified aggregator.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the aggregator.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Aggregator ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.argumentedAggregator"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the aggregator configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates aggregator configuration.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Aggregator ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Aggregator name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Aggregator URL",
+                        "name": "url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Aggregator active flag",
+                        "name": "active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Aggregator attention flag",
+                        "name": "attention",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the aggregator configuration with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes an aggregator.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Aggregator ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse id",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-config": {
+            "get": {
+                "description": "Returns information that the client needs to operate.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns client configuration.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/config.Client"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/post/{id}": {
+            "get": {
+                "description": "Returns the comment with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a comment.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.comment"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the comment with the specified ID.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a comment.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comment message",
+                        "name": "message",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.comment"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{id}": {
+            "post": {
+                "description": "Creates a comment for the specified document.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a comment.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comment message",
+                        "name": "message",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/web.createComment.commentResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{publisher}/{trackingid}": {
+            "get": {
+                "description": "Returns all comments for the specified advisory.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns all comments.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Publisher",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tracking ID",
+                        "name": "trackingid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.comment"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/diff/{document1}/{document2}": {
+            "get": {
+                "description": "Returns a diff between two documents.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a diff.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Document 1 ID",
+                        "name": "document1",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document 2 ID",
+                        "name": "document2",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents": {
+            "get": {
+                "description": "Returns all documents that match the specified query.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns documents.",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Return advisories",
+                        "name": "advisories",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document query",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Columns",
+                        "name": "columns",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ordering",
+                        "name": "orders",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable counting",
+                        "name": "count",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum documents",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.overviewDocuments.documentResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Upload endpoint for CSAF documents.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Imports a CSAF document.",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Document file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "False TLP or publisher",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "Already in database",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/forward": {
+            "get": {
+                "description": "Returns a list of all forward targets.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns forward list.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/forwarder.ForwardTarget"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/documents/forward/{id}/{target}": {
+            "post": {
+                "description": "Forwards a document to the specified target.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Forwards a document.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Target ID",
+                        "name": "target",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/{id}": {
+            "get": {
+                "description": "Returns the document in its original format.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the document.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "could not parse id",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "document not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete endpoint for CSAF documents.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a CSAF document.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/events": {
+            "get": {
+                "description": "Returns all events that match the specified query.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a list of events.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event query",
+                        "name": "query",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.overviewEvents.events"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{publisher}/{trackingid}": {
+            "get": {
+                "description": "Returns all events from the specified advisory.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns all events.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Publisher",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tracking ID",
+                        "name": "trackingid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.viewEvents.event"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/pmd": {
+            "get": {
+                "description": "Fetches and returns the provider metadata for the specified URL.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the pmd.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "PMD URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "could not parse url",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "502": {
+                        "description": "could not fetch pmd",
+                        "schema": {
+                            "$ref": "#/definitions/web.pmd.messages"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries": {
+            "get": {
+                "description": "Returns all configured stored queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns stored queries.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.StoredQuery"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a stored query with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a stored query.",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "columns",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "dashboard",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "definer",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "global",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "x-enum-varnames": [
+                            "DocumentMode",
+                            "AdvisoryMode",
+                            "EventMode"
+                        ],
+                        "name": "kind",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "num",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "orders",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            "admin",
+                            "importer",
+                            "editor",
+                            "reviewer",
+                            "auditor",
+                            "source-manager"
+                        ],
+                        "type": "string",
+                        "x-enum-comments": {
+                            "Admin": "Admin role",
+                            "Auditor": "Auditor role",
+                            "Editor": "Editor role",
+                            "Importer": "Importer role",
+                            "Reviewer": "Reviewer role",
+                            "SourceManager": "Source Manager role"
+                        },
+                        "x-enum-varnames": [
+                            "Admin",
+                            "Importer",
+                            "Editor",
+                            "Reviewer",
+                            "Auditor",
+                            "SourceManager"
+                        ],
+                        "name": "role",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/web.createStoredQuery.createResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries/ignore": {
+            "get": {
+                "description": "Returns exclusions of all queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns query exclusions.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries/ignore/{query}": {
+            "post": {
+                "description": "Ignores the query with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Ignores a query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "query",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.insertDefaultQueryExclusion.createResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the query exclusion with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes query exclusion.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "query",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries/orders": {
+            "post": {
+                "description": "Updates the query order with the specified ordering.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates the query order.",
+                "parameters": [
+                    {
+                        "description": "Query order",
+                        "name": "queryOrder",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.updateOrder.queryOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/queries/{id}": {
+            "get": {
+                "description": "Updates a feed with the specified configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a stored query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.StoredQuery"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a stored query with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a stored query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "columns",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "dashboard",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "definer",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "global",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "x-enum-varnames": [
+                            "DocumentMode",
+                            "AdvisoryMode",
+                            "EventMode"
+                        ],
+                        "name": "kind",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "num",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "orders",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            "admin",
+                            "importer",
+                            "editor",
+                            "reviewer",
+                            "auditor",
+                            "source-manager"
+                        ],
+                        "type": "string",
+                        "x-enum-comments": {
+                            "Admin": "Admin role",
+                            "Auditor": "Auditor role",
+                            "Editor": "Editor role",
+                            "Importer": "Importer role",
+                            "Reviewer": "Reviewer role",
+                            "SourceManager": "Source Manager role"
+                        },
+                        "x-enum-varnames": [
+                            "Admin",
+                            "Importer",
+                            "Editor",
+                            "Reviewer",
+                            "Auditor",
+                            "SourceManager"
+                        ],
+                        "name": "role",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the query with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes the stored query.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Success"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources": {
+            "get": {
+                "description": "Returns the source configuration and metadata of all sources.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns all sources.",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Enable statistic",
+                        "name": "stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.viewSources.sourcesResult"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse stats",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a source with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a source.",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "attention",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_passphrase",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_private",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_public",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "headers",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "ignore_patterns",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "number",
+                        "name": "rate",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "secure",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "signature_check",
+                        "in": "formData"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "strict_mode",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ID"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/attention": {
+            "get": {
+                "description": "All sources that had a change and should be reviewed are returned.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a list of sources that need attention.",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Return all sources",
+                        "name": "all",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/web.attentionSources.attention"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse all",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/sources/default": {
+            "get": {
+                "description": "Returns the default parameters for the source configuration.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the default configuration.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.defaultSourceConfig.sourceConfig"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/sources/feeds/keep": {
+            "get": {
+                "description": "Returns the time it takes until old feed entries are deleted.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns how long feed logs are kept.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.keepFeedTime.keepFeedTimeConfig"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/sources/feeds/log": {
+            "get": {
+                "description": "Returns all logs for all feeds.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns all logs.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.feedLogs.feedLogEntries"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/feeds/{id}": {
+            "get": {
+                "description": "Returns all configurations and metadata of the specified feed ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns feed.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable statistic",
+                        "name": "stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.feed"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "feed not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a feed with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a feed.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "label",
+                        "in": "formData"
+                    },
+                    {
+                        "enum": [
+                            1,
+                            0,
+                            1,
+                            2,
+                            3
+                        ],
+                        "type": "integer",
+                        "x-enum-varnames": [
+                            "defaultSourcesFeedLogLevel",
+                            "DebugFeedLogLevel",
+                            "InfoFeedLogLevel",
+                            "WarnFeedLogLevel",
+                            "ErrorFeedLogLevel"
+                        ],
+                        "name": "log_level",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "rolie",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the feed configuration with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a feed.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/feeds/{id}/log": {
+            "get": {
+                "description": "Returns all logs for the specified feed.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns all logs.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.feedLogs.feedLogEntries"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse id",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/message": {
+            "get": {
+                "description": "Returns the message that is displayed on visiting the sources page.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the default message.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/sources/{document}": {
+            "delete": {
+                "description": "This updates the SSVC of the specified document.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Changes the SSVC.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "document",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SSVC vector",
+                        "name": "vector",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/{id}": {
+            "get": {
+                "description": "Returns the source configuration and metadata.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns source information.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable statistic",
+                        "name": "stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse stats",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the source configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates source configuration.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "attention",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_passphrase",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_private",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "client_cert_public",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "headers",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "ignore_patterns",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "number",
+                        "name": "rate",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "secure",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "signature_check",
+                        "in": "formData"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "strict_mode",
+                        "in": "formData"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the source configuration with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a source.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "source deleted",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/sources/{id}/feeds": {
+            "get": {
+                "description": "Returns all feed configurations and metadata.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns feeds.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable statistic",
+                        "name": "stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.feedResult"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse stats",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a feed with the specified configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a feed.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "name": "label",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "debug",
+                            "info",
+                            "warn",
+                            "error",
+                            ""
+                        ],
+                        "type": "string",
+                        "name": "log_level",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "sourceID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "could not parse stats",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/critical": {
+            "get": {
+                "description": "Returns criticality statistics for all sources.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns criticality statistics.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/critical/feed/{id}": {
+            "get": {
+                "description": "Returns criticality statistics for the specified feed.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns criticality statistics.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/critical/source/{id}": {
+            "get": {
+                "description": "Returns criticality statistics for the specified source.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns criticality statistics.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/cve": {
+            "get": {
+                "description": "Returns cve statistics for all sources.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns cve statistics.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/cve/feed/{id}": {
+            "get": {
+                "description": "Returns cve statistics for the specified feed.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns cve statistics.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/cve/source/{id}": {
+            "get": {
+                "description": "Returns cve statistics for the specified source.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns cve statistics.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/imports": {
+            "get": {
+                "description": "Returns import statistics for all sources.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns import statistics.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/imports/feed/{id}": {
+            "get": {
+                "description": "Returns import statistics for the specified feed.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns import statistics.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Feed ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/imports/source/{id}": {
+            "get": {
+                "description": "Returns import statistics for the specified source.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns import statistics.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange start",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timerange end",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time step",
+                        "name": "step",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/status": {
+            "put": {
+                "description": "Changes the status of multiple advisories, if allowed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Bulk changes status.",
+                "parameters": [
+                    {
+                        "description": "Advisory states",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.AdvisoryState"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/status/{publisher}/{trackingid}/{state}": {
+            "put": {
+                "description": "Changes the status of the specified advisory, if allowed.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Changes the status of an advisory.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Publisher",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tracking ID",
+                        "name": "trackingid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Advisory status",
+                        "name": "state",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/tempdocuments": {
+            "get": {
+                "description": "An overview of all temporary documents that are uploaded by the user are returned.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns an overview of all temporary documents.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.overviewTempDocuments.tempDocuments"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "post": {
+                "description": "Uploads a temporary document, that can be used to create diff views.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Uploads a temporary document.",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Temporary document",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ID"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/tempdocuments/{id}": {
+            "get": {
+                "description": "Returns a temporary document with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns a temporary document.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a temporary document with the specified ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a temporary document.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/view": {
+            "get": {
+                "description": "Returns information what documents the user can view and comment.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns publisher and levels that are visible.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.PublishersTLPs"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "config.Client": {
+            "type": "object",
+            "properties": {
+                "idle_timeout": {
+                    "$ref": "#/definitions/time.Duration"
+                },
+                "keycloak_client_id": {
+                    "type": "string"
+                },
+                "keycloak_realm": {
+                    "type": "string"
+                },
+                "keycloak_url": {
+                    "type": "string"
+                },
+                "update_interval": {
+                    "$ref": "#/definitions/time.Duration"
+                }
+            }
+        },
+        "config.FeedLogLevel": {
+            "type": "integer",
+            "enum": [
+                1,
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
+                "DebugFeedLogLevel",
+                "InfoFeedLogLevel",
+                "WarnFeedLogLevel",
+                "ErrorFeedLogLevel"
+            ]
+        },
+        "forwarder.ForwardTarget": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.AdvisoryState": {
+            "type": "object",
+            "required": [
+                "publisher",
+                "state",
+                "tracking_id"
+            ],
+            "properties": {
+                "publisher": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/models.Workflow"
+                },
+                "tracking_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Event": {
+            "type": "string",
+            "enum": [
+                "import_document",
+                "delete_document",
+                "state_change",
+                "add_sscv",
+                "change_sscv",
+                "delete_sscv",
+                "add_comment",
+                "change_comment",
+                "delete_comment"
+            ],
+            "x-enum-comments": {
+                "AddCommentEvent": "AddCommentEvent represents the addition of a comment.",
+                "AddSSVCEvent": "AddSSVCEvent represents the addtion of a SSVC score.",
+                "ChangeCommentEvent": "ChangeCommentEvent represents the change of a comment.",
+                "ChangeSSVCEvent": "ChangeSSVCEvent represents the change of a SSVC score.",
+                "DeleteCommentEvent": "DeleteCommentEvent represents the deletion of a comment.",
+                "DeleteDocumentEvent": "DeleteDocumentEvent represents a document deletion.",
+                "DeleteSSVCEvent": "DeleteSSVCEvent represents the deletion of a SSVC score.",
+                "ImportDocumentEvent": "ImportDocumentEvent represents a document import.",
+                "StateChangeEvent": "StateChangeEvent represents changing the advisory state."
+            },
+            "x-enum-varnames": [
+                "ImportDocumentEvent",
+                "DeleteDocumentEvent",
+                "StateChangeEvent",
+                "AddSSVCEvent",
+                "ChangeSSVCEvent",
+                "DeleteSSVCEvent",
+                "AddCommentEvent",
+                "ChangeCommentEvent",
+                "DeleteCommentEvent"
+            ]
+        },
+        "models.ID": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.PublishersTLPs": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/models.TLP"
+                }
+            }
+        },
+        "models.StoredQuery": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "dashboard": {
+                    "type": "boolean"
+                },
+                "definer": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "global": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "$ref": "#/definitions/query.ParserMode"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num": {
+                    "type": "integer"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "query": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/models.WorkflowRole"
+                }
+            }
+        },
+        "models.Success": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TLP": {
+            "type": "string",
+            "enum": [
+                "WHITE",
+                "GREEN",
+                "AMBER",
+                "RED"
+            ],
+            "x-enum-comments": {
+                "TLPAmber": "TLPAmber represents TLP:AMBER",
+                "TLPGreen": "TLPGreen represents TLP:GREEN",
+                "TLPRed": "TLPRed   represents TLP:RED",
+                "TLPWhite": "TLPWhite represents TLP:WHITE"
+            },
+            "x-enum-varnames": [
+                "TLPWhite",
+                "TLPGreen",
+                "TLPAmber",
+                "TLPRed"
+            ]
+        },
+        "models.Workflow": {
+            "type": "string",
+            "enum": [
+                "new",
+                "read",
+                "assessing",
+                "review",
+                "archived",
+                "delete"
+            ],
+            "x-enum-comments": {
+                "ArchivedWorkflow": "ArchivedWorkflow represents 'archived'.",
+                "AssessingWorkflow": "AssessingWorkflow represents 'assessing',",
+                "DeleteWorkflow": "DeleteWorkflow represents 'delete'.",
+                "NewWorkflow": "NewWorkflow represents 'new'.",
+                "ReadWorkflow": "ReadWorkflow represents 'read'.",
+                "ReviewWorkflow": "ReviewWorkflow represents 'review'."
+            },
+            "x-enum-varnames": [
+                "NewWorkflow",
+                "ReadWorkflow",
+                "AssessingWorkflow",
+                "ReviewWorkflow",
+                "ArchivedWorkflow",
+                "DeleteWorkflow"
+            ]
+        },
+        "models.WorkflowRole": {
+            "type": "string",
+            "enum": [
+                "admin",
+                "importer",
+                "editor",
+                "reviewer",
+                "auditor",
+                "source-manager"
+            ],
+            "x-enum-comments": {
+                "Admin": "Admin role",
+                "Auditor": "Auditor role",
+                "Editor": "Editor role",
+                "Importer": "Importer role",
+                "Reviewer": "Reviewer role",
+                "SourceManager": "Source Manager role"
+            },
+            "x-enum-varnames": [
+                "Admin",
+                "Importer",
+                "Editor",
+                "Reviewer",
+                "Auditor",
+                "SourceManager"
+            ]
+        },
+        "query.ParserMode": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "DocumentMode",
+                "AdvisoryMode",
+                "EventMode"
+            ]
+        },
+        "sources.FeedSubscription": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "sources.SourceSubscription": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "subscripted": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sources.FeedSubscription"
+                    }
+                }
+            }
+        },
+        "sources.SourceSubscriptions": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sources.SourceSubscription"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "sources.Stats": {
+            "type": "object",
+            "properties": {
+                "downloading": {
+                    "type": "integer"
+                },
+                "waiting": {
+                    "type": "integer"
+                }
+            }
+        },
+        "sql.NullString": {
+            "type": "object",
+            "properties": {
+                "string": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if String is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
+        "tempstore.Entry": {
+            "type": "object",
+            "properties": {
+                "expired": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inserted": {
+                    "type": "string"
+                },
+                "length": {
+                    "type": "integer"
+                }
+            }
+        },
+        "time.Duration": {
+            "type": "integer",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
+            ],
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
+        },
+        "web.about.info": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.argumentedAggregator": {
+            "type": "object",
+            "properties": {
+                "aggregator": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "custom": {
+                    "$ref": "#/definitions/web.custom"
+                }
+            }
+        },
+        "web.attentionSources.attention": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.comment": {
+            "type": "object",
+            "properties": {
+                "commentator": {
+                    "type": "string"
+                },
+                "document_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.createComment.commentResult": {
+            "type": "object",
+            "properties": {
+                "commentator": {
+                    "description": "TODO: change to string type",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/sql.NullString"
+                        }
+                    ]
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.createStoredQuery.createResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "num": {
+                    "type": "integer"
+                }
+            }
+        },
+        "web.custom": {
+            "type": "object",
+            "properties": {
+                "attention": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sources.SourceSubscriptions"
+                    }
+                }
+            }
+        },
+        "web.defaultSourceConfig.sourceConfig": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "$ref": "#/definitions/web.sourceAge"
+                },
+                "log_level": {
+                    "$ref": "#/definitions/config.FeedLogLevel"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "secure": {
+                    "type": "boolean"
+                },
+                "signature_check": {
+                    "type": "boolean"
+                },
+                "slots": {
+                    "type": "integer"
+                },
+                "strict_mode": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "web.feed": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "log_level": {
+                    "$ref": "#/definitions/config.FeedLogLevel"
+                },
+                "rolie": {
+                    "type": "boolean"
+                },
+                "stats": {
+                    "$ref": "#/definitions/sources.Stats"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.feedLogs.entry": {
+            "type": "object",
+            "properties": {
+                "feed_id": {
+                    "type": "integer"
+                },
+                "level": {
+                    "$ref": "#/definitions/config.FeedLogLevel"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.feedLogs.feedLogEntries": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.feedLogs.entry"
+                    }
+                }
+            }
+        },
+        "web.feedResult": {
+            "type": "object",
+            "properties": {
+                "feeds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.feed"
+                    }
+                }
+            }
+        },
+        "web.insertDefaultQueryExclusion.createResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "user": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.keepFeedTime.keepFeedTimeConfig": {
+            "type": "object",
+            "properties": {
+                "keep_feed_time": {
+                    "$ref": "#/definitions/time.Duration"
+                }
+            }
+        },
+        "web.overviewDocuments.documentResult": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "documents": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    }
+                }
+            }
+        },
+        "web.overviewEvents.events": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    }
+                }
+            }
+        },
+        "web.overviewTempDocuments.tempDocuments": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tempstore.Entry"
+                    }
+                },
+                "free": {
+                    "type": "integer"
+                }
+            }
+        },
+        "web.pmd.messages": {
+            "type": "object",
+            "properties": {
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "web.source": {
+            "type": "object",
+            "required": [
+                "name",
+                "url"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "age": {
+                    "$ref": "#/definitions/web.sourceAge"
+                },
+                "attention": {
+                    "type": "boolean"
+                },
+                "client_cert_passphrase": {
+                    "type": "string"
+                },
+                "client_cert_private": {
+                    "type": "string"
+                },
+                "client_cert_public": {
+                    "type": "string"
+                },
+                "headers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ignore_patterns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "rate": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "secure": {
+                    "type": "boolean"
+                },
+                "signature_check": {
+                    "type": "boolean"
+                },
+                "slots": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "stats": {
+                    "$ref": "#/definitions/sources.Stats"
+                },
+                "status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "strict_mode": {
+                    "type": "boolean"
+                },
+                "url": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "web.sourceAge": {
+            "type": "object",
+            "properties": {
+                "time.Duration": {
+                    "type": "integer",
+                    "enum": [
+                        -9223372036854775808,
+                        9223372036854775807,
+                        1,
+                        1000,
+                        1000000,
+                        1000000000,
+                        60000000000,
+                        3600000000000
+                    ],
+                    "x-enum-varnames": [
+                        "minDuration",
+                        "maxDuration",
+                        "Nanosecond",
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute",
+                        "Hour"
+                    ]
+                }
+            }
+        },
+        "web.updateOrder.queryOrder": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "order": {
+                    "type": "integer"
+                }
+            }
+        },
+        "web.viewAggregators.aggregator": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "attention": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.viewEvents.event": {
+            "type": "object",
+            "properties": {
+                "actor": {
+                    "type": "string"
+                },
+                "comment_id": {
+                    "type": "integer"
+                },
+                "document_id": {
+                    "type": "integer"
+                },
+                "event_type": {
+                    "$ref": "#/definitions/models.Event"
+                },
+                "state": {
+                    "$ref": "#/definitions/models.Workflow"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.viewSources.sourcesResult": {
+            "type": "object",
+            "properties": {
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.source"
+                    }
+                }
+            }
+        }
+    }
+}

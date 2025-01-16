@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -37,11 +38,22 @@ type argumentedAggregator struct {
 	Custom     custom          `json:"custom"`
 }
 
+// aggregatorProxy is an endpoint the aggregator metadata for a URL.
+//
+//	@Summary		Returns the aggregator metadata.
+//	@Description	Fetches and returns the aggregator metadata for the specified URL.
+//	@Param			url	query	string	true	"Aggregator URL"
+//	@Produce		json
+//	@Success		200	{object}	argumentedAggregator
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/aggregator [get]
 func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	url := ctx.Query("url")
 	ca, err := c.am.Cache.GetAggregator(url, c.cfg)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	// search in database
@@ -60,7 +72,7 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 		}, 0,
 	); err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		slog.Error("fetching aggregator failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	custom := custom{
@@ -78,6 +90,15 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, &aAgg)
 }
 
+// viewAggregators is an endpoint that returns all configured aggregators.
+//
+//	@Summary		Returns all aggregators.
+//	@Description	Returns all aggregators that are configured.
+//	@Produce		json
+//	@Success		200	{array}	web.viewAggregators.aggregator
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/aggregators [get]
 func (c *Controller) viewAggregators(ctx *gin.Context) {
 	type aggregator struct {
 		ID        int64  `json:"id"`
@@ -104,12 +125,25 @@ func (c *Controller) viewAggregators(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("fetching aggregators failed", "error", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, list)
 }
 
+// viewAggregator is an endpoint that returns the specified.
+//
+//	@Summary		Returns the aggregator.
+//	@Description	Returns metadata and configuration of the specified aggregator.
+//	@Param			id	path	int	true	"Aggregator ID"
+//	@Produce		json
+//	@Success		200	{object}	argumentedAggregator
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		404	{object}	models.Error	"not found"
+//	@Failure		500	{object}	models.Error
+//	@Router			/aggregators/{id} [get]
 func (c *Controller) viewAggregator(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
@@ -131,16 +165,16 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 		}, 0,
 	); {
 	case errors.Is(err, pgx.ErrNoRows):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "not found")
 		return
 	case err != nil:
 		slog.Error("fetching aggregator failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	ca, err := c.am.Cache.GetAggregator(url, c.cfg)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	aAgg := argumentedAggregator{
@@ -155,6 +189,21 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, &aAgg)
 }
 
+// createAggregator is an endpoint that creates an aggregator with the specified configuration.
+//
+//	@Summary		Creates an aggregator.
+//	@Description	Creates an aggregator with specified configuration.
+//	@Param			name	formData	string	true	"Aggregator name"
+//	@Param			url		formData	string	true	"Aggregator URL"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		201	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		404	{object}	models.Error	"not found"
+//	@Failure		500	{object}	models.Error
+//	@Router			/aggregators [post]
 func (c *Controller) createAggregator(ctx *gin.Context) {
 	var (
 		ok     bool
@@ -187,18 +236,29 @@ func (c *Controller) createAggregator(ctx *gin.Context) {
 	); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": fmt.Sprintf("not a unique value: %v", err.Error()),
-			})
+			models.SendErrorMessage(ctx, http.StatusBadRequest,
+				fmt.Sprintf("not a unique value: %v", err.Error()))
 		} else {
 			slog.Error("inserting aggregator failed", "error", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{"id": id})
+	ctx.JSON(http.StatusCreated, models.ID{ID: id})
 }
 
+// deleteAggregator is an endpoint that deletes the aggregator with specified ID.
+//
+//	@Summary		Deletes an aggregator.
+//	@Description	Deletes the aggregator configuration with the specified ID.
+//	@Param			id	path	int	true	"Aggregator ID"
+//	@Produce		json
+//	@Success		200	{object}	models.Success	"deleted"
+//	@Failure		400	{object}	models.Error	"could not parse id"
+//	@Failure		401
+//	@Failure		404	{object}	models.Error	"not found"
+//	@Failure		500	{object}	models.Error
+//	@Router			/aggregators/{id} [delete]
 func (c *Controller) deleteAggregator(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
@@ -215,13 +275,13 @@ func (c *Controller) deleteAggregator(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("delete aggregator failed", "error", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	if deleted {
-		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "deleted")
 	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "not found")
 	}
 }
 
@@ -248,12 +308,28 @@ func (c *Controller) attentionAggregators(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("fetching aggregator failed", "error", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, list)
 }
 
+// updateAggregator is an endpoint that updates the aggregator configuration.
+//
+//	@Summary		Updates aggregator configuration.
+//	@Description	Updates the aggregator configuration.
+//	@Param			id			path		int		true	"Aggregator ID"
+//	@Param			name		formData	string	false	"Aggregator name"
+//	@Param			url			formData	string	false	"Aggregator URL"
+//	@Param			active		formData	bool	false	"Aggregator active flag"
+//	@Param			attention	formData	bool	false	"Aggregator attention flag"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		200	{object}	models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/aggregators/{id} [put]
 func (c *Controller) updateAggregator(ctx *gin.Context) {
 	const (
 		prefix      = `UPDATE aggregators SET `
@@ -310,7 +386,7 @@ func (c *Controller) updateAggregator(ctx *gin.Context) {
 	}
 
 	if len(fields) == 0 {
-		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
+		models.SendSuccess(ctx, http.StatusOK, "unchanged")
 		return
 	}
 
@@ -333,16 +409,16 @@ func (c *Controller) updateAggregator(ctx *gin.Context) {
 		var pgErr *pgconn.PgError
 		// Unique constraint violation
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusBadRequest, err)
 			return
 		}
 		slog.Error("updating aggregator failed", "error", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	if changed {
-		ctx.JSON(http.StatusOK, gin.H{"msg": "changed"})
+		models.SendSuccess(ctx, http.StatusOK, "changed")
 	} else {
-		ctx.JSON(http.StatusOK, gin.H{"msg": "unchanged"})
+		models.SendSuccess(ctx, http.StatusOK, "unchanged")
 	}
 }

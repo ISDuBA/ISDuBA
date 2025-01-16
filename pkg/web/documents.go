@@ -37,6 +37,17 @@ import (
 const MinSearchLength = 2 // Makes at least "Go" searchable ;-)
 
 // deleteDocument is an end point for deleting a document.
+//
+//	@Summary		Deletes a CSAF document.
+//	@Description	Delete endpoint for CSAF documents.
+//	@Produce		json
+//	@Param			id	path		int	true	"Document ID"
+//	@Success		201	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/{id} [delete]
 func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -87,17 +98,30 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	if deleted {
-		ctx.JSON(http.StatusOK, gin.H{"message": "document deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "document deleted")
 	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 	}
 }
 
 // importDocument is an end point to import a document.
+//
+//	@Summary		Imports a CSAF document.
+//	@Description	Upload endpoint for CSAF documents.
+//	@Param			file	formData	file	true	"Document file"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		201	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		403	{object}	models.Error	"False TLP or publisher"
+//	@Failure		409	{object}	models.Error	"Already in database"
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents [post]
 func (c *Controller) importDocument(ctx *gin.Context) {
 	var actor *string
 	if user := c.currentUser(ctx); user.Valid {
@@ -106,12 +130,12 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 	limited := http.MaxBytesReader(
@@ -123,19 +147,18 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	var document any
 	if err := json.NewDecoder(tee).Decode(&document); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "document is not JSON: " + err.Error()})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "document is not JSON: "+err.Error())
 		return
 	}
 
 	msgs, err := csaf.ValidateCSAF(document)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "schema validation failed: " + err.Error()})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "schema validation failed: "+err.Error())
 		return
 	}
 	if len(msgs) > 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "schema validation failed: " + strings.Join(msgs, ", "),
-		})
+		models.SendErrorMessage(ctx, http.StatusBadRequest,
+			"schema validation failed: "+strings.Join(msgs, ", "))
 		return
 	}
 
@@ -144,14 +167,13 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		rvr, err := c.val.Validate(document)
 		if err != nil {
 			slog.Error("remote validation failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "remote validation failed: " + err.Error(),
-			})
+			models.SendErrorMessage(ctx, http.StatusInternalServerError,
+				"remote validation failed: "+err.Error())
 			return
 		}
 		if !rvr.Valid {
 			// XXX: Maybe we should tell, what's exactly wrong?
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "remote validation"})
+			models.SendErrorMessage(ctx, http.StatusBadRequest, "remote validation failed")
 			return
 		}
 	}
@@ -180,18 +202,29 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 		}, 0,
 	); {
 	case err == nil:
-		ctx.JSON(http.StatusCreated, gin.H{"id": id})
+		ctx.JSON(http.StatusCreated, models.ID{ID: id})
 	case errors.Is(err, models.ErrAlreadyInDatabase):
-		ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+		models.SendErrorMessage(ctx, http.StatusConflict, "already in database")
 	case errors.Is(err, models.ErrNotAllowed):
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "wrong publisher/tlp"})
+		models.SendErrorMessage(ctx, http.StatusForbidden, "wrong publisher/tlp")
 	default:
 		slog.Error("storing document failed", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 	}
 }
 
 // viewDocument is an end point to export a document.
+//
+//	@Summary		Returns the document.
+//	@Description	Returns the document in its original format.
+//	@Param			id	path	int	true	"Document ID"
+//	@Produce		json
+//	@Success		200	{object}	any
+//	@Failure		400	{object}	models.Error	"could not parse id"
+//	@Failure		401
+//	@Failure		404	{object}	models.Error	"document not found"
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/{id} [get]
 func (c *Controller) viewDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
@@ -216,9 +249,9 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
@@ -240,21 +273,39 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		extraHeaders)
 }
 
+// viewForwardTargets is an endpoint that returns the list of all targets.
+//
+//	@Summary		Returns forward list.
+//	@Description	Returns a list of all forward targets.
+//	@Produce		json
+//	@Success		200	{array}	forwarder.ForwardTarget
+//	@Failure		401
+//	@Router			/documents/forward [get]
 func (c *Controller) viewForwardTargets(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, c.fm.Targets())
 }
 
 // forwardDocument is an end point to forward a document.
+//
+//	@Summary		Forwards a document.
+//	@Description	Forwards a document to the specified target.
+//	@Param			id		path	int	true	"Document ID"
+//	@Param			target	path	int	true	"Target ID"
+//	@Produce		json
+//	@Success		200	{object}	models.ID
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/forward/{id}/{target} [post]
 func (c *Controller) forwardDocument(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no valid document id specified"})
 		return
 	}
 
 	targetID, ok := parse(ctx, toInt64, ctx.Param("target"))
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no target specified"})
 		return
 	}
 
@@ -274,22 +325,42 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
 
 	if err := c.fm.ForwardDocument(ctx.Request.Context(), int(targetID), documentID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"id": documentID})
+	ctx.JSON(http.StatusOK, models.ID{ID: documentID})
 }
 
 // overviewDocuments is an end point to return an overview document.
+//
+//	@Summary		Returns documents.
+//	@Description	Returns all documents that match the specified query.
+//	@Param			advisories	query	bool	false	"Return advisories"
+//	@Param			query		query	string	false	"Document query"
+//	@Param			columns		query	string	false	"Columns"
+//	@Param			orders		query	string	false	"Ordering"
+//	@Param			count		query	bool	false	"Enable counting"
+//	@Param			limit		query	int		false	"Maximum documents"
+//	@Param			offset		query	int		false	"Offset"
+//	@Produce		json
+//	@Success		200	{object}	web.overviewDocuments.documentResult
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents [get]
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
+	type documentResult struct {
+		Count     int64            `json:"count"`
+		Documents []map[string]any `json:"documents"`
+	}
 	// Use the advisories.
 	advisory, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("advisories", "false"))
 	if !ok {
@@ -328,7 +399,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
 	if err := builder.CheckProjections(fields); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -336,7 +407,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
 	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -401,16 +472,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	h := gin.H{}
+	h := documentResult{}
 	if calcCount {
-		h["count"] = count
+		h.Count = count
 	}
 	if len(results) > 0 {
-		h["documents"] = results
+		h.Documents = results
 	}
 	ctx.JSON(http.StatusOK, h)
 }

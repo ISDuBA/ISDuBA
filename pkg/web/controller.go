@@ -6,7 +6,6 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-// Package web implements the endpoints of the web server.
 package web
 
 import (
@@ -27,6 +26,10 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
+
+	_ "github.com/ISDuBA/ISDuBA/pkg/web/docs" // include generated swagger data.
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // Controller binds the endpoints to the internal logic.
@@ -76,6 +79,8 @@ func (c *Controller) Bind() http.Handler {
 	r := gin.New()
 	r.Use(sloggin.New(slog.Default()))
 	r.Use(gin.Recovery())
+	// Serve API description.
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if c.cfg.Web.Static != "" {
 		r.Use(static.Serve("/", static.LocalFile(c.cfg.Web.Static, false)))

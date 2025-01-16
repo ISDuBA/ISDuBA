@@ -22,6 +22,20 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
+// changeSSVC is an endpoint that changes the SSVC of the specified document.
+//
+//	@Summary		Changes the SSVC.
+//	@Description	This updates the SSVC of the specified document.
+//	@Param			document	path	int		true	"Document ID"
+//	@Param			vector		query	string	true	"SSVC vector"
+//	@Produce		json
+//	@Success		200	{object}	models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		403	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/sources/{document} [delete]
 func (c *Controller) changeSSVC(ctx *gin.Context) {
 	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
@@ -76,7 +90,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 				return nil
 			}
 
-			// check if its a real change
+			// check if it's a real change
 			if ssvc.Valid && ssvc.String == vector {
 				unchanged = true
 				return nil
@@ -119,7 +133,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 
 			// Log the SSVC change.
 			event := models.ChangeSSVCEvent
-			if !ssvc.Valid { // Its new.
+			if !ssvc.Valid { // It's new.
 				event = models.AddSSVCEvent
 			}
 			if err := logEvent(event, models.AssessingWorkflow); err != nil {
@@ -132,18 +146,18 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 		} else {
 			slog.Error("state change failed", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
 	switch {
 	case forbidden:
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
 	case unchanged:
-		ctx.JSON(http.StatusOK, gin.H{"message": "unchanged"})
+		models.SendSuccess(ctx, http.StatusOK, "unchanged")
 	case bad:
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "unsuited state"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "unsuited state")
 	default:
-		ctx.JSON(http.StatusOK, gin.H{"message": "changed"})
+		models.SendSuccess(ctx, http.StatusOK, "changed")
 	}
 }

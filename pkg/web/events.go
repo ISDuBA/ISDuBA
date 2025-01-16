@@ -25,6 +25,18 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
+// overviewEvents is an endpoint that returns a list of events.
+//
+//	@Summary		Returns a list of events.
+//	@Description	Returns all events that match the specified query.
+//	@Param			query	query	string	false	"Event query"
+//	@Produce		json
+//	@Success		200	{object}	web.overviewEvents.events
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/events [get]
 func (c *Controller) overviewEvents(ctx *gin.Context) {
 	parser := query.Parser{
 		Mode:            query.EventMode,
@@ -48,14 +60,14 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 		ctx.DefaultQuery("columns", "event event_state time actor comments_id message id"))
 
 	if err := builder.CheckProjections(fields); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	orderFields := strings.Fields(ctx.DefaultQuery("orders", "-time"))
 	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -116,29 +128,46 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	h := gin.H{}
+	type events struct {
+		Events []map[string]any `json:"events"`
+		Count  int64            `json:"count,omitempty"`
+	}
+	h := events{}
 	if calcCount {
-		h["count"] = count
+		h.Count = count
 	}
 	if len(results) > 0 {
-		h["events"] = results
+		h.Events = results
 	}
 	ctx.JSON(http.StatusOK, h)
 }
 
+// viewEvents is an endpoint that returns the events of the specified advisory.
+//
+//	@Summary		Returns all events.
+//	@Description	Returns all events from the specified advisory.
+//	@Param			publisher	path	string	true	"Publisher"
+//	@Param			trackingid	path	string	true	"Tracking ID"
+//	@Produce		json
+//	@Success		200	{array}		web.viewEvents.event
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/events/{publisher}/{trackingid} [get]
 func (c *Controller) viewEvents(ctx *gin.Context) {
 	var key models.AdvisoryKey
 	if err := ctx.ShouldBindUri(&key); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	if key.Publisher == "" || key.TrackingID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing publisher or tracking_id"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "missing publisher or tracking_id")
 		return
 	}
 
@@ -192,12 +221,12 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	if !exists {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "advisory not found")
 		return
 	}
 

@@ -27,16 +27,31 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
+// createStoredQuery is an endpoint that creates a stored query.
+//
+//	@Summary		Creates a stored query.
+//	@Description	Creates a stored query with the specified configuration.
+//	@Param			inputForm	formData	models.StoredQuery	true	"Query configuration"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		201	{object}	web.createStoredQuery.createResult
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries [post]
 func (c *Controller) createStoredQuery(ctx *gin.Context) {
+	type createResult struct {
+		ID  int64 `json:"id"`
+		Num int64 `json:"num"`
+	}
 	sq := models.StoredQuery{
 		Definer: ctx.GetString("uid"),
 	}
 
 	// We need the name.
 	if sq.Name = ctx.PostForm("name"); sq.Name == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing 'name'",
-		})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "missing 'name'")
 		return
 	}
 
@@ -72,9 +87,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	}
 	// Global is only for admins.
 	if sq.Global && !c.hasAnyRole(ctx, models.Admin) {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"error": "global flag can only be used by admins",
-		})
+		models.SendErrorMessage(ctx, http.StatusForbidden, "global flag can only used by admins")
 		return
 	}
 
@@ -93,18 +106,16 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 
 	// columns are not optional.
 	if sq.Columns = strings.Fields(ctx.PostForm("columns")); len(sq.Columns) == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing 'columns' value",
-		})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "missing 'columns' value")
 		return
 	}
 
 	builder := query.SQLBuilder{Mode: sq.Kind}
 	builder.CreateWhere(expr)
 	if err := builder.CheckProjections(sq.Columns); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "bad 'columns' value: " + err.Error(),
-		})
+		models.SendErrorMessage(ctx,
+			http.StatusBadRequest,
+			"bad 'columns' value: "+err.Error())
 		return
 	}
 
@@ -112,9 +123,9 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 	if orders, ok := ctx.GetPostForm("orders"); ok {
 		os := strings.Fields(orders)
 		if _, err := builder.CreateOrder(os); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "bad 'orders' value: " + err.Error(),
-			})
+			models.SendErrorMessage(ctx,
+				http.StatusBadRequest,
+				"bad 'orders' value"+err.Error())
 			return
 		}
 		sq.Orders = &os
@@ -161,19 +172,30 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		var pgErr *pgconn.PgError
 		// Unique constraint violation
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+			models.SendErrorMessage(ctx, http.StatusConflict, "already in database")
 			return
 		}
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{
-		"id":  queryID,
-		"num": queryNum,
+	ctx.JSON(http.StatusCreated, createResult{
+		ID:  queryID,
+		Num: queryNum,
 	})
 }
 
+// updateOrder is an endpoint that updates the query order.
+//
+//	@Summary		Updates the query order.
+//	@Description	Updates the query order with the specified ordering.
+//	@Param			queryOrder	body	web.updateOrder.queryOrder	true	"Query order"
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	models.Success
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries/orders [post]
 func (c *Controller) updateOrder(ctx *gin.Context) {
 	type queryOrder struct {
 		ID    int64 `json:"id"`
@@ -181,7 +203,7 @@ func (c *Controller) updateOrder(ctx *gin.Context) {
 	}
 	var orders []queryOrder
 	if err := ctx.ShouldBindJSON(&orders); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -218,12 +240,22 @@ func (c *Controller) updateOrder(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "changed"})
+	models.SendSuccess(ctx, http.StatusOK, "changed")
 }
 
+// listStoredQueries is an endpoint that returns all stored queries.
+//
+//	@Summary		Returns stored queries.
+//	@Description	Returns all configured stored queries.
+//	@Produce		json
+//	@Success		200	{array}		models.StoredQuery
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries [get]
 func (c *Controller) listStoredQueries(ctx *gin.Context) {
 	const selectSQL = `SELECT ` +
 		`id,` +
@@ -275,7 +307,7 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -290,6 +322,18 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, queries)
 }
 
+// listStoredQueries is an endpoint that deletes the specified stored query.
+//
+//	@Summary		Deletes the stored query.
+//	@Description	Deletes the query with the specified ID.
+//	@Param			id	path	int	true	"Query ID"
+//	@Produce		json
+//	@Success		200	{array}		models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries/{id} [delete]
 func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
@@ -321,17 +365,29 @@ func (c *Controller) deleteStoredQuery(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	if tag.RowsAffected() != 0 {
-		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "deleted")
 	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "query not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "query not found")
 	}
 }
 
+// fetchStoredQuery is an endpoint that returns a stored query.
+//
+//	@Summary		Updates a stored query.
+//	@Description	Updates a feed with the specified configuration.
+//	@Param			id	path	int	true	"Query ID"
+//	@Produce		json
+//	@Success		200	{object}	models.StoredQuery
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries/{id} [get]
 func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
@@ -377,16 +433,30 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 	); err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "not found")
 		default:
 			slog.Error("database error", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
 	ctx.JSON(http.StatusOK, &storedQuery)
 }
 
+// updateStoredQuery is an endpoint that updates a stored query.
+//
+//	@Summary		Updates a stored query.
+//	@Description	Updates a stored query with the specified configuration.
+//	@Param			id		path		int					true	"Query ID"
+//	@Param			query	formData	models.StoredQuery	true	"Query configuration"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		200	{object}	models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries/{id} [put]
 func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
@@ -644,24 +714,33 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			bad = "not a unique value: %s" + err.Error()
 		} else {
 			slog.Error("database error", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	}
 	switch {
 	case bad != "":
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": bad})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, bad)
 	case notFound:
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "not found")
 	case unchanged:
-		ctx.JSON(http.StatusOK, gin.H{"message": "unchanged"})
+		models.SendSuccess(ctx, http.StatusOK, "unchanged")
 	default:
-		ctx.JSON(http.StatusOK, gin.H{"message": "changed"})
+		models.SendSuccess(ctx, http.StatusOK, "changed")
 	}
 }
 
+// getDefaultQueryExclusion is an endpoint that returns the exclusion list of all queries.
+//
+//	@Summary		Returns query exclusions.
+//	@Description	Returns exclusions of all queries.
+//	@Produce		json
+//	@Success		200	{object}	models.Success
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries/ignore [get]
 func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
-
 	// For which user do we want to get the ignored default queries?
 	user := c.currentUser(ctx).String
 
@@ -686,16 +765,28 @@ func (c *Controller) getDefaultQueryExclusion(ctx *gin.Context) {
 	); err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			models.SendErrorMessage(ctx, http.StatusNotFound, "not found")
 		default:
 			slog.Error("database error", "err", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
 	}
 	ctx.JSON(http.StatusOK, &ignored)
 }
 
+// deleteDefaultQueryExclusion is an endpoint that deletes the exclusion of the query with specified ID.
+//
+//	@Summary		Deletes query exclusion.
+//	@Description	Deletes the query exclusion with the specified ID.
+//	@Param			query	path	int	true	"Query ID"
+//	@Produce		json
+//	@Success		200	{object}	models.Success
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries/ignore/{query} [delete]
 func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
@@ -705,7 +796,7 @@ func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 	// For which user do we want to delete the ignored default queries?
 	user := c.currentUser(ctx).String
 
-	var deleteSQL = `DELETE FROM default_query_exclusion WHERE "user" = $1 AND id = $2`
+	deleteSQL := `DELETE FROM default_query_exclusion WHERE "user" = $1 AND id = $2`
 
 	var tag pgconn.CommandTag
 
@@ -719,24 +810,40 @@ func (c *Controller) deleteDefaultQueryExclusion(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	if tag.RowsAffected() != 0 {
-		ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+		models.SendSuccess(ctx, http.StatusOK, "deleted")
 	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "entry not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "entry not found")
 	}
 }
 
+// insertDefaultQueryExclusion is an endpoint that ignores the query with specified ID.
+//
+//	@Summary		Ignores a query.
+//	@Description	Ignores the query with the specified ID.
+//	@Param			query	path	int	true	"Query ID"
+//	@Produce		json
+//	@Success		200	{object}	web.insertDefaultQueryExclusion.createResult
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		409	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/queries/ignore/{query} [post]
 func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
+	type createResult struct {
+		User string `json:"user"`
+		ID   int64  `json:"id"`
+	}
 	queryID, ok := parse(ctx, toInt64, ctx.Param("query"))
 	if !ok {
 		return
 	}
 	user := c.currentUser(ctx).String
-	var insertSQL = `INSERT INTO default_query_exclusion ("user", id) VALUES ($1, $2) RETURNING "user", id`
+	insertSQL := `INSERT INTO default_query_exclusion ("user", id) VALUES ($1, $2) RETURNING "user", id`
 
 	var insertedUser string
 	var insertedID int64
@@ -753,15 +860,15 @@ func (c *Controller) insertDefaultQueryExclusion(ctx *gin.Context) {
 		var pgErr *pgconn.PgError
 		// Unique constraint violation
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ctx.JSON(http.StatusConflict, gin.H{"error": "already in database"})
+			models.SendErrorMessage(ctx, http.StatusConflict, "already in database")
 			return
 		}
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{
-		"user": insertedUser,
-		"id":   insertedID,
+	ctx.JSON(http.StatusCreated, createResult{
+		User: insertedUser,
+		ID:   insertedID,
 	})
 }

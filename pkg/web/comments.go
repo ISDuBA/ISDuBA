@@ -10,6 +10,7 @@ package web
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -39,7 +40,28 @@ func (c *Controller) isCommentingAllowed(ctx *gin.Context, state models.Workflow
 	}
 }
 
+// createComment is an endpoint that creates a comment.
+//
+//	@Summary		Creates a comment.
+//	@Description	Creates a comment for the specified document.
+//	@Param			id		path		int		true	"Document ID"
+//	@Param			message	formData	string	true	"Comment message"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		201	{object}	web.createComment.commentResult
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		403	{object}	models.Error
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/comments/{id} [post]
 func (c *Controller) createComment(ctx *gin.Context) {
+	type commentResult struct {
+		ID   *int64    `json:"id"`
+		Time time.Time `json:"time"`
+		// TODO: change to string type
+		Commentator sql.NullString `json:"commentator"`
+	}
 	docID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
 		return
@@ -147,25 +169,39 @@ func (c *Controller) createComment(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	switch {
 	case !exists:
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 	case !commentingAllowed:
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid state to comment"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "invalid state to comment")
 	case forbidden:
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "user not allowed to change state"})
+		models.SendErrorMessage(ctx, http.StatusForbidden, "user not allowed to change state")
 	default:
-		ctx.JSON(http.StatusCreated, gin.H{
-			"id":          commentID,
-			"time":        now,
-			"commentator": commentator,
+		ctx.JSON(http.StatusCreated, commentResult{
+			ID:          commentID,
+			Time:        now,
+			Commentator: commentator,
 		})
 	}
 }
 
+// updateComment is an endpoint that updates the specified comment.
+//
+//	@Summary		Updates a comment.
+//	@Description	Updates the comment with the specified ID.
+//	@Param			id		path		int		true	"Comment ID"
+//	@Param			message	formData	string	true	"Comment message"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Success		200	{array}		comment
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/comments/post/{id} [put]
 func (c *Controller) updateComment(ctx *gin.Context) {
 	commentID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
@@ -248,19 +284,19 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	if !exists {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "comment not found")
 		return
 	}
 	if !commentingAllowed {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid state to comment"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "invalid state to comment")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	models.SendSuccess(ctx, http.StatusOK, "comment updated")
 }
 
 type comment struct {
@@ -271,6 +307,18 @@ type comment struct {
 	Message     string    `json:"message"`
 }
 
+// viewComment is an endpoint that returns the specified comment.
+//
+//	@Summary		Returns a comment.
+//	@Description	Returns the comment with the specified ID.
+//	@Param			id	path	int	true	"Comment ID"
+//	@Produce		json
+//	@Success		200	{array}		comment
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/comments/post/{id} [get]
 func (c *Controller) viewComment(ctx *gin.Context) {
 	id, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
@@ -296,24 +344,37 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 				&post.Message)
 		}, 0); {
 	case errors.Is(err, pgx.ErrNoRows):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "comment post not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "comment post not found")
 	case err != nil:
 		slog.Error("database error while fetching comment post", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 	default:
 		ctx.JSON(http.StatusOK, &post)
 	}
 }
 
+// viewComments is an endpoint that returns all comments.
+//
+//	@Summary		Returns all comments.
+//	@Description	Returns all comments for the specified advisory.
+//	@Param			publisher	path	string	true	"Publisher"
+//	@Param			trackingid	path	string	true	"Tracking ID"
+//	@Produce		json
+//	@Success		200	{array}		comment
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		404	{object}	models.Error
+//	@Failure		500	{object}	models.Error
+//	@Router			/comments/{publisher}/{trackingid} [get]
 func (c *Controller) viewComments(ctx *gin.Context) {
 	var key models.AdvisoryKey
 	if err := ctx.ShouldBindUri(&key); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	if key.Publisher == "" || key.TrackingID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing publisher or tracking_id"})
+		models.SendErrorMessage(ctx, http.StatusBadRequest, "missing publisher or tracking_id")
 		return
 	}
 
@@ -357,12 +418,12 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		}, 0,
 	); err != nil {
 		slog.Error("database error", "err", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	if !exists {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 		return
 	}
 

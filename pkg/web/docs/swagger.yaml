@@ -1,0 +1,2858 @@
+basePath: /api
+definitions:
+  config.Client:
+    properties:
+      idle_timeout:
+        $ref: '#/definitions/time.Duration'
+      keycloak_client_id:
+        type: string
+      keycloak_realm:
+        type: string
+      keycloak_url:
+        type: string
+      update_interval:
+        $ref: '#/definitions/time.Duration'
+    type: object
+  config.FeedLogLevel:
+    enum:
+    - 1
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - defaultSourcesFeedLogLevel
+    - DebugFeedLogLevel
+    - InfoFeedLogLevel
+    - WarnFeedLogLevel
+    - ErrorFeedLogLevel
+  forwarder.ForwardTarget:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  models.AdvisoryState:
+    properties:
+      publisher:
+        type: string
+      state:
+        $ref: '#/definitions/models.Workflow'
+      tracking_id:
+        type: string
+    required:
+    - publisher
+    - state
+    - tracking_id
+    type: object
+  models.Error:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+    type: object
+  models.Event:
+    enum:
+    - import_document
+    - delete_document
+    - state_change
+    - add_sscv
+    - change_sscv
+    - delete_sscv
+    - add_comment
+    - change_comment
+    - delete_comment
+    type: string
+    x-enum-comments:
+      AddCommentEvent: AddCommentEvent represents the addition of a comment.
+      AddSSVCEvent: AddSSVCEvent represents the addtion of a SSVC score.
+      ChangeCommentEvent: ChangeCommentEvent represents the change of a comment.
+      ChangeSSVCEvent: ChangeSSVCEvent represents the change of a SSVC score.
+      DeleteCommentEvent: DeleteCommentEvent represents the deletion of a comment.
+      DeleteDocumentEvent: DeleteDocumentEvent represents a document deletion.
+      DeleteSSVCEvent: DeleteSSVCEvent represents the deletion of a SSVC score.
+      ImportDocumentEvent: ImportDocumentEvent represents a document import.
+      StateChangeEvent: StateChangeEvent represents changing the advisory state.
+    x-enum-varnames:
+    - ImportDocumentEvent
+    - DeleteDocumentEvent
+    - StateChangeEvent
+    - AddSSVCEvent
+    - ChangeSSVCEvent
+    - DeleteSSVCEvent
+    - AddCommentEvent
+    - ChangeCommentEvent
+    - DeleteCommentEvent
+  models.ID:
+    properties:
+      id:
+        type: integer
+    type: object
+  models.PublishersTLPs:
+    additionalProperties:
+      items:
+        $ref: '#/definitions/models.TLP'
+      type: array
+    type: object
+  models.StoredQuery:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      dashboard:
+        type: boolean
+      definer:
+        type: string
+      description:
+        type: string
+      global:
+        type: boolean
+      id:
+        type: integer
+      kind:
+        $ref: '#/definitions/query.ParserMode'
+      name:
+        type: string
+      num:
+        type: integer
+      orders:
+        items:
+          type: string
+        type: array
+      query:
+        type: string
+      role:
+        $ref: '#/definitions/models.WorkflowRole'
+    type: object
+  models.Success:
+    properties:
+      message:
+        type: string
+    type: object
+  models.TLP:
+    enum:
+    - WHITE
+    - GREEN
+    - AMBER
+    - RED
+    type: string
+    x-enum-comments:
+      TLPAmber: TLPAmber represents TLP:AMBER
+      TLPGreen: TLPGreen represents TLP:GREEN
+      TLPRed: TLPRed   represents TLP:RED
+      TLPWhite: TLPWhite represents TLP:WHITE
+    x-enum-varnames:
+    - TLPWhite
+    - TLPGreen
+    - TLPAmber
+    - TLPRed
+  models.Workflow:
+    enum:
+    - new
+    - read
+    - assessing
+    - review
+    - archived
+    - delete
+    type: string
+    x-enum-comments:
+      ArchivedWorkflow: ArchivedWorkflow represents 'archived'.
+      AssessingWorkflow: AssessingWorkflow represents 'assessing',
+      DeleteWorkflow: DeleteWorkflow represents 'delete'.
+      NewWorkflow: NewWorkflow represents 'new'.
+      ReadWorkflow: ReadWorkflow represents 'read'.
+      ReviewWorkflow: ReviewWorkflow represents 'review'.
+    x-enum-varnames:
+    - NewWorkflow
+    - ReadWorkflow
+    - AssessingWorkflow
+    - ReviewWorkflow
+    - ArchivedWorkflow
+    - DeleteWorkflow
+  models.WorkflowRole:
+    enum:
+    - admin
+    - importer
+    - editor
+    - reviewer
+    - auditor
+    - source-manager
+    type: string
+    x-enum-comments:
+      Admin: Admin role
+      Auditor: Auditor role
+      Editor: Editor role
+      Importer: Importer role
+      Reviewer: Reviewer role
+      SourceManager: Source Manager role
+    x-enum-varnames:
+    - Admin
+    - Importer
+    - Editor
+    - Reviewer
+    - Auditor
+    - SourceManager
+  query.ParserMode:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - DocumentMode
+    - AdvisoryMode
+    - EventMode
+  sources.FeedSubscription:
+    properties:
+      id:
+        type: integer
+      url:
+        type: string
+    type: object
+  sources.SourceSubscription:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      subscripted:
+        items:
+          $ref: '#/definitions/sources.FeedSubscription'
+        type: array
+    type: object
+  sources.SourceSubscriptions:
+    properties:
+      available:
+        items:
+          type: string
+        type: array
+      subscriptions:
+        items:
+          $ref: '#/definitions/sources.SourceSubscription'
+        type: array
+      url:
+        type: string
+    type: object
+  sources.Stats:
+    properties:
+      downloading:
+        type: integer
+      waiting:
+        type: integer
+    type: object
+  sql.NullString:
+    properties:
+      string:
+        type: string
+      valid:
+        description: Valid is true if String is not NULL
+        type: boolean
+    type: object
+  tempstore.Entry:
+    properties:
+      expired:
+        type: string
+      filename:
+        type: string
+      id:
+        type: integer
+      inserted:
+        type: string
+      length:
+        type: integer
+    type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+  web.about.info:
+    properties:
+      version:
+        type: string
+    type: object
+  web.argumentedAggregator:
+    properties:
+      aggregator:
+        items:
+          type: integer
+        type: array
+      custom:
+        $ref: '#/definitions/web.custom'
+    type: object
+  web.attentionSources.attention:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  web.comment:
+    properties:
+      commentator:
+        type: string
+      document_id:
+        type: integer
+      id:
+        type: integer
+      message:
+        type: string
+      time:
+        type: string
+    type: object
+  web.createComment.commentResult:
+    properties:
+      commentator:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: 'TODO: change to string type'
+      id:
+        type: integer
+      time:
+        type: string
+    type: object
+  web.createStoredQuery.createResult:
+    properties:
+      id:
+        type: integer
+      num:
+        type: integer
+    type: object
+  web.custom:
+    properties:
+      attention:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      subscriptions:
+        items:
+          $ref: '#/definitions/sources.SourceSubscriptions'
+        type: array
+    type: object
+  web.defaultSourceConfig.sourceConfig:
+    properties:
+      age:
+        $ref: '#/definitions/web.sourceAge'
+      log_level:
+        $ref: '#/definitions/config.FeedLogLevel'
+      rate:
+        type: number
+      secure:
+        type: boolean
+      signature_check:
+        type: boolean
+      slots:
+        type: integer
+      strict_mode:
+        type: boolean
+    type: object
+  web.feed:
+    properties:
+      id:
+        type: integer
+      label:
+        type: string
+      log_level:
+        $ref: '#/definitions/config.FeedLogLevel'
+      rolie:
+        type: boolean
+      stats:
+        $ref: '#/definitions/sources.Stats'
+      url:
+        type: string
+    type: object
+  web.feedLogs.entry:
+    properties:
+      feed_id:
+        type: integer
+      level:
+        $ref: '#/definitions/config.FeedLogLevel'
+      msg:
+        type: string
+      time:
+        type: string
+    type: object
+  web.feedLogs.feedLogEntries:
+    properties:
+      count:
+        type: integer
+      entries:
+        items:
+          $ref: '#/definitions/web.feedLogs.entry'
+        type: array
+    type: object
+  web.feedResult:
+    properties:
+      feeds:
+        items:
+          $ref: '#/definitions/web.feed'
+        type: array
+    type: object
+  web.insertDefaultQueryExclusion.createResult:
+    properties:
+      id:
+        type: integer
+      user:
+        type: string
+    type: object
+  web.keepFeedTime.keepFeedTimeConfig:
+    properties:
+      keep_feed_time:
+        $ref: '#/definitions/time.Duration'
+    type: object
+  web.overviewDocuments.documentResult:
+    properties:
+      count:
+        type: integer
+      documents:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
+    type: object
+  web.overviewEvents.events:
+    properties:
+      count:
+        type: integer
+      events:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
+    type: object
+  web.overviewTempDocuments.tempDocuments:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/tempstore.Entry'
+        type: array
+      free:
+        type: integer
+    type: object
+  web.pmd.messages:
+    properties:
+      messages:
+        items:
+          type: string
+        type: array
+    type: object
+  web.source:
+    properties:
+      active:
+        type: boolean
+      age:
+        $ref: '#/definitions/web.sourceAge'
+      attention:
+        type: boolean
+      client_cert_passphrase:
+        type: string
+      client_cert_private:
+        type: string
+      client_cert_public:
+        type: string
+      headers:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      ignore_patterns:
+        items:
+          type: string
+        type: array
+      name:
+        minLength: 1
+        type: string
+      rate:
+        minimum: 0
+        type: number
+      secure:
+        type: boolean
+      signature_check:
+        type: boolean
+      slots:
+        minimum: 0
+        type: integer
+      stats:
+        $ref: '#/definitions/sources.Stats'
+      status:
+        items:
+          type: string
+        type: array
+      strict_mode:
+        type: boolean
+      url:
+        minLength: 1
+        type: string
+    required:
+    - name
+    - url
+    type: object
+  web.sourceAge:
+    properties:
+      time.Duration:
+        enum:
+        - -9223372036854775808
+        - 9223372036854775807
+        - 1
+        - 1000
+        - 1000000
+        - 1000000000
+        - 60000000000
+        - 3600000000000
+        type: integer
+        x-enum-varnames:
+        - minDuration
+        - maxDuration
+        - Nanosecond
+        - Microsecond
+        - Millisecond
+        - Second
+        - Minute
+        - Hour
+    type: object
+  web.updateOrder.queryOrder:
+    properties:
+      id:
+        type: integer
+      order:
+        type: integer
+    type: object
+  web.viewAggregators.aggregator:
+    properties:
+      active:
+        type: boolean
+      attention:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  web.viewEvents.event:
+    properties:
+      actor:
+        type: string
+      comment_id:
+        type: integer
+      document_id:
+        type: integer
+      event_type:
+        $ref: '#/definitions/models.Event'
+      state:
+        $ref: '#/definitions/models.Workflow'
+      time:
+        type: string
+    type: object
+  web.viewSources.sourcesResult:
+    properties:
+      sources:
+        items:
+          $ref: '#/definitions/web.source'
+        type: array
+    type: object
+info:
+  contact:
+    email: info@intevation.de
+    name: ISDuBA team
+    url: https://github.com/ISDuBA/ISDuBA
+  description: This is the ISDuBA API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: ISDuBA API
+  version: "1.0"
+paths:
+  /about:
+    get:
+      description: Returns general information about the application, like version.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.about.info'
+        "401":
+          description: Unauthorized
+      summary: Returns application information.
+  /advisory/{publisher}/{trackingid}:
+    delete:
+      description: Deletes the specified advisory.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.viewEvents.event'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes an advisory.
+  /aggregator:
+    get:
+      description: Fetches and returns the aggregator metadata for the specified URL.
+      parameters:
+      - description: Aggregator URL
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.argumentedAggregator'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns the aggregator metadata.
+  /aggregators:
+    get:
+      description: Returns all aggregators that are configured.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.viewAggregators.aggregator'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns all aggregators.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates an aggregator with specified configuration.
+      parameters:
+      - description: Aggregator name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Aggregator URL
+        in: formData
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates an aggregator.
+  /aggregators/{id}:
+    delete:
+      description: Deletes the aggregator configuration with the specified ID.
+      parameters:
+      - description: Aggregator ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: could not parse id
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes an aggregator.
+    get:
+      description: Returns metadata and configuration of the specified aggregator.
+      parameters:
+      - description: Aggregator ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.argumentedAggregator'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns the aggregator.
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates the aggregator configuration.
+      parameters:
+      - description: Aggregator ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Aggregator name
+        in: formData
+        name: name
+        type: string
+      - description: Aggregator URL
+        in: formData
+        name: url
+        type: string
+      - description: Aggregator active flag
+        in: formData
+        name: active
+        type: boolean
+      - description: Aggregator attention flag
+        in: formData
+        name: attention
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates aggregator configuration.
+  /client-config:
+    get:
+      description: Returns information that the client needs to operate.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/config.Client'
+      summary: Returns client configuration.
+  /comments/{id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a comment for the specified document.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment message
+        in: formData
+        name: message
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/web.createComment.commentResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a comment.
+  /comments/{publisher}/{trackingid}:
+    get:
+      description: Returns all comments for the specified advisory.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.comment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns all comments.
+  /comments/post/{id}:
+    get:
+      description: Returns the comment with the specified ID.
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.comment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a comment.
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates the comment with the specified ID.
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment message
+        in: formData
+        name: message
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.comment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a comment.
+  /diff/{document1}/{document2}:
+    get:
+      description: Returns a diff between two documents.
+      parameters:
+      - description: Document 1 ID
+        in: path
+        name: document1
+        required: true
+        type: string
+      - description: Document 2 ID
+        in: path
+        name: document2
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a diff.
+  /documents:
+    get:
+      description: Returns all documents that match the specified query.
+      parameters:
+      - description: Return advisories
+        in: query
+        name: advisories
+        type: boolean
+      - description: Document query
+        in: query
+        name: query
+        type: string
+      - description: Columns
+        in: query
+        name: columns
+        type: string
+      - description: Ordering
+        in: query
+        name: orders
+        type: string
+      - description: Enable counting
+        in: query
+        name: count
+        type: boolean
+      - description: Maximum documents
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.overviewDocuments.documentResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns documents.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload endpoint for CSAF documents.
+      parameters:
+      - description: Document file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "403":
+          description: False TLP or publisher
+          schema:
+            $ref: '#/definitions/models.Error'
+        "409":
+          description: Already in database
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Imports a CSAF document.
+  /documents/{id}:
+    delete:
+      description: Delete endpoint for CSAF documents.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a CSAF document.
+    get:
+      description: Returns the document in its original format.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: could not parse id
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: document not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns the document.
+  /documents/forward:
+    get:
+      description: Returns a list of all forward targets.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/forwarder.ForwardTarget'
+            type: array
+        "401":
+          description: Unauthorized
+      summary: Returns forward list.
+  /documents/forward/{id}/{target}:
+    post:
+      description: Forwards a document to the specified target.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Target ID
+        in: path
+        name: target
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Forwards a document.
+  /events:
+    get:
+      description: Returns all events that match the specified query.
+      parameters:
+      - description: Event query
+        in: query
+        name: query
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.overviewEvents.events'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a list of events.
+  /events/{publisher}/{trackingid}:
+    get:
+      description: Returns all events from the specified advisory.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.viewEvents.event'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns all events.
+  /pmd:
+    get:
+      description: Fetches and returns the provider metadata for the specified URL.
+      parameters:
+      - description: PMD URL
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: could not parse url
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "502":
+          description: could not fetch pmd
+          schema:
+            $ref: '#/definitions/web.pmd.messages'
+      summary: Returns the pmd.
+  /queries:
+    get:
+      description: Returns all configured stored queries.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.StoredQuery'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns stored queries.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a stored query with the specified configuration.
+      parameters:
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: columns
+        type: array
+      - in: formData
+        name: dashboard
+        type: boolean
+      - in: formData
+        name: definer
+        type: string
+      - in: formData
+        name: description
+        type: string
+      - in: formData
+        name: global
+        type: boolean
+      - in: formData
+        name: id
+        type: integer
+      - enum:
+        - 0
+        - 1
+        - 2
+        in: formData
+        name: kind
+        type: integer
+        x-enum-varnames:
+        - DocumentMode
+        - AdvisoryMode
+        - EventMode
+      - in: formData
+        name: name
+        type: string
+      - in: formData
+        name: num
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: orders
+        type: array
+      - in: formData
+        name: query
+        type: string
+      - enum:
+        - admin
+        - importer
+        - editor
+        - reviewer
+        - auditor
+        - source-manager
+        in: formData
+        name: role
+        type: string
+        x-enum-comments:
+          Admin: Admin role
+          Auditor: Auditor role
+          Editor: Editor role
+          Importer: Importer role
+          Reviewer: Reviewer role
+          SourceManager: Source Manager role
+        x-enum-varnames:
+        - Admin
+        - Importer
+        - Editor
+        - Reviewer
+        - Auditor
+        - SourceManager
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/web.createStoredQuery.createResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a stored query.
+  /queries/{id}:
+    delete:
+      description: Deletes the query with the specified ID.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Success'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes the stored query.
+    get:
+      description: Updates a feed with the specified configuration.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.StoredQuery'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a stored query.
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates a stored query with the specified configuration.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: columns
+        type: array
+      - in: formData
+        name: dashboard
+        type: boolean
+      - in: formData
+        name: definer
+        type: string
+      - in: formData
+        name: description
+        type: string
+      - in: formData
+        name: global
+        type: boolean
+      - in: formData
+        name: id
+        type: integer
+      - enum:
+        - 0
+        - 1
+        - 2
+        in: formData
+        name: kind
+        type: integer
+        x-enum-varnames:
+        - DocumentMode
+        - AdvisoryMode
+        - EventMode
+      - in: formData
+        name: name
+        type: string
+      - in: formData
+        name: num
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: orders
+        type: array
+      - in: formData
+        name: query
+        type: string
+      - enum:
+        - admin
+        - importer
+        - editor
+        - reviewer
+        - auditor
+        - source-manager
+        in: formData
+        name: role
+        type: string
+        x-enum-comments:
+          Admin: Admin role
+          Auditor: Auditor role
+          Editor: Editor role
+          Importer: Importer role
+          Reviewer: Reviewer role
+          SourceManager: Source Manager role
+        x-enum-varnames:
+        - Admin
+        - Importer
+        - Editor
+        - Reviewer
+        - Auditor
+        - SourceManager
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a stored query.
+  /queries/ignore:
+    get:
+      description: Returns exclusions of all queries.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns query exclusions.
+  /queries/ignore/{query}:
+    delete:
+      description: Deletes the query exclusion with the specified ID.
+      parameters:
+      - description: Query ID
+        in: path
+        name: query
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes query exclusion.
+    post:
+      description: Ignores the query with the specified ID.
+      parameters:
+      - description: Query ID
+        in: path
+        name: query
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.insertDefaultQueryExclusion.createResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Ignores a query.
+  /queries/orders:
+    post:
+      consumes:
+      - application/json
+      description: Updates the query order with the specified ordering.
+      parameters:
+      - description: Query order
+        in: body
+        name: queryOrder
+        required: true
+        schema:
+          $ref: '#/definitions/web.updateOrder.queryOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates the query order.
+  /sources:
+    get:
+      description: Returns the source configuration and metadata of all sources.
+      parameters:
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.viewSources.sourcesResult'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+      summary: Returns all sources.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a source with the specified configuration.
+      parameters:
+      - in: formData
+        name: active
+        type: boolean
+      - in: formData
+        name: attention
+        type: boolean
+      - in: formData
+        name: client_cert_passphrase
+        type: string
+      - in: formData
+        name: client_cert_private
+        type: string
+      - in: formData
+        name: client_cert_public
+        type: string
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: headers
+        type: array
+      - in: formData
+        name: id
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: ignore_patterns
+        type: array
+      - in: formData
+        minLength: 1
+        name: name
+        required: true
+        type: string
+      - in: formData
+        minimum: 0
+        name: rate
+        type: number
+      - in: formData
+        name: secure
+        type: boolean
+      - in: formData
+        name: signature_check
+        type: boolean
+      - in: formData
+        minimum: 0
+        name: slots
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: status
+        type: array
+      - in: formData
+        name: strict_mode
+        type: boolean
+      - in: formData
+        minLength: 1
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/models.ID'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a source.
+  /sources/{document}:
+    delete:
+      description: This updates the SSVC of the specified document.
+      parameters:
+      - description: Document ID
+        in: path
+        name: document
+        required: true
+        type: integer
+      - description: SSVC vector
+        in: query
+        name: vector
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Changes the SSVC.
+  /sources/{id}:
+    delete:
+      description: Deletes the source configuration with the specified ID.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: source deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a source.
+    get:
+      description: Returns the source configuration and metadata.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns source information.
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates the source configuration.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - in: formData
+        name: active
+        type: boolean
+      - in: formData
+        name: attention
+        type: boolean
+      - in: formData
+        name: client_cert_passphrase
+        type: string
+      - in: formData
+        name: client_cert_private
+        type: string
+      - in: formData
+        name: client_cert_public
+        type: string
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: headers
+        type: array
+      - in: formData
+        name: id
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: ignore_patterns
+        type: array
+      - in: formData
+        minLength: 1
+        name: name
+        required: true
+        type: string
+      - in: formData
+        minimum: 0
+        name: rate
+        type: number
+      - in: formData
+        name: secure
+        type: boolean
+      - in: formData
+        name: signature_check
+        type: boolean
+      - in: formData
+        minimum: 0
+        name: slots
+        type: integer
+      - collectionFormat: csv
+        in: formData
+        items:
+          type: string
+        name: status
+        type: array
+      - in: formData
+        name: strict_mode
+        type: boolean
+      - in: formData
+        minLength: 1
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates source configuration.
+  /sources/{id}/feeds:
+    get:
+      description: Returns all feed configurations and metadata.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feedResult'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns feeds.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a feed with the specified configuration.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - in: formData
+        minLength: 1
+        name: label
+        required: true
+        type: string
+      - enum:
+        - debug
+        - info
+        - warn
+        - error
+        - ""
+        in: formData
+        name: log_level
+        type: string
+      - in: formData
+        name: sourceID
+        type: integer
+      - in: formData
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: could not parse stats
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Creates a feed.
+  /sources/attention:
+    get:
+      description: All sources that had a change and should be reviewed are returned.
+      parameters:
+      - description: Return all sources
+        in: query
+        name: all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/web.attentionSources.attention'
+            type: array
+        "400":
+          description: could not parse all
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+      summary: Returns a list of sources that need attention.
+  /sources/default:
+    get:
+      description: Returns the default parameters for the source configuration.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.defaultSourceConfig.sourceConfig'
+        "401":
+          description: Unauthorized
+      summary: Returns the default configuration.
+  /sources/feeds/{id}:
+    delete:
+      description: Deletes the feed configuration with the specified ID.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a feed.
+    get:
+      description: Returns all configurations and metadata of the specified feed ID.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enable statistic
+        in: query
+        name: stats
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feed'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: feed not found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns feed.
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates a feed with the specified configuration.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - in: formData
+        name: id
+        type: integer
+      - in: formData
+        name: label
+        type: string
+      - enum:
+        - 1
+        - 0
+        - 1
+        - 2
+        - 3
+        in: formData
+        name: log_level
+        type: integer
+        x-enum-varnames:
+        - defaultSourcesFeedLogLevel
+        - DebugFeedLogLevel
+        - InfoFeedLogLevel
+        - WarnFeedLogLevel
+        - ErrorFeedLogLevel
+      - in: formData
+        name: rolie
+        type: boolean
+      - in: formData
+        name: url
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates a feed.
+  /sources/feeds/{id}/log:
+    get:
+      description: Returns all logs for the specified feed.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feedLogs.feedLogEntries'
+        "400":
+          description: could not parse id
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns all logs.
+  /sources/feeds/keep:
+    get:
+      description: Returns the time it takes until old feed entries are deleted.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.keepFeedTime.keepFeedTimeConfig'
+        "401":
+          description: Unauthorized
+      summary: Returns how long feed logs are kept.
+  /sources/feeds/log:
+    get:
+      description: Returns all logs for all feeds.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.feedLogs.feedLogEntries'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns all logs.
+  /sources/message:
+    get:
+      description: Returns the message that is displayed on visiting the sources page.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "401":
+          description: Unauthorized
+      summary: Returns the default message.
+  /stats/critical:
+    get:
+      description: Returns criticality statistics for all sources.
+      parameters:
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns criticality statistics.
+  /stats/critical/feed/{id}:
+    get:
+      description: Returns criticality statistics for the specified feed.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns criticality statistics.
+  /stats/critical/source/{id}:
+    get:
+      description: Returns criticality statistics for the specified source.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns criticality statistics.
+  /stats/cve:
+    get:
+      description: Returns cve statistics for all sources.
+      parameters:
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns cve statistics.
+  /stats/cve/feed/{id}:
+    get:
+      description: Returns cve statistics for the specified feed.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns cve statistics.
+  /stats/cve/source/{id}:
+    get:
+      description: Returns cve statistics for the specified source.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns cve statistics.
+  /stats/imports:
+    get:
+      description: Returns import statistics for all sources.
+      parameters:
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns import statistics.
+  /stats/imports/feed/{id}:
+    get:
+      description: Returns import statistics for the specified feed.
+      parameters:
+      - description: Feed ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns import statistics.
+  /stats/imports/source/{id}:
+    get:
+      description: Returns import statistics for the specified source.
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Timerange start
+        in: query
+        name: from
+        type: string
+      - description: Timerange end
+        in: query
+        name: to
+        type: string
+      - description: Time step
+        in: query
+        name: step
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns import statistics.
+  /status:
+    put:
+      consumes:
+      - application/json
+      description: Changes the status of multiple advisories, if allowed.
+      parameters:
+      - description: Advisory states
+        in: body
+        name: input
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/models.AdvisoryState'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Bulk changes status.
+  /status/{publisher}/{trackingid}/{state}:
+    put:
+      description: Changes the status of the specified advisory, if allowed.
+      parameters:
+      - description: Publisher
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: Tracking ID
+        in: path
+        name: trackingid
+        required: true
+        type: string
+      - description: Advisory status
+        in: path
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Changes the status of an advisory.
+  /tempdocuments:
+    get:
+      description: An overview of all temporary documents that are uploaded by the
+        user are returned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.overviewTempDocuments.tempDocuments'
+        "401":
+          description: Unauthorized
+      summary: Returns an overview of all temporary documents.
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a temporary document, that can be used to create diff views.
+      parameters:
+      - description: Temporary document
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+      summary: Uploads a temporary document.
+  /tempdocuments/{id}:
+    delete:
+      description: Deletes a temporary document with the specified ID.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            $ref: '#/definitions/models.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes a temporary document.
+    get:
+      description: Returns a temporary document with the specified ID.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Returns a temporary document.
+  /view:
+    get:
+      description: Returns information what documents the user can view and comment.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PublishersTLPs'
+        "401":
+          description: Unauthorized
+      summary: Returns publisher and levels that are visible.
+swagger: "2.0"
