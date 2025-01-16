@@ -49,7 +49,7 @@ const config: PlaywrightTestConfig = {
       "monocart-reporter",
       {
         name: "Monocart Reporter test report",
-        logging: "debug",
+        logging: "info",
         outputFile: "./test-results/monocart-report/index.html",
 
         coverage: {
