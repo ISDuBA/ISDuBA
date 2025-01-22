@@ -73,7 +73,7 @@ The configuration consists of the following sections:
 
 ### <a name="section_keycloak"></a> Section `[keycloak]` Keycloak
 
-- `url`: Defaults to `"http://localhost:8080"`.
+- `url`: The URL where the Keycloak server is located. Value is used by isdubad to connect to keycloak and validate Oauth-tokens. Defaults to `"http://localhost:8080"`.
 - `realm`: Name of the realm used be the server. Defaults to `"isduba"`.
 - `certs_caching`: How long should signing certificates from the Keycloak should be cached before reasked. Defaults to `"8h"`.
 - `timeout`: How long should we wait for reactions from the Keycloak server. Defaults to `"30s"`.
@@ -160,7 +160,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_client"></a> Section `[client]` Client configuration
 
-- `keycloak_url`: The URL where the Keycloak server is located. Defaults to same as `keycloak.url`.
+- `keycloak_url`: The URL where the Keycloak server is located. Value is used to redirect unauthenticated clients to keycloak. Defaults to same as `keycloak.url`.
 - `keycloak_realm`: The name of the Keycloak realm. Defaults to `"isduba"`.
 - `keycloak_client_id`: The public client identifier. Defaults to `"auth"`.
 - `update_interval`: Specifies how often the token should be renewed. Defaults to `"5m"`.

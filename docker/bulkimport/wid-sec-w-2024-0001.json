@@ -1,0 +1,102 @@
+{
+  "document" : {
+    "aggregate_severity" : {
+      "text" : "mittel"
+    },
+    "category" : "csaf_base",
+    "csaf_version" : "2.0",
+    "distribution" : {
+      "tlp" : {
+        "label" : "WHITE",
+        "url" : "https://www.first.org/tlp/"
+      }
+    },
+    "lang" : "de-DE",
+    "notes" : [ {
+      "category" : "legal_disclaimer",
+      "text" : "Das BSI ist als Anbieter für die eigenen, zur Nutzung bereitgestellten Inhalte nach den allgemeinen Gesetzen verantwortlich. Nutzerinnen und Nutzer sind jedoch dafür verantwortlich, die Verwendung und/oder die Umsetzung der mit den Inhalten bereitgestellten Informationen sorgfältig im Einzelfall zu prüfen."
+    }, {
+      "category" : "description",
+      "text" : "Bouncy Castle ist eine Kryptographie-API für Java.",
+      "title" : "Produktbeschreibung"
+    }, {
+      "category" : "summary",
+      "text" : "Ein lokaler Angreifer kann eine Schwachstelle in Bouncy Castle ausnutzen, um Daten zu manipulieren.",
+      "title" : "Angriff"
+    }, {
+      "category" : "general",
+      "text" : "- Linux\n- MacOS X\n- Windows",
+      "title" : "Betroffene Betriebssysteme"
+    } ],
+    "publisher" : {
+      "category" : "other",
+      "contact_details" : "csaf-provider@cert-bund.de",
+      "name" : "Bundesamt für Sicherheit in der Informationstechnik",
+      "namespace" : "https://www.bsi.bund.de"
+    },
+    "references" : [ {
+      "category" : "self",
+      "summary" : "WID-SEC-W-2024-0001 - CSAF Version",
+      "url" : "https://wid.cert-bund.de/.well-known/csaf/white/2024/wid-sec-w-2024-0001.json"
+    }, {
+      "category" : "self",
+      "summary" : "WID-SEC-2024-0001 - Portal Version",
+      "url" : "https://wid.cert-bund.de/portal/wid/securityadvisory?name=WID-SEC-2024-0001"
+    }, {
+      "category" : "external",
+      "summary" : "Red Hat Bugtracker #2256406 vom 2024-01-01",
+      "url" : "https://bugzilla.redhat.com/show_bug.cgi?id=2256406"
+    }, {
+      "category" : "external",
+      "summary" : "Proof of Concept (PoC)",
+      "url" : "https://github.com/bcgit/bc-java/wiki/CVE-2022-45146"
+    } ],
+    "source_lang" : "en-US",
+    "title" : "Bouncy Castle: Schwachstelle ermöglicht Manipulation von Daten",
+    "tracking" : {
+      "current_release_date" : "2024-01-01T23:00:00.000+00:00",
+      "generator" : {
+        "date" : "2024-02-15T17:55:20.923+00:00",
+        "engine" : {
+          "name" : "BSI-WID",
+          "version" : "1.3.0"
+        }
+      },
+      "id" : "WID-SEC-W-2024-0001",
+      "initial_release_date" : "2024-01-01T23:00:00.000+00:00",
+      "revision_history" : [ {
+        "date" : "2024-01-01T23:00:00.000+00:00",
+        "number" : "1",
+        "summary" : "Initiale Fassung"
+      } ],
+      "status" : "final",
+      "version" : "1"
+    }
+  },
+  "product_tree" : {
+    "branches" : [ {
+      "branches" : [ {
+        "category" : "product_name",
+        "name" : "Open Source Bouncy Castle < 1.0.2.4 (fips)",
+        "product" : {
+          "name" : "Open Source Bouncy Castle < 1.0.2.4 (fips)",
+          "product_id" : "T031841",
+          "product_identification_helper" : {
+            "cpe" : "cpe:/a:bouncycastle:legion-of-the-bouncy-castle-java-crytography-api:1.0.2.4"
+          }
+        }
+      } ],
+      "category" : "vendor",
+      "name" : "Open Source"
+    } ]
+  },
+  "vulnerabilities" : [ {
+    "cve" : "CVE-2022-45146",
+    "notes" : [ {
+      "category" : "description",
+      "text" : "Es besteht eine Schwachstelle in Bouncy Castle. Dieser Fehler besteht im FIPS-Java-API-Modul aufgrund einer unsachgemäßen Authentifizierung, die dazu führt, dass die vom Modul verwendeten temporären Schlüssel gelöscht werden, während sie noch in Gebrauch sind. Ein lokaler Angreifer kann diese Schwachstelle ausnutzen, um Daten zu manipulieren, was zu Anwendungsfehlern oder Informationsverlust führt."
+    } ],
+    "release_date" : "2024-01-01T23:00:00Z",
+    "title" : "CVE-2022-45146"
+  } ]
+}
