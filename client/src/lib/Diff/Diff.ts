@@ -6,10 +6,24 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-export type JsonDiffResultList = JsonDiffResult[];
+import { request } from "$lib/request";
 
-export type JsonDiffResult = {
-  op: string;
+type DiffOperation = "add" | "remove" | "replace";
+
+type JsonDiffResult = {
+  op: DiffOperation;
   path: string;
   value?: string | object | object[];
 };
+
+type JsonDiffResultWrapper = {
+  result: JsonDiffResult | JsonDiffResult[];
+};
+
+const fetchDiffEntry = (urlPath: string, operation: DiffOperation, jsonPath: string) => {
+  const requestPath = encodeURI(`${urlPath}&item_op=${operation}&item_path=${jsonPath}`);
+  return request(requestPath, "GET");
+};
+
+export { fetchDiffEntry };
+export type { DiffOperation, JsonDiffResult, JsonDiffResultWrapper };
