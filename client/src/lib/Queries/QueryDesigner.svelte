@@ -481,7 +481,7 @@
       {/if}
       <div class="mt-3 flex flex-row flex-wrap">
         {#if loading}
-          <div class="loadingFadeIn mr-4 mt-3">
+          <div class="loadingFadeIn mt-3 mr-4">
             Loading ...
             <Spinner color="gray" size="4"></Spinner>
           </div>

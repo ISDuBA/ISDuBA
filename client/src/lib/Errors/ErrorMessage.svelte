@@ -30,7 +30,7 @@
         </a>
         {#if showDetails}
           <br />
-          <span class="whitespace-pre-wrap text-lg">{error.details}</span>
+          <span class="text-lg whitespace-pre-wrap">{error.details}</span>
         {/if}
       {/if}
     </Alert>

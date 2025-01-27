@@ -36,7 +36,7 @@
     on:click={() => {
       upload(files);
     }}
-    class="ml-auto mt-auto"
+    class="mt-auto ml-auto"
     color="primary">Upload</Button
   >
 </Card>

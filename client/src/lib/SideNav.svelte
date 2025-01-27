@@ -54,7 +54,7 @@
       activateClickOutside={false}
       width="fit-content"
       backdrop={false}
-      class="static min-w-fit bg-primary-700 p-0 dark:bg-gray-900"
+      class="bg-primary-700 static min-w-fit p-0 dark:bg-gray-900"
       id="sidebar"
     >
       <Sidebar
@@ -74,7 +74,7 @@
               site={{ img: "favicon.svg", name: "ISDuBA", href: "/#/" }}
             ></SidebarBrand>
           </SidebarGroup>
-          <SidebarGroup class="space-y-0 bg-primary-700 dark:bg-gray-900">
+          <SidebarGroup class="bg-primary-700 space-y-0 dark:bg-gray-900">
             <!-- Entries which are available after login should go here-->
             <SidebarItem class="px-6 py-2.5" label="Dashboard" href="/#/">
               <svelte:fragment slot="icon">

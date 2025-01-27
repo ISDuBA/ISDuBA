@@ -72,7 +72,7 @@
 <Input
   on:input={hoursChanged}
   bind:value={hours}
-  class="w-20 rounded-e-none rounded-s-none"
+  class="w-20 rounded-s-none rounded-e-none"
   placeholder="hh"
   type="number"
 />

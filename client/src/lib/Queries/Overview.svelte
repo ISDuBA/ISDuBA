@@ -227,7 +227,7 @@
       queries={userQueries}
       title="Personal"
     >
-      <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
+      <Button class="mt-3 mb-2 w-fit" href="/#/queries/new"
         ><i class="bx bx-plus me-2"></i>New query</Button
       >
     </QueryTable>
@@ -268,7 +268,7 @@
         title="Global"
         isAllowedToEdit={appStore.isAdmin()}
       >
-        <Button class="mb-2 mt-3 w-fit" href="/#/queries/new"
+        <Button class="mt-3 mb-2 w-fit" href="/#/queries/new"
           ><i class="bx bx-plus me-2"></i>New query</Button
         >
       </QueryTable>

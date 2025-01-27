@@ -367,7 +367,7 @@
             <span class="text-gray-500">Field value</span>
           </Label>
           <Input
-            class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-l-0 sm:border-t"
+            class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-t sm:border-l-0"
             on:input={onChangedHeaders}
             bind:value={header[1]}
           />
@@ -375,7 +375,7 @@
             <Button
               on:click={() => removeHeader(index)}
               title="Remove field-name-field-value-pair"
-              class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 dark:border-gray-500 dark:bg-gray-600 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
+              class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
               color="light"
             >
               <i class="bx bx-x"></i>
@@ -383,7 +383,7 @@
           {:else}
             <Button
               title="Remove key-value-pair"
-              class=" row-start-3 h-full w-fit rounded-none rounded-br-lg border-l-0 border-t-0 p-1 dark:border-gray-500 dark:bg-gray-600 sm:row-start-2 sm:rounded-tr-lg sm:border-t"
+              class=" row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
               color="light"
               disabled={true}
             >

@@ -74,7 +74,7 @@
 </svelte:head>
 
 {#if $appStore.app.isUserLoggedIn}
-  <div class="mb-8 mt-8 flex flex-row flex-wrap gap-10">
+  <div class="mt-8 mb-8 flex flex-row flex-wrap gap-10">
     {#each filteredQueries as query}
       {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)}
         <AdvisoryQuery storedQuery={query}></AdvisoryQuery>

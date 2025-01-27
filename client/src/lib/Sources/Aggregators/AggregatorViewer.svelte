@@ -573,7 +573,7 @@
                     color={editedUrlColor}
                   ></Input>
                 </div>
-                <div class="mb-2 mt-2 flex flex-wrap gap-2">
+                <div class="mt-2 mb-2 flex flex-wrap gap-2">
                   <Button
                     class="w-fit"
                     on:click={(event) => {
@@ -611,7 +611,7 @@
           </div>
           {#if list.length !== 0}
             <div
-              class="mb-2 flex flex-col justify-between break-all rounded-md border border-solid border-gray-300 px-4 py-2 dark:border-gray-500"
+              class="mb-2 flex flex-col justify-between rounded-md border border-solid border-gray-300 px-4 py-2 break-all dark:border-gray-500"
             >
               <List tag="dl" class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-600">
                 <div>
@@ -655,7 +655,7 @@
                   slot="close-button"
                   let:close
                   color="light"
-                  class="ms-1 min-h-[26px] min-w-[26px] rounded border border-primary-700/55 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+                  class="border-primary-700/55 text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
                   on:click={async (event) => {
                     event.stopPropagation();
                     event.preventDefault();
@@ -744,7 +744,7 @@
     {#if appStore.isSourceManager()}
       <div class="min-h-64">
         {#if !showCreateForm}
-          <Button class="mb-2 mt-3 w-fit" on:click={toggleCreateForm}
+          <Button class="mt-3 mb-2 w-fit" on:click={toggleCreateForm}
             ><i class="bx bx-plus me-2"></i>New aggregator</Button
           >
         {/if}
@@ -771,7 +771,7 @@
                   color={urlColor}
                 ></Input>
               </div>
-              <div class="mb-2 mt-2 flex gap-2">
+              <div class="mt-2 mb-2 flex gap-2">
                 <Button class="w-fit" on:click={toggleCreateForm} color="light"
                   ><i class="bx bx-x"></i></Button
                 >
