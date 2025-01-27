@@ -43,7 +43,7 @@
 <div class="flex flex-col items-start">
   {#each source.feeds.toSorted(sortFeeds) as feed}
     {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
-    <div class="mb-2 ms-8">
+    <div class="ms-8 mb-2">
       <div>
         <FeedBulletPoint filled={!feed.highlight}></FeedBulletPoint>
         <span class={feedClass}>{feed.url}</span>

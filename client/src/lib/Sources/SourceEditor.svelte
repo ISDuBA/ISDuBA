@@ -361,7 +361,7 @@
             <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}
               >Imported (last 24h)</DescriptionList
             >
-            <div class="mb-1 mt-1 h-1 min-h-1">
+            <div class="mt-1 mb-1 h-1 min-h-1">
               <div class="progressmeter">
                 <span class="w-full"
                   ><span
@@ -462,7 +462,7 @@
           slot="close-button"
           let:close
           color="light"
-          class="ms-1 min-h-[26px] min-w-[26px] rounded border border-primary-700/55 bg-transparent p-0 text-primary-700 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+          class="border-primary-700/55 text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
           on:click={async () => {
             markAsDone();
             close();

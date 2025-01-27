@@ -226,7 +226,7 @@
       {:else}
         <div>
           <FakeButton active>Overview</FakeButton>
-          <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+          <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
           <div class={sideScroll}>
             {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
               <ProductVulnerabilities {basePath} />
@@ -243,7 +243,7 @@
     {#if showArea(placeToPhase.productTree)}
       <div>
         <FakeButton active>Product tree</FakeButton>
-        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <ProductTree {basePath} />
         </div>
@@ -252,7 +252,7 @@
     {#if showArea(placeToPhase.vulnerabilities)}
       <div>
         <FakeButton active>Vulnerabilities</FakeButton>
-        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <Vulnerabilities {basePath} />
         </div>
@@ -261,7 +261,7 @@
     {#if showArea(placeToPhase.notes) && $appStore.webview.doc?.notes}
       <div>
         <FakeButton active>Notes</FakeButton>
-        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <Notes open notes={$appStore.webview.doc?.notes} />
         </div>
@@ -271,7 +271,7 @@
     {#if showArea(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
       <div>
         <FakeButton active>Acknowledgements</FakeButton>
-        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
         </div>
@@ -281,7 +281,7 @@
     {#if showArea(placeToPhase.references)}
       <div>
         <FakeButton active>References</FakeButton>
-        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <References references={$appStore.webview.doc?.references} />
         </div>
@@ -291,14 +291,14 @@
     {#if showArea(placeToPhase.revisionHistory)}
       <div>
         <FakeButton active>Revision history</FakeButton>
-        <div class="mb-4 mt-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
           <RevisionHistory />
         </div>
       </div>
     {/if}
   {:else}
-    <div class="ml-32 mt-32">
+    <div class="mt-32 ml-32">
       <Spinner color="gray" size="8"></Spinner>
     </div>
   {/if}
