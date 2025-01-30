@@ -148,6 +148,28 @@ CREATE TRIGGER decrement_comments
     ON comments
     FOR EACH ROW EXECUTE FUNCTION decr_comments();
 
+-- events
+DROP TRIGGER update_recent ON events_log;
+DROP FUNCTION upd_recent;
+
+-- Trigger to update cached recent value of advisory.
+CREATE FUNCTION upd_recent() RETURNS trigger AS $$
+    BEGIN
+        UPDATE advisories
+            SET recent = greatest(recent, NEW.time)
+        WHERE
+            id = (SELECT advisories_id
+                FROM documents
+                WHERE id = NEW.documents_id);
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_recent
+    AFTER INSERT OR UPDATE
+    ON events_log
+    FOR EACH ROW EXECUTE FUNCTION upd_recent();
+
 -- Finally remove data from the documents table.
 
 ALTER TABLE documents
