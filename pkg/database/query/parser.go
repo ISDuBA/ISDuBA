@@ -732,7 +732,7 @@ func (*Parser) pushCmp(st *stack, et exprType) {
 
 var validWorkflows = []string{
 	"new", "read", "assessing",
-	"review", "archive", "delete",
+	"review", "archived", "delete",
 }
 
 func parseWorkflow(s string) string {
