@@ -171,7 +171,9 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		return
 	}
 
-	expr := c.andTLPExpr(ctx, query.FieldEqString("tracking_id", key.TrackingID).And(query.FieldEqString("publisher", key.Publisher)))
+	expr := c.andTLPExpr(ctx,
+		query.FieldEqString("tracking_id", key.TrackingID).And(
+			query.FieldEqString("publisher", key.Publisher)))
 
 	builder := query.SQLBuilder{}
 	builder.CreateWhere(expr)
@@ -191,8 +193,9 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` +
-				builder.WhereClause + `)`
+			existsSQL := `SELECT EXISTS(` +
+				`SELECT FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
+				`WHERE ` + builder.WhereClause + `)`
 			if err := conn.QueryRow(
 				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
@@ -201,11 +204,13 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 				return nil
 			}
 			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
-				`WHERE documents_id in (SELECT id FROM documents WHERE ` + builder.WhereClause + `) ORDER BY time DESC`
+				`WHERE documents_id in (` +
+				`SELECT documents.id ` +
+				`FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
+				`WHERE ` + builder.WhereClause + `) ORDER BY time DESC`
 			rows, _ := conn.Query(rctx, fetchSQL, builder.Replacements...)
 			var err error
 			events, err = pgx.CollectRows(
-
 				rows,
 				func(row pgx.CollectableRow) (event, error) {
 					var ev event
