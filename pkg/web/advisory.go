@@ -26,7 +26,7 @@ type advisoryStates []models.AdvisoryState
 
 func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 	const (
-		findAdvisory = `SELECT documents.id, state::text, tlp ` +
+		findAdvisory = `SELECT docs.id, state::text, tlp ` +
 			`FROM advisories ads ` +
 			`JOIN documents docs ON ads.id = docs.advisories_id ` +
 			`WHERE ads.publisher = $1 AND ads.tracking_id = $2 ` +
