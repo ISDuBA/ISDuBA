@@ -90,9 +90,9 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			}
 			defer tx.Rollback(rctx)
 
-			stateSQL := `SELECT state, docs.tracking_id, docs.publisher ` +
-				`FROM documents docs JOIN advisories ads ` +
-				`ON docs.advisories_id = ads.id ` +
+			stateSQL := `SELECT state, advisories.tracking_id, advisories.publisher ` +
+				`FROM documents docs JOIN advisories ` +
+				`ON docs.advisories_id = advisories.id ` +
 				` WHERE ` + builder.WhereClause
 
 			var (
