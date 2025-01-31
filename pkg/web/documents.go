@@ -359,7 +359,7 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 //	@Router			/documents [get]
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	type documentResult struct {
-		Count     int64            `json:"count"`
+		Count     *int64           `json:"count,omitempty"`
 		Documents []map[string]any `json:"documents"`
 	}
 	// Use the advisories.
@@ -479,7 +479,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	h := documentResult{}
 	if calcCount {
-		h.Count = count
+		h.Count = &count
 	}
 	if len(results) > 0 {
 		h.Documents = results
