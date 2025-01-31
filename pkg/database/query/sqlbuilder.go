@@ -335,7 +335,7 @@ func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 	}
 
 	if sb.TextTables {
-		b.WriteString(` JOIN documents_texts ON id = documents_texts.documents_id ` +
+		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
 }
