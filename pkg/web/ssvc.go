@@ -49,7 +49,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 	}
 
 	const (
-		findSSVC = `SELECT ssvc, docs.tracking_id, docs.publisher, tlp, state::text ` +
+		findSSVC = `SELECT ssvc, ads.tracking_id, ads.publisher, tlp, state::text ` +
 			`FROM documents docs JOIN advisories ads ` +
 			`ON docs.advisories_id = ads.id` +
 			`WHERE docs.id = $1`

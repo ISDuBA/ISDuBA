@@ -251,6 +251,7 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
 		} else {
+			slog.Error("database error", "err", err)
 			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
