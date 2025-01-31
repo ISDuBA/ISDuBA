@@ -184,7 +184,10 @@ const (
 
 func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	switch column := e.stringValue; column {
-	case "tracking_id", "publisher", "id":
+	case "id":
+		b.WriteString("documents.")
+		b.WriteString(column)
+	case "tracking_id", "publisher":
 		b.WriteString("advisories.")
 		b.WriteString(column)
 	case "versions":
