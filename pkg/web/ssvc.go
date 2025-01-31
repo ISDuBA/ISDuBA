@@ -49,9 +49,9 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 	}
 
 	const (
-		findSSVC = `SELECT ssvc, ads.tracking_id, ads.publisher, tlp, state::text ` +
+		findSSVC = `SELECT docs.ssvc, ads.tracking_id, ads.publisher, docs.tlp, docs.state::text ` +
 			`FROM documents docs JOIN advisories ads ` +
-			`ON docs.advisories_id = ads.id` +
+			`ON docs.advisories_id = ads.id ` +
 			`WHERE docs.id = $1`
 		switchToAssessing = `UPDATE advisories SET state = 'assessing' ` +
 			`WHERE (tracking_id, publisher) = ($1, $2)`
@@ -145,7 +145,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
 		} else {
-			slog.Error("state change failed", "err", err)
+			slog.Error("database error", "err", err)
 			models.SendError(ctx, http.StatusInternalServerError, err)
 		}
 		return
