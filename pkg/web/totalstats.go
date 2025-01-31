@@ -53,14 +53,14 @@ func (c *Controller) statsTotal(ctx *gin.Context) {
 		documentsSQL = `SELECT count(*) FROM documents ` +
 			`JOIN downloads ON documents.id = downloads.documents_id ` +
 			`WHERE time <= $1`
-		advisoriesSQL = `SELECT count(DISTINCT (publisher, tracking_id)) FROM documents ` +
+		advisoriesSQL = `SELECT count(*) FROM documents ` +
 			`JOIN downloads ON documents.id = downloads.documents_id ` +
-			`WHERE time <= $1`
+			`WHERE time <= $1 AND latest = TRUE`
 	} else {
 		documentsSQL = `SELECT count(*) FROM documents ` +
 			`WHERE least(current_release_date, current_timestamp) <= $1`
-		advisoriesSQL = `SELECT count(DISTINCT (publisher, tracking_id)) FROM documents ` +
-			`WHERE least(current_release_date, current_timestamp) <= $1`
+		advisoriesSQL = `SELECT count(*) FROM documents ` +
+			`WHERE least(current_release_date, current_timestamp) <= $1 AND latest = TRUE`
 	}
 
 	list := [][]any{}
