@@ -367,7 +367,7 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 			b.WriteByte(',')
 		}
 		switch field {
-		case "tracking_id", "publisher":
+		case "tracking_id", "publisher", "id":
 			b.WriteString("advisories.")
 			b.WriteString(field)
 		case "cvss_v2_score", "cvss_v3_score", "critical":
