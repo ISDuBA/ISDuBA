@@ -446,8 +446,13 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			continue
 		}
 		switch p {
-		case "id", "tracking_id", "publisher":
+		case "tracking_id", "publisher":
 			b.WriteString("advisories.")
+			b.WriteString(p)
+			b.WriteString(` AS `)
+			b.WriteString(p)
+		case "id":
+			b.WriteString("documents.")
 			b.WriteString(p)
 			b.WriteString(` AS `)
 			b.WriteString(p)
