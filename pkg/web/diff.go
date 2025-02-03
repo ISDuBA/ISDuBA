@@ -91,10 +91,12 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 			ctx.Request.Context(),
 			func(rctx context.Context, conn *pgxpool.Conn) error {
 				for _, f := range fromDB {
-					expr := query.FieldEqInt("id", f.id).And(tlpExpr)
+					expr := query.FieldEqInt("documents.id", f.id).And(tlpExpr)
 					var b query.SQLBuilder
 					b.CreateWhere(expr)
-					fetchSQL := `SELECT original FROM documents WHERE ` + b.WhereClause
+					fetchSQL := `SELECT original ` +
+						`FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
+						`WHERE ` + b.WhereClause
 					if err := conn.QueryRow(rctx, fetchSQL, b.Replacements...).Scan(f.doc); err != nil {
 						return fmt.Errorf("fetching data from database failed: %w", err)
 					}

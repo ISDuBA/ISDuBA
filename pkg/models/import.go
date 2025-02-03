@@ -364,10 +364,12 @@ func ImportDocumentData(
 	defer tx.Rollback(ctx)
 
 	const (
+		queryAdvisory        = `SELECT id FROM advisories WHERE (tracking_id, publisher) = ($1, $2)`
+		insertAdvisory       = `INSERT INTO advisories (tracking_id, publisher) VALUES ($1, $2) RETURNING id`
 		savepointDoc         = `SAVEPOINT insert_document`
 		rollbackSavepointDoc = `ROLLBACK TO SAVEPOINT insert_document`
 		releaseSavepointDoc  = `RELEASE SAVEPOINT insert_document`
-		insertDoc            = `INSERT INTO documents (document, original) VALUES ($1, $2) RETURNING id`
+		insertDoc            = `INSERT INTO documents (document, original, advisories_id) VALUES ($1, $2, $3) RETURNING id`
 		insertLog            = `INSERT INTO events_log (event, state, actor, documents_id) VALUES ('import_document', 'new', $1, $2)`
 		queryText            = `SELECT id FROM unique_texts WHERE txt = $1`
 		insertText           = `INSERT INTO unique_texts (txt) VALUES ($1) RETURNING id`
@@ -375,8 +377,28 @@ func ImportDocumentData(
 		loadTexts            = `SELECT u.id, txt FROM documents d JOIN documents_texts t ` +
 			`ON d.id = t.documents_id JOIN unique_texts u ` +
 			`ON t.txt_id = u.id ` +
-			`WHERE d.publisher = $1 AND d.tracking_id = $2`
+			`WHERE d.advisories_id = $1`
 	)
+
+	// We need an advisory before we insert a document.
+	var (
+		advisoryID      int64
+		missingAdvisory bool
+	)
+	switch err := tx.QueryRow(
+		ctx, queryAdvisory, trackingID, publisher).Scan(&advisoryID); {
+	case errors.Is(err, pgx.ErrNoRows):
+		missingAdvisory = true
+	case err != nil:
+		return 0, fmt.Errorf("querying advisory failed: %w", err)
+	}
+	if missingAdvisory {
+		if err := tx.QueryRow(
+			ctx, insertAdvisory, trackingID, publisher).Scan(&advisoryID); err != nil {
+			return 0, fmt.Errorf("creating advisory (%q/%s) failed: %w",
+				publisher, trackingID, err)
+		}
+	}
 
 	// Using a savepoint only rolls back the transaction partially.
 	if _, err := tx.Exec(ctx, savepointDoc); err != nil {
@@ -387,6 +409,7 @@ func ImportDocumentData(
 	if err := tx.QueryRow(
 		ctx, insertDoc,
 		document, raw,
+		advisoryID,
 	).Scan(&id); err != nil {
 		var pgErr *pgconn.PgError
 		// Unique constraint violation
@@ -426,7 +449,7 @@ func ImportDocumentData(
 	// If we already have a document with the given publisher/tracking_id pair
 	// it is very likely that they share a lot of the same strings.
 	if err := func() error {
-		rows, err := tx.Query(ctx, loadTexts, publisher, trackingID)
+		rows, err := tx.Query(ctx, loadTexts, advisoryID)
 		if err != nil {
 			return err
 		}

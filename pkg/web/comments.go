@@ -90,9 +90,9 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			}
 			defer tx.Rollback(rctx)
 
-			stateSQL := `SELECT state, docs.tracking_id, docs.publisher ` +
-				`FROM documents docs JOIN advisories ads ` +
-				`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
+			stateSQL := `SELECT state, advisories.tracking_id, advisories.publisher ` +
+				`FROM documents JOIN advisories ` +
+				`ON documents.advisories_id = advisories.id ` +
 				` WHERE ` + builder.WhereClause
 
 			var (
@@ -229,7 +229,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 			defer tx.Rollback(rctx)
 			stateSQL := `SELECT state ` +
 				`FROM advisories ads JOIN documents docs ` +
-				`ON (docs.tracking_id, docs.publisher) = (ads.tracking_id, ads.publisher) ` +
+				`ON docs.advisories_id = ads.id ` +
 				`JOIN comments com ` +
 				`ON com.documents_id = docs.id` +
 				` WHERE ` + builder.WhereClause
@@ -271,7 +271,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 				`(event, state, time, actor, documents_id, comments_id) ` +
 				`VALUES('change_comment', ` +
 				`(SELECT state FROM advisories ads JOIN documents docs ` +
-				`ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.publisher) ` +
+				`ON ads.id = docs.advisories_id ` +
 				`WHERE docs.id = $3), ` +
 				`$1, $2, $3, $4)`
 
@@ -391,7 +391,8 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			existsSQL := `SELECT exists(SELECT FROM documents WHERE ` +
+			existsSQL := `SELECT EXISTS(` +
+				`SELECT FROM documents JOIN advisories ON documents.advisories_id = advisories.id WHERE ` +
 				builder.WhereClause + `)`
 			if err := conn.QueryRow(
 				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
@@ -401,7 +402,9 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 				return nil
 			}
 			fetchSQL := `SELECT id, documents_id, time, commentator, message FROM comments ` +
-				`WHERE documents_id in (SELECT id FROM documents WHERE ` +
+				`WHERE documents_id in (` +
+				`SELECT documents.id FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
+				`WHERE ` +
 				builder.WhereClause +
 				` ) ORDER BY time DESC`
 			rows, _ := conn.Query(rctx, fetchSQL, builder.Replacements...)

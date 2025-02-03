@@ -32,23 +32,23 @@ func TestAsConditions(t *testing.T) {
 			[]any{},
 		}, {
 			`{"A": [ "WHITE", "GREEN" ]}`,
-			`(((((documents.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))`,
+			`(((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))`,
 			[]any{"A", "WHITE", "GREEN"},
 		}, {
 			`{"A": [ "AMBER", "RED" ], "*": ["WHITE"]}`,
-			`(((((((documents.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((tlp)=($4)))AND((NOT (((documents.publisher)=($1)))))))))`,
+			`(((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((tlp)=($4)))AND((NOT (((advisories.publisher)=($1)))))))))`,
 			[]any{"A", "AMBER", "RED", "WHITE"},
 		}, {
 			`{"A": [ "AMBER", "RED" ], "*": ["WHITE", "GREEN"]}`,
-			`(((((((documents.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((((tlp)=($4)))OR(((tlp)=($5)))))AND((NOT (((documents.publisher)=($1)))))))))`,
+			`(((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((((tlp)=($4)))OR(((tlp)=($5)))))AND((NOT (((advisories.publisher)=($1)))))))))`,
 			[]any{"A", "AMBER", "RED", "WHITE", "GREEN"},
 		}, {
 			`{"A": [ "AMBER" ], "B": ["RED"], "*": ["WHITE"]}`,
-			`(((((((((documents.publisher)=($1)))AND(((tlp)=($2)))))OR(((((documents.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((documents.publisher)=($1)))OR(((documents.publisher)=($3)))))))))))`,
+			`(((((((((advisories.publisher)=($1)))AND(((tlp)=($2)))))OR(((((advisories.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($3)))))))))))`,
 			[]any{"A", "AMBER", "B", "RED", "WHITE"},
 		}, {
 			`{"*": ["WHITE"], "A": [ "AMBER" ], "B": ["RED"]}`,
-			`(((((((((documents.publisher)=($1)))AND(((tlp)=($2)))))OR(((((documents.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((documents.publisher)=($1)))OR(((documents.publisher)=($3)))))))))))`,
+			`(((((((((advisories.publisher)=($1)))AND(((tlp)=($2)))))OR(((((advisories.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($3)))))))))))`,
 			[]any{"A", "AMBER", "B", "RED", "WHITE"},
 		},
 	} {
