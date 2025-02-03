@@ -350,7 +350,13 @@ func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 // given filter.
 func (sb *SQLBuilder) CreateCountSQL() string {
 	var b strings.Builder
-	b.WriteString("SELECT count(*) FROM ")
+	b.WriteString("SELECT count(")
+	if sb.Mode == AdvisoryMode || sb.Mode == DocumentMode {
+		b.WriteString("DISTINCT documents.id")
+	} else {
+		b.WriteString("*")
+	}
+	b.WriteString(") FROM ")
 	sb.createFrom(&b)
 	b.WriteString(" WHERE ")
 	b.WriteString(sb.WhereClause)
