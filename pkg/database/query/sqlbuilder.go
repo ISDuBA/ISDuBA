@@ -17,12 +17,13 @@ import (
 
 // SQLBuilder helps to construct a SQL query.
 type SQLBuilder struct {
-	WhereClause  string
-	Replacements []any
-	replToIdx    map[string]int
-	Aliases      map[string]string
-	Mode         ParserMode
-	TextTables   bool
+	WhereClause   string
+	GroupByClause string
+	Replacements  []any
+	replToIdx     map[string]int
+	Aliases       map[string]string
+	Mode          ParserMode
+	TextTables    bool
 }
 
 // CreateWhere construct a WHERE clause for a given expression.
@@ -331,6 +332,7 @@ func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 		b.WriteString(`documents ` +
 			`JOIN advisories ON ` +
 			`advisories.id = documents.advisories_id`)
+		sb.GroupByClause = "documents.id, advisories.id"
 	case EventMode:
 		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
 			`JOIN advisories ON advisories.id = documents.advisories_id ` +
@@ -396,7 +398,7 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 
 // CreateQuery creates an SQL statement to query the documents
 // table and the associated texts if needed.
-// WARN: Make sure that the iput is vetted against injections.
+// WARN: Make sure that the input is vetted against injections.
 func (sb *SQLBuilder) CreateQuery(
 	fields []string,
 	order string,
@@ -410,6 +412,11 @@ func (sb *SQLBuilder) CreateQuery(
 	sb.createFrom(&b)
 	b.WriteString(" WHERE ")
 	b.WriteString(sb.WhereClause)
+
+	if sb.GroupByClause != "" {
+		b.WriteString(" GROUP BY ")
+		b.WriteString(sb.GroupByClause)
+	}
 
 	if order != "" {
 		b.WriteString(" ORDER BY ")
@@ -435,13 +442,13 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			b.WriteByte(',')
 		}
 		if alias, found := sb.Aliases[p]; found {
-			b.WriteString(`CASE WHEN length(`)
+			b.WriteString(`json_agg(CASE WHEN length(`)
 			b.WriteString(alias)
 			b.WriteString(`)<= 200 THEN `)
 			b.WriteString(alias)
 			b.WriteString(` ELSE substring(`)
 			b.WriteString(alias)
-			b.WriteString(`, 0, 197)END||'...'AS `)
+			b.WriteString(`, 0, 197)END||'...') AS `)
 			b.WriteString(p)
 			continue
 		}
