@@ -19,7 +19,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/gocsaf/csaf/v3 v3.1.1
 	github.com/jackc/pgx/v5 v5.7.2
-	github.com/samber/slog-gin v1.14.0
+	github.com/samber/slog-gin v1.14.1
 	github.com/sergi/go-diff v1.3.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
