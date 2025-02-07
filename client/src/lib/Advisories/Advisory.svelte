@@ -202,13 +202,17 @@
   async function createComment() {
     await allowEditing();
     const formData = new FormData();
-    formData.append("message", comment);
+    // Clear comment before request to avoid sending duplicate comments
+    let commentTmp = comment;
+    comment = "";
+    formData.append("message", commentTmp);
     const response = await request(`/api/comments/${params.id}`, "POST", formData);
     if (response.ok) {
-      comment = "";
       await loadAdvisoryState();
       await buildHistory();
     } else if (response.error) {
+      // Restore comment on error
+      comment = commentTmp;
       createCommentError = getErrorDetails(`Could not create comment.`, response);
     }
   }
