@@ -20,6 +20,9 @@ for the IT security of a group of products.
 
 We appreciate your problem reports, please check the list of issues first.
 
+To gain insight into the architecture of ISDuBA take a look at the
+[overview diagram](docs/images/overview-diagram.svg).
+
 
 ISDuBA uses:
 
