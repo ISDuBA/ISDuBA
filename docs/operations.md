@@ -10,7 +10,10 @@
 
 # Operations
 
-## Security
+- [`[Security]`](#section_security) Security
+- [`[Performance]`](#section_performance) Performance
+
+## <a name="section_security"</a> Security
 
 As a precaution, place the backend machine that runs `isdubad`
 in a network setup that it does not have access to internal services.
@@ -34,3 +37,23 @@ and localhost.  [See](./isdubad-config.md#section_general) for details.
 If you need a connection to an internal service, for example when
 running a provider that ISDuBA shall access,
 you must whitelist the IP address in that configuration.
+
+## <a name="section_performance"</a> Performance
+
+The performance of `isdubad` is mainly influenced by the
+configuration of the PostgreSQL database. Most distributions of GNU/linux
+pre-configure it quiet conservatively, using a minimum of RAM and assuming
+it to be run on classical hard disk drives (HDDs).
+To improve performance you should run `isdubad` on a system with
+a reasonable (at least 8GiB) amount of memory and solid-state drives (SSDs).
+You should consider using tools like [PGTune](https://pgtune.leopard.in.ua/)
+to fine-tune your PostgreSQL installation.
+
+One observation that was made during the development is that 
+improvements can be made by setting `random_page_cost = 1.0`.
+In its current state (PG15) the
+query planner of PostgreSQL does not know how many data is already in
+memory and estimates the costs of loading them incorrectly.
+This affects the use of indices in particular. Without the mentioned flag
+it often chooses to use linear scans, resulting in significant
+slowdown in e.g. searching.
