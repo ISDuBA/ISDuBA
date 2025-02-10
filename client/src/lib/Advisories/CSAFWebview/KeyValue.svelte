@@ -44,7 +44,15 @@
         {:else}
           <TableBodyRow color="custom"
             ><TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}>{values[index]}</TableBodyCell>
+            <TableBodyCell tdClass={cellStyle}>
+              {#if values[index].startsWith("https://")}
+                <a class="underline" href={values[index]}>
+                  <i class="bx bx-link"></i>{values[index]}
+                </a>
+              {:else}
+                {values[index]}
+              {/if}
+            </TableBodyCell>
           </TableBodyRow>
         {/if}
       {/each}
