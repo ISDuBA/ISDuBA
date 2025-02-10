@@ -54,7 +54,11 @@
       <div class={cellStyleKey}>Publisher name</div>
       <div class={cellStyleValue}>{publisherName}</div>
       <div class={cellStyleKey}>Publisher namespace</div>
-      <div class={cellStyleValue}>{publisherNamespace}</div>
+      <div class={cellStyleValue}>
+        <a href={publisherNamespace} class="underline">
+          <i class="bx bx-link"></i>{publisherNamespace}
+        </a>
+      </div>
       {#if publisherContactDetails}
         <div class={cellStyleKey}>Publisher contact details</div>
         <div class={cellStyleValue}>{publisherContactDetails}</div>
@@ -81,7 +85,10 @@
         {#if $appStore.webview.doc?.aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span>
+            <a href={$appStore.webview.doc?.aggregateSeverity.namespace} class="underline">
+              <i class="bx bx-link"></i>
+              <span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span>
+            </a>
           </div>
         {/if}
       {/if}
