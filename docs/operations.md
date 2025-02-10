@@ -10,10 +10,14 @@
 
 # Operations
 
-- [`[Security]`](#section_security) Security
-- [`[Performance]`](#section_performance) Performance
+General hints towards operations.
 
-## <a name="section_security"</a> Security
+## Sections
+
+- [Security](#section_security)
+- [Performance](#section_performance)
+
+### <a name="section_security">Security</a>
 
 As a precaution, place the backend machine that runs `isdubad`
 in a network setup that it does not have access to internal services.
@@ -38,7 +42,7 @@ If you need a connection to an internal service, for example when
 running a provider that ISDuBA shall access,
 you must whitelist the IP address in that configuration.
 
-## <a name="section_performance"</a> Performance
+### <a name="section_performance">Performance</a>
 
 The performance of `isdubad` is mainly influenced by the
 configuration of the PostgreSQL database. Most distributions of GNU/linux
