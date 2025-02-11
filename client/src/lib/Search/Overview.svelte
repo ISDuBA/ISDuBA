@@ -28,10 +28,12 @@
   // let searchqueryTimer: any = null;
 
   const resetQuery = () => {
+    let position = sessionStorage.getItem("tablePosition" + "" + SEARCHTYPES.ADVISORY);
+    const orderBy = position ? JSON.parse(position)[3] : undefined;
     return {
       columns: [...SEARCHPAGECOLUMNS.ADVISORY],
       queryType: SEARCHTYPES.ADVISORY,
-      orders: ["-critical"],
+      orders: orderBy ?? ["-critical"],
       query: "",
       queryReset: ""
     };
