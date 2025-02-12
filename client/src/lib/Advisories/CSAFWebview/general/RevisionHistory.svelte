@@ -40,7 +40,7 @@
             <TableBodyCell tdClass={cellStyle}>{getReadableDateString(entry.date)}</TableBodyCell>
             <TableBodyCell tdClass={baseCellStyle + " min-w-52"}>{entry.summary}</TableBodyCell>
             <TableBodyCell
-              >{#if entry.legacyVersion}{entry.legacyVersion}{/if}</TableBodyCell
+              >{#if entry.legacy_version}{entry.legacy_version}{/if}</TableBodyCell
             >
           </TableBodyRow>
         {/each}

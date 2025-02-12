@@ -83,7 +83,7 @@ export type Publisher = {
 
 export type RevisionHistoryEntry = {
   date: string;
-  legacyVersion?: string;
+  legacy_version?: string;
   number: number;
   summary: string;
 };
