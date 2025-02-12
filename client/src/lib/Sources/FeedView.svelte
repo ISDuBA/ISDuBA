@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { type Feed, getLogLevels, LogLevel } from "$lib/Sources/source";
-  import { Select, Input, TableBodyCell } from "flowbite-svelte";
+  import { Select, Input, TableBodyCell, Button, Spinner } from "flowbite-svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { onMount } from "svelte";
   import { tdClass, type TableHeader } from "$lib/Table/defaults";
@@ -25,6 +25,8 @@
   export let updateFeed = async (_feed: Feed) => {};
   export let clickFeed = async (_feed: Feed) => {};
   export let showProgress = false;
+
+  $: subscribedFeeds = feeds.filter((feed) => feed.enable);
 
   $: {
     let loadingHeader = headersEdit.find((header) => header.label == "Loading/Queued");
@@ -86,6 +88,8 @@
   let loadConfigError: ErrorDetails | null;
 
   let feedBlinkID = -1;
+  let isSubscribingAll = false;
+  let isUnSubscribingAll = false;
 
   onMount(async () => {
     const resp = await getLogLevels(!edit);
@@ -97,12 +101,66 @@
     feedBlinkID = Number(sessionStorage.getItem("feedBlinkID") ?? "-1");
     sessionStorage.removeItem("feedBlinkID");
   });
+
+  const changeAllSubscriptions = async (subscribe = true) => {
+    if (subscribe) {
+      isSubscribingAll = true;
+    } else {
+      isUnSubscribingAll = true;
+    }
+    const feedsCopy = feeds;
+    for (let i = 0; i < feedsCopy.length; i++) {
+      const feed = feedsCopy[i];
+      if (feed.enable !== subscribe) {
+        feed.enable = subscribe;
+        await updateFeed(feed);
+        if (!subscribe) {
+          feeds[i].id = undefined;
+        }
+      }
+    }
+    if (subscribe) {
+      isSubscribingAll = false;
+    } else {
+      isUnSubscribingAll = false;
+    }
+    feeds = feeds;
+  };
 </script>
 
 {#if logLevels}
   <CustomTable title="Feeds" headers={tableHeaders}>
     <div slot="top">
       <slot name="top"></slot>
+    </div>
+    <div slot="header-right" class="flex gap-2">
+      <Button
+        on:click={() => {
+          changeAllSubscriptions();
+        }}
+        class="flex gap-2"
+        color="light"
+        disabled={subscribedFeeds.length === feeds.length || isSubscribingAll || isUnSubscribingAll}
+        size="sm"
+      >
+        Subscribe all
+        {#if isSubscribingAll}
+          <Spinner color="gray" size="4"></Spinner>
+        {/if}
+      </Button>
+      <Button
+        on:click={() => {
+          changeAllSubscriptions(false);
+        }}
+        class="flex gap-2"
+        color="light"
+        disabled={subscribedFeeds.length === 0 || isSubscribingAll || isUnSubscribingAll}
+        size="sm"
+        >Unsubscribe all
+        {#if isUnSubscribingAll}
+          <Spinner color="gray" size="4"></Spinner>
+        {/if}
+      </Button>
     </div>
     {#each feeds as feed, index (index)}
       <tr class={feed.id === feedBlinkID ? "blink" : ""}>
