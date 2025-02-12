@@ -8,9 +8,7 @@
 
 module github.com/ISDuBA/ISDuBA
 
-go 1.22.9
-
-toolchain go1.22.10
+go 1.24.0
 
 require (
 	github.com/BurntSushi/toml v1.4.0
