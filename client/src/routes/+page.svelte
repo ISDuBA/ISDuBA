@@ -64,10 +64,11 @@
 
   let inactivityTime = () => {
     let time: ReturnType<typeof setTimeout>;
-
+    const timeoutTime = () => Number(appStore.getIdleTimeout() / (1000 * 1000));
     const resetTimer = () => {
       clearTimeout(time);
-      time = setTimeout(logout, Number(appStore.getIdleTimeout() / (1000 * 1000)));
+      localStorage.setItem("lastActivity", Date.now().valueOf().toString());
+      time = setTimeout(logout, timeoutTime());
     };
 
     document.onmousemove = resetTimer;
@@ -75,6 +76,13 @@
     onConfigLoad = resetTimer;
 
     const logout = async () => {
+      let lastActivity = localStorage.getItem("lastActivity");
+      if (lastActivity) {
+        const elapsedTime = Date.now() - parseInt(lastActivity, 10);
+        if (elapsedTime < timeoutTime()) {
+          return;
+        }
+      }
       appStore.setSessionExpired(true);
       appStore.setSessionExpiredMessage("Idle logout");
       sessionStorage.clear();

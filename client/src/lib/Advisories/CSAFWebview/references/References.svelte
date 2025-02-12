@@ -24,7 +24,8 @@
             <TableBodyCell tdClass={cellStyle}>{reference.category}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}
               ><p class="mb-2">{reference.summary}</p>
-              <p><i class="bx bx-link"></i>{reference.url}</p></TableBodyCell
+              <a class="underline" href={reference.url}><i class="bx bx-link"></i>{reference.url}</a
+              ></TableBodyCell
             >
             <TableBodyCell></TableBodyCell>
           </TableBodyRow>
