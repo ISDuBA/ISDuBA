@@ -28,10 +28,12 @@
   // let searchqueryTimer: any = null;
 
   const resetQuery = () => {
+    let position = sessionStorage.getItem("tablePosition" + "" + SEARCHTYPES.ADVISORY);
+    const orderBy = position ? JSON.parse(position)[3] : undefined;
     return {
       columns: [...SEARCHPAGECOLUMNS.ADVISORY],
       queryType: SEARCHTYPES.ADVISORY,
-      orders: ["-critical"],
+      orders: orderBy ?? ["-critical"],
       query: "",
       queryReset: ""
     };
@@ -100,6 +102,15 @@
       queryString = parse($querystring);
     }
   });
+
+  const filterOrderCriteria = (orders: string[], possibleOrders: string[]) => {
+    return orders.filter((criterium) => {
+      if (criterium.charAt(0) === "-") {
+        criterium = criterium.slice(1);
+      }
+      return possibleOrders.indexOf(criterium) != -1;
+    });
+  };
 </script>
 
 <svelte:head>
@@ -170,12 +181,7 @@
         on:click={() => {
           query.queryType = SEARCHTYPES.ADVISORY;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
-          query.orders = query.orders.filter((criterium) => {
-            if (criterium.charAt(0) === "-") {
-              criterium = criterium.slice(1);
-            }
-            return SEARCHPAGECOLUMNS.ADVISORY.indexOf(criterium) != -1;
-          });
+          query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
           if (query.orders.length === 0) {
             query.orders = ["-critical"];
           }
@@ -189,12 +195,7 @@
         on:click={() => {
           query.queryType = SEARCHTYPES.DOCUMENT;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
-          query.orders = query.orders.filter((criterium) => {
-            if (criterium.charAt(0) === "-") {
-              criterium = criterium.slice(1);
-            }
-            return SEARCHPAGECOLUMNS.DOCUMENT.indexOf(criterium) != -1;
-          });
+          query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
           if (query.orders.length === 0) {
             query.orders = ["-critical"];
           }
