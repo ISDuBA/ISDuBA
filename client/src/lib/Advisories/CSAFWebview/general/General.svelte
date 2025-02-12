@@ -24,6 +24,7 @@
   $: lang = $appStore.webview.doc?.lang;
   $: sourceLang = $appStore.webview.doc?.sourceLang;
   $: csafVersion = $appStore.webview.doc?.csafVersion;
+  $: distributionText = $appStore.webview.doc?.distributionText;
   $: published = $appStore.webview.doc?.published;
   $: lastUpdate = $appStore.webview.doc?.lastUpdate;
   $: status = $appStore.webview.doc?.status;
@@ -77,6 +78,10 @@
       <div class={cellStyleValue}>{csafVersion}</div>
       <div class={cellStyleKey}>Category</div>
       <div class={cellStyleValue}>{category}</div>
+      {#if distributionText}
+        <div class={cellStyleKey}>Distribution</div>
+        <div class={cellStyleValue}>{distributionText}</div>
+      {/if}
       {#if $appStore.webview.doc?.aggregateSeverity}
         <div class={cellStyleKey}>Aggregate severity text</div>
         <div class={cellStyleValue}>
