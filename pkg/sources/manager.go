@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"iter"
 	"log/slog"
 	"math/rand/v2"
 	"net/url"
@@ -208,11 +209,14 @@ func (m *Manager) numActiveFeeds() int {
 	return sum
 }
 
-func (m *Manager) activeFeeds(fn func(*feed) bool) {
-	for _, s := range m.sources {
-		if s.active {
+func (m *Manager) activeFeeds() iter.Seq[*feed] {
+	return func(yield func(*feed) bool) {
+		for _, s := range m.sources {
+			if !s.active {
+				continue
+			}
 			for _, f := range s.feeds {
-				if !fn(f) {
+				if !yield(f) {
 					return
 				}
 			}
@@ -222,28 +226,32 @@ func (m *Manager) activeFeeds(fn func(*feed) bool) {
 
 // shuffledActiveFeeds iterates in a shuffled order over
 // the feeds of the active sources.
-func (m *Manager) shuffledActiveFeeds(fn func(*feed) bool) {
-	var active []*feed
-	for _, s := range m.sources {
-		if s.active {
-			active = append(active, s.feeds...)
+func (m *Manager) shuffledActiveFeeds() iter.Seq[*feed] {
+	return func(yield func(*feed) bool) {
+		var active []*feed
+		for _, s := range m.sources {
+			if s.active {
+				active = append(active, s.feeds...)
+			}
 		}
-	}
-	m.rnd.Shuffle(len(active), func(i, j int) {
-		active[i], active[j] = active[j], active[i]
-	})
-	for _, f := range active {
-		if !fn(f) {
-			return
+		m.rnd.Shuffle(len(active), func(i, j int) {
+			active[i], active[j] = active[j], active[i]
+		})
+		for _, f := range active {
+			if !yield(f) {
+				return
+			}
 		}
 	}
 }
 
-func (m *Manager) allFeeds(fn func(*feed) bool) {
-	for _, s := range m.sources {
-		for _, f := range s.feeds {
-			if !fn(f) {
-				return
+func (m *Manager) allFeeds() iter.Seq[*feed] {
+	return func(yield func(*feed) bool) {
+		for _, s := range m.sources {
+			for _, f := range s.feeds {
+				if !yield(f) {
+					return
+				}
 			}
 		}
 	}
@@ -276,7 +284,7 @@ func (m *Manager) findSourceByName(name string) *source {
 // and does so in that case.
 func (m *Manager) refreshFeeds() {
 	now := time.Now()
-	m.activeFeeds(func(f *feed) bool {
+	for f := range m.activeFeeds() {
 		// Does the feed need a refresh?
 		if !f.refreshBlocked && (f.nextCheck.IsZero() || !now.Before(f.nextCheck)) {
 			slog.Debug("refreshing feed", "feed", f.id, "source", f.source.name)
@@ -284,8 +292,7 @@ func (m *Manager) refreshFeeds() {
 			// Even if there was an error try again later.
 			f.nextCheck = time.Now().Add(m.cfg.Sources.FeedRefresh)
 		}
-		return true
-	})
+	}
 }
 
 // startDownloads starts downloads if there are enough slots and
@@ -293,19 +300,19 @@ func (m *Manager) refreshFeeds() {
 func (m *Manager) startDownloads() {
 	for m.usedSlots < m.cfg.Sources.DownloadSlots {
 		started := false
-		m.shuffledActiveFeeds(func(f *feed) bool {
+		for f := range m.shuffledActiveFeeds() {
 			// Has this feed a free slot?
 			maxSlots := min(m.cfg.Sources.MaxSlotsPerSource, m.cfg.Sources.DownloadSlots)
 			if f.source.slots != nil {
 				maxSlots = min(maxSlots, *f.source.slots)
 			}
 			if f.source.usedSlots >= maxSlots {
-				return true
+				continue
 			}
 			// Find a candidate to download.
 			loc := f.findWaiting()
 			if loc == nil {
-				return true
+				continue
 			}
 			m.usedSlots++
 			f.source.usedSlots++
@@ -313,8 +320,10 @@ func (m *Manager) startDownloads() {
 			loc.id = m.generateID()
 			started = true
 			m.jobs <- downloadJob{l: *loc, f: f}
-			return m.usedSlots < m.cfg.Sources.DownloadSlots
-		})
+			if m.usedSlots >= m.cfg.Sources.DownloadSlots {
+				break
+			}
+		}
 		if !started {
 			return
 		}
@@ -341,12 +350,11 @@ func (m *Manager) download(wg *sync.WaitGroup) {
 
 // compactDone removes the locations the feeds which are downloaded.
 func (m *Manager) compactDone() {
-	m.allFeeds(func(f *feed) bool {
+	for f := range m.allFeeds() {
 		f.queue = slices.DeleteFunc(f.queue, func(l location) bool {
 			return l.state == done
 		})
-		return true
-	})
+	}
 }
 
 func (m *Manager) generateID() int64 {
