@@ -68,6 +68,7 @@ export default [
 
     rules: {
       "no-console": "error",
+      "no-control-regex": 0,
       "@typescript-eslint/no-explicit-any": "off",
 
       "@typescript-eslint/no-unused-vars": [

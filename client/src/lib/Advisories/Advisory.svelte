@@ -26,6 +26,8 @@
   import History from "./History.svelte/History.svelte";
   import Tlp from "./TLP.svelte";
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
+  import { addSlashes } from "$lib/utils";
+
   export let params: any = null;
 
   let document: any = {};
@@ -70,6 +72,12 @@
   }
   $: canSeeCommentArea =
     appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin();
+  $: encodedTrackingID = params.trackingID
+    ? encodeURIComponent(addSlashes(params.trackingID))
+    : undefined;
+  $: encodedPublisherNamespace = params.publisherNamespace
+    ? encodeURIComponent(addSlashes(params.publisherNamespace))
+    : undefined;
 
   const setAsReadTimeout: number[] = [];
   let isDiffOpen = false;
@@ -80,7 +88,7 @@
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
-      `/api/documents?&columns=id version tracking_id&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      `/api/documents?&columns=id version tracking_id&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
       "GET"
     );
     if (response.ok) {
@@ -111,7 +119,7 @@
 
   const loadDocumentSSVC = async () => {
     const response = await request(
-      `/api/documents?columns=ssvc&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      `/api/documents?columns=ssvc&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
       "GET"
     );
     if (response.ok) {
@@ -126,7 +134,7 @@
 
   const loadEvents = async () => {
     const response = await request(
-      `/api/events/${params.publisherNamespace}/${params.trackingID}`,
+      `/api/events/${encodedPublisherNamespace}/${encodedTrackingID}`,
       "GET"
     );
     if (response.ok) {
@@ -139,7 +147,7 @@
 
   const loadComments = async () => {
     const response = await request(
-      `/api/comments/${params.publisherNamespace}/${params.trackingID}`,
+      `/api/comments/${encodedPublisherNamespace}/${encodedTrackingID}`,
       "GET"
     );
     if (response.ok) {
@@ -238,7 +246,7 @@
     });
 
     const response = await request(
-      `/api/status/${params.publisherNamespace}/${params.trackingID}/${newState}`,
+      `/api/status/${encodedPublisherNamespace}/${encodedTrackingID}/${newState}`,
       "PUT"
     );
     if (response.ok) {
@@ -251,7 +259,7 @@
 
   const loadAdvisoryState = async () => {
     const response = await request(
-      `/api/documents?advisories=true&columns=state&query=$tracking_id ${params.trackingID} = $publisher "${params.publisherNamespace}" = and`,
+      `/api/documents?advisories=true&columns=state&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
       "GET"
     );
     if (response.ok) {
