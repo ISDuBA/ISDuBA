@@ -45,7 +45,7 @@
           <TableBodyRow color="custom"
             ><TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}>
-              {#if values[index].startsWith("https://")}
+              {#if typeof values[index] === "string" && values[index].startsWith && values[index].startsWith("https://")}
                 <a class="underline" href={values[index]}>
                   <i class="bx bx-link"></i>{values[index]}
                 </a>
