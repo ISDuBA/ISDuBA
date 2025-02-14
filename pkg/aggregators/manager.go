@@ -14,6 +14,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"log/slog"
+	"sort"
 	"sync"
 	"time"
 
@@ -67,7 +68,10 @@ func (m *Manager) Run(ctx context.Context) {
 
 func aggregatorChecksum(cagg *CachedAggregator) []byte {
 	hash := sha1.New()
-	for _, url := range cagg.SourceURLs() {
+	urls := cagg.SourceURLs()
+	// Ensure same hash on different order
+	sort.Strings(urls)
+	for _, url := range urls {
 		hash.Write([]byte(url))
 	}
 	return hash.Sum(nil)
