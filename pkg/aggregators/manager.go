@@ -14,7 +14,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"log/slog"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -70,7 +70,7 @@ func aggregatorChecksum(cagg *CachedAggregator) []byte {
 	hash := sha1.New()
 	urls := cagg.SourceURLs()
 	// Ensure same hash on different order
-	sort.Strings(urls)
+	slices.Sort(urls)
 	for _, url := range urls {
 		hash.Write([]byte(url))
 	}
