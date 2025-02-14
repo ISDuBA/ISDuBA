@@ -18,6 +18,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/gocsaf/csaf/v3/csaf"
 )
 
 type parseError string
@@ -60,6 +62,7 @@ const (
 	workflowType
 	durationType
 	eventsType
+	statusType
 )
 
 // ParserMode represents the operation mode of the parser.
@@ -200,6 +203,8 @@ func (vt valueType) String() string {
 		return "duration"
 	case eventsType:
 		return "events"
+	case statusType:
+		return "status"
 	default:
 		return fmt.Sprintf("unknown value type %d", vt)
 	}
@@ -334,6 +339,7 @@ var documentColumns = []documentColumn{
 	{"critical", floatType, docAdvEvtModes, false},
 	{"four_cves", stringType, docAdvEvtModes, true},
 	{"comments", intType, docAdvEvtModes, false},
+	{"tracking_status", statusType, docAdvEvtModes, false},
 	// Advisories only
 	{"state", workflowType, advModes, false},
 	{"recent", timeType, advModes, false},
@@ -360,6 +366,7 @@ var (
 		"timestamp": (*Parser).pushTimestamp,
 		"workflow":  (*Parser).pushWorkflow,
 		"events":    (*Parser).pushEvents,
+		"status":    (*Parser).pushStatus,
 		"=":         curry3((*Parser).pushCmp, eq),
 		"!=":        curry3((*Parser).pushCmp, ne),
 		"<":         curry3((*Parser).pushCmp, lt),
@@ -756,6 +763,15 @@ func parseEvents(s string) string {
 	return s
 }
 
+func parseStatus(s string) string {
+	switch st := csaf.TrackingStatus(s); st {
+	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
+		panic(parseError(fmt.Sprintf("%q is not a valid tracking status", s)))
+	default:
+		return s
+	}
+}
+
 func (*Parser) pushWorkflow(st *stack) {
 	if st.top().valueType == workflowType {
 		return
@@ -804,6 +820,34 @@ func (*Parser) pushEvents(st *stack) {
 			st.push(&Expr{
 				exprType:  cast,
 				valueType: eventsType,
+				children:  []*Expr{e},
+			})
+		default:
+			panic(parseError("unsupported cast"))
+		}
+	}
+}
+
+func (*Parser) pushStatus(st *stack) {
+	if st.top().valueType == statusType {
+		return
+	}
+	switch e := st.pop(); e.exprType {
+	case cnst:
+		switch e.valueType {
+		case stringType:
+			st.push(&Expr{
+				exprType:    cnst,
+				valueType:   statusType,
+				stringValue: parseStatus(e.stringValue),
+			})
+		}
+	default:
+		switch e.valueType {
+		case stringType:
+			st.push(&Expr{
+				exprType:  cast,
+				valueType: statusType,
 				children:  []*Expr{e},
 			})
 		default:

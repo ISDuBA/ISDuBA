@@ -70,6 +70,7 @@ More Examples:
 | `id`                   | `integer`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | Database ID of a document                                       |
 | `latest`               | `bool`      | :white_check_mark: | :white_check_mark: | :white_check_mark: | Latest document of an advisory                                  |
 | `tracking_id`          | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/id`                                         |
+| `tracking_status`      | `status`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/status`                                     |
 | `version`              | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/version`                                    |
 | `publisher`            | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/publisher/name`                                      |
 | `current_release_date` | `timestamp` | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/current_release_date`                       |
@@ -105,6 +106,7 @@ More Examples:
 | `timestamp` | `string`              | `timestamp` Converts argument to timestamp                                                                |
 | `workflow`  | `string`              | `workflow` Converts argument to workflow                                                                  |
 | `events`    | `string`              | `events` Converts argument to events                                                                      |
+| `status`    | `string`              | `status` Converts argument to status                                                                      |
 | `=`         | **A** **B**           | `bool` **A** equals **B**                                                                                 |
 | `!=`        | **A** **B**           | `bool` **A** not equals **B**                                                                             |
 | `<`         | **A** **B**           | `bool` **A** lesser than **B\***                                                                          |
@@ -165,3 +167,4 @@ For operators with **A** **B** arguments there is following type compatibilty ma
 | `duration`  | Length of time intervals | See Go's [Duration.ParseDuration](https://pkg.go.dev/time@go1.22.5#ParseDuration)                                                         |
 | `workflow`  | States of workflow       | `new` `read` `assessing` `review` `archived` `delete`                                                                                     |
 | `events`    | States of events         | `import_document` `delete_document` `state_change` `add_sscv` `change_sscv` `delete_sscv` `add_comment` `change_comment` `delete_comment` |
+| `status`    | Status of document       | `draft` `final` `interim`                                                                                                                 |
