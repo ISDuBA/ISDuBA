@@ -19,7 +19,7 @@ COPY Makefile Makefile
 RUN make build_client
 
 
-FROM library/golang:1.23-alpine AS server
+FROM library/golang:1.24-alpine AS server
 RUN apk update && apk add --no-cache make
 # This required to download from https locations, like CSAF trusted provider or CSAF aggregator
 RUN apk add -U --no-cache ca-certificates && update-ca-certificates
