@@ -14,12 +14,12 @@
   import { push } from "svelte-spa-router";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   import { appStore } from "$lib/store";
+  import type { AdvisoryVersion } from "./advisory";
 
-  export let advisoryVersions: any;
+  export let advisoryVersions: AdvisoryVersion[];
   $: reversedAdvisoryVersions = advisoryVersions.toReversed();
   export let publisherNamespace: string;
-  export let trackingID: string;
-  export let selectedDocumentVersion: string;
+  export let selectedDocumentVersion: AdvisoryVersion;
   let diffModeActivated = false;
   let firstDocumentIndex: number | undefined;
   let secondDocumentIndex: number | undefined;
@@ -32,18 +32,27 @@
 
   const dispatch = createEventDispatcher();
   const navigateToVersion = (version: any) => {
-    push(`/advisories/${publisherNamespace}/${trackingID}/documents/${version.id}`);
+    push(
+      `/advisories/${publisherNamespace}/${selectedDocumentVersion.tracking_id}/documents/${version.id}`
+    );
   };
   const toggleToolboxActivated = () => {
     diffModeActivated = !diffModeActivated;
     if (diffModeActivated) {
-      if (reversedAdvisoryVersions[0].version === selectedDocumentVersion) {
+      if (
+        reversedAdvisoryVersions[0].version === selectedDocumentVersion.version &&
+        reversedAdvisoryVersions[0].tracking_status === selectedDocumentVersion.tracking_status
+      ) {
         firstDocumentIndex = 0;
         nextColor = "green";
       } else {
         secondDocumentIndex = reversedAdvisoryVersions.findIndex(
-          (advVer: any) => advVer.version === selectedDocumentVersion
+          (advVer: any) =>
+            advVer.version === selectedDocumentVersion.version &&
+            advVer.tracking_status === selectedDocumentVersion.tracking_status
         );
+        // If any version but the first is selected we expect that the most interesting
+        // case is to compare the current version with the previous one.
         if (secondDocumentIndex) {
           firstDocumentIndex = secondDocumentIndex - 1;
         }
@@ -56,7 +65,7 @@
   const disableDiff = () => {
     if (
       secondDocumentIndex &&
-      reversedAdvisoryVersions[secondDocumentIndex].version !== selectedDocumentVersion
+      reversedAdvisoryVersions[secondDocumentIndex].version !== selectedDocumentVersion.version
     ) {
       navigateToVersion(reversedAdvisoryVersions[secondDocumentIndex]);
     }
@@ -122,6 +131,10 @@
                 title={`Version ${version.version}`}
               >
                 {version.version}
+                <!-- Show tracking status only if there are at least to documents with same version number -->
+                {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 2 && reversedAdvisoryVersions[index + 1].version === version.version)}
+                  &nbsp;({version.tracking_status})
+                {/if}
               </Button>
               {#if index === firstDocumentIndex}
                 <DiffVersionIndicator
@@ -151,10 +164,11 @@
             </div>
           {/each}
         {:else}
-          {#each reversedAdvisoryVersions as version}
+          {#each reversedAdvisoryVersions as version, index}
             <Button
               class={`${diffButtonBaseClass}`}
-              disabled={selectedDocumentVersion === version.version}
+              disabled={selectedDocumentVersion.version === version.version &&
+                selectedDocumentVersion.tracking_status === version.tracking_status}
               on:click={() => {
                 navigateToVersion(version);
               }}
@@ -162,6 +176,10 @@
               title={`Version ${version.version}`}
             >
               {version.version}
+              <!-- Show tracking status only if there are at least to documents with same version number -->
+              {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 2 && reversedAdvisoryVersions[index + 1].version === version.version)}
+                &nbsp;({version.tracking_status})
+              {/if}
             </Button>
           {/each}
         {/if}
