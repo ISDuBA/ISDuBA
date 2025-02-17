@@ -364,9 +364,9 @@ var (
 		"float":     (*Parser).pushFloat,
 		"integer":   (*Parser).pushInteger,
 		"timestamp": (*Parser).pushTimestamp,
-		"workflow":  (*Parser).pushWorkflow,
-		"events":    (*Parser).pushEvents,
-		"status":    (*Parser).pushStatus,
+		"workflow":  pushEnum(workflowType, parseWorkflow),
+		"events":    pushEnum(eventsType, parseEvents),
+		"status":    pushEnum(statusType, parseStatus),
 		"=":         curry3((*Parser).pushCmp, eq),
 		"!=":        curry3((*Parser).pushCmp, ne),
 		"<":         curry3((*Parser).pushCmp, lt),
@@ -772,86 +772,33 @@ func parseStatus(s string) string {
 	}
 }
 
-func (*Parser) pushWorkflow(st *stack) {
-	if st.top().valueType == workflowType {
-		return
-	}
-	switch e := st.pop(); e.exprType {
-	case cnst:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:    cnst,
-				valueType:   workflowType,
-				stringValue: parseWorkflow(e.stringValue),
-			})
+func pushEnum(vtype valueType, parse func(string) string) func(*Parser, *stack) {
+	return func(_ *Parser, st *stack) {
+		if st.top().valueType == vtype {
+			return
 		}
-	default:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:  cast,
-				valueType: workflowType,
-				children:  []*Expr{e},
-			})
+		switch e := st.pop(); e.exprType {
+		case cnst:
+			switch e.valueType {
+			case stringType:
+				st.push(&Expr{
+					exprType:    cnst,
+					valueType:   vtype,
+					stringValue: parse(e.stringValue),
+				})
+			}
 		default:
-			panic(parseError("unsupported cast"))
-		}
-	}
-}
-
-func (*Parser) pushEvents(st *stack) {
-	if st.top().valueType == eventsType {
-		return
-	}
-	switch e := st.pop(); e.exprType {
-	case cnst:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:    cnst,
-				valueType:   eventsType,
-				stringValue: parseEvents(e.stringValue),
-			})
-		}
-	default:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:  cast,
-				valueType: eventsType,
-				children:  []*Expr{e},
-			})
-		default:
-			panic(parseError("unsupported cast"))
-		}
-	}
-}
-
-func (*Parser) pushStatus(st *stack) {
-	if st.top().valueType == statusType {
-		return
-	}
-	switch e := st.pop(); e.exprType {
-	case cnst:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:    cnst,
-				valueType:   statusType,
-				stringValue: parseStatus(e.stringValue),
-			})
-		}
-	default:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:  cast,
-				valueType: statusType,
-				children:  []*Expr{e},
-			})
-		default:
-			panic(parseError("unsupported cast"))
+			switch e.valueType {
+			case stringType:
+				st.push(&Expr{
+					exprType:  cast,
+					valueType: vtype,
+					children:  []*Expr{e},
+				})
+			default:
+				panic(parseError(
+					fmt.Sprintf("unsupported cast from %q to %q", e.valueType, vtype)))
+			}
 		}
 	}
 }
