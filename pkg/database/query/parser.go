@@ -768,7 +768,7 @@ func parseStatus(s string) string {
 	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
 		return s
 	default:
-		panic(parseError(fmt.Sprintf("%q is not a valid tracking status", s)))
+		panic(parseError(fmt.Sprintf("%q is not a valid status", s)))
 	}
 }
 

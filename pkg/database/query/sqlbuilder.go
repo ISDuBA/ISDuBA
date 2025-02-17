@@ -120,7 +120,7 @@ func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 	case eventsType:
 		b.WriteString("events")
 	case statusType:
-		b.WriteString("tracking_status")
+		b.WriteString("status")
 	case durationType:
 		b.WriteString("interval")
 	}
@@ -159,7 +159,7 @@ func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 	case statusType:
 		b.WriteByte('\'')
 		b.WriteString(e.stringValue)
-		b.WriteString("'::tracking_status")
+		b.WriteString("'::status")
 	case durationType:
 		fmt.Fprintf(b, "'%.2f seconds'::interval", e.durationValue.Seconds())
 	}
@@ -196,8 +196,6 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	case "tracking_id", "publisher":
 		b.WriteString("advisories.")
 		b.WriteString(column)
-	case "tracking_status":
-		b.WriteString("status")
 	case "versions":
 		b.WriteString(versionsCount)
 	case "comments":
@@ -378,8 +376,6 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 			b.WriteByte(',')
 		}
 		switch field {
-		case "tracking_status":
-			b.WriteString("status")
 		case "tracking_id", "publisher", "id":
 			b.WriteString("advisories.")
 			b.WriteString(field)
@@ -466,9 +462,7 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			b.WriteString(p)
 			b.WriteString(` AS `)
 			b.WriteString(p)
-		case "tracking_status":
-			b.WriteString("status::text")
-		case "state", "event":
+		case "state", "event", "tracking_status":
 			b.WriteString(p)
 			b.WriteString("::text")
 		case "event_state":
