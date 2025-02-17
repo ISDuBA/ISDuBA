@@ -766,9 +766,9 @@ func parseEvents(s string) string {
 func parseStatus(s string) string {
 	switch st := csaf.TrackingStatus(s); st {
 	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
-		panic(parseError(fmt.Sprintf("%q is not a valid tracking status", s)))
-	default:
 		return s
+	default:
+		panic(parseError(fmt.Sprintf("%q is not a valid tracking status", s)))
 	}
 }
 

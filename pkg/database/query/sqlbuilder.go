@@ -196,6 +196,8 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	case "tracking_id", "publisher":
 		b.WriteString("advisories.")
 		b.WriteString(column)
+	case "tracking_status":
+		b.WriteString("status")
 	case "versions":
 		b.WriteString(versionsCount)
 	case "comments":
@@ -376,6 +378,8 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 			b.WriteByte(',')
 		}
 		switch field {
+		case "tracking_status":
+			b.WriteString("status")
 		case "tracking_id", "publisher", "id":
 			b.WriteString("advisories.")
 			b.WriteString(field)
@@ -462,7 +466,9 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			b.WriteString(p)
 			b.WriteString(` AS `)
 			b.WriteString(p)
-		case "state", "event", "tracking_status":
+		case "tracking_status":
+			b.WriteString("status::text")
+		case "state", "event":
 			b.WriteString(p)
 			b.WriteString("::text")
 		case "event_state":
