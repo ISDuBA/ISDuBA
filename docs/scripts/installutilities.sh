@@ -47,4 +47,4 @@ fi
 # install graphviz
 sudo apt install -y graphviz
 # install 
-sudo go install github.com/swaggo/swag/v2/cmd/swag@latest
+sudo go install github.com/swaggo/swag/cmd/swag@latest
