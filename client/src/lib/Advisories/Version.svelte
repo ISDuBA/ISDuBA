@@ -131,7 +131,7 @@
                 title={`Version ${version.version}`}
               >
                 {version.version}
-                <!-- Show tracking status only if there are at least to documents with same version number -->
+                <!-- Show tracking status only if there are at least two documents with same version number -->
                 {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 1 && reversedAdvisoryVersions[index + 1].version === version.version)}
                   &nbsp;({version.tracking_status})
                 {/if}
@@ -176,7 +176,7 @@
               title={`Version ${version.version}`}
             >
               {version.version}
-              <!-- Show tracking status only if there are at least to documents with same version number -->
+              <!-- Show tracking status only if there are at least two documents with same version number -->
               {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 1 && reversedAdvisoryVersions[index + 1].version === version.version)}
                 &nbsp;({version.tracking_status})
               {/if}
