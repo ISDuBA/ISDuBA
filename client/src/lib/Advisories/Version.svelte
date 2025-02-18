@@ -132,7 +132,7 @@
               >
                 {version.version}
                 <!-- Show tracking status only if there are at least to documents with same version number -->
-                {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 2 && reversedAdvisoryVersions[index + 1].version === version.version)}
+                {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 1 && reversedAdvisoryVersions[index + 1].version === version.version)}
                   &nbsp;({version.tracking_status})
                 {/if}
               </Button>
@@ -177,7 +177,7 @@
             >
               {version.version}
               <!-- Show tracking status only if there are at least to documents with same version number -->
-              {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 2 && reversedAdvisoryVersions[index + 1].version === version.version)}
+              {#if (index > 0 && reversedAdvisoryVersions[index - 1].version === version.version) || (index < reversedAdvisoryVersions.length - 1 && reversedAdvisoryVersions[index + 1].version === version.version)}
                 &nbsp;({version.tracking_status})
               {/if}
             </Button>
