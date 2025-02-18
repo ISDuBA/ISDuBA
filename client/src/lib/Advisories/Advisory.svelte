@@ -88,13 +88,18 @@
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
-      `/api/documents?&columns=id version tracking_id&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
+      `/api/documents?&columns=id version tracking_id tracking_status&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
       "GET"
     );
     if (response.ok) {
       const result = await response.content;
       advisoryVersions = result.documents.map((doc: any) => {
-        return { id: doc.id, version: doc.version, tracking_id: doc.tracking_id };
+        return {
+          id: doc.id,
+          version: doc.version,
+          tracking_id: doc.tracking_id,
+          tracking_status: doc.tracking_status
+        };
       });
       advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
         acc[version.id] = version.version;
@@ -513,9 +518,13 @@
         {#if advisoryVersions.length > 0}
           <Version
             publisherNamespace={params.publisherNamespace}
-            trackingID={params.trackingID}
             {advisoryVersions}
-            selectedDocumentVersion={document.tracking?.version}
+            selectedDocumentVersion={{
+              id: document.id,
+              tracking_id: params.trackingID,
+              tracking_status: document.tracking?.status,
+              version: document.tracking?.version
+            }}
             on:selectedDiffDocuments={() => (isDiffOpen = true)}
             on:disableDiff={() => (isDiffOpen = false)}
           ></Version>

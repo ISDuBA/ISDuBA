@@ -119,6 +119,8 @@ func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 		b.WriteString("workflow")
 	case eventsType:
 		b.WriteString("events")
+	case statusType:
+		b.WriteString("status")
 	case durationType:
 		b.WriteString("interval")
 	}
@@ -154,6 +156,10 @@ func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 		b.WriteByte('\'')
 		b.WriteString(e.stringValue)
 		b.WriteString("'::events")
+	case statusType:
+		b.WriteByte('\'')
+		b.WriteString(e.stringValue)
+		b.WriteString("'::status")
 	case durationType:
 		fmt.Fprintf(b, "'%.2f seconds'::interval", e.durationValue.Seconds())
 	}
@@ -456,7 +462,7 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			b.WriteString(p)
 			b.WriteString(` AS `)
 			b.WriteString(p)
-		case "state", "event":
+		case "state", "event", "tracking_status":
 			b.WriteString(p)
 			b.WriteString("::text")
 		case "event_state":

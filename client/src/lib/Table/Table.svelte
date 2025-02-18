@@ -123,6 +123,7 @@
     let names: { [key: string]: string } = {
       id: "ID",
       tracking_id: "TRACKING ID",
+      tracking_status: "TRACKING STATUS",
       version: "VERSION",
       publisher: "PUBLISHER",
       current_release_date: "CURRENT RELEASE",

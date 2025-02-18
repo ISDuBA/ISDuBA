@@ -18,6 +18,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/gocsaf/csaf/v3/csaf"
 )
 
 type parseError string
@@ -60,6 +62,7 @@ const (
 	workflowType
 	durationType
 	eventsType
+	statusType
 )
 
 // ParserMode represents the operation mode of the parser.
@@ -200,6 +203,8 @@ func (vt valueType) String() string {
 		return "duration"
 	case eventsType:
 		return "events"
+	case statusType:
+		return "status"
 	default:
 		return fmt.Sprintf("unknown value type %d", vt)
 	}
@@ -334,6 +339,7 @@ var documentColumns = []documentColumn{
 	{"critical", floatType, docAdvEvtModes, false},
 	{"four_cves", stringType, docAdvEvtModes, true},
 	{"comments", intType, docAdvEvtModes, false},
+	{"tracking_status", statusType, docAdvEvtModes, false},
 	// Advisories only
 	{"state", workflowType, advModes, false},
 	{"recent", timeType, advModes, false},
@@ -358,8 +364,9 @@ var (
 		"float":     (*Parser).pushFloat,
 		"integer":   (*Parser).pushInteger,
 		"timestamp": (*Parser).pushTimestamp,
-		"workflow":  (*Parser).pushWorkflow,
-		"events":    (*Parser).pushEvents,
+		"workflow":  pushEnum(workflowType, parseWorkflow),
+		"events":    pushEnum(eventsType, parseEvents),
+		"status":    pushEnum(statusType, parseStatus),
 		"=":         curry3((*Parser).pushCmp, eq),
 		"!=":        curry3((*Parser).pushCmp, ne),
 		"<":         curry3((*Parser).pushCmp, lt),
@@ -756,58 +763,42 @@ func parseEvents(s string) string {
 	return s
 }
 
-func (*Parser) pushWorkflow(st *stack) {
-	if st.top().valueType == workflowType {
-		return
-	}
-	switch e := st.pop(); e.exprType {
-	case cnst:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:    cnst,
-				valueType:   workflowType,
-				stringValue: parseWorkflow(e.stringValue),
-			})
-		}
+func parseStatus(s string) string {
+	switch st := csaf.TrackingStatus(s); st {
+	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
+		return s
 	default:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:  cast,
-				valueType: workflowType,
-				children:  []*Expr{e},
-			})
-		default:
-			panic(parseError("unsupported cast"))
-		}
+		panic(parseError(fmt.Sprintf("%q is not a valid status", s)))
 	}
 }
 
-func (*Parser) pushEvents(st *stack) {
-	if st.top().valueType == eventsType {
-		return
-	}
-	switch e := st.pop(); e.exprType {
-	case cnst:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:    cnst,
-				valueType:   eventsType,
-				stringValue: parseEvents(e.stringValue),
-			})
+func pushEnum(vtype valueType, parse func(string) string) func(*Parser, *stack) {
+	return func(_ *Parser, st *stack) {
+		if st.top().valueType == vtype {
+			return
 		}
-	default:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:  cast,
-				valueType: eventsType,
-				children:  []*Expr{e},
-			})
+		switch e := st.pop(); e.exprType {
+		case cnst:
+			switch e.valueType {
+			case stringType:
+				st.push(&Expr{
+					exprType:    cnst,
+					valueType:   vtype,
+					stringValue: parse(e.stringValue),
+				})
+			}
 		default:
-			panic(parseError("unsupported cast"))
+			switch e.valueType {
+			case stringType:
+				st.push(&Expr{
+					exprType:  cast,
+					valueType: vtype,
+					children:  []*Expr{e},
+				})
+			default:
+				panic(parseError(
+					fmt.Sprintf("unsupported cast from %q to %q", e.valueType, vtype)))
+			}
 		}
 	}
 }

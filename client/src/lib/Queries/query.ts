@@ -43,7 +43,8 @@ const COLUMNS = {
     "cvss_v2_score",
     "cvss_v3_score",
     "four_cves",
-    "comments"
+    "comments",
+    "tracking_status"
   ],
   EVENT: [
     "critical",
@@ -109,7 +110,8 @@ const SEARCHPAGECOLUMNS = {
     "initial_release_date",
     "current_release_date",
     "version",
-    "comments"
+    "comments",
+    "tracking_status"
   ],
   EVENT: [
     "time",

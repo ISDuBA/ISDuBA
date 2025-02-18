@@ -40,6 +40,10 @@
   $: docB_ID = $appStore.app.diff.docB_ID;
   $: if (docA_ID && docB_ID) compare();
 
+  const getPartOfTitle = (document: any, showTrackingStatus: boolean) => {
+    return `${document.tracking.id} (Version ${document.tracking.version}${showTrackingStatus ? ", " + document.tracking.status : ""})`;
+  };
+
   const compare = async () => {
     isLoading = true;
     const responseDocA = await getDocument("A");
@@ -51,8 +55,10 @@
         docA: documentB,
         docB: documentA
       };
-      const from = `${diffDocuments.docB.document.tracking.id} (Version ${diffDocuments.docB.document.tracking.version})`;
-      const to = `${diffDocuments.docA.document.tracking.id} (Version ${diffDocuments.docA.document.tracking.version})`;
+      const showTrackingStatus =
+        diffDocuments.docB.document.tracking.status !== diffDocuments.docA.document.tracking.status;
+      const from = getPartOfTitle(diffDocuments.docB.document, showTrackingStatus);
+      const to = getPartOfTitle(diffDocuments.docA.document, showTrackingStatus);
       title = `Changes from ${from} to ${to}`;
     }
     await getDiff();
