@@ -57,4 +57,4 @@ dist: build_isdubad build_client
 	cp -r docs/*.md $(DISTDIR)/docs
 	cp -r docs/images/*.svg $(DISTDIR)/docs
 	cp -r docs/*.toml $(DISTDIR)/docs
-	tar -cvmlzf dist/$(DISTNAME)-gnulinux-amd64.tar.gz --strip-components=1 $(DISTDIR)
+	cd dist && tar -cvmlzf $(DISTNAME)-gnulinux-amd64.tar.gz $(DISTNAME)
