@@ -30,7 +30,7 @@ timeout = "5s"
 If the `automatic` is set to true all documents that match the filter are
 forwarded to endpoint. The backend polls for documents that were not uploaded
 for the URL and forwards them. Already imported documents are also forwarded.
-If set to false only that are manually forwarded are sent to the URL. This
+If set to false only those that are manually forwarded are sent to the URL.
 
 `name` specifies the name of the forward target. This is required to let the
 user distinguish between multiple targets.
