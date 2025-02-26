@@ -750,21 +750,23 @@ func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
 	return <-fiCh
 }
 
-// FeedLog sends the log of the feed with the given id to the given function.
-func (m *Manager) FeedLog(
+// FeedLogInfo is an entry in the log of a feed.
+type FeedLogInfo struct {
+	ID      int64               `json:"feed_id"`
+	Time    time.Time           `json:"time"`
+	Level   config.FeedLogLevel `json:"level"`
+	Message string              `json:"msg"`
+}
+
+// StreamFeedLog returns a sequence of feed log entries.
+func (m *Manager) StreamFeedLog(
 	feedID *int64,
 	from, to *time.Time,
 	search string,
 	limit, offset int64,
 	logLevels []config.FeedLogLevel,
 	count bool,
-	fn func(
-		id int64,
-		t time.Time,
-		lvl config.FeedLogLevel,
-		msg string,
-	),
-) (int64, error) {
+) (int64, iter.Seq[FeedLogInfo], error) {
 	const (
 		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
 		selectSQL = `SELECT feeds_id, time, lvl::text, msg FROM feed_logs WHERE `
@@ -845,35 +847,41 @@ func (m *Manager) FeedLog(
 
 	counter := int64(-1)
 
-	err := m.db.Run(
-		context.Background(),
-		func(ctx context.Context, con *pgxpool.Conn) error {
-			if count {
-				if err := con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter); err != nil {
-					return fmt.Errorf("counting feed logs failed: %w", err)
+	if count {
+		if err := m.db.Run(
+			context.Background(),
+			func(ctx context.Context, con *pgxpool.Conn) error {
+				return con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter)
+			}, 0); err != nil {
+			return -1, nil, fmt.Errorf("counting feed logs failed: %w", err)
+		}
+	}
+
+	return counter, func(yield func(FeedLogInfo) bool) {
+		if err := m.db.Run(
+			context.Background(),
+			func(ctx context.Context, con *pgxpool.Conn) error {
+				rows, err := con.Query(ctx, selSQL, args...)
+				if err != nil {
+					return fmt.Errorf("querying feed logs failed: %w", err)
 				}
-			}
-			rows, err := con.Query(ctx, selSQL, args...)
-			if err != nil {
-				return fmt.Errorf("querying feed logs failed: %w", err)
-			}
-			defer rows.Close()
-			var (
-				id  int64
-				t   time.Time
-				lvl config.FeedLogLevel
-				msg string
-			)
-			for rows.Next() {
-				if err := rows.Scan(&id, &t, &lvl, &msg); err != nil {
-					return fmt.Errorf("scanning log failed: %w", err)
+				defer rows.Close()
+				for rows.Next() {
+					var fli FeedLogInfo
+					if err := rows.Scan(&fli.ID, &fli.Time, &fli.Level, &fli.Message); err != nil {
+						return fmt.Errorf("scanning log failed: %w", err)
+					}
+					fli.Time = fli.Time.UTC()
+					if !yield(fli) {
+						return nil
+					}
 				}
-				fn(id, t, lvl, msg)
-			}
-			return rows.Err()
-		}, 0,
-	)
-	return counter, err
+				return rows.Err()
+			}, 0,
+		); err != nil {
+			slog.Error("database error", "error", err)
+		}
+	}, nil
 }
 
 // ping wakes up the manager.
