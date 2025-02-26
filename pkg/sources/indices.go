@@ -39,7 +39,7 @@ func (fi *feedIndex) rolieLocations(r io.Reader) ([]location, error) {
 			return fmt.Errorf("invalid href: %v", href)
 		}
 		if !u.IsAbs() {
-			u = fi.base.JoinPath(u.Path)
+			u = joinURL(fi.base, u)
 		}
 		*store = u
 		return nil
@@ -141,7 +141,7 @@ func (fi *feedIndex) directoryLocations(r io.Reader) ([]location, error) {
 			return nil, fmt.Errorf("column 2 in line %d is not a valid RFC3339 time: %w", lineNo, err)
 		}
 		if !doc.IsAbs() {
-			doc = fi.base.JoinPath(doc.Path)
+			doc = joinURL(fi.base, doc)
 		}
 		// Apply age filter
 		if fi.age != nil && updated.Before(cut) {
