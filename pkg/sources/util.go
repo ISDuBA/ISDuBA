@@ -10,6 +10,7 @@ package sources
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 )
 
@@ -44,4 +45,14 @@ func AsRegexps(s []string) ([]*regexp.Regexp, error) {
 		slice = append(slice, re)
 	}
 	return slice, nil
+}
+
+// joinURL joins the two URLs while preserving the query and fragment part of the latter.
+func joinURL(baseURL *url.URL, relativeURL *url.URL) *url.URL {
+	u := baseURL.JoinPath(relativeURL.Path)
+	u.RawQuery = relativeURL.RawQuery
+	u.RawFragment = relativeURL.RawFragment
+	// Enforce https, this is required if the base url was only a domain
+	u.Scheme = "https"
+	return u
 }
