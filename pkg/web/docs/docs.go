@@ -3713,6 +3713,23 @@ const docTemplate = `{
                 "EventMode"
             ]
         },
+        "sources.FeedLogInfo": {
+            "type": "object",
+            "properties": {
+                "feed_id": {
+                    "type": "integer"
+                },
+                "level": {
+                    "$ref": "#/definitions/config.FeedLogLevel"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
         "sources.FeedSubscription": {
             "type": "object",
             "properties": {
@@ -3979,23 +3996,6 @@ const docTemplate = `{
                 }
             }
         },
-        "web.feedLogs.entry": {
-            "type": "object",
-            "properties": {
-                "feed_id": {
-                    "type": "integer"
-                },
-                "level": {
-                    "$ref": "#/definitions/config.FeedLogLevel"
-                },
-                "msg": {
-                    "type": "string"
-                },
-                "time": {
-                    "type": "string"
-                }
-            }
-        },
         "web.feedLogs.feedLogEntries": {
             "type": "object",
             "properties": {
@@ -4005,7 +4005,7 @@ const docTemplate = `{
                 "entries": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/web.feedLogs.entry"
+                        "$ref": "#/definitions/sources.FeedLogInfo"
                     }
                 }
             }
