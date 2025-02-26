@@ -68,7 +68,7 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 			slog.Warn("Invalid OpenPGP url", "url", *key.URL, "err", err)
 			continue
 		}
-		u = base.ResolveReference(u)
+		u = base.JoinPath(u.Path)
 		res, err := source.httpGet(client, m, u.String())
 		if err != nil {
 			slog.Warn(
