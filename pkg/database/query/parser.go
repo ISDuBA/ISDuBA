@@ -43,6 +43,7 @@ const (
 	mentioned
 	involved
 	ilike
+	ilikePName
 	ilikePID
 	now
 	add
@@ -356,36 +357,37 @@ var documentColumns = []documentColumn{
 var (
 	// baseActions are the action available in every parser.
 	baseActions = map[string]func(*Parser, *stack){
-		"true":      (*Parser).pushTrue,
-		"false":     (*Parser).pushFalse,
-		"not":       (*Parser).pushNot,
-		"and":       curry3((*Parser).pushBinary, and),
-		"or":        curry3((*Parser).pushBinary, or),
-		"float":     (*Parser).pushFloat,
-		"integer":   (*Parser).pushInteger,
-		"timestamp": (*Parser).pushTimestamp,
-		"workflow":  pushEnum(workflowType, parseWorkflow),
-		"events":    pushEnum(eventsType, parseEvents),
-		"status":    pushEnum(statusType, parseStatus),
-		"=":         curry3((*Parser).pushCmp, eq),
-		"!=":        curry3((*Parser).pushCmp, ne),
-		"<":         curry3((*Parser).pushCmp, lt),
-		"<=":        curry3((*Parser).pushCmp, le),
-		">":         curry3((*Parser).pushCmp, gt),
-		">=":        curry3((*Parser).pushCmp, ge),
-		"ilike":     (*Parser).pushILike,
-		"ilikepid":  (*Parser).pushILikePID,
-		"now":       (*Parser).pushNow,
-		"duration":  (*Parser).pushDuration,
-		"+":         curry3((*Parser).pushBinary, add),
-		"-":         curry3((*Parser).pushBinary, sub),
-		"/":         curry3((*Parser).pushBinary, div),
-		"*":         curry3((*Parser).pushBinary, mul),
-		"me":        (*Parser).pushMe,
-		"mentioned": (*Parser).pushMentioned,
-		"involved":  (*Parser).pushInvolved,
-		"search":    (*Parser).pushSearch,
-		"as":        (*Parser).pushAs,
+		"true":       (*Parser).pushTrue,
+		"false":      (*Parser).pushFalse,
+		"not":        (*Parser).pushNot,
+		"and":        curry3((*Parser).pushBinary, and),
+		"or":         curry3((*Parser).pushBinary, or),
+		"float":      (*Parser).pushFloat,
+		"integer":    (*Parser).pushInteger,
+		"timestamp":  (*Parser).pushTimestamp,
+		"workflow":   pushEnum(workflowType, parseWorkflow),
+		"events":     pushEnum(eventsType, parseEvents),
+		"status":     pushEnum(statusType, parseStatus),
+		"=":          curry3((*Parser).pushCmp, eq),
+		"!=":         curry3((*Parser).pushCmp, ne),
+		"<":          curry3((*Parser).pushCmp, lt),
+		"<=":         curry3((*Parser).pushCmp, le),
+		">":          curry3((*Parser).pushCmp, gt),
+		">=":         curry3((*Parser).pushCmp, ge),
+		"ilike":      (*Parser).pushILike,
+		"ilikepname": (*Parser).pushILikePName,
+		"ilikepid":   (*Parser).pushILikePID,
+		"now":        (*Parser).pushNow,
+		"duration":   (*Parser).pushDuration,
+		"+":          curry3((*Parser).pushBinary, add),
+		"-":          curry3((*Parser).pushBinary, sub),
+		"/":          curry3((*Parser).pushBinary, div),
+		"*":          curry3((*Parser).pushBinary, mul),
+		"me":         (*Parser).pushMe,
+		"mentioned":  (*Parser).pushMentioned,
+		"involved":   (*Parser).pushInvolved,
+		"search":     (*Parser).pushSearch,
+		"as":         (*Parser).pushAs,
 	}
 	// actions is for fast looking up actions along the parser mode.
 	actions = map[ParserMode]map[string]func(*Parser, *stack){
@@ -852,6 +854,16 @@ func (*Parser) pushILike(st *stack) {
 		exprType:  ilike,
 		valueType: boolType,
 		children:  []*Expr{haystack, needle},
+	})
+}
+
+func (*Parser) pushILikePName(st *stack) {
+	needle := st.pop()
+	needle.checkValueType(stringType)
+	st.push(&Expr{
+		exprType:  ilikePName,
+		valueType: boolType,
+		children:  []*Expr{needle},
 	})
 }
 

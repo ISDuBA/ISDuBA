@@ -231,6 +231,18 @@ func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
 	b.WriteString(ilikeSuffix + `)`)
 }
 
+func (sb *SQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_names AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.name')::int num ` +
+		`FROM documents ds WHERE ds.id = documents.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_names ` +
+		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = documents.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b)
+	b.WriteString(ilikeSuffix + `)`)
+}
 func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_ids AS (SELECT jsonb_path_query(` +
@@ -302,6 +314,8 @@ func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
 		sb.involvedWhere(e, b)
 	case ilike:
 		sb.ilikeWhere(e, b)
+	case ilikePName:
+		sb.ilikePNameWhere(e, b)
 	case ilikePID:
 		sb.ilikePIDWhere(e, b)
 	case now:

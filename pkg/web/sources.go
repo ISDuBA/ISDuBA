@@ -9,9 +9,12 @@
 package web
 
 import (
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
+	"iter"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -781,15 +784,10 @@ func (c *Controller) allFeedsLog(ctx *gin.Context) {
 }
 
 func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
-	type entry struct {
-		FeedID  int64               `json:"feed_id"`
-		Time    time.Time           `json:"time"`
-		Level   config.FeedLogLevel `json:"level"`
-		Message string              `json:"msg"`
-	}
+	//lint:ignore U1000 It's used by swaggo.
 	type feedLogEntries struct {
-		Entries []entry `json:"entries"`
-		Count   *int64  `json:"count,omitempty"`
+		Entries []sources.FeedLogInfo `json:"entries"`
+		Count   *int64                `json:"count,omitempty"`
 	}
 	var (
 		from, to      *time.Time
@@ -843,36 +841,48 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 		to = &tp
 	}
 
-	entries := []entry{}
-	counter, err := c.sm.FeedLog(
+	counter, stream, err := c.sm.StreamFeedLog(
 		feedID,
 		from, to,
 		search,
-		limit, offset, logLevels, count,
-		func(
-			id int64,
-			t time.Time,
-			lvl config.FeedLogLevel,
-			msg string,
-		) {
-			entries = append(entries, entry{
-				FeedID:  id,
-				Time:    t.UTC(),
-				Level:   lvl,
-				Message: msg,
-			})
-		},
-	)
+		limit, offset, logLevels, count)
 	if err != nil {
-		slog.Error("database error", "err", err)
+		slog.Error("database error", "error", err)
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	h := feedLogEntries{Entries: entries}
-	if count {
-		h.Count = &counter
-	}
-	ctx.JSON(http.StatusOK, h)
+
+	next, stop := iter.Pull(stream)
+	defer stop()
+	var num int64
+	ctx.Writer.Header().Add("Content-Type", "application/json")
+	ctx.Stream(func(w io.Writer) bool {
+		if num++; num == 1 {
+			var err error
+			if count {
+				_, err = fmt.Fprintf(w, "{\"count\": %d,\"entries\":[", counter)
+			} else {
+				_, err = fmt.Fprint(w, `{"entries":[`)
+			}
+			return err == nil
+		}
+		fli, ok := next()
+		if !ok {
+			fmt.Fprint(w, "]}")
+			return false
+		}
+		m, err := json.Marshal(&fli)
+		if err != nil {
+			slog.Error("marshaling feed log failed", "error", err)
+			fmt.Fprint(w, "]}")
+			return false
+		}
+		if num > 2 {
+			fmt.Fprint(w, ",")
+		}
+		_, err = w.Write(m)
+		return err == nil
+	})
 }
 
 // defaultMessage returns the default message.
