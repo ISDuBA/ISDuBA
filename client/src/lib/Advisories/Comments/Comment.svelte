@@ -88,7 +88,7 @@
     </div>
     {#if !isEditing}
       <div class="mt-1 flex flex-row items-center">
-       <div style="white-space: pre">{comment.message}</div>
+        <div style="white-space: pre-wrap">{comment.message}</div>
         <div class="ml-auto">
           {#if $appStore.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
             <button class="h-7 !p-2" on:click={toggleEditing}>
