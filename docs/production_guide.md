@@ -58,38 +58,10 @@ a Keycloak with the users that had access to ISDuBA at this time
 and the additional auditor users. The access to the system should be
 tightly restricted to the auditing work.
 
-## Baremetal setup
-
-### Building
-
-To build the application the latest Golang version, NodeJS 20 and standard build
-tools, like GNU Make are required. At the root of the repo run `make dist` to
-build the frontend and backend; this will result in a Tar-file inside `dist/`
-that contains the application. It can also be useful to look inside the
-Dockerfile of the application to see how individual components of the
-application can be built. If there are no special requirements it can be
-enough to use the already built tar-file from the release page.
-
-### Running
-
-The Tar-file can be copied and extracted on a production server. This file
-contains the `isdubad` backend, which can be run on any modern amd64 linux
-system and the frontend which is contained in the `web/` folder. No further
-dependencies are required to start the application. By default the backend will
-serve the contents of `web/`.
-
-For a quick start copy `example_isdubad.toml` to the
-folder where the application is contained. Configure the postgres and keycloak
-settings and rename the file to `isduba.toml`. The application can now be
-started. For exposing the application to the network it is recommended to use
-a TLS-terminating reverse proxy.
-
 ## Docker/Container setup
 
-This repo contains an example docker compose setup. The isduba container is
-built for production usage. All other components are configured for ease of
-setup, it is recommended to use another configuration or setup own
-containers/server for production usage.
+This repo contains an example docker compose setup. All components are configured for ease of
+setup, it is recommended to use the production setup for production usage.
 
 ### Keycloak
 
