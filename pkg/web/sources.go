@@ -809,7 +809,9 @@ func (lr *logRenderer) Render(w http.ResponseWriter) error {
 	already := false
 	for entry := range lr.entries {
 		if already {
-			fmt.Fprint(w, ",")
+			if _, err := fmt.Fprint(w, ","); err != nil {
+				return err
+			}
 		} else {
 			already = true
 		}
@@ -906,6 +908,7 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 		return
 	}
 
+	ctx.Header("Content-Type", "application/json")
 	ctx.Render(http.StatusOK, &lr)
 }
 
