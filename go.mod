@@ -12,7 +12,7 @@ go 1.24.0
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/ProtonMail/gopenpgp/v2 v2.8.2
+	github.com/ProtonMail/gopenpgp/v2 v2.8.3
 	github.com/gin-contrib/static v1.1.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/gocsaf/csaf/v3 v3.1.1
@@ -22,7 +22,7 @@ require (
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.4
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/time v0.10.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -32,7 +32,7 @@ require (
 	github.com/Intevation/gval v1.3.0 // indirect
 	github.com/Intevation/jsonpath v0.2.1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/ProtonMail/go-crypto v1.1.4 // indirect
+	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/ProtonMail/go-mime v0.0.0-20230322103455-7d82a3887f2f // indirect
 	github.com/bytedance/sonic v1.12.7 // indirect
 	github.com/bytedance/sonic/loader v0.2.2 // indirect

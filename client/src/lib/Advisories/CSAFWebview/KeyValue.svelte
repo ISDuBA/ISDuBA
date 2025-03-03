@@ -9,21 +9,10 @@
 -->
 
 <script lang="ts">
-  /* eslint-disable svelte/no-at-html-tags */
-  import { marked } from "marked";
-  import DOMPurify from "dompurify";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   export let keys: Array<string>;
   export let values: any;
-  marked.use({ gfm: true });
   const cellStyle = "px-6 py-0";
-
-  const getMarkdown = (index: number) => {
-    return marked.parse(
-      // eslint-disable-next-line no-misleading-character-class
-      values[index].replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")
-    ) as string;
-  };
 </script>
 
 <div class="ml-2 w-fit">
@@ -36,7 +25,7 @@
             <TableBodyCell tdClass={cellStyle}>
               <div class="markdown-text">
                 <div class="display-markdown max-w-2/3">
-                  {@html DOMPurify.sanitize(getMarkdown(index))}
+                  {index}
                 </div>
               </div>
             </TableBodyCell>
