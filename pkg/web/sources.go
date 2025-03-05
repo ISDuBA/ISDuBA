@@ -13,7 +13,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
 	"iter"
 	"log/slog"
 	"net/http"
@@ -783,6 +782,52 @@ func (c *Controller) allFeedsLog(ctx *gin.Context) {
 	c.feedLogs(ctx, nil)
 }
 
+// logRenderer renders a stream of log entries directly from the database.
+type logRenderer struct {
+	counter int64
+	entries iter.Seq[sources.FeedLogInfo]
+}
+
+// WriteContentType implements [render.Render].
+func (*logRenderer) WriteContentType(w http.ResponseWriter) {
+	if header := w.Header(); len(header["Content-Type"]) == 0 {
+		header.Add("Content-Type", "application/json")
+	}
+}
+
+// Write implements [render.Render].
+func (lr *logRenderer) Render(w http.ResponseWriter) error {
+	var err error
+	if lr.counter > -1 {
+		_, err = fmt.Fprintf(w, "{\"count\":%d,\"entries\":[", lr.counter)
+	} else {
+		_, err = fmt.Fprint(w, `{"entries":[`)
+	}
+	if err != nil {
+		return nil
+	}
+	already := false
+	for entry := range lr.entries {
+		if already {
+			if _, err := fmt.Fprint(w, ","); err != nil {
+				return err
+			}
+		} else {
+			already = true
+		}
+		m, err := json.Marshal(&entry)
+		if err != nil {
+			slog.Error("marshaling feed log failed", "error", err)
+			break
+		}
+		if _, err = w.Write(m); err != nil {
+			return err
+		}
+	}
+	_, err = fmt.Fprint(w, "]}")
+	return err
+}
+
 func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 	//lint:ignore U1000 It's used by swaggo.
 	type feedLogEntries struct {
@@ -841,48 +886,30 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 		to = &tp
 	}
 
-	counter, stream, err := c.sm.StreamFeedLog(
+	var (
+		lr            = logRenderer{counter: -1}
+		reportCounter func(int64)
+		err           error
+	)
+
+	if count {
+		reportCounter = func(c int64) { lr.counter = c }
+	}
+
+	lr.entries, err = c.sm.StreamFeedLog(
+		ctx.Request.Context(),
 		feedID,
 		from, to,
 		search,
-		limit, offset, logLevels, count)
+		limit, offset, logLevels, reportCounter)
 	if err != nil {
 		slog.Error("database error", "error", err)
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	next, stop := iter.Pull(stream)
-	defer stop()
-	var num int64
-	ctx.Writer.Header().Add("Content-Type", "application/json")
-	ctx.Stream(func(w io.Writer) bool {
-		if num++; num == 1 {
-			var err error
-			if count {
-				_, err = fmt.Fprintf(w, "{\"count\": %d,\"entries\":[", counter)
-			} else {
-				_, err = fmt.Fprint(w, `{"entries":[`)
-			}
-			return err == nil
-		}
-		fli, ok := next()
-		if !ok {
-			fmt.Fprint(w, "]}")
-			return false
-		}
-		m, err := json.Marshal(&fli)
-		if err != nil {
-			slog.Error("marshaling feed log failed", "error", err)
-			fmt.Fprint(w, "]}")
-			return false
-		}
-		if num > 2 {
-			fmt.Fprint(w, ",")
-		}
-		_, err = w.Write(m)
-		return err == nil
-	})
+	ctx.Header("Content-Type", "application/json")
+	ctx.Render(http.StatusOK, &lr)
 }
 
 // defaultMessage returns the default message.

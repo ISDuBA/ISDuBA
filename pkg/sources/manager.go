@@ -760,13 +760,14 @@ type FeedLogInfo struct {
 
 // StreamFeedLog returns a sequence of feed log entries.
 func (m *Manager) StreamFeedLog(
+	ctx context.Context,
 	feedID *int64,
 	from, to *time.Time,
 	search string,
 	limit, offset int64,
 	logLevels []config.FeedLogLevel,
-	count bool,
-) (int64, iter.Seq[FeedLogInfo], error) {
+	count func(int64),
+) (iter.Seq[FeedLogInfo], error) {
 	const (
 		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
 		selectSQL = `SELECT feeds_id, time, lvl::text, msg FROM feed_logs WHERE `
@@ -822,7 +823,7 @@ func (m *Manager) StreamFeedLog(
 	var cntSQL string
 	var cntArgs []any
 
-	if count {
+	if count != nil {
 		// Counting ignores limit, offset and order.
 		cntSQL = countSQL + cond.String()
 		cntArgs = args
@@ -845,21 +846,21 @@ func (m *Manager) StreamFeedLog(
 	selSQL := selectSQL + cond.String()
 	slog.Debug("feed log select", "stmt", selSQL)
 
-	counter := int64(-1)
-
-	if count {
+	if count != nil {
+		var counter int64
 		if err := m.db.Run(
-			context.Background(),
+			ctx,
 			func(ctx context.Context, con *pgxpool.Conn) error {
 				return con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter)
 			}, 0); err != nil {
-			return -1, nil, fmt.Errorf("counting feed logs failed: %w", err)
+			return nil, fmt.Errorf("counting feed logs failed: %w", err)
 		}
+		count(counter)
 	}
 
-	return counter, func(yield func(FeedLogInfo) bool) {
+	return func(yield func(FeedLogInfo) bool) {
 		if err := m.db.Run(
-			context.Background(),
+			ctx,
 			func(ctx context.Context, con *pgxpool.Conn) error {
 				rows, err := con.Query(ctx, selSQL, args...)
 				if err != nil {
