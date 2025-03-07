@@ -16,13 +16,15 @@ Learn how to test or setup your own ISDuBA instance.
  2. Want to support the ISDuBA project with your own code? [Here's how to setup a development instance of ISDuBA](#development-setup)
  3. Want to use ISDuBA for yourself or your organization? [Here's how to setup ISDuBA for production](#production-setup)
 
+### Further documentation for setup:
+
 See [security_considerations](./security_considerations.md) for security and maintenance considerations.
 
-If you need help to know how to configure keycloak as an identity management for ISDuBA, read [our keycloak documentation](./keycloak.md)
+If you need help to know how to configure keycloak as an identity management for ISDuBA, read [our keycloak documentation.](./keycloak.md)
 
-Where and how to configure the ISDuBA application is outlined [in isduba-config.md](./isduba-config.md).
+Where and how to configure the ISDuBA application is outlined [in isduba-config.md.](./isduba-config.md)
 
-If other problems still persist, see if they are outlined [in the troubleshooting guide](./troubleshooting.md)
+If other problems still persist, see if they are outlined [in the troubleshooting guide.](./troubleshooting.md)
 
 ## Docker-setup
 

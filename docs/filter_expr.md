@@ -10,8 +10,8 @@
 
 # Filter expressions
 
-When searching using ISDuBA's advanced search function, or when using queries,
-ISDuBA supports filter expressions to narrow down the advisories,
+When searching using ISDuBA's advanced search function, or when using queries, manageable via the cogwheel on
+the search page, ISDuBA supports filter expressions to narrow down the advisories,
 documents or events you are looking for.
 
 To do this you have to chain **conditions** in a [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) form.
