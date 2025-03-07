@@ -18,7 +18,7 @@ Learn how to test or setup your own ISDuBA instance.
 
 See [the production guide](https://github.com/ISDuBA/ISDuBA/blob/main/docs/production_guide.md) for security and maintenance considerations.
 
-### Docker-setup
+## Docker-setup
 
 **The docker setup is not meant to be used in production.**
 
@@ -26,7 +26,7 @@ Use [docker compose](https://docs.docker.com/compose/install/) to build and star
 
 ```bash
 cd docker
-#### Setting BUILD_VERSION is optional
+### Setting BUILD_VERSION is optional
 docker compose build --build-arg BUILD_VERSION=$(git describe --tags --always)
 docker compose up -d
 ```
@@ -39,7 +39,7 @@ To set the hostname of Keycloak and the client change the respective environment
 KC_HOSTNAME=keycloak-host CLIENT_HOST=client-host docker compose up -d
 ```
 
-##### Keycloak
+#### Keycloak
 
 The Keycloak admin interface can be reached under <http://localhost:8080>.
 By default, an admin user is created during setup:
@@ -55,19 +55,19 @@ The password and username can be obtained with:
 docker logs isduba-keycloak-setup | grep "Created user"
 ```
 
-##### Client application
+#### Client application
 
 The application can be reached under <http://localhost:5371>.
 
 
-### Development-setup
+## Development-setup
 
 The setup should be performed via the [installation scripts.](./scripts/README.md) on a Ubuntu 24.04 OS.
 
 An example-configuration for `isdubad` can be found in [example_isdubad.toml](./example_isdubad.toml). Please edit to your needs.
 
 
-##### Upgrading
+#### Upgrading
 When upgrading from an older version, a migration is needed to 
 configure the database by starting isdubad with the 
 `ISDUBA_DB_MIGRATE` environment variable set to true or
@@ -80,7 +80,7 @@ ISDUBA_DB_MIGRATE=true ./cmd/isdubad/isdubad -c ./isduba.toml
 ```
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
-##### Additional tasks
+#### Additional tasks
 
 Groups and users can be managed directly via Keycloak or the scripts:
 
@@ -102,7 +102,7 @@ If neither is set, then the script will try to see if
 If this is not set either, then a random password will be generated
 and stored in `docs/scripts/password.txt`.
 
-##### Run the application in a dev environment
+#### Run the application in a dev environment
 
 To start the frontend via a `vite` dev-server:
 
@@ -127,7 +127,7 @@ Make sure to have Keycloak running when trying to access the application.
 sudo -u keycloak /opt/keycloak/bin/kc.sh start-dev
 ```
 
-##### Notice when using versions of Keycloak other than a default installation of Keycloak 25
+#### Notice when using versions of Keycloak other than a default installation of Keycloak 25
 
 The setup scripts utilize Keycloak's health checks to determine whether Keycloak is running. The port to use may change depending on your Keycloak version or admin's configuration.
 The default for the current version of 25 is port 9000.
@@ -140,11 +140,11 @@ This means it may be necessary to call docs/scripts/keycloak/configurekeycloak.s
 Not setting the correct port without the -k/--keycloakRunning option will cause the script to try and call the wrong port over and over until stopped.
 
 
-### Production-setup
+## Production-setup
 
 You can download the latest stable release from [github.](https://github.com/ISDuBA/ISDuBA/releases/)
 
-##### Building
+#### Building
 
 Alternatively, to build the application the latest Golang version, NodeJS 20 and standard build
 tools, like GNU Make are required. At the root of the repo run `make dist` to
@@ -154,7 +154,7 @@ Dockerfile of the application to see how individual components of the
 application can be built. If there are no special requirements it can be
 enough to use the already built tar-file from the release page.
 
-##### Running
+#### Running
 
 The Tar-file can be copied and extracted on a production server. This file
 contains the `isdubad` backend, which can be run on any modern amd64 linux
