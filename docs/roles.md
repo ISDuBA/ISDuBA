@@ -8,7 +8,24 @@
  Software-Engineering: 2025 Intevation GmbH <https://intevation.de>
 -->
 
-The `auditor` role of ISDuBA represents users that may want to
+The actions any user can take depend on their role. Any user can have any combination of roles.
+This also determines how workflowstates of advisories can be
+set, [see this diagram for reference](./images/workflow.svg)
+There are six roles:
+ * [admin](#admin)
+ * [auditor](#auditor)
+ * [editor](#editor)
+ * [importer](#importer)
+ * [reviewer](#reviewer)
+ * [source-manager](#source-manager)
+
+The following is an overview of all roles within ISDuBA.
+
+### admin
+The `admin` role manages stored queries and is the role that can delete advisories that are set to delete.
+
+### auditor
+The `auditor` role represents users that may want to
 audit how certain security information or advisories have been
 handled by the organisation using an ISDuBA instance.
 
@@ -30,3 +47,18 @@ that you expect reasonably to be audited in the near future.
 There may be rare cases where an audit is requested for an older state of the application.
 In this situation we recommend to restore a full backup. How to create a backup is outlined
 within [the security considerations' backup section](./security_considerations#docker/container_setup)
+
+### editor
+The `editor` role represents the advisory-evaluating user. They can set an SSVC.
+
+### importer
+The `importer` role is responsible for uploading advisories. It is expected to be used by tools that require
+authentification.
+
+### reviewer
+The `reviewer` role reviews the outcome of the [editor's](#editor) evaluation and can then set the advisory
+to archived (or delete).
+
+### source-manager
+
+The `source-manager` role manages sources, meaning which advisories are downloaded from where.

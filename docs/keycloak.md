@@ -10,6 +10,40 @@
 
 This documents gives a brief overview about the impact of some configurable values within Keycloak on the application.
 
+## Necessary Configuration
+
+Keycloak has to be configured in order to work with ISDuBA.
+A realm needs to be created. This realm must later be referenced in https://github.com/ISDuBA/ISDuBA/blob/main/docs/isdubad-config.md#-section-keycloak-keycloak.
+Via clients "auth" -> client scopes "auth dedicated", the  `User Attribute` mapper "TLP" must be created, using
+the following settings:
+
+ * Mapper: User Attribute
+ * Name: TLP
+ * User Attribute: TLP
+ * Token Claim Name: TLP
+ * Claim JSON Type: JSON
+ * Add to ID token: On
+ * Add to access token: On
+ * Add to lightweight access token: On
+ * Add to userinfo: On
+ * Add to token introspection: On
+ * Multivalued: On
+ * Aggregate attribute values: On
+ 
+## Realm Roles
+
+ISDuBA utilizes a set of realm roles. The actions any user can take is defined by their role. The following roles
+should be created:
+
+ * admin
+ * auditor
+ * editor
+ * importer
+ * reviewer
+ * source-manager
+
+An overview of roles can be found within [the roles documentation](./roles.md)
+
 ## Groups
 Which advisories any given user can access is regulated by their keycloak groups. Group access rights are additive, meaning a user has all rights of every group they are part of.
 On the graphical interface of keycloak, groups are defined and can be edited under ```<url_of_keycloak>:/admin/master/console/#/isduba/groups```
