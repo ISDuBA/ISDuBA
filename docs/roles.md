@@ -10,7 +10,7 @@
 
 The actions any user can take depend on their role. Any user can have any combination of roles.
 This also determines how workflowstates of advisories can be
-set, [see this diagram for reference](./images/workflow.svg)
+set, [see this diagram for reference.](./images/workflow.svg)
 There are six roles:
  * [admin](#admin)
  * [auditor](#auditor)

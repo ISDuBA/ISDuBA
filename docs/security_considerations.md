@@ -33,7 +33,7 @@ on other ports fail, but do not get the contents back.
 
 To reduce the risk, `isdubad` comes with a predefined set of rules which
 IP adresses to block. Disallowed are typical internal network addresses
-and localhost.  [See](./isdubad-config.md#section_general) for details.
+and localhost.  [See the general section](./isdubad-config.md#section_general) for details.
 If you need a connection to an internal service, for example when
 running a provider that ISDuBA shall access,
 you must whitelist the IP address in that configuration.
