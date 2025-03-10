@@ -42,8 +42,8 @@ should be created:
  * reviewer
  * source-manager
 
-An overview of roles can be found within [the roles documentation](./roles.md). There are no further changes necessary to the
-created roles.
+An overview of roles can be found within [the roles documentation](./roles.md).
+There roles need no further changes to function after creation.
 
 ## Groups
 Which advisories any given user can access is regulated by their keycloak groups. Group access rights are additive, meaning a user has all rights of every group they are part of.
