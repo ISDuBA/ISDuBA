@@ -13,7 +13,7 @@ This documents gives a brief overview about the impact of some configurable valu
 ## Necessary Configuration
 
 Keycloak has to be configured in order to work with ISDuBA.
-A realm needs to be created. This realm must later be referenced in https://github.com/ISDuBA/ISDuBA/blob/main/docs/isdubad-config.md#-section-keycloak-keycloak.
+A realm needs to be created. This realm must be used in [the keycloak section of the config file, see](https://github.com/ISDuBA/ISDuBA/blob/main/docs/isdubad-config.md#-section-keycloak-keycloak.)
 Via clients "auth" -> client scopes "auth dedicated", the  `User Attribute` mapper "TLP" must be created, using
 the following settings:
 
@@ -42,7 +42,8 @@ should be created:
  * reviewer
  * source-manager
 
-An overview of roles can be found within [the roles documentation](./roles.md)
+An overview of roles can be found within [the roles documentation](./roles.md). There are no further changes necessary to the
+created roles.
 
 ## Groups
 Which advisories any given user can access is regulated by their keycloak groups. Group access rights are additive, meaning a user has all rights of every group they are part of.
