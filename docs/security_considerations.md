@@ -4,7 +4,7 @@
 
  SPDX-License-Identifier: Apache-2.0
 
- SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2025 Intevation GmbH <https://intevation.de>
 -->
 
