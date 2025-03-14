@@ -24,7 +24,7 @@ require (
 	github.com/swaggo/swag v1.16.4
 	golang.org/x/oauth2 v0.27.0
 	golang.org/x/time v0.11.0
-	gomodules.xyz/jsonpatch/v2 v2.4.0
+	gomodules.xyz/jsonpatch/v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
