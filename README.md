@@ -26,7 +26,7 @@ To gain insight into the architecture of ISDuBA take a look at the
 
 ISDuBA uses:
 
-- PostgreSQL as database
+- [PostgreSQL](https://www.postgresql.org/) as database
 - [keycloak](https://www.keycloak.org/) as identity provider
 - [svelte-flowbite](https://flowbite-svelte.com/)
   for the single page web application frontend

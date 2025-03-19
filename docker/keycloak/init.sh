@@ -87,22 +87,27 @@ kcadm.sh create roles --target-realm=isduba --set name=importer \
   --set "description=importer"
 
 # Create a user
-ALEX_ID=$(kcadm.sh create users --target-realm isduba \
-  --set username=alex --set enabled=true \
+USER_ID=$(kcadm.sh create users --target-realm isduba \
+  --set username=user --set enabled=true \
   --set firstName=Alex --set lastName=Klein \
   --set email=test@example.org \
   --set emailVerified=true \
   -i)
 
-password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
 kcadm.sh set-password --target-realm isduba \
-  --username alex --new-password "$password"
+  --username user --new-password "user"
 
-echo -e "\nCreated user 'alex' with password: $password"
+echo -e "\nCreated user 'user' with password: 'user'"
 
-kcadm.sh add-roles -r isduba --uusername alex --rolename editor
-kcadm.sh update -r isduba users/$ALEX_ID/groups/$WHITE_ID \
-  -s realm=isduba -s userId=$ALEX_ID -s groupId=$WHITE_ID -n
+kcadm.sh add-roles -r isduba --uusername user --rolename editor
+kcadm.sh add-roles -r isduba --uusername user --rolename source-manager
+kcadm.sh add-roles -r isduba --uusername user --rolename reviewer
+kcadm.sh add-roles -r isduba --uusername user --rolename admin
+kcadm.sh add-roles -r isduba --uusername user --rolename importer
+kcadm.sh add-roles -r isduba --uusername user --rolename auditor
 
-kcadm.sh update -r isduba users/$ALEX_ID/groups/$GREEN_ID \
-  -s realm=isduba -s userId=$ALEX_ID -s groupId=$GREEN_ID -n
+kcadm.sh update -r isduba users/$USER_ID/groups/$WHITE_ID \
+  -s realm=isduba -s userId=$USER_ID -s groupId=$WHITE_ID -n
+
+kcadm.sh update -r isduba users/$USER_ID/groups/$GREEN_ID \
+  -s realm=isduba -s userId=$USER_ID -s groupId=$GREEN_ID -n
