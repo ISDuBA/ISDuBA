@@ -32,7 +32,8 @@ else
 fi
 
 # Adjust postgresql configuration
-PG_HBA_PATH=$(su - postgres -c "psql -t -P format=unaligned -c 'SHOW hba_file;'")
+PG_HBA_PATH=$(psql -t -P format=unaligned -c 'SHOW hba_file;')
+
 if ! grep -q -F "# ISDuBA configuration" $PG_HBA_PATH;
 then
 tee -a $PG_HBA_PATH <<block_to_insert > /dev/null
