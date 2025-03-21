@@ -26,7 +26,7 @@ To gain insight into the architecture of ISDuBA take a look at the
 
 ISDuBA uses:
 
-- PostgreSQL as database
+- [PostgreSQL](https://www.postgresql.org/) as database
 - [keycloak](https://www.keycloak.org/) as identity provider
 - [svelte-flowbite](https://flowbite-svelte.com/)
   for the single page web application frontend
@@ -38,13 +38,15 @@ ISDuBA uses:
 
 ## How to get started
 
-- [Setup](docs/test-setup.md)
-- [Operations](docs/operations.md)
+- [Setup](docs/README.md)
+- [Important Security Information](docs/security_considerations.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## What does the name ISDuBA mean?
 
-The abbreviation expands to a German label, which translates to
-**I**nternal **s**ystem for **d**ownloading and evaluating **a**dvisories.
+The abbreviation expands to `**I**nternes **S**ystem zum **D**ownload **u**nd
+  der **B**ewertung von **A**dvisories`, a german label which translates to
+`Internal system for downloading and the evaluation of advisories`.
 
 ## License
 
