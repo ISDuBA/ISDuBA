@@ -61,4 +61,4 @@ to archived (or delete).
 
 ### source-manager
 
-The `source-manager` role manages sources, meaning which advisories are downloaded from where.
+The `source-manager` role manages sources, meaning which advisories are downloaded from where. 

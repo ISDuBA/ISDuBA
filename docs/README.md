@@ -13,12 +13,13 @@
 # Get Started
 
 Learn how to test or setup your own ISDuBA instance.
+When starting the application, you will be prompted to safe your aes_key. This can be ignored for test or development instances and is further explained in [the aes-keys section of the security considerations documentation](./security_considerations.md#aes-keys).
 
  1. Want to try ISDuBA for yourself? [Try our Docker setup](#docker-setup)
  2. Want to support the ISDuBA project with your own code? [Here's how to setup a development instance of ISDuBA](#development-setup)
  3. Want to use ISDuBA for yourself or your organization? [Here's how to setup ISDuBA for production](#production-setup)
- 
-When starting the advisory, you will be prompted to safe your aes_key. This can be ignored for test or development instances and is further explained in [TODO].
+ 4. Having set up an instance of ISDuBA, you can read about what to do now within the [first steps guide](./first_steps.md)
+
 
 ## Docker-setup
 
@@ -105,13 +106,27 @@ Dockerfile of the application to see how individual components of the
 application can be built. If there are no special requirements it can be
 enough to use the already built tar-file from the release page.
 
-#### Running
+#### Setup
 
 The Tar-file can be copied and extracted on a production server. This file
 contains the `isdubad` backend, which can be run on any modern amd64 linux
 system and the frontend which is contained in the `web/` folder. No further
 dependencies are required to start the application. By default the backend will
-serve the contents of `web/`.
+serve the contents of `web/`. However, a [PostgreSQL database](#configuring-postgres) and [Keycloak instance](./keycloak.md) are still necessary to properly access ISDuBA.
+
+See the [Keycloak documentation](./keycloak.md) on how to set up keycloak for your ISDuBA instance.
+
+##### Configuring Postgres
+ In your Postgres database, create a `keycloak` user with password `keycloak` as well as a database `keycloak` which will be owned by the user `keycloak`. Next up, Postgres' [client authentification](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) configuration file has to be adjusted, by adding ISDuBA-directed configuration. Simply add
+ 
+```
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+```
+
+to the end of the file. Read Postgres' [pg_hba.conf file documentation](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) for more information.
+
+#### Running
 
 For a quick start copy `example_isdubad.toml` to the
 folder where the application is contained. Configure the postgres and Keycloak
@@ -128,5 +143,4 @@ If you need help to know how to configure keycloak as an identity management for
 Where and how to configure the ISDuBA application is outlined [in isdubad-config.md.](./isdubad-config.md)
 
 If other problems still persist, see if they are outlined [in the troubleshooting guide.](./troubleshooting.md)
-
 

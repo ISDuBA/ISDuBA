@@ -44,7 +44,7 @@ Then it will call the [setup.sh script](./setup.sh) that calls all other scripts
 installall.sh can be used via:
 ``` bash
     curl -O https://raw.githubusercontent.com/ISDuBA/ISDuBA/main/docs/scripts/installall.sh
-    chmod +x
+    chmod +x installall.sh
     ./installall.sh
 ```
 This sets up the testing environment with default values:

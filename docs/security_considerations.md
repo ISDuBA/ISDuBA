@@ -57,6 +57,9 @@ For more information and backup strategies see the official
 PostgreSQL documentation for backups and restoration:
 <https://www.postgresql.org/docs/current/backup.html>
 
+### aes-keys
+The `aes_key` is used to encrypt the passwords/secrets specified for the sources. If no key is provided, the stored secrets cannot be decrypted upon restarting the application and must be re-entered in the source configuration.
+
 # Docker/Container setup
 
 This repo contains guides for docker compose and development setups. 

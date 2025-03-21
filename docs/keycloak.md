@@ -10,10 +10,35 @@
 
 This documents gives a brief overview about the impact of some configurable values within Keycloak on the application.
 
-## Necessary Configuration
+# Necessary configuration
+ 
+### ISDuBA Realm
 
 Keycloak has to be configured in order to work with ISDuBA.
 A realm needs to be created. This realm must be used in [the keycloak section of the config file, see](https://github.com/ISDuBA/ISDuBA/blob/main/docs/isdubad-config.md#-section-keycloak-keycloak.)
+
+### auth
+
+An `auth` client within the [ISDuBA realm](#isduba-realm) has to be created.
+After creation, make sure to set the following values:
+
+ * Client ID must be set to the same value as used within the config's client keycloak_client_id, the standard being `auth`
+
+ * `OIDC CIBA Grant` and `OAuth 2.0 Device Authorization Grant` must be unchecked
+ * `Standard flow` and `Direct access grants` must be checked
+ * Client authentication must be set to off
+
+ * The Root URL has to be set to `http://localhost:5173/`
+ * Valid redirect URIs must be set to `*`
+ * Valid post logout redirect URIs must be set to `+`
+ * Web origins must be set to `["*"]`
+ * `Admin URL` must be set to `http://localhost:5173/`
+ 
+ * `Consent required` should be set to off
+
+ * `Backchannel logout session required` should be set to on.
+ * `Backchannel logout revoke offline sessions` should be set to off.
+
 Via clients "auth" -> client scopes "auth dedicated", the  `User Attribute` mapper "TLP" must be created, using
 the following settings:
 
@@ -65,17 +90,21 @@ The current default is:
 
 which allows access to all TLP:WHITE advisories of all publishers. Anyone without a group will have these priviledges.
 
-The creation of new groups can be done via the graphical keycloak interface or via the [createGroup script.](./scripts/keycloak/createGroup.sh)
+The creation of new groups should be done via the graphical keycloak interface, but can also be done via the [createGroup script.](./scripts/keycloak/createGroup.sh)
 
 Editing any existing group can be done via the graphical interface.
 
 Adding users to a group can be done via the graphical interface both within the group's own tab or under the ```group``` tab of a user
 or via the [script designed to add users to roles or groups.](./scripts/keycloak/assignUserToRoleAndGroup.sh)
 
+# Additional information
+
+The following has sensible default values and does not need to be configured for ISDuBA to run properly.
+
 ## Session lengths
 
-The session lengths can be configured
-in Keycloak under ```<url_of_keycloak>:/admin/master/console/#/isduba/realm-settings/```
+The maximum session lengths can be configured
+in Keycloak under ```realm-settings/```
 
 A user stays logged in while they possess an active access token.
 
