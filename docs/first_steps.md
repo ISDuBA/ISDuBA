@@ -24,3 +24,8 @@ Furthermore, the cogwheel on the upper left of the page allows creating stored q
 
 When the desired avisory is found, a detailed advisory view can be entered by clicking on it. Here, SSVC can be set and the advisory can be commented.
 
+## Comparing Documents
+
+On the bottom left of the search page, a `diff`-widget allows opening the diff-dialogue. While it's open, advisories on the search page can be selected by clicking the +-icon next to them. After having selected 2 advisories, their newest documents can be compared against each other in a [github-pr-diff](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-comparing-branches-in-pull-requests)-based view. Users can also upload local documents temporarily to compare them against documents within the system. How many and for how long [is managed via the server configuration](https://github.com/ISDuBA/ISDuBA/blob/main/docs/isdubad-config.md#-section-temp_storage-temporary-document-storage).
+
+There is also a possibility to compare different documents of an advisory by clicking the diff-icon next to the version numbers within an advisory. Which advisories are compared to each other can be changed via clicking on the version numbers.
