@@ -18,7 +18,7 @@ Alternatively, they can utilize the Sources-Tab to add a source directly, specif
 
 ## Finding advisories
 
-When trying to find advisories, the search tab can be used to view all advisories that are accessible via the current permissions. Via the search bar, terms can be searched. An advanced search function, triggered by flipping the "Advanced" switch allows filtering more precisely [via filter expressions.](./filter_expr.md)
+When trying to find advisories, the search tab can be used to view all advisories that are accessible via the current permissions. Via the search bar, terms can be searched. An advanced search function, triggered by flipping the `Advanced` switch allows filtering more precisely [via filter expressions.](./filter_expr.md)
 
 Furthermore, the cogwheel on the upper left of the page allows creating stored queries which can be safed and used to quickly filter advisories. The Dashboard option will cause the stored query to appear on the dashboard. The Hide option will cause the story query to be hidden everywhere, potentially to make room for other queries. `Query criteria` also allow filtering [via filter expressions.](./filter_expr.md)
 
