@@ -9,7 +9,7 @@
 /**
  * Contains a list of acknowledgment elements associated with the whole document.
  */
-export type DocumentAcknowledgements = [Acknowledgement, ...Acknowledgement[]];
+export type DocumentAcknowledgments = [Acknowledgment, ...Acknowledgment[]];
 /**
  * Contains the names of contributors being recognized.
  */
@@ -25,15 +25,15 @@ export type ContributingOrganization = string;
 /**
  * SHOULD represent any contextual details the document producers wish to make known about the acknowledgment or acknowledged parties.
  */
-export type SummaryOfTheAcknowledgement = string;
+export type SummaryOfTheAcknowledgment = string;
 /**
  * Specifies a list of URLs or location of the reference to be acknowledged.
  */
-export type ListOfURLs = [URLOfAcknowledgement, ...URLOfAcknowledgement[]];
+export type ListOfURLs = [URLOfAcknowledgment, ...URLOfAcknowledgment[]];
 /**
  * Contains the URL or location of the reference to be acknowledged.
  */
-export type URLOfAcknowledgement = string;
+export type URLOfAcknowledgment = string;
 /**
  * Points to the namespace so referenced.
  */
@@ -355,7 +355,7 @@ export type Vulnerabilities = [Vulnerability, ...Vulnerability[]];
 /**
  * Contains a list of acknowledgment elements associated with this vulnerability item.
  */
-export type VulnerabilityAcknowledgements = [Acknowledgement, ...Acknowledgement[]];
+export type VulnerabilityAcknowledgments = [Acknowledgment, ...Acknowledgment[]];
 /**
  * Holds the MITRE standard Common Vulnerabilities and Exposures (CVE) tracking number for the vulnerability.
  */
@@ -597,7 +597,7 @@ export interface CommonSecurityAdvisoryFramework {
  * Captures the meta-data about this document describing a particular set of security advisories.
  */
 export interface DocumentLevelMetaData {
-  Acknowledgements?: DocumentAcknowledgements;
+  Acknowledgments?: DocumentAcknowledgments;
   aggregate_severity?: AggregateSeverity;
   category: DocumentCategory;
   csaf_version: CSAFVersion;
@@ -614,10 +614,10 @@ export interface DocumentLevelMetaData {
 /**
  * Acknowledges contributions by describing those that contributed.
  */
-export interface Acknowledgement {
+export interface Acknowledgment {
   names?: ListOfAcknowledgedNames;
   organization?: ContributingOrganization;
-  summary?: SummaryOfTheAcknowledgement;
+  summary?: SummaryOfTheAcknowledgment;
   urls?: ListOfURLs;
   [k: string]: unknown;
 }
@@ -805,7 +805,7 @@ export interface Relationship {
  * Is a container for the aggregation of all fields that are related to a single vulnerability in the document.
  */
 export interface Vulnerability {
-  Acknowledgements?: VulnerabilityAcknowledgements;
+  Acknowledgments?: VulnerabilityAcknowledgments;
   cve?: CVE;
   cwe?: CWE;
   discovery_date?: DiscoveryDate;

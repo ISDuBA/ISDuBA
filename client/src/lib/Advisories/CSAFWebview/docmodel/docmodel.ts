@@ -130,6 +130,16 @@ const getCSAFVersion = (csafDoc: any): string => {
 };
 
 /**
+ * getDistributionText retrieves distribution text.
+ * @param csafDoc
+ * @returns version | ""
+ */
+const getDistributionText = (csafDoc: any): string => {
+  if (!checkDistributionPresent(csafDoc)) return EMPTY;
+  return csafDoc.document[CSAFDocProps.DISTRIBUTION][CSAFDocProps.TEXT] || EMPTY;
+};
+
+/**
  * getId retrieves a document ID.
  * @param csafDoc
  * @returns id | ""
@@ -296,13 +306,13 @@ const getNotes = (csafDoc: any): Note[] => {
 };
 
 /**
- * getAcknowledgements retrieves ACKs.
+ * getAcknowledgments retrieves ACKs.
  * @param csafDoc
  * @returns acks | []
  */
-const getAcknowledgements = (csafDoc: any) => {
+const getAcknowledgments = (csafDoc: any) => {
   if (!checkDocumentPresent(csafDoc)) return [];
-  return csafDoc.document[CSAFDocProps.ACKNOWLEDGEMENTS];
+  return csafDoc.document[CSAFDocProps.ACKNOWLEDGMENTS];
 };
 
 /**
@@ -363,10 +373,11 @@ const getAliases = (csafDoc: any) => {
 const convertToDocModel = (csafDoc: any): DocModel => {
   const docModel: DocModel = {
     aggregateSeverity: getAggregateSeverity(csafDoc),
-    acknowledgements: getAcknowledgements(csafDoc),
+    acknowledgments: getAcknowledgments(csafDoc),
     aliases: getAliases(csafDoc),
     category: getCategory(csafDoc),
     csafVersion: getCSAFVersion(csafDoc),
+    distributionText: getDistributionText(csafDoc),
     generator: getGenerator(csafDoc),
     id: getId(csafDoc),
     isDistributionPresent: checkDistributionPresent(csafDoc),

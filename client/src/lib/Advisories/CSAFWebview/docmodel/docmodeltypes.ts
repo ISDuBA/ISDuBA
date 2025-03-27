@@ -14,7 +14,7 @@ import type {
 } from "$lib/pmdTypes";
 
 export const CSAFDocProps = {
-  ACKNOWLEDGEMENTS: "acknowledgements",
+  ACKNOWLEDGMENTS: "acknowledgments",
   AGGREGATE_SEVERITY: "aggregate_severity",
   ALIASES: "aliases",
   CATEGORY: "category",
@@ -39,6 +39,7 @@ export const CSAFDocProps = {
   REVISIONHISTORY: "revision_history",
   STATUS: "status",
   SOURCELANG: "sourcelang",
+  TEXT: "text",
   TITLE: "title",
   TLP: "tlp",
   TRACKING: "tracking",
@@ -82,17 +83,18 @@ export type Publisher = {
 
 export type RevisionHistoryEntry = {
   date: string;
-  legacyVersion?: string;
+  legacy_version?: string;
   number: number;
   summary: string;
 };
 
 export type DocModel = {
-  acknowledgements: Acknowledgement[];
+  acknowledgments: Acknowledgment[];
   aggregateSeverity: AggregateSeverity | null;
   aliases: string[];
   category: string;
   csafVersion: string;
+  distributionText: string;
   generator: any;
   id: string;
   isDistributionPresent: boolean;
@@ -135,7 +137,7 @@ export type Note = {
   title?: string;
 };
 
-export type Acknowledgement = {
+export type Acknowledgment = {
   names?: ListOfAcknowledgedNames;
   organization?: ContributingOrganization;
   summary?: SummaryOfTheReference;

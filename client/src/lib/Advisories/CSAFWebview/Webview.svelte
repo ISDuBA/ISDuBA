@@ -15,7 +15,7 @@
   import ValueList from "./ValueList.svelte";
   import RevisionHistory from "./general/RevisionHistory.svelte";
   import Notes from "./notes/Notes.svelte";
-  import Acknowledgements from "./acknowledgements/Acknowledgements.svelte";
+  import Acknowledgments from "./acknowledgments/Acknowledgments.svelte";
   import References from "./references/References.svelte";
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
   import FakeButton from "./FakeButton.svelte";
@@ -32,7 +32,7 @@
     "productTree",
     "vulnerabilities",
     "notes",
-    "acknowledgements",
+    "Acknowledgments",
     "references",
     "revisionHistory"
   ] as const;
@@ -49,7 +49,7 @@
     productTree: false,
     vulnerabilities: false,
     notes: false,
-    acknowledgements: false,
+    Acknowledgments: false,
     references: false,
     revisionHistory: false
   };
@@ -104,7 +104,7 @@
       $appStore.webview.doc && $appStore.webview.doc["isVulnerabilitiesPresent"]
     );
     increment("notes", $appStore.webview.doc?.notes);
-    increment("acknowledgements", $appStore.webview.doc?.acknowledgements);
+    increment("Acknowledgments", $appStore.webview.doc?.acknowledgments);
     increment("references", $appStore.webview.doc && $appStore.webview.doc.references.length > 0);
     increment("revisionHistory", $appStore.webview.doc?.isRevisionHistoryPresent);
     placeToPhase = {
@@ -201,10 +201,10 @@
               </div>
             </TabItem>
           {/if}
-          {#if showTab(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
-            <TabItem bind:open={tabOpen.acknowledgements} title="Acknowledgements">
+          {#if showTab(placeToPhase.Acknowledgments) && $appStore.webview.doc?.acknowledgments}
+            <TabItem bind:open={tabOpen.Acknowledgments} title="Acknowledgments">
               <div class={sideScroll}>
-                <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+                <Acknowledgments acknowledgments={$appStore.webview.doc?.acknowledgments} />
               </div>
             </TabItem>
           {/if}
@@ -268,12 +268,12 @@
       </div>
     {/if}
 
-    {#if showArea(placeToPhase.acknowledgements) && $appStore.webview.doc?.acknowledgements}
+    {#if showArea(placeToPhase.Acknowledgments) && $appStore.webview.doc?.acknowledgments}
       <div>
-        <FakeButton active>Acknowledgements</FakeButton>
+        <FakeButton active>Acknowledgments</FakeButton>
         <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
-          <Acknowledgements acknowledegements={$appStore.webview.doc?.acknowledgements} />
+          <Acknowledgments acknowledgments={$appStore.webview.doc?.acknowledgments} />
         </div>
       </div>
     {/if}

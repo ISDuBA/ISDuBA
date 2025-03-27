@@ -46,14 +46,15 @@ build_client:
 test:
 	go test ./...
 
-DISTDIR := isduba-$(SEMVER)
+DISTNAME := isduba-$(SEMVER)
+DISTDIR := dist/$(DISTNAME)
 dist: build_isdubad build_client
-	mkdir -p dist
-	cp cmd/isdubad/isdubad dist/
-	mkdir -p dist/web
-	cp -r web/* dist/web
-	mkdir -p dist/docs
-	cp -r docs/*.md dist/docs
-	cp -r docs/images/*.svg dist/docs
-	cp -r docs/*.toml dist/docs
-	cd dist/ ; tar -cvmlzf $(DISTDIR)-gnulinux-amd64.tar.gz *
+	mkdir -p $(DISTDIR)
+	cp cmd/isdubad/isdubad $(DISTDIR)/
+	mkdir -p $(DISTDIR)/web
+	cp -r web/* $(DISTDIR)/web
+	mkdir -p $(DISTDIR)/docs
+	cp -r docs/*.md $(DISTDIR)/docs
+	cp -r docs/images/*.svg $(DISTDIR)/docs
+	cp -r docs/*.toml $(DISTDIR)/docs
+	cd dist && tar -cvmlzf $(DISTNAME)-gnulinux-amd64.tar.gz $(DISTNAME)

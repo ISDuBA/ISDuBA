@@ -9,7 +9,7 @@
 // Package web implements the endpoints of the web server.
 package web
 
-//go:generate swag init -g docs.go --parseDependency --parseInternal
+//go:generate swag init -g doc.go --parseDependency --parseInternal --outputTypes go,json
 
 //	@description	This is the ISDuBA API.
 //	@title			ISDuBA API

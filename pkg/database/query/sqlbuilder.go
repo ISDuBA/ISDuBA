@@ -69,10 +69,10 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 	switch sb.Mode {
 	case AdvisoryMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments JOIN documents docs "+
-			"ON comments.documents_id = docs.id "+
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
+			"JOIN documents docs ON comments.documents_id = docs.id "+
 			"WHERE message ILIKE $%d "+
-			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
+			"AND docs.advisories_id = documents.advisories_id)",
 			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
@@ -91,7 +91,7 @@ func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
 			"ON events_log.documents_id = docs.id "+
 			"WHERE actor = $%d "+
-			"AND docs.publisher = documents.publisher AND docs.tracking_id = documents.tracking_id)",
+			"AND docs.advisories_id = documents.advisories_id)",
 			sb.replacementIndex(e.stringValue)+1)
 	case DocumentMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
@@ -119,6 +119,8 @@ func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 		b.WriteString("workflow")
 	case eventsType:
 		b.WriteString("events")
+	case statusType:
+		b.WriteString("status")
 	case durationType:
 		b.WriteString("interval")
 	}
@@ -154,6 +156,10 @@ func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 		b.WriteByte('\'')
 		b.WriteString(e.stringValue)
 		b.WriteString("'::events")
+	case statusType:
+		b.WriteByte('\'')
+		b.WriteString(e.stringValue)
+		b.WriteString("'::status")
 	case durationType:
 		fmt.Fprintf(b, "'%.2f seconds'::interval", e.durationValue.Seconds())
 	}
@@ -175,8 +181,7 @@ func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
 
 const (
 	versionsCount = `(SELECT count(*) FROM documents WHERE ` +
-		`documents.publisher = advisories.publisher AND ` +
-		`documents.tracking_id = advisories.tracking_id)`
+		`documents.advisories_id = advisories.id)`
 	commentsCountDocuments = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents.id)`
 	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
@@ -185,8 +190,11 @@ const (
 
 func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	switch column := e.stringValue; column {
-	case "tracking_id", "publisher":
+	case "id":
 		b.WriteString("documents.")
+		b.WriteString(column)
+	case "tracking_id", "publisher":
+		b.WriteString("advisories.")
 		b.WriteString(column)
 	case "versions":
 		b.WriteString(versionsCount)
@@ -223,6 +231,18 @@ func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
 	b.WriteString(ilikeSuffix + `)`)
 }
 
+func (sb *SQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_names AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.name')::int num ` +
+		`FROM documents ds WHERE ds.id = documents.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_names ` +
+		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = documents.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b)
+	b.WriteString(ilikeSuffix + `)`)
+}
 func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_ids AS (SELECT jsonb_path_query(` +
@@ -294,6 +314,8 @@ func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
 		sb.involvedWhere(e, b)
 	case ilike:
 		sb.ilikeWhere(e, b)
+	case ilikePName:
+		sb.ilikePNameWhere(e, b)
 	case ilikePID:
 		sb.ilikePIDWhere(e, b)
 	case now:
@@ -325,20 +347,18 @@ func (sb *SQLBuilder) replacementIndex(s string) int {
 
 func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 	switch sb.Mode {
-	case AdvisoryMode:
+	case AdvisoryMode, DocumentMode:
 		b.WriteString(`documents ` +
 			`JOIN advisories ON ` +
-			`advisories.tracking_id = documents.tracking_id AND ` +
-			`advisories.publisher = documents.publisher`)
-	case DocumentMode:
-		b.WriteString(`documents`)
+			`advisories.id = documents.advisories_id`)
 	case EventMode:
 		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
+			`JOIN advisories ON advisories.id = documents.advisories_id ` +
 			`LEFT JOIN (SELECT message, id FROM comments) AS comment ON events_log.comments_id = comment.id`)
 	}
 
 	if sb.TextTables {
-		b.WriteString(` JOIN documents_texts ON id = documents_texts.documents_id ` +
+		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
 }
@@ -370,8 +390,8 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 			b.WriteByte(',')
 		}
 		switch field {
-		case "tracking_id", "publisher":
-			b.WriteString("documents.")
+		case "tracking_id", "publisher", "id":
+			b.WriteString("advisories.")
 			b.WriteString(field)
 		case "cvss_v2_score", "cvss_v3_score", "critical":
 			b.WriteString("COALESCE(")
@@ -446,12 +466,17 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			continue
 		}
 		switch p {
-		case "id", "tracking_id", "publisher":
+		case "tracking_id", "publisher":
+			b.WriteString("advisories.")
+			b.WriteString(p)
+			b.WriteString(` AS `)
+			b.WriteString(p)
+		case "id":
 			b.WriteString("documents.")
 			b.WriteString(p)
 			b.WriteString(` AS `)
 			b.WriteString(p)
-		case "state", "event":
+		case "state", "event", "tracking_status":
 			b.WriteString(p)
 			b.WriteString("::text")
 		case "event_state":

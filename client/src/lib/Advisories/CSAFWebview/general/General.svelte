@@ -24,6 +24,7 @@
   $: lang = $appStore.webview.doc?.lang;
   $: sourceLang = $appStore.webview.doc?.sourceLang;
   $: csafVersion = $appStore.webview.doc?.csafVersion;
+  $: distributionText = $appStore.webview.doc?.distributionText;
   $: published = $appStore.webview.doc?.published;
   $: lastUpdate = $appStore.webview.doc?.lastUpdate;
   $: status = $appStore.webview.doc?.status;
@@ -54,7 +55,11 @@
       <div class={cellStyleKey}>Publisher name</div>
       <div class={cellStyleValue}>{publisherName}</div>
       <div class={cellStyleKey}>Publisher namespace</div>
-      <div class={cellStyleValue}>{publisherNamespace}</div>
+      <div class={cellStyleValue}>
+        <a href={publisherNamespace} class="underline">
+          <i class="bx bx-link"></i>{publisherNamespace}
+        </a>
+      </div>
       {#if publisherContactDetails}
         <div class={cellStyleKey}>Publisher contact details</div>
         <div class={cellStyleValue}>{publisherContactDetails}</div>
@@ -73,6 +78,10 @@
       <div class={cellStyleValue}>{csafVersion}</div>
       <div class={cellStyleKey}>Category</div>
       <div class={cellStyleValue}>{category}</div>
+      {#if distributionText}
+        <div class={cellStyleKey}>Distribution</div>
+        <div class={cellStyleValue}>{distributionText}</div>
+      {/if}
       {#if $appStore.webview.doc?.aggregateSeverity}
         <div class={cellStyleKey}>Aggregate severity text</div>
         <div class={cellStyleValue}>
@@ -81,7 +90,10 @@
         {#if $appStore.webview.doc?.aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span>
+            <a href={$appStore.webview.doc?.aggregateSeverity.namespace} class="underline">
+              <i class="bx bx-link"></i>
+              <span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span>
+            </a>
           </div>
         {/if}
       {/if}

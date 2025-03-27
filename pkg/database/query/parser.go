@@ -18,6 +18,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/gocsaf/csaf/v3/csaf"
 )
 
 type parseError string
@@ -41,6 +43,7 @@ const (
 	mentioned
 	involved
 	ilike
+	ilikePName
 	ilikePID
 	now
 	add
@@ -60,6 +63,7 @@ const (
 	workflowType
 	durationType
 	eventsType
+	statusType
 )
 
 // ParserMode represents the operation mode of the parser.
@@ -200,6 +204,8 @@ func (vt valueType) String() string {
 		return "duration"
 	case eventsType:
 		return "events"
+	case statusType:
+		return "status"
 	default:
 		return fmt.Sprintf("unknown value type %d", vt)
 	}
@@ -334,6 +340,7 @@ var documentColumns = []documentColumn{
 	{"critical", floatType, docAdvEvtModes, false},
 	{"four_cves", stringType, docAdvEvtModes, true},
 	{"comments", intType, docAdvEvtModes, false},
+	{"tracking_status", statusType, docAdvEvtModes, false},
 	// Advisories only
 	{"state", workflowType, advModes, false},
 	{"recent", timeType, advModes, false},
@@ -350,35 +357,37 @@ var documentColumns = []documentColumn{
 var (
 	// baseActions are the action available in every parser.
 	baseActions = map[string]func(*Parser, *stack){
-		"true":      (*Parser).pushTrue,
-		"false":     (*Parser).pushFalse,
-		"not":       (*Parser).pushNot,
-		"and":       curry3((*Parser).pushBinary, and),
-		"or":        curry3((*Parser).pushBinary, or),
-		"float":     (*Parser).pushFloat,
-		"integer":   (*Parser).pushInteger,
-		"timestamp": (*Parser).pushTimestamp,
-		"workflow":  (*Parser).pushWorkflow,
-		"events":    (*Parser).pushEvents,
-		"=":         curry3((*Parser).pushCmp, eq),
-		"!=":        curry3((*Parser).pushCmp, ne),
-		"<":         curry3((*Parser).pushCmp, lt),
-		"<=":        curry3((*Parser).pushCmp, le),
-		">":         curry3((*Parser).pushCmp, gt),
-		">=":        curry3((*Parser).pushCmp, ge),
-		"ilike":     (*Parser).pushILike,
-		"ilikepid":  (*Parser).pushILikePID,
-		"now":       (*Parser).pushNow,
-		"duration":  (*Parser).pushDuration,
-		"+":         curry3((*Parser).pushBinary, add),
-		"-":         curry3((*Parser).pushBinary, sub),
-		"/":         curry3((*Parser).pushBinary, div),
-		"*":         curry3((*Parser).pushBinary, mul),
-		"me":        (*Parser).pushMe,
-		"mentioned": (*Parser).pushMentioned,
-		"involved":  (*Parser).pushInvolved,
-		"search":    (*Parser).pushSearch,
-		"as":        (*Parser).pushAs,
+		"true":       (*Parser).pushTrue,
+		"false":      (*Parser).pushFalse,
+		"not":        (*Parser).pushNot,
+		"and":        curry3((*Parser).pushBinary, and),
+		"or":         curry3((*Parser).pushBinary, or),
+		"float":      (*Parser).pushFloat,
+		"integer":    (*Parser).pushInteger,
+		"timestamp":  (*Parser).pushTimestamp,
+		"workflow":   pushEnum(workflowType, parseWorkflow),
+		"events":     pushEnum(eventsType, parseEvents),
+		"status":     pushEnum(statusType, parseStatus),
+		"=":          curry3((*Parser).pushCmp, eq),
+		"!=":         curry3((*Parser).pushCmp, ne),
+		"<":          curry3((*Parser).pushCmp, lt),
+		"<=":         curry3((*Parser).pushCmp, le),
+		">":          curry3((*Parser).pushCmp, gt),
+		">=":         curry3((*Parser).pushCmp, ge),
+		"ilike":      (*Parser).pushILike,
+		"ilikepname": (*Parser).pushILikePName,
+		"ilikepid":   (*Parser).pushILikePID,
+		"now":        (*Parser).pushNow,
+		"duration":   (*Parser).pushDuration,
+		"+":          curry3((*Parser).pushBinary, add),
+		"-":          curry3((*Parser).pushBinary, sub),
+		"/":          curry3((*Parser).pushBinary, div),
+		"*":          curry3((*Parser).pushBinary, mul),
+		"me":         (*Parser).pushMe,
+		"mentioned":  (*Parser).pushMentioned,
+		"involved":   (*Parser).pushInvolved,
+		"search":     (*Parser).pushSearch,
+		"as":         (*Parser).pushAs,
 	}
 	// actions is for fast looking up actions along the parser mode.
 	actions = map[ParserMode]map[string]func(*Parser, *stack){
@@ -732,7 +741,7 @@ func (*Parser) pushCmp(st *stack, et exprType) {
 
 var validWorkflows = []string{
 	"new", "read", "assessing",
-	"review", "archive", "delete",
+	"review", "archived", "delete",
 }
 
 func parseWorkflow(s string) string {
@@ -756,58 +765,42 @@ func parseEvents(s string) string {
 	return s
 }
 
-func (*Parser) pushWorkflow(st *stack) {
-	if st.top().valueType == workflowType {
-		return
-	}
-	switch e := st.pop(); e.exprType {
-	case cnst:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:    cnst,
-				valueType:   workflowType,
-				stringValue: parseWorkflow(e.stringValue),
-			})
-		}
+func parseStatus(s string) string {
+	switch st := csaf.TrackingStatus(s); st {
+	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
+		return s
 	default:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:  cast,
-				valueType: workflowType,
-				children:  []*Expr{e},
-			})
-		default:
-			panic(parseError("unsupported cast"))
-		}
+		panic(parseError(fmt.Sprintf("%q is not a valid status", s)))
 	}
 }
 
-func (*Parser) pushEvents(st *stack) {
-	if st.top().valueType == eventsType {
-		return
-	}
-	switch e := st.pop(); e.exprType {
-	case cnst:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:    cnst,
-				valueType:   eventsType,
-				stringValue: parseEvents(e.stringValue),
-			})
+func pushEnum(vtype valueType, parse func(string) string) func(*Parser, *stack) {
+	return func(_ *Parser, st *stack) {
+		if st.top().valueType == vtype {
+			return
 		}
-	default:
-		switch e.valueType {
-		case stringType:
-			st.push(&Expr{
-				exprType:  cast,
-				valueType: eventsType,
-				children:  []*Expr{e},
-			})
+		switch e := st.pop(); e.exprType {
+		case cnst:
+			switch e.valueType {
+			case stringType:
+				st.push(&Expr{
+					exprType:    cnst,
+					valueType:   vtype,
+					stringValue: parse(e.stringValue),
+				})
+			}
 		default:
-			panic(parseError("unsupported cast"))
+			switch e.valueType {
+			case stringType:
+				st.push(&Expr{
+					exprType:  cast,
+					valueType: vtype,
+					children:  []*Expr{e},
+				})
+			default:
+				panic(parseError(
+					fmt.Sprintf("unsupported cast from %q to %q", e.valueType, vtype)))
+			}
 		}
 	}
 }
@@ -861,6 +854,16 @@ func (*Parser) pushILike(st *stack) {
 		exprType:  ilike,
 		valueType: boolType,
 		children:  []*Expr{haystack, needle},
+	})
+}
+
+func (*Parser) pushILikePName(st *stack) {
+	needle := st.pop()
+	needle.checkValueType(stringType)
+	st.push(&Expr{
+		exprType:  ilikePName,
+		valueType: boolType,
+		children:  []*Expr{needle},
 	})
 }
 

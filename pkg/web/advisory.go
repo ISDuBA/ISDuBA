@@ -26,10 +26,10 @@ type advisoryStates []models.AdvisoryState
 
 func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 	const (
-		findAdvisory = `SELECT id, state::text, tlp ` +
+		findAdvisory = `SELECT docs.id, state::text, tlp ` +
 			`FROM advisories ads ` +
-			`JOIN documents docs ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.Publisher) ` +
-			`WHERE docs.publisher = $1 AND docs.tracking_id = $2 ` +
+			`JOIN documents docs ON ads.id = docs.advisories_id ` +
+			`WHERE ads.publisher = $1 AND ads.tracking_id = $2 ` +
 			`and latest`
 		updateState = `UPDATE advisories SET state = $1::workflow WHERE (tracking_id, publisher) = ($2, $3)`
 		insertLog   = `INSERT INTO events_log (event, state, actor, documents_id) ` +
@@ -205,10 +205,12 @@ func (c *Controller) deleteAdvisory(ctx *gin.Context) {
 	const (
 		tlpSQL = `SELECT tlp ` +
 			`FROM advisories ads ` +
-			`JOIN documents docs ON (ads.tracking_id, ads.publisher) = (docs.tracking_id, docs.Publisher) ` +
-			`WHERE docs.publisher = $1 AND docs.tracking_id = $2 ` +
+			`JOIN documents docs ON ads.id = docs.advisories_id ` +
+			`WHERE ads.publisher = $1 AND ads.tracking_id = $2 ` +
 			`AND latest`
-		deleteSQL = `DELETE FROM documents WHERE publisher = $1 AND tracking_id = $2`
+		deleteSQL = `DELETE FROM documents WHERE ` +
+			`advisories_id = (` +
+			`SELECT id FROM advisories WHERE publisher = $1 AND tracking_id = $2)`
 	)
 
 	var forbidden, deleted bool

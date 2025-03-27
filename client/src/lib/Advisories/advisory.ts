@@ -17,6 +17,13 @@ type StateChange = {
   state: WorkflowState;
 };
 
+interface AdvisoryVersion {
+  id: number;
+  version: string;
+  tracking_id: string;
+  tracking_status: string;
+}
+
 // TODO: Refactor request from client/src/lib/request.ts so it can use JSON in body.
 async function updateMultipleStates(newStates: StateChange[]) {
   try {
@@ -71,3 +78,4 @@ async function updateMultipleStates(newStates: StateChange[]) {
 }
 
 export { updateMultipleStates };
+export type { AdvisoryVersion };

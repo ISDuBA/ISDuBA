@@ -348,27 +348,29 @@
   };
 
   const toggleAggregatorView = async (aggregator: Aggregator) => {
-    if (aggregator.id === undefined) {
-      return;
-    }
-    if (aggregatorData.get(aggregator.id)) {
-      aggregatorData.delete(aggregator.id);
-      aggregatorData = aggregatorData;
-      saveAggregatorExpand();
-      return;
-    }
-    loadingAggregators = true;
-    const resp = await fetchAggregatorData(aggregator.url);
-    loadingAggregators = false;
-    if (resp.ok) {
-      aggregatorData.set(aggregator.id, parseAggregatorData(resp.value));
-      aggregatorData = aggregatorData;
-      aggregatorMetaData.set(aggregator.id, resp.value);
-      aggregatorMetaData = aggregatorMetaData;
-      saveAggregatorExpand();
-    } else {
-      aggregatorError = resp.error;
-    }
+    await navigator.locks.request("toggleAgg", async () => {
+      if (aggregator.id === undefined) {
+        return;
+      }
+      if (aggregatorData.get(aggregator.id)) {
+        aggregatorData.delete(aggregator.id);
+        aggregatorData = aggregatorData;
+        saveAggregatorExpand();
+        return;
+      }
+      loadingAggregators = true;
+      const resp = await fetchAggregatorData(aggregator.url);
+      loadingAggregators = false;
+      if (resp.ok) {
+        aggregatorData.set(aggregator.id, parseAggregatorData(resp.value));
+        aggregatorData = aggregatorData;
+        aggregatorMetaData.set(aggregator.id, resp.value);
+        aggregatorMetaData = aggregatorMetaData;
+        saveAggregatorExpand();
+      } else {
+        aggregatorError = resp.error;
+      }
+    });
   };
 
   const removeAggregator = async (id: number) => {

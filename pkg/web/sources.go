@@ -9,9 +9,11 @@
 package web
 
 import (
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"iter"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -780,16 +782,57 @@ func (c *Controller) allFeedsLog(ctx *gin.Context) {
 	c.feedLogs(ctx, nil)
 }
 
-func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
-	type entry struct {
-		FeedID  int64               `json:"feed_id"`
-		Time    time.Time           `json:"time"`
-		Level   config.FeedLogLevel `json:"level"`
-		Message string              `json:"msg"`
+// logRenderer renders a stream of log entries directly from the database.
+type logRenderer struct {
+	counter int64
+	entries iter.Seq[sources.FeedLogInfo]
+}
+
+// WriteContentType implements [render.Render].
+func (*logRenderer) WriteContentType(w http.ResponseWriter) {
+	if header := w.Header(); len(header["Content-Type"]) == 0 {
+		header.Add("Content-Type", "application/json")
 	}
+}
+
+// Write implements [render.Render].
+func (lr *logRenderer) Render(w http.ResponseWriter) error {
+	var err error
+	if lr.counter > -1 {
+		_, err = fmt.Fprintf(w, "{\"count\":%d,\"entries\":[", lr.counter)
+	} else {
+		_, err = fmt.Fprint(w, `{"entries":[`)
+	}
+	if err != nil {
+		return nil
+	}
+	already := false
+	for entry := range lr.entries {
+		if already {
+			if _, err := fmt.Fprint(w, ","); err != nil {
+				return err
+			}
+		} else {
+			already = true
+		}
+		m, err := json.Marshal(&entry)
+		if err != nil {
+			slog.Error("marshaling feed log failed", "error", err)
+			break
+		}
+		if _, err = w.Write(m); err != nil {
+			return err
+		}
+	}
+	_, err = fmt.Fprint(w, "]}")
+	return err
+}
+
+func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
+	//lint:ignore U1000 It's used by swaggo.
 	type feedLogEntries struct {
-		Entries []entry `json:"entries"`
-		Count   *int64  `json:"count,omitempty"`
+		Entries []sources.FeedLogInfo `json:"entries"`
+		Count   *int64                `json:"count,omitempty"`
 	}
 	var (
 		from, to      *time.Time
@@ -843,36 +886,30 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 		to = &tp
 	}
 
-	entries := []entry{}
-	counter, err := c.sm.FeedLog(
+	var (
+		lr            = logRenderer{counter: -1}
+		reportCounter func(int64)
+		err           error
+	)
+
+	if count {
+		reportCounter = func(c int64) { lr.counter = c }
+	}
+
+	lr.entries, err = c.sm.StreamFeedLog(
+		ctx.Request.Context(),
 		feedID,
 		from, to,
 		search,
-		limit, offset, logLevels, count,
-		func(
-			id int64,
-			t time.Time,
-			lvl config.FeedLogLevel,
-			msg string,
-		) {
-			entries = append(entries, entry{
-				FeedID:  id,
-				Time:    t.UTC(),
-				Level:   lvl,
-				Message: msg,
-			})
-		},
-	)
+		limit, offset, logLevels, reportCounter)
 	if err != nil {
-		slog.Error("database error", "err", err)
+		slog.Error("database error", "error", err)
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	h := feedLogEntries{Entries: entries}
-	if count {
-		h.Count = &counter
-	}
-	ctx.JSON(http.StatusOK, h)
+
+	ctx.Header("Content-Type", "application/json")
+	ctx.Render(http.StatusOK, &lr)
 }
 
 // defaultMessage returns the default message.

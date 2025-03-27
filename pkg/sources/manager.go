@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"iter"
 	"log/slog"
 	"math/rand/v2"
 	"net/url"
@@ -208,11 +209,14 @@ func (m *Manager) numActiveFeeds() int {
 	return sum
 }
 
-func (m *Manager) activeFeeds(fn func(*feed) bool) {
-	for _, s := range m.sources {
-		if s.active {
+func (m *Manager) activeFeeds() iter.Seq[*feed] {
+	return func(yield func(*feed) bool) {
+		for _, s := range m.sources {
+			if !s.active {
+				continue
+			}
 			for _, f := range s.feeds {
-				if !fn(f) {
+				if !yield(f) {
 					return
 				}
 			}
@@ -222,28 +226,32 @@ func (m *Manager) activeFeeds(fn func(*feed) bool) {
 
 // shuffledActiveFeeds iterates in a shuffled order over
 // the feeds of the active sources.
-func (m *Manager) shuffledActiveFeeds(fn func(*feed) bool) {
-	var active []*feed
-	for _, s := range m.sources {
-		if s.active {
-			active = append(active, s.feeds...)
+func (m *Manager) shuffledActiveFeeds() iter.Seq[*feed] {
+	return func(yield func(*feed) bool) {
+		var active []*feed
+		for _, s := range m.sources {
+			if s.active {
+				active = append(active, s.feeds...)
+			}
 		}
-	}
-	m.rnd.Shuffle(len(active), func(i, j int) {
-		active[i], active[j] = active[j], active[i]
-	})
-	for _, f := range active {
-		if !fn(f) {
-			return
+		m.rnd.Shuffle(len(active), func(i, j int) {
+			active[i], active[j] = active[j], active[i]
+		})
+		for _, f := range active {
+			if !yield(f) {
+				return
+			}
 		}
 	}
 }
 
-func (m *Manager) allFeeds(fn func(*feed) bool) {
-	for _, s := range m.sources {
-		for _, f := range s.feeds {
-			if !fn(f) {
-				return
+func (m *Manager) allFeeds() iter.Seq[*feed] {
+	return func(yield func(*feed) bool) {
+		for _, s := range m.sources {
+			for _, f := range s.feeds {
+				if !yield(f) {
+					return
+				}
 			}
 		}
 	}
@@ -276,7 +284,7 @@ func (m *Manager) findSourceByName(name string) *source {
 // and does so in that case.
 func (m *Manager) refreshFeeds() {
 	now := time.Now()
-	m.activeFeeds(func(f *feed) bool {
+	for f := range m.activeFeeds() {
 		// Does the feed need a refresh?
 		if !f.refreshBlocked && (f.nextCheck.IsZero() || !now.Before(f.nextCheck)) {
 			slog.Debug("refreshing feed", "feed", f.id, "source", f.source.name)
@@ -284,8 +292,7 @@ func (m *Manager) refreshFeeds() {
 			// Even if there was an error try again later.
 			f.nextCheck = time.Now().Add(m.cfg.Sources.FeedRefresh)
 		}
-		return true
-	})
+	}
 }
 
 // startDownloads starts downloads if there are enough slots and
@@ -293,19 +300,19 @@ func (m *Manager) refreshFeeds() {
 func (m *Manager) startDownloads() {
 	for m.usedSlots < m.cfg.Sources.DownloadSlots {
 		started := false
-		m.shuffledActiveFeeds(func(f *feed) bool {
+		for f := range m.shuffledActiveFeeds() {
 			// Has this feed a free slot?
 			maxSlots := min(m.cfg.Sources.MaxSlotsPerSource, m.cfg.Sources.DownloadSlots)
 			if f.source.slots != nil {
 				maxSlots = min(maxSlots, *f.source.slots)
 			}
 			if f.source.usedSlots >= maxSlots {
-				return true
+				continue
 			}
 			// Find a candidate to download.
 			loc := f.findWaiting()
 			if loc == nil {
-				return true
+				continue
 			}
 			m.usedSlots++
 			f.source.usedSlots++
@@ -313,8 +320,10 @@ func (m *Manager) startDownloads() {
 			loc.id = m.generateID()
 			started = true
 			m.jobs <- downloadJob{l: *loc, f: f}
-			return m.usedSlots < m.cfg.Sources.DownloadSlots
-		})
+			if m.usedSlots >= m.cfg.Sources.DownloadSlots {
+				break
+			}
+		}
 		if !started {
 			return
 		}
@@ -341,12 +350,11 @@ func (m *Manager) download(wg *sync.WaitGroup) {
 
 // compactDone removes the locations the feeds which are downloaded.
 func (m *Manager) compactDone() {
-	m.allFeeds(func(f *feed) bool {
+	for f := range m.allFeeds() {
 		f.queue = slices.DeleteFunc(f.queue, func(l location) bool {
 			return l.state == done
 		})
-		return true
-	})
+	}
 }
 
 func (m *Manager) generateID() int64 {
@@ -742,21 +750,24 @@ func (m *Manager) Feed(feedID int64, stats bool) *FeedInfo {
 	return <-fiCh
 }
 
-// FeedLog sends the log of the feed with the given id to the given function.
-func (m *Manager) FeedLog(
+// FeedLogInfo is an entry in the log of a feed.
+type FeedLogInfo struct {
+	ID      int64               `json:"feed_id"`
+	Time    time.Time           `json:"time"`
+	Level   config.FeedLogLevel `json:"level"`
+	Message string              `json:"msg"`
+}
+
+// StreamFeedLog returns a sequence of feed log entries.
+func (m *Manager) StreamFeedLog(
+	ctx context.Context,
 	feedID *int64,
 	from, to *time.Time,
 	search string,
 	limit, offset int64,
 	logLevels []config.FeedLogLevel,
-	count bool,
-	fn func(
-		id int64,
-		t time.Time,
-		lvl config.FeedLogLevel,
-		msg string,
-	),
-) (int64, error) {
+	count func(int64),
+) (iter.Seq[FeedLogInfo], error) {
 	const (
 		countSQL  = `SELECT count(*) FROM feed_logs WHERE `
 		selectSQL = `SELECT feeds_id, time, lvl::text, msg FROM feed_logs WHERE `
@@ -812,7 +823,7 @@ func (m *Manager) FeedLog(
 	var cntSQL string
 	var cntArgs []any
 
-	if count {
+	if count != nil {
 		// Counting ignores limit, offset and order.
 		cntSQL = countSQL + cond.String()
 		cntArgs = args
@@ -835,37 +846,43 @@ func (m *Manager) FeedLog(
 	selSQL := selectSQL + cond.String()
 	slog.Debug("feed log select", "stmt", selSQL)
 
-	counter := int64(-1)
+	if count != nil {
+		var counter int64
+		if err := m.db.Run(
+			ctx,
+			func(ctx context.Context, con *pgxpool.Conn) error {
+				return con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter)
+			}, 0); err != nil {
+			return nil, fmt.Errorf("counting feed logs failed: %w", err)
+		}
+		count(counter)
+	}
 
-	err := m.db.Run(
-		context.Background(),
-		func(ctx context.Context, con *pgxpool.Conn) error {
-			if count {
-				if err := con.QueryRow(ctx, cntSQL, cntArgs...).Scan(&counter); err != nil {
-					return fmt.Errorf("counting feed logs failed: %w", err)
+	return func(yield func(FeedLogInfo) bool) {
+		if err := m.db.Run(
+			ctx,
+			func(ctx context.Context, con *pgxpool.Conn) error {
+				rows, err := con.Query(ctx, selSQL, args...)
+				if err != nil {
+					return fmt.Errorf("querying feed logs failed: %w", err)
 				}
-			}
-			rows, err := con.Query(ctx, selSQL, args...)
-			if err != nil {
-				return fmt.Errorf("querying feed logs failed: %w", err)
-			}
-			defer rows.Close()
-			var (
-				id  int64
-				t   time.Time
-				lvl config.FeedLogLevel
-				msg string
-			)
-			for rows.Next() {
-				if err := rows.Scan(&id, &t, &lvl, &msg); err != nil {
-					return fmt.Errorf("scanning log failed: %w", err)
+				defer rows.Close()
+				for rows.Next() {
+					var fli FeedLogInfo
+					if err := rows.Scan(&fli.ID, &fli.Time, &fli.Level, &fli.Message); err != nil {
+						return fmt.Errorf("scanning log failed: %w", err)
+					}
+					fli.Time = fli.Time.UTC()
+					if !yield(fli) {
+						return nil
+					}
 				}
-				fn(id, t, lvl, msg)
-			}
-			return rows.Err()
-		}, 0,
-	)
-	return counter, err
+				return rows.Err()
+			}, 0,
+		); err != nil {
+			slog.Error("database error", "error", err)
+		}
+	}, nil
 }
 
 // ping wakes up the manager.

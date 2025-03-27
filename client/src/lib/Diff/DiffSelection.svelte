@@ -280,6 +280,11 @@
             <div>{docA.document.tracking.id}</div>
             <div class="md:mb-1" title={docA.document.title}>
               {docA.document.title}
+              {#if docA.document.tracking.status !== "final"}
+                <span class="text-sm text-gray-600 dark:text-slate-300"
+                  >({docA.document.tracking.status})</span
+                >
+              {/if}
             </div>
             <span class="text-sm text-gray-600 dark:text-slate-300"
               >{getPublisher(docA.document.publisher.name)}</span
@@ -319,6 +324,11 @@
             <div>{docB.document.tracking.id}</div>
             <div class="md:mb-1" title={docB.document.title}>
               {docB.document.title}
+              {#if docB.document.tracking.status !== "final"}
+                <span class="text-sm text-gray-600 dark:text-slate-300"
+                  >({docB.document.tracking.status})</span
+                >
+              {/if}
             </div>
             <span class="text-sm text-gray-600 dark:text-slate-300"
               >{getPublisher(docB.document.publisher.name)}</span

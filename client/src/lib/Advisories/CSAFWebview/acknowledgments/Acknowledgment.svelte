@@ -11,8 +11,8 @@
 <script lang="ts">
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
-  import type { Acknowledgement } from "../docmodel/docmodeltypes";
-  export let ack: Acknowledgement;
+  import type { Acknowledgment } from "../docmodel/docmodeltypes";
+  export let ack: Acknowledgment;
   const keys: Array<string> = [];
   const values: string[] = [];
   if (ack.names) {
