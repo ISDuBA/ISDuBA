@@ -168,6 +168,8 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_forwarder"></a> Section `[forwarder]` Forwarder configuration
 
+For more information regarding how to configure the forwarder, [read the dedicated forwarder documentation](./forwarder.md) 
+
 - `update_interval`: Specifies how often the database is checked for new documents. Defaults to `"5m"`.
 
 #### Section `[[forwarder.target]]` Forwarder target configuration
