@@ -294,7 +294,7 @@
   </script>
 </svelte:head>
 
-<div class="flex h-screen bg-primary-700 dark:bg-gray-800 dark:text-white">
+<div class="bg-primary-700 flex h-screen dark:bg-gray-800 dark:text-white">
   <div>
     <SideNav></SideNav>
   </div>

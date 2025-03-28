@@ -425,7 +425,7 @@
         <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
       </div>
     </div>
-    <div class="mb-4 mt-2" />
+    <div class="mt-2 mb-4" />
   </div>
   <ErrorMessage error={loadForwardTargetsError}></ErrorMessage>
   <ErrorMessage error={loadAdvisoryVersionsError}></ErrorMessage>

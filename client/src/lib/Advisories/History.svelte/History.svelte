@@ -69,7 +69,7 @@
                     {/if}
                   </small>
                   {#if /state_change|import_document/.test(event.event_type)}
-                    <div class="border-1 border p-1 text-xs text-gray-800 dark:text-gray-200">
+                    <div class="border border-1 p-1 text-xs text-gray-800 dark:text-gray-200">
                       {event.state}
                     </div>
                   {/if}
@@ -92,7 +92,7 @@
     </TableBody>
   </Table>
   {#if historyEntries.length === 0}
-    <span class="ml-auto mr-auto text-gray-400 dark:text-gray-400"
+    <span class="mr-auto ml-auto text-gray-400 dark:text-gray-400"
       >{fullHistory ? "No entries" : "No comments"}</span
     >
   {/if}

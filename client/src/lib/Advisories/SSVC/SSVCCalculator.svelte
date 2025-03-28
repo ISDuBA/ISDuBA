@@ -328,8 +328,8 @@
         hideLabel
       />
       {#if steps[currentStep]}
-        <div class="mb-2 mt-2">
-          <span class="text-nowrap text-xl">{steps[currentStep]}</span>
+        <div class="mt-2 mb-2">
+          <span class="text-xl text-nowrap">{steps[currentStep]}</span>
         </div>
       {/if}
       {#if mainDecisions[currentStep]}
@@ -390,7 +390,7 @@
           {#if currentStep > 0}
             <Button color="light" size="xs" class="h-6 p-3" on:click={stepBack}>Back</Button>
           {/if}
-          <Button size="xs" color="light" class="h-6 text-nowrap p-3" on:click={resetUserDecisions}>
+          <Button size="xs" color="light" class="h-6 p-3 text-nowrap" on:click={resetUserDecisions}>
             Restart
           </Button>
           {#if isComplex || result}

@@ -257,7 +257,7 @@
 <div class="flex w-full flex-col">
   <div class="mb-4 flex flex-col justify-between gap-2 lg:flex-row">
     <div class="flex items-start gap-1">
-      <div class="flex min-h-28 justify-between gap-1 rounded-md pb-2 pe-3 lg:w-96 lg:max-w-96">
+      <div class="flex min-h-28 justify-between gap-1 rounded-md pe-3 pb-2 lg:w-96 lg:max-w-96">
         {#if isLoadingDocA}
           <div>
             Loading ...
@@ -433,7 +433,7 @@
         }}
         on:change={handleChange}
         multiple
-        class="mb-2 ms-1 h-16"
+        class="ms-1 mb-2 h-16"
       >
         <i class="bx bx-upload text-xl text-gray-500"></i>
         <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">

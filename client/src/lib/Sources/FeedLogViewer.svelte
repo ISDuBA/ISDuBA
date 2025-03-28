@@ -325,7 +325,7 @@
             }}
             bind:value={currentPage}
           />
-          <span class="ml-2 mr-3 w-max text-nowrap">of {numberOfPages} pages</span>
+          <span class="mr-3 ml-2 w-max text-nowrap">of {numberOfPages} pages</span>
         </div>
 
         <div class:flex={true}>

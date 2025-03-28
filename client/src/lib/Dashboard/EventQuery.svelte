@@ -180,7 +180,7 @@
               </span>
               {#if activity.event === "add_comment" || activity.event == "change_comment"}
                 <div>
-                  <span class="block overflow-hidden text-ellipsis text-nowrap italic"
+                  <span class="block overflow-hidden text-nowrap text-ellipsis italic"
                     >{activity.message ?? "Message undefined"}</span
                   >
                 </div>

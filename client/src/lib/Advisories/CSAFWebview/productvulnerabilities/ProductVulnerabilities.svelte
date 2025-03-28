@@ -51,9 +51,9 @@
   $: fourCVEs = $appStore.webview.four_cves;
 </script>
 
-<div class="crosstable-overview mb-3 mt-3 flex flex-col">
+<div class="crosstable-overview mt-3 mb-3 flex flex-col">
   {#if productLines.length > 0}
-    <div class="mb-3 mt-3 flex flex-row">
+    <div class="mt-3 mb-3 flex flex-row">
       <div class="flex flex-wrap items-baseline gap-4 text-sm">
         <div class="flex flex-row items-baseline">
           <i class="bx bx-check" />
@@ -91,12 +91,12 @@
           {#each headerColumns as column, index}
             {#if index == 0}
               <TableHeadCell
-                class="sticky left-0 z-30 text-nowrap bg-white align-bottom font-normal dark:bg-gray-800"
+                class="sticky left-0 z-30 bg-white align-bottom font-normal text-nowrap dark:bg-gray-800"
                 padding={tablePadding}>{column.content}</TableHeadCell
               >
             {:else if index == 1}
               <TableHeadCell
-                class="text-nowrap bg-white font-normal dark:bg-gray-800"
+                class="bg-white font-normal text-nowrap dark:bg-gray-800"
                 padding={tablePadding}
               >
                 <div class={titleStyles[0]}>
@@ -109,7 +109,7 @@
               </TableHeadCell>
             {:else if !renderAllCVEs && fourCVEs.includes(column.name)}
               <TableHeadCell
-                class="text-nowrap bg-white font-normal dark:bg-gray-800"
+                class="bg-white font-normal text-nowrap dark:bg-gray-800"
                 padding={tablePadding}
               >
                 <div class={titleStyles[0]}>
@@ -129,7 +129,7 @@
               </TableHeadCell>
             {:else if renderAllCVEs}
               <TableHeadCell
-                class="text-nowrap bg-white font-normal dark:bg-gray-800"
+                class="bg-white font-normal text-nowrap dark:bg-gray-800"
                 padding={tablePadding}
               >
                 <div class={titleStyles[0]}>
@@ -156,7 +156,7 @@
               {#each line as column}
                 {#if column.name === "Product"}
                   <TableBodyCell tdClass={tdClass + " sticky left-0 bg-inherit"}>
-                    <div class="max-w-1/2 min-w-56 whitespace-normal text-wrap break-all">
+                    <div class="max-w-1/2 min-w-56 text-wrap break-all whitespace-normal">
                       <a
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}

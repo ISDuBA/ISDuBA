@@ -326,7 +326,7 @@
 ></DeleteModal>
 
 <div class="flex-grow">
-  <div class="mb-2 mt-2 flex flex-row items-baseline justify-between">
+  <div class="mt-2 mb-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
       <div class="flex flex-row items-baseline gap-8">
         {#if isMultiSelectionAllowed}
@@ -442,7 +442,7 @@
               }}
               bind:value={currentPage}
             />
-            <span class="ml-2 mr-3 text-nowrap">of {numberOfPages} pages</span>
+            <span class="mr-3 ml-2 text-nowrap">of {numberOfPages} pages</span>
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
             <PaginationItem on:click={next}>
@@ -588,7 +588,7 @@
               {#if areThereAnyComments}
                 <TableBodyCell {tdClass}
                   ><a
-                    class="absolute bottom-0 left-0 right-0 top-0"
+                    class="absolute top-0 right-0 bottom-0 left-0"
                     href={getAdvisoryAnchorLink(item)}
                   >
                   </a>
@@ -614,7 +614,7 @@
                   {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -629,7 +629,7 @@
                   {:else if column === "ssvc"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -642,7 +642,7 @@
                   {:else if column === "state"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -662,7 +662,7 @@
                   {:else if column === "initial_release_date"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -673,7 +673,7 @@
                   {:else if column === "current_release_date"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -684,7 +684,7 @@
                   {:else if column === "title"}
                     <TableBodyCell tdClass={title + " relative"}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -695,7 +695,7 @@
                   {:else if column === "publisher"}
                     <TableBodyCell tdClass={publisher + " relative"}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -706,7 +706,7 @@
                   {:else if column === "recent"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -720,13 +720,13 @@
                     <TableBodyCell {tdClass}>
                       {#if !(item[column] && item[column][0] && item[column].length > 1)}
                         <a
-                          class="absolute bottom-0 left-0 right-0 top-0"
+                          class="absolute top-0 right-0 bottom-0 left-0"
                           href={getAdvisoryAnchorLink(item)}
                         >
                         </a>
                       {/if}
                       <div class="w-32">
-                        <div class="z-50 table text-wrap p-2">
+                        <div class="z-50 table p-2 text-wrap">
                           {#if item[column] && item[column][0]}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -765,7 +765,7 @@
                   {:else if column === "critical"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -780,7 +780,7 @@
                   {:else if column === "tracking_id"}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
@@ -791,7 +791,7 @@
                   {:else}
                     <TableBodyCell {tdClass}
                       ><a
-                        class="absolute bottom-0 left-0 right-0 top-0"
+                        class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
