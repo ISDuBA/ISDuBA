@@ -13,11 +13,16 @@
 Sources are what are primarily providing security advisories to ISDuBA. Managing which sources' advisories are important is the responsibility of the `source-manager` role.
 
 An easy way to find new sources is via aggregators within the `aggregators` tab, which per default contains the preconfigures but inactive "BSI CSAF Lister" as well as an option to configure additional aggregators. Using these aggregators, the source-manager can create new sources by expanding an aggregator and then the desired source.
-![Screenshot 2025-03-26 at 13-17-25 Sources - Aggregators](https://github.com/user-attachments/assets/f05f6879-239f-4bd3-a28e-28dc6d6f54e8)
+![Screenshot 2025-04-01 at 12-22-49 Sources - Aggregators](https://github.com/user-attachments/assets/3e2148e5-e320-4d3e-88c9-d0ba546c445b)
 
 
-Alternatively, they can utilize the Sources-Tab to add a source directly, specifying the domain or the location of a provider-metadata.json directly. It's important to note that ISDuBA only starts importing once a source has been officially activiated by checking the "active" checkbox.
+
+Alternatively, they can utilize the Sources-Tab to add a source directly, specifying the domain or the location of a provider-metadata.json directly. 
 ![Screenshot 2025-03-26 at 13-18-23 Sources](https://github.com/user-attachments/assets/e80fd4ff-203f-4289-8ee7-3425b964ab1c)
+It's important to note that ISDuBA only starts importing once a source has been officially activiated by checking the "active" checkbox (highlighted by being underlined in the following screenshot).
+![Screenshot 2025-04-01 at 12-29-26 Sources - Edit source1](https://github.com/user-attachments/assets/41a15af0-6095-4d51-839e-62198b6f67d2)
+
+
 
 ## Finding advisories
 
