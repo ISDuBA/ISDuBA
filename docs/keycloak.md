@@ -54,6 +54,8 @@ the following settings:
  * Add to token introspection: On
  * Multivalued: On
  * Aggregate attribute values: On
+
+Now, users can be created via the `users`-tab of the Keycloak-UI.
  
 ## Realm Roles
 
@@ -68,7 +70,7 @@ should be created:
  * source-manager
 
 An overview of roles can be found within [the roles documentation](./roles.md).
-There roles need no further changes to function after creation.
+The roles need no further changes to function after creation. A user can be assigned a role via the `role-mapping` tab of the user management tab.
 
 ## Groups
 Which advisories any given user can access is regulated by their keycloak groups. Group access rights are additive, meaning a user has all rights of every group they are part of.

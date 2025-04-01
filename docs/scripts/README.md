@@ -36,7 +36,7 @@ Since these scripts need to install all dependencies, sudo privileges are requir
  
  - The Keycloak admin user created via the scripts will have the username `keycloak`, unless otherwise specified via the environment variable `KEYCLOAK_ADMIN`. The password can be specified via the environment variable  `KEYCLOAK_ADMIN_PASSWORD`, a file (`-f` option) or directly (using the `-p` option).
   - If neither option is used, then the script will try to see if `docs/scripts/password.txt` exists and contains a password. If this is not set either, then a random password will be generated and stored in `docs/scripts/password.txt`.
-  
+
 ## [installall.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/installall.sh)
 This script will download the ISDuBA repository in the current directory unless it already exists, in which case it will update it.
 Then it will call the [setup.sh script](./setup.sh) that calls all other scripts to set up a testing environment.
@@ -60,6 +60,8 @@ where OPTIONS:
   -b, --branch=name                set up on branch 'name' instead of main (optional)
   -k, --keycloakRunning            signal the script that there is a keycloak running on port 8080 (optional)
 ```
+
+This will complete the setup, no further scripts need to be run. In the following, all called scripts are described briefly.
 
 ### [setup.sh](https://github.com/ISDuBA/ISDuBA/blob/main/docs/scripts/setup.sh)
 This script will call other scripts to finish the setup. Use this if you already cloned the repository.

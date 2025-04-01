@@ -40,6 +40,16 @@ the authorization to handle TLP WHITE and TLP GREEN advisories.
 
 The application can then be reached under <http://localhost:5371>.
 
+#### Docker-Keycloak (optional)
+To try out different roles or users not included in the default Docker image, changes must be made through Keycloak.
+The docker image uses a Keycloak which can be reached under <http://localhost:8080>.
+The default admin-user set for the docker-Keycloak-instance is:
+ * Username: admin
+ * Password: secret
+
+To find out how to create and manage users, read the [Keycloak documentation](./keycloak.md). Note that the
+scripts are not designed for use with docker.
+
 ## Development-setup
 
 The setup should be performed via the [installation scripts.](./scripts/README.md) on a Ubuntu 24.04 OS.
@@ -117,7 +127,14 @@ serve the contents of `web/`. However, a [PostgreSQL database](#configuring-post
 See the [Keycloak documentation](./keycloak.md) on how to set up keycloak for your ISDuBA instance.
 
 ##### Configuring Postgres
- In your Postgres database, create a `keycloak` user with password `keycloak` as well as a database `keycloak` which will be owned by the user `keycloak`. Next up, Postgres' [client authentification](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) configuration file has to be adjusted, by adding ISDuBA-directed configuration. Simply add
+ In your Postgres database, create a `keycloak` user with password `keycloak` as well as a database `keycloak` which will be owned by the user `keycloak`:
+```
+psql -c "CREATE USER keycloak WITH PASSWORD 'keycloak';"
+createdb -O keycloak -E 'UTF-8' keycloak
+```
+
+
+ Next up, Postgres' [client authentification](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) configuration file has to be adjusted, by adding ISDuBA-directed configuration. Simply add
  
 ```
 host    all             all             127.0.0.1/32            scram-sha-256
