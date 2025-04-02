@@ -15,9 +15,6 @@ for downloading and evaluating security advisories in the CSAF 2.0 format.
 ISDuBA is designed to support teams that are responsible
 for the IT security of a group of products.
 
-**In beta quality since v0.5.0,
-  having all of the planned functionality, but there may be defects.**
-
 We appreciate your problem reports, please check the list of issues first.
 
 To gain insight into the architecture of ISDuBA take a look at the
