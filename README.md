@@ -21,12 +21,12 @@ To gain insight into the architecture of ISDuBA take a look at the
 [overview diagram](docs/images/overview-diagram.svg).
 
 
-ISDuBA uses:
+Components used by ISDuBA:
 
 - [PostgreSQL](https://www.postgresql.org/) as database
 - [keycloak](https://www.keycloak.org/) as identity provider
 - [svelte-flowbite](https://flowbite-svelte.com/)
-  for the single page web application frontend
+  and TypeScript for the single page web application frontend
 - Go as programming language for the backend.
 - a downloading kernel that is close to
   [gocsaf](https://github.com/gocsaf/csaf)
