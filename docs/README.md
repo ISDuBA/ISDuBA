@@ -12,14 +12,14 @@
 
 # Get Started
 
-Learn how to test or setup your own ISDuBA instance.
-When starting the application, you will be prompted to safe your aes_key. This can be ignored for test or development instances and is further explained in [the aes-keys section of the security considerations documentation](./security_considerations.md#aes-keys).
+Decide how to test or setup your own ISDuBA instance.
 
  1. Want to try ISDuBA for yourself? [Try our Docker setup](#docker-setup)
  2. Want to support the ISDuBA project with your own code? [Here's how to setup a development instance of ISDuBA](#development-setup)
  3. Want to use ISDuBA for yourself or your organization? [Here's how to setup ISDuBA for production](#production-setup)
  4. Having set up an instance of ISDuBA, you can read about what to do now within the [first steps guide](./first_steps.md)
 
+When starting the application, you will be prompted to safe your aes_key. This can be ignored for test or development instances and is further explained in [the aes-keys section of the security considerations documentation](./security_considerations.md#aes-keys).
 
 ## Docker-setup
 
@@ -137,7 +137,7 @@ createdb -O keycloak -E 'UTF-8' keycloak
 
 
  Next up, Postgres' [client authentification](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) configuration file has to be adjusted, by adding ISDuBA-directed configuration. Simply add
- 
+
 ```
 host    all             all             127.0.0.1/32            scram-sha-256
 host    all             all             ::1/128                 scram-sha-256
