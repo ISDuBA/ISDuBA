@@ -32,7 +32,7 @@ Since these scripts need to install all dependencies, sudo privileges are requir
 
 ### important notes
 
- - A list of users created by the setup scripts can be found in [the users.txt.](./developer/users.txt) including their usernames and passwords. Editing this file before using the createUsers or the setup script will change which users are created.
+ - A list of users created in the Keycloak by the setup scripts can be found in [the users.txt.](./developer/users.txt) including their usernames and passwords. Editing this file before using the createUsers or the setup script will change which users are created.
  
  - The Keycloak admin user created via the scripts will have the username `keycloak`, unless otherwise specified via the environment variable `KEYCLOAK_ADMIN`. The password can be specified via the environment variable  `KEYCLOAK_ADMIN_PASSWORD`, a file (`-f` option) or directly (using the `-p` option).
   - If neither option is used, then the script will try to see if `docs/scripts/password.txt` exists and contains a password. If this is not set either, then a random password will be generated and stored in `docs/scripts/password.txt`.
