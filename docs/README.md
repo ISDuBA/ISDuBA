@@ -82,6 +82,8 @@ The keycloak server set up via the installation scripts, needed to be able to lo
 ```bash
 sudo -u keycloak /opt/keycloak/bin/kc.sh start-dev
 ```
+Note that keycloak might take a while to start up.
+
 
 After having made changes, the new application can be build via the Makefile:
 

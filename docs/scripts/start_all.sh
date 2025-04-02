@@ -12,6 +12,7 @@ set -e # to exit if a command in the script fails
 
 cd ../..
 
+echo "This script is not meant to be started manually. It exists to support the integration tests."
 echo "This script may not function as expected if isdubad, keycloak or the client have already been started."
 
 ./cmd/isdubad/isdubad &

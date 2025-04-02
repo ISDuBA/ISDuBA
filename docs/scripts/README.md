@@ -32,7 +32,7 @@ Since these scripts need to install all dependencies, sudo privileges are requir
 
 ### important notes
 
- - A list of users created in the Keycloak by the setup scripts can be found in [the users.txt.](./developer/users.txt) including their usernames and passwords. Editing this file before using the createUsers or the setup script will change which users are created.
+ - A list of users created by the setup scripts can be found in [the users.txt.](./../developer/users.txt) including their usernames and passwords. Editing this file before using the createUsers or the setup script will change which users are created.
  
  - The Keycloak admin user created via the scripts will have the username `keycloak`, unless otherwise specified via the environment variable `KEYCLOAK_ADMIN`. The password can be specified via the environment variable `KEYCLOAK_ADMIN_PASSWORD`.
   - If `KEYCLOAK_ADMIN_PASSWORD` is not set, then the script will try to see if `docs/scripts/password.txt` exists and contains a password. If this is not set either, then a random password will be generated and stored in `docs/scripts/password.txt`.
@@ -99,7 +99,7 @@ The following will briefly explain what every other script does. It's not necess
  
 #### [installpostgres.sh](./installpostgres.sh)
   Installs Postgresql 15.
-  
+
 #### [installutilities.sh](./installutilities.sh)
   Installs 
    * [make](https://www.gnu.org/software/make/)
@@ -117,7 +117,7 @@ The following will briefly explain what every other script does. It's not necess
  Extract licensing info from the packages of an SPDX-2.3 SBOM JSON file.
  
 #### [start_all.sh](./start_all.sh)
- Requires sudo privileges. Starts isdubad, the isduba client and keycloak. Is not called by the setup scripts and can be called independently to quickly start all components necessary.
+ Requires sudo privileges. Starts isdubad, the isduba client and keycloak. Is not called during setup, but is necessary for the integration-tests.
 
 ### Keycloak-scripts
 
@@ -170,7 +170,7 @@ and
 
 #### [createRealm.sh](./keycloak/createRealm.sh)
  Creates an `isduba` Keycloak realm that can be used to manage all ISDuBA-users.
-  
+
 #### [createRole.sh](./keycloak/createRole.sh)
  [Create a role] for ISDuBAs Keycloak. ISDuBA uses a set set of roles that are created during the initial setup, so there should be no reason to call this script manually.
 ``` 

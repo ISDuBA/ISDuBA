@@ -12,19 +12,29 @@
 
 Sources are what are primarily providing security advisories to ISDuBA. Managing which sources' advisories are important is the responsibility of the `source-manager` role.
 
-An easy way to find new sources is via aggregators within the `aggregators` tab, which per default contains the preconfigures but inactive "BSI CSAF Lister" as well as an option to configure additional aggregators. Using these aggregators, the source-manager can create new sources by expanding an aggregator and then the desired source.
-![Aggregators](./images/ISDuBA_Aggregators.png)
 
+An easy way to find new sources is via aggregators within the `aggregators` tab,
+which per default contains the preconfigures but inactive "BSI CSAF Lister" as well as an option to configure additional aggregators.
+Using these aggregators, the source-manager can create new sources by expanding an aggregator and then the desired source.
+![Aggregators](./images/ISDuBA_Aggregators.png)
+Finally, click on "+ As new source" to enter the [source-configuration dialogue](#configuring_sources).
 
 
 Alternatively, they can utilize the Sources-Tab to add a source directly, specifying the domain or the location of a provider-metadata.json directly. 
 ![Sources](./images/ISDuBA_Sources.png)
-It's important to note that ISDuBA only starts importing once a source has been officially activiated by checking the "active" checkbox (highlighted by being underlined in the following screenshot).
+
+### Configuring Sources
+There are two steps to configuring a new source. First, all the metadata and source-feeds are listed, and the possibility to add credentials and downloading configuration (via Advanced options) are listed.
+After saving the source via the "Save source" button, the source will be saved and listed in the sources tab and the user will be redirected into the overview for this source.
+
+Here, the credentials provided and the download configuration can be altered at any time, and the logs for the feeds and some statistics can be viewed.
+It's important to note that ISDuBA only starts importing once a source has been activiated by checking the "active" checkbox (highlighted by being underlined in the following screenshot).
+Also, any change only takes effect after it has been saved via the "Save source"-button.
 ![Sources - Active](./images/ISDuBA_Active.png)
 
 
 
-## Finding advisories
+## Finding Advisories
 
 When trying to find advisories, the search tab can be used to view all advisories that are accessible via the current permissions. Via the search bar, terms can be searched. An advanced search function, triggered by flipping the `Advanced` switch allows filtering more precisely [via filter expressions.](./filter_expr.md)
 ![Search](./images/ISDuBA_Search.png)
