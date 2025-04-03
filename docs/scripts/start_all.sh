@@ -10,15 +10,16 @@
 
 set -e # to exit if a command in the script fails
 
-echo "This script is designed to be used when the client, the backend and the keycloak are not running."
-
 cd ../..
+
+echo "This script is not meant to be started manually. It exists to support the integration tests."
+echo "This script may not function as expected if isdubad, keycloak or the client have already been started."
 
 ./cmd/isdubad/isdubad &
 
 isdubad=$!
 
-echo "isdubad is running:"
+echo "isdubad has been started:"
 echo $isdubad
 
 cd client
@@ -27,7 +28,7 @@ npm run dev &
 
 client=$!
 
-echo "the client is running:"
+echo "the client has been started:"
 echo $client
 
 sudo /opt/keycloak/bin/kc.sh start-dev --health-enabled=true &
@@ -40,5 +41,5 @@ do
 done
 keycloak=$!
 
-echo "keycloak is running:"
+echo "keycloak has been started:"
 echo $keycloak

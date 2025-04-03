@@ -15,21 +15,18 @@ for downloading and evaluating security advisories in the CSAF 2.0 format.
 ISDuBA is designed to support teams that are responsible
 for the IT security of a group of products.
 
-**In beta quality since v0.5.0,
-  having all of the planned functionality, but there may be defects.**
-
 We appreciate your problem reports, please check the list of issues first.
 
 To gain insight into the architecture of ISDuBA take a look at the
 [overview diagram](docs/images/overview-diagram.svg).
 
 
-ISDuBA uses:
+Components used by ISDuBA:
 
-- PostgreSQL as database
+- [PostgreSQL](https://www.postgresql.org/) as database
 - [keycloak](https://www.keycloak.org/) as identity provider
 - [svelte-flowbite](https://flowbite-svelte.com/)
-  for the single page web application frontend
+  and TypeScript for the single page web application frontend
 - Go as programming language for the backend.
 - a downloading kernel that is close to
   [gocsaf](https://github.com/gocsaf/csaf)
@@ -38,13 +35,15 @@ ISDuBA uses:
 
 ## How to get started
 
-- [Setup](docs/test-setup.md)
-- [Operations](docs/operations.md)
+- [Setup](docs/README.md)
+- [Important Security Information](docs/security_considerations.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## What does the name ISDuBA mean?
 
-The abbreviation expands to a German label, which translates to
-**I**nternal **s**ystem for **d**ownloading and evaluating **a**dvisories.
+The abbreviation expands to `**I**nternes **S**ystem zum **D**ownload **u**nd
+  der **B**ewertung von **A**dvisories`, a german label which translates to
+`Internal system for downloading and the evaluation of advisories`.
 
 ## License
 
