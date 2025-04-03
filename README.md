@@ -41,9 +41,9 @@ Components used by ISDuBA:
 
 ## What does the name ISDuBA mean?
 
-The abbreviation expands to `**I**nternes **S**ystem zum **D**ownload **u**nd
-  der **B**ewertung von **A**dvisories`, a german label which translates to
-`Internal system for downloading and the evaluation of advisories`.
+The abbreviation expands to **I**nternes **S**ystem zum **D**ownload **u**nd
+  der **B**ewertung von **A**dvisories, a german label which translates to
+`Internal system for downloading and evaluation of advisories`.
 
 ## License
 
