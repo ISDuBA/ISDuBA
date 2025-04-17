@@ -75,7 +75,7 @@ const logLevels = [
   { value: LogLevel.default, name: "Default" },
   { value: LogLevel.error, name: "Errors" },
   { value: LogLevel.info, name: "Info" },
-  { value: LogLevel.warn, name: "Errors and warnings" },
+  { value: LogLevel.warn, name: "Warning" },
   { value: LogLevel.debug, name: "Debug (verbose)" }
 ];
 
