@@ -178,14 +178,17 @@
                       <i class="bx bx-heart" />
                       <i class="bx b-minus" />
                     {:else}
-                      <i
-                        class:bx={true}
-                        class:bx-x={column.content === ProductStatusSymbol.KNOWN_AFFECTED}
-                        class:bx-check={column.content === ProductStatusSymbol.FIXED}
-                        class:bx-error={column.content === ProductStatusSymbol.UNDER_INVESTIGATION}
-                        class:bx-minus={column.content === ProductStatusSymbol.NOT_AFFECTED}
-                        class:bx-heart={column.content === ProductStatusSymbol.RECOMMENDED}
-                      />
+                      <!-- May contain more than one status and thus more than one character -->
+                      {#each column.content as char}
+                        <i
+                          class:bx={true}
+                          class:bx-x={char === ProductStatusSymbol.KNOWN_AFFECTED}
+                          class:bx-check={char === ProductStatusSymbol.FIXED}
+                          class:bx-error={char === ProductStatusSymbol.UNDER_INVESTIGATION}
+                          class:bx-minus={char === ProductStatusSymbol.NOT_AFFECTED}
+                          class:bx-heart={char === ProductStatusSymbol.RECOMMENDED}
+                        />
+                      {/each}
                     {/if}
                   </TableBodyCell>
                 {:else if renderAllCVEs}
