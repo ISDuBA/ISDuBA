@@ -1761,6 +1761,11 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "integer",
+                        "name": "age",
+                        "in": "formData"
+                    },
+                    {
                         "type": "boolean",
                         "name": "attention",
                         "in": "formData"
@@ -2060,19 +2065,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            1,
                             0,
                             1,
                             2,
-                            3
+                            3,
+                            1
                         ],
                         "type": "integer",
                         "x-enum-varnames": [
-                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel"
+                            "ErrorFeedLogLevel",
+                            "defaultSourcesFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -2351,6 +2356,11 @@ const docTemplate = `{
                     {
                         "type": "boolean",
                         "name": "active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "age",
                         "in": "formData"
                     },
                     {
@@ -3440,7 +3450,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "idle_timeout": {
-                    "$ref": "#/definitions/time.Duration"
+                    "type": "integer"
                 },
                 "keycloak_client_id": {
                     "type": "string"
@@ -3452,25 +3462,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "update_interval": {
-                    "$ref": "#/definitions/time.Duration"
+                    "type": "integer"
                 }
             }
         },
         "config.FeedLogLevel": {
             "type": "integer",
             "enum": [
-                1,
                 0,
                 1,
                 2,
-                3
+                3,
+                1
             ],
             "x-enum-varnames": [
-                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel"
+                "ErrorFeedLogLevel",
+                "defaultSourcesFeedLogLevel"
             ]
         },
         "forwarder.ForwardTarget": {
@@ -3821,29 +3831,6 @@ const docTemplate = `{
                 }
             }
         },
-        "time.Duration": {
-            "type": "integer",
-            "enum": [
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000
-            ],
-            "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour"
-            ]
-        },
         "web.about.info": {
             "type": "object",
             "properties": {
@@ -3951,7 +3938,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "age": {
-                    "$ref": "#/definitions/web.sourceAge"
+                    "type": "integer"
                 },
                 "log_level": {
                     "$ref": "#/definitions/config.FeedLogLevel"
@@ -4036,7 +4023,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "keep_feed_time": {
-                    "$ref": "#/definitions/time.Duration"
+                    "type": "integer"
                 }
             }
         },
@@ -4106,7 +4093,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "age": {
-                    "$ref": "#/definitions/web.sourceAge"
+                    "type": "integer"
                 },
                 "attention": {
                     "type": "boolean"
@@ -4168,34 +4155,6 @@ const docTemplate = `{
                 "url": {
                     "type": "string",
                     "minLength": 1
-                }
-            }
-        },
-        "web.sourceAge": {
-            "type": "object",
-            "properties": {
-                "time.Duration": {
-                    "type": "integer",
-                    "enum": [
-                        -9223372036854775808,
-                        9223372036854775807,
-                        1,
-                        1000,
-                        1000000,
-                        1000000000,
-                        60000000000,
-                        3600000000000
-                    ],
-                    "x-enum-varnames": [
-                        "minDuration",
-                        "maxDuration",
-                        "Nanosecond",
-                        "Microsecond",
-                        "Millisecond",
-                        "Second",
-                        "Minute",
-                        "Hour"
-                    ]
                 }
             }
         },

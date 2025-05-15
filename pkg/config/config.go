@@ -262,8 +262,8 @@ type Client struct {
 	KeycloakURL      string        `toml:"keycloak_url" json:"keycloak_url"`
 	KeycloakRealm    string        `toml:"keycloak_realm" json:"keycloak_realm"`
 	KeycloakClientID string        `toml:"keycloak_client_id" json:"keycloak_client_id"`
-	UpdateInterval   time.Duration `toml:"update_interval" json:"update_interval"`
-	IdleTimeout      time.Duration `toml:"idle_timeout" json:"idle_timeout"`
+	UpdateInterval   time.Duration `toml:"update_interval" json:"update_interval" swaggertype:"integer"`
+	IdleTimeout      time.Duration `toml:"idle_timeout" json:"idle_timeout" swaggertype:"integer"`
 }
 
 // Config are all the configuration options.

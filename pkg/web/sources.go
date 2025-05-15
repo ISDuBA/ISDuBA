@@ -60,7 +60,7 @@ type source struct {
 	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
 	Secure               *bool          `json:"secure,omitempty" form:"secure"`
 	SignatureCheck       *bool          `json:"signature_check,omitempty" form:"signature_check"`
-	Age                  *sourceAge     `json:"age,omitempty" form:"age"`
+	Age                  *sourceAge     `json:"age,omitempty" form:"age" swaggertype:"primitive,integer"`
 	IgnorePatterns       []string       `json:"ignore_patterns,omitempty" form:"ignore_patterns"`
 	ClientCertPublic     *string        `json:"client_cert_public,omitempty" form:"client_cert_public"`
 	ClientCertPrivate    *string        `json:"client_cert_private,omitempty" form:"client_cert_private"`
@@ -934,7 +934,7 @@ func (c *Controller) defaultMessage(ctx *gin.Context) {
 //	@Router			/sources/feeds/keep [get]
 func (c *Controller) keepFeedTime(ctx *gin.Context) {
 	type keepFeedTimeConfig struct {
-		KeepFeedTime time.Duration `json:"keep_feed_time"`
+		KeepFeedTime time.Duration `json:"keep_feed_time" swaggertype:"integer"`
 	}
 	ctx.JSON(http.StatusOK, keepFeedTimeConfig{KeepFeedTime: c.cfg.Sources.KeepFeedLogs})
 }
@@ -981,7 +981,7 @@ func (c *Controller) defaultSourceConfig(ctx *gin.Context) {
 		StrictMode     bool                `json:"strict_mode"`
 		Secure         bool                `json:"secure"`
 		SignatureCheck bool                `json:"signature_check"`
-		Age            sourceAge           `json:"age"`
+		Age            sourceAge           `json:"age" swaggertype:"primitive,integer"`
 	}
 	cfg := c.cfg.Sources
 	ctx.JSON(http.StatusOK, sourceConfig{
