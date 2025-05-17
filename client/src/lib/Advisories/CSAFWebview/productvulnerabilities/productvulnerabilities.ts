@@ -44,8 +44,12 @@ const generateProductVulnerabilities = (jsonDocument: any, products: any, produc
     return relevantProducts[product.product_id];
   });
   vulnerabilities.sort((vuln1: Vulnerability, vuln2: Vulnerability) => {
-    if (vuln1.cve < vuln2.cve) return -1;
-    if (vuln1.cve > vuln2.cve) return 1;
+    if (!vuln1.cve && vuln2.cve) return -1;
+    if (vuln1.cve && !vuln2.cve) return 1;
+    if (vuln1.cve && vuln2.cve) {
+      if (vuln1.cve < vuln2.cve) return -1;
+      if (vuln1.cve > vuln2.cve) return 1;
+    }
     return 0;
   });
   const result = generateCrossTableFrom(products, vulnerabilities, productLookup);
@@ -268,12 +272,10 @@ const extractVulnerabilities = (jsonDocument: any): VulnerabilitesExtractionResu
    */
   const vulnerabilities = jsonDocument.vulnerabilities.reduce(
     (acc: Vulnerability[], vulnerability: any) => {
-      if (!vulnerability.cve) {
-        return acc;
+      const result: Vulnerability = {};
+      if (vulnerability.cve) {
+        result.cve = vulnerability.cve;
       }
-      const result: Vulnerability = {
-        cve: vulnerability.cve
-      };
       if (vulnerability.product_status) {
         if (vulnerability.product_status.known_affected) {
           result.known_affected = generateDictFrom(vulnerability.product_status, "known_affected");
