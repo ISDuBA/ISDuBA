@@ -20,7 +20,7 @@
 <div>
   <Table noborder>
     <TableBodyRow>
-      <TableBodyCell><h5>Product Version Helper</h5></TableBodyCell>
+      <TableBodyCell><h5>Product identification helper</h5></TableBodyCell>
     </TableBodyRow>
   </Table>
   {#if helper.cpe}
