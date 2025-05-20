@@ -299,7 +299,7 @@ describe("Productvulnerabilities test", () => {
 describe("Productvulnerabilities test", () => {
   it("Vulnerability: parses vulnerability without cve", () => {
     const { vulnerabilities } = extractVulnerabilities(vulnerability_wo_CVE);
-    expect(vulnerabilities.length).toBe(0);
+    expect(vulnerabilities.length).toBe(1);
   });
 });
 

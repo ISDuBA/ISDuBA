@@ -51,8 +51,7 @@ export type Relationship = {
 export type Product = { product_id: string; name: string };
 
 export type Vulnerability = {
-  cve: string;
-} & {
+  cve?: string;
   known_affected?: StringObject;
   fixed?: StringObject;
   under_investigation?: StringObject;
