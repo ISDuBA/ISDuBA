@@ -115,7 +115,7 @@ More Examples:
 | `status`     | `string`              | `status` Converts argument to status                                                                      |
 | `=`          | **A** **B**           | `bool` **A** equals **B**                                                                                 |
 | `!=`         | **A** **B**           | `bool` **A** not equals **B**                                                                             |
-| `<`          | **A** **B**           | `bool` **A** lesser than **B**                                                                          |
+| `<`          | **A** **B**           | `bool` **A** lesser than **B**                                                                            |
 | `<=`         | **A** **B**           | `bool` **A** lesser or equal than **B**                                                                   |
 | `>`          | **A** **B**           | `bool` **A** greater than **B**                                                                           |
 | `>=`         | **A** **B**           | `bool` **A** greater or equal than **B**                                                                  |
