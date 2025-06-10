@@ -65,6 +65,7 @@
   let headersEdit: TableHeader[] = [
     ...headers,
     { label: "Loading/Queued", attribute: "stats" },
+    { label: "Healthy", attribute: "healthy" },
     { label: "Logs", attribute: "logs" }
   ];
 
@@ -224,6 +225,9 @@
           {#if edit}
             <TableBodyCell {tdClass}
               >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
+            >
+            <TableBodyCell {tdClass}
+              ><i class={"bx " + (feed.healthy ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
             >
             {#if feed.enable}
               <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>

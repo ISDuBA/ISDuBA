@@ -37,6 +37,8 @@ type Source = {
     downloading: number;
     waiting: number;
   };
+
+  healthy?: boolean;
 };
 
 type SourceConfig = {
@@ -69,6 +71,7 @@ type Feed = {
     downloading: number;
     waiting: number;
   };
+  healthy?: boolean;
 };
 
 const logLevels = [
@@ -400,9 +403,10 @@ const fetchSource = async (
 };
 
 const fetchSources = async (
-  showStats: boolean = false
+  showStats: boolean = false,
+  showHealth: boolean = false
 ): Promise<Result<Source[], ErrorDetails>> => {
-  const resp = await request(`/api/sources?stats=${showStats}`, "GET");
+  const resp = await request(`/api/sources?stats=${showStats}&health=${showHealth}`, "GET");
   if (resp.ok) {
     if (resp.content.sources) {
       return {
@@ -578,9 +582,13 @@ const fetchFeed = async (
 
 const fetchFeeds = async (
   id: number,
-  showStats: boolean = false
+  showStats: boolean = false,
+  showHealth: boolean = true
 ): Promise<Result<Feed[], ErrorDetails>> => {
-  const resp = await request(`/api/sources/${id}/feeds?stats=${showStats}`, "GET");
+  const resp = await request(
+    `/api/sources/${id}/feeds?stats=${showStats}&health=${showHealth}`,
+    "GET"
+  );
   if (resp.ok) {
     if (resp.content.feeds) {
       return {
