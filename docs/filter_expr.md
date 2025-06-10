@@ -17,7 +17,12 @@ documents or events you are looking for.
 To do this you have to chain **conditions** in a [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) form.
 A **condition** is an boolean expression evaluating to `true` or `false`.
 
-To select e.g. documents with an CVSSv3 score greater or equal 5 you can write the following:
+This means filter expressions have the following structure:
+```
+<Value1> <Value2> <Operator> [ <Value3> <Value4> <Operator2> (and|or) ... ]
+```
+
+To select e.g. documents with an CVSSv3 score greater or equal 5 you write the following:
 
 ```
 $cvss_v3_score 5 float >=
@@ -110,7 +115,7 @@ More Examples:
 | `status`     | `string`              | `status` Converts argument to status                                                                      |
 | `=`          | **A** **B**           | `bool` **A** equals **B**                                                                                 |
 | `!=`         | **A** **B**           | `bool` **A** not equals **B**                                                                             |
-| `<`          | **A** **B**           | `bool` **A** lesser than **B\***                                                                          |
+| `<`          | **A** **B**           | `bool` **A** lesser than **B**                                                                            |
 | `<=`         | **A** **B**           | `bool` **A** lesser or equal than **B**                                                                   |
 | `>`          | **A** **B**           | `bool` **A** greater than **B**                                                                           |
 | `>=`         | **A** **B**           | `bool` **A** greater or equal than **B**                                                                  |
