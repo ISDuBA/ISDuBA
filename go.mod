@@ -14,7 +14,7 @@ require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/ProtonMail/gopenpgp/v2 v2.9.0
 	github.com/gin-contrib/static v1.1.5
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
 	github.com/gocsaf/csaf/v3 v3.2.0
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/samber/slog-gin v1.15.0
