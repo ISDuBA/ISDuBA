@@ -16,7 +16,7 @@ require (
 	github.com/gin-contrib/static v1.1.5
 	github.com/gin-gonic/gin v1.10.1
 	github.com/gocsaf/csaf/v3 v3.2.0
-	github.com/jackc/pgx/v5 v5.7.4
+	github.com/jackc/pgx/v5 v5.7.5
 	github.com/samber/slog-gin v1.15.0
 	github.com/sergi/go-diff v1.4.0
 	github.com/swaggo/files v1.0.1
