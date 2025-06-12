@@ -60,7 +60,7 @@
 
   const getSources = async () => {
     loadingSources = true;
-    const result = await fetchSources(true);
+    const result = await fetchSources(true, true);
     loadingSources = false;
     if (result.ok) {
       sources = result.value;
@@ -114,6 +114,10 @@
           attribute: "stats"
         },
         {
+          label: "Healthy",
+          attribute: "healthy"
+        },
+        {
           label: "Imported (last 24h)",
           attribute: "statsHistory",
           progressDuration: shortLoadInterval * longLoadMultiplier
@@ -152,7 +156,11 @@
             <TableBodyCell {tdClass}
               >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
             >
+            <TableBodyCell {tdClass}
+              ><i class={"bx " + (source.healthy ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+            >
           {:else}
+            <TableBodyCell></TableBodyCell>
             <TableBodyCell></TableBodyCell>
             <TableBodyCell></TableBodyCell>
             <TableBodyCell></TableBodyCell>

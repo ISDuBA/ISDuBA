@@ -100,7 +100,7 @@
     if (result.ok) {
       source.stats = result.value.stats;
     }
-    let feedResult = await fetchFeeds(source.id ?? 0, true);
+    let feedResult = await fetchFeeds(source.id ?? 0, true, true);
     if (feedResult.ok) {
       for (let feed of feedResult.value) {
         const find = feeds.find((i) => i.id === feed.id);
