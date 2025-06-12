@@ -147,8 +147,7 @@ func showHealth(ctx *gin.Context) (bool, bool) {
 	return parse(ctx, strconv.ParseBool, st)
 }
 
-func (c *Controller) isHealthy(ctx context.Context, isSource bool, id int64) (*bool, error) {
-	var healthy *bool
+func (c *Controller) isHealthy(ctx context.Context, isSource bool, id int64) (bool, error) {
 
 	healthSQL := `SELECT NOT EXISTS (` +
 		`SELECT 1 FROM downloads WHERE feeds_id `
@@ -167,6 +166,7 @@ func (c *Controller) isHealthy(ctx context.Context, isSource bool, id int64) (*b
             checksum_failed  IS TRUE OR
             signature_failed IS TRUE
         ));`
+	var healthy bool
 	switch err := c.db.Run(
 		ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
@@ -174,7 +174,7 @@ func (c *Controller) isHealthy(ctx context.Context, isSource bool, id int64) (*b
 		}, 0); {
 	case err != nil:
 		slog.Error("database error while fetching health status", "err", err)
-		return nil, err
+		return false, err
 	default:
 		return healthy, nil
 	}
@@ -208,11 +208,12 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 		var healthy *bool
 		if health {
 			var err error
-			healthy, err = c.isHealthy(ctx.Request.Context(), true, si.ID)
+			hlty, err := c.isHealthy(ctx.Request.Context(), true, si.ID)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
+			healthy = &hlty
 		}
 		srcs = append(srcs, newSource(si, healthy))
 	}, stats)
@@ -388,12 +389,12 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 
 	var healthy *bool
 	if health {
-		var err error
-		healthy, err = c.isHealthy(ctx.Request.Context(), false, si.ID)
+		hlty, err := c.isHealthy(ctx.Request.Context(), false, si.ID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		healthy = &hlty
 	}
 	ctx.JSON(http.StatusOK, newSource(si, healthy))
 }
@@ -653,11 +654,13 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 		var healthy *bool
 		if health {
 			var err error
-			healthy, err = c.isHealthy(ctx.Request.Context(), false, fi.ID)
+			hlthy, err := c.isHealthy(ctx.Request.Context(), false, fi.ID)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
+			healthy = &hlthy
+
 		}
 		feeds = append(feeds, newFeed(fi, healthy))
 	}, stats); {
@@ -818,12 +821,12 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 	}
 	var healthy *bool
 	if health {
-		var err error
-		healthy, err = c.isHealthy(ctx.Request.Context(), false, fi.ID)
+		hlthy, err := c.isHealthy(ctx.Request.Context(), false, fi.ID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		healthy = &hlthy
 	}
 
 	ctx.JSON(http.StatusOK, newFeed(fi, healthy))
