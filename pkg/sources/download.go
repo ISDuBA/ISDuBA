@@ -295,6 +295,9 @@ func (l *location) download(m *Manager, f *feed) {
 		if err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
 			var i inserter
 			status.toInserter(&i)
+			if !f.invalid.Load() {
+				i.add("feeds_id", f.id)
+			}
 			sql := i.sql("downloads")
 			_, err := conn.Exec(ctx, sql, i.values...)
 			return err
