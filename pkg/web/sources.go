@@ -9,6 +9,7 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -20,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -66,6 +69,7 @@ type source struct {
 	ClientCertPrivate    *string        `json:"client_cert_private,omitempty" form:"client_cert_private"`
 	ClientCertPassphrase *string        `json:"client_cert_passphrase,omitempty" form:"client_cert_passphrase"`
 	Stats                *sources.Stats `json:"stats,omitempty"`
+	Healthy              *bool          `json:"healthy,omitempty"`
 }
 
 type feed struct {
@@ -75,6 +79,7 @@ type feed struct {
 	Rolie    bool                `json:"rolie"`
 	LogLevel config.FeedLogLevel `json:"log_level"`
 	Stats    *sources.Stats      `json:"stats,omitempty"`
+	Healthy  *bool               `json:"healthy,omitempty"`
 }
 
 var stars = "***"
@@ -86,7 +91,7 @@ func threeStars(b bool) *string {
 	return nil
 }
 
-func newSource(si *sources.SourceInfo) *source {
+func newSource(si *sources.SourceInfo, healthy *bool) *source {
 	var sa *sourceAge
 	if si.Age != nil {
 		sa = &sourceAge{*si.Age}
@@ -110,10 +115,11 @@ func newSource(si *sources.SourceInfo) *source {
 		ClientCertPrivate:    threeStars(si.HasClientCertPrivate),
 		ClientCertPassphrase: threeStars(si.HasClientCertPassphrase),
 		Stats:                si.Stats,
+		Healthy:              healthy,
 	}
 }
 
-func newFeed(fi *sources.FeedInfo) *feed {
+func newFeed(fi *sources.FeedInfo, healthy *bool) *feed {
 	return &feed{
 		ID:       fi.ID,
 		Label:    fi.Label,
@@ -121,6 +127,7 @@ func newFeed(fi *sources.FeedInfo) *feed {
 		Rolie:    fi.Rolie,
 		LogLevel: fi.Lvl,
 		Stats:    fi.Stats,
+		Healthy:  healthy,
 	}
 }
 
@@ -132,11 +139,53 @@ func showStats(ctx *gin.Context) (bool, bool) {
 	return parse(ctx, strconv.ParseBool, st)
 }
 
+func showHealth(ctx *gin.Context) (bool, bool) {
+	st := ctx.Query("health")
+	if st == "" {
+		return false, true
+	}
+	return parse(ctx, strconv.ParseBool, st)
+}
+
+func (c *Controller) isHealthy(ctx context.Context, isSource bool, id int64) (bool, error) {
+
+	healthSQL := `SELECT NOT EXISTS (` +
+		`SELECT 1 FROM downloads WHERE feeds_id `
+
+	if isSource {
+		healthSQL += ` IN (SELECT id FROM feeds WHERE sources_id = $1) `
+	} else {
+		healthSQL += `= $1 `
+	}
+	healthSQL += `AND time >= NOW() - INTERVAL '24 hours' ` +
+		`AND (
+            download_failed  IS TRUE OR
+            filename_failed  IS TRUE OR
+            schema_failed    IS TRUE OR
+            remote_failed    IS TRUE OR
+            checksum_failed  IS TRUE OR
+            signature_failed IS TRUE
+        ));`
+	var healthy bool
+	switch err := c.db.Run(
+		ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, healthSQL, id).Scan(&healthy)
+		}, 0); {
+	case err != nil:
+		slog.Error("database error while fetching health status", "err", err)
+		return false, err
+	default:
+		return healthy, nil
+	}
+}
+
 // viewSources is an endpoint that returns information about the source.
 //
 //	@Summary		Returns all sources.
 //	@Description	Returns the source configuration and metadata of all sources.
 //	@Param			stats	query	bool	false	"Enable statistic"
+//	@Param			health	query	bool	false	"Enable health indicator"
 //	@Produce		json
 //	@Success		200	{object}	web.viewSources.sourcesResult
 //	@Failure		400	{object}	models.Error	"could not parse stats"
@@ -147,12 +196,26 @@ func (c *Controller) viewSources(ctx *gin.Context) {
 	if !ok {
 		return
 	}
+	health, ok := showHealth(ctx)
+	if !ok {
+		return
+	}
 	type sourcesResult struct {
 		Sources []*source `json:"sources"`
 	}
 	srcs := []*source{}
 	c.sm.Sources(func(si *sources.SourceInfo) {
-		srcs = append(srcs, newSource(si))
+		var healthy *bool
+		if health {
+			var err error
+			hlty, err := c.isHealthy(ctx.Request.Context(), true, si.ID)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			healthy = &hlty
+		}
+		srcs = append(srcs, newSource(si, healthy))
 	}, stats)
 	ctx.JSON(http.StatusOK, sourcesResult{Sources: srcs})
 }
@@ -295,6 +358,7 @@ func (c *Controller) deleteSource(ctx *gin.Context) {
 //	@Description	Returns the source configuration and metadata.
 //	@Param			id		path	int		true	"Source ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
+//	@Param			health	query	bool	false	"Enable health indicator"
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error	"could not parse stats"
@@ -313,12 +377,26 @@ func (c *Controller) viewSource(ctx *gin.Context) {
 	if !ok {
 		return
 	}
+	health, ok := showHealth(ctx)
+	if !ok {
+		return
+	}
 	si := c.sm.Source(input.ID, stats)
 	if si == nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
-	ctx.JSON(http.StatusOK, newSource(si))
+
+	var healthy *bool
+	if health {
+		hlty, err := c.isHealthy(ctx.Request.Context(), false, si.ID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		healthy = &hlty
+	}
+	ctx.JSON(http.StatusOK, newSource(si, healthy))
 }
 
 // updateSource is an endpoint that updates the source configuration.
@@ -542,7 +620,9 @@ type feedResult struct {
 //	@Summary		Returns feeds.
 //	@Description	Returns all feed configurations and metadata.
 //	@Param			id		path	int		true	"Source ID"
+//	@Param			health		path	int		true	"Source ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
+//	@Param			health	query	bool	false	"Enable health indicator"
 //	@Produce		json
 //	@Success		200	{object}	feedResult
 //	@Failure		400	{object}	models.Error	"could not parse stats"
@@ -553,6 +633,7 @@ type feedResult struct {
 func (c *Controller) viewFeeds(ctx *gin.Context) {
 	var input struct {
 		SourceID int64 `uri:"id"`
+		Health   bool  `query:"health"`
 	}
 	if err := ctx.ShouldBindUri(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -562,9 +643,26 @@ func (c *Controller) viewFeeds(ctx *gin.Context) {
 	if !ok {
 		return
 	}
+
+	health, ok := showHealth(ctx)
+	if !ok {
+		return
+	}
 	feeds := []*feed{}
+
 	switch err := c.sm.Feeds(input.SourceID, func(fi *sources.FeedInfo) {
-		feeds = append(feeds, newFeed(fi))
+		var healthy *bool
+		if health {
+			var err error
+			hlthy, err := c.isHealthy(ctx.Request.Context(), false, fi.ID)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			healthy = &hlthy
+
+		}
+		feeds = append(feeds, newFeed(fi, healthy))
 	}, stats); {
 	case err == nil:
 		ctx.JSON(http.StatusOK, feedResult{Feeds: feeds})
@@ -693,6 +791,7 @@ func (c *Controller) updateFeed(ctx *gin.Context) {
 //	@Description	Returns all configurations and metadata of the specified feed ID.
 //	@Param			id		path	int		true	"Feed ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
+//	@Param			health	query	bool	false	"Enable health indicator"
 //	@Produce		json
 //	@Success		200	{object}	feed
 //	@Failure		400	{object}	models.Error
@@ -711,26 +810,38 @@ func (c *Controller) viewFeed(ctx *gin.Context) {
 	if !ok {
 		return
 	}
+	health, ok := showHealth(ctx)
+	if !ok {
+		return
+	}
 	fi := c.sm.Feed(input.FeedID, stats)
 	if fi == nil {
 		models.SendErrorMessage(ctx, http.StatusNotFound, "feed not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, newFeed(fi))
+	var healthy *bool
+	if health {
+		hlthy, err := c.isHealthy(ctx.Request.Context(), false, fi.ID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		healthy = &hlthy
+	}
+
+	ctx.JSON(http.StatusOK, newFeed(fi, healthy))
 }
 
-// deleteFeed is an endpoint that deletes the feed with specified ID.
-//
-//	@Summary		Deletes a feed.
-//	@Description	Deletes the feed configuration with the specified ID.
-//	@Param			id	path	int	true	"Feed ID"
-//	@Produce		json
-//	@Success		200	{object}	models.Success	"deleted"
-//	@Failure		400	{object}	models.Error
-//	@Failure		401
-//	@Failure		404	{object}	models.Error
-//	@Failure		500	{object}	models.Error
-//	@Router			/sources/feeds/{id} [delete]
+// @Summary		Deletes a feed.
+// @Description	Deletes the feed configuration with the specified ID.
+// @Param			id	path	int	true	"Feed ID"
+// @Produce		json
+// @Success		200	{object}	models.Success	"deleted"
+// @Failure		400	{object}	models.Error
+// @Failure		401
+// @Failure		404	{object}	models.Error
+// @Failure		500	{object}	models.Error
+// @Router			/sources/feeds/{id} [delete]
 func (c *Controller) deleteFeed(ctx *gin.Context) {
 	var input struct {
 		FeedID int64 `uri:"id"`

@@ -107,8 +107,9 @@ const (
 
 // Stats are some statistics about feeds and sources.
 type Stats struct {
-	Downloading int `json:"downloading"`
-	Waiting     int `json:"waiting"`
+	Downloading int  `json:"downloading"`
+	Waiting     int  `json:"waiting"`
+	Healthy     bool `json:"healthy"`
 }
 
 // SourceInfo are infos about a source.
