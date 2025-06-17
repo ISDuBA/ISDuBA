@@ -18,7 +18,7 @@ Not everything was implemented as it was proposed in there.
 
 Some source code files are machine generated. At the moment is only:
 
-* [docs.go](../pkg/web/docs/docs.go)
+* [docs.go](../internal/web/docs/docs.go)
 
 If you change the source files please regenerate the generated files
 with `go generate ./...` in the root folder and add the updated files
