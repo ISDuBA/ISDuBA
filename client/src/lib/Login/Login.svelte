@@ -102,6 +102,8 @@
             ISDuBA is Free Software.
             <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
               >The source code is available on Github.</A
+            ><A href="/swagger/index.html" class="underline hover:no-underline"
+              >ISDuBA API documentation.</A
             ></P
           >
         {/if}
@@ -172,6 +174,11 @@
             </List>
           {/if}
         {/await}
+      </P>
+      <P>
+        <A href="/swagger/index.html" class="underline hover:no-underline"
+          >ISDuBA API documentation</A
+        >
       </P>
     {/if}
     <ErrorMessage error={viewError}></ErrorMessage>
