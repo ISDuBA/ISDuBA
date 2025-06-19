@@ -92,6 +92,9 @@ After having made changes, the new application can be build via the Makefile:
 make all
 ```
 
+Note that the API documentation linked within the application contains the wrong URL when a
+development build is being run. It can still be found here: http://localhost:8081/swagger/index.html.
+
 #### Upgrading
 When upgrading from an older version, a migration is needed to 
 configure the database by starting isdubad with the 
