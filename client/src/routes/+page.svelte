@@ -90,10 +90,9 @@
     };
   };
 
-  inactivityTime();
-
   loadConfig().then(() => {
     if (onConfigLoad) {
+      inactivityTime();
       onConfigLoad();
     }
     let userManager = new UserManager(configuration.getConfiguration());
