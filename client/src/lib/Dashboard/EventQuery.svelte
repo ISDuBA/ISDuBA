@@ -132,9 +132,16 @@
   };
 
   onMount(async () => {
-    isLoading = true;
-    await transformDataToActivities();
-    isLoading = false;
+    if (
+      appStore.isEditor() ||
+      appStore.isReviewer() ||
+      appStore.isAuditor() ||
+      appStore.isAdmin()
+    ) {
+      isLoading = true;
+      await transformDataToActivities();
+      isLoading = false;
+    }
   });
 </script>
 
