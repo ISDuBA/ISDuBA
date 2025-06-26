@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  // Avoid warning of unsued prop
+  // Avoid warning of unused prop
   // eslint-disable-next-line
   export let params: any = null;
 </script>
