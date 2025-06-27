@@ -44,29 +44,31 @@
   let isLoading = false;
 
   const updateQueryOrder = async (queries: Query[]) => {
-    let nodes = columnList.querySelectorAll(".columnName");
-    type Order = {
-      id: number;
-      order: number;
-    };
-    let orders: Order[] = [];
-    let i = 0;
-    for (const node of nodes) {
-      let columnName = node.innerText;
-      let query = queries.find((q) => q.name === columnName);
-      if (query) {
-        orders.push({ id: query.id, order: i });
+    await navigator.locks.request("updateQuery", async () => {
+      let nodes = columnList.querySelectorAll(".columnName");
+      type Order = {
+        id: number;
+        order: number;
+      };
+      let orders: Order[] = [];
+      let i = 0;
+      for (const node of nodes) {
+        let columnName = node.innerText;
+        let query = queries.find((q) => q.name === columnName);
+        if (query) {
+          orders.push({ id: query.id, order: i });
+        }
+        i++;
       }
-      i++;
-    }
 
-    let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
-    if (!response.ok && response.error) {
-      orderErrorMessage = getErrorDetails(`Could not update query order.`, response);
-    }
-    if (response.ok) {
-      push(`/queries/`);
-    }
+      let response = await request(`/api/queries/orders`, "POST", JSON.stringify(orders));
+      if (!response.ok && response.error) {
+        orderErrorMessage = getErrorDetails(`Could not update query order.`, response);
+      }
+      if (response.ok) {
+        push(`/queries/`);
+      }
+    });
   };
 
   const elementDragEventUserQuery = () => {
