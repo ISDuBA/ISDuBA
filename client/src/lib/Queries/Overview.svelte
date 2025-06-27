@@ -124,34 +124,36 @@
   };
 
   const cloneQuery = async (query: Query) => {
-    if (!queries) return;
-    isCloning = true;
-    query.name = proposeName(queries, query.name);
-    const response = await createStoredQuery(query);
-    if (!response.ok && response.error) {
-      cloneErrorMessage = getErrorDetails(`Failed to clone query.`, response);
-    } else if (response.ok) {
-      await placeQueriesAtTop([response.content.id]);
-      const queriesBeforeClone = queries;
-      await fetchData();
-      const table = document.getElementById(query.global ? "global-queries" : "personal-queries");
-      if (table) {
-        table.scrollTop = 0;
-        table.scrollIntoView({ behavior: "smooth" });
+    await navigator.locks.request("updateQuery", async () => {
+      if (!queries) return;
+      isCloning = true;
+      query.name = proposeName(queries, query.name);
+      const response = await createStoredQuery(query);
+      if (!response.ok && response.error) {
+        cloneErrorMessage = getErrorDetails(`Failed to clone query.`, response);
+      } else if (response.ok) {
+        await placeQueriesAtTop([response.content.id]);
+        const queriesBeforeClone = queries;
+        await fetchData();
+        const table = document.getElementById(query.global ? "global-queries" : "personal-queries");
+        if (table) {
+          table.scrollTop = 0;
+          table.scrollIntoView({ behavior: "smooth" });
+        }
+        const queriesAfterClone = queries;
+        newQueries = [
+          ...newQueries,
+          ...queriesAfterClone.filter((q) => !queriesBeforeClone.map((q) => q.id).includes(q.id))
+        ];
+        const newQueriesCopy: Query[] = newQueries;
+        setTimeout(() => {
+          newQueries = newQueries.filter((q) => {
+            return !newQueriesCopy.map((q) => q.id).includes(q.id);
+          });
+        }, 5000);
       }
-      const queriesAfterClone = queries;
-      newQueries = [
-        ...newQueries,
-        ...queriesAfterClone.filter((q) => !queriesBeforeClone.map((q) => q.id).includes(q.id))
-      ];
-      const newQueriesCopy: Query[] = newQueries;
-      setTimeout(() => {
-        newQueries = newQueries.filter((q) => {
-          return !newQueriesCopy.map((q) => q.id).includes(q.id);
-        });
-      }, 5000);
-    }
-    isCloning = false;
+      isCloning = false;
+    });
   };
 
   const placeQueriesAtTop = async (queryIDs: number[], global = false) => {
