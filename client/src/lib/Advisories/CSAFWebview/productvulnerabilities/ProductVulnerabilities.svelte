@@ -32,7 +32,7 @@
     "w-4 overflow-hidden",
     "w-max",
     "[padding:50%_0] h-0",
-    "origin-top-left -rotate-90 mt-[50%] -translate-full whitespace-nowrap block"
+    "origin-top-left -rotate-90 mt-[50%] whitespace-nowrap block"
   ];
 
   export let basePath = "";
