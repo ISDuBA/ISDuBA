@@ -240,9 +240,9 @@
       }
       appStore.setDocuments(documents);
       // We are outside the range of available documents,
-      // try the previous page
+      // try the last page
       if (offset > 0 && count == 0) {
-        await previous();
+        await last();
       }
     } else if (response.error) {
       error =
@@ -302,7 +302,6 @@
 
   const onDeleted = async () => {
     await fetchData();
-    await first();
   };
 
   $: numberOfPages = Math.ceil(count / limit);
