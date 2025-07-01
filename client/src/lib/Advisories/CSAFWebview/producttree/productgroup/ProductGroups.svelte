@@ -13,6 +13,8 @@
   export let productGroups: any;
 </script>
 
-{#each productGroups as productGroup}
-  <ProductGroup {productGroup} />
-{/each}
+{#if productGroups}
+  {#each productGroups as productGroup}
+    <ProductGroup {productGroup} />
+  {/each}
+{/if}
