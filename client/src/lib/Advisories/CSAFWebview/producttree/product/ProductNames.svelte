@@ -19,6 +19,8 @@
   });
 </script>
 
-{#each productNames as product}
-  <ProductName {product} />
-{/each}
+{#if productNames}
+  {#each productNames as product}
+    <ProductName {product} />
+  {/each}
+{/if}
