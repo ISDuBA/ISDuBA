@@ -12,11 +12,13 @@
   import ProductName from "./ProductName.svelte";
 
   export let productNames: any;
-  productNames = productNames.sort((p1: any, p2: any) => {
-    if (p1.name < p2.name) return -1;
-    if (p1.name > p2.name) return 1;
-    return 0;
-  });
+  productNames = productNames
+    ? productNames.sort((p1: any, p2: any) => {
+        if (p1.name < p2.name) return -1;
+        if (p1.name > p2.name) return 1;
+        return 0;
+      })
+    : [];
 </script>
 
 {#if productNames}
