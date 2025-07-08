@@ -241,7 +241,7 @@
       appStore.setDocuments(documents);
       // We are outside the range of available documents,
       // try the last page
-      if (offset > 0 && count == 0) {
+      if (offset >= count) {
         await last();
       }
     } else if (response.error) {
