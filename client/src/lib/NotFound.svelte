@@ -7,5 +7,10 @@
  SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
+<script lang="ts">
+  // Avoid warning of unused prop
+  // eslint-disable-next-line
+  export let params: any = null;
+</script>
 
 <h1>Not Found</h1>
