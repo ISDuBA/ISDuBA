@@ -239,6 +239,11 @@
         ({ count, documents } = response.content);
       }
       appStore.setDocuments(documents);
+      // We are outside the range of available documents,
+      // try the last page
+      if (offset >= count) {
+        await last();
+      }
     } else if (response.error) {
       error =
         response.error === "400"
@@ -251,31 +256,31 @@
     requestOngoing = false;
   }
 
-  const previous = () => {
+  const previous = async () => {
     if (offset - limit >= 0) {
       offset = offset - limit > 0 ? offset - limit : 0;
       currentPage -= 1;
     }
-    fetchData();
+    await fetchData();
   };
-  const next = () => {
+  const next = async () => {
     if (offset + limit <= count) {
       offset = offset + limit;
       currentPage += 1;
     }
-    fetchData();
+    await fetchData();
   };
 
-  const first = () => {
+  const first = async () => {
     offset = 0;
     currentPage = 1;
-    fetchData();
+    await fetchData();
   };
 
-  const last = () => {
+  const last = async () => {
     offset = (numberOfPages - 1) * limit;
     currentPage = numberOfPages;
-    fetchData();
+    await fetchData();
   };
 
   const switchSort = async (column: string) => {
@@ -292,12 +297,11 @@
     }
     orderBy = orderBy;
     await tick();
-    fetchData();
+    await fetchData();
   };
 
   const onDeleted = async () => {
     await fetchData();
-    first();
   };
 
   $: numberOfPages = Math.ceil(count / limit);
