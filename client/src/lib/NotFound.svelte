@@ -9,8 +9,9 @@
 -->
 <script lang="ts">
   // Avoid warning of unused prop
-  // eslint-disable-next-line
   export let params: any = null;
+  // eslint-disable-next-line no-console
+  console.info("Got params: " + params);
 </script>
 
 <h1>Not Found</h1>
