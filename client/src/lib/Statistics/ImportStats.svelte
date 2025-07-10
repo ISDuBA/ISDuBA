@@ -341,17 +341,22 @@
     const paddedDate = pad(date.getDate());
     const paddedHours = pad(date.getHours());
     const paddedMinutes = pad(date.getMinutes());
-    let diff = to.getTime() - from.getTime();
-    if (diff >= YEAR_MS) {
-      label = `${date.getFullYear()}-${paddedMonth}`;
-    } else if (diff > MONTH_MS + 3 * DAY_MS) {
-      label = `${date.getFullYear()}-${paddedMonth}-${paddedDate}`;
-    } else if (diff >= MONTH_MS) {
-      label = `${date.getFullYear()}-W${getWeekNumber(date)}`;
-    } else if (diff == WEEK_MS) {
-      label = `${date.getFullYear()}-${paddedMonth}-${paddedDate}`;
+
+    // If there's only one datapoint per day, then showing the times feels unnecessarily exact.
+    // It's likely the user rather wants to know which day they are on so they don't have to
+    // manually count backwards.
+    if (stepsInMilliseconds >= DAY_MS) {
+      // How detailed we show the dates depends on the size of steps
+      if (stepsInMilliseconds >= YEAR_MS) {
+        label = `${date.getFullYear()}-${paddedMonth}`; // YYYY-MM for yearly or more
+      } else if (stepsInMilliseconds >= MONTH_MS) {
+        label = `${date.getFullYear()}-W${getWeekNumber(date)}`; // YYYY-W<WeekNumber> for steps at least the size of a month
+      } else {
+        label = `${date.getFullYear()}-${paddedMonth}-${paddedDate}`; // YYYY-MM-DD for steps at least the size of a day
+      }
     } else {
-      label = `${paddedHours}:${paddedMinutes}`;
+      // If steps are even smaller than a day, then the time is important. Keep the date since times only can be ambiguous.
+      label = `${paddedMonth}-${paddedDate} | ${paddedHours}:${paddedMinutes}`; // HH:MM for sub-daily steps
     }
     return label;
   };
