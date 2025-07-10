@@ -160,14 +160,13 @@
           }}>x</button
         >
       {/if}
-      <Button
-        size="xs"
-        class="h-7 py-3.5"
-        on:click={() => {
-          triggerSearch();
-        }}>{advancedSearch ? "Apply" : "Search"}</Button
-      >
     </Search>
+    <Button
+      size="xs"
+      on:click={() => {
+        triggerSearch();
+      }}>{advancedSearch ? "Apply" : "Search"}</Button
+    >
     <div class="mt-1" title="Define finer grained search queries">
       <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
     </div>
