@@ -204,6 +204,7 @@
 
   const setSearchType = (newSearchType: SEARCHTYPES) => {
     currentSearch.searchType = newSearchType;
+    currentSearch.orderBy = [];
     if (currentSearch.searchType === SEARCHTYPES.DOCUMENT) {
       currentSearch.columns = columnsFromNames(COLUMNS.DOCUMENT);
     }
