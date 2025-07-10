@@ -30,6 +30,17 @@
 
   export let params: any = null;
 
+  // Define a type for tracking status
+  type TrackingStatus = "draft" | "interim" | "final";
+
+  // Define an interface for advisory versions
+  interface AdvisoryVersion {
+    id: number;
+    version: string;
+    tracking_id: string;
+    tracking_status: TrackingStatus;
+  }
+
   let document: any = {};
   let ssvcVector: string;
   let comment: string = "";
@@ -42,7 +53,7 @@
   let loadDocumentSSVCError: ErrorDetails | null = null;
   let loadForwardTargetsError: ErrorDetails | null = null;
   let stateError: ErrorDetails | null = null;
-  let advisoryVersions: any[] = [];
+  let advisoryVersions: AdvisoryVersion[] = [];
   let advisoryVersionByDocumentID: any;
   let advisoryState = "";
   let historyEntries: any = [];
@@ -98,13 +109,35 @@
           id: doc.id,
           version: doc.version,
           tracking_id: doc.tracking_id,
-          tracking_status: doc.tracking_status
+          tracking_status: doc.tracking_status as TrackingStatus
         };
       });
-      advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: any) => {
-        acc[version.id] = version.version;
-        return acc;
-      }, {});
+
+      // Define the order of tracking statuses
+      const statusOrder: Record<TrackingStatus, number> = {
+        draft: 3,
+        interim: 2,
+        final: 1
+      };
+
+      // Sort the advisoryVersions array
+      advisoryVersions.sort((a, b) => {
+        // If versions are different, maintain original sort (or any default sort)
+        if (a.version !== b.version) {
+          return 0; // Keep original order for different versions
+        }
+
+        // If versions are the same, sort by tracking_status
+        return statusOrder[a.tracking_status] - statusOrder[b.tracking_status];
+      });
+
+      advisoryVersionByDocumentID = advisoryVersions.reduce(
+        (acc: any, version: AdvisoryVersion) => {
+          acc[version.id] = version.version;
+          return acc;
+        },
+        {}
+      );
     } else if (response.error) {
       loadAdvisoryVersionsError = getErrorDetails(`Could not load versions.`, response);
     }
