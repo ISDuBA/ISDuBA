@@ -265,6 +265,32 @@ func StoreFilename(filename string) DocumentStoreChainFunc {
 	}
 }
 
+// checkTLP checks whether a given any stems from a JSON object containing a document.distribution.tlp.label.
+func checkTLP(document any) bool {
+	root, ok := document.(map[string]any)
+	if !ok {
+		return false
+	}
+
+	doc, ok := root["document"].(map[string]any)
+	if !ok {
+		return false
+	}
+
+	distribution, ok := doc["distribution"].(map[string]any)
+	if !ok {
+		return false
+	}
+
+	tlp, ok := distribution["tlp"].(map[string]any)
+	if !ok {
+		return false
+	}
+
+	_, ok = tlp["label"]
+	return ok
+}
+
 // ImportDocument imports a given advisory into the database.
 func ImportDocument(
 	ctx context.Context,
@@ -289,6 +315,10 @@ func ImportDocument(
 	}
 	if len(msgs) > 0 {
 		return 0, errors.New("schema validation failed: " + strings.Join(msgs, ", "))
+	}
+	tlpExists := checkTLP(document)
+	if !tlpExists {
+		return 0, fmt.Errorf("Import failed: Missing TLP label.")
 	}
 	return ImportDocumentData(ctx, conn, document, buf.Bytes(), actor, pstlps, inTx, dry)
 }
