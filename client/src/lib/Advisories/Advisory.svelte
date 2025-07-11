@@ -27,19 +27,9 @@
   import Tlp from "./TLP.svelte";
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
+  import type { TrackingStatus, AdvisoryVersion } from "./advisory.ts";
 
   export let params: any = null;
-
-  // Define a type for tracking status
-  type TrackingStatus = "draft" | "interim" | "final";
-
-  // Define an interface for advisory versions
-  interface AdvisoryVersion {
-    id: number;
-    version: string;
-    tracking_id: string;
-    tracking_status: TrackingStatus;
-  }
 
   let document: any = {};
   let ssvcVector: string;
