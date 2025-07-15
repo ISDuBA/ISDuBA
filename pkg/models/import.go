@@ -315,12 +315,9 @@ func ImportDocumentData(
 
 	var reps []replacer
 
-	if pstlps != nil {
-		reps = append(reps, storer(&tlp, &tlpOk, "document", "distribution", "tlp", "label"))
-	}
-
 	transformJSON(document, chainReplacers(
 		append(reps,
+			storer(&tlp, &tlpOk, "document", "distribution", "tlp", "label"),
 			storer(&publisher, &publisherOK, "document", "publisher", "name"),
 			storer(&trackingID, &trackingIDOK, "document", "tracking", "id"),
 			keepAndIndex(idxer.index, "document", "publisher", "name"),
@@ -339,7 +336,7 @@ func ImportDocumentData(
 		return 0, errors.New("missing /document/tracking/id")
 	}
 
-	if pstlps != nil && !tlpOk {
+	if !tlpOk {
 		return 0, errors.New("missing /document/distribution/tlp/label")
 	}
 
