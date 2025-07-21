@@ -188,18 +188,18 @@ func deleteAdvisory(path string) error {
 func moveAdvisory(path string, destination string) error {
 	currentDir, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("Error getting current working directory to prepare moving advisories that could not be imported: %v\n", err)
+		return fmt.Errorf("error getting current working directory to prepare moving advisories that could not be imported: %v", err)
 	}
 	destinationFolderPath := filepath.Join(currentDir, destination)
 	err = os.MkdirAll(destinationFolderPath, 0755)
 	if err != nil {
-		return fmt.Errorf("Error creating folder for advisories that failed to be imported:'%s': %v\n", destinationFolderPath, err)
+		return fmt.Errorf("error creating folder for advisories that failed to be imported:'%s': %v", destinationFolderPath, err)
 	}
 	fileName := filepath.Base(path)
 	destinationFilePath := filepath.Join(destinationFolderPath, fileName)
 	err = os.Rename(path, destinationFilePath)
 	if err != nil {
-		return fmt.Errorf("Error moving advisory that could not be imported from '%s' to '%s': %v\n", path, destinationFilePath, err)
+		return fmt.Errorf("error moving advisory that could not be imported from '%s' to '%s': %v", path, destinationFilePath, err)
 	}
 	fmt.Printf("Advisory '%s' that could not be imported moved to '%s'\n", path, destinationFilePath)
 	return nil
