@@ -38,6 +38,9 @@ func processFile(
 	db *database.DB,
 	dry bool,
 	importer, file string,
+	del bool,
+	mov string,
+	ctn bool,
 ) error {
 	var actor *string
 	if importer != "" {
@@ -99,9 +102,31 @@ func processFile(
 		}, 0); err != nil {
 			if errors.Is(err, models.ErrAlreadyInDatabase) {
 				slog.Warn("advisory already in database", "file", filepath.Base(path))
-				err = nil
+				if del {
+					errDel := deleteAdvisory(path)
+					if errDel != nil {
+						return fmt.Errorf("failed to delete duplicate advisory %s: %w", filepath.Base(path), errDel)
+					}
+				}
+				return nil
 			}
-			return err
+			if mov != "" {
+				errMov := moveAdvisory(path, mov)
+				if errMov != nil {
+					return fmt.Errorf("failed to import: %w, failed to move not imported advisory: %w", err, errMov)
+				}
+			}
+			if !ctn {
+				return err
+			}
+			slog.Warn("import failed", "error", err)
+			return nil
+		}
+		if del {
+			errDel := deleteAdvisory(path)
+			if errDel != nil {
+				return fmt.Errorf("failed to delete imported advisory %s: %w", filepath.Base(path), errDel)
+			}
 		}
 		slog.Info("inserted", "id", id)
 		return nil
@@ -109,7 +134,7 @@ func processFile(
 	return filepath.WalkDir(file, walk)
 }
 
-func process(creds *config.Database, dry bool, importer string, files []string) error {
+func process(creds *config.Database, dry bool, importer string, files []string, del bool, mov string, ctn bool) error {
 	start := time.Now()
 	defer func() {
 		slog.Info("processing took", "duration", time.Since(start))
@@ -127,9 +152,8 @@ func process(creds *config.Database, dry bool, importer string, files []string) 
 		return err
 	}
 	defer conn.Close(ctx)
-
 	for _, file := range files {
-		if err := processFile(ctx, db, dry, importer, file); err != nil {
+		if err := processFile(ctx, db, dry, importer, file, del, mov, ctn); err != nil {
 			return fmt.Errorf("processing %q failed: %w", file, err)
 		}
 	}
@@ -151,12 +175,45 @@ func userName() string {
 	return user.Username
 }
 
+func deleteAdvisory(path string) error {
+	err := os.Remove(path)
+	if err != nil {
+		fmt.Printf("Error deleting file: %s\n", err)
+		return err
+	}
+	fmt.Printf("File '%s' deleted successfully.\n", path)
+	return nil
+}
+
+func moveAdvisory(path string, destination string) error {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("error getting current working directory to prepare moving advisories that could not be imported: %v", err)
+	}
+	destinationFolderPath := filepath.Join(currentDir, destination)
+	err = os.MkdirAll(destinationFolderPath, 0755)
+	if err != nil {
+		return fmt.Errorf("error creating folder for advisories that failed to be imported:'%s': %v", destinationFolderPath, err)
+	}
+	fileName := filepath.Base(path)
+	destinationFilePath := filepath.Join(destinationFolderPath, fileName)
+	err = os.Rename(path, destinationFilePath)
+	if err != nil {
+		return fmt.Errorf("error moving advisory that could not be imported from '%s' to '%s': %v", path, destinationFilePath, err)
+	}
+	fmt.Printf("Advisory '%s' that could not be imported moved to '%s'\n", path, destinationFilePath)
+	return nil
+}
+
 func main() {
 	var (
-		creds       config.Database
-		importer    string
-		dry         bool
-		showVersion bool
+		creds           config.Database
+		importer        string
+		moveOnErr       string
+		dry             bool
+		showVersion     bool
+		deleteOnSuccess bool
+		continueOnError bool
 	)
 	flag.StringVar(&creds.Database, "database", "isduba", "database name")
 	flag.StringVar(&creds.User, "user", "isduba", "database user")
@@ -165,11 +222,14 @@ func main() {
 	flag.IntVar(&creds.Port, "port", 5432, "database host")
 	flag.BoolVar(&dry, "dry", false, "dont store values")
 	flag.BoolVar(&showVersion, "version", false, "show version information")
+	flag.BoolVar(&deleteOnSuccess, "delete", false, "delete successfully imported advisories")
+	flag.StringVar(&moveOnErr, "move", "", "move unsuccessfully imported advisories to this folder (create folder if it does not exist)")
 	flag.StringVar(&importer, "importer", userName(), "importing person")
+	flag.BoolVar(&continueOnError, "continue", false, "continue bulkimport even if an advisory was not imported successfully")
 	flag.Parse()
 	if showVersion {
 		fmt.Printf("%s version: %s\n", os.Args[0], version.SemVersion)
 		os.Exit(0)
 	}
-	check(process(&creds, dry, importer, flag.Args()))
+	check(process(&creds, dry, importer, flag.Args(), deleteOnSuccess, moveOnErr, continueOnError))
 }
