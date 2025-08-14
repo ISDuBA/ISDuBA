@@ -17,11 +17,13 @@ type StateChange = {
   state: WorkflowState;
 };
 
+export type TrackingStatus = "draft" | "interim" | "final";
+
 interface AdvisoryVersion {
   id: number;
   version: string;
   tracking_id: string;
-  tracking_status: string;
+  tracking_status: TrackingStatus;
 }
 
 // TODO: Refactor request from client/src/lib/request.ts so it can use JSON in body.
