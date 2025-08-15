@@ -41,6 +41,8 @@
   import { areArraysEqual } from "$lib/utils";
   import DeleteModal from "./DeleteModal.svelte";
   import { updateMultipleStates } from "$lib/Advisories/advisory";
+  import type { CurrentSearchQuery } from "$lib/types";
+  import { getAdvisoryAnchorLink } from "$lib/Advisories/advisory";
 
   let openRow: number | null;
   let abortController: AbortController;
@@ -91,10 +93,6 @@
   let dropdownOpen = false;
   const selectClass =
     "max-w-96 w-fit text-gray-900 disabled:text-gray-400 bg-gray-50 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:disabled:text-gray-500 dark:focus:ring-primary-500 dark:focus:border-primary-500";
-
-  const getAdvisoryLink = (item: any) =>
-    `/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`;
-  const getAdvisoryAnchorLink = (item: any) => "#" + getAdvisoryLink(item);
 
   const changeWorkflowState = async () => {
     if (!selectedDocuments || selectedDocuments.length < 0) return;
@@ -318,6 +316,22 @@
     }
 
     return "";
+  };
+
+  // Used to display previous and next advisory
+  const storeCurrentSearchQuery = (documentOffset: number) => {
+    // Limit `next advisory` support to advisory search queries
+    if (tableType !== SEARCHTYPES.ADVISORY) {
+      sessionStorage.removeItem("currentSearchQuery");
+      return;
+    }
+    const currentSearchQuery: CurrentSearchQuery = {
+      offset: offset + documentOffset,
+      query: query,
+      orderBy: orderBy,
+      searchTerm: searchTerm
+    };
+    sessionStorage.setItem("currentSearchQuery", JSON.stringify(currentSearchQuery));
   };
 </script>
 
@@ -594,6 +608,7 @@
                   ><a
                     class="absolute top-0 right-0 bottom-0 left-0"
                     href={getAdvisoryAnchorLink(item)}
+                    on:click={() => storeCurrentSearchQuery(i)}
                   >
                   </a>
                   <div class="m-2 table w-full text-wrap">
@@ -620,6 +635,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -635,6 +651,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-16 text-wrap">
@@ -648,6 +665,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -668,6 +686,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -679,6 +698,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -690,6 +710,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-[min(250px)] text-wrap">
@@ -701,6 +722,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class={publisher + " m-2"}>
@@ -712,6 +734,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -726,6 +749,7 @@
                         <a
                           class="absolute top-0 right-0 bottom-0 left-0"
                           href={getAdvisoryAnchorLink(item)}
+                          on:click={() => storeCurrentSearchQuery(i)}
                         >
                         </a>
                       {/if}
@@ -771,6 +795,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -786,6 +811,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-40 text-wrap">
@@ -797,6 +823,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        on:click={() => storeCurrentSearchQuery(i)}
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">

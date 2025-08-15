@@ -13,3 +13,10 @@ export type HttpResponse = {
 };
 
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+
+export type CurrentSearchQuery = {
+  query: string;
+  searchTerm: string;
+  offset: number;
+  orderBy: string[];
+};

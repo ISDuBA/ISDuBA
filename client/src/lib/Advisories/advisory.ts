@@ -79,5 +79,9 @@ async function updateMultipleStates(newStates: StateChange[]) {
   }
 }
 
+export const getAdvisoryLink = (item: any) =>
+  `/advisories/${item.publisher}/${item.tracking_id}/documents/${item.id}`;
+export const getAdvisoryAnchorLink = (item: any) => "#" + getAdvisoryLink(item);
+
 export { updateMultipleStates };
 export type { AdvisoryVersion };
