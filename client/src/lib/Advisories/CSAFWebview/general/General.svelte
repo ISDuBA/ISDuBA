@@ -11,6 +11,7 @@
   import { appStore } from "$lib/store";
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { getReadableDateString } from "../helpers";
+  import Cvss from "./CVSS.svelte";
 
   $: trackingVersion = $appStore.webview.doc?.trackingVersion;
   $: generator = $appStore.webview.doc?.generator;
@@ -28,6 +29,8 @@
   $: published = $appStore.webview.doc?.published;
   $: lastUpdate = $appStore.webview.doc?.lastUpdate;
   $: status = $appStore.webview.doc?.status;
+  $: baseSeverity = $appStore.webview.doc?.highestScore?.baseSeverity;
+  $: baseScore = $appStore.webview.doc?.highestScore?.baseScore;
   $: if (
     !$appStore.webview.doc?.isRevisionHistoryPresent &&
     !$appStore.webview.doc?.isDocPresent &&
@@ -45,10 +48,17 @@
 
 <div class="w-full">
   <div class="mb-3">
-    <span class="text-xl">{title} </span>
-    {#if $appStore.webview.doc?.status !== Status.final}
-      <span class="ml-3 text-lg text-gray-400">{status}</span>
-    {/if}
+    <div class="flex flex-row">
+      <div>
+        <span class="text-xl">{title} </span>
+        {#if $appStore.webview.doc?.status !== Status.final}
+          <span class="ml-3 text-lg text-gray-400">{status}</span>
+        {/if}
+      </div>
+      {#if $appStore.webview.doc?.highestScore}
+        <Cvss {baseScore} {baseSeverity}></Cvss>
+      {/if}
+    </div>
   </div>
   <div class="flex w-full flex-row flex-wrap">
     <div class="grid w-full grid-cols-[auto_minmax(0,_1fr)] gap-1.5 text-sm">

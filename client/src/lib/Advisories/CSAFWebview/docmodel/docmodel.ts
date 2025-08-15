@@ -270,6 +270,56 @@ const getVulnerabilities = (csafDoc: any) => {
 };
 
 /**
+ * Retrieves the CVSS object with the highest base score,
+ * prioritizing CVSS v3 over v2 across the entire document.
+ * If any CVSS v3 score exists, all CVSS v2 scores are ignored.
+ * @param {object} csafDoc - The CSAF document object.
+ * @returns {object | null} The preferred and highest CVSS object, or null if none are found.
+ */
+const getHighestScore = (csafDoc: any): object | null => {
+  if (!csafDoc?.vulnerabilities?.length) {
+    return null;
+  }
+
+  let hasCvssV3 = false;
+  let highestScoreObject: any = null;
+  let highestBaseScore = -1;
+
+  // First pass: Check if any CVSS v3 scores exist
+  for (const vulnerability of csafDoc.vulnerabilities) {
+    if (vulnerability.scores?.some((score: any) => score.cvss_v3)) {
+      hasCvssV3 = true;
+      break;
+    }
+  }
+
+  // Second pass: Find the highest score based on the first pass's result
+  for (const vulnerability of csafDoc.vulnerabilities) {
+    if (!vulnerability.scores) {
+      continue;
+    }
+
+    for (const score of vulnerability.scores) {
+      if (hasCvssV3) {
+        // If v3 exists anywhere, only consider v3 scores
+        if (score.cvss_v3 && score.cvss_v3.baseScore > highestBaseScore) {
+          highestBaseScore = score.cvss_v3.baseScore;
+          highestScoreObject = score.cvss_v3;
+        }
+      } else {
+        // If no v3 scores were found, consider all v2 scores
+        if (score.cvss_v2 && score.cvss_v2.baseScore > highestBaseScore) {
+          highestBaseScore = score.cvss_v2.baseScore;
+          highestScoreObject = score.cvss_v2;
+        }
+      }
+    }
+  }
+
+  return highestScoreObject;
+};
+
+/**
  * getRevisionHistory retrieves revision history sorted by date.
  * @param csafDoc
  * @returns history | []
@@ -403,7 +453,8 @@ const convertToDocModel = (csafDoc: any): DocModel => {
     title: getTitle(csafDoc),
     tlp: getTlp(csafDoc),
     trackingVersion: getTrackingVersion(csafDoc),
-    vulnerabilities: getVulnerabilities(csafDoc)
+    vulnerabilities: getVulnerabilities(csafDoc),
+    highestScore: getHighestScore(csafDoc)
   };
   const products = extractProducts(csafDoc);
   const productLookup = products.reduce((o: any, n: any) => {

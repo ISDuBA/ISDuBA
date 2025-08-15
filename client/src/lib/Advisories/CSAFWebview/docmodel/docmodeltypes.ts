@@ -121,6 +121,7 @@ export type DocModel = {
   tlp: TLP;
   trackingVersion: string;
   vulnerabilities: any;
+  highestScore: any;
 };
 
 export type DocModelKey = keyof DocModel;
