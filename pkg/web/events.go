@@ -185,6 +185,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		Actor      *string         `json:"actor,omitempty"`
 		DocumentID int64           `json:"document_id"`
 		CommentID  *int64          `json:"comment_id,omitempty"`
+		PrevSSVC   *string         `json:"prev_ssvc,omitempty"`
 	}
 
 	var events []event
@@ -203,7 +204,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 			if !exists {
 				return nil
 			}
-			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
+			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id, prev_ssvc FROM events_log ` +
 				`WHERE documents_id in (` +
 				`SELECT documents.id ` +
 				`FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
@@ -215,10 +216,14 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 				func(row pgx.CollectableRow) (event, error) {
 					var ev event
 					var act sql.NullString
-					err := row.Scan(&ev.Event, &ev.DocumentID, &ev.Time, &ev.Actor, &ev.State, &ev.CommentID)
+					var prevSSVC sql.NullString
+					err := row.Scan(&ev.Event, &ev.DocumentID, &ev.Time, &ev.Actor, &ev.State, &ev.CommentID, &prevSSVC)
 					ev.Time = ev.Time.UTC()
 					if act.Valid {
 						ev.Actor = &act.String
+					}
+					if prevSSVC.Valid {
+						ev.PrevSSVC = &prevSSVC.String
 					}
 					return ev, err
 				})
