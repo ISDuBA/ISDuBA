@@ -100,6 +100,11 @@ type Attention = {
   name: string;
 };
 
+type UploadInfo = {
+  success?: boolean;
+  message?: string;
+};
+
 const fetchAggregatorAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {
   const resp = await request(`/api/aggregators/attention`, "GET");
   if (resp.ok) {
@@ -691,6 +696,7 @@ export {
   type Attention,
   LogLevel,
   type Feed,
+  type UploadInfo,
   saveSource,
   saveAggregator,
   updateAggregator,

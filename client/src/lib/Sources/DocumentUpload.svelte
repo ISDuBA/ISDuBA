@@ -9,27 +9,27 @@
 -->
 
 <script lang="ts">
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails } from "$lib/Errors/error";
+  import { type UploadInfo } from "$lib/Sources/source";
   import Upload from "$lib/Upload.svelte";
   import { request } from "$lib/request";
-  import { push } from "svelte-spa-router";
 
-  let uploadError: ErrorDetails | null;
-
-  const uploadDocuments = async (files: FileList) => {
+  const uploadDocuments = async (files: FileList): Promise<UploadInfo[]> => {
+    let uploadInfo = [];
     for (const file of files) {
+      let info: UploadInfo = { success: true };
       const formData = new FormData();
       formData.append("file", file);
       const resp = await request(`/api/documents`, "POST", formData);
       if (resp.error) {
-        uploadError = getErrorDetails(`Could not upload file`, resp);
-        return;
+        info.success = false;
+        let details = getErrorDetails(`Could not upload file`, resp);
+        info.message = `${details.message} ${details.details}`;
       }
+      uploadInfo.push(info);
     }
-    push(`/sources`);
+    return uploadInfo;
   };
 </script>
 
 <Upload upload={uploadDocuments} label="Upload a document"></Upload>
-<ErrorMessage error={uploadError}></ErrorMessage>
