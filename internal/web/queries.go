@@ -91,6 +91,14 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
+	// default query flag
+	if defaultQuery := ctx.PostForm("default_query"); defaultQuery != "" {
+		var ok bool
+		if sq.DefaultQuery, ok = parse(ctx, strconv.ParseBool, defaultQuery); !ok {
+			return
+		}
+	}
+
 	parser := query.Parser{Mode: sq.Kind}
 
 	// The query to filter the documents.
@@ -146,7 +154,8 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		`columns,` +
 		`orders,` +
 		`dashboard,` +
-		`role ` +
+		`role,` +
+		`default_query ` +
 		`) VALUES ($1::stored_queries_kind, $2, $3, $4, $5, $6, $7, $8, $9, $10)` +
 		`RETURNING id, num`
 
@@ -269,7 +278,8 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 		`columns,` +
 		`orders,` +
 		`dashboard,` +
-		`role ` +
+		`role,` +
+		`default_query ` +
 		`FROM stored_queries WHERE ` +
 		`definer = $1 OR global ` +
 		`ORDER BY global desc, definer, num`
@@ -298,6 +308,7 @@ func (c *Controller) listStoredQueries(ctx *gin.Context) {
 						&storedQuery.Orders,
 						&storedQuery.Dashboard,
 						&storedQuery.Role,
+						&storedQuery.DefaultQuery,
 					); err != nil {
 						return nil, err
 					}
@@ -405,7 +416,8 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 		`columns,` +
 		`orders,` +
 		`dashboard,` +
-		`role ` +
+		`role,` +
+		`default_query ` +
 		`FROM stored_queries WHERE id = $1 AND ` +
 		`(global OR definer = $2)`
 
@@ -428,6 +440,7 @@ func (c *Controller) fetchStoredQuery(ctx *gin.Context) {
 				&storedQuery.Orders,
 				&storedQuery.Dashboard,
 				&storedQuery.Role,
+				&storedQuery.DefaultQuery,
 			)
 		}, 0,
 	); err != nil {
@@ -474,7 +487,8 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 			`columns,` +
 			`orders,` +
 			`dashboard,` +
-			`role, ` +
+			`role,` +
+			`default_query,` +
 			`definer ` +
 			`FROM stored_queries WHERE id = $1 AND `
 		selectNoAdminSQL = selectSQLPrefix +
@@ -517,6 +531,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				&sq.Orders,
 				&sq.Dashboard,
 				&sq.Role,
+				&sq.DefaultQuery,
 				&sq.Definer,
 			); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
@@ -588,6 +603,16 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					return nil
 				}
 				add(dashboard != sq.Dashboard, "dashboard", dashboard)
+			}
+
+			// Check default query
+			if dQ := ctx.PostForm("default_query"); dQ != "" {
+				defaultQuery, err := strconv.ParseBool(dQ)
+				if err != nil {
+					bad = "bad 'default_query' value: " + err.Error()
+					return nil
+				}
+				add(defaultQuery != sq.DefaultQuery, "default_query", defaultQuery)
 			}
 
 			// Check role
