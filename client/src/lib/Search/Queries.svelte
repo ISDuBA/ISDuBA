@@ -32,6 +32,7 @@
   });
   let selectedIndex = -2;
   export let selectedQuery: boolean = false;
+  export let defaultQuery: any;
   export let queryString: any;
   let ignoredQueries: Query[] = [];
   let errorMessage: ErrorDetails | null = null;
@@ -68,7 +69,11 @@
     fetchIgnored();
     const response = await request("/api/queries", "GET");
     if (response.ok) {
-      queries = response.content.filter((q: any) => !q.dashboard);
+      queries = response.content.filter((q: Query) => !q.dashboard && !q.default_query);
+      let defaultQueries = response.content.filter((q: Query) => q.default_query);
+      if (defaultQueries) {
+        defaultQuery = defaultQueries[0];
+      }
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
