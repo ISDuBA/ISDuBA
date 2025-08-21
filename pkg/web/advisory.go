@@ -135,9 +135,9 @@ func (c *Controller) changeStatusAll(ctx *gin.Context, inputs advisoryStates) {
 //	@Description	Changes the status of the specified advisory, if allowed.
 //	@Param			publisher	path	string	true	"Publisher"
 //	@Param			trackingid	path	string	true	"Tracking ID"
-//	@Param			state	path	string	true	"Advisory status"
+//	@Param			state		path	string	true	"Advisory status"
 //	@Produce		json
-//	@Success		200	{object}		models.Success
+//	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
 //	@Failure		401
 //	@Failure		403	{object}	models.Error
@@ -158,9 +158,9 @@ func (c *Controller) changeStatus(ctx *gin.Context) {
 //	@Summary		Bulk changes status.
 //	@Description	Changes the status of multiple advisories, if allowed.
 //	@Param			input	body	advisoryStates	true	"Advisory states"
-//	@Accept		json
+//	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}		models.Success
+//	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
 //	@Failure		401
 //	@Failure		403	{object}	models.Error

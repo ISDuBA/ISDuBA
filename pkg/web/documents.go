@@ -351,6 +351,7 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 //	@Param			count		query	bool	false	"Enable counting"
 //	@Param			limit		query	int		false	"Maximum documents"
 //	@Param			offset		query	int		false	"Offset"
+//	@Param			results		query	bool	false	"Return search results"
 //	@Produce		json
 //	@Success		200	{object}	web.overviewDocuments.documentResult
 //	@Failure		400	{object}	models.Error
@@ -364,6 +365,12 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 	// Use the advisories.
 	advisory, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("advisories", "false"))
+	if !ok {
+		return
+	}
+
+	// Return search results
+	returnSearchResults, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("results", "false"))
 	if !ok {
 		return
 	}
@@ -393,7 +400,10 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(query.BoolField("latest"))
 	}
 
-	builder := query.SQLBuilder{Mode: mode}
+	builder := query.SQLBuilder{
+		Mode:                mode,
+		ReturnSearchResults: returnSearchResults,
+	}
 	builder.CreateWhere(expr)
 
 	fields := strings.Fields(
@@ -465,7 +475,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if results, err = scanRows(rows, fields, builder.Aliases); err != nil {
+			if results, err = scanRows(rows, fields, builder.Aliases, builder.IgnoreFields); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -492,9 +502,16 @@ func scanRows(
 	rows pgx.Rows,
 	fields []string,
 	aliases map[string]string,
+	ignoreFields map[string]struct{},
 ) ([]map[string]any, error) {
-	values := make([]any, len(fields))
-	ptrs := make([]any, len(fields))
+	f := []string{}
+	for _, field := range fields {
+		if _, found := ignoreFields[field]; !found {
+			f = append(f, field)
+		}
+	}
+	values := make([]any, len(f))
+	ptrs := make([]any, len(f))
 	for i := range ptrs {
 		ptrs[i] = &values[i]
 	}
@@ -503,8 +520,8 @@ func scanRows(
 		if err := rows.Scan(ptrs...); err != nil {
 			return nil, fmt.Errorf("scanning row failed: %w", err)
 		}
-		result := make(map[string]any, len(fields))
-		for i, p := range fields {
+		result := make(map[string]any, len(f))
+		for i, p := range f {
 			v := values[i]
 			// XXX: A little bit hacky to support client.
 			if _, ok := aliases[p]; ok {

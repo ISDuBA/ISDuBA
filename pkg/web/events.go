@@ -120,7 +120,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if results, err = scanRows(rows, fields, builder.Aliases); err != nil {
+			if results, err = scanRows(rows, fields, builder.Aliases, builder.IgnoreFields); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
