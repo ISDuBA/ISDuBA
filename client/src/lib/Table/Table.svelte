@@ -64,6 +64,7 @@
   export let tableType: SEARCHTYPES;
   export let orderBy: string[] = ["title"];
   export let defaultOrderBy = ["title"];
+  export let searchResults: boolean;
 
   const tdClass = "whitespace-nowrap relative";
 
@@ -86,6 +87,10 @@
     ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) || tableType === SEARCHTYPES.ADVISORY);
   $: areThereAnyComments =
     tableType === SEARCHTYPES.EVENT && documents?.find((d: any) => d.event === "add_comment");
+
+  $: if (searchResults !== undefined) {
+    fetchData();
+  }
 
   let selectedState: any;
   let dropdownOpen = false;
@@ -217,7 +222,7 @@
     } else {
       const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
       documentURL = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     }
 

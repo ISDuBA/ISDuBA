@@ -23,6 +23,7 @@
   let searchTerm: string | null;
   let advisoryTable: any;
   let advancedSearch = false;
+  let searchResults = true;
   let selectedCustomQuery: boolean;
   let queryString: any;
   let defaultQuery: any;
@@ -192,6 +193,9 @@
     <div class="mt-1" title="Define finer grained search queries">
       <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
     </div>
+    <div class="mt-1" title="Toggle if search results should be returned">
+      <Toggle bind:checked={searchResults} class="ml-3">Results</Toggle>
+    </div>
   </div>
   {#if !selectedCustomQuery}
     <ButtonGroup class="ml-auto h-7">
@@ -247,6 +251,7 @@
     query={`${query.query}`}
     orderBy={query.orders}
     bind:this={advisoryTable}
+    {searchResults}
   ></AdvisoryTable>
 {/if}
 

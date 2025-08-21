@@ -620,7 +620,7 @@ type feedResult struct {
 //	@Summary		Returns feeds.
 //	@Description	Returns all feed configurations and metadata.
 //	@Param			id		path	int		true	"Source ID"
-//	@Param			health		path	int		true	"Source ID"
+//	@Param			health	path	int		true	"Source ID"
 //	@Param			stats	query	bool	false	"Enable statistic"
 //	@Param			health	query	bool	false	"Enable health indicator"
 //	@Produce		json
