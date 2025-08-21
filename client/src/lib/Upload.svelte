@@ -9,13 +9,36 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import {
+    Button,
+    Card,
+    Fileupload,
+    Label,
+    Listgroup,
+    ListgroupItem,
+    Tooltip
+  } from "flowbite-svelte";
+  import { type UploadInfo } from "$lib/Sources/source";
   export let label;
-  export let upload = (files: FileList) => {
+  export let upload = async (files: FileList): Promise<UploadInfo[]> => {
     // eslint-disable-next-line no-console
-    console.log(files);
+    console.log(files, uploadInfo);
+    return [];
+  };
+
+  export let uploadInfo: UploadInfo[] = [];
+
+  const getColor = (uploadInfo: UploadInfo) => {
+    let success = uploadInfo?.success;
+    if (success !== undefined) {
+      return success ? "text-green-600" : "text-red-600";
+    }
+    return "";
   };
   let files: FileList;
+  $: if (files) {
+    uploadInfo = [];
+  }
 </script>
 
 <Card size="lg">
@@ -26,15 +49,21 @@
       {#if !files}
         <ListgroupItem>No files selected</ListgroupItem>
       {:else}
-        {#each files as file}
-          <ListgroupItem>{file.name}</ListgroupItem>
+        {#each files as file, i}
+          {@const info = uploadInfo[i]}
+          {@const color = getColor(info)}
+          <ListgroupItem class={color}>{file.name}</ListgroupItem>
+
+          {#if info?.message}
+            <Tooltip>{info.message}</Tooltip>
+          {/if}
         {/each}
       {/if}
     </Listgroup>
   </div>
   <Button
-    on:click={() => {
-      upload(files);
+    on:click={async () => {
+      uploadInfo = await upload(files);
     }}
     class="mt-auto ml-auto"
     color="primary">Upload</Button
