@@ -45,6 +45,7 @@
   let abortController: AbortController;
   let columnList: any;
   let hide = false;
+  let defaultQuery = false;
   let ignoredQueries: number[] = [];
   let isAllowedToEdit = true;
   let sortable: any = null;
@@ -108,6 +109,7 @@
       description: "",
       global: false,
       dashboard: false,
+      default_query: false,
       role: undefined
     };
   };
@@ -261,6 +263,7 @@
       description: result.description || "",
       global: result.global,
       dashboard: result.dashboard,
+      default_query: false,
       role: result.role
     };
   };
@@ -380,6 +383,10 @@
       <div class="flex flex-row items-center gap-x-2">
         <span>Hide:</span>
         <CCheckbox bind:checked={hide}></CCheckbox>
+      </div>
+      <div class="flex flex-row items-center gap-x-2">
+        <span>Default:</span>
+        <CCheckbox bind:checked={defaultQuery}></CCheckbox>
       </div>
     </div>
     <div class="mb-6">

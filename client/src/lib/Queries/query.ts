@@ -149,6 +149,7 @@ interface Search {
   description: string;
   global: boolean;
   dashboard: boolean;
+  default_query: boolean;
   role: Role | undefined;
 }
 
@@ -166,6 +167,7 @@ type Query = {
   query: string;
   description: string | undefined;
   dashboard: boolean;
+  default_query: boolean;
   role: Role;
 };
 
@@ -203,6 +205,7 @@ const saveStoredQuery = (query: Query, method: string) => {
   formData.append("name", query.name);
   formData.append("global", `${query.global}`);
   formData.append("dashboard", `${query.dashboard}`);
+  formData.append("default_query", `${query.default_query}`);
   if (query.role) {
     formData.append("role", `${query.role}`);
   } else {
