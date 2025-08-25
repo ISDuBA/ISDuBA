@@ -70,8 +70,8 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	} else {
 		switch sb.Mode {
 		case AdvisoryMode, DocumentMode:
-			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM unique_texts "+
-				"JOIN documents_texts ON unique_texts.id = documents_texts.txt_id "+
+			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
+				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
 				"WHERE txt ILIKE $%d "+
 				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
 		case EventMode:
