@@ -52,7 +52,7 @@
     "prettier-plugin-svelte": "^3.4.0",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "source-map-support": "^0.5.21",
-    "svelte": "^4.2.19",
+    "svelte": "^5.38.3",
     "svelte-check": "^4.3.1",
     "tailwindcss": "^4.0.0",
     "ts-node": "^10.9.2",
