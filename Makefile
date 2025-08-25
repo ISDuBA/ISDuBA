@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-.PHONY: all build_isdubad build_importer build_pkg test build_client
+.PHONY: all build_isdubad build_importer build_internal test build_client
 
 all: build_isdubad build_importer build_client test
 
@@ -22,7 +22,7 @@ SEMVER := $(shell echo '$(GITDESC)' | sed -E -e 's/^v//' -e 's/([0-9]+\.[0-9]+\.
 testsemver:
 	@echo from \'$(GITDESC)\' transformed to \'$(SEMVER)\'
 
-LDFLAGS=-ldflags "-X github.com/ISDuBA/ISDuBA/pkg/version.SemVersion=$(SEMVER)"
+LDFLAGS=-ldflags "-X github.com/ISDuBA/ISDuBA/internal/version.SemVersion=$(SEMVER)"
 GO_FLAGS=$(LDFLAGS)
 
 # Build for coverage profile generation
@@ -31,14 +31,14 @@ GO_FLAGS += "-cover"
 endif
 
 
-build_importer: build_pkg
+build_importer: build_internal
 	cd cmd/bulkimport && go build $(GO_FLAGS)
 
-build_isdubad: build_pkg
+build_isdubad: build_internal
 	cd cmd/isdubad && go build $(GO_FLAGS)
 
-build_pkg:
-	cd pkg && go build $(GO_FLAGS) ./...
+build_internal:
+	cd internal && go build $(GO_FLAGS) ./...
 
 build_client:
 	cd client && npm install && npm run build
