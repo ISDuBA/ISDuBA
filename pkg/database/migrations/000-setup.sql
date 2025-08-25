@@ -267,7 +267,8 @@ CREATE TABLE events_log (
     time         timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actor        varchar,
     documents_id int REFERENCES documents(id) ON DELETE SET NULL,
-    comments_id  int REFERENCES comments(id) ON DELETE SET NULL
+    comments_id  int REFERENCES comments(id) ON DELETE SET NULL,
+    prev_ssvc    text
 );
 
 CREATE INDEX events_log_time_idx ON events_log(time);

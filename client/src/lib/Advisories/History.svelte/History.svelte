@@ -66,6 +66,9 @@
                     {/if}
                     {#if event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
                       SSVC changed ({event.actor})
+                      {#if event.prev_ssvc}
+                        Previous SSVC: {event.prev_ssvc}
+                      {/if}
                     {/if}
                   </small>
                   {#if /state_change|import_document/.test(event.event_type)}

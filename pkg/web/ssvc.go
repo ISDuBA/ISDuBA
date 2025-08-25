@@ -55,8 +55,8 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 			`WHERE docs.id = $1`
 		switchToAssessing = `UPDATE advisories SET state = 'assessing' ` +
 			`WHERE (tracking_id, publisher) = ($1, $2)`
-		insertLog = `INSERT INTO events_log (event, state, actor, documents_id) ` +
-			`VALUES ($1::events, $2::workflow, $3, $4)`
+		insertLog = `INSERT INTO events_log (event, state, actor, documents_id, prev_ssvc) ` +
+			`VALUES ($1::events, $2::workflow, $3, $4, $5)`
 		updateSSVC = `UPDATE documents SET ssvc = $1 WHERE id = $2`
 	)
 
@@ -103,8 +103,8 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 			}
 
 			actor := c.currentUser(ctx)
-			logEvent := func(event models.Event, state models.Workflow) error {
-				_, err := tx.Exec(rctx, insertLog, string(event), string(state), actor, documentID)
+			logEvent := func(event models.Event, state models.Workflow, prevSSVC *string) error {
+				_, err := tx.Exec(rctx, insertLog, string(event), string(state), actor, documentID, prevSSVC)
 				return err
 			}
 
@@ -121,7 +121,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 					return err
 				}
 				// Log the state change.
-				if err := logEvent(models.StateChangeEvent, models.AssessingWorkflow); err != nil {
+				if err := logEvent(models.StateChangeEvent, models.AssessingWorkflow, nil); err != nil {
 					return err
 				}
 			}
@@ -133,10 +133,13 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 
 			// Log the SSVC change.
 			event := models.ChangeSSVCEvent
+			var prevSSVC *string
 			if !ssvc.Valid { // It's new.
 				event = models.AddSSVCEvent
+			} else {
+				prevSSVC = &ssvc.String
 			}
-			if err := logEvent(event, models.AssessingWorkflow); err != nil {
+			if err := logEvent(event, models.AssessingWorkflow, prevSSVC); err != nil {
 				return err
 			}
 			return tx.Commit(rctx)
