@@ -156,7 +156,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		`dashboard,` +
 		`role,` +
 		`default_query ` +
-		`) VALUES ($1::stored_queries_kind, $2, $3, $4, $5, $6, $7, $8, $9, $10)` +
+		`) VALUES ($1::stored_queries_kind, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)` +
 		`RETURNING id, num`
 
 	var queryID, queryNum int64
@@ -175,6 +175,7 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 				sq.Orders,
 				sq.Dashboard,
 				sq.Role,
+				sq.DefaultQuery,
 			).Scan(&queryID, &queryNum)
 		}, 0,
 	); err != nil {

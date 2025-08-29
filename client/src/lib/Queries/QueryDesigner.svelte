@@ -138,6 +138,7 @@
       formData.append("name", currentSearch.name);
       formData.append("global", `${currentSearch.global}`);
       formData.append("dashboard", `${currentSearch.dashboard}`);
+      formData.append("default_query", defaultQuery);
       if (currentSearch.role) {
         formData.append("role", `${currentSearch.role}`);
       } else {
