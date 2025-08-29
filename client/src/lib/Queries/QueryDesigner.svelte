@@ -138,7 +138,7 @@
       formData.append("name", currentSearch.name);
       formData.append("global", `${currentSearch.global}`);
       formData.append("dashboard", `${currentSearch.dashboard}`);
-      formData.append("default_query", defaultQuery);
+      formData.append("default_query", `${defaultQuery}`);
       if (currentSearch.role) {
         formData.append("role", `${currentSearch.role}`);
       } else {
@@ -264,7 +264,7 @@
       description: result.description || "",
       global: result.global,
       dashboard: result.dashboard,
-      default_query: false,
+      default_query: result.default_query,
       role: result.role
     };
   };
@@ -293,6 +293,7 @@
           isAllowedToEdit = false;
         }
         currentSearch = generateQueryFrom(thisQuery);
+        defaultQuery = currentSearch.default_query;
         if (queryString?.clone) {
           currentSearch.name = proposeName(thisQuery, currentSearch.name);
           if (!isRoleIncluded(appStore.getRoles(), [ADMIN])) {
