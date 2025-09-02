@@ -123,6 +123,22 @@
     isLoading = false;
   };
 
+  const changeDefaultQuery = async (id: number, isChecked: boolean) => {
+    isLoading = true;
+    unsetErrors();
+    if (queries) {
+      const queryToUpdate = queries.filter((q) => q.id === id)[0];
+      if (queryToUpdate) {
+        queryToUpdate.default_query = isChecked;
+        const response = await updateStoredQuery(queryToUpdate);
+        if (!response.ok && response.error) {
+          ignoreErrorMessage = getErrorDetails(`Could not change option.`, response);
+        }
+      }
+    }
+    isLoading = false;
+  };
+
   const clone = async (query: Query) => {
     if (!queries) return;
     const cloneQuery = queryContext["cloneQuery"];
@@ -162,6 +178,9 @@
         </TableHeadCell>
         <TableHeadCell padding={tablePadding} on:click={() => {}}>
           <div title={"Show on your personal dashboard"}>Hide</div>
+        </TableHeadCell>
+        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+          <div title={"Use as default query"}>Default query</div>
         </TableHeadCell>
         <TableHeadCell></TableHeadCell>
       </TableHead>
@@ -207,6 +226,16 @@
                   }}
                   disabled={!ignoredQueries || isLoading}
                   checked={ignoredQueries !== null && ignoredQueries.includes(query.id)}
+                ></CCheckbox>
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>
+                <CCheckbox
+                  on:change={() => {
+                    changeDefaultQuery(query.id, query.default_query);
+                  }}
+                  bind:checked={query.default_query}
+                  class={isAllowedToEdit ? "" : "text-gray-300"}
+                  disabled={!isAllowedToEdit || isLoading}
                 ></CCheckbox>
               </TableBodyCell>
               <td>

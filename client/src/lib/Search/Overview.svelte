@@ -25,24 +25,45 @@
   let advancedSearch = false;
   let selectedCustomQuery: boolean;
   let queryString: any;
+  let defaultQuery: any;
   // let searchqueryTimer: any = null;
 
-  const resetQuery = () => {
-    let position = sessionStorage.getItem("tablePosition" + "" + SEARCHTYPES.ADVISORY);
+  $: if (defaultQuery) {
+    if (!selectedCustomQuery) {
+      query = getDefaultQuery();
+    }
+  }
+
+  const getDefaultQuery = () => {
+    let searchType = SEARCHTYPES.ADVISORY;
+    if (defaultQuery) {
+      searchType = defaultQuery.kind;
+    }
+    let position = sessionStorage.getItem("tablePosition" + "" + searchType);
     const orderBy = position ? JSON.parse(position)[3] : undefined;
-    return {
-      columns: [...SEARCHPAGECOLUMNS.ADVISORY],
-      queryType: SEARCHTYPES.ADVISORY,
-      orders: orderBy ?? ["-critical"],
-      query: "",
-      queryReset: ""
-    };
+    if (defaultQuery) {
+      return {
+        columns: defaultQuery.columns,
+        queryType: defaultQuery.kind,
+        query: defaultQuery.query,
+        queryReset: "",
+        orders: orderBy ?? defaultQuery.orders
+      };
+    } else {
+      return {
+        columns: [...SEARCHPAGECOLUMNS.ADVISORY],
+        queryType: SEARCHTYPES.ADVISORY,
+        orders: orderBy ?? ["-critical"],
+        query: "",
+        queryReset: ""
+      };
+    }
   };
 
-  let query = resetQuery();
+  let query = getDefaultQuery();
 
   const setQueryBack = async () => {
-    query = resetQuery();
+    query = getDefaultQuery();
     searchTerm = "";
     sessionStorage.setItem("documentSearchTerm", "");
     await tick();
@@ -62,18 +83,18 @@
       }
       if (
         searchTerm &&
-        !query.columns.find((c) => {
+        !query.columns.find((c: any) => {
           return c === searchColumnName;
         })
       ) {
         query.columns.push(searchColumnName);
       }
       if (!searchTerm)
-        query.columns = query.columns.filter((c) => {
+        query.columns = query.columns.filter((c: any) => {
           return c !== searchColumnName;
         });
     } else {
-      query.columns = query.columns.filter((c) => {
+      query.columns = query.columns.filter((c: any) => {
         return c !== searchColumnName;
       });
       if (!selectedCustomQuery) {
@@ -89,7 +110,7 @@
   const clearSearch = async () => {
     searchTerm = "";
     query.query = query.queryReset;
-    query.columns = query.columns.filter((c) => {
+    query.columns = query.columns.filter((c: any) => {
       return c !== searchColumnName;
     });
     await tick();
@@ -133,6 +154,7 @@
   }}
   {queryString}
   bind:selectedQuery={selectedCustomQuery}
+  bind:defaultQuery
 ></Queries>
 <div class="mb-3 flex">
   <div class="flex w-2/3 flex-row">

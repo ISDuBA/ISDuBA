@@ -45,6 +45,7 @@
   let abortController: AbortController;
   let columnList: any;
   let hide = false;
+  let defaultQuery = false;
   let ignoredQueries: number[] = [];
   let isAllowedToEdit = true;
   let sortable: any = null;
@@ -108,6 +109,7 @@
       description: "",
       global: false,
       dashboard: false,
+      default_query: false,
       role: undefined
     };
   };
@@ -136,6 +138,7 @@
       formData.append("name", currentSearch.name);
       formData.append("global", `${currentSearch.global}`);
       formData.append("dashboard", `${currentSearch.dashboard}`);
+      formData.append("default_query", `${defaultQuery}`);
       if (currentSearch.role) {
         formData.append("role", `${currentSearch.role}`);
       } else {
@@ -261,6 +264,7 @@
       description: result.description || "",
       global: result.global,
       dashboard: result.dashboard,
+      default_query: result.default_query,
       role: result.role
     };
   };
@@ -289,6 +293,7 @@
           isAllowedToEdit = false;
         }
         currentSearch = generateQueryFrom(thisQuery);
+        defaultQuery = currentSearch.default_query;
         if (queryString?.clone) {
           currentSearch.name = proposeName(thisQuery, currentSearch.name);
           if (!isRoleIncluded(appStore.getRoles(), [ADMIN])) {
@@ -380,6 +385,10 @@
       <div class="flex flex-row items-center gap-x-2">
         <span>Hide:</span>
         <CCheckbox bind:checked={hide}></CCheckbox>
+      </div>
+      <div class="flex flex-row items-center gap-x-2">
+        <span>Default:</span>
+        <CCheckbox bind:checked={defaultQuery}></CCheckbox>
       </div>
     </div>
     <div class="mb-6">
