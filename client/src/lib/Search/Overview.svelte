@@ -193,8 +193,8 @@
     <div class="mt-1" title="Define finer grained search queries">
       <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
     </div>
-    <div class="mt-1" title="Toggle if search results should be returned">
-      <Toggle bind:checked={searchResults} class="ml-3">Results</Toggle>
+    <div class="mt-1" title="Show every single time the search term was found">
+      <Toggle bind:checked={searchResults} class="ml-3">Detailed</Toggle>
     </div>
   </div>
   {#if !selectedCustomQuery}
