@@ -10,11 +10,11 @@
 
 <script lang="ts">
   import DiffSelection from "$lib/Diff/DiffSelection.svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { Button, Img } from "flowbite-svelte";
 
-  $: docA = $appStore.app.diff.docA;
-  $: docB = $appStore.app.diff.docB;
+  $: docA = appStore.state.app.diff.docA;
+  $: docB = appStore.state.app.diff.docB;
 </script>
 
 <div class={`sticky bottom-0 left-0 flex translate-y-6 flex-col items-start justify-center`}>
@@ -35,7 +35,7 @@
       <Img src="plus-minus.svg" class="h-4 min-w-4 dark:invert" />
     </Button>
   </div>
-  {#if $appStore.app.isToolboxOpen}
+  {#if appStore.state.app.isToolboxOpen}
     <div
       class="flex min-h-48 w-full max-w-[700pt] min-w-full items-stretch gap-6 rounded-tr-md border border-solid border-gray-300 bg-white p-4 shadow-gray-800 md:min-w-96 lg:w-auto dark:border-gray-600 dark:bg-gray-800 dark:shadow-gray-200"
     >

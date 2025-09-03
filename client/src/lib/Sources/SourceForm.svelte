@@ -14,6 +14,16 @@
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount } from "svelte";
   import CFileinput from "$lib/Components/CFileinput.svelte";
+
+  // Define enum first
+  enum AgeUnit {
+    hours = "h",
+    days = "d",
+    weeks = "w",
+    months = "m",
+    years = "y"
+  }
+
   export let formClass: string = "";
   export let source: Source;
   export let oldSource: Source | undefined = undefined;
@@ -63,14 +73,6 @@
   };
 
   export let inputChange = () => {};
-
-  enum AgeUnit {
-    hours = "h",
-    days = "d",
-    weeks = "w",
-    months = "m",
-    years = "y"
-  }
 
   const ageUnits: { value: AgeUnit; name: string }[] = [
     { value: AgeUnit.hours, name: "hours" },

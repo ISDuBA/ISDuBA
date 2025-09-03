@@ -19,7 +19,7 @@
   import { onDestroy, onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { type Source, fetchSources } from "$lib/Sources/source";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { DAY_MS } from "$lib/time";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceBasicStats from "./SourceBasicStats.svelte";

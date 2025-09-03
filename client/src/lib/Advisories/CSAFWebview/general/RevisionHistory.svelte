@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import {
     Table,
     TableBody,
@@ -24,7 +24,7 @@
   const cellStyle = "whitespace-nowrap " + baseCellStyle;
 </script>
 
-{#if $appStore.webview.doc?.isRevisionHistoryPresent}
+{#if appStore.state.webview.doc?.isRevisionHistoryPresent}
   <div class="mt-1 w-fit pl-5">
     <Table noborder striped={true}>
       <TableHead>
@@ -34,7 +34,7 @@
         <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each $appStore.webview.doc?.revisionHistory as entry}
+        {#each appStore.state.webview.doc?.revisionHistory as entry}
           <TableBodyRow>
             <TableBodyCell tdClass={cellStyle}>{entry.number}</TableBodyCell>
             <TableBodyCell tdClass={cellStyle}>{getReadableDateString(entry.date)}</TableBodyCell>

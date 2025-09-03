@@ -14,7 +14,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { canSetStateReview, isRoleIncluded } from "$lib/permissions";
   import { ARCHIVED, EDITOR, REVIEW, REVIEWER } from "$lib/workflow";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
 
   export let value: string;

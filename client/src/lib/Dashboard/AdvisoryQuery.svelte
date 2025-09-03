@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { push } from "svelte-spa-router";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
@@ -82,7 +82,7 @@
   };
 </script>
 
-{#if $appStore.app.isUserLoggedIn}
+{#if appStore.state.app.isUserLoggedIn}
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title={storedQuery.description}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">

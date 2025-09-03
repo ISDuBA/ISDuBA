@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { TableBodyCell } from "flowbite-svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/request";
   import { createEventDispatcher } from "svelte";
@@ -90,8 +90,8 @@
       <div class="mt-1 flex flex-row items-center">
         <div style="white-space: pre-wrap">{comment.message}</div>
         <div class="ml-auto">
-          {#if $appStore.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
-            <button class="h-7 !p-2" on:click={toggleEditing}>
+          {#if appStore.state.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
+            <button class="h-7 !p-2" on:click={toggleEditing} aria-label="Edit comment">
               <i class="bx bx-edit text-lg"></i>
             </button>
           {/if}

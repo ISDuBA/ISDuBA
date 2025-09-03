@@ -41,6 +41,7 @@
       <button
         on:click={clearInput}
         slot="right"
+        aria-label="Clear search"
         class="group flex h-[26pt] w-[26pt] items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-gray-500"
       >
         <i class="bx bx-x dark:group-hover:text-gray-800"></i>

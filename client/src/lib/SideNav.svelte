@@ -18,7 +18,7 @@
     SidebarBrand
   } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { page } from "$app/stores";
   import { truncate } from "$lib/utils";
 
@@ -45,7 +45,7 @@
 </script>
 
 <svelte:window bind:innerWidth={width} />
-{#if $appStore.app.userManager && ($appStore.app.isUserLoggedIn || $appStore.app.sessionExpired)}
+{#if appStore.state.app.userManager && (appStore.state.app.isUserLoggedIn || appStore.state.app.sessionExpired)}
   <div class="flex">
     <Drawer
       transitionType="fly"
@@ -105,10 +105,10 @@
                 <i class="bx bx-bar-chart-square"></i>
               </svelte:fragment>
             </SidebarItem>
-            {#if !$appStore.app.sessionExpired}
+            {#if !appStore.state.app.sessionExpired}
               <SidebarItem
                 class="px-6 py-2.5"
-                label={truncate($appStore.app.tokenParsed?.preferred_username ?? "", 15)}
+                label={truncate(appStore.state.app.tokenParsed?.preferred_username ?? "", 15)}
                 href="/#/login"
               >
                 <svelte:fragment slot="icon">
@@ -121,7 +121,10 @@
       </Sidebar>
     </Drawer>
     <div class="h-screen w-16 bg-white p-2 dark:bg-gray-800">
-      <button on:click={toggleDrawer}>
+      <button
+        on:click={toggleDrawer}
+        aria-label={drawerHidden ? "open navigation" : "close navigation"}
+      >
         <i title={drawerHidden ? "open navigation" : "close navigation"} class="bx bx-menu text-2xl"
         ></i>
       </button>

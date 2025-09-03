@@ -42,7 +42,7 @@
     type FeedSubscription,
     type Subscription
   } from "$lib/aggregatorTypes";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import CAccordionItem from "$lib/Components/CAccordionItem.svelte";

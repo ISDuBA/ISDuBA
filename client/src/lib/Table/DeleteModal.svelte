@@ -13,14 +13,14 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { SEARCHTYPES } from "$lib/Queries/query";
   import { request } from "$lib/request";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { Button, Modal, Spinner } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
 
   export let documents: any[] = [];
   export let type: SEARCHTYPES;
 
-  $: isDeleteModalOpen = $appStore.app.isDeleteModalOpen;
+  $: isDeleteModalOpen = appStore.state.app.isDeleteModalOpen;
   $: if (!isDeleteModalOpen) {
     errorMessage = null;
   }
@@ -62,7 +62,7 @@
 <Modal
   size="xs"
   title={documents.length === 1 ? documents[0].title : `Delete ${type}`}
-  bind:open={$appStore.app.isDeleteModalOpen}
+  bind:open={appStore.state.app.isDeleteModalOpen}
   autoclose
   outsideclose
 >

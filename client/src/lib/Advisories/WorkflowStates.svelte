@@ -10,7 +10,7 @@
 <script lang="ts">
   import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR, REVIEWER } from "$lib/workflow";
   import { allowedToChangeWorkflow, isRoleIncluded } from "$lib/permissions";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { Badge } from "flowbite-svelte";
 
   export let advisoryState = "";

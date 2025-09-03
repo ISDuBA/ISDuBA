@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
   import {
     Table,
@@ -41,14 +41,14 @@
     appStore.resetSelectedProduct();
   });
 
-  $: if ($appStore.webview.doc) {
-    const vulnerabilities = [...$appStore.webview.doc.productVulnerabilities];
+  $: if (appStore.state.webview.doc) {
+    const vulnerabilities = [...appStore.state.webview.doc.productVulnerabilities];
 
     headerColumns = vulnerabilities.shift()!;
     productLines = vulnerabilities;
   }
 
-  $: fourCVEs = $appStore.webview.four_cves;
+  $: fourCVEs = appStore.state.webview.four_cves;
 </script>
 
 <div class="crosstable-overview mt-3 mb-3 flex flex-col">
@@ -56,20 +56,20 @@
     <div class="mt-3 mb-3 flex flex-row">
       <div class="flex flex-wrap items-baseline gap-4 text-sm">
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-check" />
+          <i class="bx bx-check"></i>
           <span class="ml-1 text-nowrap">Fixed</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-error" /><span class="ml-1 text-nowrap">Under investigation</span>
+          <i class="bx bx-error"></i><span class="ml-1 text-nowrap">Under investigation</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-x" /><span class="ml-1 text-nowrap">Known affected</span>
+          <i class="bx bx-x"></i><span class="ml-1 text-nowrap">Known affected</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-minus" /><span class="ml-1 text-nowrap">Not affected</span>
+          <i class="bx bx-minus"></i><span class="ml-1 text-nowrap">Not affected</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-heart" /><span class="ml-1 text-nowrap">Recommended</span>
+          <i class="bx bx-heart"></i><span class="ml-1 text-nowrap">Recommended</span>
         </div>
         {#if productLines[0].length > 6}
           <div class="ml-auto flex flex-row items-baseline">
@@ -161,7 +161,7 @@
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
                         class={innerLinkStyle}
-                        >{$appStore.webview.doc?.productsByID[column.content]}
+                        >{appStore.state.webview.doc?.productsByID[column.content]}
                         ({column.content.length > 20
                           ? column.content.substring(0, 20) + "..."
                           : column.content})</a
@@ -175,8 +175,8 @@
                 {:else if !renderAllCVEs && (fourCVEs.includes(column.name) || column.name === "Total")}
                   <TableBodyCell {tdClass}>
                     {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
-                      <i class="bx bx-heart" />
-                      <i class="bx b-minus" />
+                      <i class="bx bx-heart"></i>
+                      <i class="bx b-minus"></i>
                     {:else}
                       <!-- May contain more than one status and thus more than one character -->
                       {#each column.content as char}
@@ -187,15 +187,15 @@
                           class:bx-error={char === ProductStatusSymbol.UNDER_INVESTIGATION}
                           class:bx-minus={char === ProductStatusSymbol.NOT_AFFECTED}
                           class:bx-heart={char === ProductStatusSymbol.RECOMMENDED}
-                        />
+                        ></i>
                       {/each}
                     {/if}
                   </TableBodyCell>
                 {:else if renderAllCVEs}
                   <TableBodyCell {tdClass}>
                     {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
-                      <i class="bx bx-heart" />
-                      <i class="bx b-minus" />
+                      <i class="bx bx-heart"></i>
+                      <i class="bx b-minus"></i>
                     {:else}
                       <i
                         class:bx={true}
@@ -204,7 +204,7 @@
                         class:bx-error={column.content === ProductStatusSymbol.UNDER_INVESTIGATION}
                         class:bx-minus={column.content === ProductStatusSymbol.NOT_AFFECTED}
                         class:bx-heart={column.content === ProductStatusSymbol.RECOMMENDED}
-                      />
+                      ></i>
                     {/if}
                   </TableBodyCell>
                 {/if}

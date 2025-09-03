@@ -75,7 +75,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div {title} id={header}>
     <div class="inline-flex items-center" on:click={toggle}>
-      <i class="bx {getClass(level)} {icon}" />
+      <i class="bx {getClass(level)} {icon}"></i>
       <slot class={getClass(level)} name="header"
         ><span class={getClass(level)}>{header}</span></slot
       >

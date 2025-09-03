@@ -172,7 +172,11 @@
         {#if placeholderFeed}
           <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
           <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-            <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
+            <a
+              href={"javascript:void(0);"}
+              on:click={async () => await clickFeed(feed)}
+              aria-label="View feed archive"
+            >
               <i class="bx bx-archive"> </i></a
             >
           </TableBodyCell>
@@ -202,8 +206,10 @@
             tdClass={`${tdClass} break-all whitespace-normal`}
           >
             {#if edit && feed.enable}
-              <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}
-                >{feed.url}</a
+              <a
+                href={"javascript:void(0);"}
+                on:click={async () => await clickFeed(feed)}
+                aria-label="View feed details">{feed.url}</a
               >
             {:else}
               <span class="text-amber-600">
@@ -235,7 +241,11 @@
             >
             {#if feed.enable}
               <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-                <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
+                <a
+                  href={"javascript:void(0);"}
+                  on:click={async () => await clickFeed(feed)}
+                  aria-label="View feed archive"
+                >
                   <i class="bx bx-archive"> </i></a
                 >
               </TableBodyCell>
