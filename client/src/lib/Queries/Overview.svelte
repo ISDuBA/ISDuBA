@@ -15,7 +15,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { Modal } from "flowbite-svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { fetchIgnored, setIgnored, createStoredQuery, proposeName, type Query } from "./query";
   import QueryTable from "./QueryTable.svelte";
   import type { Order } from "./query";

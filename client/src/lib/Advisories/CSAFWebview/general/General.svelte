@@ -8,37 +8,37 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
 
-  $: trackingVersion = $appStore.webview.doc?.trackingVersion;
-  $: generator = $appStore.webview.doc?.generator;
-  $: publisherName = $appStore.webview.doc?.publisher.name;
-  $: publisherCategory = $appStore.webview.doc?.publisher.category;
-  $: publisherNamespace = $appStore.webview.doc?.publisher.namespace;
-  $: publisherIssuingAuthority = $appStore.webview.doc?.publisher.issuing_authority;
-  $: publisherContactDetails = $appStore.webview.doc?.publisher.contact_details;
-  $: category = $appStore.webview.doc?.category;
-  $: title = $appStore.webview.doc?.title;
-  $: lang = $appStore.webview.doc?.lang;
-  $: sourceLang = $appStore.webview.doc?.sourceLang;
-  $: csafVersion = $appStore.webview.doc?.csafVersion;
-  $: distributionText = $appStore.webview.doc?.distributionText;
-  $: published = $appStore.webview.doc?.published;
-  $: lastUpdate = $appStore.webview.doc?.lastUpdate;
-  $: status = $appStore.webview.doc?.status;
-  $: baseSeverity = $appStore.webview.doc?.highestScore?.baseSeverity;
-  $: baseScore = $appStore.webview.doc?.highestScore?.baseScore;
+  $: trackingVersion = appStore.state.webview.doc?.trackingVersion;
+  $: generator = appStore.state.webview.doc?.generator;
+  $: publisherName = appStore.state.webview.doc?.publisher.name;
+  $: publisherCategory = appStore.state.webview.doc?.publisher.category;
+  $: publisherNamespace = appStore.state.webview.doc?.publisher.namespace;
+  $: publisherIssuingAuthority = appStore.state.webview.doc?.publisher.issuing_authority;
+  $: publisherContactDetails = appStore.state.webview.doc?.publisher.contact_details;
+  $: category = appStore.state.webview.doc?.category;
+  $: title = appStore.state.webview.doc?.title;
+  $: lang = appStore.state.webview.doc?.lang;
+  $: sourceLang = appStore.state.webview.doc?.sourceLang;
+  $: csafVersion = appStore.state.webview.doc?.csafVersion;
+  $: distributionText = appStore.state.webview.doc?.distributionText;
+  $: published = appStore.state.webview.doc?.published;
+  $: lastUpdate = appStore.state.webview.doc?.lastUpdate;
+  $: status = appStore.state.webview.doc?.status;
+  $: baseSeverity = appStore.state.webview.doc?.highestScore?.baseSeverity;
+  $: baseScore = appStore.state.webview.doc?.highestScore?.baseScore;
   $: if (
-    !$appStore.webview.doc?.isRevisionHistoryPresent &&
-    !$appStore.webview.doc?.isDocPresent &&
-    !$appStore.webview.doc?.isProductTreePresent &&
-    !$appStore.webview.doc?.isPublisherPresent &&
-    !$appStore.webview.doc?.isTLPPresent &&
-    !$appStore.webview.doc?.isTrackingPresent &&
-    !$appStore.webview.doc?.isVulnerabilitiesPresent
+    !appStore.state.webview.doc?.isRevisionHistoryPresent &&
+    !appStore.state.webview.doc?.isDocPresent &&
+    !appStore.state.webview.doc?.isProductTreePresent &&
+    !appStore.state.webview.doc?.isPublisherPresent &&
+    !appStore.state.webview.doc?.isTLPPresent &&
+    !appStore.state.webview.doc?.isTrackingPresent &&
+    !appStore.state.webview.doc?.isVulnerabilitiesPresent
   ) {
     appStore.setSingleErrorMsg("Are you sure the URL refers to a CSAF document?");
   }
@@ -51,11 +51,11 @@
     <div class="flex flex-row">
       <div>
         <span class="text-xl">{title} </span>
-        {#if $appStore.webview.doc?.status !== Status.final}
+        {#if appStore.state.webview.doc?.status !== Status.final}
           <span class="ml-3 text-lg text-gray-400">{status}</span>
         {/if}
       </div>
-      {#if $appStore.webview.doc?.highestScore}
+      {#if appStore.state.webview.doc?.highestScore}
         <Cvss {baseScore} {baseSeverity}></Cvss>
       {/if}
     </div>
@@ -92,17 +92,17 @@
         <div class={cellStyleKey}>Distribution</div>
         <div class={cellStyleValue}>{distributionText}</div>
       {/if}
-      {#if $appStore.webview.doc?.aggregateSeverity}
+      {#if appStore.state.webview.doc?.aggregateSeverity}
         <div class={cellStyleKey}>Aggregate severity text</div>
         <div class={cellStyleValue}>
-          <span>{$appStore.webview.doc?.aggregateSeverity.text}</span>
+          <span>{appStore.state.webview.doc?.aggregateSeverity.text}</span>
         </div>
-        {#if $appStore.webview.doc?.aggregateSeverity.namespace}
+        {#if appStore.state.webview.doc?.aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <a href={$appStore.webview.doc?.aggregateSeverity.namespace} class="underline">
+            <a href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
               <i class="bx bx-link"></i>
-              <span>{$appStore.webview.doc?.aggregateSeverity.namespace}</span>
+              <span>{appStore.state.webview.doc?.aggregateSeverity.namespace}</span>
             </a>
           </div>
         {/if}
@@ -123,10 +123,10 @@
     <span class="text-sm text-gray-400">
       Generator:
       {#if generator}
-        {$appStore.webview.doc?.generator?.engine.name}
+        {appStore.state.webview.doc?.generator?.engine.name}
       {/if}
       {#if generator?.engine?.version}
-        {$appStore.webview.doc?.generator?.engine.version}
+        {appStore.state.webview.doc?.generator?.engine.version}
       {/if}
       {#if generator?.date}
         · {getReadableDateString(generator.date)}

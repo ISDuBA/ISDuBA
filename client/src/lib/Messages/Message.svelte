@@ -12,7 +12,7 @@
   import { Toast } from "flowbite-svelte";
   import { MESSAGE } from "./messagetypes";
   import { onMount } from "svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { blur } from "svelte/transition";
 
   export let error: any = null;

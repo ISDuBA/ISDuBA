@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -120,7 +120,8 @@
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
-      a.mention = a.message && a.message.includes($appStore.app.tokenParsed?.preferred_username);
+      a.mention =
+        a.message && a.message.includes(appStore.state.app.tokenParsed?.preferred_username);
       if (a.ssvc) a.ssvcLabel = convertVectorToSSVCObject(a.ssvc).label;
       if (a.tracking_id && a.publisher) {
         a.documentURL = `/advisories/${a.publisher}/${a.tracking_id}/documents/${a.id}`;
@@ -145,7 +146,7 @@
   });
 </script>
 
-{#if $appStore.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin())}
+{#if appStore.state.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin())}
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title={storedQuery.description}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">

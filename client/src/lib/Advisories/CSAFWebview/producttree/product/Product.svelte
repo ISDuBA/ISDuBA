@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { tick } from "svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
@@ -28,7 +28,7 @@
     await new Promise((res) => setTimeout(res, 5000));
     blink = false;
   }
-  $: selectedProduct = $appStore.webview.ui.selectedProduct;
+  $: selectedProduct = appStore.state.webview.ui.selectedProduct;
   $: productID = product?.product_id;
   $: if (selectedProduct === productID) {
     highlight = true;
@@ -44,9 +44,9 @@
     header={product.name}
     level={4}
     {highlight}
-    open={$appStore.webview.ui.selectedProduct === product.product_id}
+    open={appStore.state.webview.ui.selectedProduct === product.product_id}
     onClose={() => {
-      if ($appStore.webview.ui.selectedProduct === product.product_id) {
+      if (appStore.state.webview.ui.selectedProduct === product.product_id) {
         appStore.resetSelectedProduct();
       }
     }}

@@ -10,7 +10,7 @@
 <script lang="ts">
   import { Button, Select, Label, Modal, Spinner } from "flowbite-svelte";
   import { onDestroy, onMount } from "svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
   import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
@@ -435,9 +435,11 @@
       {#if processRunning}
         <Spinner></Spinner>
       {:else if lastSuccessfulForwardTarget === selectedForwardTarget}
-        <div class="inline-flex w-8 items-center"><i class="bx bx-check text-2xl" /></div>
+        <div class="inline-flex w-8 items-center"><i class="bx bx-check text-2xl"></i></div>
       {:else}
-        <div class="inline-flex w-8 items-center"><i class="bx bx-right-arrow-alt text-2xl" /></div>
+        <div class="inline-flex w-8 items-center">
+          <i class="bx bx-right-arrow-alt text-2xl"></i>
+        </div>
       {/if}
     </Button>
   {/if}
@@ -451,8 +453,8 @@
       <div class="flex gap-2">
         <Label class="text-lg">
           <span class="mr-2">{params.trackingID}</span>
-          {#if $appStore.webview.doc?.tlp.label}
-            <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+          {#if appStore.state.webview.doc?.tlp.label}
+            <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
         </Label>
       </div>
@@ -466,7 +468,7 @@
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
         </div>
       </div>
-      <div class="mt-2 mb-4" />
+      <div class="mt-2 mb-4"></div>
     </div>
   {/if}
   <ErrorMessage error={loadForwardTargetsError}></ErrorMessage>

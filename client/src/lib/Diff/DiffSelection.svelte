@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import {
     Button,
     Dropzone,
@@ -32,13 +32,13 @@
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import { getRelativeTime } from "$lib/time";
 
-  $: docA_ID = $appStore.app.diff.docA_ID;
-  $: docB_ID = $appStore.app.diff.docB_ID;
+  $: docA_ID = appStore.state.app.diff.docA_ID;
+  $: docB_ID = appStore.state.app.diff.docB_ID;
   $: if (docA_ID) updateDocumentA();
   $: if (docB_ID) updateDocumentB();
-  $: docA = $appStore.app.diff.docA;
-  $: docB = $appStore.app.diff.docB;
-  $: isToolboxOpen = $appStore.app.isToolboxOpen;
+  $: docA = appStore.state.app.diff.docA;
+  $: docB = appStore.state.app.diff.docB;
+  $: isToolboxOpen = appStore.state.app.isToolboxOpen;
   $: if (isToolboxOpen) {
     getTempDocuments();
     getDocuments();
@@ -394,7 +394,7 @@
                       }
                       e.preventDefault();
                     }}
-                    class:invisible={!$appStore.app.isToolboxOpen}
+                    class:invisible={!appStore.state.app.isToolboxOpen}
                     disabled={docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons}
                     title={`compare ${doc.title} - ${doc.tracking.id}`}
                   >

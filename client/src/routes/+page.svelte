@@ -21,7 +21,7 @@
   import Search from "$lib/Search/Overview.svelte";
   import Advisory from "$lib/Advisories/Advisory.svelte";
   import NotFound from "$lib/NotFound.svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { push } from "svelte-spa-router";
   import Messages from "$lib/Messages/Messages.svelte";
   import Login from "$lib/Login/Login.svelte";
@@ -86,7 +86,7 @@
       appStore.setSessionExpired(true);
       appStore.setSessionExpiredMessage("Idle logout");
       sessionStorage.clear();
-      await $appStore.app.userManager?.signoutRedirect();
+      await appStore.getUserManager()?.signoutRedirect();
     };
   };
 
@@ -163,95 +163,95 @@
 
   const routes = {
     "/": wrap({
-      component: Dashboard,
+      component: Dashboard as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/login": wrap({
-      component: Login
+      component: Login as any
     }),
     "/advisories/:publisherNamespace/:trackingID/documents/:id/:position?": wrap({
-      component: Advisory,
+      component: Advisory as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/search": wrap({
-      component: Search,
+      component: Search as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/configuration": wrap({
-      component: Configuration,
+      component: Configuration as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/queries/": wrap({
-      component: QueryOverview,
+      component: QueryOverview as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/queries/new": wrap({
-      component: QueryDesigner,
+      component: QueryDesigner as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/queries/:id": wrap({
-      component: QueryDesigner,
+      component: QueryDesigner as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/diff": wrap({
-      component: Diff,
+      component: Diff as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/statistics": wrap({
-      component: Statistics,
+      component: Statistics as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources": wrap({
-      component: Sources,
+      component: Sources as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources/new": wrap({
-      component: SourceCreator,
+      component: SourceCreator as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources/new/:domain": wrap({
-      component: SourceCreator,
+      component: SourceCreator as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources/logs/:id": wrap({
-      component: FeedLogViewer,
+      component: FeedLogViewer as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources/upload": wrap({
-      component: DocumentUpload,
+      component: DocumentUpload as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources/aggregators": wrap({
-      component: AggregatorViewer,
+      component: AggregatorViewer as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
     "/sources/aggregators/:id": wrap({
-      component: AggregatorViewer,
+      component: AggregatorViewer as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
 
     "/sources/:id": wrap({
-      component: SourceEditor,
+      component: SourceEditor as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "*": NotFound
+    "*": NotFound as any
   };
 
   const conditionsFailed = (event: any) => {
@@ -299,7 +299,7 @@
     <SideNav></SideNav>
   </div>
   <main class="flex max-h-screen w-full flex-col overflow-auto bg-white p-6 dark:bg-gray-800">
-    {#if $appStore.app.userManager}
+    {#if appStore.state.app.userManager}
       <Router {routes} on:conditionsFailed={conditionsFailed} />
     {/if}
     <ErrorMessage error={loadConfigError}></ErrorMessage>

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import Branch from "./branch/Branch.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import ProductGroups from "./productgroup/ProductGroups.svelte";
@@ -21,11 +21,11 @@
   let openSubBranches = false;
   let openBranches = false;
   let openRelationships = false;
-  $: selectedProduct = $appStore.webview.ui.selectedProduct;
+  $: selectedProduct = appStore.state.webview.ui.selectedProduct;
 
   $: {
     let size = 0;
-    for (let branch of $appStore.webview.doc?.productTree.branches ?? []) {
+    for (let branch of appStore.state.webview.doc?.productTree.branches ?? []) {
       if (branch.branches) {
         size = size + branch.branches.length;
       }
@@ -36,40 +36,44 @@
     openBranches = !!selectedProduct || size <= productTreeCutoffs.level2Upper;
     openSubBranches = !!selectedProduct || size <= productTreeCutoffs.level2Lower;
     openRelationships =
-      $appStore.webview.doc?.productTree.relationships?.length ?? 0 <= productTreeCutoffs.relations;
+      appStore.state.webview.doc?.productTree.relationships?.length ??
+      0 <= productTreeCutoffs.relations;
   }
 </script>
 
-{#if $appStore.webview.doc?.productTree.branches}
+{#if appStore.state.webview.doc?.productTree.branches}
   <Collapsible
     header="Branches"
     open={!!selectedProduct ||
-      $appStore.webview.doc?.productTree.branches.length <= productTreeCutoffs.level1}
+      appStore.state.webview.doc?.productTree.branches.length <= productTreeCutoffs.level1}
   >
-    {#each $appStore.webview.doc?.productTree.branches as branch}
+    {#each appStore.state.webview.doc?.productTree.branches as branch}
       <Branch {branch} {openSubBranches} open={openBranches} />
     {/each}
   </Collapsible>
 {/if}
 
-{#if $appStore.webview.doc?.productTree.relationships}
+{#if appStore.state.webview.doc?.productTree.relationships}
   <Collapsible header="Relationships" open={!!selectedProduct || openRelationships}>
-    <Relationships {basePath} relationships={$appStore.webview.doc?.productTree.relationships} />
-  </Collapsible>
-{/if}
-
-{#if $appStore.webview.doc?.productTree.product_groups}
-  <Collapsible header="Product groups" open>
-    <ProductGroups
-      productGroups={!selectedProduct && $appStore.webview.doc?.productTree.product_groups}
+    <Relationships
+      {basePath}
+      relationships={appStore.state.webview.doc?.productTree.relationships}
     />
   </Collapsible>
 {/if}
 
-{#if $appStore.webview.doc?.productTree.full_product_names}
+{#if appStore.state.webview.doc?.productTree.product_groups}
+  <Collapsible header="Product groups" open>
+    <ProductGroups
+      productGroups={!selectedProduct && appStore.state.webview.doc?.productTree.product_groups}
+    />
+  </Collapsible>
+{/if}
+
+{#if appStore.state.webview.doc?.productTree.full_product_names}
   <Collapsible header="Full Product Names" open>
     <ProductNames
-      productNames={!selectedProduct && $appStore.webview.doc?.productTree.full_product_names}
+      productNames={!selectedProduct && appStore.state.webview.doc?.productTree.full_product_names}
     />
   </Collapsible>
 {/if}

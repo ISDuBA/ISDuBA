@@ -32,7 +32,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ADMIN, EDITOR, IMPORTER, REVIEWER } from "$lib/workflow";
   import { getAllowedWorkflowChanges, isRoleIncluded } from "$lib/permissions";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { getPublisher } from "$lib/publisher";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
@@ -69,13 +69,16 @@
   const tdClass = "whitespace-nowrap relative";
 
   $: disableDiffButtons =
-    $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
+    appStore.state.app.diff.docA_ID !== undefined && appStore.state.app.diff.docB_ID !== undefined;
 
   $: areAllSelected =
-    documents && areArraysEqual(documentIDs, Array.from($appStore.app.selectedDocumentIDs.keys()));
+    documents &&
+    areArraysEqual(documentIDs, Array.from(appStore.state.app.selectedDocumentIDs.keys()));
 
   $: selectedDocuments =
-    $appStore.app.documents?.filter((d: any) => $appStore.app.selectedDocumentIDs.has(d.id)) ?? [];
+    appStore.state.app.documents?.filter((d: any) =>
+      appStore.state.app.selectedDocumentIDs.has(d.id)
+    ) ?? [];
   $: allowedWorkflowStateChanges = getAllowedWorkflowChanges(
     selectedDocuments?.map((d: any) => d.state) ?? []
   );
@@ -330,7 +333,7 @@
 
 <DeleteModal
   on:deleted={onDeleted}
-  documents={$appStore.app.documentsToDelete || []}
+  documents={appStore.state.app.documentsToDelete || []}
   type={tableType}
 ></DeleteModal>
 
@@ -537,7 +540,7 @@
               {#if isMultiSelectionAllowed}
                 <TableBodyCell tdClass="px-0">
                   <CCheckbox
-                    checked={$appStore.app.selectedDocumentIDs.has(item.id)}
+                    checked={appStore.state.app.selectedDocumentIDs.has(item.id)}
                     on:click={(event) => {
                       const isChecked = event.detail.target.checked;
                       if (isChecked) {
@@ -564,7 +567,7 @@
                   {/if}
                   <button
                     on:click|stopPropagation={(e) => {
-                      if ($appStore.app.diff.docA_ID) {
+                      if (appStore.state.app.diff.docA_ID) {
                         appStore.setDiffDocB_ID(item.id);
                       } else {
                         appStore.setDiffDocA_ID(item.id);
@@ -572,11 +575,11 @@
                       appStore.openToolbox();
                       e.preventDefault();
                     }}
-                    class:invisible={!$appStore.app.isToolboxOpen &&
-                      $appStore.app.diff.docA_ID === undefined &&
-                      $appStore.app.diff.docB_ID === undefined}
-                    disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
-                      $appStore.app.diff.docB_ID === item.id.toString() ||
+                    class:invisible={!appStore.state.app.isToolboxOpen &&
+                      appStore.state.app.diff.docA_ID === undefined &&
+                      appStore.state.app.diff.docB_ID === undefined}
+                    disabled={appStore.state.app.diff.docA_ID === item.id.toString() ||
+                      appStore.state.app.diff.docB_ID === item.id.toString() ||
                       disableDiffButtons}
                     class="min-w-[26px] p-1"
                     title={`compare ${item.tracking_id}`}
@@ -584,8 +587,8 @@
                     <Img
                       src="plus-minus.svg"
                       class={`${
-                        $appStore.app.diff.docA_ID === item.id.toString() ||
-                        $appStore.app.diff.docB_ID === item.id.toString() ||
+                        appStore.state.app.diff.docA_ID === item.id.toString() ||
+                        appStore.state.app.diff.docB_ID === item.id.toString() ||
                         disableDiffButtons
                           ? "invert-[70%]"
                           : "dark:invert"
@@ -599,6 +602,7 @@
                   ><a
                     class="absolute top-0 right-0 bottom-0 left-0"
                     href={getAdvisoryAnchorLink(item)}
+                    aria-label="View advisory details"
                   >
                   </a>
                   <div class="m-2 table w-full text-wrap">
@@ -625,6 +629,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        aria-label="View advisory details"
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -640,6 +645,7 @@
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        aria-label="View advisory details"
                       >
                       </a>
                       <div class="m-2 table w-16 text-wrap">
@@ -651,6 +657,7 @@
                   {:else if column === "state"}
                     <TableBodyCell {tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -671,6 +678,7 @@
                   {:else if column === "initial_release_date"}
                     <TableBodyCell {tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -682,6 +690,7 @@
                   {:else if column === "current_release_date"}
                     <TableBodyCell {tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -693,6 +702,7 @@
                   {:else if column === "title"}
                     <TableBodyCell tdClass={title + " relative"}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -704,6 +714,7 @@
                   {:else if column === "publisher"}
                     <TableBodyCell tdClass={publisher + " relative"}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -715,6 +726,7 @@
                   {:else if column === "recent"}
                     <TableBodyCell {tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -729,6 +741,7 @@
                     <TableBodyCell {tdClass}>
                       {#if !(item[column] && item[column][0] && item[column].length > 1)}
                         <a
+                          aria-label="View advisory details"
                           class="absolute top-0 right-0 bottom-0 left-0"
                           href={getAdvisoryAnchorLink(item)}
                         >
@@ -774,6 +787,7 @@
                   {:else if column === "critical"}
                     <TableBodyCell {tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -789,6 +803,7 @@
                   {:else if column === "tracking_id"}
                     <TableBodyCell {tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -800,6 +815,7 @@
                   {:else}
                     <TableBodyCell {tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >

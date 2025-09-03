@@ -8,7 +8,7 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import General from "$lib/Advisories/CSAFWebview/general/General.svelte";
   import ProductTree from "$lib/Advisories/CSAFWebview/producttree/ProductTree.svelte";
   import Vulnerabilities from "$lib/Advisories/CSAFWebview/vulnerabilities/Vulnerabilities.svelte";
@@ -97,16 +97,19 @@
     };
     increment(
       "productTree",
-      $appStore.webview.doc && $appStore.webview.doc["isProductTreePresent"]
+      appStore.state.webview.doc && appStore.state.webview.doc["isProductTreePresent"]
     );
     increment(
       "vulnerabilities",
-      $appStore.webview.doc && $appStore.webview.doc["isVulnerabilitiesPresent"]
+      appStore.state.webview.doc && appStore.state.webview.doc["isVulnerabilitiesPresent"]
     );
-    increment("notes", $appStore.webview.doc?.notes);
-    increment("Acknowledgments", $appStore.webview.doc?.acknowledgments);
-    increment("references", $appStore.webview.doc && $appStore.webview.doc.references.length > 0);
-    increment("revisionHistory", $appStore.webview.doc?.isRevisionHistoryPresent);
+    increment("notes", appStore.state.webview.doc?.notes);
+    increment("Acknowledgments", appStore.state.webview.doc?.acknowledgments);
+    increment(
+      "references",
+      appStore.state.webview.doc && appStore.state.webview.doc.references.length > 0
+    );
+    increment("revisionHistory", appStore.state.webview.doc?.isRevisionHistoryPresent);
     placeToPhase = {
       vulnerabilitiesOverview: { show: true, phase: next },
       ...phaseObject
@@ -123,7 +126,7 @@
     updateUI();
   }
 
-  $: aliases = $appStore.webview.doc?.aliases;
+  $: aliases = appStore.state.webview.doc?.aliases;
 
   $: innerWidth = 0;
   $: {
@@ -135,13 +138,13 @@
   }
   $: {
     isCSAF = !!(
-      $appStore.webview.doc?.isRevisionHistoryPresent ||
-      $appStore.webview.doc?.isDocPresent ||
-      $appStore.webview.doc?.isProductTreePresent ||
-      $appStore.webview.doc?.isPublisherPresent ||
-      $appStore.webview.doc?.isTLPPresent ||
-      $appStore.webview.doc?.isTrackingPresent ||
-      $appStore.webview.doc?.isVulnerabilitiesPresent
+      appStore.state.webview.doc?.isRevisionHistoryPresent ||
+      appStore.state.webview.doc?.isDocPresent ||
+      appStore.state.webview.doc?.isProductTreePresent ||
+      appStore.state.webview.doc?.isPublisherPresent ||
+      appStore.state.webview.doc?.isTLPPresent ||
+      appStore.state.webview.doc?.isTrackingPresent ||
+      appStore.state.webview.doc?.isVulnerabilitiesPresent
     );
     updatePlaces();
   }
@@ -152,7 +155,7 @@
 <div class="grid auto-cols-fr grid-flow-col gap-6">
   {#if isCSAF}
     <div class="flex w-full flex-col">
-      {#if $appStore.webview.doc}
+      {#if appStore.state.webview.doc}
         <div class="mb-4 w-full">
           <General />
         </div>
@@ -169,7 +172,7 @@
           inactiveClasses="h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
         >
           <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Overview">
-            {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
+            {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
               <div class={sideScroll}>
                 <ProductVulnerabilities {basePath} />
               </div>
@@ -194,24 +197,24 @@
               </div>
             </TabItem>
           {/if}
-          {#if showTab(placeToPhase.notes) && $appStore.webview.doc?.notes}
+          {#if showTab(placeToPhase.notes) && appStore.state.webview.doc?.notes}
             <TabItem bind:open={tabOpen.notes} title="Notes">
               <div class={sideScroll}>
-                <Notes open notes={$appStore.webview.doc?.notes} />
+                <Notes open notes={appStore.state.webview.doc?.notes} />
               </div>
             </TabItem>
           {/if}
-          {#if showTab(placeToPhase.Acknowledgments) && $appStore.webview.doc?.acknowledgments}
+          {#if showTab(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
             <TabItem bind:open={tabOpen.Acknowledgments} title="Acknowledgments">
               <div class={sideScroll}>
-                <Acknowledgments acknowledgments={$appStore.webview.doc?.acknowledgments} />
+                <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
               </div>
             </TabItem>
           {/if}
           {#if showTab(placeToPhase.references)}
             <TabItem bind:open={tabOpen.references} title="References">
               <div class={sideScroll}>
-                <References references={$appStore.webview.doc?.references} />
+                <References references={appStore.state.webview.doc?.references} />
               </div>
             </TabItem>
           {/if}
@@ -228,7 +231,7 @@
           <FakeButton active>Overview</FakeButton>
           <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
           <div class={sideScroll}>
-            {#if $appStore.webview.doc?.productVulnerabilities.length > 1}
+            {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
               <ProductVulnerabilities {basePath} />
             {:else}
               <i>
@@ -258,22 +261,22 @@
         </div>
       </div>
     {/if}
-    {#if showArea(placeToPhase.notes) && $appStore.webview.doc?.notes}
+    {#if showArea(placeToPhase.notes) && appStore.state.webview.doc?.notes}
       <div>
         <FakeButton active>Notes</FakeButton>
         <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
-          <Notes open notes={$appStore.webview.doc?.notes} />
+          <Notes open notes={appStore.state.webview.doc?.notes} />
         </div>
       </div>
     {/if}
 
-    {#if showArea(placeToPhase.Acknowledgments) && $appStore.webview.doc?.acknowledgments}
+    {#if showArea(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
       <div>
         <FakeButton active>Acknowledgments</FakeButton>
         <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
-          <Acknowledgments acknowledgments={$appStore.webview.doc?.acknowledgments} />
+          <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
         </div>
       </div>
     {/if}
@@ -283,7 +286,7 @@
         <FakeButton active>References</FakeButton>
         <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
-          <References references={$appStore.webview.doc?.references} />
+          <References references={appStore.state.webview.doc?.references} />
         </div>
       </div>
     {/if}

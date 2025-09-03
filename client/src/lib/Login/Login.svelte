@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { Button, Heading, Card } from "flowbite-svelte";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -24,12 +24,12 @@
     appStore.setSessionExpired(true);
     appStore.setSessionExpiredMessage("Logout");
     sessionStorage.clear();
-    await $appStore.app.userManager?.signoutRedirect();
+    await appStore.state.app.userManager?.signoutRedirect();
   }
 
   async function login() {
     try {
-      await $appStore.app.userManager?.signinRedirect();
+      await appStore.state.app.userManager?.signinRedirect();
     } catch (e: any) {
       viewError = getErrorDetails(`Could not load login information: ` + e.message);
     }
@@ -90,16 +90,16 @@
             ><b>Realm: </b>{appStore.getKeycloakRealm()}</span
           ></P
         >
-        {#if $appStore.app.userManager && !$appStore.app.isUserLoggedIn}
-          {#if $appStore.app.sessionExpired}
+        {#if appStore.state.app.userManager && !appStore.state.app.isUserLoggedIn}
+          {#if appStore.state.app.sessionExpired}
             <div class="text-yellow-400">
-              <i class="bx bx-message-alt-error"></i> Your session is expired: {$appStore.app
+              <i class="bx bx-message-alt-error"></i> Your session is expired: {appStore.state.app
                 .sessionExpiredMessage || "Please login"}
             </div>
           {/if}
           <Button on:click={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
         {/if}
-        {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
+        {#if appStore.state.app.userManager && appStore.state.app.isUserLoggedIn}
           <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
           <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
@@ -118,11 +118,11 @@
         </div>
       </div>
     </Card>
-    {#if $appStore.app.isUserLoggedIn && !$appStore.app.sessionExpired}
+    {#if appStore.state.app.isUserLoggedIn && !appStore.state.app.sessionExpired}
       <div class="mt-4 flex w-full flex-row gap-4">
         <div class="flex flex-grow flex-col">
           <span class="text-xl">User:</span>
-          <span class="ml-3">{$appStore.app.tokenParsed?.preferred_username}</span>
+          <span class="ml-3">{appStore.state.app.tokenParsed?.preferred_username}</span>
         </div>
         {#if !viewError}
           <div class="flex flex-grow flex-col">

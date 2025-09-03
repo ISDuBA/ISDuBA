@@ -39,7 +39,7 @@
     toLocaleISOString
   } from "$lib/time";
   import chroma from "chroma-js";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import DateRange from "$lib/Components/DateRange.svelte";
   import debounce from "debounce";
 
@@ -95,11 +95,11 @@
   ];
   const rangeColors = ["#ddd", "#FFEFB0", "#E6A776", "#CD5D3A", "#B41500"];
 
-  let darkMode = $appStore.app.isDarkMode;
+  let darkMode = appStore.state.app.isDarkMode;
 
   $: {
-    if ($appStore.app.isDarkMode !== darkMode) {
-      darkMode = $appStore.app.isDarkMode;
+    if (appStore.state.app.isDarkMode !== darkMode) {
+      darkMode = appStore.state.app.isDarkMode;
       updateChartColors();
     }
   }

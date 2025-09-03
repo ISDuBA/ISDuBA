@@ -27,6 +27,7 @@
   }}
   {disabled}
   {title}
+  aria-label={title || `Icon button ${icon}`}
   id={$$props.id}
   class="p-1"
 >

@@ -8,7 +8,7 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
-import { appStore } from "./store";
+import { appStore } from "./store.svelte";
 import { push } from "svelte-spa-router";
 import type { User } from "oidc-client-ts";
 import type { HttpResponse } from "./types";
@@ -105,7 +105,12 @@ export const request = async (
 
 export const getAccessToken = async () => {
   const userManager = appStore.getUserManager();
-  return userManager.getUser().then(async (user: User) => {
+  if (!userManager) {
+    await push("/login");
+    return;
+  }
+
+  return userManager.getUser().then(async (user: User | null) => {
     if (user) {
       appStore.setTokenParsed(jwtDecode(user.access_token));
       return user.access_token;

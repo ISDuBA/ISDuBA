@@ -29,7 +29,7 @@
   import { onMount } from "svelte";
   import { push, querystring } from "svelte-spa-router";
   import { parse } from "qs";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import Sortable from "sortablejs";

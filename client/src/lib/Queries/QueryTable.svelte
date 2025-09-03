@@ -267,7 +267,9 @@
         </tbody>
       {:else if queries !== undefined && queries.length === 0}
         <tbody>
-          <span>No queries found</span>
+          <tr>
+            <td colspan="6" class="py-4 text-center">No queries found</td>
+          </tr>
         </tbody>
       {/if}
     </Table>

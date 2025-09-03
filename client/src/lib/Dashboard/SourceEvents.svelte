@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import {
     type Attention,
@@ -64,7 +64,7 @@
   });
 </script>
 
-{#if $appStore.app.isUserLoggedIn && appStore.isSourceManager()}
+{#if appStore.state.app.isUserLoggedIn && appStore.isSourceManager()}
   <div class="mb-8 flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title="Changed sources"></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">

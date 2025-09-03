@@ -9,12 +9,12 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import Message from "./Message.svelte";
 </script>
 
 <div style="position:absolute; bottom:1rem; right:1rem;">
-  {#each $appStore.app.errors as error (error.id)}
+  {#each appStore.state.app.errors as error (error.id)}
     <div class="mb-2">
       <Message {error}></Message>
     </div>

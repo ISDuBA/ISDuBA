@@ -13,7 +13,7 @@
   import { Button } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import { fetchSource } from "../source";
 
