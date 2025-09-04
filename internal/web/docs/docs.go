@@ -735,6 +735,12 @@ const docTemplate = `{
                         "description": "Offset",
                         "name": "offset",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return search results",
+                        "name": "results",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1260,6 +1266,14 @@ const docTemplate = `{
                             "Reviewer": "Reviewer role",
                             "SourceManager": "Source Manager role"
                         },
+                        "x-enum-descriptions": [
+                            "Admin role",
+                            "Importer role",
+                            "Editor role",
+                            "Reviewer role",
+                            "Auditor role",
+                            "Source Manager role"
+                        ],
                         "x-enum-varnames": [
                             "Admin",
                             "Importer",
@@ -1621,6 +1635,14 @@ const docTemplate = `{
                             "Reviewer": "Reviewer role",
                             "SourceManager": "Source Manager role"
                         },
+                        "x-enum-descriptions": [
+                            "Admin role",
+                            "Importer role",
+                            "Editor role",
+                            "Reviewer role",
+                            "Auditor role",
+                            "Source Manager role"
+                        ],
                         "x-enum-varnames": [
                             "Admin",
                             "Importer",
@@ -1725,6 +1747,12 @@ const docTemplate = `{
                         "description": "Enable statistic",
                         "name": "stats",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable health indicator",
+                        "name": "health",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1792,6 +1820,11 @@ const docTemplate = `{
                         },
                         "collectionFormat": "csv",
                         "name": "headers",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "healthy",
                         "in": "formData"
                     },
                     {
@@ -2010,6 +2043,12 @@ const docTemplate = `{
                         "description": "Enable statistic",
                         "name": "stats",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable health indicator",
+                        "name": "health",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2054,6 +2093,11 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "boolean",
+                        "name": "healthy",
+                        "in": "formData"
+                    },
+                    {
                         "type": "integer",
                         "name": "id",
                         "in": "formData"
@@ -2072,6 +2116,7 @@ const docTemplate = `{
                             1
                         ],
                         "type": "integer",
+                        "format": "int32",
                         "x-enum-varnames": [
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
@@ -2310,6 +2355,12 @@ const docTemplate = `{
                         "description": "Enable statistic",
                         "name": "stats",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable health indicator",
+                        "name": "health",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2390,6 +2441,11 @@ const docTemplate = `{
                         },
                         "collectionFormat": "csv",
                         "name": "headers",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "healthy",
                         "in": "formData"
                     },
                     {
@@ -2549,9 +2605,22 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "integer",
+                        "description": "Source ID",
+                        "name": "health",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "type": "boolean",
                         "description": "Enable statistic",
                         "name": "stats",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable health indicator",
+                        "name": "health",
                         "in": "query"
                     }
                 ],
@@ -3468,6 +3537,7 @@ const docTemplate = `{
         },
         "config.FeedLogLevel": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 0,
                 1,
@@ -3551,6 +3621,17 @@ const docTemplate = `{
                 "ImportDocumentEvent": "ImportDocumentEvent represents a document import.",
                 "StateChangeEvent": "StateChangeEvent represents changing the advisory state."
             },
+            "x-enum-descriptions": [
+                "ImportDocumentEvent represents a document import.",
+                "DeleteDocumentEvent represents a document deletion.",
+                "StateChangeEvent represents changing the advisory state.",
+                "AddSSVCEvent represents the addtion of a SSVC score.",
+                "ChangeSSVCEvent represents the change of a SSVC score.",
+                "DeleteSSVCEvent represents the deletion of a SSVC score.",
+                "AddCommentEvent represents the addition of a comment.",
+                "ChangeCommentEvent represents the change of a comment.",
+                "DeleteCommentEvent represents the deletion of a comment."
+            ],
             "x-enum-varnames": [
                 "ImportDocumentEvent",
                 "DeleteDocumentEvent",
@@ -3649,6 +3730,12 @@ const docTemplate = `{
                 "TLPRed": "TLPRed   represents TLP:RED",
                 "TLPWhite": "TLPWhite represents TLP:WHITE"
             },
+            "x-enum-descriptions": [
+                "TLPWhite represents TLP:WHITE",
+                "TLPGreen represents TLP:GREEN",
+                "TLPAmber represents TLP:AMBER",
+                "TLPRed   represents TLP:RED"
+            ],
             "x-enum-varnames": [
                 "TLPWhite",
                 "TLPGreen",
@@ -3674,6 +3761,14 @@ const docTemplate = `{
                 "ReadWorkflow": "ReadWorkflow represents 'read'.",
                 "ReviewWorkflow": "ReviewWorkflow represents 'review'."
             },
+            "x-enum-descriptions": [
+                "NewWorkflow represents 'new'.",
+                "ReadWorkflow represents 'read'.",
+                "AssessingWorkflow represents 'assessing',",
+                "ReviewWorkflow represents 'review'.",
+                "ArchivedWorkflow represents 'archived'.",
+                "DeleteWorkflow represents 'delete'."
+            ],
             "x-enum-varnames": [
                 "NewWorkflow",
                 "ReadWorkflow",
@@ -3701,6 +3796,14 @@ const docTemplate = `{
                 "Reviewer": "Reviewer role",
                 "SourceManager": "Source Manager role"
             },
+            "x-enum-descriptions": [
+                "Admin role",
+                "Importer role",
+                "Editor role",
+                "Reviewer role",
+                "Auditor role",
+                "Source Manager role"
+            ],
             "x-enum-varnames": [
                 "Admin",
                 "Importer",
@@ -3793,6 +3896,9 @@ const docTemplate = `{
             "properties": {
                 "downloading": {
                     "type": "integer"
+                },
+                "healthy": {
+                    "type": "boolean"
                 },
                 "waiting": {
                     "type": "integer"
@@ -3963,6 +4069,9 @@ const docTemplate = `{
         "web.feed": {
             "type": "object",
             "properties": {
+                "healthy": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -4112,6 +4221,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "healthy": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "integer"

@@ -17,12 +17,14 @@ import (
 
 // SQLBuilder helps to construct a SQL query.
 type SQLBuilder struct {
-	WhereClause  string
-	Replacements []any
-	replToIdx    map[string]int
-	Aliases      map[string]string
-	Mode         ParserMode
-	TextTables   bool
+	WhereClause         string
+	Replacements        []any
+	replToIdx           map[string]int
+	Aliases             map[string]string
+	IgnoreFields        map[string]struct{}
+	Mode                ParserMode
+	TextTables          bool
+	ReturnSearchResults bool
 }
 
 // CreateWhere construct a WHERE clause for a given expression.
@@ -50,20 +52,42 @@ func LikeEscape(query string) string {
 }
 
 func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
-	fmt.Fprintf(b, "txt ILIKE $%d",
-		sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	if sb.ReturnSearchResults {
+		fmt.Fprintf(b, "txt ILIKE $%d",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 
-	// We need the text tables to be joined.
-	sb.TextTables = true
+		// We need the text tables to be joined.
+		sb.TextTables = true
 
-	// Handle alias
-	if e.alias == "" {
-		return
+		// Handle alias
+		if e.alias == "" {
+			return
+		}
+		if sb.Aliases == nil {
+			sb.Aliases = map[string]string{}
+		}
+		sb.Aliases[e.alias] = `txt`
+	} else {
+		switch sb.Mode {
+		case AdvisoryMode, DocumentMode:
+			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
+				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
+				"WHERE txt ILIKE $%d "+
+				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
+		case EventMode:
+			// TODO clarify how to handle event search
+		}
+
+		// Ignore alias for now to avoid breaking change
+		if e.alias == "" {
+			return
+		}
+		if sb.IgnoreFields == nil {
+			sb.IgnoreFields = map[string]struct{}{}
+		}
+		sb.IgnoreFields[e.alias] = struct{}{}
 	}
-	if sb.Aliases == nil {
-		sb.Aliases = map[string]string{}
-	}
-	sb.Aliases[e.alias] = `txt`
+
 }
 
 func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
@@ -416,7 +440,7 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 
 // CreateQuery creates an SQL statement to query the documents
 // table and the associated texts if needed.
-// WARN: Make sure that the iput is vetted against injections.
+// WARN: Make sure that the input is vetted against injections.
 func (sb *SQLBuilder) CreateQuery(
 	fields []string,
 	order string,
@@ -451,6 +475,9 @@ func (sb *SQLBuilder) CreateQuery(
 // projectionsWithCasts joins given projection adding casts if needed.
 func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 	for i, p := range proj {
+		if _, found := sb.IgnoreFields[p]; found {
+			continue
+		}
 		if i > 0 {
 			b.WriteByte(',')
 		}
@@ -502,6 +529,9 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 func (sb *SQLBuilder) CheckProjections(proj []string) error {
 	for _, p := range proj {
 		if _, found := sb.Aliases[p]; found {
+			continue
+		}
+		if _, found := sb.IgnoreFields[p]; found {
 			continue
 		}
 		if !ExistsDocumentColumn(p, sb.Mode) {
