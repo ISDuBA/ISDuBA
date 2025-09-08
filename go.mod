@@ -23,7 +23,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/time v0.12.0
+	golang.org/x/time v0.13.0
 	gomodules.xyz/jsonpatch/v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
