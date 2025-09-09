@@ -40,7 +40,7 @@
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
   import { onMount } from "svelte";
 
-  let loadConfigError: ErrorDetails | null;
+  let loadConfigError: ErrorDetails | null = $state(null);
 
   const loadConfig = () => {
     return new Promise((resolve) => {

@@ -12,13 +12,17 @@
   import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
 
-  export let id: string;
+  interface Props {
+    id: string;
+  }
+
+  let { id }: Props = $props();
 
   const showMore = () => {
     push(`/search?query=${id}`);
   };
 </script>
 
-<Button on:click={showMore} color="light" class="h-fit w-fit rounded-md !px-2 !py-1">
+<Button onclick={showMore} color="light" class="h-fit w-fit rounded-md !px-2 !py-1">
   <i class="bx bx-spreadsheet text-lg"></i>
 </Button>

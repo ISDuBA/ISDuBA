@@ -15,18 +15,23 @@
   import { request } from "$lib/request";
   import { appStore } from "$lib/store.svelte";
   import { Button, Modal, Spinner } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
 
-  export let documents: any[] = [];
-  export let type: SEARCHTYPES;
-
-  $: isDeleteModalOpen = appStore.state.app.isDeleteModalOpen;
-  $: if (!isDeleteModalOpen) {
-    errorMessage = null;
+  interface Props {
+    documents?: any[];
+    type: SEARCHTYPES;
+    onDeleted: () => void;
   }
-  let errorMessage: ErrorDetails | null = null;
-  let isLoading = false;
-  const dispatch = createEventDispatcher();
+
+  let { documents = [], type, onDeleted }: Props = $props();
+
+  let isDeleteModalOpen = $derived(appStore.state.app.isDeleteModalOpen);
+  $effect(() => {
+    if (!isDeleteModalOpen) {
+      errorMessage = null;
+    }
+  });
+  let errorMessage: ErrorDetails | null = $state(null);
+  let isLoading = $state(false);
 
   const deleteDocuments = async () => {
     errorMessage = null;
@@ -53,7 +58,7 @@
     }
     isLoading = false;
     if (!failed) {
-      dispatch("deleted");
+      onDeleted();
       appStore.setIsDeleteModalOpen(false);
     }
   };

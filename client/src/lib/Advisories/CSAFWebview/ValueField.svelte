@@ -9,8 +9,11 @@
 -->
 
 <script lang="ts">
-  export let value = "";
-  export let label = "";
+  interface Props {
+    label?: string;
+    value?: string;
+  }
+  let { label = "", value = "" }: Props = $props();
 </script>
 
 <div>

@@ -9,28 +9,37 @@
 -->
 
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   import { appStore } from "$lib/store.svelte";
   import type { AdvisoryVersion } from "./advisory";
 
-  export let advisoryVersions: AdvisoryVersion[];
-  $: reversedAdvisoryVersions = advisoryVersions.toReversed();
-  export let publisherNamespace: string;
-  export let selectedDocumentVersion: AdvisoryVersion;
-  let diffModeActivated = false;
-  let firstDocumentIndex: number | undefined;
-  let secondDocumentIndex: number | undefined;
-  let nextColor = "red";
+  interface Props {
+    advisoryVersions: AdvisoryVersion[];
+    publisherNamespace: string;
+    selectedDocumentVersion: AdvisoryVersion;
+    onDisabledDiff: () => void;
+    selectedDiffDocuments: () => void;
+  }
+
+  let {
+    advisoryVersions,
+    publisherNamespace,
+    selectedDocumentVersion,
+    onDisabledDiff,
+    selectedDiffDocuments
+  }: Props = $props();
+  let diffModeActivated = $state(false);
+  let firstDocumentIndex: number | undefined = $state();
+  let secondDocumentIndex: number | undefined = $state();
+  let nextColor = $state("red");
   const diffButtonBaseClass = "!p-2 h-8 min-w-8 mb-2";
   const versionButtonClass = "dark:text-white text-black hover:text-black border border-solid";
   const redButtonClass = `${versionButtonClass} bg-red-100 group-hover:bg-red-300 border-red-700 dark:bg-red-700 dark:group-hover:bg-red-500 dark:border-red-100`;
   const greenButtonClass = `${versionButtonClass} bg-green-100 group-hover:bg-green-300 border-green-700 dark:bg-green-700 dark:group-hover:bg-green-500 dark:border-green-100`;
   const lightButtonClass = `${versionButtonClass} bg-white group-hover:bg-gray-200 border-gray-700 dark:bg-gray-800 dark:group-hover:bg-gray-600 dark:border-gray-300`;
 
-  const dispatch = createEventDispatcher();
   const navigateToVersion = (version: any) => {
     push(
       `/advisories/${publisherNamespace}/${selectedDocumentVersion.tracking_id}/documents/${version.id}`
@@ -69,7 +78,7 @@
     ) {
       navigateToVersion(reversedAdvisoryVersions[secondDocumentIndex]);
     }
-    dispatch("disableDiff");
+    onDisabledDiff();
   };
   const showDiff = () => {
     if (
@@ -79,7 +88,7 @@
     ) {
       appStore.setDiffDocA_ID(reversedAdvisoryVersions[secondDocumentIndex].id);
       appStore.setDiffDocB_ID(reversedAdvisoryVersions[firstDocumentIndex].id);
-      dispatch("selectedDiffDocuments");
+      selectedDiffDocuments();
     }
   };
   const selectDiffDocument = (index: number) => {
@@ -107,6 +116,7 @@
       showDiff();
     }
   };
+  let reversedAdvisoryVersions = $derived(advisoryVersions.toReversed());
 </script>
 
 <div class="mb-2 flex flex-row items-center gap-4">

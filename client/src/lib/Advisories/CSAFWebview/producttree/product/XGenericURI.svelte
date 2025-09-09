@@ -12,7 +12,10 @@
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import type { xGenericURI } from "./producttypes";
 
-  export let x_generic_uris: xGenericURI[];
+  interface Props {
+    x_generic_uris: xGenericURI[];
+  }
+  let { x_generic_uris }: Props = $props();
 </script>
 
 <p>X Generic URIs</p>

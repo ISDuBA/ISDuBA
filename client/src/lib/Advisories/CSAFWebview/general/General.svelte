@@ -13,35 +13,24 @@
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
 
-  $: trackingVersion = appStore.state.webview.doc?.trackingVersion;
-  $: generator = appStore.state.webview.doc?.generator;
-  $: publisherName = appStore.state.webview.doc?.publisher.name;
-  $: publisherCategory = appStore.state.webview.doc?.publisher.category;
-  $: publisherNamespace = appStore.state.webview.doc?.publisher.namespace;
-  $: publisherIssuingAuthority = appStore.state.webview.doc?.publisher.issuing_authority;
-  $: publisherContactDetails = appStore.state.webview.doc?.publisher.contact_details;
-  $: category = appStore.state.webview.doc?.category;
-  $: title = appStore.state.webview.doc?.title;
-  $: lang = appStore.state.webview.doc?.lang;
-  $: sourceLang = appStore.state.webview.doc?.sourceLang;
-  $: csafVersion = appStore.state.webview.doc?.csafVersion;
-  $: distributionText = appStore.state.webview.doc?.distributionText;
-  $: published = appStore.state.webview.doc?.published;
-  $: lastUpdate = appStore.state.webview.doc?.lastUpdate;
-  $: status = appStore.state.webview.doc?.status;
-  $: baseSeverity = appStore.state.webview.doc?.highestScore?.baseSeverity;
-  $: baseScore = appStore.state.webview.doc?.highestScore?.baseScore;
-  $: if (
-    !appStore.state.webview.doc?.isRevisionHistoryPresent &&
-    !appStore.state.webview.doc?.isDocPresent &&
-    !appStore.state.webview.doc?.isProductTreePresent &&
-    !appStore.state.webview.doc?.isPublisherPresent &&
-    !appStore.state.webview.doc?.isTLPPresent &&
-    !appStore.state.webview.doc?.isTrackingPresent &&
-    !appStore.state.webview.doc?.isVulnerabilitiesPresent
-  ) {
-    appStore.setSingleErrorMsg("Are you sure the URL refers to a CSAF document?");
-  }
+  let trackingVersion = $derived(appStore.state.webview.doc?.trackingVersion);
+  let generator = $derived(appStore.state.webview.doc?.generator);
+  let publisherName = $derived(appStore.state.webview.doc?.publisher.name);
+  let publisherCategory = $derived(appStore.state.webview.doc?.publisher.category);
+  let publisherNamespace = $derived(appStore.state.webview.doc?.publisher.namespace);
+  let publisherIssuingAuthority = $derived(appStore.state.webview.doc?.publisher.issuing_authority);
+  let publisherContactDetails = $derived(appStore.state.webview.doc?.publisher.contact_details);
+  let category = $derived(appStore.state.webview.doc?.category);
+  let title = $derived(appStore.state.webview.doc?.title);
+  let lang = $derived(appStore.state.webview.doc?.lang);
+  let sourceLang = $derived(appStore.state.webview.doc?.sourceLang);
+  let csafVersion = $derived(appStore.state.webview.doc?.csafVersion);
+  let distributionText = $derived(appStore.state.webview.doc?.distributionText);
+  let published = $derived(appStore.state.webview.doc?.published);
+  let lastUpdate = $derived(appStore.state.webview.doc?.lastUpdate);
+  let status = $derived(appStore.state.webview.doc?.status);
+  let baseSeverity = $derived(appStore.state.webview.doc?.highestScore?.baseSeverity);
+  let baseScore = $derived(appStore.state.webview.doc?.highestScore?.baseScore);
   const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
   const cellStyleKey = "content-center w-40 py-0";
 </script>

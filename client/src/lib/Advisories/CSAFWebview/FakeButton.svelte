@@ -8,7 +8,13 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  export let active = false;
+  import type { Snippet } from "svelte";
+
+  interface Props {
+    active?: boolean;
+    children: Snippet;
+  }
+  let { active = false, children }: Props = $props();
   const activeClass =
     "h-7 py-1 px-3 border-gray-300 dark:bg-gray-600 border text-xs bg-gray-200 hover:bg-gray-100 rounded-lg max-w-max";
   const inactiveClass =
@@ -16,5 +22,5 @@
 </script>
 
 <div class={active ? activeClass : inactiveClass}>
-  <slot></slot>
+  {@render children()}
 </div>

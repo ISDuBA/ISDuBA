@@ -11,7 +11,12 @@
 <script lang="ts">
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
-  export let note: Note;
+
+  interface Props {
+    note: Note;
+  }
+  let { note }: Props = $props();
+
   let keys: string[] = [];
   let values: string[] = [];
   if (note.audience) {

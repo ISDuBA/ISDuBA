@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
@@ -20,20 +20,24 @@
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
 
-  let searchTerm: string | null;
-  let advisoryTable: any;
-  let advancedSearch = false;
-  let searchResults = true;
-  let selectedCustomQuery: boolean;
-  let queryString: any;
-  let defaultQuery: any;
+  let searchTerm: string | null = $state(null);
+  let advisoryTable: any = $state(null);
+  let advancedSearch = $state(false);
+  let searchResults = $state(true);
+  let selectedCustomQuery: boolean = $state(false);
+  let queryString: any = $state();
+  let defaultQuery: any = $state(null);
   // let searchqueryTimer: any = null;
 
-  $: if (defaultQuery) {
-    if (!selectedCustomQuery) {
-      query = getDefaultQuery();
+  $effect(() => {
+    untrack(() => selectedCustomQuery);
+    untrack(() => query);
+    if (defaultQuery) {
+      if (!selectedCustomQuery) {
+        query = getDefaultQuery();
+      }
     }
-  }
+  });
 
   const getDefaultQuery = () => {
     let searchType = SEARCHTYPES.ADVISORY;
@@ -61,7 +65,7 @@
     }
   };
 
-  let query = getDefaultQuery();
+  let query = $state(getDefaultQuery());
 
   const setQueryBack = async () => {
     query = getDefaultQuery();
@@ -71,9 +75,14 @@
     advisoryTable.fetchData();
   };
 
-  $: if (!selectedCustomQuery) {
-    setQueryBack();
-  }
+  $effect(() => {
+    untrack(() => query);
+    untrack(() => searchTerm);
+    untrack(() => advisoryTable);
+    if (!selectedCustomQuery) {
+      setQueryBack();
+    }
+  });
 
   const triggerSearch = async () => {
     if (!advancedSearch) {
@@ -140,8 +149,7 @@
 </svelte:head>
 
 <Queries
-  on:querySelected={async (e) => {
-    let { detail } = e;
+  onQuerySelected={async (detail: any) => {
     query = {
       query: detail.query,
       queryReset: detail.query,
@@ -178,7 +186,7 @@
       {#if searchTerm}
         <button
           class="mr-3"
-          on:click={() => {
+          onclick={() => {
             clearSearch();
           }}>x</button
         >

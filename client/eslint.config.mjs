@@ -82,7 +82,7 @@ export default [
     }
   },
   {
-    files: ["**/*.svelte"],
+    files: ["**/*.svelte", "**/*.svelte.ts"],
 
     languageOptions: {
       parser: parser,
@@ -92,6 +92,14 @@ export default [
       parserOptions: {
         parser: "@typescript-eslint/parser"
       }
+    },
+    rules: {
+      // Using rest elements with $props() leads to an error with eslint-plugin-svelte v2
+      // (https://github.com/sveltejs/svelte/issues/16065#issuecomment-2932219425). But
+      // an upgrade of that dependency makes it necessary to remove FlatCompat
+      // (https://github.com/sveltejs/eslint-plugin-svelte/issues/1153#issuecomment-2753100891).
+      // This is a fast workaround until we update the eslint config.
+      "svelte/valid-compile": "off"
     }
   },
   {

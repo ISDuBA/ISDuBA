@@ -10,15 +10,17 @@
 
 <script lang="ts">
   import { Button, Input } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
 
-  export let containerClass: string | undefined = undefined;
-  export let searchTerm: string;
+  interface Props {
+    containerClass?: string | undefined;
+    searchTerm: string;
+    search: () => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let { containerClass = undefined, searchTerm = $bindable(), search }: Props = $props();
 
   const dispatchSearchEvent = () => {
-    dispatch("search");
+    search();
   };
 
   const clearInput = () => {
@@ -39,7 +41,7 @@
       }}
     >
       <button
-        on:click={clearInput}
+        onclick={clearInput}
         slot="right"
         aria-label="Clear search"
         class="group flex h-[26pt] w-[26pt] items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-gray-500"

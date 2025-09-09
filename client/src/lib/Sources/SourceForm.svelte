@@ -12,7 +12,7 @@
   import { type Source, fetchSourceDefaultConfig } from "$lib/Sources/source";
   import { Accordion, AccordionItem, Button, Input, Label, Select } from "flowbite-svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import CFileinput from "$lib/Components/CFileinput.svelte";
 
   // Define enum first
@@ -24,11 +24,23 @@
     years = "y"
   }
 
-  export let formClass: string = "";
-  export let source: Source;
-  export let oldSource: Source | undefined = undefined;
-  export let enableActive: boolean = false;
-  export let parseSource: boolean = true;
+  interface Props {
+    formClass?: string;
+    source: Source;
+    oldSource?: Source | undefined;
+    enableActive?: boolean;
+    parseSource?: boolean;
+    inputChange?: () => void;
+  }
+
+  let {
+    formClass = "",
+    source = $bindable(),
+    oldSource = undefined,
+    enableActive = false,
+    parseSource = $bindable(true),
+    inputChange = () => {}
+  }: Props = $props();
   export const updateSource = async () => {
     formatHeaders();
     await loadCerts();
@@ -72,8 +84,6 @@
     ageUnit = baseUnit;
   };
 
-  export let inputChange = () => {};
-
   const ageUnits: { value: AgeUnit; name: string }[] = [
     { value: AgeUnit.hours, name: "hours" },
     { value: AgeUnit.days, name: "days" },
@@ -90,20 +100,20 @@
     y: 24 * 365
   };
 
-  let headers: [string, string][] = [["", ""]];
-  let privateCert: FileList | undefined;
-  let privateCertReset: boolean = false;
-  let publicCert: FileList | undefined;
-  let publicCertReset: boolean = false;
+  let headers: [string, string][] = $state([["", ""]]);
+  let privateCert: FileList | undefined = $state();
+  let privateCertReset: boolean = $state(false);
+  let publicCert: FileList | undefined = $state();
+  let publicCertReset: boolean = $state(false);
 
-  let ageUnit: AgeUnit;
-  let ageNumber: number | undefined;
+  let ageUnit: AgeUnit = $state(AgeUnit.years);
+  let ageNumber: number | undefined = $state(undefined);
   let previousAgeNumber: number | undefined;
 
-  let displayActiveHighlight: boolean = true;
+  let displayActiveHighlight: boolean = $state(true);
 
-  let ratePlaceholder = 0;
-  let slotPlaceholder = 2;
+  let ratePlaceholder = $state(0);
+  let slotPlaceholder = $state(2);
 
   const loadSourceDefaults = async () => {
     const resp = await fetchSourceDefaultConfig();
@@ -170,13 +180,6 @@
     inputChange();
   };
 
-  $: if (source.headers) {
-    if (parseSource) {
-      parseHeaders();
-      parseSource = false;
-    }
-  }
-
   const parseHeaders = () => {
     headers = [];
     for (const header of source.headers) {
@@ -216,6 +219,13 @@
       }
     }
   };
+  $effect(() => {
+    untrack(() => headers);
+    if (source.headers && parseSource) {
+      parseHeaders();
+      parseSource = false;
+    }
+  });
 </script>
 
 <form class={formClass}>
@@ -225,7 +235,7 @@
     {#if enableActive}
       <CCheckbox
         class="mb-3"
-        on:change={() => {
+        onChanged={() => {
           displayActiveHighlight = false;
           inputChange();
         }}
@@ -241,7 +251,7 @@
         bind:files={privateCert}
         bind:isFileReset={privateCertReset}
         oldFile={oldSource?.client_cert_private}
-        on:change={inputChange}
+        onChanged={inputChange}
         id="private-cert"
         titleClearButton="Remove private cert"
       ></CFileinput>
@@ -250,7 +260,7 @@
         bind:files={publicCert}
         bind:isFileReset={publicCertReset}
         oldFile={oldSource?.client_cert_public}
-        on:change={inputChange}
+        onChanged={inputChange}
         id="public-cert"
         titleClearButton="Remove public cert"
       ></CFileinput>
@@ -321,23 +331,23 @@
 
       <Label>Options</Label>
       <div class="mb-3 flex w-full gap-4">
-        <CCheckbox on:change={inputChange} bind:checked={source.strict_mode}>Strict mode</CCheckbox>
-        <CCheckbox on:change={inputChange} bind:checked={source.secure}
+        <CCheckbox onChanged={inputChange} bind:checked={source.strict_mode}>Strict mode</CCheckbox>
+        <CCheckbox onChanged={inputChange} bind:checked={source.secure}
           >Check TLS certificates</CCheckbox
         >
-        <CCheckbox on:change={inputChange} bind:checked={source.signature_check}
+        <CCheckbox onChanged={inputChange} bind:checked={source.signature_check}
           >Check document OpenPGP signature</CCheckbox
         >
       </div>
 
       <Label>Ignore patterns</Label>
-      {#each source.ignore_patterns as pattern, index (index)}
+      {#each source.ignore_patterns as _pattern, index (index)}
         <div class="mb-3 inline-flex w-full">
           <Label class="grow">
             <Input
               class="rounded-none rounded-l-lg"
               on:input={onChangedIgnorePatterns}
-              bind:value={pattern}
+              bind:value={source.ignore_patterns[index]}
             />
           </Label>
           <Button

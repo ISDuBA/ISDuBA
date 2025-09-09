@@ -12,7 +12,11 @@
   import type { ProductGroup } from "$lib/pmdTypes";
   import ValueField from "$lib/Advisories/CSAFWebview/ValueField.svelte";
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
-  export let productGroup: ProductGroup;
+
+  interface Props {
+    productGroup: ProductGroup;
+  }
+  let { productGroup }: Props = $props();
 </script>
 
 <ValueList label="Group IDs" values={productGroup.group_ids} />

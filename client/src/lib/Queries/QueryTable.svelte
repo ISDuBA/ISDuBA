@@ -21,14 +21,29 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Sortable from "sortablejs";
   import { request } from "$lib/request";
+  import type { Snippet } from "svelte";
 
-  export let tableContainerID: string | null = null;
-  export let title = "";
-  export let queries: Query[] | undefined = [];
-  export let newQueries: Query[] = [];
-  export let ignoredQueries: number[] | null = null;
-  export let isAllowedToEdit = false;
-  export let isAllowedToClone = true;
+  interface Props {
+    tableContainerID?: string | null;
+    title?: string;
+    queries?: Query[] | undefined;
+    newQueries?: Query[];
+    ignoredQueries?: number[] | null;
+    isAllowedToEdit?: boolean;
+    isAllowedToClone?: boolean;
+    children?: Snippet;
+  }
+
+  let {
+    tableContainerID = null,
+    title = "",
+    queries = [],
+    newQueries = [],
+    ignoredQueries = null,
+    isAllowedToEdit = false,
+    isAllowedToClone = true,
+    children
+  }: Props = $props();
 
   const queryContext: any = getContext("queryContext");
 
@@ -37,12 +52,12 @@
   };
 
   let orderBy = "";
-  let querytoDelete: any = resetQueryToDelete();
-  let ignoreErrorMessage: ErrorDetails | null = null;
-  let cloneErrorMessage: ErrorDetails | null = null;
-  let orderErrorMessage: ErrorDetails | null = null;
-  let columnList: any;
-  let isLoading = false;
+  let querytoDelete: any = $state(resetQueryToDelete());
+  let ignoreErrorMessage: ErrorDetails | null = $state(null);
+  let cloneErrorMessage: ErrorDetails | null = $state(null);
+  let orderErrorMessage: ErrorDetails | null = $state(null);
+  let columnList: any = $state();
+  let isLoading = $state(false);
 
   const updateQueryOrder = async (queries: Query[]) => {
     await navigator.locks.request("updateQuery", async () => {
@@ -75,12 +90,14 @@
     }
   };
 
-  $: if (columnList && isAllowedToEdit) {
-    Sortable.create(columnList, {
-      animation: 150,
-      onEnd: elementDragEventUserQuery
-    });
-  }
+  $effect(() => {
+    if (columnList && isAllowedToEdit) {
+      Sortable.create(columnList, {
+        animation: 150,
+        onEnd: elementDragEventUserQuery
+      });
+    }
+  });
 
   const unsetErrors = () => {
     ignoreErrorMessage = null;
@@ -186,7 +203,7 @@
         <tbody bind:this={columnList}>
           {#each queries as query, index (index)}
             <tr
-              on:click={() => {
+              onclick={() => {
                 push(`/queries/${query.id}`);
               }}
               class:cursor-pointer={true}
@@ -209,7 +226,7 @@
               >
               <TableBodyCell {tdClass}>
                 <CCheckbox
-                  on:change={() => {
+                  onChanged={() => {
                     changeDashboard(query.id, query.dashboard);
                   }}
                   bind:checked={query.dashboard}
@@ -219,7 +236,7 @@
               </TableBodyCell>
               <TableBodyCell {tdClass}>
                 <CCheckbox
-                  on:click={() => {
+                  onClicked={() => {
                     changeIgnored(query.id, !ignoredQueries?.includes(query.id));
                   }}
                   disabled={!ignoredQueries || isLoading}
@@ -228,7 +245,7 @@
               </TableBodyCell>
               <TableBodyCell {tdClass}>
                 <CCheckbox
-                  on:change={() => {
+                  onChanged={() => {
                     changeDefaultQuery(query.id, query.default_query);
                   }}
                   bind:checked={query.default_query}
@@ -241,14 +258,16 @@
                   <CIconButton
                     title={`clone ${query.name}`}
                     icon="copy"
-                    on:click={async () => {
+                    onClicked={async (event) => {
+                      event.stopPropagation();
                       clone(query);
                     }}
                   ></CIconButton>
                 {/if}
                 {#if isAllowedToEdit}
                   <CIconButton
-                    on:click={() => {
+                    onClicked={(event) => {
+                      event.stopPropagation();
                       querytoDelete = {
                         name: query.name,
                         id: query.id
@@ -275,7 +294,7 @@
     </Table>
   </div>
   <div class="flex flex-col">
-    <slot></slot>
+    {@render children?.()}
     <ErrorMessage error={ignoreErrorMessage}></ErrorMessage>
     <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
     <ErrorMessage error={orderErrorMessage}></ErrorMessage>

@@ -9,14 +9,20 @@
 -->
 
 <script lang="ts">
-  export let content: any[];
-  export let isSideBySideViewActivated: boolean = true;
-  $: sideBySideContent = isSideBySideViewActivated
-    ? [
-        content?.filter((element) => ["d", "o"].includes(element.m)),
-        content?.filter((element) => ["i", "o"].includes(element.m))
-      ]
-    : [];
+  interface Props {
+    content: any[];
+    isSideBySideViewActivated?: boolean;
+  }
+
+  let { content, isSideBySideViewActivated = true }: Props = $props();
+  let sideBySideContent = $derived(
+    isSideBySideViewActivated
+      ? [
+          content?.filter((element) => ["d", "o"].includes(element.m)),
+          content?.filter((element) => ["i", "o"].includes(element.m))
+        ]
+      : []
+  );
 
   const getSpanClass = (type: string) => {
     if (type === "i") return "bg-green-200 dark:bg-[#1a363c]";

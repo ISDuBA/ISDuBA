@@ -10,7 +10,7 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import {
     Button,
     Dropdown,
@@ -42,61 +42,83 @@
   import DeleteModal from "./DeleteModal.svelte";
   import { updateMultipleStates } from "$lib/Advisories/advisory";
 
-  let openRow: number | null;
+  let openRow: number | null = $state(null);
   let abortController: AbortController;
   let requestOngoing = false;
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
   };
-  let limit = 10;
-  let offset = 0;
-  let count = 0;
-  let currentPage = 1;
-  let documents: any = null;
-  $: documentIDs = documents?.map((d: any) => d.id) ?? [];
-  let loading = false;
-  let error: ErrorDetails | null;
-  let changeWorkflowStateError: ErrorDetails | null;
+  let limit = $state(10);
+  let offset = $state(0);
+  let count = $state(0);
+  let currentPage = $state(1);
+  let documents: any = $state(null);
+  let documentIDs = $derived(documents?.map((d: any) => d.id) ?? []);
+  let loading = $state(false);
+  let error: ErrorDetails | null = $state(null);
+  let changeWorkflowStateError: ErrorDetails | null = $state(null);
   let prevQuery = "";
-  export let columns: string[];
-  export let query: string = "";
-  export let searchTerm: string = "";
-  export let tableType: SEARCHTYPES;
-  export let orderBy: string[] = ["title"];
-  export let defaultOrderBy = ["title"];
-  export let searchResults: boolean;
+  interface Props {
+    columns: string[];
+    query?: string;
+    searchTerm?: string;
+    tableType: SEARCHTYPES;
+    orderBy?: string[];
+    defaultOrderBy?: any;
+    searchResults: boolean;
+  }
+
+  let {
+    columns,
+    query = "",
+    searchTerm = "",
+    tableType,
+    searchResults,
+    orderBy = $bindable(["title"]),
+    defaultOrderBy = ["title"]
+  }: Props = $props();
 
   const tdClass = "whitespace-nowrap relative";
 
-  $: disableDiffButtons =
-    appStore.state.app.diff.docA_ID !== undefined && appStore.state.app.diff.docB_ID !== undefined;
+  let disableDiffButtons = $derived(
+    appStore.state.app.diff.docA_ID !== undefined && appStore.state.app.diff.docB_ID !== undefined
+  );
 
-  $: areAllSelected =
+  let areAllSelected = $derived(
     documents &&
-    areArraysEqual(documentIDs, Array.from(appStore.state.app.selectedDocumentIDs.keys()));
+      areArraysEqual(documentIDs, Array.from(appStore.state.app.selectedDocumentIDs.keys()))
+  );
 
-  $: selectedDocuments =
+  let selectedDocuments = $derived(
     appStore.state.app.documents?.filter((d: any) =>
       appStore.state.app.selectedDocumentIDs.has(d.id)
-    ) ?? [];
-  $: allowedWorkflowStateChanges = getAllowedWorkflowChanges(
-    selectedDocuments?.map((d: any) => d.state) ?? []
+    ) ?? []
   );
-  $: workflowOptions = allowedWorkflowStateChanges.map((c) => {
-    return { name: c.to, value: c.to };
-  });
-  $: isMultiSelectionAllowed =
+  let allowedWorkflowStateChanges = $derived(
+    getAllowedWorkflowChanges(selectedDocuments?.map((d: any) => d.state) ?? [])
+  );
+  let workflowOptions = $derived(
+    allowedWorkflowStateChanges.map((c) => {
+      return { name: c.to, value: c.to };
+    })
+  );
+  let isMultiSelectionAllowed = $derived(
     isRoleIncluded(appStore.getRoles(), [EDITOR, IMPORTER, ADMIN, REVIEWER]) &&
-    ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) || tableType === SEARCHTYPES.ADVISORY);
-  $: areThereAnyComments =
-    tableType === SEARCHTYPES.EVENT && documents?.find((d: any) => d.event === "add_comment");
+      ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) ||
+        tableType === SEARCHTYPES.ADVISORY)
+  );
+  let areThereAnyComments = $derived(
+    tableType === SEARCHTYPES.EVENT && documents?.find((d: any) => d.event === "add_comment")
+  );
 
-  $: if (searchResults !== undefined) {
-    fetchData();
-  }
+  $effect(() => {
+    if (searchResults !== undefined) {
+      fetchData();
+    }
+  });
 
-  let selectedState: any;
-  let dropdownOpen = false;
+  let selectedState: any = $state(null);
+  let dropdownOpen = $state(false);
   const selectClass =
     "max-w-96 w-fit text-gray-900 disabled:text-gray-400 bg-gray-50 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:disabled:text-gray-500 dark:focus:ring-primary-500 dark:focus:border-primary-500";
 
@@ -125,7 +147,7 @@
     }
   };
 
-  let innerWidth = 0;
+  let innerWidth = $state(0);
 
   const getColumnDisplayName = (column: string): string => {
     let names: { [key: string]: string } = {
@@ -153,14 +175,16 @@
     sessionStorage.setItem("tablePosition" + query + tableType, JSON.stringify(position));
   };
 
-  let postitionRestored: boolean = false;
+  let postitionRestored: boolean = $state(false);
   const restorePosition = () => {
     let position = sessionStorage.getItem("tablePosition" + query + tableType);
     if (position) {
-      [offset, currentPage, limit, orderBy] = JSON.parse(position);
+      setPaginationParameters(JSON.parse(position));
     } else {
-      offset = 0;
-      currentPage = 1;
+      setPaginationParameters({
+        offset: 0,
+        currentPage: 1
+      });
     }
   };
 
@@ -171,28 +195,63 @@
         return c.replace("-", "");
       })
       .forEach((c) => {
-        if (!orderBy.includes(c)) orderBy = defaultOrderBy;
+        if (!orderBy.includes(c)) {
+          setPaginationParameters({
+            orderBy: defaultOrderBy
+          });
+        }
       });
   };
 
-  $: if (columns) {
-    setOrderBy();
+  interface PaginationParameters {
+    offset?: number;
+    currentPage?: number;
+    limit?: number;
+    orderBy?: string[];
   }
 
-  $: if (offset || currentPage || limit || orderBy) {
+  const setPaginationParameters = (paginationParameters: PaginationParameters) => {
+    if (paginationParameters.offset !== undefined) {
+      offset = paginationParameters.offset;
+    }
+    if (paginationParameters.currentPage !== undefined) {
+      currentPage = paginationParameters.currentPage;
+    }
+    if (paginationParameters.limit !== undefined) {
+      limit = paginationParameters.limit;
+    }
+    if (paginationParameters.orderBy !== undefined) {
+      orderBy = paginationParameters.orderBy;
+    }
+    savePosition();
+  };
+
+  $effect(() => {
+    untrack(() => orderBy);
+    if (columns) {
+      setOrderBy();
+    }
+  });
+
+  $effect(() => {
+    untrack(() => offset);
+    untrack(() => currentPage);
+    untrack(() => limit);
+    untrack(() => orderBy);
+    if (tableType || !tableType) {
+      restorePosition();
+      savePosition();
+    }
+  });
+
+  onMount(() => {
     if (!postitionRestored) {
       restorePosition();
       postitionRestored = true;
     }
-    savePosition();
-  }
+  });
 
-  $: if (tableType || !tableType) {
-    restorePosition();
-    savePosition();
-  }
-
-  $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
+  let isAdmin = $derived(isRoleIncluded(appStore.getRoles(), [ADMIN]));
 
   export async function fetchData(): Promise<void> {
     appStore.setDocuments([]);
@@ -266,44 +325,55 @@
 
   const previous = async () => {
     if (offset - limit >= 0) {
-      offset = offset - limit > 0 ? offset - limit : 0;
-      currentPage -= 1;
+      setPaginationParameters({
+        currentPage: currentPage - 1,
+        offset: offset - limit > 0 ? offset - limit : 0
+      });
     }
     await fetchData();
   };
   const next = async () => {
     if (offset + limit <= count) {
-      offset = offset + limit;
-      currentPage += 1;
+      setPaginationParameters({
+        currentPage: currentPage + 1,
+        offset: offset + limit
+      });
     }
     await fetchData();
   };
 
   const first = async () => {
-    offset = 0;
-    currentPage = 1;
+    setPaginationParameters({
+      currentPage: 1,
+      offset: 0
+    });
     await fetchData();
   };
 
   const last = async () => {
-    offset = (numberOfPages - 1) * limit;
-    currentPage = numberOfPages;
+    setPaginationParameters({
+      currentPage: numberOfPages,
+      offset: (numberOfPages - 1) * limit
+    });
     await fetchData();
   };
 
   const switchSort = async (column: string) => {
     let found = orderBy.find((c) => c === column);
     let foundMinus = orderBy.find((c) => c === "-" + column);
+    let tmpOrderBy: string[] = [];
     if (foundMinus) {
-      orderBy = orderBy.filter((c) => c !== "-" + column);
+      tmpOrderBy = orderBy.filter((c) => c !== "-" + column);
     }
     if (found) {
-      orderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
+      tmpOrderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
     }
     if (!found && !foundMinus) {
-      orderBy.push(column);
+      tmpOrderBy.push(column);
     }
-    orderBy = orderBy;
+    setPaginationParameters({
+      orderBy: tmpOrderBy
+    });
     await tick();
     await fetchData();
   };
@@ -312,7 +382,7 @@
     await fetchData();
   };
 
-  $: numberOfPages = Math.ceil(count / limit);
+  let numberOfPages = $derived(Math.ceil(count / limit));
 
   const getColumnOrder = (orderBy: string[], column: string): string => {
     let index = orderBy.indexOf(column);
@@ -331,10 +401,7 @@
 
 <svelte:window bind:innerWidth />
 
-<DeleteModal
-  on:deleted={onDeleted}
-  documents={appStore.state.app.documentsToDelete || []}
-  type={tableType}
+<DeleteModal {onDeleted} documents={appStore.state.app.documentsToDelete || []} type={tableType}
 ></DeleteModal>
 
 <div class="flex-grow">
@@ -415,8 +482,10 @@
             ]}
             bind:value={limit}
             on:change={() => {
-              offset = 0;
-              currentPage = 1;
+              setPaginationParameters({
+                currentPage: 1,
+                offset: 0
+              });
               fetchData();
             }}
           ></Select>
@@ -444,12 +513,17 @@
           <div class="flex items-center">
             <input
               class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-800`}
-              on:change={() => {
-                if (!parseInt("" + currentPage)) currentPage = 1;
-                currentPage = Math.floor(currentPage);
-                if (currentPage < 1) currentPage = 1;
-                if (currentPage > numberOfPages) currentPage = numberOfPages;
-                offset = (currentPage - 1) * limit;
+              onchange={() => {
+                let tmpCurrentPage = currentPage;
+                if (!parseInt("" + tmpCurrentPage)) tmpCurrentPage = 1;
+                tmpCurrentPage = Math.floor(tmpCurrentPage);
+                if (tmpCurrentPage < 1) tmpCurrentPage = 1;
+                if (tmpCurrentPage > numberOfPages) tmpCurrentPage = numberOfPages;
+                const tmpOffset = (tmpCurrentPage - 1) * limit;
+                setPaginationParameters({
+                  currentPage: tmpCurrentPage,
+                  offset: tmpOffset
+                });
                 fetchData();
               }}
               bind:value={currentPage}
@@ -493,7 +567,7 @@
             <TableHeadCell padding="px-0">
               <CCheckbox
                 checked={areAllSelected}
-                on:click={(event) => {
+                onClicked={(event) => {
                   const isChecked = event.detail.target.checked;
                   if (isChecked) {
                     for (let i = 0; i < documentIDs.length; i++) {
@@ -541,7 +615,7 @@
                 <TableBodyCell tdClass="px-0">
                   <CCheckbox
                     checked={appStore.state.app.selectedDocumentIDs.has(item.id)}
-                    on:click={(event) => {
+                    onClicked={(event) => {
                       const isChecked = event.detail.target.checked;
                       if (isChecked) {
                         appStore.addSelectedDocumentID(item.id);
@@ -556,7 +630,7 @@
                 <div class="flex items-center">
                   {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
                     <CIconButton
-                      on:click={() => {
+                      onClicked={() => {
                         appStore.setDocumentsToDelete([item]);
                         appStore.setIsDeleteModalOpen(true);
                       }}
@@ -566,7 +640,8 @@
                     ></CIconButton>
                   {/if}
                   <button
-                    on:click|stopPropagation={(e) => {
+                    onclick={(e) => {
+                      e.stopPropagation();
                       if (appStore.state.app.diff.docA_ID) {
                         appStore.setDiffDocB_ID(item.id);
                       } else {
@@ -750,12 +825,15 @@
                       <div class="w-32">
                         <div class="z-50 table p-2 text-wrap">
                           {#if item[column] && item[column][0]}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
                             {#if item[column].length > 1}
                               <div
                                 class="mr-2 flex cursor-pointer items-center"
-                                on:click|stopPropagation={() => toggleRow(i)}
+                                onclick={(event) => {
+                                  event.stopPropagation();
+                                  toggleRow(i);
+                                }}
                               >
                                 <div class="flex-grow">
                                   {item[column][0]}

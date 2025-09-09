@@ -30,64 +30,71 @@
   import type { TrackingStatus, AdvisoryVersion } from "./advisory.ts";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
 
-  export let params: any = null;
+  let { params } = $props();
 
-  let document: any = {};
-  let ssvcVector: string;
-  let comment: string = "";
-  let loadCommentsError: ErrorDetails | null = null;
-  let loadEventsError: ErrorDetails | null = null;
-  let loadAdvisoryVersionsError: ErrorDetails | null = null;
-  let loadDocumentError: ErrorDetails | null = null;
-  let loadFourCVEsError: ErrorDetails | null = null;
-  let createCommentError: ErrorDetails | null = null;
-  let loadDocumentSSVCError: ErrorDetails | null = null;
-  let loadForwardTargetsError: ErrorDetails | null = null;
-  let stateError: ErrorDetails | null = null;
-  let advisoryVersions: AdvisoryVersion[] = [];
-  let advisoryVersionByDocumentID: any;
-  let advisoryState = "";
-  let historyEntries: any = [];
-  let isCommentingAllowed: boolean;
-  let isSSVCediting = false;
-  let position = "";
-  let processRunning = false;
-  let lastSuccessfulForwardTarget: number | undefined;
-  let isInconsistent = false;
+  let document: any = $state({});
+  let ssvcVector: string = $state("");
+  let comment: string = $state("");
+  let loadCommentsError: ErrorDetails | null = $state(null);
+  let loadEventsError: ErrorDetails | null = $state(null);
+  let loadAdvisoryVersionsError: ErrorDetails | null = $state(null);
+  let loadDocumentError: ErrorDetails | null = $state(null);
+  let loadFourCVEsError: ErrorDetails | null = $state(null);
+  let createCommentError: ErrorDetails | null = $state(null);
+  let loadDocumentSSVCError: ErrorDetails | null = $state(null);
+  let loadForwardTargetsError: ErrorDetails | null = $state(null);
+  let stateError: ErrorDetails | null = $state(null);
+  let advisoryVersions: AdvisoryVersion[] = $state([]);
+  let advisoryVersionByDocumentID: any = $state(undefined);
+  let advisoryState: string = $state("");
+  let historyEntries: any = $state([]);
+  let isCommentingAllowed: boolean = $state(false);
+  let isSSVCediting = $state(false);
+  let position = $state("");
+  let processRunning = $state(false);
+  let lastSuccessfulForwardTarget: number | undefined = $state(undefined);
+  let isInconsistent = $state(false);
 
-  $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
-    isCommentingAllowed = appStore.isEditor();
-  } else if ([REVIEW].includes(advisoryState)) {
-    isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
-  } else if ([ARCHIVED].includes(advisoryState)) {
-    isCommentingAllowed = appStore.isEditor() || appStore.isAdmin();
-  } else if ([DELETE].includes(advisoryState)) {
-    isCommentingAllowed = appStore.isAdmin();
-  } else {
-    isCommentingAllowed = false;
-  }
+  $effect(() => {
+    if ([NEW, READ, ASSESSING].includes(advisoryState)) {
+      isCommentingAllowed = appStore.isEditor();
+    } else if ([REVIEW].includes(advisoryState)) {
+      isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+    } else if ([ARCHIVED].includes(advisoryState)) {
+      isCommentingAllowed = appStore.isEditor() || appStore.isAdmin();
+    } else if ([DELETE].includes(advisoryState)) {
+      isCommentingAllowed = appStore.isAdmin();
+    } else {
+      isCommentingAllowed = false;
+    }
+  });
 
-  let isCalculatingAllowed: boolean;
-  $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
-    isCalculatingAllowed = appStore.isEditor();
-  } else {
-    isCalculatingAllowed = false;
-  }
-  $: canSeeCommentArea =
-    appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin();
-  $: encodedTrackingID = params.trackingID
-    ? encodeURIComponent(addSlashes(params.trackingID))
-    : undefined;
-  $: encodedPublisherNamespace = params.publisherNamespace
-    ? encodeURIComponent(addSlashes(params.publisherNamespace))
-    : undefined;
+  let isCalculatingAllowed: boolean = $state(false);
+  $effect(() => {
+    if ([NEW, READ, ASSESSING].includes(advisoryState)) {
+      isCalculatingAllowed = appStore.isEditor();
+    } else {
+      isCalculatingAllowed = false;
+    }
+  });
+  let canSeeCommentArea = $derived(
+    appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin()
+  );
+  let encodedTrackingID = $derived(
+    params.trackingID ? encodeURIComponent(addSlashes(params.trackingID)) : undefined
+  );
+  let encodedPublisherNamespace = $derived(
+    params.publisherNamespace
+      ? encodeURIComponent(addSlashes(params.publisherNamespace))
+      : undefined
+  );
 
   const setAsReadTimeout: number[] = [];
-  let isDiffOpen = false;
-  let commentFocus = false;
+  let isDiffOpen = $state(false);
+  let commentFocus = $state(false);
 
-  let availableForwardSelection: any[] = [];
-  let selectedForwardTarget: number | undefined;
+  let availableForwardSelection: any[] = $state([]);
+  let selectedForwardTarget: number | undefined = $state();
 
   const loadAdvisoryVersions = async () => {
     const response = await request(
@@ -409,17 +416,19 @@
     }
   });
 
-  $: if (params) {
-    loadData();
-    position = params.position;
-    if (!params.position) {
-      const topElement = window.document.getElementById("top");
-      topElement?.scrollIntoView();
-      appStore.setSelectedProduct("");
-      appStore.setSelectedCVE("");
+  $effect(() => {
+    if (params) {
+      loadData();
+      position = params.position;
+      if (!params.position) {
+        const topElement = window.document.getElementById("top");
+        topElement?.scrollIntoView();
+        appStore.setSelectedProduct("");
+        appStore.setSelectedCVE("");
+      }
     }
-  }
-  let openForwardModal = false;
+  });
+  let openForwardModal = $state(false);
 </script>
 
 <svelte:head>
@@ -495,7 +504,7 @@
                   vectorInput={ssvcVector}
                   disabled={!isCalculatingAllowed}
                   documentID={params.id}
-                  on:updateSSVC={loadMetaData}
+                  updateSSVC={loadMetaData}
                   {allowEditing}
                 ></SsvcCalculator>
               {/if}
@@ -508,20 +517,20 @@
                     : "New Comment"}</Label
                 >
                 <CommentTextArea
-                  on:focus={() => {
+                  onFocus={() => {
                     commentFocus = true;
                   }}
-                  on:blur={() => {
+                  onBlur={() => {
                     commentFocus = false;
                   }}
-                  on:input={() => (createCommentError = null)}
-                  on:saveComment={createComment}
-                  on:saveForReview={sendForReview}
-                  on:saveForAssessing={sendForAssessing}
+                  onInput={() => (createCommentError = null)}
+                  saveComment={createComment}
+                  saveForReview={sendForReview}
+                  saveForAssessing={sendForAssessing}
                   bind:value={comment}
                   errorMessage={createCommentError}
                   buttonText="Send"
-                  state={advisoryState}
+                  workflowState={advisoryState}
                 ></CommentTextArea>
               </div>
             {/if}
@@ -530,24 +539,26 @@
           <div class="h-auto">
             <div class="mt-6 h-full">
               <History
-                state={advisoryState}
-                on:commentUpdate={() => {
+                workflowState={advisoryState}
+                onCommentUpdated={() => {
                   buildHistory();
                 }}
                 entries={historyEntries}
               >
-                <div slot="additionalButtons">
-                  {#if availableForwardSelection.length != 0}
-                    <Button
-                      size="xs"
-                      color="light"
-                      class="h-7 py-1 text-xs"
-                      on:click={() => (openForwardModal = true)}
-                    >
-                      Forward document</Button
-                    >
-                  {/if}
-                </div>
+                {#snippet additionalButtons()}
+                  <div>
+                    {#if availableForwardSelection.length != 0}
+                      <Button
+                        size="xs"
+                        color="light"
+                        class="h-7 py-1 text-xs"
+                        on:click={() => (openForwardModal = true)}
+                      >
+                        Forward document</Button
+                      >
+                    {/if}
+                  </div>
+                {/snippet}
               </History>
             </div>
             <ErrorMessage error={loadEventsError}></ErrorMessage>
@@ -570,8 +581,8 @@
                 tracking_status: document.tracking?.status,
                 version: document.tracking?.version
               }}
-              on:selectedDiffDocuments={() => (isDiffOpen = true)}
-              on:disableDiff={() => (isDiffOpen = false)}
+              selectedDiffDocuments={() => (isDiffOpen = true)}
+              onDisabledDiff={() => (isDiffOpen = false)}
             ></Version>
           {/if}
         </div>
@@ -579,17 +590,25 @@
           {#if isDiffOpen}
             <Diff showTitle={false}></Diff>
           {:else}
-            <Webview
-              widthOffset={canSeeCommentArea ? 464 : 0}
-              basePath={"#/advisories/" +
-                params.publisherNamespace +
-                "/" +
-                params.trackingID +
-                "/documents/" +
-                params.id +
-                "/"}
-              {position}
-            ></Webview>
+            <div class="grid auto-cols-fr grid-flow-col gap-6">
+              {#if appStore.state.webview.doc}
+                <Webview
+                  widthOffset={canSeeCommentArea ? 464 : 0}
+                  basePath={"#/advisories/" +
+                    params.publisherNamespace +
+                    "/" +
+                    params.trackingID +
+                    "/documents/" +
+                    params.id +
+                    "/"}
+                  {position}
+                ></Webview>
+              {:else}
+                <div class="mt-32 ml-32">
+                  <Spinner color="gray" size="8"></Spinner>
+                </div>
+              {/if}
+            </div>
             {#if !canSeeCommentArea && availableForwardSelection.length != 0}
               <div class="my-2 flex w-full flex-row justify-end">
                 <Button

@@ -34,5 +34,5 @@
 </script>
 
 {#if appStore.state.webview.ui.history.length > 0}
-  <a class="backbutton" href="#top" on:click={backPressed}>Last pos. <i class="bx bx-undo"></i></a>
+  <a class="backbutton" href="#top" onclick={backPressed}>Last pos. <i class="bx bx-undo"></i></a>
 {/if}

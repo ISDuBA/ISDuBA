@@ -13,8 +13,8 @@
   import { appStore } from "$lib/store.svelte";
   import { Button, Img } from "flowbite-svelte";
 
-  $: docA = appStore.state.app.diff.docA;
-  $: docB = appStore.state.app.diff.docB;
+  let docA = $derived(appStore.state.app.diff.docA);
+  let docB = $derived(appStore.state.app.diff.docB);
 </script>
 
 <div class={`sticky bottom-0 left-0 flex translate-y-6 flex-col items-start justify-center`}>

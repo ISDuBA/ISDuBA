@@ -12,19 +12,27 @@
   import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
   import { tick } from "svelte";
-  export let label;
-  export let upload = async (
-    files: FileList,
-    updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
-  ): Promise<UploadInfo[]> => {
-    // eslint-disable-next-line no-console
-    console.log(files, uploadInfo, updateCallback);
-    return [];
-  };
-  export let cancel = () => {};
 
-  export let uploadInfo: UploadInfo[] = [];
-  let isUploading = false;
+  interface Props {
+    cancel: () => any;
+    label: any;
+    upload?: any;
+    uploadInfo?: UploadInfo[];
+  }
+
+  let {
+    cancel,
+    label,
+    upload = async (
+      files: FileList,
+      updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
+    ): Promise<UploadInfo[]> => {
+      // eslint-disable-next-line no-console
+      console.log(files, uploadInfo, updateCallback);
+      return [];
+    },
+    uploadInfo = $bindable([])
+  }: Props = $props();
 
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
@@ -33,12 +41,15 @@
     }
     return "";
   };
-  let files: FileList | undefined;
-  let filesCache: FileList | undefined;
-  let showFileInput = true;
-  $: if (files) {
-    uploadInfo = [];
-  }
+  let files: FileList | undefined = $state(undefined);
+  let filesCache: FileList | undefined = $state(undefined);
+  let isUploading = $state(false);
+  let showFileInput = $state(true);
+  $effect(() => {
+    if (files) {
+      uploadInfo = [];
+    }
+  });
 </script>
 
 <Card size="lg">
@@ -84,7 +95,7 @@
           setTimeout(async () => {
             if (files) {
               filesCache = files;
-              uploadInfo = await upload(files, (info) => {
+              uploadInfo = await upload(files, (info: UploadInfo[]) => {
                 uploadInfo = info;
               });
             }

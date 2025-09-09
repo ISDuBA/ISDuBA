@@ -14,7 +14,11 @@
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
   import XGenericUri from "./XGenericURI.svelte";
   import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  export let helper: any;
+
+  interface Props {
+    helper: any;
+  }
+  let { helper }: Props = $props();
 </script>
 
 <div>

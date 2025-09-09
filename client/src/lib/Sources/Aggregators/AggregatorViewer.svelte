@@ -51,75 +51,86 @@
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
   import type { AggregatorEntry, AggregatorRole, FeedInfo, SourceInfo } from "./aggregator";
   import SourceContent from "./SourceContent.svelte";
+  import { SvelteMap } from "svelte/reactivity";
 
   const textFlushOpen = "text-black dark:text-white";
   const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full`;
-  let loadingAggregators: boolean = false;
-  let aggregators: Aggregator[] = [];
-  let aggregatorData = new Map<number, AggregatorEntry[]>();
-  let aggregatorMetaData = new Map<number, AggregatorMetadata>();
+  let loadingAggregators: boolean = $state(false);
+  let aggregators: Aggregator[] = $state([]);
+  let aggregatorData = $state(new SvelteMap<number, AggregatorEntry[]>());
+  let aggregatorMetaData = $state(new SvelteMap<number, AggregatorMetadata>());
 
-  let aggregatorError: ErrorDetails | null;
-  let aggregatorSaveError: ErrorDetails | null;
-  let aggregatorEditError: ErrorDetails | null;
+  let aggregatorError: ErrorDetails | null = $state(null);
+  let aggregatorSaveError: ErrorDetails | null = $state(null);
+  let aggregatorEditError: ErrorDetails | null = $state(null);
 
-  let validUrl: boolean | null = null;
-  let urlColor: "red" | "green" | "base" = "base";
-  $: if (validUrl !== undefined) {
-    if (validUrl === null) {
-      urlColor = "base";
-    } else if (validUrl) {
-      urlColor = "green";
-    } else {
-      urlColor = "red";
+  let validUrl: boolean | null = $state(null);
+  let urlColor: "red" | "green" | "base" = $derived.by(() => {
+    if (validUrl !== undefined) {
+      if (validUrl === null) {
+        return "base";
+      } else if (validUrl) {
+        return "green";
+      } else {
+        return "red";
+      }
     }
-  }
-  let validName: boolean | null = null;
-  let nameColor: "red" | "green" | "base" = "base";
-  $: if (validName !== undefined) {
-    if (validName === null) {
-      nameColor = "base";
-    } else if (validName) {
-      nameColor = "green";
-    } else {
-      nameColor = "red";
+    return "base";
+  });
+  let validName: boolean | null = $state(null);
+  let nameColor: "red" | "green" | "base" = $derived.by(() => {
+    if (validName !== undefined) {
+      if (validName !== undefined) {
+        if (validName === null) {
+          return "base";
+        } else if (validName) {
+          return "green";
+        } else {
+          return "red";
+        }
+      }
     }
-  }
-  let validEditedName: boolean | null = null;
-  let editedNameColor: "red" | "green" | "base" = "base";
-  $: if (validEditedName !== undefined) {
-    if (validEditedName === null) {
-      editedNameColor = "base";
-    } else if (validEditedName) {
-      editedNameColor = "green";
-    } else {
-      editedNameColor = "red";
+    return "base";
+  });
+  let validEditedName: boolean | null = $state(null);
+  let editedNameColor: "red" | "green" | "base" = $derived.by(() => {
+    if (validEditedName !== undefined) {
+      if (validEditedName === null) {
+        return "base";
+      } else if (validEditedName) {
+        return "green";
+      } else {
+        return "red";
+      }
     }
-  }
-  let validEditedUrl: boolean | null = null;
-  let editedUrlColor: "red" | "green" | "base" = "base";
-  $: if (validEditedUrl !== undefined) {
-    if (validEditedUrl === null) {
-      editedUrlColor = "base";
-    } else if (validUrl) {
-      editedUrlColor = "green";
-    } else {
-      editedUrlColor = "red";
+    return "base";
+  });
+  let validEditedUrl: boolean | null = $state(null);
+  let editedUrlColor: "red" | "green" | "base" = $derived.by(() => {
+    if (validEditedUrl !== undefined) {
+      if (validEditedUrl === null) {
+        return "base";
+      } else if (validEditedUrl) {
+        return "green";
+      } else {
+        return "red";
+      }
     }
-  }
+    return "base";
+  });
 
-  let editedName: string = "";
-  let editedUrl: string = "";
+  let editedName: string = $state("");
+  let editedUrl: string = $state("");
 
-  let aggregator: Aggregator = {
+  let aggregator: Aggregator = $state({
     name: "",
     url: ""
-  };
+  });
 
-  let blinkId: number | undefined = undefined;
-  let openAggregator: boolean[] = [];
-  let showCreateForm = false;
-  let aggregatorToEdit: number | undefined = undefined;
+  let blinkId: number | undefined = $state(undefined);
+  let openAggregator: boolean[] = $state([]);
+  let showCreateForm = $state(false);
+  let aggregatorToEdit: number | undefined = $state(undefined);
   let formClass = "max-w-[800pt]";
 
   const toggleCreateForm = () => {
@@ -354,7 +365,6 @@
       }
       if (aggregatorData.get(aggregator.id)) {
         aggregatorData.delete(aggregator.id);
-        aggregatorData = aggregatorData;
         saveAggregatorExpand();
         return;
       }
@@ -363,7 +373,6 @@
       loadingAggregators = false;
       if (resp.ok) {
         aggregatorData.set(aggregator.id, parseAggregatorData(resp.value));
-        aggregatorData = aggregatorData;
         aggregatorMetaData.set(aggregator.id, resp.value);
         aggregatorMetaData = aggregatorMetaData;
         saveAggregatorExpand();
@@ -508,16 +517,16 @@
                 {/if}
               </div>
               {#if aggregator.active !== undefined && appStore.isSourceManager()}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <!--
-                Stopping the event propagation in the click event of the Toggle doesn't work when using
-                the mouse because it also consists of a span and a label element. These elements also fire
-                click events which aren't stopped.
-                Still, the Toggle needs the event listener so it can be toggled via keyboard.
-              -->
+                  Stopping the event propagation in the click event of the Toggle doesn't work when using
+                  the mouse because it also consists of a span and a label element. These elements also fire
+                  click events which aren't stopped.
+                  Still, the Toggle needs the event listener so it can be toggled via keyboard.
+                -->
                 <div
-                  on:click={(event) => {
+                  onclick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     toggleActive(aggregator);
@@ -653,6 +662,7 @@
                   These are the currently available providers. Please review their feeds and adjust
                   the sources if needed.
                 </p>
+                <!-- @migration-task: migrate this slot by hand, `close-button` is an invalid identifier -->
                 <Button
                   slot="close-button"
                   let:close
@@ -672,21 +682,23 @@
             <div class="ps-4">
               {#each list as entry}
                 <Collapsible header="" showBorder={false}>
-                  <div slot="header" class="mb-2 flex items-center gap-2">
-                    <div
-                      class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-black dark:text-white"
-                    >
-                      <span>{entry.name}</span>
-                      <span class="flex w-fit gap-1">
-                        {#each new Array(entry.feedsSubscribed) as _a}
-                          <FeedBulletPoint filled></FeedBulletPoint>
-                        {/each}
-                        {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
-                          <FeedBulletPoint></FeedBulletPoint>
-                        {/each}
-                      </span>
+                  {#snippet headerSlot()}
+                    <div class="mb-2 flex items-center gap-2">
+                      <div
+                        class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-black dark:text-white"
+                      >
+                        <span>{entry.name}</span>
+                        <span class="flex w-fit gap-1">
+                          {#each new Array(entry.feedsSubscribed) as _a}
+                            <FeedBulletPoint filled></FeedBulletPoint>
+                          {/each}
+                          {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
+                            <FeedBulletPoint></FeedBulletPoint>
+                          {/each}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  {/snippet}
                   <div class="mb-3 flex flex-col gap-3">
                     <List
                       tag="dl"
@@ -708,7 +720,7 @@
                         </div>
                       {:else}
                         <button
-                          on:click={async () => {
+                          onclick={async () => {
                             await push(`/sources/${source.id}`);
                           }}
                           class={entry.feedsSubscribed === 0
@@ -751,7 +763,7 @@
           >
         {/if}
         {#if showCreateForm}
-          <form transition:scale on:submit={submitAggregator} class={formClass}>
+          <form transition:scale onsubmit={submitAggregator} class={formClass}>
             <div class="flex w-96 flex-col gap-2">
               <div>
                 <Label>Name</Label>

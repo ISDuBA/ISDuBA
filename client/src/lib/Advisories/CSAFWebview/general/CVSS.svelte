@@ -8,8 +8,11 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  export let baseScore = "";
-  export let baseSeverity = "";
+  interface Props {
+    baseScore: string;
+    baseSeverity: string;
+  }
+  let { baseScore, baseSeverity }: Props = $props();
 
   const getSeverityClass = (severity: string) => {
     return severity.toLowerCase();

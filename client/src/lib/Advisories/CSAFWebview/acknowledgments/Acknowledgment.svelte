@@ -12,7 +12,10 @@
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
   import type { Acknowledgment } from "../docmodel/docmodeltypes";
-  export let ack: Acknowledgment;
+  interface Props {
+    ack: Acknowledgment;
+  }
+  let { ack }: Props = $props();
   const keys: Array<string> = [];
   const values: string[] = [];
   if (ack.names) {

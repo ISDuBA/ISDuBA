@@ -20,40 +20,58 @@
   import QueryTable from "./QueryTable.svelte";
   import type { Order } from "./query";
 
-  let deleteModalOpen = false;
+  let deleteModalOpen = $state(false);
 
   const resetQueryToDelete = () => {
     return { name: "", id: -1 };
   };
 
-  let queries: Query[] | undefined = [];
-  let newQueries: Query[] = [];
-  let ignoredQueries: number[] = [];
-  let errorMessage: ErrorDetails | null;
-  let cloneErrorMessage: ErrorDetails | null;
-  let querytoDelete: any = resetQueryToDelete();
-  let loading = false;
-  let isCloning = false;
+  let queries: Query[] | undefined = $state([]);
+  let newQueries: Query[] = $state([]);
+  let ignoredQueries: number[] = $state([]);
+  let errorMessage: ErrorDetails | null = $state(null);
+  let cloneErrorMessage: ErrorDetails | null = $state(null);
+  let querytoDelete: any = $state(resetQueryToDelete());
+  let loading = $state(false);
+  let isCloning = $state(false);
 
-  $: globalRelevantQueries = queries
-    ?.filter((q) => q.definer === "system-default" && q.global && q.dashboard)
-    .slice(0, 2);
-  $: globalDashboardQueries = queries?.filter(
-    (q) => q.dashboard && q.global && !globalRelevantQueries?.map((q) => q.id).includes(q.id)
+  let globalRelevantQueries = $derived(
+    $state
+      .snapshot(queries)
+      ?.filter((q) => q.definer === "system-default" && q.global && q.dashboard)
+      .slice(0, 2)
   );
-  $: globalSearchQueries = queries?.filter((q) => !q.dashboard && q.global);
-  $: userQueries = queries?.filter((q: Query) => {
-    return !q.global;
-  });
-  $: adminQueries = queries?.filter((q: Query) => {
-    return q.global;
-  });
+  let globalDashboardQueries = $derived(
+    $state
+      .snapshot(queries)
+      ?.filter(
+        (q) => q.dashboard && q.global && !globalRelevantQueries?.map((q) => q.id).includes(q.id)
+      )
+  );
+  let globalSearchQueries = $derived(
+    $state.snapshot(queries)?.filter((q) => !q.dashboard && q.global)
+  );
+  let userQueries = $derived(
+    $state.snapshot(queries)?.filter((q: Query) => {
+      return !q.global;
+    })
+  );
+  let adminQueries = $derived(
+    $state.snapshot(queries)?.filter((q: Query) => {
+      return q.global;
+    })
+  );
 
   const fetchQueries = async () => {
     loading = true;
     const response = await request("/api/queries", "GET");
     if (response.ok) {
       const result = response.content;
+      result.forEach((q: any) => {
+        if (typeof q.default_query !== "boolean") {
+          q.default_query = false;
+        }
+      });
       queries = result.sort((q1: Query, q2: Query) => {
         return q1.num > q2.num;
       });
@@ -107,7 +125,7 @@
       isCloning = true;
       // Clone the special queries
       for (let i = globalRelevantQueries.length - 1; i >= 0; i--) {
-        const queryToClone = globalRelevantQueries[i];
+        const queryToClone = $state.snapshot(globalRelevantQueries)[i];
         if (queryToClone) {
           queryToClone.global = false;
           await cloneQuery(queryToClone, false);

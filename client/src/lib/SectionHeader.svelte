@@ -8,13 +8,26 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
-<script>
+<script lang="ts">
   import { Heading } from "flowbite-svelte";
+  import type { Snippet } from "svelte";
 
-  export let title = "";
+  interface Props {
+    title: string;
+    mainSlot?: Snippet;
+    rightSlot?: Snippet;
+  }
+  let { title = "", mainSlot = undefined, rightSlot = undefined }: Props = $props();
 </script>
 
 <div class="mb-3 flex text-lg break-all text-gray-900 dark:text-white">
-  <Heading tag="h2" class="me-4 w-fit" customSize="text-lg">{title} <slot /></Heading>
-  <slot name="right"></slot>
+  <Heading tag="h2" class="me-4 w-fit" customSize="text-lg"
+    >{title}
+    {#if mainSlot}
+      {@render mainSlot()}
+    {/if}
+  </Heading>
+  {#if rightSlot}
+    {@render rightSlot()}
+  {/if}
 </div>

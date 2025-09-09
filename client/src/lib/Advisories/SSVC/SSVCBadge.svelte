@@ -12,10 +12,14 @@
   import { Badge } from "flowbite-svelte";
   import { convertVectorToSSVCObject } from "./SSVCCalculator";
 
-  export let vector: string;
+  interface Props {
+    vector: string;
+  }
 
-  $: ssvc = convertVectorToSSVCObject(vector);
-  $: style = ssvc.color ? `color: white; background-color: ${ssvc.color};` : "";
+  let { vector }: Props = $props();
+
+  let ssvc = $derived(convertVectorToSSVCObject(vector));
+  let style = $derived(ssvc.color ? `color: white; background-color: ${ssvc.color};` : "");
 </script>
 
 <Badge class="h-6 w-fit" title={ssvc.vector} {style}>{ssvc.label}</Badge>

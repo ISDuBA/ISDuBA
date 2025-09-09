@@ -36,40 +36,44 @@
   import { DAY_MS } from "$lib/time";
   import SourceBasicStats from "./SourceBasicStats.svelte";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
-  export let params: any = null;
+
+  interface Props {
+    params: any;
+  }
+  let { params = null }: Props = $props();
 
   const shortLoadInterval = 5;
   const longLoadMultiplier = 6;
 
-  let sourceEdited: boolean = false;
+  let sourceEdited: boolean = $state(false);
 
-  let modalOpen: boolean = false;
-  let modalMessage = "";
-  let modalTitle = "";
-  let modalCallback: any;
+  let modalOpen: boolean = $state(false);
+  let modalMessage = $state("");
+  let modalTitle = $state("");
+  let modalCallback: any = $state(null);
 
-  let saveSourceError: ErrorDetails | null = null;
-  let loadSourceError: ErrorDetails | null = null;
-  let loadFeedError: ErrorDetails | null = null;
-  let saveFeedError: ErrorDetails | null = null;
-  let loadPmdError: ErrorDetails | null = null;
-  let feedError: ErrorDetails | null = null;
-  let pmd: CSAFProviderMetadata;
-  let feeds: Feed[] = [];
+  let saveSourceError: ErrorDetails | null = $state(null);
+  let loadSourceError: ErrorDetails | null = $state(null);
+  let loadFeedError: ErrorDetails | null = $state(null);
+  let saveFeedError: ErrorDetails | null = $state(null);
+  let loadPmdError: ErrorDetails | null = $state(null);
+  let feedError: ErrorDetails | null = $state(null);
+  let pmd: CSAFProviderMetadata | null = $state(null);
+  let feeds: Feed[] = $state([]);
 
-  let loadingFeeds: boolean = false;
-  let loadingSource: boolean = false;
-  let loadingPMD: boolean = false;
+  let loadingFeeds: boolean = $state(false);
+  let loadingSource: boolean = $state(false);
+  let loadingPMD: boolean = $state(false);
 
   let formClass = "max-w-[800pt]";
 
-  let sourceForm: any;
-  let updateSourceForm: any;
+  let sourceForm: any = $state(null);
+  let updateSourceForm: any = $state(null);
   let fillAgeDataFromSource: (source: Source) => void;
 
-  let loadSource: boolean = true;
+  let loadSource: boolean = $state(true);
 
-  let source: Source = {
+  const initialSource = {
     name: "",
     url: "",
     active: false,
@@ -80,16 +84,17 @@
     ignore_patterns: [""],
     attention: false
   };
+  let source: Source = $state(structuredClone(initialSource));
 
-  let oldSource = structuredClone(source);
+  let oldSource: Source = $state(structuredClone(initialSource));
 
-  let sourceStatFull: SourceBasicStats;
-  let sourceStatLast: SourceBasicStats;
+  let sourceStatFull: SourceBasicStats | null = $state(null);
+  let sourceStatLast: SourceBasicStats | null = $state(null);
 
   let updateIteration = 0;
   let updateStats = setInterval(async () => {
     updateIteration = (updateIteration + 1) % 6;
-    if (updateIteration == 0) {
+    if (updateIteration == 0 && sourceStatFull && sourceStatLast) {
       sourceStatFull.reload();
       sourceStatLast.reload();
     }
@@ -122,7 +127,7 @@
         fillAgeDataFromSource(source);
       }
       await updateSourceForm();
-      oldSource = structuredClone(source);
+      oldSource = structuredClone($state.snapshot(source));
       sourceEdited = false;
     } else {
       loadSourceError = result.error;
@@ -247,7 +252,7 @@
 
   const inputChange = async () => {
     await updateSourceForm();
-    if (sourceEqual(oldSource, source)) {
+    if (sourceEqual($state.snapshot(oldSource), $state.snapshot(source))) {
       sourceEdited = false;
     } else {
       sourceEdited = true;
@@ -274,7 +279,7 @@
         await loadPMD();
       }
       await loadFeeds();
-      if (source.id !== 0) {
+      if (source.id !== 0 && pmd) {
         let missingFeeds = calculateMissingFeeds(parseFeeds(pmd, feeds), feeds);
         missingFeeds.map((f) => {
           f.enable = false;
@@ -443,36 +448,31 @@
   </div>
 {/if}
 
-<FeedView
-  showProgress
-  {feeds}
-  placeholderFeed={source.id === 0}
-  {clickFeed}
-  {updateFeed}
-  edit={true}
->
-  <div slot="top">
-    {#if source.attention}
-      <Badge class="mb-2 h-fit p-1" dismissable>
-        <p>
-          These are the currently available feeds. Please review them and adjust the subscriptions
-          if needed.
-        </p>
-        <Button
-          slot="close-button"
-          let:close
-          color="light"
-          class="border-primary-700/55 text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
-          on:click={async () => {
-            markAsDone();
-            close();
-          }}
-        >
-          <i class="bx bx-check"></i>
-        </Button>
-      </Badge>
-    {/if}
-  </div>
+<FeedView {feeds} placeholderFeed={source.id === 0} {clickFeed} {updateFeed} edit={true}>
+  {#snippet feedViewTopSlot()}
+    <div>
+      {#if source.attention}
+        <Badge class="mb-2 h-fit p-1" dismissable>
+          <p>
+            These are the currently available feeds. Please review them and adjust the subscriptions
+            if needed.
+          </p>
+          <Button
+            slot="close-button"
+            let:close
+            color="light"
+            class="border-primary-700/55 text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+            on:click={async () => {
+              markAsDone();
+              close();
+            }}
+          >
+            <i class="bx bx-check"></i>
+          </Button>
+        </Badge>
+      {/if}
+    </div>
+  {/snippet}
 </FeedView>
 <div
   class:invisible={!loadingFeeds && !loadingPMD}

@@ -17,8 +17,8 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import DarkMode from "flowbite-svelte/DarkMode.svelte";
 
-  let viewError: ErrorDetails | null;
-  let versionError: ErrorDetails | null;
+  let viewError: ErrorDetails | null = $state(null);
+  let versionError: ErrorDetails | null = $state(null);
 
   async function logout() {
     appStore.setSessionExpired(true);

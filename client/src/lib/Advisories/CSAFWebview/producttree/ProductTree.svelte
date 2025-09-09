@@ -16,14 +16,22 @@
   import ProductNames from "./product/ProductNames.svelte";
   import Relationships from "./relationship/Relationships.svelte";
   import { productTreeCutoffs } from "../efficiencyCutoffs";
-  export let basePath = "";
+  import { untrack } from "svelte";
 
-  let openSubBranches = false;
-  let openBranches = false;
-  let openRelationships = false;
-  $: selectedProduct = appStore.state.webview.ui.selectedProduct;
+  interface Props {
+    basePath: string;
+  }
+  let { basePath }: Props = $props();
 
-  $: {
+  let openSubBranches = $state(false);
+  let openBranches = $state(false);
+  let openRelationships = $state(false);
+  let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
+
+  $effect(() => {
+    untrack(() => openSubBranches);
+    untrack(() => openBranches);
+    untrack(() => openRelationships);
     let size = 0;
     for (let branch of appStore.state.webview.doc?.productTree.branches ?? []) {
       if (branch.branches) {
@@ -38,7 +46,7 @@
     openRelationships =
       appStore.state.webview.doc?.productTree.relationships?.length ??
       0 <= productTreeCutoffs.relations;
-  }
+  });
 </script>
 
 {#if appStore.state.webview.doc?.productTree.branches}

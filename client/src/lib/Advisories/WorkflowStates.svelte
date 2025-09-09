@@ -13,8 +13,11 @@
   import { appStore } from "$lib/store.svelte";
   import { Badge } from "flowbite-svelte";
 
-  export let advisoryState = "";
-  export let updateStateFn;
+  interface Props {
+    advisoryState: string;
+    updateStateFn: (state: string) => Promise<void>;
+  }
+  let { advisoryState = "", updateStateFn }: Props = $props();
 
   const updateStateIfAllowed = async (state: string) => {
     if (allowedToChangeWorkflow(appStore.getRoles(), advisoryState, state)) {
@@ -34,13 +37,13 @@
 </script>
 
 {#if advisoryState}
-  <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(NEW)}>
+  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(NEW)}>
     <Badge title="Mark as new" class="flex w-fit gap-1" color={getBadgeColor(NEW, advisoryState)}>
       <i class="bx bxs-certification"></i>
       <span>{NEW}</span>
     </Badge>
   </a>
-  <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(READ)}>
+  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(READ)}>
     <Badge title="Mark as read" class="flex w-fit gap-1" color={getBadgeColor(READ, advisoryState)}>
       <i class="bx bx-show"></i>
       <span>{READ}</span></Badge
@@ -50,7 +53,7 @@
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => {
+      onclick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
     >
@@ -63,7 +66,7 @@
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => {
+      onclick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
     >
@@ -76,7 +79,7 @@
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => updateStateIfAllowed(ASSESSING)}
+      onclick={() => updateStateIfAllowed(ASSESSING)}
     >
       <Badge
         title="Mark as assesing"
@@ -92,7 +95,7 @@
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => {
+      onclick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
     >
@@ -105,7 +108,7 @@
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => updateStateIfAllowed(REVIEW)}
+      onclick={() => updateStateIfAllowed(REVIEW)}
     >
       <Badge
         title="Release for review"
@@ -120,17 +123,17 @@
   <a
     href={"javascript:void(0);"}
     class="inline-flex"
-    on:click={() => updateStateIfAllowed(ARCHIVED)}
+    onclick={() => updateStateIfAllowed(ARCHIVED)}
   >
     <Badge title="Archive" class="flex w-fit gap-1" color={getBadgeColor(ARCHIVED, advisoryState)}>
       <i class="bx bx-archive"></i>
       <span>{ARCHIVED}</span>
     </Badge>
   </a>
-  <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(DELETE)}>
+  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(DELETE)}>
     <Badge
       title="Mark for deletion"
-      on:click={() => updateStateFn(DELETE)}
+      onclick={() => updateStateFn(DELETE)}
       class="flex w-fit gap-1"
       color={getBadgeColor(DELETE, advisoryState)}
     >
