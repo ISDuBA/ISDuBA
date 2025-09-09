@@ -44,7 +44,7 @@
 <Card size="lg">
   <div class={`flex flex-col ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
     <Label class="pb-2">{label}</Label>
-    <Fileupload value="" bind:files multiple />
+    <Fileupload value="" bind:files multiple accept=".json" />
     <Listgroup class="mt-6">
       {#if !files}
         <ListgroupItem>No files selected</ListgroupItem>
