@@ -10,16 +10,20 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
-  import { tick } from "svelte";
+  import { tick, untrack } from "svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
   import type { Relationship } from "$lib/pmdTypes";
   import { A } from "flowbite-svelte";
-  export let relation: Relationship;
-  let highlight = false;
-  let blink = false;
-  export let basePath = "";
+
+  interface Props {
+    basePath: string;
+    relation: Relationship;
+  }
+  let { basePath, relation }: Props = $props();
+
+  let blink = $state(false);
   async function updateUI() {
     await tick();
     document
@@ -29,14 +33,16 @@
     await new Promise((res) => setTimeout(res, 5000));
     blink = false;
   }
-  $: selectedProduct = appStore.state.webview.ui.selectedProduct;
-  $: productID = relation.full_product_name.product_id;
-  $: if (selectedProduct === productID) {
-    highlight = true;
-    updateUI();
-  } else {
-    highlight = false;
-  }
+  let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
+  let productID = $derived(relation.full_product_name.product_id);
+  let highlight = $derived(selectedProduct === productID);
+  $effect(() => {
+    untrack(() => selectedProduct);
+    untrack(() => blink);
+    if (selectedProduct === productID) {
+      updateUI();
+    }
+  });
 </script>
 
 <Collapsible

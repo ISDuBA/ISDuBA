@@ -15,12 +15,16 @@
   import { Button } from "flowbite-svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 
-  export let operation: string;
-  export let path: string;
-  export let urlPath: string;
-  let result: any;
-  let error: ErrorDetails | null;
-  let isOpen = false;
+  interface Props {
+    operation: string;
+    path: string;
+    urlPath: string;
+  }
+
+  let { operation, path, urlPath }: Props = $props();
+  let result: any = $state();
+  let error: ErrorDetails | null = $state(null);
+  let isOpen = $state(false);
 
   const loadEntry = async () => {
     isOpen = !isOpen;

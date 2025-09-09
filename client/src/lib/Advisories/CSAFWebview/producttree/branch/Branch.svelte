@@ -13,20 +13,27 @@
   import Product from "$lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
   import type { Branch } from "$lib/pmdTypes";
   import { Badge } from "flowbite-svelte";
-  export let branch: Branch;
-  export let open: boolean;
-  export let openSubBranches: boolean = false;
+  import Self from "./Branch.svelte";
+
+  interface Props {
+    branch: Branch;
+    open: boolean;
+    openSubBranches: boolean;
+  }
+  let { branch, open, openSubBranches = false }: Props = $props();
 </script>
 
 <div class="pl-3">
   <Collapsible {open} header={branch.category + ": " + branch.name}>
-    <div slot="header" class="py-2">
-      <Badge rounded large color="dark">{branch.category}</Badge>
-      {branch.name}
-    </div>
+    {#snippet headerSlot()}
+      <div class="py-2">
+        <Badge rounded large color="dark">{branch.category}</Badge>
+        {branch.name}
+      </div>
+    {/snippet}
     {#if branch.branches}
       {#each branch.branches as b}
-        <svelte:self branch={b} open={openSubBranches} {openSubBranches} />
+        <Self branch={b} open={openSubBranches} {openSubBranches} />
       {/each}
     {/if}
     {#if branch.product}

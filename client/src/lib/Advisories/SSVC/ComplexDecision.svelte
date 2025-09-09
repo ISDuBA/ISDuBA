@@ -14,8 +14,12 @@
   import type { SSVCDecision, SSVCDecisionChild } from "./SSVCCalculator";
   import { getDecision } from "./SSVCCalculator";
 
-  export let children: SSVCDecisionChild[] | undefined;
-  export let decisionPoints: SSVCDecision[] | undefined;
+  interface Props {
+    children: SSVCDecisionChild[] | undefined;
+    decisionPoints: SSVCDecision[];
+  }
+
+  let { children, decisionPoints }: Props = $props();
 
   onMount(() => {
     children?.forEach((child) => {

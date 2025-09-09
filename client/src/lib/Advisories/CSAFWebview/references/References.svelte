@@ -10,7 +10,12 @@
 
 <script lang="ts">
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  export let references: any;
+
+  interface Props {
+    references: any;
+  }
+  let { references }: Props = $props();
+
   const baseCellStyle = "py-2 px-2";
   const cellStyle = "" + baseCellStyle;
 </script>

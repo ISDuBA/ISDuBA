@@ -11,8 +11,12 @@
 <script lang="ts">
   import { P } from "flowbite-svelte";
   import { List, Li } from "flowbite-svelte";
-  export let values: any = [];
-  export let label = "";
+
+  interface Props {
+    label?: string;
+    values?: any;
+  }
+  let { label = "", values = [] }: Props = $props();
 </script>
 
 <P>{label}</P>

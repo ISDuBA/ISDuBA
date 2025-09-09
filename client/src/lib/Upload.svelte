@@ -19,14 +19,22 @@
     Tooltip
   } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
-  export let label;
-  export let upload = async (files: FileList): Promise<UploadInfo[]> => {
-    // eslint-disable-next-line no-console
-    console.log(files, uploadInfo);
-    return [];
-  };
 
-  export let uploadInfo: UploadInfo[] = [];
+  interface Props {
+    label: any;
+    upload?: any;
+    uploadInfo?: UploadInfo[];
+  }
+
+  let {
+    label,
+    upload = async (files: FileList): Promise<UploadInfo[]> => {
+      // eslint-disable-next-line no-console
+      console.log(files, uploadInfo);
+      return [];
+    },
+    uploadInfo = $bindable([])
+  }: Props = $props();
 
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
@@ -35,14 +43,16 @@
     }
     return "";
   };
-  let files: FileList;
-  $: if (files) {
-    uploadInfo = [];
-  }
+  let files: FileList | undefined = $state(undefined);
+  $effect(() => {
+    if (files) {
+      uploadInfo = [];
+    }
+  });
 </script>
 
 <Card size="lg">
-  <div class={`flex flex-col ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
+  <div class={`flex flex-col ${files?.length && files.length > 1 ? "mb-4" : "mb-40"}`}>
     <Label class="pb-2">{label}</Label>
     <Fileupload value="" bind:files multiple />
     <Listgroup class="mt-6">

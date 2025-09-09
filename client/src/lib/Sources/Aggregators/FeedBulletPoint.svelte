@@ -9,11 +9,15 @@
 -->
 
 <script lang="ts">
-  export let filled = false;
+  interface Props {
+    filled?: boolean;
+  }
+
+  let { filled = false }: Props = $props();
 
   const background = "bg-gray-600 dark:bg-gray-500";
   const borderColor = "gray";
-  $: border = `border border-${borderColor}-800 dark:border-${borderColor}-500`;
+  let border = $derived(`border border-${borderColor}-800 dark:border-${borderColor}-500`);
 </script>
 
 <span class={`${filled ? background : ""} ${border} inline-block h-3 w-3 rounded-[3pt]`}></span>

@@ -22,7 +22,7 @@
   import { page } from "$app/stores";
   import { truncate } from "$lib/utils";
 
-  $: activeUrl = "/" + $page.url.hash;
+  let activeUrl = $derived("/" + $page.url.hash);
 
   let activeClass =
     "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-gray-950 dark:text-white hover:bg-primary-100 dark:hover:bg-black";
@@ -35,9 +35,11 @@
     easing: sineIn
   };
   let breakPoint: number = 1280;
-  let width: number;
-  let drawerHidden: boolean = false;
-  $: drawerHidden = width < breakPoint;
+  let width: number = $state(0);
+  let drawerHidden: boolean = $state(false);
+  $effect(() => {
+    drawerHidden = width < breakPoint;
+  });
 
   const toggleDrawer = () => {
     drawerHidden = !drawerHidden;
@@ -122,7 +124,7 @@
     </Drawer>
     <div class="h-screen w-16 bg-white p-2 dark:bg-gray-800">
       <button
-        on:click={toggleDrawer}
+        onclick={toggleDrawer}
         aria-label={drawerHidden ? "open navigation" : "close navigation"}
       >
         <i title={drawerHidden ? "open navigation" : "close navigation"} class="bx bx-menu text-2xl"

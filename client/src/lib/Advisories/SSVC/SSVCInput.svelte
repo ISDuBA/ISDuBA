@@ -11,20 +11,30 @@
 <script lang="ts">
   import { Label, Input } from "flowbite-svelte";
   import { vectorStart } from "./SSVCCalculator";
-  import { createEventDispatcher, onMount, tick } from "svelte";
+  import { onMount, tick } from "svelte";
 
-  export let autofocus = false;
-  export let disabled = false;
-  export let isValid = true;
-  export let value = vectorStart;
+  interface Props {
+    autofocus: boolean;
+    disabled: boolean;
+    isValid: boolean;
+    value: string;
+    onKeyup?: (event: any) => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let {
+    autofocus = false,
+    disabled = false,
+    isValid = $bindable(),
+    value = $bindable(),
+    onKeyup = undefined
+  }: Props = $props();
+
   const defaultInputClass = "border-gray-600 rounded-s-none h-10";
 
-  let minLengthReached = false;
-  let endsWithSlash = false;
-  let containsValidDate = false;
-  let inputValue = "";
+  let minLengthReached = $state(false);
+  let endsWithSlash = $state(false);
+  let containsValidDate = $state(false);
+  let inputValue = $state("");
 
   onMount(() => {
     const newValue = value.replace(vectorStart, "");
@@ -84,7 +94,9 @@
     const newInput = event.target.value;
     value = `${vectorStart}${inputValue}`;
     isValid = isVectorValid(newInput);
-    dispatch("keyup", event);
+    if (onKeyup) {
+      onKeyup(event);
+    }
   };
 
   const handlePasteEvent = async (event: any) => {

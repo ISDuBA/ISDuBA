@@ -20,9 +20,9 @@
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceEvents from "./SourceEvents.svelte";
 
-  let filteredQueries: any[] = [];
-  let loadIgnoredError: ErrorDetails | null;
-  let loadQueryError: ErrorDetails | null;
+  let filteredQueries: any[] = $state([]);
+  let loadIgnoredError: ErrorDetails | null = $state(null);
+  let loadQueryError: ErrorDetails | null = $state(null);
 
   const fetchStoredQueries = async (): Promise<any[]> => {
     const response = await request("/api/queries", "GET");

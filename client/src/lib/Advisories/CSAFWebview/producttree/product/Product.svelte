@@ -10,14 +10,18 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
-  import { tick } from "svelte";
+  import { tick, untrack } from "svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "./ProductIdentificationHelper.svelte";
   import type { FullProductName } from "$lib/pmdTypes";
-  export let product: FullProductName;
-  let highlight = false;
-  let blink = false;
+
+  interface Props {
+    product: FullProductName;
+  }
+  let { product }: Props = $props();
+
+  let blink = $state(false);
   /**
    * updateUI waits for the UI to settle and scrolls to given ProductID.
    */
@@ -28,15 +32,17 @@
     await new Promise((res) => setTimeout(res, 5000));
     blink = false;
   }
-  $: selectedProduct = appStore.state.webview.ui.selectedProduct;
-  $: productID = product?.product_id;
-  $: if (selectedProduct === productID) {
-    highlight = true;
-    appStore.resetSelectedProduct();
-    updateUI();
-  } else {
-    highlight = false;
-  }
+  let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
+  let productID = $derived(product?.product_id);
+  let highlight = $derived(selectedProduct === productID);
+  $effect(() => {
+    untrack(() => selectedProduct);
+    untrack(() => blink);
+    if (selectedProduct === productID) {
+      appStore.resetSelectedProduct();
+      updateUI();
+    }
+  });
 </script>
 
 <div class={"p-2" + (blink ? " blink" : "")} id={product.product_id}>

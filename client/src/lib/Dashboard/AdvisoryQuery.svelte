@@ -23,10 +23,14 @@
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
 
-  export let storedQuery: any;
-  let documents: any[] | null = null;
-  let newDocumentsError: ErrorDetails | null;
-  let isLoading = false;
+  interface Props {
+    storedQuery: any;
+  }
+
+  let { storedQuery }: Props = $props();
+  let documents: any[] | null = $state(null);
+  let newDocumentsError: ErrorDetails | null = $state(null);
+  let isLoading = $state(false);
   const ignoredColumns = [
     "id",
     "title",
@@ -95,50 +99,62 @@
       {#if documents}
         {#if documents.length > 0}
           {#each documents as doc}
-            <Activity on:click={() => openDocument(doc)}>
-              <div slot="top-left">
-                {#if doc.critical}
-                  <span class:text-red-500={Number(doc.critical) > 5.0}>
-                    {doc.critical}
-                  </span>
-                {/if}
-              </div>
-              <span slot="top-right" class="ml-auto">{getPublisher(doc.publisher)}</span>
+            <Activity onClicked={() => openDocument(doc)}>
+              {#snippet topLeftSlot()}
+                <div>
+                  {#if doc.critical}
+                    <span class:text-red-500={Number(doc.critical) > 5.0}>
+                      {doc.critical}
+                    </span>
+                  {/if}
+                </div>
+              {/snippet}
+              {#snippet topRightSlot()}
+                <div>
+                  <span class="ml-auto">{getPublisher(doc.publisher)}</span>
+                </div>
+              {/snippet}
               <div class="text-black dark:text-white">{doc.title ?? "Title: undefined"}</div>
               <div class="text-sm text-gray-700 dark:text-gray-400">{doc.tracking_id}</div>
-              <div slot="bottom-left" class="flex items-center gap-4 text-slate-400">
-                {#if doc.comments !== undefined}
-                  <div class="flex items-center gap-1">
-                    <i class="bx bx-comment"></i>
-                    <span>{doc.comments}</span>
-                  </div>
-                {/if}
-                {#if doc.versions !== undefined}
-                  <div class="flex items-center gap-1">
-                    <i class="bx bx-collection"></i>
-                    <span>{doc.versions}</span>
-                  </div>
-                {/if}
-                {#if doc.ssvc}
-                  <SsvcBadge vector={doc.ssvc}></SsvcBadge>
-                {/if}
-              </div>
-              <div slot="bottom-right" class="text-slate-400">
-                {#if doc.recent !== undefined}
-                  <span>{getRelativeTime(new Date(doc.recent))}</span>
-                {/if}
-              </div>
-              <div slot="bottom-bottom">
-                {#if Object.keys(doc).filter((k) => !ignoredColumns.includes(k)).length > 0}
-                  <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
-                    {#each Object.keys(doc).sort() as key}
-                      {#if !ignoredColumns.includes(key) && doc[key] !== undefined && doc[key] !== null}
-                        <div>{key}: {doc[key]}</div>
-                      {/if}
-                    {/each}
-                  </div>
-                {/if}
-              </div>
+              {#snippet bottomLeftSlot()}
+                <div class="flex items-center gap-4 text-slate-400">
+                  {#if doc.comments !== undefined}
+                    <div class="flex items-center gap-1">
+                      <i class="bx bx-comment"></i>
+                      <span>{doc.comments}</span>
+                    </div>
+                  {/if}
+                  {#if doc.versions !== undefined}
+                    <div class="flex items-center gap-1">
+                      <i class="bx bx-collection"></i>
+                      <span>{doc.versions}</span>
+                    </div>
+                  {/if}
+                  {#if doc.ssvc}
+                    <SsvcBadge vector={doc.ssvc}></SsvcBadge>
+                  {/if}
+                </div>
+              {/snippet}
+              {#snippet bottomRightSlot()}
+                <div class="text-slate-400">
+                  {#if doc.recent !== undefined}
+                    <span>{getRelativeTime(new Date(doc.recent))}</span>
+                  {/if}
+                </div>
+              {/snippet}
+              {#snippet bottomBottomSlot()}
+                <div>
+                  {#if Object.keys(doc).filter((k) => !ignoredColumns.includes(k)).length > 0}
+                    <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
+                      {#each Object.keys(doc).sort() as key}
+                        {#if !ignoredColumns.includes(key) && doc[key] !== undefined && doc[key] !== null}
+                          <div>{key}: {doc[key]}</div>
+                        {/if}
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/snippet}
             </Activity>
           {/each}
         {:else}

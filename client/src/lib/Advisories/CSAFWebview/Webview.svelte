@@ -20,11 +20,15 @@
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
   import FakeButton from "./FakeButton.svelte";
 
-  import { Tabs, TabItem, Spinner } from "flowbite-svelte";
+  import { Tabs, TabItem } from "flowbite-svelte";
+  import { onMount } from "svelte";
 
-  export let position = "";
-  export let basePath = "";
-  export let widthOffset = 0;
+  interface Props {
+    position: string;
+    basePath: string;
+    widthOffset: number;
+  }
+  let { position = "", basePath = "", widthOffset = 0 }: Props = $props();
 
   const sideScroll = "w-full overflow-y-auto h-max";
   const webviewDataSections = [
@@ -38,13 +42,15 @@
   ] as const;
   type WebviewDataSections = (typeof webviewDataSections)[number];
 
-  let screenPhase: number = 0;
-  let placeToPhase = Object.fromEntries(
-    webviewDataSections.map((key) => [key, { show: false, phase: 9 }])
-  ) as { [place in WebviewDataSections]: { show: boolean; phase: number } };
-  let isCSAF: boolean = false;
+  let innerWidth = $state(0);
+  let screenPhase: number = $derived(Math.max(0, Math.floor((innerWidth - widthOffset) / 550 - 1)));
+  let placeToPhase = $state(
+    Object.fromEntries(webviewDataSections.map((key) => [key, { show: false, phase: 9 }])) as {
+      [place in WebviewDataSections]: { show: boolean; phase: number };
+    }
+  );
 
-  let tabOpen: { [key in WebviewDataSections]: boolean } = {
+  let tabOpen: { [key in WebviewDataSections]: boolean } = $state({
     vulnerabilitiesOverview: true,
     productTree: false,
     vulnerabilities: false,
@@ -52,7 +58,7 @@
     Acknowledgments: false,
     references: false,
     revisionHistory: false
-  };
+  });
 
   const updateUI = async () => {
     // This is a hack
@@ -122,187 +128,164 @@
   const showArea = (place: { show: boolean; phase: number }) =>
     place.show && place.phase <= screenPhase;
 
-  $: if (position && position != "") {
-    updateUI();
-  }
-
-  $: aliases = appStore.state.webview.doc?.aliases;
-
-  $: innerWidth = 0;
-  $: {
-    let oldPhase = screenPhase;
-    screenPhase = Math.max(0, Math.floor((innerWidth - widthOffset) / 550 - 1));
-    if (oldPhase !== screenPhase) {
-      updatePlaces();
+  $effect(() => {
+    if (position && position != "") {
+      updateUI();
     }
-  }
-  $: {
-    isCSAF = !!(
-      appStore.state.webview.doc?.isRevisionHistoryPresent ||
-      appStore.state.webview.doc?.isDocPresent ||
-      appStore.state.webview.doc?.isProductTreePresent ||
-      appStore.state.webview.doc?.isPublisherPresent ||
-      appStore.state.webview.doc?.isTLPPresent ||
-      appStore.state.webview.doc?.isTrackingPresent ||
-      appStore.state.webview.doc?.isVulnerabilitiesPresent
-    );
+  });
+
+  let aliases = $derived(appStore.state.webview.doc?.aliases);
+
+  onMount(() => {
     updatePlaces();
-  }
+  });
 </script>
 
 <svelte:window bind:innerWidth />
 
-<div class="grid auto-cols-fr grid-flow-col gap-6">
-  {#if isCSAF}
-    <div class="flex w-full flex-col">
-      {#if appStore.state.webview.doc}
-        <div class="mb-4 w-full">
-          <General />
-        </div>
+<div class="flex w-full flex-col">
+  {#if appStore.state.webview.doc}
+    <div class="mb-4 w-full">
+      <General />
+    </div>
+  {/if}
+  {#if aliases}
+    <div class="mb-4">
+      <ValueList label="Aliases" values={aliases} />
+    </div>
+  {/if}
+  {#if showTab(placeToPhase.revisionHistory)}
+    <Tabs
+      defaultClass="flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse mb-2"
+      activeClasses="h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-sm"
+      inactiveClasses="h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
+    >
+      <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Overview">
+        {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+          <div class={sideScroll}>
+            <ProductVulnerabilities {basePath} />
+          </div>
+        {:else}
+          <i>
+            <h2>No Vulnerabilities overview</h2>
+            (As no products are connected to vulnerabilities.)
+          </i>
+        {/if}
+      </TabItem>
+      {#if showTab(placeToPhase.productTree)}
+        <TabItem bind:open={tabOpen.productTree} title="Product tree">
+          <div class={sideScroll}>
+            <ProductTree {basePath} />
+          </div>
+        </TabItem>
       {/if}
-      {#if aliases}
-        <div class="mb-4">
-          <ValueList label="Aliases" values={aliases} />
-        </div>
+      {#if showTab(placeToPhase.vulnerabilities)}
+        <TabItem bind:open={tabOpen.vulnerabilities} title="Vulnerabilities">
+          <div class={sideScroll}>
+            <Vulnerabilities {basePath} />
+          </div>
+        </TabItem>
+      {/if}
+      {#if showTab(placeToPhase.notes) && appStore.state.webview.doc?.notes}
+        <TabItem bind:open={tabOpen.notes} title="Notes">
+          <div class={sideScroll}>
+            <Notes open notes={appStore.state.webview.doc?.notes} />
+          </div>
+        </TabItem>
+      {/if}
+      {#if showTab(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
+        <TabItem bind:open={tabOpen.Acknowledgments} title="Acknowledgments">
+          <div class={sideScroll}>
+            <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+          </div>
+        </TabItem>
+      {/if}
+      {#if showTab(placeToPhase.references)}
+        <TabItem bind:open={tabOpen.references} title="References">
+          <div class={sideScroll}>
+            <References references={appStore.state.webview.doc?.references} />
+          </div>
+        </TabItem>
       {/if}
       {#if showTab(placeToPhase.revisionHistory)}
-        <Tabs
-          defaultClass="flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse mb-2"
-          activeClasses="h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-sm"
-          inactiveClasses="h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
-        >
-          <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Overview">
-            {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
-              <div class={sideScroll}>
-                <ProductVulnerabilities {basePath} />
-              </div>
-            {:else}
-              <i>
-                <h2>No Vulnerabilities overview</h2>
-                (As no products are connected to vulnerabilities.)
-              </i>
-            {/if}
-          </TabItem>
-          {#if showTab(placeToPhase.productTree)}
-            <TabItem bind:open={tabOpen.productTree} title="Product tree">
-              <div class={sideScroll}>
-                <ProductTree {basePath} />
-              </div>
-            </TabItem>
-          {/if}
-          {#if showTab(placeToPhase.vulnerabilities)}
-            <TabItem bind:open={tabOpen.vulnerabilities} title="Vulnerabilities">
-              <div class={sideScroll}>
-                <Vulnerabilities {basePath} />
-              </div>
-            </TabItem>
-          {/if}
-          {#if showTab(placeToPhase.notes) && appStore.state.webview.doc?.notes}
-            <TabItem bind:open={tabOpen.notes} title="Notes">
-              <div class={sideScroll}>
-                <Notes open notes={appStore.state.webview.doc?.notes} />
-              </div>
-            </TabItem>
-          {/if}
-          {#if showTab(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
-            <TabItem bind:open={tabOpen.Acknowledgments} title="Acknowledgments">
-              <div class={sideScroll}>
-                <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
-              </div>
-            </TabItem>
-          {/if}
-          {#if showTab(placeToPhase.references)}
-            <TabItem bind:open={tabOpen.references} title="References">
-              <div class={sideScroll}>
-                <References references={appStore.state.webview.doc?.references} />
-              </div>
-            </TabItem>
-          {/if}
-          {#if showTab(placeToPhase.revisionHistory)}
-            <TabItem bind:open={tabOpen.revisionHistory} title="Revision history">
-              <div class={sideScroll}>
-                <RevisionHistory />
-              </div>
-            </TabItem>
-          {/if}
-        </Tabs>
-      {:else}
-        <div>
-          <FakeButton active>Overview</FakeButton>
-          <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <TabItem bind:open={tabOpen.revisionHistory} title="Revision history">
           <div class={sideScroll}>
-            {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
-              <ProductVulnerabilities {basePath} />
-            {:else}
-              <i>
-                <h2>No Vulnerabilities overview</h2>
-                (As no products are connected to vulnerabilities.)
-              </i>
-            {/if}
+            <RevisionHistory />
           </div>
-        </div>
+        </TabItem>
       {/if}
-    </div>
-    {#if showArea(placeToPhase.productTree)}
-      <div>
-        <FakeButton active>Product tree</FakeButton>
-        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-        <div class={sideScroll}>
-          <ProductTree {basePath} />
-        </div>
-      </div>
-    {/if}
-    {#if showArea(placeToPhase.vulnerabilities)}
-      <div>
-        <FakeButton active>Vulnerabilities</FakeButton>
-        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-        <div class={sideScroll}>
-          <Vulnerabilities {basePath} />
-        </div>
-      </div>
-    {/if}
-    {#if showArea(placeToPhase.notes) && appStore.state.webview.doc?.notes}
-      <div>
-        <FakeButton active>Notes</FakeButton>
-        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-        <div class={sideScroll}>
-          <Notes open notes={appStore.state.webview.doc?.notes} />
-        </div>
-      </div>
-    {/if}
-
-    {#if showArea(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
-      <div>
-        <FakeButton active>Acknowledgments</FakeButton>
-        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-        <div class={sideScroll}>
-          <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
-        </div>
-      </div>
-    {/if}
-
-    {#if showArea(placeToPhase.references)}
-      <div>
-        <FakeButton active>References</FakeButton>
-        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-        <div class={sideScroll}>
-          <References references={appStore.state.webview.doc?.references} />
-        </div>
-      </div>
-    {/if}
-
-    {#if showArea(placeToPhase.revisionHistory)}
-      <div>
-        <FakeButton active>Revision history</FakeButton>
-        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-        <div class={sideScroll}>
-          <RevisionHistory />
-        </div>
-      </div>
-    {/if}
+    </Tabs>
   {:else}
-    <div class="mt-32 ml-32">
-      <Spinner color="gray" size="8"></Spinner>
+    <div>
+      <FakeButton active>Overview</FakeButton>
+      <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class={sideScroll}>
+        {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+          <ProductVulnerabilities {basePath} />
+        {:else}
+          <i>
+            <h2>No Vulnerabilities overview</h2>
+            (As no products are connected to vulnerabilities.)
+          </i>
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
+{#if showArea(placeToPhase.productTree)}
+  <div>
+    <FakeButton active>Product tree</FakeButton>
+    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+    <div class={sideScroll}>
+      <ProductTree {basePath} />
+    </div>
+  </div>
+{/if}
+{#if showArea(placeToPhase.vulnerabilities)}
+  <div>
+    <FakeButton active>Vulnerabilities</FakeButton>
+    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+    <div class={sideScroll}>
+      <Vulnerabilities {basePath} />
+    </div>
+  </div>
+{/if}
+{#if showArea(placeToPhase.notes) && appStore.state.webview.doc?.notes}
+  <div>
+    <FakeButton active>Notes</FakeButton>
+    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+    <div class={sideScroll}>
+      <Notes open notes={appStore.state.webview.doc?.notes} />
+    </div>
+  </div>
+{/if}
+
+{#if showArea(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
+  <div>
+    <FakeButton active>Acknowledgments</FakeButton>
+    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+    <div class={sideScroll}>
+      <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+    </div>
+  </div>
+{/if}
+
+{#if showArea(placeToPhase.references)}
+  <div>
+    <FakeButton active>References</FakeButton>
+    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+    <div class={sideScroll}>
+      <References references={appStore.state.webview.doc?.references} />
+    </div>
+  </div>
+{/if}
+
+{#if showArea(placeToPhase.revisionHistory)}
+  <div>
+    <FakeButton active>Revision history</FakeButton>
+    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+    <div class={sideScroll}>
+      <RevisionHistory />
+    </div>
+  </div>
+{/if}

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { appStore } from "$lib/store.svelte";
   import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
   import {
@@ -22,11 +22,18 @@
     Button
   } from "flowbite-svelte";
   import { innerLinkStyle } from "./../helpers";
+
+  interface Props {
+    basePath: string;
+  }
+
+  let { basePath = "" }: Props = $props();
+
   const tdClass = "whitespace-nowrap py-1 px-2 font-normal";
   const tablePadding = "px-2";
-  let renderAllCVEs = false;
-  let headerColumns: any[] = [];
-  let productLines: any[] = [];
+  let renderAllCVEs = $state(false);
+  let headerColumns: any[] = $state([]);
+  let productLines: any[] = $state([]);
 
   const titleStyles = [
     "w-4 overflow-hidden",
@@ -35,20 +42,22 @@
     "origin-top-left -rotate-90 mt-[50%] whitespace-nowrap block"
   ];
 
-  export let basePath = "";
-
   onMount(() => {
     appStore.resetSelectedProduct();
   });
 
-  $: if (appStore.state.webview.doc) {
-    const vulnerabilities = [...appStore.state.webview.doc.productVulnerabilities];
+  $effect(() => {
+    untrack(() => headerColumns);
+    untrack(() => productLines);
+    if (appStore.state.webview.doc) {
+      const vulnerabilities = [...appStore.state.webview.doc.productVulnerabilities];
 
-    headerColumns = vulnerabilities.shift()!;
-    productLines = vulnerabilities;
-  }
+      headerColumns = vulnerabilities.shift()!;
+      productLines = vulnerabilities;
+    }
+  });
 
-  $: fourCVEs = appStore.state.webview.four_cves;
+  let fourCVEs = $derived(appStore.state.webview.four_cves);
 </script>
 
 <div class="crosstable-overview mt-3 mb-3 flex flex-col">

@@ -10,6 +10,7 @@ import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltype
 import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./workflow";
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
+import { SvelteSet } from "svelte/reactivity";
 
 type ErrorMessage = {
   id: string;
@@ -39,7 +40,7 @@ type AppStore = {
     errors: ErrorMessage[];
     documents: any[] | null;
     documentsToDelete: any[] | null;
-    selectedDocumentIDs: Set<number>;
+    selectedDocumentIDs: SvelteSet<number>;
     isToolboxOpen: boolean;
     isDeleteModalOpen: boolean;
     diff: {
@@ -104,7 +105,7 @@ const generateInitialState = (): AppStore => {
       documents: null,
       documentsToDelete: null,
       isDeleteModalOpen: false,
-      selectedDocumentIDs: new Set<number>(),
+      selectedDocumentIDs: new SvelteSet<number>(),
       isToolboxOpen: false,
       isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false
     },

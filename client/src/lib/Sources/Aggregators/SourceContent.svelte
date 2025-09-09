@@ -17,10 +17,14 @@
   import { onMount } from "svelte";
   import { fetchSource } from "../source";
 
-  export let source: SourceInfo;
-  export let entry: AggregatorEntry;
+  interface Props {
+    source: SourceInfo;
+    entry: AggregatorEntry;
+  }
 
-  let isActive: undefined | boolean;
+  let { source, entry }: Props = $props();
+
+  let isActive: undefined | boolean = $state();
 
   const sortFeeds = (a: FeedInfo, b: FeedInfo) => {
     if (a.highlight && !b.highlight) {

@@ -9,21 +9,26 @@
 -->
 
 <script lang="ts">
+  import DiffEntry from "./DiffEntry.svelte";
   import ReplaceOperation from "./ReplaceOperation.svelte";
 
-  export let content: any;
-  export let isSideBySideViewActivated: boolean = true;
-  export let operation: string;
-  export let depth = 0;
+  interface Props {
+    content: any;
+    isSideBySideViewActivated?: boolean;
+    operation: string;
+    depth?: number;
+  }
 
-  $: containerStyle = `padding-left: ${depth > 1 ? 6 * depth : 0}pt`;
+  let { content, isSideBySideViewActivated = true, operation, depth = 0 }: Props = $props();
+
+  let containerStyle = $derived(`padding-left: ${depth > 1 ? 6 * depth : 0}pt`);
 </script>
 
 <div style={containerStyle}>
   {#if Array.isArray(content) && !content[0]["m"]}
     {#each content as val, index}
       <div class="mb-4 flex">
-        {index + 1}.&ensp;<svelte:self content={val} depth={depth + 1} {operation}></svelte:self>
+        {index + 1}.&ensp;<DiffEntry content={val} depth={depth + 1} {operation}></DiffEntry>
       </div>
     {/each}
   {:else if Array.isArray(content) && operation === "replace"}
@@ -35,7 +40,7 @@
         {#if typeof content[key] === "string"}
           {content[key]}
         {:else}
-          <svelte:self content={content[key]} depth={depth + 1} {operation}></svelte:self>
+          <DiffEntry content={content[key]} depth={depth + 1} {operation}></DiffEntry>
         {/if}
       </div>
     {/each}

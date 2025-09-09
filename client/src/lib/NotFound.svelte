@@ -8,8 +8,12 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  // Avoid warning of unused prop
-  export let params: any = null;
+  interface Props {
+    // Avoid warning of unused prop
+    params?: any;
+  }
+
+  let { params = null }: Props = $props();
   // eslint-disable-next-line no-console
   console.info("Got params: " + params);
 </script>
