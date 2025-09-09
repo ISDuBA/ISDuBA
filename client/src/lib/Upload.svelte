@@ -12,9 +12,12 @@
   import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
   export let label;
-  export let upload = async (files: FileList): Promise<UploadInfo[]> => {
+  export let upload = async (
+    files: FileList,
+    updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
+  ): Promise<UploadInfo[]> => {
     // eslint-disable-next-line no-console
-    console.log(files, uploadInfo);
+    console.log(files, uploadInfo, updateCallback);
     return [];
   };
 
@@ -40,16 +43,29 @@
       <Label class="pb-2">{label}</Label>
       <Fileupload value="" bind:files multiple accept=".json" />
     </div>
-    <Button
-      on:click={async () => {
-        isUploading = true;
-        uploadInfo = await upload(files);
-        isUploading = false;
-      }}
-      class="mt-auto ml-auto"
-      color="primary"
-      disabled={isUploading}>Upload</Button
-    >
+    <div class="flex items-center justify-end gap-2">
+      {#if isUploading}
+        <div class="flex w-fit gap-2">
+          <span>Uploading ...</span>
+          <div class="w-fit min-w-8">
+            <span class="min-w-16">{uploadInfo?.length}</span>/<span class="min-w-16"
+              >{files?.length ?? 1}</span
+            >
+          </div>
+        </div>
+      {/if}
+      <Button
+        on:click={async () => {
+          isUploading = true;
+          uploadInfo = await upload(files, (info) => {
+            uploadInfo = info;
+          });
+          isUploading = false;
+        }}
+        color="primary"
+        disabled={isUploading}>Upload</Button
+      >
+    </div>
     <Listgroup class="mt-6">
       {#if !files}
         <ListgroupItem>No files selected</ListgroupItem>

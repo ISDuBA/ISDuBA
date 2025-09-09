@@ -14,7 +14,10 @@
   import Upload from "$lib/Upload.svelte";
   import { request } from "$lib/request";
 
-  const uploadDocuments = async (files: FileList): Promise<UploadInfo[]> => {
+  const uploadDocuments = async (
+    files: FileList,
+    updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
+  ): Promise<UploadInfo[]> => {
     let uploadInfo = [];
     for (const file of files) {
       let info: UploadInfo = { success: true };
@@ -27,6 +30,9 @@
         info.message = `${details.message} ${details.details}`;
       }
       uploadInfo.push(info);
+      if (updateCallback) {
+        updateCallback(uploadInfo);
+      }
     }
     return uploadInfo;
   };
