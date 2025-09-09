@@ -67,6 +67,7 @@
     font-weight: bolder;
     padding: 0.25em;
     height: fit-content;
-    min-width: 28pt;
+    min-width: fit-content;
+    width: 50pt;
   }
 </style>
