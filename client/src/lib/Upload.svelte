@@ -34,9 +34,18 @@
 </script>
 
 <Card size="lg">
-  <div class={`flex flex-col ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
-    <Label class="pb-2">{label}</Label>
-    <Fileupload value="" bind:files multiple accept=".json" />
+  <div class={`flex flex-col gap-4 ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
+    <div>
+      <Label class="pb-2">{label}</Label>
+      <Fileupload value="" bind:files multiple accept=".json" />
+    </div>
+    <Button
+      on:click={async () => {
+        uploadInfo = await upload(files);
+      }}
+      class="mt-auto ml-auto"
+      color="primary">Upload</Button
+    >
     <Listgroup class="mt-6">
       {#if !files}
         <ListgroupItem>No files selected</ListgroupItem>
@@ -61,11 +70,4 @@
       {/if}
     </Listgroup>
   </div>
-  <Button
-    on:click={async () => {
-      uploadInfo = await upload(files);
-    }}
-    class="mt-auto ml-auto"
-    color="primary">Upload</Button
-  >
 </Card>
