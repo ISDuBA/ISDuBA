@@ -9,15 +9,7 @@
 -->
 
 <script lang="ts">
-  import {
-    Button,
-    Card,
-    Fileupload,
-    Label,
-    Listgroup,
-    ListgroupItem,
-    Tooltip
-  } from "flowbite-svelte";
+  import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
   export let label;
   export let upload = async (files: FileList): Promise<UploadInfo[]> => {
@@ -52,11 +44,19 @@
         {#each files as file, i}
           {@const info = uploadInfo[i]}
           {@const color = getColor(info)}
-          <ListgroupItem class={color}>{file.name}</ListgroupItem>
-
-          {#if info?.message}
-            <Tooltip>{info.message}</Tooltip>
-          {/if}
+          <ListgroupItem>
+            <div class="flex items-center gap-1">
+              {#if info?.success}
+                <i class={`bx bx-check-circle ${color}`}></i>
+              {:else if info}
+                <i class={`bx bx-x-circle ${color}`}></i>
+              {/if}
+              <div class={`font-bold text-black`}>{file.name}</div>
+            </div>
+            {#if info?.message}
+              <div>{info.message}</div>
+            {/if}
+          </ListgroupItem>
         {/each}
       {/if}
     </Listgroup>
