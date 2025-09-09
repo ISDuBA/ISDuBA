@@ -21,7 +21,9 @@
 
 <div class={"score " + getSeverityClass(baseSeverity)}>
   <span class="baseScore">{baseScore}</span>
-  <span class="baseSeverity">({baseSeverity})</span>
+  {#if baseSeverity}
+    <span class="baseSeverity">({baseSeverity})</span>
+  {/if}
 </div>
 
 <style>
@@ -35,39 +37,36 @@
 
   .score.none {
     background: #53aa33;
-    border: 2px solid #53aa33;
   }
 
   .score.low {
     background: #ffcb0d;
-    border: 2px solid #ffcb0d;
   }
 
   .score.medium {
     background: #f9a009;
-    border: 2px solid #f9a009;
   }
 
   .score.high {
     background: #df3d03;
-    border: 2px solid #df3d03;
   }
 
   .score.critical {
     background: #cc0500;
-    border: 2px solid #cc0500;
   }
 
   .score {
     display: flex;
     flex-wrap: nowrap;
     gap: 2pt;
+    justify-content: center;
     margin: 0 15px;
-    border: 2px solid #666666;
     background: #dddddd;
+    color: black;
     font-size: small;
     font-weight: bolder;
     padding: 0.25em;
     height: fit-content;
+    min-width: 28pt;
   }
 </style>

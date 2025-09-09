@@ -45,7 +45,7 @@
         {/if}
       </div>
       {#if appStore.state.webview.doc?.highestScore}
-        <Cvss {baseScore} {baseSeverity}></Cvss>
+        <Cvss {baseScore} baseSeverity={baseSeverity ?? ""}></Cvss>
       {/if}
     </div>
   </div>
