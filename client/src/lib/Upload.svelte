@@ -19,6 +19,7 @@
   };
 
   export let uploadInfo: UploadInfo[] = [];
+  let isUploading = false;
 
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
@@ -41,10 +42,13 @@
     </div>
     <Button
       on:click={async () => {
+        isUploading = true;
         uploadInfo = await upload(files);
+        isUploading = false;
       }}
       class="mt-auto ml-auto"
-      color="primary">Upload</Button
+      color="primary"
+      disabled={isUploading}>Upload</Button
     >
     <Listgroup class="mt-6">
       {#if !files}
