@@ -58,37 +58,16 @@
     border: 2px solid #cc0500;
   }
 
-  .score span {
-    font-weight: bold;
-    width: 100%;
-  }
-
   .score {
-    top: -36px;
-    right: 0;
-    padding: 0 0.4em;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2pt;
     margin: 0 15px;
     border: 2px solid #666666;
     background: #dddddd;
-    font-size: 11px;
-    border-radius: 10px;
-    width: 100px;
-    height: auto;
-    line-height: 150%;
-    text-align: center;
-  }
-
-  .baseScore {
-    display: block;
-    font-size: 32px;
-    line-height: 32px;
-    font-weight: normal;
-    margin-top: 4px;
-  }
-  .baseSeverity {
-    font-size: 16px;
-    font-weight: normal;
-    margin-bottom: 5px;
-    display: block;
+    font-size: small;
+    font-weight: bolder;
+    padding: 0.25em;
+    height: fit-content;
   }
 </style>

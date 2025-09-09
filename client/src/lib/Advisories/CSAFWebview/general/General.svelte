@@ -39,7 +39,7 @@
   <div class="mb-3">
     <div class="flex flex-row">
       <div>
-        <span class="text-xl">{title} </span>
+        <span class="text-xl text-balance">{title} </span>
         {#if appStore.state.webview.doc?.status !== Status.final}
           <span class="ml-3 text-lg text-gray-400">{status}</span>
         {/if}
