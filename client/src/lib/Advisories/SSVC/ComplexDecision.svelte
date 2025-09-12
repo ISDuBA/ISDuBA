@@ -46,7 +46,7 @@
                 <Radio
                   name={child.label}
                   value={option.label}
-                  class="flex h-6 flex-col text-xs tracking-tight"
+                  class="flex flex-col text-xs tracking-tight"
                   ><span class="mt-2">{option.label}</span></Radio
                 >
               </div>

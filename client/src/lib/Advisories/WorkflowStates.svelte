@@ -11,7 +11,7 @@
   import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR, REVIEWER } from "$lib/workflow";
   import { allowedToChangeWorkflow, isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store.svelte";
-  import { Badge } from "flowbite-svelte";
+  import CBadge from "$lib/Components/CBadge.svelte";
 
   interface Props {
     advisoryState: string;
@@ -38,15 +38,19 @@
 
 {#if advisoryState}
   <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(NEW)}>
-    <Badge title="Mark as new" class="flex w-fit gap-1" color={getBadgeColor(NEW, advisoryState)}>
+    <CBadge title="Mark as new" class="flex w-fit gap-1" color={getBadgeColor(NEW, advisoryState)}>
       <i class="bx bxs-certification"></i>
       <span>{NEW}</span>
-    </Badge>
+    </CBadge>
   </a>
   <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(READ)}>
-    <Badge title="Mark as read" class="flex w-fit gap-1" color={getBadgeColor(READ, advisoryState)}>
+    <CBadge
+      title="Mark as read"
+      class="flex w-fit gap-1"
+      color={getBadgeColor(READ, advisoryState)}
+    >
       <i class="bx bx-show"></i>
-      <span>{READ}</span></Badge
+      <span>{READ}</span></CBadge
     >
   </a>
   {#if isRoleIncluded(appStore.getRoles(), [EDITOR, REVIEWER]) && advisoryState === REVIEW}
@@ -57,9 +61,9 @@
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
+      <CBadge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
         <i class="bx bxs-analyse"></i>
-        <span>{ASSESSING}</span></Badge
+        <span>{ASSESSING}</span></CBadge
       >
     </a>
   {:else if isRoleIncluded(appStore.getRoles(), [EDITOR]) && advisoryState === ARCHIVED}
@@ -70,10 +74,10 @@
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
+      <CBadge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
         <i class="bx bxs-analyse"></i>
         <span>{ASSESSING}</span>
-      </Badge>
+      </CBadge>
     </a>
   {:else}
     <a
@@ -81,14 +85,14 @@
       class="inline-flex"
       onclick={() => updateStateIfAllowed(ASSESSING)}
     >
-      <Badge
+      <CBadge
         title="Mark as assesing"
         class="flex w-fit gap-1"
         color={getBadgeColor(ASSESSING, advisoryState)}
       >
         <i class="bx bxs-analyse"></i>
         <span>{ASSESSING}</span>
-      </Badge>
+      </CBadge>
     </a>
   {/if}
   {#if advisoryState === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
@@ -99,10 +103,10 @@
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Release for review" class="flex w-fit gap-1" color="dark">
+      <CBadge title="Release for review" class="flex w-fit gap-1" color="dark">
         <i class="bx bx-book-open"></i>
         <span>{REVIEW}</span>
-      </Badge>
+      </CBadge>
     </a>
   {:else}
     <a
@@ -110,14 +114,14 @@
       class="inline-flex"
       onclick={() => updateStateIfAllowed(REVIEW)}
     >
-      <Badge
+      <CBadge
         title="Release for review"
         class="flex w-fit gap-1"
         color={getBadgeColor(REVIEW, advisoryState)}
       >
         <i class="bx bx-book-open"></i>
         <span>{REVIEW}</span>
-      </Badge>
+      </CBadge>
     </a>
   {/if}
   <a
@@ -125,13 +129,13 @@
     class="inline-flex"
     onclick={() => updateStateIfAllowed(ARCHIVED)}
   >
-    <Badge title="Archive" class="flex w-fit gap-1" color={getBadgeColor(ARCHIVED, advisoryState)}>
+    <CBadge title="Archive" class="flex w-fit gap-1" color={getBadgeColor(ARCHIVED, advisoryState)}>
       <i class="bx bx-archive"></i>
       <span>{ARCHIVED}</span>
-    </Badge>
+    </CBadge>
   </a>
   <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(DELETE)}>
-    <Badge
+    <CBadge
       title="Mark for deletion"
       onclick={() => updateStateFn(DELETE)}
       class="flex w-fit gap-1"
@@ -139,6 +143,6 @@
     >
       <i class="bx bx-trash"></i>
       <span>{DELETE}</span>
-    </Badge>
+    </CBadge>
   </a>
 {/if}

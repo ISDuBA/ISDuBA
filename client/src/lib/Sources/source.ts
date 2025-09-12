@@ -30,7 +30,7 @@ type Source = {
   ignore_patterns: string[];
   client_cert_public?: string | null;
   client_cert_private?: string | null;
-  client_cert_passphrase?: string | null;
+  client_cert_passphrase: string;
   status?: string[];
   attention: boolean;
   stats?: {

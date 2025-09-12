@@ -52,13 +52,13 @@
     color={coloryByType(error.type)}
     bind:toastStatus={open}
     transition={blur}
-    on:close={() => {
+    onclose={() => {
       appStore.removeError(error.id);
     }}
-    {divClass}
+    class={divClass}
     {dismissable}
   >
-    <svelte:fragment slot="icon">
+    {#snippet icon()}
       <i
         class:bx={true}
         class:bxs-message-rounded-x={error.type === MESSAGE.ERROR}
@@ -66,7 +66,7 @@
         class:bxs-message-rounded-check={error.type === MESSAGE.SUCCESS}
         class:bxs-message-rounded={error.type === MESSAGE.INFO}
       ></i>
-    </svelte:fragment>
+    {/snippet}
     <span class="mb-1 text-sm font-semibold text-gray-900 dark:text-white">{error.type}</span>
     <div class="mb-2 text-sm font-normal">{error.message}</div>
   </Toast>

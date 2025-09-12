@@ -86,7 +86,7 @@
               color="light"
               size="sm"
               class={`mr-3 h-7 py-1 text-xs ${renderAllCVEs ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-              on:click={() => {
+              onclick={() => {
                 renderAllCVEs = !renderAllCVEs;
               }}><span class="text-nowrap">All CVEs ({productLines[0].length - 2})</span></Button
             >
@@ -95,7 +95,7 @@
       </div>
     </div>
     <div class="crosstable mx-auto flex flex-row lg:mx-0">
-      <Table noborder striped={true}>
+      <Table border={false} striped={true}>
         <TableHead>
           {#each headerColumns as column, index}
             {#if index == 0}
@@ -164,7 +164,7 @@
             <TableBodyRow>
               {#each line as column}
                 {#if column.name === "Product"}
-                  <TableBodyCell tdClass={tdClass + " sticky left-0 bg-inherit"}>
+                  <TableBodyCell class={tdClass + " sticky left-0 bg-inherit"}>
                     <div class="max-w-1/2 min-w-56 text-wrap break-all whitespace-normal">
                       <a
                         id={crypto.randomUUID()}
@@ -178,11 +178,11 @@
                     </div>
                   </TableBodyCell>
                 {:else if column.content === "N.A" && ((!renderAllCVEs && fourCVEs.includes(column.name)) || column.name === "Total")}
-                  <TableBodyCell {tdClass}>{column.content}</TableBodyCell>
+                  <TableBodyCell class={tdClass}>{column.content}</TableBodyCell>
                 {:else if column.content === "N.A" && renderAllCVEs && (fourCVEs.includes(column.name) || column.name === "Total")}
-                  <TableBodyCell {tdClass}>{column.content}</TableBodyCell>
+                  <TableBodyCell class={tdClass}>{column.content}</TableBodyCell>
                 {:else if !renderAllCVEs && (fourCVEs.includes(column.name) || column.name === "Total")}
-                  <TableBodyCell {tdClass}>
+                  <TableBodyCell class={tdClass}>
                     {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
                       <i class="bx bx-heart"></i>
                       <i class="bx b-minus"></i>
@@ -201,7 +201,7 @@
                     {/if}
                   </TableBodyCell>
                 {:else if renderAllCVEs}
-                  <TableBodyCell {tdClass}>
+                  <TableBodyCell class={tdClass}>
                     {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
                       <i class="bx bx-heart"></i>
                       <i class="bx b-minus"></i>

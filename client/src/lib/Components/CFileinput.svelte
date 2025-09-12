@@ -45,7 +45,7 @@
 
 <div class={`${containerClass ?? "mb-3 inline-flex w-full"}`}>
   <Button
-    on:click={() => {
+    onclick={() => {
       document.getElementById(id)?.click();
     }}
     class="rounded-none rounded-l-lg border border-r-0 dark:border-gray-700 dark:bg-gray-800"

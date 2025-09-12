@@ -143,7 +143,7 @@
       <div class="flex gap-2">
         {#if !placeholderFeed}
           <Button
-            on:click={() => {
+            onclick={() => {
               changeAllSubscriptions();
             }}
             class="flex gap-2"
@@ -159,7 +159,7 @@
             {/if}
           </Button>
           <Button
-            on:click={() => {
+            onclick={() => {
               changeAllSubscriptions(false);
             }}
             class="flex gap-2"
@@ -178,8 +178,8 @@
       {#each feeds as feed, index (index)}
         <tr class={feed.id === feedBlinkID ? "blink" : ""}>
           {#if placeholderFeed}
-            <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-            <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+            <TableBodyCell class={tdClass}>{feed.label}</TableBodyCell>
+            <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
               <a
                 href={"javascript:void(0);"}
                 onclick={async () => await clickFeed(feed)}
@@ -189,7 +189,7 @@
               >
             </TableBodyCell>
           {:else}
-            <TableBodyCell {tdClass}>
+            <TableBodyCell class={tdClass}>
               {#if feed.enable && !placeholderFeed}
                 <CIconButton
                   onClicked={async () => {
@@ -210,8 +210,8 @@
               {/if}
             </TableBodyCell>
             <TableBodyCell
-              on:click={async () => await clickFeed(feed)}
-              tdClass={`${tdClass} break-all whitespace-normal`}
+              onclick={async () => await clickFeed(feed)}
+              class={`$class={tdClass} break-all whitespace-normal`}
             >
               {#if edit && feed.enable}
                 <a
@@ -225,30 +225,30 @@
                 </span>
               {/if}
             </TableBodyCell>
-            <TableBodyCell {tdClass}
+            <TableBodyCell class={tdClass}
               ><Select
                 items={logLevels}
                 bind:value={feed.log_level}
-                on:change={async () => await updateFeed(feed)}
+                onchange={async () => await updateFeed(feed)}
               /></TableBodyCell
             >
             {#if edit && !feed.enable}
-              <TableBodyCell {tdClass}>N/A</TableBodyCell>
+              <TableBodyCell class={tdClass}>N/A</TableBodyCell>
             {:else}
-              <TableBodyCell {tdClass}
-                ><Input bind:value={feed.label} on:input={async () => await updateFeed(feed)}
+              <TableBodyCell class={tdClass}
+                ><Input bind:value={feed.label} oninput={async () => await updateFeed(feed)}
                 ></Input></TableBodyCell
               >
             {/if}
             {#if edit}
-              <TableBodyCell {tdClass}
+              <TableBodyCell class={tdClass}
                 >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
               >
-              <TableBodyCell {tdClass}
+              <TableBodyCell class={tdClass}
                 ><i class={"bx " + (feed.healthy ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
               >
               {#if feed.enable}
-                <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
+                <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
                   <a
                     href={"javascript:void(0);"}
                     onclick={async () => await clickFeed(feed)}

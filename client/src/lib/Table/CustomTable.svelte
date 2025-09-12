@@ -49,10 +49,18 @@
   {#if topSlot}
     {@render topSlot()}
   {/if}
-  <Table divClass="relative" hoverable={true} noborder={true}>
-    <TableHead theadClass={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : ""}>
+  <Table
+    classes={{
+      div: "relative"
+    }}
+    hoverable={true}
+    border={false}
+  >
+    <TableHead
+      class={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : "dark:bg-gray-800"}
+    >
       {#each headers as header}
-        <TableHeadCell class={header.class ?? ""} padding={tablePadding} on:click={() => {}}>
+        <TableHeadCell class={header.class ?? ""} padding={tablePadding} onclick={() => {}}>
           <span>{header.label}</span>
           <i
             class:bx={true}

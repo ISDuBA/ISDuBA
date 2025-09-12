@@ -130,7 +130,7 @@
         {#if !ignoredQueries.includes(query.id)}
           <Button
             size="xs"
-            on:click={() => selectQuery(index)}
+            onclick={() => selectQuery(index)}
             class={getClass(query.global, index === selectedIndex)}
           >
             <span title={query.description} class="p-2">{truncate(query.name, 30)}</span>
@@ -138,14 +138,14 @@
         {/if}
       {/each}
       {#if currentQueryTitle && selectedIndex < 0}
-        <Button size="xs" on:click={() => selectQuery(-1)} class={getClass(true, true)}>
+        <Button size="xs" onclick={() => selectQuery(-1)} class={getClass(true, true)}>
           <span class="p-2">{truncate(currentQueryTitle, 30)}</span>
         </Button>
       {/if}
       <Button
         title="Configure queries"
         size="xs"
-        on:click={() => {
+        onclick={() => {
           push("/queries");
         }}
       >

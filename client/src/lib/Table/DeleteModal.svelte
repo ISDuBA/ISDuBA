@@ -82,7 +82,7 @@
       {/if}
     </h3>
     <Button
-      on:click={() => {
+      onclick={() => {
         deleteDocuments();
       }}
       color="red"
@@ -90,7 +90,7 @@
     >
       <span>Yes, I'm sure</span>
       <div class:invisible={!isLoading} class:ms-2={true} class={isLoading ? "loadingFadeIn" : ""}>
-        <Spinner color="white" size="4"></Spinner>
+        <Spinner color="gray" size="4"></Spinner>
       </div>
     </Button>
     <Button color="alternative">No, cancel</Button>

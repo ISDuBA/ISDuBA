@@ -232,7 +232,7 @@
       <div class="flex items-center gap-4">
         <Button
           title="Download all logs"
-          on:click={() => {
+          onclick={() => {
             if (isDownloadingLogs) {
               downloadAbortController.abort();
             } else {
@@ -300,7 +300,7 @@
             { name: "10000", value: 10000 }
           ]}
           bind:value={limit}
-          on:change={async () => {
+          onchange={async () => {
             resetPagination();
             await loadLogs();
           }}
@@ -310,14 +310,14 @@
       <div class="flex flex-row flex-wrap items-center">
         <div class:flex={true} class:mr-3={true}>
           <PaginationItem
-            normalClass={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
-            on:click={first}
+            class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
+            onclick={first}
           >
             <i class="bx bx-arrow-to-left"></i>
           </PaginationItem>
           <PaginationItem
-            normalClass={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
-            on:click={previous}
+            class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
+            onclick={previous}
           >
             <i class="bx bx-chevrons-left"></i>
           </PaginationItem>
@@ -341,18 +341,18 @@
 
         <div class:flex={true}>
           <PaginationItem
-            normalClass={currentPage === numberOfPages
+            class={currentPage === numberOfPages
               ? paginationItemDeactivatedClass
               : paginationItemClass}
-            on:click={next}
+            onclick={next}
           >
             <i class="bx bx-chevrons-right"></i>
           </PaginationItem>
           <PaginationItem
-            normalClass={currentPage === numberOfPages
+            class={currentPage === numberOfPages
               ? paginationItemDeactivatedClass
               : paginationItemClass}
-            on:click={last}
+            onclick={last}
           >
             <i class="bx bx-arrow-to-right"></i>
           </PaginationItem>
@@ -391,11 +391,11 @@
         {#snippet mainSlot()}
           {#each logs as log, index (index)}
             <tr>
-              <TableBodyCell tdClass={`${tdClass} min-w-[170pt] align-baseline`}
+              <TableBodyCell class={`${tdClass} min-w-[170pt] align-baseline`}
                 >{log.time}</TableBodyCell
               >
-              <TableBodyCell tdClass={`${tdClass} align-baseline`}>{log.level}</TableBodyCell>
-              <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
+              <TableBodyCell class={`${tdClass} align-baseline`}>{log.level}</TableBodyCell>
+              <TableBodyCell class={`${tdClass} break-all whitespace-normal`}
                 >{log.msg}</TableBodyCell
               >
             </tr>

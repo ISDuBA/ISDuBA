@@ -83,14 +83,14 @@
 </script>
 
 <Input
-  on:input={hoursChanged}
+  oninput={hoursChanged}
   bind:value={hours}
   class="w-20 rounded-s-none rounded-e-none"
   placeholder="hh"
   type="number"
 />
 <Input
-  on:input={minutesChanged}
+  oninput={minutesChanged}
   bind:value={minutes}
   class={minutesInputClass}
   placeholder="mm"

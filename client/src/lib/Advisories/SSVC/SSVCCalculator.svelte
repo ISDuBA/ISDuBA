@@ -342,7 +342,7 @@
         completedCustom=""
         currentCustom=""
         color="primary"
-        size="h-1"
+        class="h-1"
         currentStep={currentStep + 1}
         {steps}
         hideLabel

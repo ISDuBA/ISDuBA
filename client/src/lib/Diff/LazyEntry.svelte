@@ -43,7 +43,7 @@
 <div>
   <Button
     class="flex items-end gap-x-2 bg-inherit pl-1 text-gray-500 hover:bg-inherit dark:bg-inherit dark:text-gray-400 dark:hover:bg-inherit"
-    on:click={loadEntry}
+    onclick={loadEntry}
   >
     {#if isOpen}
       <i class="bx bx-chevron-up text-2xl"></i>

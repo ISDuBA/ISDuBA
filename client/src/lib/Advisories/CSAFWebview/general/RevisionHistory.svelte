@@ -26,7 +26,7 @@
 
 {#if appStore.state.webview.doc?.isRevisionHistoryPresent}
   <div class="mt-1 w-fit pl-5">
-    <Table noborder striped={true}>
+    <Table border={false} striped={true}>
       <TableHead>
         <TableHeadCell padding={tablePadding}>#</TableHeadCell>
         <TableHeadCell padding={tablePadding}>Date</TableHeadCell>
@@ -36,9 +36,9 @@
       <TableBody>
         {#each appStore.state.webview.doc?.revisionHistory as entry}
           <TableBodyRow>
-            <TableBodyCell tdClass={cellStyle}>{entry.number}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}>{getReadableDateString(entry.date)}</TableBodyCell>
-            <TableBodyCell tdClass={baseCellStyle + " min-w-52"}>{entry.summary}</TableBodyCell>
+            <TableBodyCell class={cellStyle}>{entry.number}</TableBodyCell>
+            <TableBodyCell class={cellStyle}>{getReadableDateString(entry.date)}</TableBodyCell>
+            <TableBodyCell class={baseCellStyle + " min-w-52"}>{entry.summary}</TableBodyCell>
             <TableBodyCell
               >{#if entry.legacy_version}{entry.legacy_version}{/if}</TableBodyCell
             >

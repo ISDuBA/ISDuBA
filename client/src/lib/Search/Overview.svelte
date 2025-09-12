@@ -20,7 +20,7 @@
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
 
-  let searchTerm: string | null = $state(null);
+  let searchTerm: string | undefined = $state(undefined);
   let advisoryTable: any = $state(null);
   let advancedSearch = $state(false);
   let searchResults = $state(true);
@@ -171,7 +171,7 @@
       size="sm"
       placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
       bind:value={searchTerm}
-      on:keyup={(e) => {
+      onkeyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
         if (e.key === "Enter") triggerSearch();
         // if (searchTerm && searchTerm.length > 2) {
@@ -194,7 +194,7 @@
     </Search>
     <Button
       size="xs"
-      on:click={() => {
+      onclick={() => {
         triggerSearch();
       }}>{advancedSearch ? "Apply" : "Search"}</Button
     >
@@ -211,7 +211,7 @@
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.ADVISORY ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           query.queryType = SEARCHTYPES.ADVISORY;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
@@ -225,7 +225,7 @@
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.DOCUMENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           query.queryType = SEARCHTYPES.DOCUMENT;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
@@ -240,7 +240,7 @@
           size="xs"
           color="light"
           class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.EVENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-          on:click={() => {
+          onclick={() => {
             query.queryType = SEARCHTYPES.EVENT;
             query.columns = SEARCHPAGECOLUMNS.EVENT;
             query.orders = ["-time"];
@@ -251,7 +251,7 @@
     </ButtonGroup>
   {/if}
 </div>
-{#if searchTerm !== null}
+{#if searchTerm !== undefined}
   <AdvisoryTable
     defaultOrderBy={query.orders}
     columns={query.columns}

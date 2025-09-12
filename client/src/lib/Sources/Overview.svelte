@@ -136,10 +136,10 @@
             onfocus={() => {}}
             class={appStore.isSourceManager() ? "cursor-pointer" : ""}
           >
-            <TableBodyCell tdClass="w-fit max-w-10">
+            <TableBodyCell class="w-fit max-w-10">
               <i class="bx bx-git-repo-forked"></i>
             </TableBodyCell>
-            <TableBodyCell tdClass={`${tdClass} break-words hyphens-auto`}>
+            <TableBodyCell class={`$class={tdClass} break-words hyphens-auto`}>
               <div class="whitespace-break-spaces">
                 <span>{source.name}</span>
                 {#if source.attention}
@@ -148,16 +148,16 @@
               </div>
             </TableBodyCell>
             {#if source.id !== 0}
-              <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
+              <TableBodyCell class={`$class={tdClass} break-all whitespace-normal`}
                 >{source.url}</TableBodyCell
               >
-              <TableBodyCell {tdClass}
+              <TableBodyCell class={tdClass}
                 ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
               >
-              <TableBodyCell {tdClass}
+              <TableBodyCell class={tdClass}
                 >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
               >
-              <TableBodyCell {tdClass}
+              <TableBodyCell class={tdClass}
                 ><i class={"bx " + (source.healthy ? "bxs-circle" : "bx-circle")}
                 ></i></TableBodyCell
               >

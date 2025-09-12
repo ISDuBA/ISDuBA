@@ -30,6 +30,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
   import validator from "validator";
+  import type { InputProps } from "flowbite-svelte";
 
   interface Props {
     params: any;
@@ -43,17 +44,17 @@
 
   let validUrl: boolean | null = $state(false);
 
-  let urlColor: "red" | "green" | "base" = $derived.by(() => {
+  let urlColor: InputProps["color"] = $derived.by(() => {
     if (validUrl !== undefined) {
       if (validUrl === null) {
-        return "base";
+        return "default";
       } else if (validUrl) {
         return "green";
       } else {
         return "red";
       }
     }
-    return "base";
+    return "default";
   });
 
   let source: Source = {
@@ -64,7 +65,8 @@
     active: false,
     headers: [""],
     ignore_patterns: [""],
-    attention: false
+    attention: false,
+    client_cert_passphrase: ""
   };
 
   let formClass = "max-w-[800pt]";
@@ -160,26 +162,29 @@
   {#if params?.domain}
     <List tag="dl" class="divide-y divide-gray-200 text-sm 2xl:w-max">
       <div>
-        <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
-        <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
+        <DescriptionList tag="dt" class={dtClass}>Domain/PMD</DescriptionList>
+        <DescriptionList tag="dd" class={ddClass}>{source.url}</DescriptionList>
       </div>
       {#if pmd}
         <div>
-          <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Canonical URL</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{pmd.canonical_url}</DescriptionList>
         </div>
         <div>
-          <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Publisher Name</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.name}</DescriptionList>
         </div>
         <div>
-          <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Publisher Contact</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.contact_details}</DescriptionList
+          >
         </div>
         <div>
           {#if pmd.publisher.issuing_authority}
-            <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+            <DescriptionList tag="dt" class={dtClass}>Issuing Authority</DescriptionList>
+            <DescriptionList tag="dd" class={ddClass}
+              >{pmd.publisher.issuing_authority}</DescriptionList
+            >
           {/if}
         </div>
       {/if}
@@ -188,14 +193,14 @@
     <SourceForm bind:this={sourceForm} {inputChange} {formClass} {source}></SourceForm>
     <FeedView feeds={pmdFeeds}></FeedView>
 
-    <Button on:click={saveAll} color="green">
+    <Button onclick={saveAll} color="green">
       <i class="bx bxs-save me-2"></i>
       <span>Save source</span>
     </Button>
   {:else}
     <form onsubmit={loadPMD} class={formClass}>
       <Label>Domain/PMD</Label>
-      <Input bind:value={source.url} on:input={checkUrl} color={urlColor}></Input>
+      <Input bind:value={source.url} oninput={checkUrl} color={urlColor}></Input>
       <br />
       <div class:hidden={!loadingPMD} class:mb-4={true}>
         Loading ...

@@ -72,7 +72,7 @@
     </Listgroup>
   </div>
   <Button
-    on:click={async () => {
+    onclick={async () => {
       uploadInfo = await upload(files);
     }}
     class="mt-auto ml-auto"
