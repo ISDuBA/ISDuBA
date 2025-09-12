@@ -108,7 +108,7 @@
         const queryToClone = globalRelevantQueries[i];
         if (queryToClone) {
           queryToClone.global = false;
-          await cloneQuery(queryToClone);
+          await cloneQuery(queryToClone, false);
         }
       }
       if (!failed) {
@@ -127,8 +127,8 @@
     });
   };
 
-  const cloneQuery = async (query: Query) => {
-    await navigator.locks.request("updateQuery", async () => {
+  const cloneQuery = async (query: Query, withLock = true) => {
+    const coreLogic = async () => {
       if (!queries) return;
       isCloning = true;
       query.name = proposeName(queries, query.name);
@@ -157,7 +157,15 @@
         }, 5000);
       }
       isCloning = false;
-    });
+    };
+
+    if (withLock) {
+      // If the function is not called by a function that has already aquired the lock
+      await navigator.locks.request("updateQuery", coreLogic);
+    } else {
+      // Calling function has already aquired the lock, e.g. cloneDashboardQueries
+      await coreLogic();
+    }
   };
 
   const placeQueriesAtTop = async (queryIDs: number[], global = false) => {
