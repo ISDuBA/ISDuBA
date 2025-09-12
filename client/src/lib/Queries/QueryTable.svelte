@@ -171,30 +171,30 @@
   </div>
   <hr class="mb-6" />
   <div id={tableContainerID} class="mb-2 max-h-[66vh] overflow-auto">
-    <Table hoverable={true} noborder={true}>
-      <TableHead>
-        <TableHeadCell padding={tablePadding}></TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}
+    <Table hoverable={true} border={false}>
+      <TableHead class="dark:bg-gray-800">
+        <TableHeadCell class={tablePadding}></TableHeadCell>
+        <TableHeadCell class={tablePadding} onclick={() => {}}
           >Name<i
             class:bx={true}
             class:bx-caret-up={orderBy == "name"}
             class:bx-caret-down={orderBy == "-name"}
           ></i></TableHeadCell
         >
-        <TableHeadCell padding={tablePadding} on:click={() => {}}
+        <TableHeadCell class={tablePadding} onclick={() => {}}
           >Description<i
             class:bx={true}
             class:bx-caret-up={orderBy == "description"}
             class:bx-caret-down={orderBy == "-description"}
           ></i>
         </TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+        <TableHeadCell class={tablePadding} onclick={() => {}}>
           <div>Dashboard</div>
         </TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+        <TableHeadCell class={tablePadding} onclick={() => {}}>
           <div title={"Show on your personal dashboard"}>Hide</div>
         </TableHeadCell>
-        <TableHeadCell padding={tablePadding} on:click={() => {}}>
+        <TableHeadCell padding={tablePadding} onclick={() => {}}>
           <div title={"Use as default query"}>Default query</div>
         </TableHeadCell>
         <TableHeadCell></TableHeadCell>
@@ -208,7 +208,7 @@
               }}
               class:cursor-pointer={true}
               class:motion-safe:animate-pulse-fast={newQueries.map((q) => q.id).includes(query.id)}
-              ><TableBodyCell {tdClass}>
+              ><TableBodyCell class={tdClass}>
                 {#if isAllowedToEdit}
                   <Img
                     src="grid-dots-vertical-rounded.svg"
@@ -216,15 +216,15 @@
                   />
                 {/if}
               </TableBodyCell>
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>
                 <div class="text-wrap break-all">
                   <span class="columnName">{query.name ?? "-"}</span>
                 </div>
               </TableBodyCell>
-              <TableBodyCell {tdClass}
+              <TableBodyCell class={tdClass}
                 ><div class="text-wrap break-all">{query.description ?? "-"}</div></TableBodyCell
               >
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>
                 <CCheckbox
                   onChanged={() => {
                     changeDashboard(query.id, query.dashboard);
@@ -234,7 +234,7 @@
                   disabled={!isAllowedToEdit || isLoading}
                 ></CCheckbox>
               </TableBodyCell>
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>
                 <CCheckbox
                   onClicked={() => {
                     changeIgnored(query.id, !ignoredQueries?.includes(query.id));
@@ -243,7 +243,7 @@
                   checked={ignoredQueries !== null && ignoredQueries.includes(query.id)}
                 ></CCheckbox>
               </TableBodyCell>
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>
                 <CCheckbox
                   onChanged={() => {
                     changeDefaultQuery(query.id, query.default_query);

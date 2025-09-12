@@ -22,7 +22,7 @@
 </script>
 
 <div>
-  <Table noborder>
+  <Table border={false}>
     <TableBodyRow>
       <TableBodyCell><h5>Product identification helper</h5></TableBodyCell>
     </TableBodyRow>

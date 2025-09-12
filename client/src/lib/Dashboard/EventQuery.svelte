@@ -16,12 +16,13 @@
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
-  import { Badge, Spinner } from "flowbite-svelte";
+  import { Spinner } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { getRelativeTime } from "$lib/time";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
+  import CBadge from "$lib/Components/CBadge.svelte";
 
   interface Props {
     storedQuery: any;
@@ -188,8 +189,8 @@
                   {:else if activity.event === "change_comment"}
                     {activity.actor} changed a comment
                   {:else if activity.event === "state_change"}
-                    {activity.actor} changed the state to <Badge color="dark"
-                      >{activity.event_state}</Badge
+                    {activity.actor} changed the state to <CBadge color="dark"
+                      >{activity.event_state}</CBadge
                     >
                   {/if}
                 </span>

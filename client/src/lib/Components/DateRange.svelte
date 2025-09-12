@@ -152,8 +152,10 @@
     </Label>
     <div class="flex">
       {#if !hideFrom}
-        <Input class={inputClass} let:props>
-          <input oninput={onDateChanged} id={fromId} type="date" {...props} value={fromString} />
+        <Input class={inputClass}>
+          {#snippet children(props)}
+            <input oninput={onDateChanged} id={fromId} type="date" {...props} value={fromString} />
+          {/snippet}
         </Input>
       {/if}
       {#if showTimeControls}
@@ -161,7 +163,7 @@
         ></TimeInput>
       {/if}
       {#if clearable}
-        <Button color="light" class={resetButtonClass} on:click={clearFrom}>
+        <Button color="light" class={resetButtonClass} onclick={clearFrom}>
           <i class={iconClass}></i>
         </Button>
       {/if}
@@ -177,8 +179,10 @@
     </Label>
     <div class="flex">
       {#if !hideTo}
-        <Input class={inputClass} let:props>
-          <input oninput={onDateChanged} id={toId} type="date" {...props} value={toString} />
+        <Input class={inputClass}>
+          {#snippet children(props)}
+            <input oninput={onDateChanged} id={toId} type="date" {...props} value={toString} />
+          {/snippet}
         </Input>
       {/if}
       {#if showTimeControls}
@@ -186,7 +190,7 @@
         ></TimeInput>
       {/if}
       {#if clearable}
-        <Button color="light" class={resetButtonClass} on:click={clearTo}>
+        <Button color="light" class={resetButtonClass} onclick={clearTo}>
           <i class={iconClass}></i>
         </Button>
       {/if}

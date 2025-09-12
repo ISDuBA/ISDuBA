@@ -12,7 +12,7 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import Product from "$lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
   import type { Branch } from "$lib/pmdTypes";
-  import { Badge } from "flowbite-svelte";
+  import CBadge from "$lib/Components/CBadge.svelte";
   import Self from "./Branch.svelte";
 
   interface Props {
@@ -27,7 +27,7 @@
   <Collapsible {open} header={branch.category + ": " + branch.name}>
     {#snippet headerSlot()}
       <div class="py-2">
-        <Badge rounded large color="dark">{branch.category}</Badge>
+        <CBadge rounded large color="dark">{branch.category}</CBadge>
         {branch.name}
       </div>
     {/snippet}

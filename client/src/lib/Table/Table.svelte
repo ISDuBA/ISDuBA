@@ -412,7 +412,7 @@
           <div class="flex items-center gap-2">
             {#if appStore.isAdmin()}
               <Button
-                on:click={() => {
+                onclick={() => {
                   appStore.setDocumentsToDelete(selectedDocuments);
                   appStore.setIsDeleteModalOpen(true);
                 }}
@@ -433,16 +433,15 @@
                 <i class="bx bx-git-commit text-black-700 dark:text-gray-300"></i>
               </Button>
               <Dropdown
-                bind:open={dropdownOpen}
-                on:show={(event) => {
-                  if (!event.detail) {
+                bind:isOpen={dropdownOpen}
+                ontoggle={(event) => {
+                  if (event.newState) {
                     changeWorkflowStateError = null;
                   }
                 }}
                 placement="top-start"
                 triggeredBy="#state-icon"
-                class="w-full max-w-sm divide-y divide-gray-100 rounded p-4 shadow dark:divide-gray-700 dark:bg-gray-800"
-                containerClass="divide-y z-50 border border-gray-300"
+                class="z-50 w-full max-w-sm divide-y divide-gray-100 rounded border border-gray-300 p-4 shadow dark:divide-gray-700 dark:bg-gray-800"
               >
                 <div class="flex flex-col gap-3">
                   <div class="flex w-fit flex-col gap-3">
@@ -452,11 +451,11 @@
                         bind:value={selectedState}
                         items={workflowOptions}
                         placeholder="Choose..."
-                        defaultClass={selectClass}
+                        class={selectClass}
                       ></Select>
                     </Label>
                     <Button
-                      on:click={() => {
+                      onclick={() => {
                         changeWorkflowState();
                       }}
                       disabled={!selectedState}
@@ -481,7 +480,7 @@
               { name: "100", value: 100 }
             ]}
             bind:value={limit}
-            on:change={() => {
+            onchange={() => {
               setPaginationParameters({
                 currentPage: 1,
                 offset: 0
@@ -503,10 +502,10 @@
       <div>
         <div class="mx-3 flex flex-row">
           <div class:invisible={currentPage === 1} class:flex={true} class:mr-3={true}>
-            <PaginationItem on:click={first}>
+            <PaginationItem onclick={first}>
               <i class="bx bx-arrow-to-left"></i>
             </PaginationItem>
-            <PaginationItem on:click={previous}>
+            <PaginationItem onclick={previous}>
               <i class="bx bx-chevrons-left"></i>
             </PaginationItem>
           </div>
@@ -531,10 +530,10 @@
             <span class="mr-3 ml-2 text-nowrap">of {numberOfPages} pages</span>
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
-            <PaginationItem on:click={next}>
+            <PaginationItem onclick={next}>
               <i class="bx bx-chevrons-right"></i>
             </PaginationItem>
-            <PaginationItem on:click={last}>
+            <PaginationItem onclick={last}>
               <i class="bx bx-arrow-to-right"></i>
             </PaginationItem>
           </div>
@@ -561,14 +560,14 @@
   <ErrorMessage {error}></ErrorMessage>
   {#if documents?.length > 0}
     <div class="w-auto">
-      <Table style="w-auto" hoverable={true} noborder={true}>
-        <TableHead class="cursor-pointer">
+      <Table style="w-auto" hoverable={true} border={false}>
+        <TableHead class="cursor-pointer dark:bg-gray-800">
           {#if isMultiSelectionAllowed}
-            <TableHeadCell padding="px-0">
+            <TableHeadCell class="px-1">
               <CCheckbox
                 checked={areAllSelected}
                 onClicked={(event) => {
-                  const isChecked = event.detail.target.checked;
+                  const isChecked = event.target.checked;
                   if (isChecked) {
                     for (let i = 0; i < documentIDs.length; i++) {
                       appStore.addSelectedDocumentID(documentIDs[i]);
@@ -580,15 +579,15 @@
               ></CCheckbox>
             </TableHeadCell>
           {/if}
-          <TableHeadCell padding="px-0"></TableHeadCell>
+          <TableHeadCell class="px-0"></TableHeadCell>
           {#if areThereAnyComments}
-            <TableHeadCell padding={tablePadding} class="cursor-default">Comment</TableHeadCell>
+            <TableHeadCell class={`${tablePadding} cursor-default`}>Comment</TableHeadCell>
           {/if}
           {#each columns as column}
             {#if column !== searchColumnName}
               <TableHeadCell
-                padding={tablePadding}
-                on:click={() => {
+                class={tablePadding}
+                onclick={() => {
                   switchSort(column);
                 }}
                 >{getColumnDisplayName(column)}<i
@@ -612,11 +611,11 @@
                 : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"}
             >
               {#if isMultiSelectionAllowed}
-                <TableBodyCell tdClass="px-0">
+                <TableBodyCell class="px-1">
                   <CCheckbox
                     checked={appStore.state.app.selectedDocumentIDs.has(item.id)}
                     onClicked={(event) => {
-                      const isChecked = event.detail.target.checked;
+                      const isChecked = event.target.checked;
                       if (isChecked) {
                         appStore.addSelectedDocumentID(item.id);
                       } else {
@@ -626,7 +625,7 @@
                   ></CCheckbox>
                 </TableBodyCell>
               {/if}
-              <TableBodyCell tdClass="px-0">
+              <TableBodyCell class="px-0">
                 <div class="flex items-center">
                   {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
                     <CIconButton
@@ -673,7 +672,7 @@
                 </div>
               </TableBodyCell>
               {#if areThereAnyComments}
-                <TableBodyCell {tdClass}
+                <TableBodyCell class={tdClass}
                   ><a
                     class="absolute top-0 right-0 bottom-0 left-0"
                     href={getAdvisoryAnchorLink(item)}
@@ -700,7 +699,7 @@
               {#each columns as column}
                 {#if column !== searchColumnName}
                   {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
@@ -716,7 +715,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "ssvc"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
@@ -730,7 +729,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "state"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -751,7 +750,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "initial_release_date"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -763,7 +762,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "current_release_date"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -775,7 +774,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "title"}
-                    <TableBodyCell tdClass={title + " relative"}
+                    <TableBodyCell class={title + " relative"}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -787,7 +786,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "publisher"}
-                    <TableBodyCell tdClass={publisher + " relative"}
+                    <TableBodyCell class={publisher + " relative"}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -799,7 +798,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "recent"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -813,7 +812,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "four_cves"}
-                    <TableBodyCell {tdClass}>
+                    <TableBodyCell class={tdClass}>
                       {#if !(item[column] && item[column][0] && item[column].length > 1)}
                         <a
                           aria-label="View advisory details"
@@ -863,7 +862,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "critical"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -879,7 +878,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "tracking_id"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -891,7 +890,7 @@
                       </div></TableBodyCell
                     >
                   {:else}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -911,7 +910,7 @@
                 class={(i % 2 == 1 ? "bg-white" : "bg-gray-100") +
                   " border border-y-indigo-500/100"}
               >
-                <TableBodyCell colspan={columns.length} {tdClass}
+                <TableBodyCell colspan={columns.length} class={tdClass}
                   >{@html item[searchColumnName]}</TableBodyCell
                 >
               </TableBodyRow>

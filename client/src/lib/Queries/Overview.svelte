@@ -239,14 +239,14 @@
   bind:open={deleteModalOpen}
   autoclose
   outsideclose
-  classHeader="flex justify-between items-center p-4 md:p-5 rounded-t-lg break-all"
+  classes={{ header: "flex justify-between items-center p-4 md:p-5 rounded-t-lg break-all" }}
 >
   <div class="text-center">
     <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
       Are you sure you want to delete this query?
     </h3>
     <Button
-      on:click={() => {
+      onclick={() => {
         deleteQuery();
       }}
       color="red"
@@ -286,11 +286,11 @@
         title="Global relevant dashboard queries"
       >
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
-        <Button class="h-fit w-fit text-sm" on:click={cloneDashboardQueries} disabled={isCloning}>
+        <Button class="h-fit w-fit text-sm" onclick={cloneDashboardQueries} disabled={isCloning}>
           <i class="bx bx-copy me-2"></i>
           <span class="me-2">Clone relevant queries and hide cloned queries</span>
           <div class:invisible={!isCloning} class={isCloning ? "loadingFadeIn text-white" : ""}>
-            <Spinner color="white" size="4"></Spinner>
+            <Spinner color="gray" size="4"></Spinner>
           </div>
         </Button>
       </QueryTable>

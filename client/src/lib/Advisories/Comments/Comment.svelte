@@ -82,7 +82,7 @@
   }
 </script>
 
-<TableBodyCell {tdClass}>
+<TableBodyCell class={tdClass}>
   <div class="flex flex-col">
     <div class="flex flex-row items-baseline">
       <small class="w-40 text-xs text-slate-400" title={comment.time}

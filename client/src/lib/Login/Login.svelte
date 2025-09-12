@@ -83,7 +83,7 @@
       </Heading>
       <DarkMode />
     </div>
-    <Card>
+    <Card class="p-4 sm:p-6 md:p-8">
       <div class="flex flex-col gap-4">
         <P class="flex flex-col"
           ><span><b>Server URL: </b>{appStore.getKeycloakURL()}</span><span
@@ -97,11 +97,11 @@
                 .sessionExpiredMessage || "Please login"}
             </div>
           {/if}
-          <Button on:click={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
+          <Button onclick={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
         {/if}
         {#if appStore.state.app.userManager && appStore.state.app.isUserLoggedIn}
           <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
-          <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
+          <Button onclick={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
         <div class="flex flex-row gap-4">
           <div class="flex flex-grow flex-col">
@@ -127,10 +127,10 @@
         {#if !viewError}
           <div class="flex flex-grow flex-col">
             <span class="text-xl">View: </span>
-            <List tag="ul" class="space-y-1" list="none">
+            <List tag="ul" class="list-none space-y-1">
               {#await getView() then view}
                 {#each view.entries() as [publisher, tlps]}
-                  <Li liClass="ml-3"
+                  <Li class="ml-3"
                     >{publisher === "*" ? "all" : publisher}:
                     {#each tlps as tlp}
                       <div
@@ -147,24 +147,24 @@
           </div>
           <div class="flex flex-col">
             <span class="text-xl">Roles:</span>
-            <List tag="ul" class="space-y-1" list="none">
+            <List tag="ul" class="list-none space-y-1">
               {#if appStore.isAdmin()}
-                <Li liClass="ml-3">Admin</Li>
+                <Li class="ml-3">Admin</Li>
               {/if}
               {#if appStore.isReviewer()}
-                <Li liClass="ml-3">Reviewer</Li>
+                <Li class="ml-3">Reviewer</Li>
               {/if}
               {#if appStore.isAuditor()}
-                <Li liClass="ml-3">Auditor</Li>
+                <Li class="ml-3">Auditor</Li>
               {/if}
               {#if appStore.isImporter()}
-                <Li liClass="ml-3">Importer</Li>
+                <Li class="ml-3">Importer</Li>
               {/if}
               {#if appStore.isEditor()}
-                <Li liClass="ml-3">Editor</Li>
+                <Li class="ml-3">Editor</Li>
               {/if}
               {#if appStore.isSourceManager()}
-                <Li liClass="ml-3">Source-Manager</Li>
+                <Li class="ml-3">Source-Manager</Li>
               {/if}
             </List>
           </div>

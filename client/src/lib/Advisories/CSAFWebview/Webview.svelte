@@ -31,6 +31,10 @@
   let { position = "", basePath = "", widthOffset = 0 }: Props = $props();
 
   const sideScroll = "w-full overflow-y-auto h-max";
+  const tabItemActiveClass =
+    "h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-sm";
+  const tabItemInactiveClass =
+    "h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg";
   const webviewDataSections = [
     "vulnerabilitiesOverview",
     "productTree",
@@ -155,12 +159,13 @@
     </div>
   {/if}
   {#if showTab(placeToPhase.revisionHistory)}
-    <Tabs
-      defaultClass="flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse mb-2"
-      activeClasses="h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-sm"
-      inactiveClasses="h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
-    >
-      <TabItem bind:open={tabOpen.vulnerabilitiesOverview} title="Overview">
+    <Tabs class="mb-2 flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse">
+      <TabItem
+        activeClass={tabItemActiveClass}
+        inactiveClass={tabItemInactiveClass}
+        bind:open={tabOpen.vulnerabilitiesOverview}
+        title="Overview"
+      >
         {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
           <div class={sideScroll}>
             <ProductVulnerabilities {basePath} />
@@ -173,42 +178,72 @@
         {/if}
       </TabItem>
       {#if showTab(placeToPhase.productTree)}
-        <TabItem bind:open={tabOpen.productTree} title="Product tree">
+        <TabItem
+          activeClass={tabItemActiveClass}
+          inactiveClass={tabItemInactiveClass}
+          bind:open={tabOpen.productTree}
+          title="Product tree"
+        >
           <div class={sideScroll}>
             <ProductTree {basePath} />
           </div>
         </TabItem>
       {/if}
       {#if showTab(placeToPhase.vulnerabilities)}
-        <TabItem bind:open={tabOpen.vulnerabilities} title="Vulnerabilities">
+        <TabItem
+          activeClass={tabItemActiveClass}
+          inactiveClass={tabItemInactiveClass}
+          bind:open={tabOpen.vulnerabilities}
+          title="Vulnerabilities"
+        >
           <div class={sideScroll}>
             <Vulnerabilities {basePath} />
           </div>
         </TabItem>
       {/if}
       {#if showTab(placeToPhase.notes) && appStore.state.webview.doc?.notes}
-        <TabItem bind:open={tabOpen.notes} title="Notes">
+        <TabItem
+          activeClass={tabItemActiveClass}
+          inactiveClass={tabItemInactiveClass}
+          bind:open={tabOpen.notes}
+          title="Notes"
+        >
           <div class={sideScroll}>
             <Notes open notes={appStore.state.webview.doc?.notes} />
           </div>
         </TabItem>
       {/if}
       {#if showTab(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
-        <TabItem bind:open={tabOpen.Acknowledgments} title="Acknowledgments">
+        <TabItem
+          activeClass={tabItemActiveClass}
+          inactiveClass={tabItemInactiveClass}
+          bind:open={tabOpen.Acknowledgments}
+          title="Acknowledgments"
+        >
           <div class={sideScroll}>
             <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
           </div>
         </TabItem>
       {/if}
       {#if showTab(placeToPhase.references)}
-        <TabItem bind:open={tabOpen.references} title="References">
+        <TabItem
+          activeClass={tabItemActiveClass}
+          inactiveClass={tabItemInactiveClass}
+          bind:open={tabOpen.references}
+          title="References"
+        >
           <div class={sideScroll}>
             <References references={appStore.state.webview.doc?.references} />
           </div>
         </TabItem>
       {/if}
       {#if showTab(placeToPhase.revisionHistory)}
-        <TabItem bind:open={tabOpen.revisionHistory} title="Revision history">
+        <TabItem
+          activeClass={tabItemActiveClass}
+          inactiveClass={tabItemInactiveClass}
+          bind:open={tabOpen.revisionHistory}
+          title="Revision history"
+        >
           <div class={sideScroll}>
             <RevisionHistory />
           </div>

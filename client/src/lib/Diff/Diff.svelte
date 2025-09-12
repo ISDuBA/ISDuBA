@@ -35,7 +35,6 @@
   let pressedButtonClass = "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700";
   let accordionItemDefaultClass =
     "flex justify-start items-center gap-x-4 text-gray-700 font-semibold w-full";
-  let textFlushOpen = "text-gray-500 dark:text-white";
   let isLoading = $state(false);
 
   const getPartOfTitle = (document: any, showTrackingStatus: boolean) => {
@@ -128,17 +127,14 @@
       >{diff.length} changes</span
     >
     <Accordion flush multiple class={title ? "mt-8" : "mt-1"}>
-      <AccordionItem
-        paddingFlush="pt-0 pb-3"
-        bind:open={isAddSectionOpen}
-        defaultClass={accordionItemDefaultClass}
-        {textFlushOpen}
-      >
-        <div slot="header">
-          <div class="flex items-center gap-2">
-            <span>Added ({addChanges.length})</span>
+      <AccordionItem bind:open={isAddSectionOpen} class={accordionItemDefaultClass}>
+        {#snippet header()}
+          <div>
+            <div class="flex items-center gap-2">
+              <span>Added ({addChanges.length})</span>
+            </div>
           </div>
-        </div>
+        {/snippet}
         {#each addChanges as change}
           <div class={getBodyClass("add")}>
             {#if change.value}
@@ -153,17 +149,14 @@
           </div>
         {/each}
       </AccordionItem>
-      <AccordionItem
-        paddingFlush="py-3"
-        bind:open={isRemoveSectionOpen}
-        defaultClass={accordionItemDefaultClass}
-        {textFlushOpen}
-      >
-        <div slot="header">
-          <div class="flex items-center gap-2">
-            <span>Removed ({removeChanges.length})</span>
+      <AccordionItem bind:open={isRemoveSectionOpen} class={accordionItemDefaultClass}>
+        {#snippet header()}
+          <div>
+            <div class="flex items-center gap-2">
+              <span>Removed ({removeChanges.length})</span>
+            </div>
           </div>
-        </div>
+        {/snippet}
         {#each removeChanges as change}
           <div class={getBodyClass("remove")}>
             {#if change.value}
@@ -180,39 +173,36 @@
           </div>
         {/each}
       </AccordionItem>
-      <AccordionItem
-        paddingFlush="py-3"
-        bind:open={isEditedSectionOpen}
-        defaultClass={accordionItemDefaultClass}
-        {textFlushOpen}
-      >
-        <div slot="header">
-          <div class="flex items-center gap-2">
-            <span>Edited ({replaceChanges.length})</span>
-            <ButtonGroup>
-              <Button
-                color="light"
-                class={`py-1 text-xs ${isSideBySideViewActivated === true ? pressedButtonClass : ""}`}
-                on:click={(event) => {
-                  event.stopPropagation();
-                  isSideBySideViewActivated = true;
-                }}
-              >
-                Side-by-side
-              </Button>
-              <Button
-                color="light"
-                class={`py-1 text-xs ${isSideBySideViewActivated === false ? pressedButtonClass : ""}`}
-                on:click={(event) => {
-                  event.stopPropagation();
-                  isSideBySideViewActivated = false;
-                }}
-              >
-                Inline
-              </Button>
-            </ButtonGroup>
+      <AccordionItem bind:open={isEditedSectionOpen} class={accordionItemDefaultClass}>
+        {#snippet header()}
+          <div>
+            <div class="flex items-center gap-2">
+              <span>Edited ({replaceChanges.length})</span>
+              <ButtonGroup>
+                <Button
+                  color="light"
+                  class={`py-1 text-xs ${isSideBySideViewActivated === true ? pressedButtonClass : ""}`}
+                  onclick={(event: any) => {
+                    event.stopPropagation();
+                    isSideBySideViewActivated = true;
+                  }}
+                >
+                  Side-by-side
+                </Button>
+                <Button
+                  color="light"
+                  class={`py-1 text-xs ${isSideBySideViewActivated === false ? pressedButtonClass : ""}`}
+                  onclick={(event: any) => {
+                    event.stopPropagation();
+                    isSideBySideViewActivated = false;
+                  }}
+                >
+                  Inline
+                </Button>
+              </ButtonGroup>
+            </div>
           </div>
-        </div>
+        {/snippet}
         {#each replaceChanges as change}
           <div class={getBodyClass("replace")}>
             {#if change.value}

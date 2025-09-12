@@ -50,9 +50,9 @@
   <Table>
     <TableBody>
       {#each historyEntries as event}
-        <TableBodyRow color="custom">
+        <TableBodyRow color="default">
           {#if event.event_type !== "add_comment"}
-            <TableBodyCell {tdClass}>
+            <TableBodyCell class={tdClass}>
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
                   <small
@@ -116,7 +116,7 @@
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           fullHistory = false;
         }}>Comments</Button
       >
@@ -124,7 +124,7 @@
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           fullHistory = true;
         }}>History</Button
       >

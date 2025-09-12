@@ -53,17 +53,17 @@
 
 <Textarea
   bind:value
-  on:focus={(event) => {
+  onfocus={(event) => {
     if (onFocus) {
       onFocus(event);
     }
   }}
-  on:blur={(event) => {
+  onblur={(event) => {
     if (onBlur) {
       onBlur(event);
     }
   }}
-  on:input={(event) => {
+  oninput={(event) => {
     if (onInput) {
       onInput(event);
     }
@@ -71,59 +71,71 @@
   class="mb-2"
   id="comment-textarea"
 >
-  <div slot="footer" class="flex flex-col">
-    <div class="flex items-start justify-between">
-      <div>
-        {#if !cancelable}
-          {#if canSetStateReview(workflowState) && workflowState !== ARCHIVED && saveForReview}
-            <Button size="xs" on:click={() => saveForReview()} disabled={count === 0} color="light">
-              {#if count > 0}
-                <span>Release for review with comment</span>
-              {:else}
-                <span>Release for review</span>
-              {/if}
-            </Button>
+  {#snippet footer()}
+    <div class="flex flex-col">
+      <div class="flex items-start justify-between">
+        <div>
+          {#if !cancelable}
+            {#if canSetStateReview(workflowState) && workflowState !== ARCHIVED && saveForReview}
+              <Button
+                size="xs"
+                onclick={() => saveForReview()}
+                disabled={count === 0}
+                color="light"
+              >
+                {#if count > 0}
+                  <span>Release for review with comment</span>
+                {:else}
+                  <span>Release for review</span>
+                {/if}
+              </Button>
+            {/if}
+            {#if (workflowState === REVIEW && isRoleIncluded( appStore.getRoles(), [REVIEWER] )) || ((workflowState === REVIEW || workflowState === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
+              <Button
+                size="xs"
+                onclick={() => {
+                  if (saveForAssessing) saveForAssessing();
+                }}
+                disabled={count === 0}
+                color="light"
+              >
+                <span>Send back to assessing</span>
+              </Button>
+            {/if}
+            {#if workflowState === ARCHIVED && isRoleIncluded( appStore.getRoles(), [EDITOR] ) && saveForReview}
+              <Button
+                size="xs"
+                onclick={() => saveForReview()}
+                disabled={count === 0}
+                color="light"
+              >
+                <span>Send back to review</span>
+              </Button>
+            {/if}
           {/if}
-          {#if (workflowState === REVIEW && isRoleIncluded( appStore.getRoles(), [REVIEWER] )) || ((workflowState === REVIEW || workflowState === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
+          {#if !((workflowState === REVIEW || workflowState === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
             <Button
+              color="green"
               size="xs"
-              on:click={() => {
-                if (saveForAssessing) saveForAssessing();
-              }}
-              disabled={count === 0}
-              color="light"
+              onclick={() => saveComment()}
+              disabled={count > 10000 || count === 0 || value === old}
             >
-              <span>Send back to assessing</span>
+              <span>{buttonText}</span>
             </Button>
           {/if}
-          {#if workflowState === ARCHIVED && isRoleIncluded( appStore.getRoles(), [EDITOR] ) && saveForReview}
-            <Button size="xs" on:click={() => saveForReview()} disabled={count === 0} color="light">
-              <span>Send back to review</span>
+          {#if cancelable && cancel}
+            <Button size="xs" onclick={() => cancel()} outline color="red">
+              <span>Cancel</span>
             </Button>
           {/if}
-        {/if}
-        {#if !((workflowState === REVIEW || workflowState === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
-          <Button
-            color="green"
-            size="xs"
-            on:click={() => saveComment()}
-            disabled={count > 10000 || count === 0 || value === old}
-          >
-            <span>{buttonText}</span>
-          </Button>
-        {/if}
-        {#if cancelable && cancel}
-          <Button size="xs" on:click={() => cancel()} outline color="red">
-            <span>Cancel</span>
-          </Button>
+        </div>
+        {#if count > 9500}
+          <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}>
+            {`${count}/10000`}
+          </Label>
         {/if}
       </div>
-      {#if count > 9500}
-        <Label class={count < 10000 ? "text-gray-600" : "font-bold text-red-600"}>
-          {`${count}/10000`}
-        </Label>
-      {/if}
+      <ErrorMessage error={errorMessage}></ErrorMessage>
     </div>
-    <ErrorMessage error={errorMessage}></ErrorMessage>
-  </div>
+  {/snippet}
 </Textarea>

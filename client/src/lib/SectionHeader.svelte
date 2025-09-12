@@ -21,7 +21,7 @@
 </script>
 
 <div class="mb-3 flex text-lg break-all text-gray-900 dark:text-white">
-  <Heading tag="h2" class="me-4 w-fit" customSize="text-lg"
+  <Heading tag="h2" class="me-4 w-fit text-lg"
     >{title}
     {#if mainSlot}
       {@render mainSlot()}

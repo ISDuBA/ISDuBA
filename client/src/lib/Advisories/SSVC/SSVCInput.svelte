@@ -122,8 +122,8 @@
   >
   <div class="flex w-full flex-col gap-y-2">
     <Input
-      on:keyup={handleKeyEvent}
-      on:paste={handlePasteEvent}
+      onkeyup={handleKeyEvent}
+      onpaste={handlePasteEvent}
       bind:value={inputValue}
       {autofocus}
       {disabled}

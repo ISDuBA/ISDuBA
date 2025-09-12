@@ -280,7 +280,7 @@
         {:else if docA}
           <div>
             <Button
-              on:click={() => {
+              onclick={() => {
                 appStore.setDiffDocA_ID(undefined);
                 appStore.setDiffDocA(undefined);
               }}
@@ -324,7 +324,7 @@
         {:else if docB}
           <div>
             <Button
-              on:click={() => {
+              onclick={() => {
                 appStore.setDiffDocB_ID(undefined);
                 appStore.setDiffDocB(undefined);
               }}
@@ -360,7 +360,7 @@
     </div>
     <div class="flex h-full items-start">
       <Button
-        on:click={() => push("/diff")}
+        onclick={() => push("/diff")}
         disabled={!docA || !docB || !docA_ID || !docB_ID}
         size="sm"
         class="flex gap-x-2"
@@ -389,7 +389,7 @@
             {@const doc = document.document}
             {@const tempDocID = `tempdocument${document.file.id}`}
             <TableBodyRow>
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>
                 <div class="flex items-center">
                   <CIconButton
                     onClicked={() => {
@@ -424,16 +424,16 @@
                   </button>
                 </div>
               </TableBodyCell>
-              <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
-              <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>{doc.tracking.id}</TableBodyCell>
+              <TableBodyCell class={tdClass}>{doc.publisher.name}</TableBodyCell>
+              <TableBodyCell class={tdClass}>
                 <span
                   class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
                   title={doc.title}>{doc.title}</span
                 >
               </TableBodyCell>
-              <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
-              <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
+              <TableBodyCell class={tdClass}>{doc.expired}</TableBodyCell>
+              <TableBodyCell class={tdClass}>{document.file.filename}</TableBodyCell>
             </TableBodyRow>
           {/each}
           <TableBodyRow></TableBodyRow>
@@ -442,11 +442,11 @@
     {/if}
     {#if freeTempDocuments}
       <Dropzone
-        on:drop={dropHandle}
-        on:dragover={(event) => {
+        ondrop={dropHandle}
+        ondragover={(event) => {
           event.preventDefault();
         }}
-        on:change={handleChange}
+        onchange={handleChange}
         multiple
         class="ms-1 mb-2 h-16"
       >

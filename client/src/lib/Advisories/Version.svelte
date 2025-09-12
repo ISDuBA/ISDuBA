@@ -134,7 +134,7 @@
               <Button
                 disabled={isDisabled}
                 class={`${diffButtonBaseClass} ${index === firstDocumentIndex ? redButtonClass : index === secondDocumentIndex ? greenButtonClass : lightButtonClass}`}
-                on:click={() => {
+                onclick={() => {
                   selectDiffDocument(index);
                 }}
                 outline
@@ -179,7 +179,7 @@
               class={`${diffButtonBaseClass}`}
               disabled={selectedDocumentVersion.version === version.version &&
                 selectedDocumentVersion.tracking_status === version.tracking_status}
-              on:click={() => {
+              onclick={() => {
                 navigateToVersion(version);
               }}
               color="light"
@@ -194,7 +194,7 @@
           {/each}
         {/if}
         {#if (appStore.isEditor() || appStore.isReviewer()) && advisoryVersions.length > 1}
-          <Button color="light" class="flex h-8 gap-x-2 px-3" on:click={toggleToolboxActivated}>
+          <Button color="light" class="flex h-8 gap-x-2 px-3" onclick={toggleToolboxActivated}>
             <i class="bx bx-transfer"></i>
             <span class="text-nowrap">{diffModeActivated ? "Hide" : "Show"} changes</span>
           </Button>

@@ -230,7 +230,7 @@
 
 <form class={formClass}>
   <Label>Name</Label>
-  <Input class="mb-3" on:input={inputChange} bind:value={source.name}></Input>
+  <Input class="mb-3" oninput={inputChange} bind:value={source.name}></Input>
   <div class={!source.active && displayActiveHighlight ? "blink" : ""}>
     {#if enableActive}
       <CCheckbox
@@ -244,8 +244,10 @@
     {/if}
   </div>
   <Accordion>
-    <AccordionItem
-      ><span slot="header">Credentials</span>
+    <AccordionItem>
+      {#snippet header()}
+        <span>Credentials</span>
+      {/snippet}
       <Label>Private cert</Label>
       <CFileinput
         bind:files={privateCert}
@@ -268,12 +270,12 @@
       <div class="mb-3 inline-flex w-full">
         <Input
           class="rounded-none rounded-l-lg"
-          on:input={inputChange}
+          oninput={inputChange}
           bind:value={source.client_cert_passphrase}
         />
         <Button
-          on:click={() => {
-            source.client_cert_passphrase = null;
+          onclick={() => {
+            source.client_cert_passphrase = "";
           }}
           title="Remove passphrase"
           class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
@@ -283,8 +285,10 @@
         </Button>
       </div>
     </AccordionItem>
-    <AccordionItem
-      ><span slot="header">Advanced options</span>
+    <AccordionItem>
+      {#snippet header()}
+        <span>Advanced options</span>
+      {/snippet}
       <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-[minmax(190px,1fr)_1fr_1fr]">
         <div>
           <Label>Maximum document age</Label>
@@ -294,14 +298,14 @@
               type="number"
               min="0"
               placeholder="0"
-              on:input={onChangedAge}
+              oninput={onChangedAge}
               bind:value={ageNumber}
             ></Input>
             <Select
               class="rounded-none rounded-r-lg border-l-0"
               items={ageUnits}
               bind:value={ageUnit}
-              on:change={onChangedAge}
+              onchange={onChangedAge}
             />
           </div>
         </div>
@@ -311,7 +315,7 @@
             type="number"
             step="0.01"
             placeholder={ratePlaceholder.toString()}
-            on:input={inputChange}
+            oninput={inputChange}
             min="0"
             bind:value={source.rate}
           />
@@ -323,7 +327,7 @@
             step="1"
             placeholder={slotPlaceholder.toString()}
             min="1"
-            on:input={inputChange}
+            oninput={inputChange}
             bind:value={source.slots}
           />
         </div>
@@ -346,12 +350,12 @@
           <Label class="grow">
             <Input
               class="rounded-none rounded-l-lg"
-              on:input={onChangedIgnorePatterns}
+              oninput={onChangedIgnorePatterns}
               bind:value={source.ignore_patterns[index]}
             />
           </Label>
           <Button
-            on:click={() => removePattern(index)}
+            onclick={() => removePattern(index)}
             title="Remove pattern"
             class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
             color="light"
@@ -372,7 +376,7 @@
           </Label>
           <Input
             class="col-span-2 row-start-2 rounded-none rounded-t-lg sm:col-span-1 sm:rounded-l-lg sm:rounded-tr-none"
-            on:input={onChangedHeaders}
+            oninput={onChangedHeaders}
             bind:value={header[0]}
           />
           <Label class="collapse col-span-2 col-start-1 row-start-1 sm:visible sm:col-start-2">
@@ -380,12 +384,12 @@
           </Label>
           <Input
             class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-t sm:border-l-0"
-            on:input={onChangedHeaders}
+            oninput={onChangedHeaders}
             bind:value={header[1]}
           />
           {#if headers.length > 1}
             <Button
-              on:click={() => removeHeader(index)}
+              onclick={() => removeHeader(index)}
               title="Remove field-name-field-value-pair"
               class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
               color="light"

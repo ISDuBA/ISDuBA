@@ -76,7 +76,7 @@
           <td>Product reference</td>
           <td
             ><A
-              color="text-primary-700 dark:text-primary-400"
+              class="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.product_reference)}`}
               >{relation.product_reference}</A
@@ -87,7 +87,7 @@
           <td>Relates to</td>
           <td
             ><A
-              color="text-primary-700 dark:text-primary-400"
+              class="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.relates_to_product_reference)}`}
               >{relation.relates_to_product_reference}</A

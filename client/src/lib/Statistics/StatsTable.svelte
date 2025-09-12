@@ -41,12 +41,12 @@
         {#each dates as date, index}
           <tr class="odd:bg-white even:bg-gray-100 dark:odd:bg-gray-800 dark:even:bg-gray-700">
             {#if date instanceof Date}
-              <TableBodyCell {tdClass}>{toLocaleISOString(date)}</TableBodyCell>
+              <TableBodyCell class={tdClass}>{toLocaleISOString(date)}</TableBodyCell>
             {/if}
             {#each Object.keys(stats) as key}
               {@const count = stats[key]?.[index][1]}
               <TableBodyCell
-                tdClass={`${tdClass} ${typeof count === "number" && count !== 0 ? "" : "!text-gray-400"}`}
+                class={`$class={tdClass} ${typeof count === "number" && count !== 0 ? "" : "!text-gray-400"}`}
                 >{count ?? 0}</TableBodyCell
               >
             {/each}

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { type ColorVariant } from "flowbite-svelte";
+  import type { ColorVariant } from "./types";
   import type { HTMLButtonAttributes } from "svelte/elements";
 
   type Props = {

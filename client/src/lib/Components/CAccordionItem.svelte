@@ -13,6 +13,8 @@
   import { getContext, onMount } from "svelte";
   import { writable, type Writable } from "svelte/store";
   import { fade, blur, fly, slide } from "svelte/transition";
+  import type { HTMLButtonAttributes } from "svelte/elements";
+  import type { Snippet } from "svelte";
 
   type TransitionTypes =
     | "fade"
@@ -44,7 +46,7 @@
     classInactive?: string;
   }
 
-  interface $$Props {
+  type Props = {
     id?: string;
     tag?: string;
     open?: boolean;
@@ -64,31 +66,38 @@
     classActive?: string;
     classInactive?: string;
     toggleCallback?: () => Promise<any>;
-  }
+    headerSlot: Snippet;
+    arrowup?: Snippet;
+    arrowdown?: Snippet;
+    children?: Snippet;
+  } & HTMLButtonAttributes;
 
-  export let id: $$Props["id"] = undefined;
-  export let tag: $$Props["tag"] = "h2";
-  export let open: NonNullable<$$Props["open"]> = false;
-  export let activeClass: $$Props["activeClass"] = undefined;
-  export let inactiveClass: $$Props["inactiveClass"] = undefined;
-  export let defaultClass: $$Props["defaultClass"] =
-    "flex items-center justify-between w-full font-medium text-left group-first:rounded-t-xl border-gray-200 dark:border-gray-700";
-  export let transitionType: $$Props["transitionType"] = "slide";
-  export let transitionParams: $$Props["transitionParams"] = {};
-  export let paddingFlush: $$Props["paddingFlush"] = "py-5";
-  export let paddingDefault: $$Props["paddingDefault"] = "p-5";
-  export let textFlushOpen: $$Props["textFlushOpen"] = "text-gray-900 dark:text-white";
-  export let textFlushDefault: $$Props["textFlushDefault"] = "text-gray-500 dark:text-gray-400";
-  export let borderClass: $$Props["borderClass"] = "border-s border-e group-first:border-t";
-  export let borderOpenClass: $$Props["borderOpenClass"] = "border-s border-e";
-  export let borderBottomClass: $$Props["borderBottomClass"] = "border-b";
-  export let borderSharedClass: $$Props["borderSharedClass"] =
-    "border-gray-200 dark:border-gray-700";
-
-  export let classActive: $$Props["classActive"] = undefined;
-  export let classInactive: $$Props["classInactive"] = undefined;
-
-  export let toggleCallback: $$Props["toggleCallback"] = undefined;
+  let {
+    id = undefined,
+    tag = "h2",
+    open = $bindable(false),
+    activeClass = undefined,
+    inactiveClass = undefined,
+    defaultClass = "flex items-center justify-between w-full font-medium text-left group-first:rounded-t-xl border-gray-200 dark:border-gray-700",
+    transitionType = "slide",
+    transitionParams = {},
+    paddingFlush = "py-5",
+    paddingDefault = "p-5",
+    textFlushOpen = "text-gray-900 dark:text-white",
+    textFlushDefault = "text-gray-500 dark:text-gray-400",
+    borderClass = "border-s border-e group-first:border-t",
+    borderOpenClass = "border-s border-e",
+    borderBottomClass = "border-b",
+    borderSharedClass = "border-gray-200 dark:border-gray-700",
+    classActive = undefined,
+    classInactive = undefined,
+    toggleCallback = undefined,
+    headerSlot,
+    arrowup = undefined,
+    arrowdown = undefined,
+    children,
+    ...restProps
+  }: Props = $props();
 
   let activeCls = twMerge(activeClass, classActive);
   let inactiveCls = twMerge(inactiveClass, classInactive);
@@ -107,7 +116,7 @@
     }
   };
 
-  const ctx = getContext<AccordionCtxType>("ctx") ?? {};
+  const ctx: AccordionCtxType = getContext("ctx") ?? {};
 
   // single selection
   const self = {};
@@ -130,31 +139,37 @@
     selected.set(open ? {} : self);
   };
 
-  let buttonClass: string;
-  $: buttonClass = twMerge([
-    defaultClass,
-    ctx.flush || borderClass,
-    borderBottomClass,
-    borderSharedClass,
-    ctx.flush ? paddingFlush : paddingDefault,
-    open && (ctx.flush ? textFlushOpen : activeCls || ctx.activeClass),
-    !open && (ctx.flush ? textFlushDefault : inactiveCls || ctx.inactiveClass),
-    $$props.class
-  ]);
+  let buttonClass: string = $derived(
+    twMerge([
+      defaultClass,
+      ctx.flush ? "" : borderClass,
+      borderBottomClass,
+      borderSharedClass,
+      ctx.flush ? paddingFlush : paddingDefault,
+      open && (ctx.flush ? textFlushOpen : activeCls || ctx.activeClass),
+      !open && (ctx.flush ? textFlushDefault : inactiveCls || ctx.inactiveClass),
+      restProps.class ? `${restProps.class}` : ""
+    ])
+  );
 
-  $: contentClass = twMerge([
-    ctx.flush ? paddingFlush : paddingDefault,
-    ctx.flush ? "" : borderOpenClass,
-    borderBottomClass,
-    borderSharedClass
-  ]);
+  let contentClass: string = $derived(
+    twMerge([
+      ctx.flush ? paddingFlush : paddingDefault,
+      ctx.flush ? "" : borderOpenClass,
+      borderBottomClass,
+      borderSharedClass
+    ])
+  );
 </script>
 
 <svelte:element this={tag} class="group">
-  <button on:click={handleToggle} type="button" {id} class={buttonClass} aria-expanded={open}>
-    <slot name="header" />
-    {#if open}
-      <slot name="arrowup">
+  <button onclick={handleToggle} type="button" {id} class={buttonClass} aria-expanded={open}>
+    {#if headerSlot}
+      {@render headerSlot?.()}
+    {:else if open}
+      {#if arrowup}
+        {@render arrowup()}
+      {:else}
         <svg
           class="h-3 w-3 text-gray-800 dark:text-white"
           aria-hidden="true"
@@ -170,56 +185,32 @@
             d="M9 5 5 1 1 5"
           />
         </svg>
-      </slot>
+      {/if}
+    {:else if arrowdown}
+      {@render arrowdown()}
     {:else}
-      <slot name="arrowdown">
-        <svg
-          class="h-3 w-3 text-gray-800 dark:text-white"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 10 6"
-        >
-          <path
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="m1 1 4 4 4-4"
-          />
-        </svg>
-      </slot>
+      <svg
+        class="h-3 w-3 text-gray-800 dark:text-white"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 10 6"
+      >
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="m1 1 4 4 4-4"
+        />
+      </svg>
     {/if}
   </button>
 </svelte:element>
 {#if open}
   <div transition:multiple={transitionParams}>
     <div class={contentClass}>
-      <slot />
+      {@render children?.()}
     </div>
   </div>
 {/if}
-
-<!--
-@component
-[Go to docs](https://flowbite-svelte.com/)
-## Props
-@prop export let tag: $$Props['tag'] = 'h2';
-@prop export let open: NonNullable<$$Props['open']> = false;
-@prop export let activeClass: $$Props['activeClass'] = undefined;
-@prop export let inactiveClass: $$Props['inactiveClass'] = undefined;
-@prop export let defaultClass: $$Props['defaultClass'] = 'flex items-center justify-between w-full font-medium text-left group-first:rounded-t-xl border-gray-200 dark:border-gray-700';
-@prop export let transitionType: $$Props['transitionType'] = 'slide';
-@prop export let transitionParams: $$Props['transitionParams'] = {};
-@prop export let paddingFlush: $$Props['paddingFlush'] = 'py-5';
-@prop export let paddingDefault: $$Props['paddingDefault'] = 'p-5';
-@prop export let textFlushOpen: $$Props['textFlushOpen'] = 'text-gray-900 dark:text-white';
-@prop export let textFlushDefault: $$Props['textFlushDefault'] = 'text-gray-500 dark:text-gray-400';
-@prop export let borderClass: $$Props['borderClass'] = 'border-s border-e group-first:border-t';
-@prop export let borderOpenClass: $$Props['borderOpenClass'] = 'border-s border-e';
-@prop export let borderBottomClass: $$Props['borderBottomClass'] = 'border-b';
-@prop export let borderSharedClass: $$Props['borderSharedClass'] = 'border-gray-200 dark:border-gray-700';
-@prop export let classActive: $$Props['classActive'] = undefined;
-@prop export let classInactive: $$Props['classInactive'] = undefined;
-@prop export let openCallback: $$Props['openCallback'] = undefined;
--->

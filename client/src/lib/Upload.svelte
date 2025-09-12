@@ -52,19 +52,19 @@
   });
 </script>
 
-<Card size="lg">
+<Card size="lg" class="p-4">
   <div class={`flex flex-col gap-4 ${files?.length && files.length > 1 ? "mb-4" : "mb-40"}`}>
     <div>
       <Label class="pb-2">{label}</Label>
       {#if showFileInput}
         <Fileupload
-          inputClass="cursor-pointer disabled:cursor-not-allowed border !p-0 dark:text-gray-400"
+          wrapperClass="cursor-pointer disabled:cursor-not-allowed !p-0 dark:text-gray-400"
           class="file:bg-primary-800"
           value=""
           bind:files
           multiple
           accept=".json"
-          on:change={() => {
+          onchange={() => {
             filesCache = undefined;
           }}
         />
@@ -83,14 +83,14 @@
       {/if}
       {#if isUploading}
         <Button
-          on:click={() => {
+          onclick={() => {
             cancel();
           }}
           color="red">Cancel</Button
         >
       {/if}
       <Button
-        on:click={async () => {
+        onclick={async () => {
           isUploading = true;
           setTimeout(async () => {
             if (files) {

@@ -624,11 +624,11 @@
         <ButtonGroup>
           <Button
             class={mode === "diagram" ? pressedButtonClass : buttonClass}
-            on:click={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
+            onclick={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
           >
           <Button
             class={mode === "table" ? pressedButtonClass : buttonClass}
-            on:click={() => setMode("table")}><i class="bx bx-table"></i></Button
+            onclick={() => setMode("table")}><i class="bx bx-table"></i></Button
           >
         </ButtonGroup>
       {/if}
@@ -653,17 +653,17 @@
         <DateRange onChanged={onSelectedDate} bind:from bind:to></DateRange>
         <ButtonGroup class="h-fit">
           <Button
-            on:click={() => {
+            onclick={() => {
               selectPredefinedRange("day");
             }}>Day</Button
           >
           <Button
-            on:click={() => {
+            onclick={() => {
               selectPredefinedRange("month");
             }}>Month</Button
           >
           <Button
-            on:click={() => {
+            onclick={() => {
               selectPredefinedRange("year");
             }}>Year</Button
           >

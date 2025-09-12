@@ -350,7 +350,7 @@
             >
             <Input
               disabled={!isAllowedToEdit}
-              on:input={() => {
+              oninput={() => {
                 wasNameEdited = true;
               }}
               bind:value={currentSearch.name}
@@ -413,7 +413,7 @@
             ? pressedButtonClass
             : buttonClass}
           disabled={!isAllowedToEdit}
-          on:click={() => setSearchType(SEARCHTYPES.ADVISORY)}
+          onclick={() => setSearchType(SEARCHTYPES.ADVISORY)}
         >
           Advisories</Button
         >
@@ -422,12 +422,12 @@
             ? pressedButtonClass
             : buttonClass}
           disabled={!isAllowedToEdit}
-          on:click={() => setSearchType(SEARCHTYPES.DOCUMENT)}>Documents</Button
+          onclick={() => setSearchType(SEARCHTYPES.DOCUMENT)}>Documents</Button
         >
         <Button
           class={currentSearch.searchType === SEARCHTYPES.EVENT ? pressedButtonClass : buttonClass}
           disabled={!isAllowedToEdit}
-          on:click={() => setSearchType(SEARCHTYPES.EVENT)}>Events</Button
+          onclick={() => setSearchType(SEARCHTYPES.EVENT)}>Events</Button
         >
       </ButtonGroup>
     </div>
@@ -513,13 +513,13 @@
         <ErrorMessage error={errorMessage}></ErrorMessage>
         <div class="my-2 ml-auto flex flex-row flex-wrap gap-3">
           {#if !loading}
-            <Button on:click={testQuery} color="light"
+            <Button onclick={testQuery} color="light"
               ><i class="bx bx-test-tube me-2"></i> Test query</Button
             >
           {/if}
           {#if loading}
             <Button
-              on:click={() => {
+              onclick={() => {
                 if (abortController) abortController.abort();
                 loading = false;
                 unsetMessages();
@@ -528,7 +528,7 @@
             >
           {/if}
           <Button
-            on:click={() => {
+            onclick={() => {
               if (loadedData) {
                 currentSearch = generateQueryFrom(loadedData);
               } else {
@@ -538,7 +538,7 @@
             }}
             color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
           >
-          <Button disabled={disableSave} on:click={saveQuery} color="green"
+          <Button disabled={disableSave} onclick={saveQuery} color="green"
             ><i class="bx bxs-save me-2"></i> Save</Button
           >
         </div>

@@ -32,23 +32,24 @@
 <div class={containerClass ?? "relative flex w-full md:w-fit"}>
   <div class="relative w-full md:w-96">
     <Input
-      defaultClass="w-full disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right !rounded-e-none"
+      class="w-full !rounded-e-none disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right"
       size="md"
       placeholder="Enter a search term"
       bind:value={searchTerm}
-      on:keyup={(e) => {
+      onkeyup={(e) => {
         if (e.key === "Enter") dispatchSearchEvent();
       }}
     >
-      <button
-        onclick={clearInput}
-        slot="right"
-        aria-label="Clear search"
-        class="group flex h-[26pt] w-[26pt] items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-gray-500"
-      >
-        <i class="bx bx-x dark:group-hover:text-gray-800"></i>
-      </button>
+      {#snippet right()}
+        <button
+          onclick={clearInput}
+          aria-label="Clear search"
+          class="group flex h-[26pt] w-[26pt] items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-gray-500"
+        >
+          <i class="bx bx-x dark:group-hover:text-gray-800"></i>
+        </button>
+      {/snippet}
     </Input>
   </div>
-  <Button size="xs" class="rounded-s-none" on:click={dispatchSearchEvent}>Search</Button>
+  <Button size="xs" class="rounded-s-none" onclick={dispatchSearchEvent}>Search</Button>
 </div>

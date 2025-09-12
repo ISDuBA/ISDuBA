@@ -9,7 +9,8 @@
 -->
 
 <script lang="ts">
-  import { Checkbox, type CheckboxItem, type FormColorType } from "flowbite-svelte";
+  import { Checkbox, type CheckboxItem } from "flowbite-svelte";
+  import type { FormColorType } from "./types";
   import type { Snippet } from "svelte";
   import type { HTMLButtonAttributes } from "svelte/elements";
 
@@ -20,11 +21,8 @@
     custom?: boolean;
     disabled?: boolean;
     group?: string[];
-    groupInputClass?: string;
-    groupLabelClass?: string;
     inline?: boolean;
     name?: string | undefined;
-    spacing?: string;
     value?: string | number;
     onChanged?: (event: any) => void;
     onClicked?: (event: any) => void;
@@ -38,11 +36,8 @@
     custom = false,
     disabled = false,
     group = [],
-    groupInputClass = "",
-    groupLabelClass = "",
     inline = false,
     name = undefined,
-    spacing = "",
     value = "on",
     onChanged = undefined,
     onClicked = undefined,
@@ -53,24 +48,22 @@
 
 <Checkbox
   bind:checked
-  class={`min-h-[20px] min-w-[20px] cursor-pointer !p-[6px] !py-[6px] ${restProps.class}`}
+  class={`min-h-[20px] min-w-[20px]`}
+  classes={{ div: `p-[6px]! py-[6px]! cursor-pointer ${restProps.class}` }}
   {choices}
   {color}
   {custom}
   {disabled}
   {group}
-  {groupInputClass}
-  {groupLabelClass}
   {inline}
   {name}
-  {spacing}
   {value}
-  on:change={(event) => {
+  onchange={(event) => {
     if (onChanged) {
       onChanged(event);
     }
   }}
-  on:click={(event) => {
+  onclick={(event) => {
     event.stopPropagation();
     if (onClicked) {
       onClicked(event);

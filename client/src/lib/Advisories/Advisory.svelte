@@ -439,7 +439,7 @@
   <Label class="text-lg">Forward document</Label>
   <Select items={availableForwardSelection} bind:value={selectedForwardTarget}></Select>
   {#if typeof selectedForwardTarget === "number"}
-    <Button disabled={processRunning} on:click={forwardDocument}>
+    <Button disabled={processRunning} onclick={forwardDocument}>
       <span class="mr-2">Send document</span>
       {#if processRunning}
         <Spinner></Spinner>
@@ -552,7 +552,7 @@
                         size="xs"
                         color="light"
                         class="h-7 py-1 text-xs"
-                        on:click={() => (openForwardModal = true)}
+                        onclick={() => (openForwardModal = true)}
                       >
                         Forward document</Button
                       >
@@ -615,7 +615,7 @@
                   size="xs"
                   color="light"
                   class="h-7 py-1 text-xs"
-                  on:click={() => (openForwardModal = true)}
+                  onclick={() => (openForwardModal = true)}
                 >
                   Forward document
                 </Button>
