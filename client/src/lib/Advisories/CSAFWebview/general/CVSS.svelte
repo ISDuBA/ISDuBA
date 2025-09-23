@@ -8,15 +8,21 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
+  import { getCVSSTextualRating } from "$lib/Statistics/statistics";
+
   export let baseScore = "";
   export let baseSeverity = "";
 
-  const getSeverityClass = (severity: string) => {
-    return severity.toLowerCase();
+  const getSeverityClass = (severity: string, score: string) => {
+    if (severity) {
+      return severity.toLowerCase();
+    } else if (score) {
+      return getCVSSTextualRating(Number(score));
+    }
   };
 </script>
 
-<div class={"score " + getSeverityClass(baseSeverity)}>
+<div class={"score " + getSeverityClass(baseSeverity, baseScore)}>
   <span class="baseScore">{baseScore}</span>
   {#if baseSeverity}
     <span class="baseSeverity">({baseSeverity})</span>
