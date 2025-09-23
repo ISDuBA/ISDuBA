@@ -50,11 +50,14 @@
 
 <style>
   .score.none,
-  .score.low,
-  .score.medium,
   .score.high,
   .score.critical {
     color: #ffffff;
+  }
+
+  .score.low,
+  .score.medium {
+    color: #222;
   }
 
   .score.none {
