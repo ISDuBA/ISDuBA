@@ -14,7 +14,7 @@ import type { Result } from "$lib/types";
 type StatisticEntry = [Date, number | null];
 type Statistic = StatisticEntry[];
 
-type CVSSTextualRating = "None" | "Low" | "Medium" | "High";
+type CVSSTextualRating = "None" | "Low" | "Medium" | "High" | "Critical";
 type CritStatisticEntry = [CVSSTextualRating | number];
 type CritStatistic = [Date, CritStatisticEntry[]];
 

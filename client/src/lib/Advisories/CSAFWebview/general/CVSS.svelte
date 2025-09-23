@@ -8,7 +8,7 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { getCVSSTextualRating } from "$lib/Statistics/statistics";
+  import type { CVSSTextualRating } from "$lib/Statistics/statistics";
 
   interface Props {
     baseScore: string;
@@ -16,11 +16,25 @@
   }
   let { baseScore, baseSeverity }: Props = $props();
 
+  const getCVSSTextualRating = (CVSS: number): CVSSTextualRating => {
+    if (CVSS === 0) {
+      return "None";
+    } else if (CVSS <= 3.9) {
+      return "Low";
+    } else if (CVSS <= 6.9) {
+      return "Medium";
+    } else if (CVSS <= 8.9) {
+      return "High";
+    } else {
+      return "Critical";
+    }
+  };
+
   const getSeverityClass = (severity: string, score: string) => {
     if (severity) {
       return severity.toLowerCase();
     } else if (score) {
-      return getCVSSTextualRating(Number(score));
+      return getCVSSTextualRating(Number(score)).toLowerCase();
     }
   };
 </script>
