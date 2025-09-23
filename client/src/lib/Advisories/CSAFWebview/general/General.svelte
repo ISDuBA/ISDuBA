@@ -48,7 +48,7 @@
 
 <div class="w-full">
   <div class="mb-3">
-    <div class="flex flex-row">
+    <div class="flex flex-row gap-2">
       <div>
         <span class="text-xl text-balance">{title} </span>
         {#if $appStore.webview.doc?.status !== Status.final}

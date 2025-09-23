@@ -22,6 +22,7 @@
   import { getRelativeTime } from "$lib/time";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
+  import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
 
   export let storedQuery: any;
   let documents: any[] | null = null;
@@ -98,9 +99,7 @@
             <Activity on:click={() => openDocument(doc)}>
               <div slot="top-left">
                 {#if doc.critical}
-                  <span class:text-red-500={Number(doc.critical) > 5.0}>
-                    {doc.critical}
-                  </span>
+                  <CVSS baseScore={doc.critical}></CVSS>
                 {/if}
               </div>
               <span slot="top-right" class="ml-auto">{getPublisher(doc.publisher)}</span>

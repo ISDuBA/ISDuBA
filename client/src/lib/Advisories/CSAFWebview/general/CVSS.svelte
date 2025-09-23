@@ -36,12 +36,14 @@
   };
 </script>
 
-<div class={"score " + getSeverityClass(baseSeverity, baseScore)}>
-  <span class="baseScore">{baseScore}</span>
-  {#if baseSeverity}
-    <span class="baseSeverity">({baseSeverity})</span>
-  {/if}
-</div>
+{#if baseScore !== null && baseScore !== undefined}
+  <div class={"score " + getSeverityClass(baseSeverity, baseScore)}>
+    <span class="baseScore">{baseScore}</span>
+    {#if baseSeverity}
+      <span class="baseSeverity">({baseSeverity})</span>
+    {/if}
+  </div>
+{/if}
 
 <style>
   .score.none,
@@ -77,7 +79,6 @@
     flex-wrap: nowrap;
     gap: 2pt;
     justify-content: center;
-    margin: 0 15px;
     background: #dddddd;
     color: black;
     font-size: small;
