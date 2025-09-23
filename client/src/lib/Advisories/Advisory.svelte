@@ -27,7 +27,12 @@
   import Tlp from "./TLP.svelte";
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
-  import type { TrackingStatus, AdvisoryVersion } from "./advisory.ts";
+  import {
+    type TrackingStatus,
+    type AdvisoryVersion,
+    getAdvisoryAnchorLink
+  } from "$lib/Advisories/advisory";
+  import type { CurrentSearchQuery } from "$lib/types";
 
   export let params: any = null;
 
@@ -52,6 +57,9 @@
   let position = "";
   let processRunning = false;
   let lastSuccessfulForwardTarget: number | undefined;
+  let currentSearchQuery: CurrentSearchQuery | null = null;
+  let nextAdvisoryURL: string = "";
+  let previousAdvisoryURL: string = "";
 
   $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
     isCommentingAllowed = appStore.isEditor();
@@ -376,6 +384,58 @@
       lastSuccessfulForwardTarget = selectedForwardTarget;
     }
   };
+
+  const fetchAdvisoryURL = async (offset: number) => {
+    if (!currentSearchQuery) {
+      return "";
+    }
+    const limit = 1;
+    const loadAdvisories = true;
+    const orderBy = currentSearchQuery.orderBy;
+    const searchColumn = currentSearchQuery.searchTerm;
+    const queryParam = currentSearchQuery.query;
+    // Fetch all columns that are required to identify the advisory
+    let fetchColumns = ["id", "tracking_id", "publisher"];
+
+    let documentURL = encodeURI(
+      `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+    );
+    const response = await request(documentURL, "GET");
+    if (!response.ok) {
+      return "";
+    }
+    let count = -1;
+    let documents: any;
+    ({ count, documents } = response.content);
+    if (count < 1 || documents.length < 1) {
+      return "";
+    }
+    return getAdvisoryAnchorLink(documents[0]);
+  };
+
+  const storeNewCurrentSearchQuery = async (offset: number) => {
+    if (currentSearchQuery) {
+      currentSearchQuery.offset += offset;
+      sessionStorage.setItem("currentSearchQuery", JSON.stringify(currentSearchQuery));
+    }
+    await loadCurrentSearchQuery();
+  };
+
+  const loadCurrentSearchQuery = async () => {
+    let currentSearchQueryString = sessionStorage.getItem("currentSearchQuery");
+    if (!currentSearchQueryString) {
+      return;
+    }
+
+    currentSearchQuery = JSON.parse(currentSearchQueryString) as CurrentSearchQuery;
+    if (currentSearchQuery.offset > 0) {
+      previousAdvisoryURL = await fetchAdvisoryURL(currentSearchQuery.offset - 1);
+    } else {
+      previousAdvisoryURL = "";
+    }
+    nextAdvisoryURL = await fetchAdvisoryURL(currentSearchQuery.offset + 1);
+  };
+
   onDestroy(() => {
     setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
@@ -392,6 +452,7 @@
     ) {
       await fetchForwardTargets();
     }
+    loadCurrentSearchQuery();
   });
 
   $: if (params) {
@@ -460,6 +521,26 @@
       <div
         class="right-3 mr-3 flex w-full flex-col lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
       >
+        {#if currentSearchQuery}
+          <div class="flex items-start justify-between">
+            <Button
+              on:click={() => storeNewCurrentSearchQuery(-1)}
+              href={previousAdvisoryURL}
+              size="xs"
+              color="light"
+              class="h-7 py-1 text-xs"
+              disabled={previousAdvisoryURL === ""}>Previous advisory</Button
+            >
+            <Button
+              on:click={() => storeNewCurrentSearchQuery(1)}
+              size="xs"
+              color="light"
+              class="h-7 py-1 text-xs"
+              href={nextAdvisoryURL}
+              disabled={nextAdvisoryURL === ""}>Next advisory</Button
+            >
+          </div>
+        {/if}
         <div class={isSSVCediting || commentFocus ? "w-full p-3 shadow-md" : "w-full p-3"}>
           <div class="flex flex-row items-center">
             {#if ssvcVector}
