@@ -41,6 +41,7 @@
   import { areArraysEqual } from "$lib/utils";
   import DeleteModal from "./DeleteModal.svelte";
   import { updateMultipleStates } from "$lib/Advisories/advisory";
+  import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
 
   let openRow: number | null = $state(null);
   let abortController: AbortController;
@@ -706,14 +707,8 @@
                         aria-label="View advisory details"
                       >
                       </a>
-                      <div class="m-2 table w-full text-wrap">
-                        <span
-                          class:text-red-500={Number(item[column]) > 5.0}
-                          class:dark:text-red-300={Number(item[column]) > 5.0}
-                          >{item[column] == null ? "" : item[column]}</span
-                        >
-                      </div></TableBodyCell
-                    >
+                      <CVSS baseScore={item[column]}></CVSS>
+                    </TableBodyCell>
                   {:else if column === "ssvc"}
                     <TableBodyCell class={tdClass}
                       ><a
@@ -869,14 +864,8 @@
                         href={getAdvisoryAnchorLink(item)}
                       >
                       </a>
-                      <div class="m-2 table w-full text-wrap">
-                        <span
-                          class:text-red-500={Number(item[column]) > 5.0}
-                          class:dark:text-red-300={Number(item[column]) > 5.0}
-                          >{item[column] == null ? "" : item[column]}</span
-                        >
-                      </div></TableBodyCell
-                    >
+                      <CVSS baseScore={item[column]}></CVSS>
+                    </TableBodyCell>
                   {:else if column === "tracking_id"}
                     <TableBodyCell class={tdClass}
                       ><a
