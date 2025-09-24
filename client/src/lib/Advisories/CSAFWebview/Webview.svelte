@@ -19,9 +19,10 @@
   import References from "./references/References.svelte";
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
   import FakeButton from "./FakeButton.svelte";
+  import { push } from "svelte-spa-router";
 
   import { Tabs, TabItem } from "flowbite-svelte";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   interface Props {
     position: string;
@@ -35,26 +36,29 @@
     "h-7 py-1 px-3 border-gray-300 border text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-sm";
   const tabItemInactiveClass =
     "h-7 py-1 px-3 border-gray-300 border text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg";
-  const webviewDataSections = [
-    "vulnerabilitiesOverview",
-    "productTree",
-    "vulnerabilities",
-    "notes",
-    "Acknowledgments",
-    "references",
-    "revisionHistory"
-  ] as const;
-  type WebviewDataSections = (typeof webviewDataSections)[number];
 
-  let innerWidth = $state(0);
-  let screenPhase: number = $derived(Math.max(0, Math.floor((innerWidth - widthOffset) / 550 - 1)));
-  let placeToPhase = $state(
-    Object.fromEntries(webviewDataSections.map((key) => [key, { show: false, phase: 9 }])) as {
-      [place in WebviewDataSections]: { show: boolean; phase: number };
-    }
-  );
+  type SingleWebviewDataSection =
+    | "vulnerabilitiesOverview"
+    | "productTree"
+    | "vulnerabilities"
+    | "notes"
+    | "Acknowledgments"
+    | "references"
+    | "revisionHistory"
+    | undefined;
+  type WebviewDataSections = {
+    [key: string]: boolean;
+    vulnerabilitiesOverview: boolean;
+    productTree: boolean;
+    vulnerabilities: boolean;
+    notes: boolean;
+    Acknowledgments: boolean;
+    references: boolean;
+    revisionHistory: boolean;
+  };
 
-  let tabOpen: { [key in WebviewDataSections]: boolean } = $state({
+  let closeAll = $state(false);
+  let tabOpen: WebviewDataSections = $state({
     vulnerabilitiesOverview: true,
     productTree: false,
     vulnerabilities: false,
@@ -64,84 +68,102 @@
     revisionHistory: false
   });
 
-  const updateUI = async () => {
-    // This is a hack
-    setTimeout(() => {
+  // When a link in a component inside the Webview is clicked we want the appropriate
+  // tab to be opened.
+  // Alternatively, it should be possible to drill down the method openTab so the children
+  // could use it but then every child has to use that method and that would make the code
+  // harder to maintain.
+  let forcedTab: SingleWebviewDataSection = $derived.by(() => {
+    if (position && position != "") {
       if (position.startsWith("product-")) {
-        updateTabOpen("productTree");
-        appStore.setSelectedProduct(position.replace("product-", ""));
+        return "productTree";
       }
       if (position.startsWith("cve-")) {
-        updateTabOpen("vulnerabilities");
-        appStore.setSelectedCVE(position.replace("cve-", ""));
+        return "vulnerabilities";
       }
-    }, 300);
-  };
+    }
+    return undefined;
+  });
+  let reallyOpen: WebviewDataSections = $derived.by(() => {
+    const open = $state.snapshot(tabOpen);
+    if (closeAll || forcedTab) {
+      const keys = Object.keys(open);
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (closeAll) open[key] = false;
+        else open[key] = key === forcedTab;
+      }
+    }
+    return open;
+  });
 
-  const updateTabOpen = (open?: WebviewDataSections) => {
-    let openedTab: WebviewDataSections = (Object.entries(tabOpen).find((tab) => tab[1]) ?? [
-      "vulnerabilitiesOverview"
-    ])[0] as WebviewDataSections;
-    const canBeOpened = (tab: WebviewDataSections) =>
-      tab === "vulnerabilitiesOverview" ||
-      (screenPhase < placeToPhase[tab].phase && placeToPhase[tab].show);
-    if (open && canBeOpened(open)) {
-      if (open !== openedTab) {
-        tabOpen[open] = true;
-        tabOpen[openedTab] = false;
-      }
-    } else if (openedTab !== "vulnerabilitiesOverview" && !canBeOpened(openedTab)) {
-      tabOpen.vulnerabilitiesOverview = true;
-      tabOpen[openedTab] = false;
+  let innerWidth = $state(0);
+
+  let maxTabs: number = $derived.by(() => {
+    return Object.keys(tabOpen).length;
+  });
+  let tabCount: number = $derived.by(() => {
+    let count = 1;
+    if (appStore.state.webview.doc && appStore.state.webview.doc["isProductTreePresent"]) count++;
+    if (appStore.state.webview.doc && appStore.state.webview.doc["isVulnerabilitiesPresent"])
+      count++;
+    if (appStore.state.webview.doc?.notes) count++;
+    if (appStore.state.webview.doc?.acknowledgments) count++;
+    if (appStore.state.webview.doc && appStore.state.webview.doc.references.length > 0) count++;
+    if (appStore.state.webview.doc?.isRevisionHistoryPresent) count++;
+    return count;
+  });
+  let missingTabs: number = $derived.by(() => {
+    return maxTabs - tabCount;
+  });
+  // Number of sections that can be shown next to each other
+  let screenPhase: number = $derived(
+    Math.max(0, Math.floor((innerWidth - widthOffset) / 550 - 1 + missingTabs))
+  );
+
+  const openTab = async (tab: string, openRoot = true) => {
+    if (openRoot && position && position != "") {
+      push(basePath);
+    }
+    await tick();
+    const keys = Object.keys(tabOpen);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      tabOpen[key] = tab === key;
     }
   };
 
-  const updatePlaces = () => {
-    let phaseObject: { [key in WebviewDataSections]?: { show: boolean; phase: number } } = {};
-    let next = 1;
-    let increment = (place: WebviewDataSections, show: any) => {
-      phaseObject[place] = { show: !!show, phase: next };
-      if (show) {
-        next++;
+  const setSelectedItems = () => {
+    if (position && position != "") {
+      if (position.startsWith("product-")) {
+        appStore.setSelectedProduct(position.replace("product-", ""));
       }
-    };
-    increment(
-      "productTree",
-      appStore.state.webview.doc && appStore.state.webview.doc["isProductTreePresent"]
-    );
-    increment(
-      "vulnerabilities",
-      appStore.state.webview.doc && appStore.state.webview.doc["isVulnerabilitiesPresent"]
-    );
-    increment("notes", appStore.state.webview.doc?.notes);
-    increment("Acknowledgments", appStore.state.webview.doc?.acknowledgments);
-    increment(
-      "references",
-      appStore.state.webview.doc && appStore.state.webview.doc.references.length > 0
-    );
-    increment("revisionHistory", appStore.state.webview.doc?.isRevisionHistoryPresent);
-    placeToPhase = {
-      vulnerabilitiesOverview: { show: true, phase: next },
-      ...phaseObject
-    } as { [key in WebviewDataSections]: { show: boolean; phase: number } };
-    updateTabOpen();
+      if (position.startsWith("cve-")) {
+        appStore.setSelectedCVE(position.replace("cve-", ""));
+      }
+    }
   };
 
-  const showTab = (place: { show: boolean; phase: number }) =>
-    place.show && place.phase > screenPhase;
-  const showArea = (place: { show: boolean; phase: number }) =>
-    place.show && place.phase <= screenPhase;
+  // Need variable reallyOpen to return false for every tab once and then to return true
+  // for the tab that should be opened. Otherwise the appropriate TabItem would not
+  // recognize that it should be opened.
+  const tempCloseAll = async () => {
+    closeAll = true;
+    await tick();
+    closeAll = false;
+  };
 
   $effect(() => {
     if (position && position != "") {
-      updateUI();
+      setSelectedItems();
+      tempCloseAll();
     }
   });
 
   let aliases = $derived(appStore.state.webview.doc?.aliases);
 
   onMount(() => {
-    updatePlaces();
+    setSelectedItems();
   });
 </script>
 
@@ -158,12 +180,13 @@
       <ValueList label="Aliases" values={aliases} />
     </div>
   {/if}
-  {#if showTab(placeToPhase.revisionHistory)}
+  {#if screenPhase < Object.keys(tabOpen).length}
     <Tabs class="mb-2 flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse">
       <TabItem
         activeClass={tabItemActiveClass}
         inactiveClass={tabItemInactiveClass}
-        bind:open={tabOpen.vulnerabilitiesOverview}
+        open={reallyOpen.vulnerabilitiesOverview}
+        onclick={() => openTab("vulnerabilitiesOverview")}
         title="Overview"
       >
         {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
@@ -177,11 +200,12 @@
           </i>
         {/if}
       </TabItem>
-      {#if showTab(placeToPhase.productTree)}
+      {#if screenPhase < 2}
         <TabItem
           activeClass={tabItemActiveClass}
           inactiveClass={tabItemInactiveClass}
-          bind:open={tabOpen.productTree}
+          open={reallyOpen.productTree}
+          onclick={() => openTab("productTree")}
           title="Product tree"
         >
           <div class={sideScroll}>
@@ -189,11 +213,12 @@
           </div>
         </TabItem>
       {/if}
-      {#if showTab(placeToPhase.vulnerabilities)}
+      {#if screenPhase < 3}
         <TabItem
           activeClass={tabItemActiveClass}
           inactiveClass={tabItemInactiveClass}
-          bind:open={tabOpen.vulnerabilities}
+          open={reallyOpen.vulnerabilities}
+          onclick={() => openTab("vulnerabilities")}
           title="Vulnerabilities"
         >
           <div class={sideScroll}>
@@ -201,11 +226,12 @@
           </div>
         </TabItem>
       {/if}
-      {#if showTab(placeToPhase.notes) && appStore.state.webview.doc?.notes}
+      {#if screenPhase < 4 && appStore.state.webview.doc?.notes}
         <TabItem
           activeClass={tabItemActiveClass}
           inactiveClass={tabItemInactiveClass}
-          bind:open={tabOpen.notes}
+          open={reallyOpen.notes}
+          onclick={() => openTab("notes")}
           title="Notes"
         >
           <div class={sideScroll}>
@@ -213,11 +239,12 @@
           </div>
         </TabItem>
       {/if}
-      {#if showTab(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
+      {#if screenPhase < 5 && appStore.state.webview.doc?.acknowledgments}
         <TabItem
           activeClass={tabItemActiveClass}
           inactiveClass={tabItemInactiveClass}
-          bind:open={tabOpen.Acknowledgments}
+          open={reallyOpen.Acknowledgments}
+          onclick={() => openTab("Acknowledgments")}
           title="Acknowledgments"
         >
           <div class={sideScroll}>
@@ -225,11 +252,12 @@
           </div>
         </TabItem>
       {/if}
-      {#if showTab(placeToPhase.references)}
+      {#if screenPhase < 6}
         <TabItem
           activeClass={tabItemActiveClass}
           inactiveClass={tabItemInactiveClass}
-          bind:open={tabOpen.references}
+          open={reallyOpen.references}
+          onclick={() => openTab("references")}
           title="References"
         >
           <div class={sideScroll}>
@@ -237,11 +265,12 @@
           </div>
         </TabItem>
       {/if}
-      {#if showTab(placeToPhase.revisionHistory)}
+      {#if screenPhase < 7}
         <TabItem
           activeClass={tabItemActiveClass}
           inactiveClass={tabItemInactiveClass}
-          bind:open={tabOpen.revisionHistory}
+          open={reallyOpen.revisionHistory}
+          onclick={() => openTab("revisionHistory")}
           title="Revision history"
         >
           <div class={sideScroll}>
@@ -267,7 +296,7 @@
     </div>
   {/if}
 </div>
-{#if showArea(placeToPhase.productTree)}
+{#if screenPhase > 1}
   <div>
     <FakeButton active>Product tree</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
@@ -276,7 +305,7 @@
     </div>
   </div>
 {/if}
-{#if showArea(placeToPhase.vulnerabilities)}
+{#if screenPhase > 2}
   <div>
     <FakeButton active>Vulnerabilities</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
@@ -285,7 +314,7 @@
     </div>
   </div>
 {/if}
-{#if showArea(placeToPhase.notes) && appStore.state.webview.doc?.notes}
+{#if screenPhase > 3 && appStore.state.webview.doc?.notes}
   <div>
     <FakeButton active>Notes</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
@@ -295,7 +324,7 @@
   </div>
 {/if}
 
-{#if showArea(placeToPhase.Acknowledgments) && appStore.state.webview.doc?.acknowledgments}
+{#if screenPhase > 4 && appStore.state.webview.doc?.acknowledgments}
   <div>
     <FakeButton active>Acknowledgments</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
@@ -305,7 +334,7 @@
   </div>
 {/if}
 
-{#if showArea(placeToPhase.references)}
+{#if screenPhase > 5}
   <div>
     <FakeButton active>References</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
@@ -315,7 +344,7 @@
   </div>
 {/if}
 
-{#if showArea(placeToPhase.revisionHistory)}
+{#if screenPhase > 6}
   <div>
     <FakeButton active>Revision history</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
