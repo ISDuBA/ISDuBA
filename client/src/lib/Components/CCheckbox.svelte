@@ -38,7 +38,7 @@
     group = [],
     inline = false,
     name = undefined,
-    value = "on",
+    value = undefined,
     onChanged = undefined,
     onClicked = undefined,
     children,
