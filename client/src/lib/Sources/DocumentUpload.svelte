@@ -28,7 +28,7 @@
       if (resp.error) {
         info.success = false;
         let details = getErrorDetails(`Could not upload file`, resp);
-        info.message = `${details.message} ${details.details}`;
+        info.message = `${details.message} ${details.details ?? ""}`;
       }
       uploadInfo.push(info);
       if (updateCallback) {
