@@ -39,7 +39,9 @@
 {#if baseScore !== null && baseScore !== undefined}
   <div class={"score " + getSeverityClass(baseSeverity, baseScore)}>
     <span class="baseScore">{baseScore}</span>
-    {#if baseSeverity}
+    {#if baseSeverity && !baseScore}
+      <span class="baseSeverity">{baseSeverity}</span>
+    {:else if baseSeverity}
       <span class="baseSeverity">({baseSeverity})</span>
     {/if}
   </div>
