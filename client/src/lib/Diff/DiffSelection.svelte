@@ -442,11 +442,11 @@
     {/if}
     {#if freeTempDocuments}
       <Dropzone
-        ondrop={dropHandle}
-        ondragover={(event) => {
+        onDrop={dropHandle}
+        onDragOver={(event) => {
           event.preventDefault();
         }}
-        onchange={handleChange}
+        onChange={handleChange}
         multiple
         class="ms-1 mb-2 h-16"
       >
