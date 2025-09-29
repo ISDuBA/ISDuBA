@@ -98,19 +98,22 @@
             </div>
           {/if}
           <Button on:click={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
-          <P>
-            ISDuBA is Free Software.
-            <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
-              >The source code is available on Github.</A
-            ><A href="/swagger/index.html" class="underline hover:no-underline"
-              >ISDuBA API documentation.</A
-            ></P
-          >
         {/if}
         {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
           <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
           <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
+        <P>
+          ISDuBA is Free Software.
+          <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
+            >The source code is available on Github.</A
+          >
+          {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
+            <A href="/swagger/index.html" class="underline hover:no-underline"
+              >ISDuBA API documentation.</A
+            >
+          {/if}
+        </P>
       </div>
     </Card>
     {#if $appStore.app.isUserLoggedIn && !$appStore.app.sessionExpired}
