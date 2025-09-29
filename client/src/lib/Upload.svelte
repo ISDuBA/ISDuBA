@@ -80,7 +80,7 @@
               {:else if info}
                 <i class={`bx bx-x-circle ${color}`}></i>
               {/if}
-              <div class={`font-bold text-black`}>{file.name}</div>
+              <div class={`font-bold text-black dark:text-white`}>{file.name}</div>
             </div>
             {#if info?.message}
               <div>{info.message}</div>
