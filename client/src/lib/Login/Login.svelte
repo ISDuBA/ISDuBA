@@ -76,7 +76,7 @@
 
 <div class="flex h-screen items-center justify-center">
   <div class="flex w-96 flex-col gap-4">
-    <div class="inline-flex flex-row">
+    <div class="inline-flex flex-row justify-between">
       <Heading class="mb-2 flex items-center gap-4">
         <img class="h-10" src="favicon.svg" alt="Icon of ISDuBA" aria-hidden="true" />
         <span>ISDuBA</span>
