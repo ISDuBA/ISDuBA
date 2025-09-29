@@ -18,6 +18,7 @@
     files: FileList,
     updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
   ): Promise<UploadInfo[]> => {
+    if (!files) return [];
     let uploadInfo = [];
     for (const file of files) {
       let info: UploadInfo = { success: true };
