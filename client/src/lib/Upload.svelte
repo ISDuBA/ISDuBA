@@ -63,7 +63,7 @@
           isUploading = false;
         }}
         color="primary"
-        disabled={isUploading}>Upload</Button
+        disabled={isUploading || !files || files.length === 0}>Upload</Button
       >
     </div>
     <Listgroup class="mt-6">
