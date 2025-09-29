@@ -11,7 +11,7 @@
   import type { CVSSTextualRating } from "$lib/Statistics/statistics";
 
   interface Props {
-    baseScore: string;
+    baseScore?: string;
     baseSeverity?: string;
   }
   let { baseScore, baseSeverity }: Props = $props();
@@ -42,7 +42,9 @@
 {#if baseScore !== null && baseScore !== undefined}
   <div class={"score " + getSeverityClass(baseSeverity, baseScore)}>
     <span class="baseScore">{baseScore}</span>
-    {#if baseSeverity}
+    {#if baseSeverity && !baseScore}
+      <span class="baseSeverity">{baseSeverity}</span>
+    {:else if baseSeverity}
       <span class="baseSeverity">({baseSeverity})</span>
     {/if}
   </div>

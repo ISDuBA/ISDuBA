@@ -10,6 +10,7 @@
 
 <script lang="ts">
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
+  import CVSS from "./general/CVSS.svelte";
 
   interface Props {
     keys: Array<string>;
@@ -17,7 +18,7 @@
   }
   let { keys, values }: Props = $props();
 
-  const cellStyle = "px-6 py-0";
+  const cellStyle = "px-6 py-1";
 </script>
 
 <div class="ml-2 w-fit">
@@ -33,6 +34,17 @@
                   {index}
                 </div>
               </div>
+            </TableBodyCell>
+          </TableBodyRow>
+        {:else if key === "baseScore" || key === "baseSeverity"}
+          <TableBodyRow color="default">
+            <TableBodyCell class={cellStyle}>{key}</TableBodyCell>
+            <TableBodyCell class={cellStyle}>
+              {#if key === "baseScore"}
+                <CVSS baseScore={values[index]}></CVSS>
+              {:else}
+                <CVSS baseSeverity={values[index]}></CVSS>
+              {/if}
             </TableBodyCell>
           </TableBodyRow>
         {:else}
