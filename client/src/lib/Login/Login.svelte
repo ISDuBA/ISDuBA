@@ -108,11 +108,9 @@
           <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
             >The source code is available on Github.</A
           >
-          {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
-            <A href="/swagger/index.html" class="underline hover:no-underline"
-              >ISDuBA API documentation.</A
-            >
-          {/if}
+          <A href="/swagger/index.html" class="underline hover:no-underline"
+            >ISDuBA API documentation.</A
+          >
         </P>
       </div>
     </Card>
@@ -177,11 +175,6 @@
             </List>
           {/if}
         {/await}
-      </P>
-      <P>
-        <A href="/swagger/index.html" class="underline hover:no-underline"
-          >ISDuBA API documentation</A
-        >
       </P>
     {/if}
     <ErrorMessage error={viewError}></ErrorMessage>
