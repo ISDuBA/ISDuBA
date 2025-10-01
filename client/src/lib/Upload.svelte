@@ -66,10 +66,8 @@
         disabled={isUploading || !files || files.length === 0}>Upload</Button
       >
     </div>
-    <Listgroup class="mt-6">
-      {#if !files}
-        <ListgroupItem>No files selected</ListgroupItem>
-      {:else}
+    {#if files}
+      <Listgroup class="mt-6">
         {#each files as file, i}
           {@const info = uploadInfo[i]}
           {@const color = getColor(info)}
@@ -87,7 +85,7 @@
             {/if}
           </ListgroupItem>
         {/each}
-      {/if}
-    </Listgroup>
+      </Listgroup>
+    {/if}
   </div>
 </Card>
