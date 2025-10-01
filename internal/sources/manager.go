@@ -1085,6 +1085,7 @@ func (m *Manager) AddFeed(
 		}
 		if s.id == 0 {
 			errCh <- InvalidArgumentError("cannot update this source")
+			return
 		}
 		if slices.ContainsFunc(s.feeds, func(f *feed) bool { return f.label == label }) {
 			errCh <- InvalidArgumentError("label already exists")
