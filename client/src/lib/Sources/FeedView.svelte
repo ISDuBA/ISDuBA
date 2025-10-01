@@ -135,33 +135,37 @@
       <slot name="top"></slot>
     </div>
     <div slot="header-right" class="flex gap-2">
-      <Button
-        on:click={() => {
-          changeAllSubscriptions();
-        }}
-        class="flex gap-2"
-        color="light"
-        disabled={subscribedFeeds.length === feeds.length || isSubscribingAll || isUnSubscribingAll}
-        size="sm"
-      >
-        Subscribe all
-        {#if isSubscribingAll}
-          <Spinner color="gray" size="4"></Spinner>
-        {/if}
-      </Button>
-      <Button
-        on:click={() => {
-          changeAllSubscriptions(false);
-        }}
-        class="flex gap-2"
-        color="light"
-        disabled={subscribedFeeds.length === 0 || isSubscribingAll || isUnSubscribingAll}
-        size="sm"
-        >Unsubscribe all
-        {#if isUnSubscribingAll}
-          <Spinner color="gray" size="4"></Spinner>
-        {/if}
-      </Button>
+      {#if !placeholderFeed}
+        <Button
+          on:click={() => {
+            changeAllSubscriptions();
+          }}
+          class="flex gap-2"
+          color="light"
+          disabled={subscribedFeeds.length === feeds.length ||
+            isSubscribingAll ||
+            isUnSubscribingAll}
+          size="sm"
+        >
+          Subscribe all
+          {#if isSubscribingAll}
+            <Spinner color="gray" size="4"></Spinner>
+          {/if}
+        </Button>
+        <Button
+          on:click={() => {
+            changeAllSubscriptions(false);
+          }}
+          class="flex gap-2"
+          color="light"
+          disabled={subscribedFeeds.length === 0 || isSubscribingAll || isUnSubscribingAll}
+          size="sm"
+          >Unsubscribe all
+          {#if isUnSubscribingAll}
+            <Spinner color="gray" size="4"></Spinner>
+          {/if}
+        </Button>
+      {/if}
     </div>
     {#each feeds as feed, index (index)}
       <tr class={feed.id === feedBlinkID ? "blink" : ""}>
