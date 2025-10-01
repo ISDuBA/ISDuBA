@@ -41,7 +41,13 @@
   <div class={`flex flex-col gap-4 ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
     <div>
       <Label class="pb-2">{label}</Label>
-      <Fileupload value="" bind:files multiple accept=".json" />
+      <Fileupload
+        inputClass="cursor-pointer disabled:cursor-not-allowed border !p-0 dark:text-gray-400"
+        value=""
+        bind:files
+        multiple
+        accept=".json"
+      />
     </div>
     <div class="flex items-center justify-end gap-2">
       {#if isUploading}
