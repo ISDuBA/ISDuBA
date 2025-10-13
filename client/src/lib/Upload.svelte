@@ -43,6 +43,7 @@
       <Label class="pb-2">{label}</Label>
       <Fileupload
         inputClass="cursor-pointer disabled:cursor-not-allowed border !p-0 dark:text-gray-400"
+        class="file:bg-primary-800"
         value=""
         bind:files
         multiple
