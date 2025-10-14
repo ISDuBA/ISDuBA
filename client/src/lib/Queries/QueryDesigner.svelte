@@ -149,6 +149,8 @@
       }
       if (currentSearch.query.length > 0) {
         formData.append("query", currentSearch.query);
+      } else {
+        formData.append("query", "true");
       }
       let sortedColumns = sortColumns(currentSearch.columns);
       const columns = sortedColumns.filter((c) => c.visible).map((c) => c.name);
