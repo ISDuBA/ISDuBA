@@ -11,6 +11,7 @@
 <script lang="ts">
   import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
+  import { tick } from "svelte";
   export let label;
   export let upload = async (
     files: FileList,
@@ -31,24 +32,28 @@
     }
     return "";
   };
-  let files: FileList;
+  let files: FileList | undefined;
+  let filesCache: FileList | undefined;
+  let showFileInput = true;
   $: if (files) {
     uploadInfo = [];
   }
 </script>
 
 <Card size="lg">
-  <div class={`flex flex-col gap-4 ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
+  <div class={`flex flex-col gap-4 ${files?.length && files.length > 1 ? "mb-4" : "mb-40"}`}>
     <div>
       <Label class="pb-2">{label}</Label>
-      <Fileupload
-        inputClass="cursor-pointer disabled:cursor-not-allowed border !p-0 dark:text-gray-400"
-        class="file:bg-primary-800"
-        value=""
-        bind:files
-        multiple
-        accept=".json"
-      />
+      {#if showFileInput}
+        <Fileupload
+          inputClass="cursor-pointer disabled:cursor-not-allowed border !p-0 dark:text-gray-400"
+          class="file:bg-primary-800"
+          value=""
+          bind:files
+          multiple
+          accept=".json"
+        />
+      {/if}
     </div>
     <div class="flex items-center justify-end gap-2">
       {#if isUploading}
@@ -64,18 +69,27 @@
       <Button
         on:click={async () => {
           isUploading = true;
-          uploadInfo = await upload(files, (info) => {
-            uploadInfo = info;
-          });
+          if (files) {
+            filesCache = files;
+            uploadInfo = await upload(files, (info) => {
+              uploadInfo = info;
+            });
+          }
+          files = undefined;
           isUploading = false;
+          // This is a hack. The file input has to be re-added to the DOM. Otherwise it would not change
+          // the label "x files selected." to its initial value even if we set files to undefined.
+          showFileInput = false;
+          await tick();
+          showFileInput = true;
         }}
         color="primary"
         disabled={isUploading || !files || files.length === 0}>Upload</Button
       >
     </div>
-    {#if files}
+    {#if filesCache}
       <Listgroup class="mt-6">
-        {#each files as file, i}
+        {#each filesCache as file, i}
           {@const info = uploadInfo[i]}
           {@const color = getColor(info)}
           <ListgroupItem>
