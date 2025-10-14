@@ -169,9 +169,9 @@
       <P>
         {#await getVersion() then version}
           {#if !versionError}
-            <span class="text-xl">Versions:</span>
+            <span class="text-xl">Version:</span>
             <List tag="ul" class="space-y-1" list="none">
-              <Li liClass="ml-3">ISDuBA: {version}</Li>
+              <Li liClass="ml-3">{version}</Li>
             </List>
           {/if}
         {/await}
