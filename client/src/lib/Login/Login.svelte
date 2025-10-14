@@ -103,15 +103,15 @@
           <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
           <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
-        <P>
-          ISDuBA is Free Software.
-          <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
-            >The source code is available on Github.</A
-          >
-          <A href="/swagger/index.html" class="underline hover:no-underline"
-            >ISDuBA API documentation.</A
-          >
-        </P>
+        <div class="flex flex-col gap-4">
+          <span class="text-white">
+            ISDuBA is Free Software. The source code is <A
+              href="https://github.com/ISDuBA/"
+              class="underline hover:no-underline">available on Github</A
+            >.
+          </span>
+          <A href="/swagger/index.html" class="underline hover:no-underline">API documentation</A>
+        </div>
       </div>
     </Card>
     {#if $appStore.app.isUserLoggedIn && !$appStore.app.sessionExpired}
