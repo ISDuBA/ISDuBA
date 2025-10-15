@@ -277,8 +277,12 @@
         {#if !vectorInput}
           <span class="h-6 text-lg">Please enter a SSVC</span>
         {/if}
-        <button class="mr-auto h-6" {disabled} onclick={toggleEditing} aria-label="Edit SSVC"
-          ><i class="bx bx-edit-alt ml-1"></i></button
+        <button
+          aria-label="Edit SSVC"
+          class="mr-auto h-6"
+          {disabled}
+          title="Edit SSVC"
+          onclick={toggleEditing}><i class="bx bx-edit-alt ml-1"></i></button
         >
       </div>
     {/if}
