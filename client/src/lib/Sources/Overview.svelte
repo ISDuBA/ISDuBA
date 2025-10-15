@@ -19,7 +19,7 @@
   import { onDestroy, onMount } from "svelte";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { type Source, fetchSources } from "$lib/Sources/source";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { DAY_MS } from "$lib/time";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceBasicStats from "./SourceBasicStats.svelte";
@@ -27,12 +27,12 @@
   const shortLoadInterval = 5;
   const longLoadMultiplier = 6;
 
-  let messageError: ErrorDetails | null;
-  let sourcesError: ErrorDetails | null;
+  let messageError: ErrorDetails | null = $state(null);
+  let sourcesError: ErrorDetails | null = $state(null);
 
-  let loadingSources: boolean = false;
+  let loadingSources: boolean = $state(false);
 
-  let sources: Source[] = [];
+  let sources: Source[] = $state([]);
   let statsComponents: { [idToRole: string]: SourceBasicStats } = {};
 
   async function getMessage() {
@@ -45,7 +45,7 @@
     return new Map<string, [string]>();
   }
 
-  let updateIteration = 0;
+  let updateIteration = $state(0);
   let sourceUpdate = setInterval(async () => {
     updateIteration = (updateIteration + 1) % longLoadMultiplier;
     if (updateIteration == 0) {
@@ -124,78 +124,85 @@
         }
       ]}
     >
-      {#each sources as source, index (index)}
-        <tr
-          on:click={() => {
-            if (appStore.isSourceManager()) {
-              push(`/sources/${source.id}`);
-            }
-          }}
-          on:blur={() => {}}
-          on:focus={() => {}}
-          class={appStore.isSourceManager() ? "cursor-pointer" : ""}
-        >
-          <TableBodyCell tdClass="w-fit max-w-10">
-            <i class="bx bx-git-repo-forked"></i>
-          </TableBodyCell>
-          <TableBodyCell tdClass={`${tdClass} break-words hyphens-auto`}>
-            <div class="whitespace-break-spaces">
-              <span>{source.name}</span>
-              {#if source.attention}
-                <Badge class="min-w-fit">Source changed</Badge>
-              {/if}
-            </div>
-          </TableBodyCell>
-          {#if source.id !== 0}
-            <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
-              >{source.url}</TableBodyCell
-            >
-            <TableBodyCell {tdClass}
-              ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
-            >
-            <TableBodyCell {tdClass}
-              >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
-            >
-            <TableBodyCell {tdClass}
-              ><i class={"bx " + (source.healthy ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
-            >
-          {:else}
-            <TableBodyCell></TableBodyCell>
-            <TableBodyCell></TableBodyCell>
-            <TableBodyCell></TableBodyCell>
-            <TableBodyCell></TableBodyCell>
-          {/if}
-          <TableBodyCell>
-            {#if source.id !== undefined}
-              {@const yesterday = Date.now() - DAY_MS}
-              <SourceBasicStats bind:this={statsComponents[`${source.id}full`]} sourceID={source.id}
-              ></SourceBasicStats>
-              (<SourceBasicStats
-                bind:this={statsComponents[`${source.id}last`]}
-                from={new Date(yesterday)}
-                sourceID={source.id}
-              ></SourceBasicStats>)
+      {#snippet mainSlot()}
+        {#each sources as source, index (index)}
+          <tr
+            onclick={() => {
+              if (appStore.isSourceManager()) {
+                push(`/sources/${source.id}`);
+              }
+            }}
+            onblur={() => {}}
+            onfocus={() => {}}
+            class={appStore.isSourceManager() ? "cursor-pointer" : ""}
+          >
+            <TableBodyCell class="w-fit max-w-10">
+              <i class="bx bx-git-repo-forked"></i>
+            </TableBodyCell>
+            <TableBodyCell class={`$class={tdClass} break-words hyphens-auto`}>
+              <div class="whitespace-break-spaces">
+                <span>{source.name}</span>
+                {#if source.attention}
+                  <Badge class="min-w-fit">Source changed</Badge>
+                {/if}
+              </div>
+            </TableBodyCell>
+            {#if source.id !== 0}
+              <TableBodyCell class={`$class={tdClass} break-all whitespace-normal`}
+                >{source.url}</TableBodyCell
+              >
+              <TableBodyCell class={tdClass}
+                ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+              >
+              <TableBodyCell class={tdClass}
+                >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
+              >
+              <TableBodyCell class={tdClass}
+                ><i class={"bx " + (source.healthy ? "bxs-circle" : "bx-circle")}
+                ></i></TableBodyCell
+              >
+            {:else}
+              <TableBodyCell></TableBodyCell>
+              <TableBodyCell></TableBodyCell>
+              <TableBodyCell></TableBodyCell>
+              <TableBodyCell></TableBodyCell>
             {/if}
-          </TableBodyCell>
-        </tr>
-      {/each}
-      <div slot="bottom">
-        <div
-          class:invisible={!loadingSources}
-          class={loadingSources ? "loadingFadeIn" : ""}
-          class:mb-4={true}
-        >
-          Loading ...
-          <Spinner color="gray" size="4"></Spinner>
+            <TableBodyCell>
+              {#if source.id !== undefined}
+                {@const yesterday = Date.now() - DAY_MS}
+                <SourceBasicStats
+                  bind:this={statsComponents[`${source.id}full`]}
+                  sourceID={source.id}
+                ></SourceBasicStats>
+                (<SourceBasicStats
+                  bind:this={statsComponents[`${source.id}last`]}
+                  from={new Date(yesterday)}
+                  sourceID={source.id}
+                ></SourceBasicStats>)
+              {/if}
+            </TableBodyCell>
+          </tr>
+        {/each}
+      {/snippet}
+      {#snippet bottomSlot()}
+        <div>
+          <div
+            class:invisible={!loadingSources}
+            class={loadingSources ? "loadingFadeIn" : ""}
+            class:mb-4={true}
+          >
+            Loading ...
+            <Spinner color="gray" size="4"></Spinner>
+          </div>
+          {#if appStore.isSourceManager()}
+            <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+              <i class="bx bx-plus"></i>
+              <span>Add source</span>
+            </Button>
+          {/if}
+          <ErrorMessage error={sourcesError}></ErrorMessage>
         </div>
-        {#if appStore.isSourceManager()}
-          <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-            <i class="bx bx-plus"></i>
-            <span>Add source</span>
-          </Button>
-        {/if}
-        <ErrorMessage error={sourcesError}></ErrorMessage>
-      </div>
+      {/snippet}
     </CustomTable>
   {/if}
   {#await getMessage() then resp}

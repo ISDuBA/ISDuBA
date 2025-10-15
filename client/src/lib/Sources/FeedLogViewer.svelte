@@ -33,32 +33,41 @@
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import debounce from "debounce";
 
-  export let params: any = null;
+  interface Props {
+    params?: any;
+  }
 
-  let logs: any[] = [];
-  let loadingLogs: boolean = false;
-  let isDownloadingLogs: boolean = false;
-  let downloadAbortController = new AbortController();
+  let { params = null }: Props = $props();
+
+  let logs: any[] = $state([]);
+  let loadingLogs: boolean = $state(false);
+  let isDownloadingLogs: boolean = $state(false);
+  let downloadAbortController = $state(new AbortController());
   let abortController: AbortController | undefined = undefined;
-  let loadFeedError: ErrorDetails | null = null;
-  let loadLogsError: ErrorDetails | null = null;
+  let loadFeedError: ErrorDetails | null = $state(null);
+  let loadLogsError: ErrorDetails | null = $state(null);
   let loadConfigError: ErrorDetails | null = null;
-  let loadKeepLogsError: ErrorDetails | null = null;
+  let loadKeepLogsError: ErrorDetails | null = $state(null);
 
-  let feed: Feed | null = null;
+  let feed: Feed | null = $state(null);
 
-  let offset = 0;
-  let limit = 10;
-  let count: number | undefined = undefined;
-  let currentPage = 1;
-  let numberOfPages = 1000;
-  let searchTerm = "";
-  let selectedLogLevels: LogLevel[] = [];
-  let from: Date | undefined;
-  let to: Date | undefined = new Date();
+  let offset = $state(0);
+  let limit = $state(10);
+  let count: number | undefined = $state(undefined);
+  let currentPage = $state(1);
+  let searchTerm = $state("");
+  let selectedLogLevels: LogLevel[] = $state([]);
+  let from: Date | undefined = $state();
+  let to: Date | undefined = $state(new Date());
 
-  $: numberOfPages = Math.max(1, Math.ceil((count ?? 0) / limit));
-  $: realLogLevels = logLevels.filter((l) => l.value !== LogLevel.default);
+  let numberOfPages = $derived.by(() => {
+    if (count !== undefined || count !== undefined) {
+      return Math.max(1, Math.ceil((count ?? 0) / limit));
+    } else {
+      return 1000;
+    }
+  });
+  let realLogLevels = $derived(logLevels.filter((l) => l.value !== LogLevel.default));
 
   const paginationItemClass =
     "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white";
@@ -219,47 +228,49 @@
 
 {#if feed}
   <SectionHeader title={feed.label}>
-    <div slot="right" class="flex items-center gap-4">
-      <Button
-        title="Download all logs"
-        on:click={() => {
-          if (isDownloadingLogs) {
-            downloadAbortController.abort();
-          } else {
-            downloadFeedLogs();
-          }
-        }}
-        color={isDownloadingLogs ? "red" : "light"}
-        class={`ml-3 h-8 py-1 text-xs`}
-        outline={isDownloadingLogs}
-      >
+    {#snippet rightSlot()}
+      <div class="flex items-center gap-4">
+        <Button
+          title="Download all logs"
+          onclick={() => {
+            if (isDownloadingLogs) {
+              downloadAbortController.abort();
+            } else {
+              downloadFeedLogs();
+            }
+          }}
+          color={isDownloadingLogs ? "red" : "light"}
+          class={`ml-3 h-8 py-1 text-xs`}
+          outline={isDownloadingLogs}
+        >
+          {#if isDownloadingLogs}
+            <i class="bx bx-x text-lg"></i>
+          {:else}
+            <i class="bx bx-download text-lg"></i>
+          {/if}
+        </Button>
         {#if isDownloadingLogs}
-          <i class="bx bx-x text-lg"></i>
-        {:else}
-          <i class="bx bx-download text-lg"></i>
+          <div class="flex items-center gap-2">
+            <Spinner color="gray" size="4"></Spinner>
+            <span class="text-sm text-gray-400"
+              >Preparing logs. Depending on the amount of logs this may take a while.</span
+            >
+          </div>
         {/if}
-      </Button>
-      {#if isDownloadingLogs}
-        <div class="flex items-center gap-2">
-          <Spinner color="gray" size="4"></Spinner>
-          <span class="text-sm text-gray-400"
-            >Preparing logs. Depending on the amount of logs this may take a while.</span
-          >
-        </div>
-      {/if}
-    </div>
+      </div>
+    {/snippet}
   </SectionHeader>
 
   <div class="mb-4 flex flex-col gap-4">
     <div class="flex flex-wrap gap-x-8 gap-y-6">
       <CSearch
-        on:search={() => {
+        search={() => {
           resetPagination();
           loadLogs();
         }}
         bind:searchTerm
       ></CSearch>
-      <DateRange clearable showTimeControls on:change={onRangeChanged} bind:from bind:to
+      <DateRange clearable showTimeControls onChanged={onRangeChanged} bind:from bind:to
       ></DateRange>
       <ErrorMessage error={loadKeepLogsError}></ErrorMessage>
       <div class="flex flex-wrap items-center gap-1">
@@ -267,7 +278,7 @@
         {#each realLogLevels as level}
           <CCheckbox
             checked={selectedLogLevels.includes(level.value)}
-            on:click={() => {
+            onClicked={() => {
               toggleLevel(level.value);
             }}>{level.name}</CCheckbox
           >
@@ -289,7 +300,7 @@
             { name: "10000", value: 10000 }
           ]}
           bind:value={limit}
-          on:change={async () => {
+          onchange={async () => {
             resetPagination();
             await loadLogs();
           }}
@@ -299,14 +310,14 @@
       <div class="flex flex-row flex-wrap items-center">
         <div class:flex={true} class:mr-3={true}>
           <PaginationItem
-            normalClass={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
-            on:click={first}
+            class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
+            onclick={first}
           >
             <i class="bx bx-arrow-to-left"></i>
           </PaginationItem>
           <PaginationItem
-            normalClass={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
-            on:click={previous}
+            class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
+            onclick={previous}
           >
             <i class="bx bx-chevrons-left"></i>
           </PaginationItem>
@@ -315,7 +326,7 @@
         <div class="flex flex-row flex-wrap items-center">
           <input
             class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-800 dark:text-white`}
-            on:change={() => {
+            onchange={() => {
               if (!parseInt("" + currentPage)) currentPage = 1;
               currentPage = Math.floor(currentPage);
               if (currentPage < 1) currentPage = 1;
@@ -330,18 +341,18 @@
 
         <div class:flex={true}>
           <PaginationItem
-            normalClass={currentPage === numberOfPages
+            class={currentPage === numberOfPages
               ? paginationItemDeactivatedClass
               : paginationItemClass}
-            on:click={next}
+            onclick={next}
           >
             <i class="bx bx-chevrons-right"></i>
           </PaginationItem>
           <PaginationItem
-            normalClass={currentPage === numberOfPages
+            class={currentPage === numberOfPages
               ? paginationItemDeactivatedClass
               : paginationItemClass}
-            on:click={last}
+            onclick={last}
           >
             <i class="bx bx-arrow-to-right"></i>
           </PaginationItem>
@@ -377,27 +388,31 @@
           }
         ]}
       >
-        {#each logs as log, index (index)}
-          <tr>
-            <TableBodyCell tdClass={`${tdClass} min-w-[170pt] align-baseline`}
-              >{log.time}</TableBodyCell
+        {#snippet mainSlot()}
+          {#each logs as log, index (index)}
+            <tr>
+              <TableBodyCell class={`${tdClass} min-w-[170pt] align-baseline`}
+                >{log.time}</TableBodyCell
+              >
+              <TableBodyCell class={`${tdClass} align-baseline`}>{log.level}</TableBodyCell>
+              <TableBodyCell class={`${tdClass} break-all whitespace-normal`}
+                >{log.msg}</TableBodyCell
+              >
+            </tr>
+          {/each}
+        {/snippet}
+        {#snippet bottomSlot()}
+          <div>
+            <div
+              class:invisible={!loadingLogs}
+              class={loadingLogs ? "loadingFadeIn" : ""}
+              class:mb-4={true}
             >
-            <TableBodyCell tdClass={`${tdClass} align-baseline`}>{log.level}</TableBodyCell>
-            <TableBodyCell tdClass={`${tdClass} break-all whitespace-normal`}
-              >{log.msg}</TableBodyCell
-            >
-          </tr>
-        {/each}
-        <div slot="bottom">
-          <div
-            class:invisible={!loadingLogs}
-            class={loadingLogs ? "loadingFadeIn" : ""}
-            class:mb-4={true}
-          >
-            Loading ...
-            <Spinner color="gray" size="4"></Spinner>
+              Loading ...
+              <Spinner color="gray" size="4"></Spinner>
+            </div>
           </div>
-        </div>
+        {/snippet}
       </CustomTable>
     </div>
   {:else}

@@ -11,24 +11,29 @@
 <script lang="ts">
   import ProductIdentificationHelper from "./ProductIdentificationHelper.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import { appStore } from "$lib/store";
-  import { tick } from "svelte";
+  import { appStore } from "$lib/store.svelte";
+  import { tick, untrack } from "svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  export let product: any;
+
+  interface Props {
+    product: any;
+  }
+  let { product }: Props = $props();
   async function updateUI() {
     await tick();
     document.getElementById(`${product?.product_id}`)?.scrollIntoView({ behavior: "smooth" });
   }
-  let highlight = false;
 
-  $: selectedProduct = $appStore.webview.ui.selectedProduct;
-  $: productID = product?.product_id;
-  $: if (selectedProduct === productID) {
-    highlight = true;
-    updateUI();
-  } else {
-    highlight = false;
-  }
+  let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
+  let productID = $derived(product?.product_id);
+  let highlight = $derived(selectedProduct === productID);
+
+  $effect(() => {
+    untrack(() => selectedProduct);
+    if (selectedProduct === productID) {
+      updateUI();
+    }
+  });
 </script>
 
 <div id={product?.product_id}>
@@ -36,9 +41,9 @@
     header={product.name}
     level={4}
     {highlight}
-    open={$appStore.webview.ui.selectedProduct === product.product_id}
+    open={appStore.state.webview.ui.selectedProduct === product.product_id}
     onClose={() => {
-      if ($appStore.webview.ui.selectedProduct === product.product_id) {
+      if (appStore.state.webview.ui.selectedProduct === product.product_id) {
         appStore.resetSelectedProduct();
       }
     }}

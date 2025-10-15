@@ -7,7 +7,7 @@
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
 import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
-import { appStore } from "$lib/store";
+import { appStore } from "$lib/store.svelte";
 /**
  * loadFile loads files via FileReader.
  * @param csafFile

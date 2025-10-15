@@ -16,29 +16,26 @@
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
 
-  export let showTitle = true;
-  let title = "";
+  interface Props {
+    showTitle?: boolean;
+  }
+
+  let { showTitle = true }: Props = $props();
+  let title = $state("");
   let diffDocuments: any;
-  let error: ErrorDetails | null;
-  let diff: any;
-  let urlPath: string;
-  let isAddSectionOpen = false;
-  let isRemoveSectionOpen = false;
-  let isEditedSectionOpen = true;
-  let isSideBySideViewActivated = true;
+  let error: ErrorDetails | null = $state(null);
+  let diff: any = $state();
+  let urlPath: string = $state("");
+  let isAddSectionOpen = $state(false);
+  let isRemoveSectionOpen = $state(false);
+  let isEditedSectionOpen = $state(true);
+  let isSideBySideViewActivated = $state(true);
   let pressedButtonClass = "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700";
   let accordionItemDefaultClass =
     "flex justify-start items-center gap-x-4 text-gray-700 font-semibold w-full";
-  let textFlushOpen = "text-gray-500 dark:text-white";
-  let isLoading = false;
-  $: addChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "add") : [];
-  $: removeChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : [];
-  $: replaceChanges = diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : [];
-  $: docA_ID = $appStore.app.diff.docA_ID;
-  $: docB_ID = $appStore.app.diff.docB_ID;
-  $: if (docA_ID && docB_ID) compare();
+  let isLoading = $state(false);
 
   const getPartOfTitle = (document: any, showTrackingStatus: boolean) => {
     return `${document.tracking.id} (Version ${document.tracking.version}${showTrackingStatus ? ", " + document.tracking.status : ""})`;
@@ -66,14 +63,15 @@
   };
 
   const getDocument = async (letter: string) => {
-    const docID = letter === "A" ? $appStore.app.diff.docA_ID : $appStore.app.diff.docB_ID;
+    const docID =
+      letter === "A" ? appStore.state.app.diff.docA_ID : appStore.state.app.diff.docB_ID;
     const endpoint = docID?.startsWith("tempdocument") ? "tempdocuments" : "documents";
     const id = docID?.startsWith("tempdocument") ? docID.replace("tempdocument", "") : docID;
     return request(`/api/${endpoint}/${id}`, "GET");
   };
 
   const getDiff = async () => {
-    urlPath = `/api/diff/${$appStore.app.diff.docB_ID}/${$appStore.app.diff.docA_ID}?word-diff=true`;
+    urlPath = `/api/diff/${appStore.state.app.diff.docB_ID}/${appStore.state.app.diff.docA_ID}?word-diff=true`;
     error = null;
     const response = await request(urlPath, "GET");
     if (response.ok) {
@@ -93,6 +91,20 @@
       return `${bodyClass} bg-gray-100 dark:bg-gray-700`;
     }
   };
+  let addChanges = $derived(
+    diff ? diff.filter((result: JsonDiffResult) => result.op === "add") : []
+  );
+  let removeChanges = $derived(
+    diff ? diff.filter((result: JsonDiffResult) => result.op === "remove") : []
+  );
+  let replaceChanges = $derived(
+    diff ? diff.filter((result: JsonDiffResult) => result.op === "replace") : []
+  );
+  let docA_ID = $derived(appStore.state.app.diff.docA_ID);
+  let docB_ID = $derived(appStore.state.app.diff.docB_ID);
+  $effect(() => {
+    if (docA_ID && docB_ID) compare();
+  });
 </script>
 
 <svelte:head>
@@ -115,17 +127,14 @@
       >{diff.length} changes</span
     >
     <Accordion flush multiple class={title ? "mt-8" : "mt-1"}>
-      <AccordionItem
-        paddingFlush="pt-0 pb-3"
-        bind:open={isAddSectionOpen}
-        defaultClass={accordionItemDefaultClass}
-        {textFlushOpen}
-      >
-        <div slot="header">
-          <div class="flex items-center gap-2">
-            <span>Added ({addChanges.length})</span>
+      <AccordionItem bind:open={isAddSectionOpen} class={accordionItemDefaultClass}>
+        {#snippet header()}
+          <div>
+            <div class="flex items-center gap-2">
+              <span>Added ({addChanges.length})</span>
+            </div>
           </div>
-        </div>
+        {/snippet}
         {#each addChanges as change}
           <div class={getBodyClass("add")}>
             {#if change.value}
@@ -140,17 +149,14 @@
           </div>
         {/each}
       </AccordionItem>
-      <AccordionItem
-        paddingFlush="py-3"
-        bind:open={isRemoveSectionOpen}
-        defaultClass={accordionItemDefaultClass}
-        {textFlushOpen}
-      >
-        <div slot="header">
-          <div class="flex items-center gap-2">
-            <span>Removed ({removeChanges.length})</span>
+      <AccordionItem bind:open={isRemoveSectionOpen} class={accordionItemDefaultClass}>
+        {#snippet header()}
+          <div>
+            <div class="flex items-center gap-2">
+              <span>Removed ({removeChanges.length})</span>
+            </div>
           </div>
-        </div>
+        {/snippet}
         {#each removeChanges as change}
           <div class={getBodyClass("remove")}>
             {#if change.value}
@@ -167,39 +173,36 @@
           </div>
         {/each}
       </AccordionItem>
-      <AccordionItem
-        paddingFlush="py-3"
-        bind:open={isEditedSectionOpen}
-        defaultClass={accordionItemDefaultClass}
-        {textFlushOpen}
-      >
-        <div slot="header">
-          <div class="flex items-center gap-2">
-            <span>Edited ({replaceChanges.length})</span>
-            <ButtonGroup>
-              <Button
-                color="light"
-                class={`py-1 text-xs ${isSideBySideViewActivated === true ? pressedButtonClass : ""}`}
-                on:click={(event) => {
-                  event.stopPropagation();
-                  isSideBySideViewActivated = true;
-                }}
-              >
-                Side-by-side
-              </Button>
-              <Button
-                color="light"
-                class={`py-1 text-xs ${isSideBySideViewActivated === false ? pressedButtonClass : ""}`}
-                on:click={(event) => {
-                  event.stopPropagation();
-                  isSideBySideViewActivated = false;
-                }}
-              >
-                Inline
-              </Button>
-            </ButtonGroup>
+      <AccordionItem bind:open={isEditedSectionOpen} class={accordionItemDefaultClass}>
+        {#snippet header()}
+          <div>
+            <div class="flex items-center gap-2">
+              <span>Edited ({replaceChanges.length})</span>
+              <ButtonGroup>
+                <Button
+                  color="light"
+                  class={`py-1 text-xs ${isSideBySideViewActivated === true ? pressedButtonClass : ""}`}
+                  onclick={(event: any) => {
+                    event.stopPropagation();
+                    isSideBySideViewActivated = true;
+                  }}
+                >
+                  Side-by-side
+                </Button>
+                <Button
+                  color="light"
+                  class={`py-1 text-xs ${isSideBySideViewActivated === false ? pressedButtonClass : ""}`}
+                  onclick={(event: any) => {
+                    event.stopPropagation();
+                    isSideBySideViewActivated = false;
+                  }}
+                >
+                  Inline
+                </Button>
+              </ButtonGroup>
+            </div>
           </div>
-        </div>
+        {/snippet}
         {#each replaceChanges as change}
           <div class={getBodyClass("replace")}>
             {#if change.value}

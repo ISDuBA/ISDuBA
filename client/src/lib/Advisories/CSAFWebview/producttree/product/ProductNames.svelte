@@ -11,7 +11,11 @@
 <script lang="ts">
   import ProductName from "./ProductName.svelte";
 
-  export let productNames: any;
+  interface Props {
+    productNames: any;
+  }
+
+  let { productNames }: Props = $props();
   productNames = productNames
     ? productNames.sort((p1: any, p2: any) => {
         if (p1.name < p2.name) return -1;

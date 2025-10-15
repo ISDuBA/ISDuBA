@@ -9,21 +9,26 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
-  import { Badge, Spinner } from "flowbite-svelte";
+  import { Spinner } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { getRelativeTime } from "$lib/time";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
+  import CBadge from "$lib/Components/CBadge.svelte";
 
-  export let storedQuery: any;
+  interface Props {
+    storedQuery: any;
+  }
+
+  let { storedQuery }: Props = $props();
   const ignoredColumns = [
     "documentURL",
     "id",
@@ -43,12 +48,12 @@
     "tracking_id"
   ];
 
-  let activityCount = 0;
-  let resultingActivities: any;
-  let loadActivityError: ErrorDetails | null = null;
-  let loadCommentsError: ErrorDetails | null = null;
+  let activityCount = $state(0);
+  let resultingActivities: any = $state([]);
+  let loadActivityError: ErrorDetails | null = $state(null);
+  let loadCommentsError: ErrorDetails | null = $state(null);
   let loadDocumentsError: ErrorDetails | null = null;
-  let isLoading = false;
+  let isLoading = $state(false);
 
   const aggregateNewest = (events: any) => {
     return events.reduce((o: any, n: any) => {
@@ -120,7 +125,8 @@
     const activitiesAggregated = aggregateNewest(activities);
     let recentActivities = Object.values(activitiesAggregated);
     recentActivities = recentActivities.map((a: any) => {
-      a.mention = a.message && a.message.includes($appStore.app.tokenParsed?.preferred_username);
+      a.mention =
+        a.message && a.message.includes(appStore.state.app.tokenParsed?.preferred_username);
       if (a.ssvc) a.ssvcLabel = convertVectorToSSVCObject(a.ssvc).label;
       if (a.tracking_id && a.publisher) {
         a.documentURL = `/advisories/${a.publisher}/${a.tracking_id}/documents/${a.id}`;
@@ -145,7 +151,7 @@
   });
 </script>
 
-{#if $appStore.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin())}
+{#if appStore.state.app.isUserLoggedIn && (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin())}
   <div class="flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title={storedQuery.description}></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
@@ -159,32 +165,36 @@
         {#if resultingActivities.length > 0}
           {#each resultingActivities as activity}
             <Activity
-              on:click={() => {
+              onClicked={() => {
                 if (activity.documentURL) push(activity.documentURL);
               }}
             >
-              <div slot="top-right">
-                <span>{getRelativeTime(new Date(activity.time))}</span>
-              </div>
-              <span slot="top-left">
-                {#if activity.mention}
-                  {activity.actor} mentioned you
-                {:else if activity.event === "add_comment"}
-                  {activity.actor} added a comment
-                {:else if activity.event === "add_ssvc"}
-                  {activity.actor} added a SSVC "{activity.ssvcLabel}""
-                {:else if activity.event === "import_document"}
-                  {activity.actor} imported a document
-                {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
-                  {activity.actor} changed a SSVC to "{activity.ssvcLabel}"
-                {:else if activity.event === "change_comment"}
-                  {activity.actor} changed a comment
-                {:else if activity.event === "state_change"}
-                  {activity.actor} changed the state to <Badge color="dark"
-                    >{activity.event_state}</Badge
-                  >
-                {/if}
-              </span>
+              {#snippet topRightSlot()}
+                <div>
+                  <span>{getRelativeTime(new Date(activity.time))}</span>
+                </div>
+              {/snippet}
+              {#snippet topLeftSlot()}
+                <span>
+                  {#if activity.mention}
+                    {activity.actor} mentioned you
+                  {:else if activity.event === "add_comment"}
+                    {activity.actor} added a comment
+                  {:else if activity.event === "add_ssvc"}
+                    {activity.actor} added a SSVC "{activity.ssvcLabel}""
+                  {:else if activity.event === "import_document"}
+                    {activity.actor} imported a document
+                  {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
+                    {activity.actor} changed a SSVC to "{activity.ssvcLabel}"
+                  {:else if activity.event === "change_comment"}
+                    {activity.actor} changed a comment
+                  {:else if activity.event === "state_change"}
+                    {activity.actor} changed the state to <CBadge color="dark"
+                      >{activity.event_state}</CBadge
+                    >
+                  {/if}
+                </span>
+              {/snippet}
               {#if activity.event === "add_comment" || activity.event == "change_comment"}
                 <div>
                   <span class="block overflow-hidden text-nowrap text-ellipsis italic"
@@ -199,39 +209,45 @@
                   {activity.tracking_id ?? "Trackind ID undefined"}
                 </div>
               {/if}
-              <span class="text-gray-400" slot="bottom-left">
-                {activity.event === "add_comment" || activity.event == "change_comment"
-                  ? `${activity.title ?? "Title undefined"}`
-                  : ""}
-              </span>
-              <div slot="bottom-bottom" class="mt-2">
-                <div class="flex items-center gap-4 text-xs text-slate-400">
-                  {#if activity.comments !== undefined}
-                    <div class="flex items-center gap-1">
-                      <i class="bx bx-comment"></i>
-                      <span>{activity.comments}</span>
+              {#snippet bottomLeftSlot()}
+                <span class="text-gray-400">
+                  {activity.event === "add_comment" || activity.event == "change_comment"
+                    ? `${activity.title ?? "Title undefined"}`
+                    : ""}
+                </span>
+              {/snippet}
+              {#snippet bottomBottomSlot()}
+                <div class="mt-2">
+                  <div class="flex items-center gap-4 text-xs text-slate-400">
+                    {#if activity.comments !== undefined}
+                      <div class="flex items-center gap-1">
+                        <i class="bx bx-comment"></i>
+                        <span>{activity.comments}</span>
+                      </div>
+                    {/if}
+                    {#if activity.versions !== undefined}
+                      <div class="flex items-center gap-1">
+                        <i class="bx bx-collection"></i>
+                        <span>{activity.versions}</span>
+                      </div>
+                    {/if}
+                    {#if activity.ssvc}
+                      <SsvcBadge vector={activity.ssvc}></SsvcBadge>
+                    {/if}
+                  </div>
+                  {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}
+                    <div
+                      class="my-2 rounded-sm border p-2 text-xs text-gray-800 dark:text-gray-200"
+                    >
+                      {#each Object.keys(activity).sort() as key}
+                        {#if !ignoredColumns.includes(key) && activity[key] !== undefined && activity[key] !== null}
+                          <div>{key}: {activity[key]}</div>
+                        {/if}
+                      {/each}
                     </div>
-                  {/if}
-                  {#if activity.versions !== undefined}
-                    <div class="flex items-center gap-1">
-                      <i class="bx bx-collection"></i>
-                      <span>{activity.versions}</span>
-                    </div>
-                  {/if}
-                  {#if activity.ssvc}
-                    <SsvcBadge vector={activity.ssvc}></SsvcBadge>
                   {/if}
                 </div>
-                {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}
-                  <div class="my-2 rounded-sm border p-2 text-xs text-gray-800 dark:text-gray-200">
-                    {#each Object.keys(activity).sort() as key}
-                      {#if !ignoredColumns.includes(key) && activity[key] !== undefined && activity[key] !== null}
-                        <div>{key}: {activity[key]}</div>
-                      {/if}
-                    {/each}
-                  </div>
-                {/if}
-              </div>
+              {/snippet}
             </Activity>
           {/each}
         {:else}

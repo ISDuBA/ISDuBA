@@ -31,7 +31,7 @@ setup("authenticate and upload document", async ({ page }) => {
 
   // Upload test document
   await page.goto("/#/sources");
-  await page.getByRole("button", { name: " Upload documents" }).click();
+  await page.getByRole("link", { name: " Upload documents" }).click();
   await page
     .locator('input[type="file"]')
     .setInputFiles("../docs/example-advisories/avendor-advisory-0004.json");

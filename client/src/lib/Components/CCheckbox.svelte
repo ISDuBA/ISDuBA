@@ -9,48 +9,68 @@
 -->
 
 <script lang="ts">
-  import { Checkbox, type CheckboxItem, type FormColorType } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
+  import { Checkbox, type CheckboxItem } from "flowbite-svelte";
+  import type { FormColorType } from "./types";
+  import type { Snippet } from "svelte";
+  import type { HTMLButtonAttributes } from "svelte/elements";
 
-  export let checked: boolean | undefined = undefined;
-  export let choices: CheckboxItem[] = [];
-  export let color: FormColorType = "primary";
-  export let custom = false;
-  export let disabled = false;
-  export let group: string[] = [];
-  export let groupInputClass = "";
-  export let groupLabelClass = "";
-  export let inline = false;
-  export let name: string | undefined = undefined;
-  export let spacing = "";
-  export let value: string | number = "on";
+  type Props = {
+    checked?: boolean;
+    choices?: CheckboxItem[];
+    color?: FormColorType;
+    custom?: boolean;
+    disabled?: boolean;
+    group?: string[];
+    inline?: boolean;
+    name?: string | undefined;
+    value?: string | number;
+    onChanged?: (event: any) => void;
+    onClicked?: (event: any) => void;
+    children?: Snippet;
+  } & HTMLButtonAttributes;
 
-  const dispatch = createEventDispatcher();
+  let {
+    checked = $bindable(false),
+    choices = [],
+    color = "primary",
+    custom = false,
+    disabled = false,
+    group = [],
+    inline = false,
+    name = undefined,
+    value = undefined,
+    onChanged = undefined,
+    onClicked = undefined,
+    children,
+    ...restProps
+  }: Props = $props();
 </script>
 
 <Checkbox
   bind:checked
-  class={`min-h-[20px] min-w-[20px] cursor-pointer !p-[6px] !py-[6px] ${$$props?.class}`}
+  class={`min-h-[20px] min-w-[20px]`}
+  classes={{ div: `p-[6px]! py-[6px]! cursor-pointer ${restProps.class}` }}
   {choices}
   {color}
   {custom}
   {disabled}
   {group}
-  {groupInputClass}
-  {groupLabelClass}
   {inline}
   {name}
-  {spacing}
   {value}
-  on:change={(event) => {
-    dispatch("change", event);
+  onchange={(event) => {
+    if (onChanged) {
+      onChanged(event);
+    }
   }}
-  on:click={(event) => {
+  onclick={(event) => {
     event.stopPropagation();
-    dispatch("click", event);
+    if (onClicked) {
+      onClicked(event);
+    }
   }}
 >
   <span class="ps-2">
-    <slot></slot>
+    {@render children?.()}
   </span>
 </Checkbox>

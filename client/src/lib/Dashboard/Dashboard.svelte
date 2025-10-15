@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import AdvisoryQuery from "./AdvisoryQuery.svelte";
   import EventQuery from "./EventQuery.svelte";
@@ -20,9 +20,9 @@
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceEvents from "./SourceEvents.svelte";
 
-  let filteredQueries: any[] = [];
-  let loadIgnoredError: ErrorDetails | null;
-  let loadQueryError: ErrorDetails | null;
+  let filteredQueries: any[] = $state([]);
+  let loadIgnoredError: ErrorDetails | null = $state(null);
+  let loadQueryError: ErrorDetails | null = $state(null);
 
   const fetchStoredQueries = async (): Promise<any[]> => {
     const response = await request("/api/queries", "GET");
@@ -54,7 +54,7 @@
     const userDashboardQueries = allQueries.filter(
       (query) =>
         query.dashboard &&
-        query.definer === $appStore.app.tokenParsed?.preferred_username &&
+        query.definer === appStore.state.app.tokenParsed?.preferred_username &&
         !query.global &&
         (!ignoredQueries || !ignoredQueries.includes(query.id))
     );
@@ -73,7 +73,7 @@
   <title>Dashboard</title>
 </svelte:head>
 
-{#if $appStore.app.isUserLoggedIn}
+{#if appStore.state.app.isUserLoggedIn}
   <div class="mt-8 mb-8 flex flex-row flex-wrap gap-10">
     {#each filteredQueries as query}
       {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)}

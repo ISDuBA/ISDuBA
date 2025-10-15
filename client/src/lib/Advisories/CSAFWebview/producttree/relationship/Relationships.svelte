@@ -11,8 +11,12 @@
 <script lang="ts">
   import type { Relationship } from "$lib/pmdTypes";
   import Relation from "./Relation.svelte";
-  export let relationships: Relationship[];
-  export let basePath = "";
+
+  interface Props {
+    relationships: Relationship[];
+    basePath: string;
+  }
+  let { basePath = "", relationships }: Props = $props();
 </script>
 
 {#each relationships as relation}

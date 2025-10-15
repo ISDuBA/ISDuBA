@@ -17,29 +17,27 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
   import CIconButton from "$lib/Components/CIconButton.svelte";
+  import type { Snippet } from "svelte";
 
-  export let placeholderFeed: boolean = false;
-  export let feeds: Feed[] = [];
-  export let edit: boolean = false;
-
-  export let updateFeed = async (_feed: Feed) => {};
-  export let clickFeed = async (_feed: Feed) => {};
-  export let showProgress = false;
-
-  $: subscribedFeeds = feeds.filter((feed) => feed.enable);
-
-  $: {
-    let loadingHeader = headersEdit.find((header) => header.label == "Loading/Queued");
-    if (loadingHeader) {
-      if (showProgress) {
-        // loadingHeader.progressDuration = shortLoadInterval;
-      } else {
-        loadingHeader.progressDuration = undefined;
-      }
-    }
+  interface Props {
+    edit?: boolean;
+    feeds?: Feed[];
+    placeholderFeed?: boolean;
+    updateFeed?: (feed: Feed) => Promise<void>;
+    clickFeed?: (feed: Feed) => Promise<void>;
+    feedViewTopSlot?: Snippet;
   }
 
-  // const shortLoadInterval = 5;
+  let {
+    edit = false,
+    feeds = [],
+    placeholderFeed = false,
+    updateFeed = async (_feed: Feed) => {},
+    clickFeed = async (_feed: Feed) => {},
+    feedViewTopSlot = undefined
+  }: Props = $props();
+
+  let subscribedFeeds = $derived(feeds.filter((feed) => feed.enable));
 
   let headers: TableHeader[] = [
     {
@@ -73,24 +71,27 @@
     (i) => i.attribute === "label" || i.attribute === "logs"
   );
 
-  let tableHeaders = headers;
-  $: if (edit !== undefined || placeholderFeed !== undefined) {
-    if (placeholderFeed) {
-      tableHeaders = headerPlaceholder;
-    } else if (edit) {
-      tableHeaders = headersEdit;
+  let tableHeaders = $derived.by(() => {
+    if (edit !== undefined || placeholderFeed !== undefined) {
+      if (placeholderFeed) {
+        return headerPlaceholder;
+      } else if (edit) {
+        return headersEdit;
+      } else {
+        return headers;
+      }
     } else {
-      tableHeaders = headers;
+      return [];
     }
-  }
+  });
 
-  let logLevels: { value: LogLevel; name: string }[] = [];
+  let logLevels: { value: LogLevel; name: string }[] = $state([]);
 
-  let loadConfigError: ErrorDetails | null;
+  let loadConfigError: ErrorDetails | null = $state(null);
 
-  let feedBlinkID = -1;
-  let isSubscribingAll = false;
-  let isUnSubscribingAll = false;
+  let feedBlinkID = $state(-1);
+  let isSubscribingAll = $state(false);
+  let isUnSubscribingAll = $state(false);
 
   onMount(async () => {
     const resp = await getLogLevels(!edit);
@@ -131,119 +132,137 @@
 
 {#if logLevels}
   <CustomTable title="Feeds" headers={tableHeaders}>
-    <div slot="top">
-      <slot name="top"></slot>
-    </div>
-    <div slot="header-right" class="flex gap-2">
-      {#if !placeholderFeed}
-        <Button
-          on:click={() => {
-            changeAllSubscriptions();
-          }}
-          class="flex gap-2"
-          color="light"
-          disabled={subscribedFeeds.length === feeds.length ||
-            isSubscribingAll ||
-            isUnSubscribingAll}
-          size="sm"
-        >
-          Subscribe all
-          {#if isSubscribingAll}
-            <Spinner color="gray" size="4"></Spinner>
-          {/if}
-        </Button>
-        <Button
-          on:click={() => {
-            changeAllSubscriptions(false);
-          }}
-          class="flex gap-2"
-          color="light"
-          disabled={subscribedFeeds.length === 0 || isSubscribingAll || isUnSubscribingAll}
-          size="sm"
-          >Unsubscribe all
-          {#if isUnSubscribingAll}
-            <Spinner color="gray" size="4"></Spinner>
-          {/if}
-        </Button>
+    {#snippet topSlot()}
+      {#if feedViewTopSlot}
+        <div>
+          {@render feedViewTopSlot()}
+        </div>
       {/if}
-    </div>
-    {#each feeds as feed, index (index)}
-      <tr class={feed.id === feedBlinkID ? "blink" : ""}>
-        {#if placeholderFeed}
-          <TableBodyCell {tdClass}>{feed.label}</TableBodyCell>
-          <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-            <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
-              <i class="bx bx-archive"> </i></a
-            >
-          </TableBodyCell>
-        {:else}
-          <TableBodyCell {tdClass}>
-            {#if feed.enable && !placeholderFeed}
-              <CIconButton
-                on:click={async () => {
-                  feed.enable = false;
-                  await updateFeed(feed);
-                  feed.id = undefined;
-                }}
-                icon="trash"
-              ></CIconButton>
-            {:else}
-              <CIconButton
-                on:click={async () => {
-                  feed.enable = true;
-                  await updateFeed(feed);
-                }}
-                icon="plus"
-              ></CIconButton>
-            {/if}
-          </TableBodyCell>
-          <TableBodyCell
-            on:click={async () => await clickFeed(feed)}
-            tdClass={`${tdClass} break-all whitespace-normal`}
+    {/snippet}
+    {#snippet headerRightSlot()}
+      <div class="flex gap-2">
+        {#if !placeholderFeed}
+          <Button
+            onclick={() => {
+              changeAllSubscriptions();
+            }}
+            class="flex gap-2"
+            color="light"
+            disabled={subscribedFeeds.length === feeds.length ||
+              isSubscribingAll ||
+              isUnSubscribingAll}
+            size="sm"
           >
-            {#if edit && feed.enable}
-              <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}
-                >{feed.url}</a
-              >
-            {:else}
-              <span class="text-amber-600">
-                {feed.url}
-              </span>
+            Subscribe all
+            {#if isSubscribingAll}
+              <Spinner color="gray" size="4"></Spinner>
             {/if}
-          </TableBodyCell>
-          <TableBodyCell {tdClass}
-            ><Select
-              items={logLevels}
-              bind:value={feed.log_level}
-              on:change={async () => await updateFeed(feed)}
-            /></TableBodyCell
-          >
-          {#if edit && !feed.enable}
-            <TableBodyCell {tdClass}>N/A</TableBodyCell>
-          {:else}
-            <TableBodyCell {tdClass}
-              ><Input bind:value={feed.label} on:input={async () => await updateFeed(feed)}
-              ></Input></TableBodyCell
-            >
-          {/if}
-          {#if edit}
-            <TableBodyCell {tdClass}
-              >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
-            >
-            <TableBodyCell {tdClass}
-              ><i class={"bx " + (feed.healthy ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
-            >
-            {#if feed.enable}
-              <TableBodyCell on:click={async () => await clickFeed(feed)} {tdClass}>
-                <a href={"javascript:void(0);"} on:click={async () => await clickFeed(feed)}>
-                  <i class="bx bx-archive"> </i></a
-                >
-              </TableBodyCell>
+          </Button>
+          <Button
+            onclick={() => {
+              changeAllSubscriptions(false);
+            }}
+            class="flex gap-2"
+            color="light"
+            disabled={subscribedFeeds.length === 0 || isSubscribingAll || isUnSubscribingAll}
+            size="sm"
+            >Unsubscribe all
+            {#if isUnSubscribingAll}
+              <Spinner color="gray" size="4"></Spinner>
             {/if}
-          {/if}
+          </Button>
         {/if}
-      </tr>
-    {/each}
+      </div>
+    {/snippet}
+    {#snippet mainSlot()}
+      {#each feeds as feed, index (index)}
+        <tr class={feed.id === feedBlinkID ? "blink" : ""}>
+          {#if placeholderFeed}
+            <TableBodyCell class={tdClass}>{feed.label}</TableBodyCell>
+            <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
+              <a
+                href={"javascript:void(0);"}
+                onclick={async () => await clickFeed(feed)}
+                aria-label="View feed archive"
+              >
+                <i class="bx bx-archive"> </i></a
+              >
+            </TableBodyCell>
+          {:else}
+            <TableBodyCell class={tdClass}>
+              {#if feed.enable && !placeholderFeed}
+                <CIconButton
+                  onClicked={async () => {
+                    feed.enable = false;
+                    await updateFeed(feed);
+                    feed.id = undefined;
+                  }}
+                  icon="trash"
+                ></CIconButton>
+              {:else}
+                <CIconButton
+                  onClicked={async () => {
+                    feed.enable = true;
+                    await updateFeed(feed);
+                  }}
+                  icon="plus"
+                ></CIconButton>
+              {/if}
+            </TableBodyCell>
+            <TableBodyCell
+              onclick={async () => await clickFeed(feed)}
+              class={`$class={tdClass} break-all whitespace-normal`}
+            >
+              {#if edit && feed.enable}
+                <a
+                  href={"javascript:void(0);"}
+                  onclick={async () => await clickFeed(feed)}
+                  aria-label="View feed details">{feed.url}</a
+                >
+              {:else}
+                <span class="text-amber-600">
+                  {feed.url}
+                </span>
+              {/if}
+            </TableBodyCell>
+            <TableBodyCell class={tdClass}
+              ><Select
+                items={logLevels}
+                bind:value={feed.log_level}
+                onchange={async () => await updateFeed(feed)}
+              /></TableBodyCell
+            >
+            {#if edit && !feed.enable}
+              <TableBodyCell class={tdClass}>N/A</TableBodyCell>
+            {:else}
+              <TableBodyCell class={tdClass}
+                ><Input bind:value={feed.label} oninput={async () => await updateFeed(feed)}
+                ></Input></TableBodyCell
+              >
+            {/if}
+            {#if edit}
+              <TableBodyCell class={tdClass}
+                >{(feed.stats?.downloading ?? 0) + "/" + (feed.stats?.waiting ?? 0)}</TableBodyCell
+              >
+              <TableBodyCell class={tdClass}
+                ><i class={"bx " + (feed.healthy ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
+              >
+              {#if feed.enable}
+                <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
+                  <a
+                    href={"javascript:void(0);"}
+                    onclick={async () => await clickFeed(feed)}
+                    aria-label="View feed archive"
+                  >
+                    <i class="bx bx-archive"> </i></a
+                  >
+                </TableBodyCell>
+              {/if}
+            {/if}
+          {/if}
+        </tr>
+      {/each}
+    {/snippet}
   </CustomTable>
 {/if}
 <ErrorMessage error={loadConfigError}></ErrorMessage>

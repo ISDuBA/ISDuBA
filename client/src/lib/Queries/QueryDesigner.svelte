@@ -26,29 +26,33 @@
   } from "$lib/Queries/query";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { push, querystring } from "svelte-spa-router";
   import { parse } from "qs";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import Sortable from "sortablejs";
 
-  export let params: any = null;
-  let wasNameEdited = false;
-  let queryCount: any = null;
-  let loading = false;
-  let errorMessage: ErrorDetails | null;
-  let saveErrorMessage: ErrorDetails | null;
-  let loadQueryError: ErrorDetails | null;
-  let loadedData: any = null;
-  let abortController: AbortController;
-  let columnList: any;
-  let hide = false;
-  let defaultQuery = false;
+  interface Props {
+    params?: any;
+  }
+
+  let { params = null }: Props = $props();
+  let wasNameEdited = $state(false);
+  let queryCount: any = $state(null);
+  let loading = $state(false);
+  let errorMessage: ErrorDetails | null = $state(null);
+  let saveErrorMessage: ErrorDetails | null = $state(null);
+  let loadQueryError: ErrorDetails | null = $state(null);
+  let loadedData: any = $state(null);
+  let abortController: AbortController | null = $state(null);
+  let columnList: any = $state();
+  let hide = $state(false);
+  let defaultQuery = $state(false);
   let ignoredQueries: number[] = [];
-  let isAllowedToEdit = true;
-  let sortable: any = null;
+  let isAllowedToEdit = $state(true);
+  let sortable: any = $state(null);
 
   const basicButtonClass = "h-8";
   const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
@@ -114,7 +118,7 @@
     };
   };
 
-  let currentSearch = newQuery();
+  let currentSearch = $state(newQuery());
 
   const sortColumns = (columns: Column[]): Column[] => {
     let nodes = columnList.querySelectorAll(".columnName");
@@ -315,22 +319,25 @@
     return undefined;
   };
 
-  $: if (columnList && isAllowedToEdit) {
-    sortable = Sortable.create(columnList, {
-      animation: 150
-    });
-  } else if (sortable && !isAllowedToEdit) {
-    sortable.option("disabled", true);
-  }
+  $effect(() => {
+    untrack(() => sortable);
+    if (columnList && isAllowedToEdit) {
+      sortable = Sortable.create(columnList, {
+        animation: 150
+      });
+    } else if (sortable && !isAllowedToEdit) {
+      sortable.option("disabled", true);
+    }
+  });
 
-  $: noColumnSelected = currentSearch.columns.every((c) => c.visible == false);
-  $: disableSave = noColumnSelected || currentSearch.name == "";
+  let noColumnSelected = $derived(currentSearch.columns.every((c) => c.visible == false));
+  let disableSave = $derived(noColumnSelected || currentSearch.name == "");
 </script>
 
 <SectionHeader title="Queries"></SectionHeader>
 <hr class="mb-6" />
 
-{#if loadQueryError !== null}
+{#if loadQueryError === null}
   <div class="md:w-3/4">
     <div class="flex flex-col">
       <div class="flex flex-row flex-wrap gap-4">
@@ -341,7 +348,7 @@
             >
             <Input
               disabled={!isAllowedToEdit}
-              on:input={() => {
+              oninput={() => {
                 wasNameEdited = true;
               }}
               bind:value={currentSearch.name}
@@ -366,7 +373,7 @@
           <span>Global:</span>
           <CCheckbox
             checked={currentSearch.global}
-            on:change={() => {
+            onChanged={() => {
               currentSearch.global = !currentSearch.global;
             }}
           ></CCheckbox>
@@ -377,7 +384,7 @@
         <CCheckbox
           checked={currentSearch.dashboard}
           disabled={!isAllowedToEdit}
-          on:change={() => {
+          onChanged={() => {
             currentSearch.dashboard = !currentSearch.dashboard;
           }}
         ></CCheckbox>
@@ -404,7 +411,7 @@
             ? pressedButtonClass
             : buttonClass}
           disabled={!isAllowedToEdit}
-          on:click={() => setSearchType(SEARCHTYPES.ADVISORY)}
+          onclick={() => setSearchType(SEARCHTYPES.ADVISORY)}
         >
           Advisories</Button
         >
@@ -413,12 +420,12 @@
             ? pressedButtonClass
             : buttonClass}
           disabled={!isAllowedToEdit}
-          on:click={() => setSearchType(SEARCHTYPES.DOCUMENT)}>Documents</Button
+          onclick={() => setSearchType(SEARCHTYPES.DOCUMENT)}>Documents</Button
         >
         <Button
           class={currentSearch.searchType === SEARCHTYPES.EVENT ? pressedButtonClass : buttonClass}
           disabled={!isAllowedToEdit}
-          on:click={() => setSearchType(SEARCHTYPES.EVENT)}>Events</Button
+          onclick={() => setSearchType(SEARCHTYPES.EVENT)}>Events</Button
         >
       </ButtonGroup>
     </div>
@@ -437,8 +444,8 @@
           <div
             role="presentation"
             class={`mb-1 flex flex-row items-center ${isAllowedToEdit ? "cursor-pointer" : "cursor-default"}`}
-            on:blur={() => {}}
-            on:focus={() => {}}
+            onblur={() => {}}
+            onfocus={() => {}}
           >
             {#if isAllowedToEdit}
               <div class:w-6={true} class:flex={true} class:flex-col={true}>
@@ -450,7 +457,7 @@
             <div class="columnName me-2 w-1/3 min-w-40">{col.name}</div>
             <div class="me-2 w-1/4 md:min-w-28">
               <CCheckbox
-                on:change={() => {
+                onChanged={() => {
                   setVisible(index);
                 }}
                 checked={currentSearch.columns[index].visible}
@@ -459,7 +466,7 @@
             </div>
             <button
               disabled={!isAllowedToEdit}
-              on:click={() => {
+              onclick={() => {
                 switchOrderDirection(col.name);
               }}
             >
@@ -504,13 +511,13 @@
         <ErrorMessage error={errorMessage}></ErrorMessage>
         <div class="my-2 ml-auto flex flex-row flex-wrap gap-3">
           {#if !loading}
-            <Button on:click={testQuery} color="light"
+            <Button onclick={testQuery} color="light"
               ><i class="bx bx-test-tube me-2"></i> Test query</Button
             >
           {/if}
           {#if loading}
             <Button
-              on:click={() => {
+              onclick={() => {
                 if (abortController) abortController.abort();
                 loading = false;
                 unsetMessages();
@@ -519,7 +526,7 @@
             >
           {/if}
           <Button
-            on:click={() => {
+            onclick={() => {
               if (loadedData) {
                 currentSearch = generateQueryFrom(loadedData);
               } else {
@@ -529,7 +536,7 @@
             }}
             color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
           >
-          <Button disabled={disableSave} on:click={saveQuery} color="green"
+          <Button disabled={disableSave} onclick={saveQuery} color="green"
             ><i class="bx bxs-save me-2"></i> Save</Button
           >
         </div>

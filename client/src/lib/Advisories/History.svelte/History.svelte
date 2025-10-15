@@ -17,34 +17,42 @@
     TableBodyRow
   } from "flowbite-svelte";
   import Comment from "$lib/Advisories/Comments/Comment.svelte";
-  import { createEventDispatcher } from "svelte";
   import { getReadableDateString } from "../CSAFWebview/helpers";
+  import type { Snippet } from "svelte";
 
   const intlFormat = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "medium"
   });
 
-  const dispatch = createEventDispatcher();
-  export let entries;
-  export let state = "";
-  let fullHistory = false;
+  interface Props {
+    entries: any;
+    workflowState: string;
+    onCommentUpdated: () => void;
+    additionalButtons?: Snippet;
+  }
+
+  let { entries, workflowState = "", onCommentUpdated, additionalButtons }: Props = $props();
+
+  let fullHistory = $state(false);
   const tdClass = "py-2 px-2";
 
-  $: historyEntries = fullHistory
-    ? entries
-    : entries.filter((e: any) => {
-        if (e.event_type === "add_comment") return e;
-      });
+  let historyEntries = $derived(
+    fullHistory
+      ? entries
+      : entries.filter((e: any) => {
+          if (e.event_type === "add_comment") return e;
+        })
+  );
 </script>
 
 <div class="flex max-h-[470px] flex-col overflow-auto p-1">
   <Table>
     <TableBody>
       {#each historyEntries as event}
-        <TableBodyRow color="custom">
+        <TableBodyRow color="default">
           {#if event.event_type !== "add_comment"}
-            <TableBodyCell {tdClass}>
+            <TableBodyCell class={tdClass}>
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
                   <small
@@ -82,9 +90,9 @@
           {/if}
           {#if event.event_type === "add_comment"}
             <Comment
-              {state}
-              on:commentUpdate={() => {
-                dispatch("commentUpdate");
+              {workflowState}
+              onCommentUpdated={() => {
+                onCommentUpdated();
               }}
               comment={event}
               {fullHistory}
@@ -100,13 +108,15 @@
     >
   {/if}
   <div class="mt-6 flex flex-row justify-end gap-2">
-    <slot name="additionalButtons"></slot>
+    {#if additionalButtons}
+      {@render additionalButtons()}
+    {/if}
     <ButtonGroup class="h-7">
       <Button
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${!fullHistory ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           fullHistory = false;
         }}>Comments</Button
       >
@@ -114,7 +124,7 @@
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${fullHistory ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           fullHistory = true;
         }}>History</Button
       >

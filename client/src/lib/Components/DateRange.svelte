@@ -10,15 +10,24 @@
 
 <script lang="ts">
   import { Button, Input, Label } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
   import TimeInput from "./TimeInput.svelte";
 
-  export let clearable = false;
-  export let from: Date | undefined;
-  export let to: Date | undefined;
-  export let showTimeControls = false;
+  interface Props {
+    clearable?: boolean;
+    from: Date | undefined;
+    to: Date | undefined;
+    showTimeControls?: boolean;
+    onChanged?: () => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let {
+    clearable = false,
+    from = $bindable(),
+    to = $bindable(),
+    showTimeControls = false,
+    onChanged = undefined
+  }: Props = $props();
+
   const uuid = crypto.randomUUID();
   const fromId = `from-${uuid}`;
   const toId = `to-${uuid}`;
@@ -26,22 +35,28 @@
   const resetButtonClass = "rounded-s-none px-3";
   const defaultInputClass = "h-fit";
   const inputClass = `${defaultInputClass} ${clearable || showTimeControls ? "rounded-e-none" : ""}`;
-  let hideFrom = false;
-  let hideTo = false;
-  let fromString: string | undefined;
-  let toString: string | undefined;
-  let fromTimeInput: any;
-  let toTimeInput: any;
+  let hideFrom = $state(false);
+  let hideTo = $state(false);
+  let fromString: string | undefined = $state();
+  let toString: string | undefined = $state();
+  let fromTimeInput: any = $state();
+  let toTimeInput: any = $state();
 
-  $: if (from) {
-    fromString = from.toISOString().split("T")[0];
-  }
-  $: if (to) {
-    toString = to.toISOString().split("T")[0];
-  }
+  $effect(() => {
+    if (from) {
+      fromString = from.toISOString().split("T")[0];
+    }
+  });
+  $effect(() => {
+    if (to) {
+      toString = to.toISOString().split("T")[0];
+    }
+  });
 
   const onChange = () => {
-    dispatch("change");
+    if (onChanged) {
+      onChanged();
+    }
   };
 
   /*
@@ -137,19 +152,18 @@
     </Label>
     <div class="flex">
       {#if !hideFrom}
-        <Input class={inputClass} let:props>
-          <input on:input={onDateChanged} id={fromId} type="date" {...props} value={fromString} />
+        <Input class={inputClass}>
+          {#snippet children(props)}
+            <input oninput={onDateChanged} id={fromId} type="date" {...props} value={fromString} />
+          {/snippet}
         </Input>
       {/if}
       {#if showTimeControls}
-        <TimeInput
-          bind:this={fromTimeInput}
-          on:timeChanged={onFromTimeChanged}
-          roundEnd={!clearable}
+        <TimeInput bind:this={fromTimeInput} onTimeChanged={onFromTimeChanged} roundEnd={!clearable}
         ></TimeInput>
       {/if}
       {#if clearable}
-        <Button color="light" class={resetButtonClass} on:click={clearFrom}>
+        <Button color="light" class={resetButtonClass} onclick={clearFrom}>
           <i class={iconClass}></i>
         </Button>
       {/if}
@@ -165,16 +179,18 @@
     </Label>
     <div class="flex">
       {#if !hideTo}
-        <Input class={inputClass} let:props>
-          <input on:input={onDateChanged} id={toId} type="date" {...props} value={toString} />
+        <Input class={inputClass}>
+          {#snippet children(props)}
+            <input oninput={onDateChanged} id={toId} type="date" {...props} value={toString} />
+          {/snippet}
         </Input>
       {/if}
       {#if showTimeControls}
-        <TimeInput bind:this={toTimeInput} on:timeChanged={onToTimeChanged} roundEnd={!clearable}
+        <TimeInput bind:this={toTimeInput} onTimeChanged={onToTimeChanged} roundEnd={!clearable}
         ></TimeInput>
       {/if}
       {#if clearable}
-        <Button color="light" class={resetButtonClass} on:click={clearTo}>
+        <Button color="light" class={resetButtonClass} onclick={clearTo}>
           <i class={iconClass}></i>
         </Button>
       {/if}

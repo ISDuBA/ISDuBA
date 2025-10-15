@@ -10,19 +10,24 @@
 
 <script lang="ts">
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  export let keys: Array<string>;
-  export let values: any;
+
+  interface Props {
+    keys: Array<string>;
+    values: any;
+  }
+  let { keys, values }: Props = $props();
+
   const cellStyle = "px-6 py-0";
 </script>
 
 <div class="ml-2 w-fit">
-  <Table noborder>
+  <Table border={false}>
     <TableBody>
       {#each keys as key, index}
         {#if key === "text" || key === "Text"}
-          <TableBodyRow color="custom">
-            <TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}>
+          <TableBodyRow color="default">
+            <TableBodyCell class={cellStyle}>{key}</TableBodyCell>
+            <TableBodyCell class={cellStyle}>
               <div class="markdown-text">
                 <div class="display-markdown max-w-2/3">
                   {index}
@@ -31,9 +36,9 @@
             </TableBodyCell>
           </TableBodyRow>
         {:else}
-          <TableBodyRow color="custom"
-            ><TableBodyCell tdClass={cellStyle}>{key}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}>
+          <TableBodyRow color="default"
+            ><TableBodyCell class={cellStyle}>{key}</TableBodyCell>
+            <TableBodyCell class={cellStyle}>
               {#if typeof values[index] === "string" && values[index].startsWith && values[index].startsWith("https://")}
                 <a class="underline" href={values[index]}>
                   <i class="bx bx-link"></i>{values[index]}

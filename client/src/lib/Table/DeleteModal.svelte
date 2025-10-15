@@ -13,20 +13,25 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { SEARCHTYPES } from "$lib/Queries/query";
   import { request } from "$lib/request";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { Button, Modal, Spinner } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
 
-  export let documents: any[] = [];
-  export let type: SEARCHTYPES;
-
-  $: isDeleteModalOpen = $appStore.app.isDeleteModalOpen;
-  $: if (!isDeleteModalOpen) {
-    errorMessage = null;
+  interface Props {
+    documents?: any[];
+    type: SEARCHTYPES;
+    onDeleted: () => void;
   }
-  let errorMessage: ErrorDetails | null = null;
-  let isLoading = false;
-  const dispatch = createEventDispatcher();
+
+  let { documents = [], type, onDeleted }: Props = $props();
+
+  let isDeleteModalOpen = $derived(appStore.state.app.isDeleteModalOpen);
+  $effect(() => {
+    if (!isDeleteModalOpen) {
+      errorMessage = null;
+    }
+  });
+  let errorMessage: ErrorDetails | null = $state(null);
+  let isLoading = $state(false);
 
   const deleteDocuments = async () => {
     errorMessage = null;
@@ -53,7 +58,7 @@
     }
     isLoading = false;
     if (!failed) {
-      dispatch("deleted");
+      onDeleted();
       appStore.setIsDeleteModalOpen(false);
     }
   };
@@ -62,7 +67,7 @@
 <Modal
   size="xs"
   title={documents.length === 1 ? documents[0].title : `Delete ${type}`}
-  bind:open={$appStore.app.isDeleteModalOpen}
+  bind:open={appStore.state.app.isDeleteModalOpen}
   autoclose
   outsideclose
 >
@@ -77,7 +82,7 @@
       {/if}
     </h3>
     <Button
-      on:click={() => {
+      onclick={() => {
         deleteDocuments();
       }}
       color="red"
@@ -85,7 +90,7 @@
     >
       <span>Yes, I'm sure</span>
       <div class:invisible={!isLoading} class:ms-2={true} class={isLoading ? "loadingFadeIn" : ""}>
-        <Spinner color="white" size="4"></Spinner>
+        <Spinner color="gray" size="4"></Spinner>
       </div>
     </Button>
     <Button color="alternative">No, cancel</Button>

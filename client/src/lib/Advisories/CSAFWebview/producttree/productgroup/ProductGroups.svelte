@@ -10,7 +10,11 @@
 
 <script lang="ts">
   import ProductGroup from "./ProductGroup.svelte";
-  export let productGroups: any;
+
+  interface Props {
+    productGroups: any;
+  }
+  let { productGroups }: Props = $props();
 </script>
 
 {#if productGroups}

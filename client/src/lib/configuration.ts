@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { appStore } from "./store";
+import { appStore } from "./store.svelte";
 import { type UserManagerSettings, WebStorageStateStore } from "oidc-client-ts";
 
 const url = window.location.origin;

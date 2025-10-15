@@ -10,11 +10,14 @@
 <script lang="ts">
   import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR, REVIEWER } from "$lib/workflow";
   import { allowedToChangeWorkflow, isRoleIncluded } from "$lib/permissions";
-  import { appStore } from "$lib/store";
-  import { Badge } from "flowbite-svelte";
+  import { appStore } from "$lib/store.svelte";
+  import CBadge from "$lib/Components/CBadge.svelte";
 
-  export let advisoryState = "";
-  export let updateStateFn;
+  interface Props {
+    advisoryState: string;
+    updateStateFn: (state: string) => Promise<void>;
+  }
+  let { advisoryState = "", updateStateFn }: Props = $props();
 
   const updateStateIfAllowed = async (state: string) => {
     if (allowedToChangeWorkflow(appStore.getRoles(), advisoryState, state)) {
@@ -34,108 +37,112 @@
 </script>
 
 {#if advisoryState}
-  <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(NEW)}>
-    <Badge title="Mark as new" class="flex w-fit gap-1" color={getBadgeColor(NEW, advisoryState)}>
+  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(NEW)}>
+    <CBadge title="Mark as new" class="flex w-fit gap-1" color={getBadgeColor(NEW, advisoryState)}>
       <i class="bx bxs-certification"></i>
       <span>{NEW}</span>
-    </Badge>
+    </CBadge>
   </a>
-  <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(READ)}>
-    <Badge title="Mark as read" class="flex w-fit gap-1" color={getBadgeColor(READ, advisoryState)}>
+  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(READ)}>
+    <CBadge
+      title="Mark as read"
+      class="flex w-fit gap-1"
+      color={getBadgeColor(READ, advisoryState)}
+    >
       <i class="bx bx-show"></i>
-      <span>{READ}</span></Badge
+      <span>{READ}</span></CBadge
     >
   </a>
   {#if isRoleIncluded(appStore.getRoles(), [EDITOR, REVIEWER]) && advisoryState === REVIEW}
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => {
+      onclick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
+      <CBadge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
         <i class="bx bxs-analyse"></i>
-        <span>{ASSESSING}</span></Badge
+        <span>{ASSESSING}</span></CBadge
       >
     </a>
   {:else if isRoleIncluded(appStore.getRoles(), [EDITOR]) && advisoryState === ARCHIVED}
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => {
+      onclick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
+      <CBadge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
         <i class="bx bxs-analyse"></i>
         <span>{ASSESSING}</span>
-      </Badge>
+      </CBadge>
     </a>
   {:else}
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => updateStateIfAllowed(ASSESSING)}
+      onclick={() => updateStateIfAllowed(ASSESSING)}
     >
-      <Badge
+      <CBadge
         title="Mark as assesing"
         class="flex w-fit gap-1"
         color={getBadgeColor(ASSESSING, advisoryState)}
       >
         <i class="bx bxs-analyse"></i>
         <span>{ASSESSING}</span>
-      </Badge>
+      </CBadge>
     </a>
   {/if}
   {#if advisoryState === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => {
+      onclick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
     >
-      <Badge title="Release for review" class="flex w-fit gap-1" color="dark">
+      <CBadge title="Release for review" class="flex w-fit gap-1" color="dark">
         <i class="bx bx-book-open"></i>
         <span>{REVIEW}</span>
-      </Badge>
+      </CBadge>
     </a>
   {:else}
     <a
       href={"javascript:void(0);"}
       class="inline-flex"
-      on:click={() => updateStateIfAllowed(REVIEW)}
+      onclick={() => updateStateIfAllowed(REVIEW)}
     >
-      <Badge
+      <CBadge
         title="Release for review"
         class="flex w-fit gap-1"
         color={getBadgeColor(REVIEW, advisoryState)}
       >
         <i class="bx bx-book-open"></i>
         <span>{REVIEW}</span>
-      </Badge>
+      </CBadge>
     </a>
   {/if}
   <a
     href={"javascript:void(0);"}
     class="inline-flex"
-    on:click={() => updateStateIfAllowed(ARCHIVED)}
+    onclick={() => updateStateIfAllowed(ARCHIVED)}
   >
-    <Badge title="Archive" class="flex w-fit gap-1" color={getBadgeColor(ARCHIVED, advisoryState)}>
+    <CBadge title="Archive" class="flex w-fit gap-1" color={getBadgeColor(ARCHIVED, advisoryState)}>
       <i class="bx bx-archive"></i>
       <span>{ARCHIVED}</span>
-    </Badge>
+    </CBadge>
   </a>
-  <a href={"javascript:void(0);"} class="inline-flex" on:click={() => updateStateIfAllowed(DELETE)}>
-    <Badge
+  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(DELETE)}>
+    <CBadge
       title="Mark for deletion"
-      on:click={() => updateStateFn(DELETE)}
+      onclick={() => updateStateFn(DELETE)}
       class="flex w-fit gap-1"
       color={getBadgeColor(DELETE, advisoryState)}
     >
       <i class="bx bx-trash"></i>
       <span>{DELETE}</span>
-    </Badge>
+    </CBadge>
   </a>
 {/if}

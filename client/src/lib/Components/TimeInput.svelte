@@ -10,18 +10,31 @@
 
 <script lang="ts">
   import { Input } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
 
-  export let roundEnd = true;
-  export let hours: number | string | undefined = undefined;
-  export let minutes: number | string | undefined = undefined;
+  interface Time {
+    hours: number;
+    minutes: number;
+  }
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    roundEnd?: boolean;
+    hours?: number | string | undefined;
+    minutes?: number | string | undefined;
+    onTimeChanged: (time: Time) => void;
+  }
+
+  let {
+    roundEnd = true,
+    hours = $bindable(undefined),
+    minutes = $bindable(undefined),
+    onTimeChanged
+  }: Props = $props();
+
   const minutesInputClass = `w-20 rounded-s-none ${roundEnd ? "" : "rounded-e-none"}`;
   const numberRegex = /\d/i;
 
   const timeChanged = () => {
-    dispatch("timeChanged", {
+    onTimeChanged({
       hours: hours === "" ? 0 : Number(hours),
       minutes: minutes === "" ? 0 : Number(minutes)
     });
@@ -70,14 +83,14 @@
 </script>
 
 <Input
-  on:input={hoursChanged}
+  oninput={hoursChanged}
   bind:value={hours}
   class="w-20 rounded-s-none rounded-e-none"
   placeholder="hh"
   type="number"
 />
 <Input
-  on:input={minutesChanged}
+  oninput={minutesChanged}
   bind:value={minutes}
   class={minutesInputClass}
   placeholder="mm"

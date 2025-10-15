@@ -25,7 +25,7 @@
   } from "$lib/Statistics/statistics";
   import Chart from "chart.js/auto";
   import { Button, ButtonGroup, Spinner } from "flowbite-svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, untrack } from "svelte";
   import "chartjs-adapter-moment";
   import StatsTable from "./StatsTable.svelte";
   import {
@@ -39,24 +39,43 @@
     toLocaleISOString
   } from "$lib/time";
   import chroma from "chroma-js";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import DateRange from "$lib/Components/DateRange.svelte";
   import debounce from "debounce";
 
-  export let chartType: "bar" | "line" | "scatter" = "bar";
-  export let divContainerClass = "mb-16";
-  export let height = "140pt";
-  export let stepsInMinutes = 30;
-  export let showLegend = false;
-  export let showRangeSelection = false;
-  export let initialFrom: Date = new Date(Date.now() - DAY_MS * 2);
-  export let updateIntervalInMinutes: number | null = null;
-  export let title = `Imports / ${stepsInMinutes} min`;
-  export let axes: Axis[] = [{ label: "Docs", types: ["imports"] }];
-  export let isStacked = false;
-  export let showModeToggle = false;
-  export let colors: string[] | undefined = undefined;
-  export let source: Source | null = null;
+  interface Props {
+    chartType?: "bar" | "line" | "scatter";
+    divContainerClass?: string;
+    height?: string;
+    stepsInMinutes?: number;
+    showLegend?: boolean;
+    showRangeSelection?: boolean;
+    initialFrom?: Date;
+    updateIntervalInMinutes?: number | null;
+    title?: any;
+    axes?: Axis[];
+    isStacked?: boolean;
+    showModeToggle?: boolean;
+    colors?: string[] | undefined;
+    source?: Source | null;
+  }
+
+  let {
+    chartType = "bar",
+    divContainerClass = "mb-16",
+    height = "140pt",
+    stepsInMinutes = 30,
+    showLegend = false,
+    showRangeSelection = false,
+    initialFrom = new Date(Date.now() - DAY_MS * 2),
+    updateIntervalInMinutes = null,
+    title = `Imports / ${stepsInMinutes} min`,
+    axes = [{ label: "Docs", types: ["imports"] }],
+    isStacked = false,
+    showModeToggle = false,
+    colors = undefined,
+    source = null
+  }: Props = $props();
 
   type Axis = {
     label: string;
@@ -68,16 +87,16 @@
     isFeed: boolean;
   };
 
-  let from: Date = initialFrom;
-  let to: Date = new Date();
-  let error: ErrorDetails | null = null;
-  let chartComponentRef: any;
+  let from: Date = $state(initialFrom);
+  let to: Date = $state(new Date());
+  let error: ErrorDetails | null = $state(null);
+  let chartComponentRef: any = $state();
   let chart: any;
-  let isLoading = false;
-  let stats: StatisticGroup = {};
+  let isLoading = $state(false);
+  let stats: StatisticGroup = $state({});
   let intervalID: ReturnType<typeof setInterval> | null;
   let stepsInMilliseconds = 1000 * 60 * stepsInMinutes;
-  let mode: StatisticsMode = "diagram";
+  let mode: StatisticsMode = $state("diagram");
   let abortController: AbortController | undefined = undefined;
   const basicButtonClass = "py-1 px-3";
   const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
@@ -95,33 +114,35 @@
   ];
   const rangeColors = ["#ddd", "#FFEFB0", "#E6A776", "#CD5D3A", "#B41500"];
 
-  let darkMode = $appStore.app.isDarkMode;
+  let darkMode = $state(appStore.state.app.isDarkMode);
 
-  $: {
-    if ($appStore.app.isDarkMode !== darkMode) {
-      darkMode = $appStore.app.isDarkMode;
+  $effect(() => {
+    untrack(() => chart);
+    if (appStore.state.app.isDarkMode !== darkMode) {
+      darkMode = appStore.state.app.isDarkMode;
       updateChartColors();
     }
-  }
-
-  $: types = axes.map((axis) => axis.types).flat();
-  $: datasets = Object.keys(stats).map((key: string, index: number) => {
-    let label = getLabelForKey(key);
-    const yAxisID = axes.findIndex((axis) => axis.types.includes(key as StatisticType));
-    const color = getColor(index);
-    return {
-      label: label,
-      data: stats[key]?.map((s) => {
-        return { x: s[0], y: s[1] };
-      }),
-      borderWidth: chartType === "line" ? 2 : 0,
-      backgroundColor: chartType === "line" ? chroma(color).brighten(1.4).hex() : color,
-      borderColor: color,
-      fill: true,
-      pointBackgroundColor: color,
-      yAxisID: `y${yAxisID > 0 ? yAxisID : ""}`
-    };
   });
+  let types = $derived(axes.map((axis) => axis.types).flat());
+  let datasets = $derived(
+    Object.keys(stats).map((key: string, index: number) => {
+      let label = getLabelForKey(key);
+      const yAxisID = axes.findIndex((axis) => axis.types.includes(key as StatisticType));
+      const color = getColor(index);
+      return {
+        label: label,
+        data: stats[key]?.map((s) => {
+          return { x: s[0], y: s[1] };
+        }),
+        borderWidth: chartType === "line" ? 2 : 0,
+        backgroundColor: chartType === "line" ? chroma(color).brighten(1.4).hex() : color,
+        borderColor: color,
+        fill: true,
+        pointBackgroundColor: color,
+        yAxisID: `y${yAxisID > 0 ? yAxisID : ""}`
+      };
+    })
+  );
 
   const getColor = (index: number) => {
     let color;
@@ -603,11 +624,11 @@
         <ButtonGroup>
           <Button
             class={mode === "diagram" ? pressedButtonClass : buttonClass}
-            on:click={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
+            onclick={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
           >
           <Button
             class={mode === "table" ? pressedButtonClass : buttonClass}
-            on:click={() => setMode("table")}><i class="bx bx-table"></i></Button
+            onclick={() => setMode("table")}><i class="bx bx-table"></i></Button
           >
         </ButtonGroup>
       {/if}
@@ -629,20 +650,20 @@
     {/if}
     {#if showRangeSelection}
       <div class="my-2 flex flex-wrap items-end justify-start gap-4 md:justify-center">
-        <DateRange on:change={onSelectedDate} bind:from bind:to></DateRange>
+        <DateRange onChanged={onSelectedDate} bind:from bind:to></DateRange>
         <ButtonGroup class="h-fit">
           <Button
-            on:click={() => {
+            onclick={() => {
               selectPredefinedRange("day");
             }}>Day</Button
           >
           <Button
-            on:click={() => {
+            onclick={() => {
               selectPredefinedRange("month");
             }}>Month</Button
           >
           <Button
-            on:click={() => {
+            onclick={() => {
               selectPredefinedRange("year");
             }}>Year</Button
           >

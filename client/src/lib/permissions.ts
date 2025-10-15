@@ -8,7 +8,7 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
-import { appStore } from "./store";
+import { appStore } from "./store.svelte";
 import type { Role, WorkflowState, WorkflowStateTransition } from "./workflow";
 import { NEW, READ, REVIEW, ASSESSING, ARCHIVED, DELETE, WORKFLOW_TRANSITIONS } from "./workflow";
 
