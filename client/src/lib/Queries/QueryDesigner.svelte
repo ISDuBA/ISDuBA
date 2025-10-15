@@ -336,11 +336,13 @@
       <div class="flex flex-row flex-wrap gap-4">
         <div class="flex w-1/3 min-w-56 flex-col gap-x-2">
           <div>
-            <Label class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : ""}
-              >Name:</Label
+            <Label
+              class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : ""}
+              for="query-name">Name:</Label
             >
             <Input
               disabled={!isAllowedToEdit}
+              id="query-name"
               on:input={() => {
                 wasNameEdited = true;
               }}
@@ -355,8 +357,12 @@
           </div>
         </div>
         <div class="mb-4 flex w-1/3 min-w-56 flex-col gap-x-2 md:mb-0 md:min-w-96">
-          <Label>Description:</Label>
-          <Input disabled={!isAllowedToEdit} bind:value={currentSearch.description} />
+          <Label for="query-description">Description:</Label>
+          <Input
+            disabled={!isAllowedToEdit}
+            id="query-description"
+            bind:value={currentSearch.description}
+          />
         </div>
       </div>
     </div>
