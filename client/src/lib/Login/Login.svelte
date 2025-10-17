@@ -104,17 +104,17 @@
           <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
         <div class="flex flex-row gap-4">
-          <div class="flex flex-col flex-grow">
+          <div class="flex flex-grow flex-col">
             <A href="/swagger/index.html" class="text-left no-underline hover:underline">API</A>
           </div>
-        <div class="flex flex-col flex-grow">
-          <span class="dark:text-white text-right">
-            ISDuBA is Free Software  →<A
-              href="https://github.com/ISDuBA/"
-              class="hover:underline no-underline">Github</A
-            >
-          </span>
-        </div>
+          <div class="flex flex-grow flex-col">
+            <span class="text-right dark:text-white">
+              ISDuBA is Free Software →<A
+                href="https://github.com/ISDuBA/"
+                class="no-underline hover:underline">Github</A
+              >
+            </span>
+          </div>
         </div>
       </div>
     </Card>
