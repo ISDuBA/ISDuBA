@@ -14,7 +14,8 @@
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import { getContext } from "svelte";
-  import { setIgnored, updateStoredQuery, type Query } from "./query";
+  import { setIgnored, updateStoredQuery } from "./query";
+  import type { Order, Query } from "./query";
   import { push } from "svelte-spa-router";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
@@ -46,10 +47,6 @@
   const updateQueryOrder = async (queries: Query[]) => {
     await navigator.locks.request("updateQuery", async () => {
       let nodes = columnList.querySelectorAll(".columnName");
-      type Order = {
-        id: number;
-        order: number;
-      };
       let orders: Order[] = [];
       let i = 0;
       for (const node of nodes) {
@@ -67,6 +64,7 @@
       }
       if (response.ok) {
         push(`/queries/`);
+        queryContext["setNewOrder"]?.(orders);
       }
     });
   };

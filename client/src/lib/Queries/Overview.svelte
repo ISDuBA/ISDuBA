@@ -18,6 +18,8 @@
   import { appStore } from "$lib/store";
   import { fetchIgnored, setIgnored, createStoredQuery, proposeName, type Query } from "./query";
   import QueryTable from "./QueryTable.svelte";
+  import type { Order } from "./query";
+
   let deleteModalOpen = false;
 
   const resetQueryToDelete = () => {
@@ -191,10 +193,21 @@
     }
   };
 
+  const setNewOrder = (orders: Order[]) => {
+    queries?.forEach((q) => {
+      const order = orders.find((o) => o.id === q.id);
+      if (order) {
+        q.num = order.order;
+      }
+    });
+  };
+
   setContext("queryContext", {
-    cloneQuery: cloneQuery,
+    cloneQuery,
     openDeleteModal: onOpenDeleteModal,
-    updateIgnored: updateIgnored
+    updateIgnored,
+    setNewOrder,
+    loading
   });
 </script>
 

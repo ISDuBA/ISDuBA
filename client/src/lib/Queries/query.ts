@@ -171,6 +171,11 @@ type Query = {
   role: Role;
 };
 
+type Order = {
+  id: number;
+  order: number;
+};
+
 const generateQueryString = (currentSearch: Search) => {
   const chosenColumns = currentSearch.columns.filter((c: any) => {
     return c.visible === true;
@@ -300,4 +305,4 @@ export {
   SEARCHTYPES,
   SEARCHPAGECOLUMNS
 };
-export type { Column, Query, Search };
+export type { Column, Order, Query, Search };
