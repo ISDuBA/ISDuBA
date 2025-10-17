@@ -52,6 +52,9 @@
           bind:files
           multiple
           accept=".json"
+          on:change={() => {
+            filesCache = undefined;
+          }}
         />
       {/if}
     </div>
@@ -104,6 +107,16 @@
             {#if info?.message}
               <div>{info.message}</div>
             {/if}
+          </ListgroupItem>
+        {/each}
+      </Listgroup>
+    {:else if files}
+      <Listgroup class="mt-6">
+        {#each files as file}
+          <ListgroupItem>
+            <div class="flex items-center gap-1">
+              <div class={`font-bold text-black dark:text-white`}>{file.name}</div>
+            </div>
           </ListgroupItem>
         {/each}
       </Listgroup>
