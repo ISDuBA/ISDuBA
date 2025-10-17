@@ -103,14 +103,18 @@
           <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
           <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
-        <div class="flex flex-col gap-4">
-          <span class="dark:text-white">
-            ISDuBA is Free Software. The source code is <A
+        <div class="flex flex-row gap-4">
+          <div class="flex flex-col flex-grow">
+            <A href="/swagger/index.html" class="text-left no-underline hover:underline">API</A>
+          </div>
+        <div class="flex flex-col flex-grow">
+          <span class="dark:text-white text-right">
+            ISDuBA is Free Software  →<A
               href="https://github.com/ISDuBA/"
-              class="underline hover:no-underline">available on Github</A
-            >.
+              class="hover:underline no-underline">Github</A
+            >
           </span>
-          <A href="/swagger/index.html" class="underline hover:no-underline">API documentation</A>
+        </div>
         </div>
       </div>
     </Card>
@@ -169,10 +173,7 @@
       <P>
         {#await getVersion() then version}
           {#if !versionError}
-            <span class="text-xl">Version:</span>
-            <List tag="ul" class="space-y-1" list="none">
-              <Li liClass="ml-3">{version}</Li>
-            </List>
+            <span class="text-m">Version: {version}</span>
           {/if}
         {/await}
       </P>
