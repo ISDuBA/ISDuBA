@@ -104,7 +104,7 @@
           <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
         <div class="flex flex-col gap-4">
-          <span class="text-white">
+          <span class="dark:text-white">
             ISDuBA is Free Software. The source code is <A
               href="https://github.com/ISDuBA/"
               class="underline hover:no-underline">available on Github</A
