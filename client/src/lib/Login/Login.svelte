@@ -98,19 +98,24 @@
             </div>
           {/if}
           <Button on:click={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
-          <P>
-            ISDuBA is Free Software.
-            <A href="https://github.com/ISDuBA/" class="underline hover:no-underline"
-              >The source code is available on Github.</A
-            ><A href="/swagger/index.html" class="underline hover:no-underline"
-              >ISDuBA API documentation.</A
-            ></P
-          >
         {/if}
         {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
           <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
           <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
+        <div class="flex flex-row gap-4">
+          <div class="flex flex-grow flex-col">
+            <A href="/swagger/index.html" class="text-left no-underline hover:underline">API</A>
+          </div>
+          <div class="flex flex-grow flex-col">
+            <span class="text-right dark:text-white">
+              ISDuBA is Free Software →<A
+                href="https://github.com/ISDuBA/"
+                class="no-underline hover:underline">Github</A
+              >
+            </span>
+          </div>
+        </div>
       </div>
     </Card>
     {#if $appStore.app.isUserLoggedIn && !$appStore.app.sessionExpired}
@@ -168,17 +173,9 @@
       <P>
         {#await getVersion() then version}
           {#if !versionError}
-            <span class="text-xl">Versions:</span>
-            <List tag="ul" class="space-y-1" list="none">
-              <Li liClass="ml-3">ISDuBA: {version}</Li>
-            </List>
+            <span class="text-m">Version: {version}</span>
           {/if}
         {/await}
-      </P>
-      <P>
-        <A href="/swagger/index.html" class="underline hover:no-underline"
-          >ISDuBA API documentation</A
-        >
       </P>
     {/if}
     <ErrorMessage error={viewError}></ErrorMessage>
