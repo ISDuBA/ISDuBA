@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { test as setup } from "@playwright/test";
+import { expect, test as setup } from "@playwright/test";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -32,10 +32,13 @@ setup("authenticate and upload document", async ({ page }) => {
   // Upload test document
   await page.goto("/#/sources");
   await page.getByRole("button", { name: " Upload documents" }).click();
+  // Test if the upload button is disabled when no files were added yet
+  const uploadButton = page.getByRole("button", { name: "Upload" });
+  await expect(uploadButton).toBeDisabled();
   await page
     .locator('input[type="file"]')
     .setInputFiles("../docs/example-advisories/avendor-advisory-0004.json");
-  await page.getByRole("button", { name: "Upload" }).click();
+  await uploadButton.click();
 
   // End of authentication steps.
 

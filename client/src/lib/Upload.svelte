@@ -9,24 +9,22 @@
 -->
 
 <script lang="ts">
-  import {
-    Button,
-    Card,
-    Fileupload,
-    Label,
-    Listgroup,
-    ListgroupItem,
-    Tooltip
-  } from "flowbite-svelte";
+  import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
+  import { tick } from "svelte";
   export let label;
-  export let upload = async (files: FileList): Promise<UploadInfo[]> => {
+  export let upload = async (
+    files: FileList,
+    updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
+  ): Promise<UploadInfo[]> => {
     // eslint-disable-next-line no-console
-    console.log(files, uploadInfo);
+    console.log(files, uploadInfo, updateCallback);
     return [];
   };
+  export let cancel = () => {};
 
   export let uploadInfo: UploadInfo[] = [];
+  let isUploading = false;
 
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
@@ -35,37 +33,104 @@
     }
     return "";
   };
-  let files: FileList;
+  let files: FileList | undefined;
+  let filesCache: FileList | undefined;
+  let showFileInput = true;
   $: if (files) {
     uploadInfo = [];
   }
 </script>
 
 <Card size="lg">
-  <div class={`flex flex-col ${files?.length > 1 ? "mb-4" : "mb-40"}`}>
-    <Label class="pb-2">{label}</Label>
-    <Fileupload value="" bind:files multiple />
-    <Listgroup class="mt-6">
-      {#if !files}
-        <ListgroupItem>No files selected</ListgroupItem>
-      {:else}
-        {#each files as file, i}
+  <div class={`flex flex-col gap-4 ${files?.length && files.length > 1 ? "mb-4" : "mb-40"}`}>
+    <div>
+      <Label class="pb-2">{label}</Label>
+      {#if showFileInput}
+        <Fileupload
+          inputClass="cursor-pointer disabled:cursor-not-allowed border !p-0 dark:text-gray-400"
+          class="file:bg-primary-800"
+          value=""
+          bind:files
+          multiple
+          accept=".json"
+          on:change={() => {
+            filesCache = undefined;
+          }}
+        />
+      {/if}
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      {#if isUploading}
+        <div class="flex w-fit gap-2">
+          <span>Uploading ...</span>
+          <div class="w-fit min-w-8">
+            <span class="min-w-16">{uploadInfo?.length}</span>/<span class="min-w-16"
+              >{files?.length ?? 1}</span
+            >
+          </div>
+        </div>
+      {/if}
+      {#if isUploading}
+        <Button
+          on:click={() => {
+            cancel();
+          }}
+          color="red">Cancel</Button
+        >
+      {/if}
+      <Button
+        on:click={async () => {
+          isUploading = true;
+          setTimeout(async () => {
+            if (files) {
+              filesCache = files;
+              uploadInfo = await upload(files, (info) => {
+                uploadInfo = info;
+              });
+            }
+            files = undefined;
+            // This is a hack. The file input has to be re-added to the DOM. Otherwise it would not change
+            // the label "x files selected." to its initial value even if we set files to undefined.
+            showFileInput = false;
+            await tick();
+            showFileInput = true;
+            isUploading = false;
+          });
+        }}
+        color="primary"
+        disabled={isUploading || !files || files.length === 0}>Upload</Button
+      >
+    </div>
+    {#if filesCache}
+      <Listgroup class="mt-6">
+        {#each filesCache as file, i}
           {@const info = uploadInfo[i]}
           {@const color = getColor(info)}
-          <ListgroupItem class={color}>{file.name}</ListgroupItem>
-
-          {#if info?.message}
-            <Tooltip>{info.message}</Tooltip>
-          {/if}
+          <ListgroupItem>
+            <div class="flex items-center gap-1">
+              {#if info?.success}
+                <i class={`bx bx-check-circle ${color}`}></i>
+              {:else if info}
+                <i class={`bx bx-x-circle ${color}`}></i>
+              {/if}
+              <div class={`font-bold text-black dark:text-white`}>{file.name}</div>
+            </div>
+            {#if info?.message}
+              <div>{info.message}</div>
+            {/if}
+          </ListgroupItem>
         {/each}
-      {/if}
-    </Listgroup>
+      </Listgroup>
+    {:else if files}
+      <Listgroup class="mt-6">
+        {#each files as file}
+          <ListgroupItem>
+            <div class="flex items-center gap-1">
+              <div class={`font-bold text-black dark:text-white`}>{file.name}</div>
+            </div>
+          </ListgroupItem>
+        {/each}
+      </Listgroup>
+    {/if}
   </div>
-  <Button
-    on:click={async () => {
-      uploadInfo = await upload(files);
-    }}
-    class="mt-auto ml-auto"
-    color="primary">Upload</Button
-  >
 </Card>
