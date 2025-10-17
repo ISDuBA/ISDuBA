@@ -8,84 +8,89 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
+  import type { CVSSTextualRating } from "$lib/Statistics/statistics";
+
   export let baseScore = "";
   export let baseSeverity = "";
 
-  const getSeverityClass = (severity: string) => {
-    return severity.toLowerCase();
+  const getCVSSTextualRating = (CVSS: number): CVSSTextualRating => {
+    if (CVSS === 0) {
+      return "None";
+    } else if (CVSS <= 3.9) {
+      return "Low";
+    } else if (CVSS <= 6.9) {
+      return "Medium";
+    } else if (CVSS <= 8.9) {
+      return "High";
+    } else {
+      return "Critical";
+    }
+  };
+
+  const getSeverityClass = (severity: string, score: string) => {
+    if (severity) {
+      return severity.toLowerCase();
+    } else if (score) {
+      return getCVSSTextualRating(Number(score)).toLowerCase();
+    }
   };
 </script>
 
-<div class={"score " + getSeverityClass(baseSeverity)}>
-  <span class="baseScore">{baseScore}</span>
-  <span class="baseSeverity">({baseSeverity})</span>
-</div>
+{#if baseScore !== null && baseScore !== undefined}
+  <div class={"score " + getSeverityClass(baseSeverity, baseScore)}>
+    <span class="baseScore">{baseScore}</span>
+    {#if baseSeverity && !baseScore}
+      <span class="baseSeverity">{baseSeverity}</span>
+    {:else if baseSeverity}
+      <span class="baseSeverity">({baseSeverity})</span>
+    {/if}
+  </div>
+{/if}
 
 <style>
   .score.none,
-  .score.low,
-  .score.medium,
   .score.high,
   .score.critical {
     color: #ffffff;
   }
 
+  .score.low,
+  .score.medium {
+    color: #222;
+  }
+
   .score.none {
     background: #53aa33;
-    border: 2px solid #53aa33;
   }
 
   .score.low {
     background: #ffcb0d;
-    border: 2px solid #ffcb0d;
   }
 
   .score.medium {
     background: #f9a009;
-    border: 2px solid #f9a009;
   }
 
   .score.high {
     background: #df3d03;
-    border: 2px solid #df3d03;
   }
 
   .score.critical {
     background: #cc0500;
-    border: 2px solid #cc0500;
-  }
-
-  .score span {
-    font-weight: bold;
-    width: 100%;
   }
 
   .score {
-    top: -36px;
-    right: 0;
-    padding: 0 0.4em;
-    margin: 0 15px;
-    border: 2px solid #666666;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2pt;
+    justify-content: center;
     background: #dddddd;
-    font-size: 11px;
-    border-radius: 10px;
-    width: 100px;
-    height: auto;
-    line-height: 150%;
-    text-align: center;
-  }
-
-  .baseScore {
-    display: block;
-    font-size: 32px;
-    line-height: 32px;
-    font-weight: normal;
-    margin-top: 4px;
-  }
-  .baseSeverity {
-    font-size: 16px;
-    font-weight: normal;
-    margin-bottom: 5px;
-    display: block;
+    color: black;
+    font-size: small;
+    font-weight: bolder;
+    padding: 0.25em;
+    height: fit-content;
+    min-width: fit-content;
+    width: 50pt;
   }
 </style>
