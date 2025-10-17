@@ -21,6 +21,7 @@
     console.log(files, uploadInfo, updateCallback);
     return [];
   };
+  export let cancel = () => {};
 
   export let uploadInfo: UploadInfo[] = [];
   let isUploading = false;
@@ -69,22 +70,32 @@
           </div>
         </div>
       {/if}
+      {#if isUploading}
+        <Button
+          on:click={() => {
+            cancel();
+          }}
+          color="red">Cancel</Button
+        >
+      {/if}
       <Button
         on:click={async () => {
           isUploading = true;
-          if (files) {
-            filesCache = files;
-            uploadInfo = await upload(files, (info) => {
-              uploadInfo = info;
-            });
-          }
-          files = undefined;
-          isUploading = false;
-          // This is a hack. The file input has to be re-added to the DOM. Otherwise it would not change
-          // the label "x files selected." to its initial value even if we set files to undefined.
-          showFileInput = false;
-          await tick();
-          showFileInput = true;
+          setTimeout(async () => {
+            if (files) {
+              filesCache = files;
+              uploadInfo = await upload(files, (info) => {
+                uploadInfo = info;
+              });
+            }
+            files = undefined;
+            // This is a hack. The file input has to be re-added to the DOM. Otherwise it would not change
+            // the label "x files selected." to its initial value even if we set files to undefined.
+            showFileInput = false;
+            await tick();
+            showFileInput = true;
+            isUploading = false;
+          });
         }}
         color="primary"
         disabled={isUploading || !files || files.length === 0}>Upload</Button
