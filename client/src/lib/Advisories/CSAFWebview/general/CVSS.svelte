@@ -31,10 +31,18 @@
   };
 
   const getSeverityClass = (severity: string | undefined, score: string | undefined) => {
-    if (severity) {
-      return severity.toLowerCase();
-    } else if (score) {
-      return getCVSSTextualRating(Number(score)).toLowerCase();
+    if (severity && score) {
+      if (severity.toLowerCase() !== getCVSSTextualRating(Number(score)).toLowerCase()) {
+        return "";
+      } else {
+        return severity.toLowerCase();
+      }
+    } else {
+      if (severity) {
+        return severity.toLowerCase();
+      } else if (score !== undefined) {
+        return getCVSSTextualRating(Number(score)).toLowerCase();
+      }
     }
   };
 </script>
@@ -57,6 +65,7 @@
     color: #ffffff;
   }
 
+  .score,
   .score.low,
   .score.medium {
     color: #222;
@@ -88,7 +97,6 @@
     gap: 2pt;
     justify-content: center;
     background: #dddddd;
-    color: black;
     font-size: small;
     font-weight: bolder;
     padding: 0.25em;
