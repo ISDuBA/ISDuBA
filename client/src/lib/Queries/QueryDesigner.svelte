@@ -184,7 +184,7 @@
       if (errorMessage === null) {
         push(`/queries/`);
       }
-    } else {
+    } else if (response?.ok !== false) {
       push(`/queries/`);
     }
   };
