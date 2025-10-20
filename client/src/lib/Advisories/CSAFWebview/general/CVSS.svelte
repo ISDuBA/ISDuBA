@@ -102,6 +102,6 @@
     padding: 0.25em;
     height: fit-content;
     min-width: fit-content;
-    width: 50pt;
+    width: 36pt;
   }
 </style>
