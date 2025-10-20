@@ -212,7 +212,7 @@
   {#if appStore.isImporter()}
     <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
       <i class="bx bx-upload"></i>
-      <span>Upload documents</span>
+      <span class="ml-1">Upload documents</span>
     </Button>
   {/if}
 </div>

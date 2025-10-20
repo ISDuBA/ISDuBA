@@ -14,9 +14,17 @@
   import Upload from "$lib/Upload.svelte";
   import { request } from "$lib/request";
 
-  const uploadDocuments = async (files: FileList): Promise<UploadInfo[]> => {
+  let cancelled = false;
+
+  const uploadDocuments = async (
+    files: FileList,
+    updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
+  ): Promise<UploadInfo[]> => {
+    cancelled = false;
+    if (!files) return [];
     let uploadInfo = [];
     for (const file of files) {
+      if (cancelled) break;
       let info: UploadInfo = { success: true };
       const formData = new FormData();
       formData.append("file", file);
@@ -24,12 +32,21 @@
       if (resp.error) {
         info.success = false;
         let details = getErrorDetails(`Could not upload file`, resp);
-        info.message = `${details.message} ${details.details}`;
+        info.message = `${details.message} ${details.details ?? ""}`;
       }
       uploadInfo.push(info);
+      if (updateCallback) {
+        updateCallback(uploadInfo);
+      }
     }
     return uploadInfo;
   };
 </script>
 
-<Upload upload={uploadDocuments} label="Upload a document"></Upload>
+<Upload
+  upload={uploadDocuments}
+  cancel={() => {
+    cancelled = true;
+  }}
+  label="Upload a document"
+></Upload>
