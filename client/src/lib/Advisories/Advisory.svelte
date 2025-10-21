@@ -81,12 +81,10 @@
     appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin()
   );
   let encodedTrackingID = $derived(
-    params.trackingID ? encodeURIComponent(addSlashes(params.trackingID)) : undefined
+    document.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
   );
   let encodedPublisherNamespace = $derived(
-    params.publisherNamespace
-      ? encodeURIComponent(addSlashes(params.publisherNamespace))
-      : undefined
+    document.publisher?.name ? encodeURIComponent(addSlashes(document.publisher?.name)) : undefined
   );
 
   const setAsReadTimeout: number[] = [];
@@ -151,8 +149,10 @@
     if (response.ok) {
       const result = await response.content;
       if (
-        result.document.tracking.id !== params.trackingID ||
-        result.document.publisher.name !== params.publisherNamespace
+        params.trackingID &&
+        params.publisherNamespace &&
+        (result.document.tracking.id !== params.trackingID ||
+          result.document.publisher.name !== params.publisherNamespace)
       ) {
         isInconsistent = true;
       }
@@ -432,7 +432,7 @@
 </script>
 
 <svelte:head>
-  <title>{params.trackingID}</title>
+  <title>{document.tracking?.id}</title>
 </svelte:head>
 
 <Modal bind:open={openForwardModal}>
@@ -461,7 +461,7 @@
     <div class="flex w-full flex-none flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">
-          <span class="mr-2">{params.trackingID}</span>
+          <span class="mr-2">{document.tracking?.id}</span>
           {#if appStore.state.webview.doc?.tlp.label}
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
@@ -471,7 +471,7 @@
         class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
       >
         <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
-          >{params.publisherNamespace}</Label
+          >{document.publisher?.name}</Label
         >
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
@@ -573,11 +573,11 @@
         <div class="flex flex-row">
           {#if advisoryVersions?.length > 0}
             <Version
-              publisherNamespace={params.publisherNamespace}
+              publisherNamespace={document.publisher?.name}
               {advisoryVersions}
               selectedDocumentVersion={{
                 id: document.id,
-                tracking_id: params.trackingID,
+                tracking_id: document.tracking?.id,
                 tracking_status: document.tracking?.status,
                 version: document.tracking?.version
               }}
@@ -595,9 +595,9 @@
                 <Webview
                   widthOffset={canSeeCommentArea ? 464 : 0}
                   basePath={"#/advisories/" +
-                    params.publisherNamespace +
+                    document.publisher?.name +
                     "/" +
-                    params.trackingID +
+                    document.tracking?.id +
                     "/documents/" +
                     params.id +
                     "/"}
