@@ -28,6 +28,7 @@
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
   import type { TrackingStatus, AdvisoryVersion } from "./advisory.ts";
+  import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
 
   export let params: any = null;
 
@@ -52,6 +53,7 @@
   let position = "";
   let processRunning = false;
   let lastSuccessfulForwardTarget: number | undefined;
+  let isInconsistent = false;
 
   $: if ([NEW, READ, ASSESSING].includes(advisoryState)) {
     isCommentingAllowed = appStore.isEditor();
@@ -94,49 +96,59 @@
     );
     if (response.ok) {
       const result = await response.content;
-      advisoryVersions = result.documents.map((doc: any) => {
-        return {
-          id: doc.id,
-          version: doc.version,
-          tracking_id: doc.tracking_id,
-          tracking_status: doc.tracking_status as TrackingStatus
+      if (result.documents) {
+        advisoryVersions = result.documents.map((doc: any) => {
+          return {
+            id: doc.id,
+            version: doc.version,
+            tracking_id: doc.tracking_id,
+            tracking_status: doc.tracking_status as TrackingStatus
+          };
+        });
+
+        // Define the order of tracking statuses
+        const statusOrder: Record<TrackingStatus, number> = {
+          draft: 3,
+          interim: 2,
+          final: 1
         };
-      });
 
-      // Define the order of tracking statuses
-      const statusOrder: Record<TrackingStatus, number> = {
-        draft: 3,
-        interim: 2,
-        final: 1
-      };
+        // Sort the advisoryVersions array
+        advisoryVersions.sort((a, b) => {
+          // If versions are different, maintain original sort (or any default sort)
+          if (a.version !== b.version) {
+            return 0; // Keep original order for different versions
+          }
 
-      // Sort the advisoryVersions array
-      advisoryVersions.sort((a, b) => {
-        // If versions are different, maintain original sort (or any default sort)
-        if (a.version !== b.version) {
-          return 0; // Keep original order for different versions
-        }
+          // If versions are the same, sort by tracking_status
+          return statusOrder[a.tracking_status] - statusOrder[b.tracking_status];
+        });
 
-        // If versions are the same, sort by tracking_status
-        return statusOrder[a.tracking_status] - statusOrder[b.tracking_status];
-      });
-
-      advisoryVersionByDocumentID = advisoryVersions.reduce(
-        (acc: any, version: AdvisoryVersion) => {
-          acc[version.id] = version.version;
-          return acc;
-        },
-        {}
-      );
+        advisoryVersionByDocumentID = advisoryVersions.reduce(
+          (acc: any, version: AdvisoryVersion) => {
+            acc[version.id] = version.version;
+            return acc;
+          },
+          {}
+        );
+      }
     } else if (response.error) {
       loadAdvisoryVersionsError = getErrorDetails(`Could not load versions.`, response);
     }
   };
 
   const loadDocument = async () => {
+    document = {};
+    isInconsistent = false;
     const response = await request(`/api/documents/${params.id}`, "GET");
     if (response.ok) {
       const result = await response.content;
+      if (
+        result.document.tracking.id !== params.trackingID ||
+        result.document.publisher.name !== params.publisherNamespace
+      ) {
+        isInconsistent = true;
+      }
       ({ document } = result);
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
@@ -152,7 +164,7 @@
     );
     if (response.ok) {
       const result = await response.content;
-      if (result.documents[0].ssvc) {
+      if (result.documents?.[0].ssvc) {
         ssvcVector = result.documents[0].ssvc;
       }
     } else if (response.error) {
@@ -292,8 +304,8 @@
     );
     if (response.ok) {
       const result = response.content;
-      advisoryState = result.documents[0].state;
-      return result.documents[0].state;
+      advisoryState = result.documents?.[0].state;
+      return result.documents?.[0].state;
     } else if (response.error) {
       stateError = getErrorDetails(`Couldn't load state.`, response);
     }
@@ -314,27 +326,30 @@
   };
 
   const loadData = async () => {
-    await loadFourCVEs();
-    await loadDocumentSSVC();
     await loadDocument();
     await loadAdvisoryVersions();
-    await buildHistory();
-    if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
+    if (document) {
+      await loadFourCVEs();
+      await loadDocumentSSVC();
       await buildHistory();
-    }
-    await loadAdvisoryState();
-    // Only set state to 'read' if editor opens the current version.
-    if (
-      advisoryState === NEW &&
-      canSetStateRead(advisoryState) &&
-      (advisoryVersions.length === 1 || advisoryVersions[0].version === document.tracking?.version)
-    ) {
-      const id: any = setTimeout(async () => {
-        if (advisoryState === "new" && canSetStateRead(advisoryState)) {
-          await updateState(READ);
-        }
-      }, 20000);
-      setAsReadTimeout.push(id);
+      if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
+        await buildHistory();
+      }
+      await loadAdvisoryState();
+      // Only set state to 'read' if editor opens the current version.
+      if (
+        advisoryState === NEW &&
+        canSetStateRead(advisoryState) &&
+        (advisoryVersions.length === 1 ||
+          advisoryVersions[0].version === document.tracking?.version)
+      ) {
+        const id: any = setTimeout(async () => {
+          if (advisoryState === "new" && canSetStateRead(advisoryState)) {
+            await updateState(READ);
+          }
+        }, 20000);
+        setAsReadTimeout.push(id);
+      }
     }
   };
 
@@ -429,159 +444,165 @@
 </Modal>
 
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
-  <div class="flex w-full flex-none flex-col">
-    <div class="flex gap-2">
-      <Label class="text-lg">
-        <span class="mr-2">{params.trackingID}</span>
-        {#if $appStore.webview.doc?.tlp.label}
-          <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
-        {/if}
-      </Label>
-    </div>
-    <div
-      class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
-    >
-      <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
-        >{params.publisherNamespace}</Label
-      >
-      <div class="mt-4 flex h-fit flex-row gap-2 self-center">
-        <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
+  {#if isInconsistent}
+    <InconsistencyMessage {advisoryVersions} {document} {params}></InconsistencyMessage>
+  {:else}
+    <div class="flex w-full flex-none flex-col">
+      <div class="flex gap-2">
+        <Label class="text-lg">
+          <span class="mr-2">{params.trackingID}</span>
+          {#if $appStore.webview.doc?.tlp.label}
+            <Tlp tlp={$appStore.webview.doc?.tlp.label}></Tlp>
+          {/if}
+        </Label>
       </div>
+      <div
+        class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
+      >
+        <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
+          >{params.publisherNamespace}</Label
+        >
+        <div class="mt-4 flex h-fit flex-row gap-2 self-center">
+          <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
+        </div>
+      </div>
+      <div class="mt-2 mb-4" />
     </div>
-    <div class="mt-2 mb-4" />
-  </div>
+  {/if}
   <ErrorMessage error={loadForwardTargetsError}></ErrorMessage>
   <ErrorMessage error={loadAdvisoryVersionsError}></ErrorMessage>
   <ErrorMessage error={stateError}></ErrorMessage>
   <ErrorMessage error={loadDocumentError}></ErrorMessage>
   <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
-  <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
-    {#if canSeeCommentArea}
-      <div
-        class="right-3 mr-3 flex w-full flex-col lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
-      >
-        <div class={isSSVCediting || commentFocus ? "w-full p-3 shadow-md" : "w-full p-3"}>
-          <div class="flex flex-row items-center">
-            {#if ssvcVector}
-              {#if !isSSVCediting}
-                <SsvcBadge vector={ssvcVector}></SsvcBadge>
-              {/if}
-            {/if}
-            {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
-              <SsvcCalculator
-                bind:isEditing={isSSVCediting}
-                vectorInput={ssvcVector}
-                disabled={!isCalculatingAllowed}
-                documentID={params.id}
-                on:updateSSVC={loadMetaData}
-                {allowEditing}
-              ></SsvcCalculator>
-            {/if}
-          </div>
-          {#if isCommentingAllowed && !isSSVCediting}
-            <div class="mt-6">
-              <Label class="mb-2" for="comment-textarea"
-                >{advisoryState === ARCHIVED && appStore.isEditor()
-                  ? "Reactivate with comment"
-                  : "New Comment"}</Label
-              >
-              <CommentTextArea
-                on:focus={() => {
-                  commentFocus = true;
-                }}
-                on:blur={() => {
-                  commentFocus = false;
-                }}
-                on:input={() => (createCommentError = null)}
-                on:saveComment={createComment}
-                on:saveForReview={sendForReview}
-                on:saveForAssessing={sendForAssessing}
-                bind:value={comment}
-                errorMessage={createCommentError}
-                buttonText="Send"
-                state={advisoryState}
-              ></CommentTextArea>
-            </div>
-          {/if}
-        </div>
-        <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
-        <div class="h-auto">
-          <div class="mt-6 h-full">
-            <History
-              state={advisoryState}
-              on:commentUpdate={() => {
-                buildHistory();
-              }}
-              entries={historyEntries}
-            >
-              <div slot="additionalButtons">
-                {#if availableForwardSelection.length != 0}
-                  <Button
-                    size="xs"
-                    color="light"
-                    class="h-7 py-1 text-xs"
-                    on:click={() => (openForwardModal = true)}
-                  >
-                    Forward document</Button
-                  >
+  {#if !isInconsistent}
+    <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
+      {#if canSeeCommentArea}
+        <div
+          class="right-3 mr-3 flex w-full flex-col lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
+        >
+          <div class={isSSVCediting || commentFocus ? "w-full p-3 shadow-md" : "w-full p-3"}>
+            <div class="flex flex-row items-center">
+              {#if ssvcVector}
+                {#if !isSSVCediting}
+                  <SsvcBadge vector={ssvcVector}></SsvcBadge>
                 {/if}
-              </div>
-            </History>
-          </div>
-          <ErrorMessage error={loadEventsError}></ErrorMessage>
-          <ErrorMessage error={loadCommentsError}></ErrorMessage>
-        </div>
-      </div>
-    {/if}
-    <div
-      class={"flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:pr-6" +
-        (canSeeCommentArea ? " lg:overflow-auto" : "")}
-    >
-      <div class="flex flex-row">
-        {#if advisoryVersions.length > 0}
-          <Version
-            publisherNamespace={params.publisherNamespace}
-            {advisoryVersions}
-            selectedDocumentVersion={{
-              id: document.id,
-              tracking_id: params.trackingID,
-              tracking_status: document.tracking?.status,
-              version: document.tracking?.version
-            }}
-            on:selectedDiffDocuments={() => (isDiffOpen = true)}
-            on:disableDiff={() => (isDiffOpen = false)}
-          ></Version>
-        {/if}
-      </div>
-      <div class="flex flex-col">
-        {#if isDiffOpen}
-          <Diff showTitle={false}></Diff>
-        {:else}
-          <Webview
-            widthOffset={canSeeCommentArea ? 464 : 0}
-            basePath={"#/advisories/" +
-              params.publisherNamespace +
-              "/" +
-              params.trackingID +
-              "/documents/" +
-              params.id +
-              "/"}
-            {position}
-          ></Webview>
-          {#if !canSeeCommentArea && availableForwardSelection.length != 0}
-            <div class="my-2 flex w-full flex-row justify-end">
-              <Button
-                size="xs"
-                color="light"
-                class="h-7 py-1 text-xs"
-                on:click={() => (openForwardModal = true)}
-              >
-                Forward document
-              </Button>
+              {/if}
+              {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
+                <SsvcCalculator
+                  bind:isEditing={isSSVCediting}
+                  vectorInput={ssvcVector}
+                  disabled={!isCalculatingAllowed}
+                  documentID={params.id}
+                  on:updateSSVC={loadMetaData}
+                  {allowEditing}
+                ></SsvcCalculator>
+              {/if}
             </div>
+            {#if isCommentingAllowed && !isSSVCediting}
+              <div class="mt-6">
+                <Label class="mb-2" for="comment-textarea"
+                  >{advisoryState === ARCHIVED && appStore.isEditor()
+                    ? "Reactivate with comment"
+                    : "New Comment"}</Label
+                >
+                <CommentTextArea
+                  on:focus={() => {
+                    commentFocus = true;
+                  }}
+                  on:blur={() => {
+                    commentFocus = false;
+                  }}
+                  on:input={() => (createCommentError = null)}
+                  on:saveComment={createComment}
+                  on:saveForReview={sendForReview}
+                  on:saveForAssessing={sendForAssessing}
+                  bind:value={comment}
+                  errorMessage={createCommentError}
+                  buttonText="Send"
+                  state={advisoryState}
+                ></CommentTextArea>
+              </div>
+            {/if}
+          </div>
+          <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
+          <div class="h-auto">
+            <div class="mt-6 h-full">
+              <History
+                state={advisoryState}
+                on:commentUpdate={() => {
+                  buildHistory();
+                }}
+                entries={historyEntries}
+              >
+                <div slot="additionalButtons">
+                  {#if availableForwardSelection.length != 0}
+                    <Button
+                      size="xs"
+                      color="light"
+                      class="h-7 py-1 text-xs"
+                      on:click={() => (openForwardModal = true)}
+                    >
+                      Forward document</Button
+                    >
+                  {/if}
+                </div>
+              </History>
+            </div>
+            <ErrorMessage error={loadEventsError}></ErrorMessage>
+            <ErrorMessage error={loadCommentsError}></ErrorMessage>
+          </div>
+        </div>
+      {/if}
+      <div
+        class={"flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:pr-6" +
+          (canSeeCommentArea ? " lg:overflow-auto" : "")}
+      >
+        <div class="flex flex-row">
+          {#if advisoryVersions?.length > 0}
+            <Version
+              publisherNamespace={params.publisherNamespace}
+              {advisoryVersions}
+              selectedDocumentVersion={{
+                id: document.id,
+                tracking_id: params.trackingID,
+                tracking_status: document.tracking?.status,
+                version: document.tracking?.version
+              }}
+              on:selectedDiffDocuments={() => (isDiffOpen = true)}
+              on:disableDiff={() => (isDiffOpen = false)}
+            ></Version>
           {/if}
-        {/if}
+        </div>
+        <div class="flex flex-col">
+          {#if isDiffOpen}
+            <Diff showTitle={false}></Diff>
+          {:else}
+            <Webview
+              widthOffset={canSeeCommentArea ? 464 : 0}
+              basePath={"#/advisories/" +
+                params.publisherNamespace +
+                "/" +
+                params.trackingID +
+                "/documents/" +
+                params.id +
+                "/"}
+              {position}
+            ></Webview>
+            {#if !canSeeCommentArea && availableForwardSelection.length != 0}
+              <div class="my-2 flex w-full flex-row justify-end">
+                <Button
+                  size="xs"
+                  color="light"
+                  class="h-7 py-1 text-xs"
+                  on:click={() => (openForwardModal = true)}
+                >
+                  Forward document
+                </Button>
+              </div>
+            {/if}
+          {/if}
+        </div>
       </div>
     </div>
-  </div>
+  {/if}
 </div>
