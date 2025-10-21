@@ -22,6 +22,7 @@
     onClose?: () => any;
     children: Snippet;
     headerSlot?: Snippet;
+    headerRightSlot?: Snippet;
   }
   let {
     header,
@@ -37,7 +38,8 @@
       //default: Do nothing
     },
     children,
-    headerSlot = undefined
+    headerSlot = undefined,
+    headerRightSlot = undefined
   }: Props = $props();
   const uuid = crypto.randomUUID();
 
@@ -109,6 +111,9 @@
           <span class={getClass(level)}>{header}</span>
         {/if}
       </div>
+      <span class="ms-2">
+        {@render headerRightSlot?.()}
+      </span>
     </div>
     {#if visibility === "block"}
       <div id={uuid} class={`ml-2 pl-2 ${showBorder ? "border-l-2 border-l-gray-200" : ""}`}>
