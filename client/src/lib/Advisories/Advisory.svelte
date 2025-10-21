@@ -461,7 +461,7 @@
     <div class="flex w-full flex-none flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">
-          <span class="mr-2">{document.tracking?.id}</span>
+          <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
           {#if appStore.state.webview.doc?.tlp.label}
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
@@ -471,7 +471,7 @@
         class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
       >
         <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
-          >{document.publisher?.name}</Label
+          >{document.publisher ? document.publisher.name : ""}</Label
         >
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
