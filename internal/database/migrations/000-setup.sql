@@ -61,8 +61,8 @@ $$ LANGUAGE SQL IMMUTABLE;
 CREATE TYPE status AS ENUM (
     'draft', 'final', 'interim');
 
-CREATE FUNCTION text_to_status(text) RETURNS status AS $$
-    SELECT $1::status
+CREATE FUNCTION text_to_status(text) RETURNS public.status AS $$
+    SELECT $1::public.status
 $$ LANGUAGE SQL IMMUTABLE;
 
 
