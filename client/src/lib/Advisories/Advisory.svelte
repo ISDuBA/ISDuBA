@@ -463,7 +463,7 @@
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
   {#if documentNotFound}
     <div class="mb-2 font-bold">
-      <i class="bx bx-error-circle" aria-hidden></i>
+      <i class="bx bx-error-circle" aria-hidden="true"></i>
       <span>The URL doesn't reference any document</span>
     </div>
   {:else if isInconsistent}
