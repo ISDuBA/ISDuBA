@@ -6,7 +6,8 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { getAccessToken } from "$lib/request";
+import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+import { getAccessToken, request } from "$lib/request";
 import { appStore } from "$lib/store.svelte";
 import type { WorkflowState } from "$lib/workflow";
 import { push } from "svelte-spa-router";
@@ -24,6 +25,11 @@ interface AdvisoryVersion {
   version: string;
   tracking_id: string;
   tracking_status: TrackingStatus;
+}
+
+interface AdvisoryVersionsResult {
+  advisoryVersions?: AdvisoryVersion[];
+  error?: ErrorDetails;
 }
 
 // TODO: Refactor request from client/src/lib/request.ts so it can use JSON in body.
@@ -79,5 +85,50 @@ async function updateMultipleStates(newStates: StateChange[]) {
   }
 }
 
-export { updateMultipleStates };
+const loadAdvisoryVersions = async (
+  encodedTrackingID: string,
+  encodedPublisherNamespace: string
+): Promise<AdvisoryVersionsResult | undefined> => {
+  const response = await request(
+    `/api/documents?&columns=id version tracking_id tracking_status&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
+    "GET"
+  );
+  if (response.ok) {
+    const result = await response.content;
+    if (result.documents) {
+      const advisoryVersions: AdvisoryVersion[] = result.documents.map((doc: any) => {
+        return {
+          id: doc.id,
+          version: doc.version,
+          tracking_id: doc.tracking_id,
+          tracking_status: doc.tracking_status as TrackingStatus
+        };
+      });
+
+      // Define the order of tracking statuses
+      const statusOrder: Record<TrackingStatus, number> = {
+        draft: 3,
+        interim: 2,
+        final: 1
+      };
+
+      // Sort the advisoryVersions array
+      advisoryVersions.sort((a, b) => {
+        // If versions are different, maintain original sort (or any default sort)
+        if (a.version !== b.version) {
+          return 0; // Keep original order for different versions
+        }
+
+        // If versions are the same, sort by tracking_status
+        return statusOrder[a.tracking_status] - statusOrder[b.tracking_status];
+      });
+
+      return { advisoryVersions };
+    }
+  } else if (response.error) {
+    return { error: getErrorDetails(`Could not load versions.`, response) };
+  }
+};
+
+export { updateMultipleStates, loadAdvisoryVersions };
 export type { AdvisoryVersion };

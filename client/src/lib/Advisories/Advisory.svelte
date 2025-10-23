@@ -27,7 +27,7 @@
   import Tlp from "./TLP.svelte";
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
-  import type { TrackingStatus, AdvisoryVersion } from "./advisory.ts";
+  import { type AdvisoryVersion, loadAdvisoryVersions } from "$lib/Advisories/advisory";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
 
   let { params } = $props();
@@ -96,52 +96,20 @@
   let availableForwardSelection: any[] = $state([]);
   let selectedForwardTarget: number | undefined = $state();
 
-  const loadAdvisoryVersions = async () => {
-    const response = await request(
-      `/api/documents?&columns=id version tracking_id tracking_status&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
-      "GET"
-    );
-    if (response.ok) {
-      const result = await response.content;
-      if (result.documents) {
-        advisoryVersions = result.documents.map((doc: any) => {
-          return {
-            id: doc.id,
-            version: doc.version,
-            tracking_id: doc.tracking_id,
-            tracking_status: doc.tracking_status as TrackingStatus
-          };
-        });
-
-        // Define the order of tracking statuses
-        const statusOrder: Record<TrackingStatus, number> = {
-          draft: 3,
-          interim: 2,
-          final: 1
-        };
-
-        // Sort the advisoryVersions array
-        advisoryVersions.sort((a, b) => {
-          // If versions are different, maintain original sort (or any default sort)
-          if (a.version !== b.version) {
-            return 0; // Keep original order for different versions
-          }
-
-          // If versions are the same, sort by tracking_status
-          return statusOrder[a.tracking_status] - statusOrder[b.tracking_status];
-        });
-
-        advisoryVersionByDocumentID = advisoryVersions.reduce(
-          (acc: any, version: AdvisoryVersion) => {
-            acc[version.id] = version.version;
-            return acc;
-          },
-          {}
-        );
+  const getAdvisoryVersions = async () => {
+    if (!encodedTrackingID || !encodedPublisherNamespace) return;
+    const result = await loadAdvisoryVersions(encodedTrackingID, encodedPublisherNamespace);
+    if (result) {
+      if (result.error) {
+        loadAdvisoryVersionsError = result.error;
+      } else if (result.advisoryVersions) {
+        advisoryVersions = result.advisoryVersions;
       }
-    } else if (response.error) {
-      loadAdvisoryVersionsError = getErrorDetails(`Could not load versions.`, response);
     }
+    advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: AdvisoryVersion) => {
+      acc[version.id] = version.version;
+      return acc;
+    }, {});
   };
 
   const loadDocument = async () => {
@@ -343,7 +311,7 @@
 
   const loadData = async () => {
     await loadDocument();
-    await loadAdvisoryVersions();
+    await getAdvisoryVersions();
     if (couldNotLoadDocument || isInconsistent) return;
     if (document) {
       await loadFourCVEs();
@@ -471,7 +439,7 @@
       <span>The URL doesn't reference any document</span>
     </div>
   {:else if isInconsistent}
-    <InconsistencyMessage {advisoryVersions} {document} {params}></InconsistencyMessage>
+    <InconsistencyMessage {document} {params}></InconsistencyMessage>
   {:else if !couldNotLoadDocument && !isInconsistent}
     <div class="flex w-full flex-none flex-col">
       <div class="flex gap-2">
