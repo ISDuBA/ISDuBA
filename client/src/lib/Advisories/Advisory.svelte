@@ -344,6 +344,7 @@
   const loadData = async () => {
     await loadDocument();
     await loadAdvisoryVersions();
+    if (couldNotLoadDocument || isInconsistent) return;
     if (document) {
       await loadFourCVEs();
       await loadDocumentSSVC();
