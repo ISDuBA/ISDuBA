@@ -410,7 +410,7 @@
 </script>
 
 <svelte:head>
-  <title>{document.tracking?.id}</title>
+  <title>{documentNotFound ? "Document not found" : document.tracking?.id}</title>
 </svelte:head>
 
 <Modal bind:open={openForwardModal}>
