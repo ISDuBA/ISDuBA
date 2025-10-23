@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import {
     Button,
     Dropzone,
@@ -28,32 +28,19 @@
   import { getPublisher } from "$lib/publisher";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, untrack } from "svelte";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import { getRelativeTime } from "$lib/time";
 
-  $: docA_ID = $appStore.app.diff.docA_ID;
-  $: docB_ID = $appStore.app.diff.docB_ID;
-  $: if (docA_ID) updateDocumentA();
-  $: if (docB_ID) updateDocumentB();
-  $: docA = $appStore.app.diff.docA;
-  $: docB = $appStore.app.diff.docB;
-  $: isToolboxOpen = $appStore.app.isToolboxOpen;
-  $: if (isToolboxOpen) {
-    getTempDocuments();
-    getDocuments();
-  }
-  $: disableDiffButtons = docA_ID !== undefined && docB_ID !== undefined;
-
-  let freeTempDocuments = 0;
-  let tempDocuments: any[] = [];
-  let loadDocumentAErrorMessage: ErrorDetails | null;
-  let loadDocumentBErrorMessage: ErrorDetails | null;
-  let tempDocErrorMessage: ErrorDetails | null;
-  let loadTempDocsErrorMessage: ErrorDetails | null;
+  let freeTempDocuments = $state(0);
+  let tempDocuments: any[] = $state([]);
+  let loadDocumentAErrorMessage: ErrorDetails | null = $state(null);
+  let loadDocumentBErrorMessage: ErrorDetails | null = $state(null);
+  let tempDocErrorMessage: ErrorDetails | null = $state(null);
+  let loadTempDocsErrorMessage: ErrorDetails | null = $state(null);
   let intervalID: ReturnType<typeof setTimeout> | undefined = undefined;
-  let isLoadingDocA = false;
-  let isLoadingDocB = false;
+  let isLoadingDocA = $state(false);
+  let isLoadingDocB = $state(false);
 
   const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
   const padding = "pe-5 pt-2";
@@ -252,6 +239,33 @@
     if (didDocExpire) getTempDocuments();
     else tempDocuments = tempDocuments;
   };
+  let docA_ID = $derived(appStore.state.app.diff.docA_ID);
+  let docB_ID = $derived(appStore.state.app.diff.docB_ID);
+  $effect(() => {
+    if (docA_ID) updateDocumentA();
+  });
+  $effect(() => {
+    if (docB_ID) updateDocumentB();
+  });
+  let docA = $derived(appStore.state.app.diff.docA);
+  let docB = $derived(appStore.state.app.diff.docB);
+  let isToolboxOpen = $derived(appStore.state.app.isToolboxOpen);
+  $effect(() => {
+    untrack(() => loadTempDocsErrorMessage);
+    untrack(() => freeTempDocuments);
+    untrack(() => tempDocuments);
+    untrack(() => loadDocumentAErrorMessage);
+    untrack(() => isLoadingDocA);
+    untrack(() => docA_ID);
+    untrack(() => loadDocumentBErrorMessage);
+    untrack(() => isLoadingDocB);
+    untrack(() => docB_ID);
+    if (isToolboxOpen) {
+      getTempDocuments();
+      getDocuments();
+    }
+  });
+  let disableDiffButtons = $derived(docA_ID !== undefined && docB_ID !== undefined);
 </script>
 
 <div class="flex w-full flex-col">
@@ -266,7 +280,7 @@
         {:else if docA}
           <div>
             <Button
-              on:click={() => {
+              onclick={() => {
                 appStore.setDiffDocA_ID(undefined);
                 appStore.setDiffDocA(undefined);
               }}
@@ -310,7 +324,7 @@
         {:else if docB}
           <div>
             <Button
-              on:click={() => {
+              onclick={() => {
                 appStore.setDiffDocB_ID(undefined);
                 appStore.setDiffDocB(undefined);
               }}
@@ -346,7 +360,7 @@
     </div>
     <div class="flex h-full items-start">
       <Button
-        on:click={() => push("/diff")}
+        onclick={() => push("/diff")}
         disabled={!docA || !docB || !docA_ID || !docB_ID}
         size="sm"
         class="flex gap-x-2"
@@ -375,10 +389,10 @@
             {@const doc = document.document}
             {@const tempDocID = `tempdocument${document.file.id}`}
             <TableBodyRow>
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>
                 <div class="flex items-center">
                   <CIconButton
-                    on:click={() => {
+                    onClicked={() => {
                       deleteTempDocument(document.file.id);
                     }}
                     color="red"
@@ -386,7 +400,8 @@
                     icon="trash"
                   ></CIconButton>
                   <button
-                    on:click|stopPropagation={(e) => {
+                    onclick={(e) => {
+                      e.stopPropagation();
                       if (docA_ID) {
                         appStore.setDiffDocB_ID(tempDocID);
                       } else {
@@ -394,7 +409,7 @@
                       }
                       e.preventDefault();
                     }}
-                    class:invisible={!$appStore.app.isToolboxOpen}
+                    class:invisible={!appStore.state.app.isToolboxOpen}
                     disabled={docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons}
                     title={`compare ${doc.title} - ${doc.tracking.id}`}
                   >
@@ -409,16 +424,16 @@
                   </button>
                 </div>
               </TableBodyCell>
-              <TableBodyCell {tdClass}>{doc.tracking.id}</TableBodyCell>
-              <TableBodyCell {tdClass}>{doc.publisher.name}</TableBodyCell>
-              <TableBodyCell {tdClass}>
+              <TableBodyCell class={tdClass}>{doc.tracking.id}</TableBodyCell>
+              <TableBodyCell class={tdClass}>{doc.publisher.name}</TableBodyCell>
+              <TableBodyCell class={tdClass}>
                 <span
                   class="block overflow-hidden text-ellipsis whitespace-nowrap md:w-44 lg:w-60 xl:w-96"
                   title={doc.title}>{doc.title}</span
                 >
               </TableBodyCell>
-              <TableBodyCell {tdClass}>{doc.expired}</TableBodyCell>
-              <TableBodyCell {tdClass}>{document.file.filename}</TableBodyCell>
+              <TableBodyCell class={tdClass}>{doc.expired}</TableBodyCell>
+              <TableBodyCell class={tdClass}>{document.file.filename}</TableBodyCell>
             </TableBodyRow>
           {/each}
           <TableBodyRow></TableBodyRow>
@@ -427,11 +442,11 @@
     {/if}
     {#if freeTempDocuments}
       <Dropzone
-        on:drop={dropHandle}
-        on:dragover={(event) => {
+        onDrop={dropHandle}
+        onDragOver={(event) => {
           event.preventDefault();
         }}
-        on:change={handleChange}
+        onChange={handleChange}
         multiple
         class="ms-1 mb-2 h-16"
       >

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { Button, Heading, Card } from "flowbite-svelte";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -17,19 +17,19 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import DarkMode from "flowbite-svelte/DarkMode.svelte";
 
-  let viewError: ErrorDetails | null;
-  let versionError: ErrorDetails | null;
+  let viewError: ErrorDetails | null = $state(null);
+  let versionError: ErrorDetails | null = $state(null);
 
   async function logout() {
     appStore.setSessionExpired(true);
     appStore.setSessionExpiredMessage("Logout");
     sessionStorage.clear();
-    await $appStore.app.userManager?.signoutRedirect();
+    await appStore.state.app.userManager?.signoutRedirect();
   }
 
   async function login() {
     try {
-      await $appStore.app.userManager?.signinRedirect();
+      await appStore.state.app.userManager?.signinRedirect();
     } catch (e: any) {
       viewError = getErrorDetails(`Could not load login information: ` + e.message);
     }
@@ -76,32 +76,32 @@
 
 <div class="flex h-screen items-center justify-center">
   <div class="flex w-96 flex-col gap-4">
-    <div class="inline-flex flex-row">
+    <div class="inline-flex flex-row justify-between">
       <Heading class="mb-2 flex items-center gap-4">
         <img class="h-10" src="favicon.svg" alt="Icon of ISDuBA" aria-hidden="true" />
         <span>ISDuBA</span>
       </Heading>
       <DarkMode />
     </div>
-    <Card>
+    <Card class="p-4 sm:p-6 md:p-8">
       <div class="flex flex-col gap-4">
         <P class="flex flex-col"
           ><span><b>Server URL: </b>{appStore.getKeycloakURL()}</span><span
             ><b>Realm: </b>{appStore.getKeycloakRealm()}</span
           ></P
         >
-        {#if $appStore.app.userManager && !$appStore.app.isUserLoggedIn}
-          {#if $appStore.app.sessionExpired}
+        {#if appStore.state.app.userManager && !appStore.state.app.isUserLoggedIn}
+          {#if appStore.state.app.sessionExpired}
             <div class="text-yellow-400">
-              <i class="bx bx-message-alt-error"></i> Your session is expired: {$appStore.app
+              <i class="bx bx-message-alt-error"></i> Your session is expired: {appStore.state.app
                 .sessionExpiredMessage || "Please login"}
             </div>
           {/if}
-          <Button on:click={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
+          <Button onclick={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
         {/if}
-        {#if $appStore.app.userManager && $appStore.app.isUserLoggedIn}
+        {#if appStore.state.app.userManager && appStore.state.app.isUserLoggedIn}
           <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
-          <Button on:click={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
+          <Button onclick={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
         {/if}
         <div class="flex flex-row gap-4">
           <div class="flex flex-grow flex-col">
@@ -118,19 +118,19 @@
         </div>
       </div>
     </Card>
-    {#if $appStore.app.isUserLoggedIn && !$appStore.app.sessionExpired}
+    {#if appStore.state.app.isUserLoggedIn && !appStore.state.app.sessionExpired}
       <div class="mt-4 flex w-full flex-row gap-4">
         <div class="flex flex-grow flex-col">
           <span class="text-xl">User:</span>
-          <span class="ml-3">{$appStore.app.tokenParsed?.preferred_username}</span>
+          <span class="ml-3">{appStore.state.app.tokenParsed?.preferred_username}</span>
         </div>
         {#if !viewError}
           <div class="flex flex-grow flex-col">
             <span class="text-xl">View: </span>
-            <List tag="ul" class="space-y-1" list="none">
+            <List tag="ul" class="list-none space-y-1">
               {#await getView() then view}
                 {#each view.entries() as [publisher, tlps]}
-                  <Li liClass="ml-3"
+                  <Li class="ml-3"
                     >{publisher === "*" ? "all" : publisher}:
                     {#each tlps as tlp}
                       <div
@@ -147,24 +147,24 @@
           </div>
           <div class="flex flex-col">
             <span class="text-xl">Roles:</span>
-            <List tag="ul" class="space-y-1" list="none">
+            <List tag="ul" class="list-none space-y-1">
               {#if appStore.isAdmin()}
-                <Li liClass="ml-3">Admin</Li>
+                <Li class="ml-3">Admin</Li>
               {/if}
               {#if appStore.isReviewer()}
-                <Li liClass="ml-3">Reviewer</Li>
+                <Li class="ml-3">Reviewer</Li>
               {/if}
               {#if appStore.isAuditor()}
-                <Li liClass="ml-3">Auditor</Li>
+                <Li class="ml-3">Auditor</Li>
               {/if}
               {#if appStore.isImporter()}
-                <Li liClass="ml-3">Importer</Li>
+                <Li class="ml-3">Importer</Li>
               {/if}
               {#if appStore.isEditor()}
-                <Li liClass="ml-3">Editor</Li>
+                <Li class="ml-3">Editor</Li>
               {/if}
               {#if appStore.isSourceManager()}
-                <Li liClass="ml-3">Source-Manager</Li>
+                <Li class="ml-3">Source-Manager</Li>
               {/if}
             </List>
           </div>

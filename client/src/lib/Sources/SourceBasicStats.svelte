@@ -13,9 +13,14 @@
   import type { Result } from "$lib/types";
   import type { ErrorDetails } from "$lib/Errors/error";
 
-  export let from: Date = new Date(0);
-  export let sourceID: number;
-  let oldResponse: Result<StatisticGroup, ErrorDetails> | null = null;
+  interface Props {
+    from?: Date;
+    sourceID: number;
+  }
+
+  let { from = new Date(0), sourceID }: Props = $props();
+
+  let oldResponse: Result<StatisticGroup, ErrorDetails> | null = $state(null);
   export const reload = async () => {
     promise = fetch();
   };
@@ -29,7 +34,7 @@
     );
     return oldResponse;
   };
-  let promise = fetch();
+  let promise = $state(fetch());
 </script>
 
 {#await promise}

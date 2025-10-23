@@ -12,25 +12,55 @@
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { Table, TableBody, TableHead, TableHeadCell } from "flowbite-svelte";
   import { tablePadding, type TableHeader } from "./defaults";
-  export let title: string | undefined = undefined;
-  export let headers: TableHeader[];
-  export let stickyHeaders = false;
-  let orderBy = "";
+  import type { Snippet } from "svelte";
+  interface Props {
+    title?: string;
+    headers: TableHeader[];
+    stickyHeaders?: boolean;
+    bottomSlot?: Snippet;
+    headerRightSlot?: Snippet;
+    mainSlot: Snippet;
+    topSlot?: Snippet;
+  }
+  let {
+    title = undefined,
+    headers,
+    stickyHeaders = false,
+    bottomSlot = undefined,
+    headerRightSlot = undefined,
+    mainSlot,
+    topSlot = undefined
+  }: Props = $props();
+  let orderBy = $state("");
 </script>
 
 <div class="mb-6">
   {#if title}
     <SectionHeader {title}>
-      <div slot="right">
-        <slot name="header-right"></slot>
-      </div>
+      {#snippet rightSlot()}
+        <div>
+          {#if headerRightSlot}
+            {@render headerRightSlot()}
+          {/if}
+        </div>
+      {/snippet}
     </SectionHeader>
   {/if}
-  <slot name="top"></slot>
-  <Table divClass="relative" hoverable={true} noborder={true}>
-    <TableHead theadClass={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : ""}>
+  {#if topSlot}
+    {@render topSlot()}
+  {/if}
+  <Table
+    classes={{
+      div: "relative"
+    }}
+    hoverable={true}
+    border={false}
+  >
+    <TableHead
+      class={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : "dark:bg-gray-800"}
+    >
       {#each headers as header}
-        <TableHeadCell class={header.class ?? ""} padding={tablePadding} on:click={() => {}}>
+        <TableHeadCell class={header.class ?? ""} padding={tablePadding} onclick={() => {}}>
           <span>{header.label}</span>
           <i
             class:bx={true}
@@ -52,10 +82,12 @@
         </TableHeadCell>{/each}
     </TableHead>
     <TableBody>
-      <slot></slot>
+      {@render mainSlot()}
     </TableBody>
   </Table>
   <div class="mt-2">
-    <slot name="bottom"></slot>
+    {#if bottomSlot}
+      {@render bottomSlot()}
+    {/if}
   </div>
 </div>

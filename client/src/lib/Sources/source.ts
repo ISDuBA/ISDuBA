@@ -13,7 +13,7 @@ import type { CSAFProviderMetadata } from "$lib/provider";
 import type { AggregatorMetadata } from "$lib/aggregatorTypes";
 
 const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
-const ddClass: string = "break-words font-semibold ml-2 mb-1";
+const ddClass: string = "text-md break-words font-semibold ml-2 mb-1";
 
 type Source = {
   id?: number;
@@ -30,7 +30,7 @@ type Source = {
   ignore_patterns: string[];
   client_cert_public?: string | null;
   client_cert_private?: string | null;
-  client_cert_passphrase?: string | null;
+  client_cert_passphrase: string;
   status?: string[];
   attention: boolean;
   stats?: {

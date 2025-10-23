@@ -12,19 +12,27 @@
   import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
   import { tick } from "svelte";
-  export let label;
-  export let upload = async (
-    files: FileList,
-    updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
-  ): Promise<UploadInfo[]> => {
-    // eslint-disable-next-line no-console
-    console.log(files, uploadInfo, updateCallback);
-    return [];
-  };
-  export let cancel = () => {};
 
-  export let uploadInfo: UploadInfo[] = [];
-  let isUploading = false;
+  interface Props {
+    cancel: () => any;
+    label: any;
+    upload?: any;
+    uploadInfo?: UploadInfo[];
+  }
+
+  let {
+    cancel,
+    label,
+    upload = async (
+      files: FileList,
+      updateCallback: ((uploadInfo: UploadInfo[]) => void) | undefined
+    ): Promise<UploadInfo[]> => {
+      // eslint-disable-next-line no-console
+      console.log(files, uploadInfo, updateCallback);
+      return [];
+    },
+    uploadInfo = $bindable([])
+  }: Props = $props();
 
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
@@ -33,27 +41,30 @@
     }
     return "";
   };
-  let files: FileList | undefined;
-  let filesCache: FileList | undefined;
-  let showFileInput = true;
-  $: if (files) {
-    uploadInfo = [];
-  }
+  let files: FileList | undefined = $state(undefined);
+  let filesCache: FileList | undefined = $state(undefined);
+  let isUploading = $state(false);
+  let showFileInput = $state(true);
+  $effect(() => {
+    if (files) {
+      uploadInfo = [];
+    }
+  });
 </script>
 
-<Card size="lg">
+<Card size="lg" class="p-4">
   <div class={`flex flex-col gap-4 ${files?.length && files.length > 1 ? "mb-4" : "mb-40"}`}>
     <div>
       <Label class="pb-2">{label}</Label>
       {#if showFileInput}
         <Fileupload
-          inputClass="cursor-pointer disabled:cursor-not-allowed border !p-0 dark:text-gray-400"
+          wrapperClass="cursor-pointer disabled:cursor-not-allowed !p-0 dark:text-gray-400"
           class="file:bg-primary-800"
           value=""
           bind:files
           multiple
           accept=".json"
-          on:change={() => {
+          onchange={() => {
             filesCache = undefined;
           }}
         />
@@ -72,19 +83,19 @@
       {/if}
       {#if isUploading}
         <Button
-          on:click={() => {
+          onclick={() => {
             cancel();
           }}
           color="red">Cancel</Button
         >
       {/if}
       <Button
-        on:click={async () => {
+        onclick={async () => {
           isUploading = true;
           setTimeout(async () => {
             if (files) {
               filesCache = files;
-              uploadInfo = await upload(files, (info) => {
+              uploadInfo = await upload(files, (info: UploadInfo[]) => {
                 uploadInfo = info;
               });
             }

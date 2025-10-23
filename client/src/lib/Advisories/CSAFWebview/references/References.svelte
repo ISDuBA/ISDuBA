@@ -10,19 +10,24 @@
 
 <script lang="ts">
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  export let references: any;
+
+  interface Props {
+    references: any;
+  }
+  let { references }: Props = $props();
+
   const baseCellStyle = "py-2 px-2";
   const cellStyle = "" + baseCellStyle;
 </script>
 
 {#if references}
   <div class="mt-1 w-full pl-5">
-    <Table noborder striped={true}>
+    <Table border={false} striped={true}>
       <TableBody>
         {#each references as reference}
           <TableBodyRow>
-            <TableBodyCell tdClass={cellStyle}>{reference.category}</TableBodyCell>
-            <TableBodyCell tdClass={cellStyle}
+            <TableBodyCell class={cellStyle}>{reference.category}</TableBodyCell>
+            <TableBodyCell class={cellStyle}
               ><p class="mb-2">{reference.summary}</p>
               <a class="underline" href={reference.url}><i class="bx bx-link"></i>{reference.url}</a
               ></TableBodyCell

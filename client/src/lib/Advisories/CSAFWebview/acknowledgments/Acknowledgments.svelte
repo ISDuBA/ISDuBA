@@ -11,7 +11,10 @@
 <script lang="ts">
   import AcknowledgmentComponent from "./Acknowledgment.svelte";
   import type { Acknowledgment } from "../docmodel/docmodeltypes";
-  export let acknowledgments: Acknowledgment[];
+  interface Props {
+    acknowledgments: Acknowledgment[];
+  }
+  let { acknowledgments }: Props = $props();
 </script>
 
 {#if acknowledgments}

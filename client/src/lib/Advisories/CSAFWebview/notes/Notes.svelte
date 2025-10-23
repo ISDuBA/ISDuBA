@@ -12,9 +12,14 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import SingleNote from "$lib/Advisories/CSAFWebview/notes/Note.svelte";
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
-  export let notes: Note[];
-  export let open: boolean = false;
-  $: hasDescription = notes.some((note) => note.category === "description");
+
+  interface Props {
+    notes: Note[];
+    open?: boolean;
+  }
+  let { notes, open = false }: Props = $props();
+
+  let hasDescription = $derived(notes.some((note) => note.category === "description"));
 </script>
 
 {#if notes}

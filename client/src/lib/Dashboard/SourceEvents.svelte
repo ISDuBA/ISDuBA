@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import {
     type Attention,
@@ -27,10 +27,10 @@
     isSource: boolean;
   }
 
-  let attentionCount = 0;
-  let attentions: MergedAttention[] = [];
-  let loadAttentionError: ErrorDetails | null;
-  let isLoading = false;
+  let attentionCount = $state(0);
+  let attentions: MergedAttention[] = $state([]);
+  let loadAttentionError: ErrorDetails | null = $state(null);
+  let isLoading = $state(false);
 
   const loadAttentionList = async () => {
     let sourceResult = await fetchSourceAttentionList();
@@ -64,7 +64,7 @@
   });
 </script>
 
-{#if $appStore.app.isUserLoggedIn && appStore.isSourceManager()}
+{#if appStore.state.app.isUserLoggedIn && appStore.isSourceManager()}
   <div class="mb-8 flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
     <SectionHeader title="Changed sources"></SectionHeader>
     <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
@@ -78,7 +78,7 @@
         {#if attentions.length > 0}
           {#each attentions as attention}
             <Activity
-              on:click={() => {
+              onClicked={() => {
                 if (attention.id) {
                   if (attention.isSource) {
                     push(`/sources/${attention.id}`);
@@ -88,9 +88,10 @@
                 }
               }}
             >
-              <div slot="top-left">
-                {attention.isSource ? "Source change" : "Aggregator change"}
-              </div>
+              {#snippet topLeftSlot()}
+                <div>
+                  {attention.isSource ? "Source change" : "Aggregator change"}
+                </div>{/snippet}
               <div>{attention.name}</div>
             </Activity>
           {/each}
@@ -100,7 +101,7 @@
       {/if}
     </div>
     <Button
-      on:click={async () => await push(`/sources/`)}
+      onclick={async () => await push(`/sources/`)}
       color="light"
       class="h-fit w-fit rounded-md !px-2 !py-1"
     >

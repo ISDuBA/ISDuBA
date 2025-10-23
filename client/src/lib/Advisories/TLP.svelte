@@ -8,7 +8,10 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  export let tlp = "";
+  interface Props {
+    tlp?: string;
+  }
+  let { tlp = "" }: Props = $props();
 </script>
 
 <a

@@ -23,7 +23,7 @@
     dtClass,
     ddClass
   } from "$lib/Sources/source";
-  import { Button, Spinner, Modal, List, DescriptionList, Badge } from "flowbite-svelte";
+  import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
@@ -36,40 +36,45 @@
   import { DAY_MS } from "$lib/time";
   import SourceBasicStats from "./SourceBasicStats.svelte";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
-  export let params: any = null;
+  import CBadge from "$lib/Components/CBadge.svelte";
+
+  interface Props {
+    params: any;
+  }
+  let { params = null }: Props = $props();
 
   const shortLoadInterval = 5;
   const longLoadMultiplier = 6;
 
-  let sourceEdited: boolean = false;
+  let sourceEdited: boolean = $state(false);
 
-  let modalOpen: boolean = false;
-  let modalMessage = "";
-  let modalTitle = "";
-  let modalCallback: any;
+  let modalOpen: boolean = $state(false);
+  let modalMessage = $state("");
+  let modalTitle = $state("");
+  let modalCallback: any = $state(null);
 
-  let saveSourceError: ErrorDetails | null = null;
-  let loadSourceError: ErrorDetails | null = null;
-  let loadFeedError: ErrorDetails | null = null;
-  let saveFeedError: ErrorDetails | null = null;
-  let loadPmdError: ErrorDetails | null = null;
-  let feedError: ErrorDetails | null = null;
-  let pmd: CSAFProviderMetadata;
-  let feeds: Feed[] = [];
+  let saveSourceError: ErrorDetails | null = $state(null);
+  let loadSourceError: ErrorDetails | null = $state(null);
+  let loadFeedError: ErrorDetails | null = $state(null);
+  let saveFeedError: ErrorDetails | null = $state(null);
+  let loadPmdError: ErrorDetails | null = $state(null);
+  let feedError: ErrorDetails | null = $state(null);
+  let pmd: CSAFProviderMetadata | null = $state(null);
+  let feeds: Feed[] = $state([]);
 
-  let loadingFeeds: boolean = false;
-  let loadingSource: boolean = false;
-  let loadingPMD: boolean = false;
+  let loadingFeeds: boolean = $state(false);
+  let loadingSource: boolean = $state(false);
+  let loadingPMD: boolean = $state(false);
 
   let formClass = "max-w-[800pt]";
 
-  let sourceForm: any;
-  let updateSourceForm: any;
+  let sourceForm: any = $state(null);
+  let updateSourceForm: any = $state(null);
   let fillAgeDataFromSource: (source: Source) => void;
 
-  let loadSource: boolean = true;
+  let loadSource: boolean = $state(true);
 
-  let source: Source = {
+  const initialSource = {
     name: "",
     url: "",
     active: false,
@@ -78,18 +83,20 @@
     strict_mode: true,
     headers: [""],
     ignore_patterns: [""],
-    attention: false
+    attention: false,
+    client_cert_passphrase: ""
   };
+  let source: Source = $state(structuredClone(initialSource));
 
-  let oldSource = structuredClone(source);
+  let oldSource: Source = $state(structuredClone(initialSource));
 
-  let sourceStatFull: SourceBasicStats;
-  let sourceStatLast: SourceBasicStats;
+  let sourceStatFull: SourceBasicStats | null = $state(null);
+  let sourceStatLast: SourceBasicStats | null = $state(null);
 
   let updateIteration = 0;
   let updateStats = setInterval(async () => {
     updateIteration = (updateIteration + 1) % 6;
-    if (updateIteration == 0) {
+    if (updateIteration == 0 && sourceStatFull && sourceStatLast) {
       sourceStatFull.reload();
       sourceStatLast.reload();
     }
@@ -122,7 +129,7 @@
         fillAgeDataFromSource(source);
       }
       await updateSourceForm();
-      oldSource = structuredClone(source);
+      oldSource = structuredClone($state.snapshot(source));
       sourceEdited = false;
     } else {
       loadSourceError = result.error;
@@ -247,7 +254,7 @@
 
   const inputChange = async () => {
     await updateSourceForm();
-    if (sourceEqual(oldSource, source)) {
+    if (sourceEqual($state.snapshot(oldSource), $state.snapshot(source))) {
       sourceEdited = false;
     } else {
       sourceEdited = true;
@@ -274,7 +281,7 @@
         await loadPMD();
       }
       await loadFeeds();
-      if (source.id !== 0) {
+      if (source.id !== 0 && pmd) {
         let missingFeeds = calculateMissingFeeds(parseFeeds(pmd, feeds), feeds);
         missingFeeds.map((f) => {
           f.enable = false;
@@ -301,7 +308,7 @@
       {modalMessage}
     </h3>
     <Button
-      on:click={() => {
+      onclick={() => {
         modalCallback();
       }}
       color="red"
@@ -317,49 +324,51 @@
     <div class="w-full">
       <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
         <div>
-          <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Domain/PMD</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{source.url}</DescriptionList>
         </div>
         {#if pmd}
           <div>
-            <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+            <DescriptionList tag="dt" class={dtClass}>Canonical URL</DescriptionList>
+            <DescriptionList tag="dd" class={ddClass}>{pmd.canonical_url}</DescriptionList>
           </div>
           <div>
-            <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
+            <DescriptionList tag="dt" class={dtClass}>Publisher Name</DescriptionList>
+            <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.name}</DescriptionList>
           </div>
           <div>
-            <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
+            <DescriptionList tag="dt" class={dtClass}>Publisher Contact</DescriptionList>
+            <DescriptionList tag="dd" class={ddClass}
+              >{pmd.publisher.contact_details}</DescriptionList
+            >
           </div>
           <div>
             {#if pmd.publisher.issuing_authority}
-              <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
-              <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList
+              <DescriptionList tag="dt" class={dtClass}>Issuing Authority</DescriptionList>
+              <DescriptionList tag="dd" class={ddClass}
+                >{pmd.publisher.issuing_authority}</DescriptionList
               >
             {/if}
           </div>
         {/if}
         <div>
-          <DescriptionList tag="dt" {dtClass}>Status</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Status</DescriptionList>
           {#if source.status}
             {#each source.status as s}
-              <DescriptionList tag="dd" {ddClass}>{s}</DescriptionList>
+              <DescriptionList tag="dd" class={ddClass}>{s}</DescriptionList>
             {/each}
           {:else}
-            <DescriptionList tag="dd" {ddClass}>OK</DescriptionList>
+            <DescriptionList tag="dd" class={ddClass}>OK</DescriptionList>
           {/if}
         </div>
       </List>
       {#if source.stats}
         <h4 class="mt-3">Status</h4>
         <div class="grid w-full grid-cols-[max-content_max-content_max-content] gap-x-4 text-sm">
-          <DescriptionList tag="dt" {dtClass}>Loading</DescriptionList>
-          <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}>Queued</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Loading</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass + " mr-1"}>Queued</DescriptionList>
           <div>
-            <DescriptionList tag="dt" dtClass={dtClass + " mr-1"}
-              >Imported (last 24h)</DescriptionList
+            <DescriptionList tag="dt" class={dtClass + " mr-1"}>Imported (last 24h)</DescriptionList
             >
             <div class="mt-1 mb-1 h-1 min-h-1">
               <div class="progressmeter">
@@ -372,9 +381,9 @@
               </div>
             </div>
           </div>
-          <DescriptionList tag="dd" {ddClass}>{source.stats.downloading}</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{source.stats.waiting}</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>
+          <DescriptionList tag="dd" class={ddClass}>{source.stats.downloading}</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{source.stats.waiting}</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>
             {#if source.id}
               {@const yesterday = Date.now() - DAY_MS}
               <SourceBasicStats bind:this={sourceStatFull} sourceID={source.id}></SourceBasicStats>
@@ -418,12 +427,12 @@
         {formClass}
         enableActive={true}
       ></SourceForm>
-      <Button disabled={!sourceEdited} on:click={updateSource} color="green">
+      <Button disabled={!sourceEdited} onclick={updateSource} color="green">
         <i class="bx bxs-save me-2"></i>
         <span>Save source</span>
       </Button>
       <Button
-        on:click={(event) => {
+        onclick={(event: any) => {
           event.stopPropagation();
           modalCallback = () => {
             deleteSource();
@@ -443,36 +452,31 @@
   </div>
 {/if}
 
-<FeedView
-  showProgress
-  {feeds}
-  placeholderFeed={source.id === 0}
-  {clickFeed}
-  {updateFeed}
-  edit={true}
->
-  <div slot="top">
-    {#if source.attention}
-      <Badge class="mb-2 h-fit p-1" dismissable>
-        <p>
-          These are the currently available feeds. Please review them and adjust the subscriptions
-          if needed.
-        </p>
-        <Button
-          slot="close-button"
-          let:close
-          color="light"
-          class="border-primary-700/55 text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
-          on:click={async () => {
-            markAsDone();
-            close();
-          }}
-        >
-          <i class="bx bx-check"></i>
-        </Button>
-      </Badge>
-    {/if}
-  </div>
+<FeedView {feeds} placeholderFeed={source.id === 0} {clickFeed} {updateFeed} edit={true}>
+  {#snippet feedViewTopSlot()}
+    <div>
+      {#if source.attention}
+        <CBadge class="mb-2 h-fit p-1" dismissable>
+          <p>
+            These are the currently available feeds. Please review them and adjust the subscriptions
+            if needed.
+          </p>
+          {#snippet closeButtonSlot()}
+            <Button
+              color="light"
+              class="border-primary-700/55 text-primary-700 ms-1 min-h-[26px] min-w-[26px] rounded border bg-transparent p-0 hover:bg-white/50 dark:bg-transparent dark:hover:bg-white/20"
+              onclick={async () => {
+                markAsDone();
+                close();
+              }}
+            >
+              <i class="bx bx-check"></i>
+            </Button>
+          {/snippet}
+        </CBadge>
+      {/if}
+    </div>
+  {/snippet}
 </FeedView>
 <div
   class:invisible={!loadingFeeds && !loadingPMD}

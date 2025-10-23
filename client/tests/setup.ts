@@ -31,7 +31,7 @@ setup("authenticate and upload document", async ({ page }) => {
 
   // Upload test document
   await page.goto("/#/sources");
-  await page.getByRole("button", { name: " Upload documents" }).click();
+  await page.getByRole("link", { name: " Upload documents" }).click();
   // Test if the upload button is disabled when no files were added yet
   const uploadButton = page.getByRole("button", { name: "Upload" });
   await expect(uploadButton).toBeDisabled();

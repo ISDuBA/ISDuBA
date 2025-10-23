@@ -12,7 +12,10 @@
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import type { hashEntry } from "./producttypes";
 
-  export let hash: hashEntry[];
+  interface Props {
+    hash: hashEntry[];
+  }
+  let { hash }: Props = $props();
 </script>
 
 {#each hash as hashEntry}

@@ -11,17 +11,21 @@
 <script lang="ts">
   import type { ErrorDetails } from "$lib/Errors/error";
   import { Alert } from "flowbite-svelte";
-  export let error: ErrorDetails | null;
+  interface Props {
+    error: ErrorDetails | null;
+  }
 
-  let showDetails: boolean = false;
+  let { error }: Props = $props();
+
+  let showDetails: boolean = $state(false);
 </script>
 
 {#if error}
   <div class="w-fit">
-    <Alert color="red" defaultClass="p-4 gap-3 text-sm dark:bg-[#302834]" dismissable>
+    <Alert color="red" class="gap-3 p-4 text-sm dark:bg-[#302834]" dismissable>
       <span class="text-lg"> {error.message}</span>
       {#if error.details}
-        <a href={"javascript:void(0);"} on:click={() => (showDetails = !showDetails)}>
+        <a href={"javascript:void(0);"} onclick={() => (showDetails = !showDetails)}>
           {#if showDetails}
             <i class="bx bx-chevron-up text-2xl"></i>
           {:else}

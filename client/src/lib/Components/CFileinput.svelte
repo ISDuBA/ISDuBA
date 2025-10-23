@@ -10,29 +10,42 @@
 
 <script lang="ts">
   import { Button, Label } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
 
-  export let containerClass: string | undefined = undefined;
-  export let clearable = true;
-  export let disabled = false;
-  export let files: FileList | undefined = undefined;
-  export let id: string;
-  export let multiple = true;
-  export let oldFile: string | null | undefined = undefined;
-  export let isFileReset: boolean = false;
-  export let titleClearButton = "";
+  interface Props {
+    containerClass?: string | undefined;
+    clearable?: boolean;
+    disabled?: boolean;
+    files?: FileList | undefined;
+    id: string;
+    multiple?: boolean;
+    oldFile?: string | null | undefined;
+    isFileReset?: boolean;
+    titleClearButton?: string;
+    onChanged?: (event?: any) => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let {
+    containerClass = undefined,
+    clearable = true,
+    disabled = false,
+    files = $bindable(),
+    id,
+    multiple = true,
+    oldFile = $bindable(undefined),
+    isFileReset = $bindable(false),
+    titleClearButton = "",
+    onChanged = () => {}
+  }: Props = $props();
 
   const onChange = (event: any) => {
     files = event.target.files;
-    dispatch("change");
+    onChanged();
   };
 </script>
 
 <div class={`${containerClass ?? "mb-3 inline-flex w-full"}`}>
   <Button
-    on:click={() => {
+    onclick={() => {
       document.getElementById(id)?.click();
     }}
     class="rounded-none rounded-l-lg border border-r-0 dark:border-gray-700 dark:bg-gray-800"
@@ -55,14 +68,14 @@
       <span>No file selected</span>
     {/if}
   </Label>
-  <input {multiple} on:change={onChange} {disabled} {id} type="file" />
+  <input {multiple} onchange={onChange} {disabled} {id} type="file" />
   {#if clearable}
     <Button
-      on:click={() => {
+      onclick={() => {
         files = undefined;
         oldFile = undefined;
         isFileReset = true;
-        dispatch("change");
+        onChanged();
       }}
       title={titleClearButton}
       class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"

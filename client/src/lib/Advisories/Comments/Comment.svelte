@@ -10,45 +10,58 @@
 
 <script lang="ts">
   import { TableBodyCell } from "flowbite-svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import CommentTextArea from "./CommentTextArea.svelte";
   import { request } from "$lib/request";
-  import { createEventDispatcher } from "svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
   import { getReadableDateString } from "../CSAFWebview/helpers";
+  import { untrack } from "svelte";
 
-  export let comment: any;
-  export let fullHistory: boolean;
-  export let state = "";
+  interface Props {
+    comment: any;
+    fullHistory: boolean;
+    workflowState: string;
+    onCommentUpdated: () => void;
+  }
+
+  let { comment, fullHistory, workflowState = "", onCommentUpdated }: Props = $props();
   const intlFormat = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "medium"
   });
-  let updatedComment = comment.message;
-  let commentID = comment.comment_id;
-  $: if (commentID !== comment.comment_id) {
-    updatedComment = comment.message;
-    commentID = comment.comment_id;
-  }
-  let isEditing = false;
-  let updateCommentError: ErrorDetails | null;
-  let lastEdited = "";
-  let isCommentingAllowed: boolean;
-
-  $: if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(state)) {
-    if (appStore.isReviewer() && [NEW, READ, ARCHIVED].includes(state)) {
-      isCommentingAllowed = false;
-    } else {
-      isCommentingAllowed = appStore.isEditor() || appStore.isReviewer();
+  let updatedComment = $state(comment.message);
+  let commentID = $state(comment.comment_id);
+  $effect(() => {
+    untrack(() => commentID);
+    if (commentID !== comment.comment_id) {
+      updatedComment = comment.message;
+      commentID = comment.comment_id;
     }
-  } else {
-    isCommentingAllowed = false;
-  }
+  });
+  let isEditing = $state(false);
+  let updateCommentError: ErrorDetails | null = $state(null);
+  let lastEdited = $derived.by(() => {
+    if (comment.times) {
+      let latest = [...comment.times].sort().reverse()[0];
+      latest = latest.replace("T", " ").split(".")[0];
+      return `(edited ${latest})`;
+    }
+  });
+
+  let isCommentingAllowed = $derived.by(() => {
+    if ([NEW, READ, ASSESSING, REVIEW, ARCHIVED].includes(workflowState)) {
+      if (appStore.isReviewer() && [NEW, READ, ARCHIVED].includes(workflowState)) {
+        return false;
+      } else {
+        return appStore.isEditor() || appStore.isReviewer();
+      }
+    } else {
+      return false;
+    }
+  });
 
   const tdClass = "py-2 px-2";
-
-  const dispatch = createEventDispatcher();
 
   function toggleEditing() {
     isEditing = !isEditing;
@@ -65,17 +78,11 @@
     } else if (response.error) {
       updateCommentError = getErrorDetails(`Could not update comment.`, response);
     }
-    dispatch("commentUpdate");
-  }
-
-  $: if (comment.times) {
-    let latest = comment.times.sort().reverse()[0];
-    latest = latest.replace("T", " ").split(".")[0];
-    lastEdited = `(edited ${latest})`;
+    onCommentUpdated();
   }
 </script>
 
-<TableBodyCell {tdClass}>
+<TableBodyCell class={tdClass}>
   <div class="flex flex-col">
     <div class="flex flex-row items-baseline">
       <small class="w-40 text-xs text-slate-400" title={comment.time}
@@ -90,8 +97,8 @@
       <div class="mt-1 flex flex-row items-center">
         <div style="white-space: pre-wrap">{comment.message}</div>
         <div class="ml-auto">
-          {#if $appStore.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
-            <button class="h-7 !p-2" on:click={toggleEditing}>
+          {#if appStore.state.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
+            <button class="h-7 !p-2" onclick={toggleEditing} aria-label="Edit comment">
               <i class="bx bx-edit text-lg"></i>
             </button>
           {/if}
@@ -99,9 +106,9 @@
       </div>
     {:else}
       <CommentTextArea
-        on:cancel={toggleEditing}
-        on:input={() => (updateCommentError = null)}
-        on:saveComment={updateComment}
+        cancel={toggleEditing}
+        onInput={() => (updateCommentError = null)}
+        saveComment={updateComment}
         cancelable={true}
         buttonText="Save"
         errorMessage={updateCommentError}

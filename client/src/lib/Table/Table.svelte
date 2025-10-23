@@ -10,7 +10,7 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import {
     Button,
     Dropdown,
@@ -32,7 +32,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ADMIN, EDITOR, IMPORTER, REVIEWER } from "$lib/workflow";
   import { getAllowedWorkflowChanges, isRoleIncluded } from "$lib/permissions";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { getPublisher } from "$lib/publisher";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
@@ -42,58 +42,83 @@
   import DeleteModal from "./DeleteModal.svelte";
   import { updateMultipleStates } from "$lib/Advisories/advisory";
 
-  let openRow: number | null;
+  let openRow: number | null = $state(null);
   let abortController: AbortController;
   let requestOngoing = false;
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
   };
-  let limit = 10;
-  let offset = 0;
-  let count = 0;
-  let currentPage = 1;
-  let documents: any = null;
-  $: documentIDs = documents?.map((d: any) => d.id) ?? [];
-  let loading = false;
-  let error: ErrorDetails | null;
-  let changeWorkflowStateError: ErrorDetails | null;
+  let limit = $state(10);
+  let offset = $state(0);
+  let count = $state(0);
+  let currentPage = $state(1);
+  let documents: any = $state(null);
+  let documentIDs = $derived(documents?.map((d: any) => d.id) ?? []);
+  let loading = $state(false);
+  let error: ErrorDetails | null = $state(null);
+  let changeWorkflowStateError: ErrorDetails | null = $state(null);
   let prevQuery = "";
-  export let columns: string[];
-  export let query: string = "";
-  export let searchTerm: string = "";
-  export let tableType: SEARCHTYPES;
-  export let orderBy: string[] = ["title"];
-  export let defaultOrderBy = ["title"];
-  export let searchResults: boolean;
+  interface Props {
+    columns: string[];
+    query?: string;
+    searchTerm?: string;
+    tableType: SEARCHTYPES;
+    orderBy?: string[];
+    defaultOrderBy?: any;
+    searchResults: boolean;
+  }
+
+  let {
+    columns,
+    query = "",
+    searchTerm = "",
+    tableType,
+    searchResults,
+    orderBy = $bindable(["title"]),
+    defaultOrderBy = ["title"]
+  }: Props = $props();
 
   const tdClass = "whitespace-nowrap relative";
 
-  $: disableDiffButtons =
-    $appStore.app.diff.docA_ID !== undefined && $appStore.app.diff.docB_ID !== undefined;
-
-  $: areAllSelected =
-    documents && areArraysEqual(documentIDs, Array.from($appStore.app.selectedDocumentIDs.keys()));
-
-  $: selectedDocuments =
-    $appStore.app.documents?.filter((d: any) => $appStore.app.selectedDocumentIDs.has(d.id)) ?? [];
-  $: allowedWorkflowStateChanges = getAllowedWorkflowChanges(
-    selectedDocuments?.map((d: any) => d.state) ?? []
+  let disableDiffButtons = $derived(
+    appStore.state.app.diff.docA_ID !== undefined && appStore.state.app.diff.docB_ID !== undefined
   );
-  $: workflowOptions = allowedWorkflowStateChanges.map((c) => {
-    return { name: c.to, value: c.to };
-  });
-  $: isMultiSelectionAllowed =
+
+  let areAllSelected = $derived(
+    documents &&
+      areArraysEqual(documentIDs, Array.from(appStore.state.app.selectedDocumentIDs.keys()))
+  );
+
+  let selectedDocuments = $derived(
+    appStore.state.app.documents?.filter((d: any) =>
+      appStore.state.app.selectedDocumentIDs.has(d.id)
+    ) ?? []
+  );
+  let allowedWorkflowStateChanges = $derived(
+    getAllowedWorkflowChanges(selectedDocuments?.map((d: any) => d.state) ?? [])
+  );
+  let workflowOptions = $derived(
+    allowedWorkflowStateChanges.map((c) => {
+      return { name: c.to, value: c.to };
+    })
+  );
+  let isMultiSelectionAllowed = $derived(
     isRoleIncluded(appStore.getRoles(), [EDITOR, IMPORTER, ADMIN, REVIEWER]) &&
-    ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) || tableType === SEARCHTYPES.ADVISORY);
-  $: areThereAnyComments =
-    tableType === SEARCHTYPES.EVENT && documents?.find((d: any) => d.event === "add_comment");
+      ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) ||
+        tableType === SEARCHTYPES.ADVISORY)
+  );
+  let areThereAnyComments = $derived(
+    tableType === SEARCHTYPES.EVENT && documents?.find((d: any) => d.event === "add_comment")
+  );
 
-  $: if (searchResults !== undefined) {
-    fetchData();
-  }
+  $effect(() => {
+    if (searchResults !== undefined) {
+      fetchData();
+    }
+  });
 
-  let selectedState: any;
-  let dropdownOpen = false;
+  let selectedState: any = $state(null);
+  let dropdownOpen = $state(false);
   const selectClass =
     "max-w-96 w-fit text-gray-900 disabled:text-gray-400 bg-gray-50 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:disabled:text-gray-500 dark:focus:ring-primary-500 dark:focus:border-primary-500";
 
@@ -122,7 +147,7 @@
     }
   };
 
-  let innerWidth = 0;
+  let innerWidth = $state(0);
 
   const getColumnDisplayName = (column: string): string => {
     let names: { [key: string]: string } = {
@@ -150,14 +175,16 @@
     sessionStorage.setItem("tablePosition" + query + tableType, JSON.stringify(position));
   };
 
-  let postitionRestored: boolean = false;
+  let postitionRestored: boolean = $state(false);
   const restorePosition = () => {
     let position = sessionStorage.getItem("tablePosition" + query + tableType);
     if (position) {
-      [offset, currentPage, limit, orderBy] = JSON.parse(position);
+      setPaginationParameters(JSON.parse(position));
     } else {
-      offset = 0;
-      currentPage = 1;
+      setPaginationParameters({
+        offset: 0,
+        currentPage: 1
+      });
     }
   };
 
@@ -168,28 +195,63 @@
         return c.replace("-", "");
       })
       .forEach((c) => {
-        if (!orderBy.includes(c)) orderBy = defaultOrderBy;
+        if (!orderBy.includes(c)) {
+          setPaginationParameters({
+            orderBy: defaultOrderBy
+          });
+        }
       });
   };
 
-  $: if (columns) {
-    setOrderBy();
+  interface PaginationParameters {
+    offset?: number;
+    currentPage?: number;
+    limit?: number;
+    orderBy?: string[];
   }
 
-  $: if (offset || currentPage || limit || orderBy) {
+  const setPaginationParameters = (paginationParameters: PaginationParameters) => {
+    if (paginationParameters.offset !== undefined) {
+      offset = paginationParameters.offset;
+    }
+    if (paginationParameters.currentPage !== undefined) {
+      currentPage = paginationParameters.currentPage;
+    }
+    if (paginationParameters.limit !== undefined) {
+      limit = paginationParameters.limit;
+    }
+    if (paginationParameters.orderBy !== undefined) {
+      orderBy = paginationParameters.orderBy;
+    }
+    savePosition();
+  };
+
+  $effect(() => {
+    untrack(() => orderBy);
+    if (columns) {
+      setOrderBy();
+    }
+  });
+
+  $effect(() => {
+    untrack(() => offset);
+    untrack(() => currentPage);
+    untrack(() => limit);
+    untrack(() => orderBy);
+    if (tableType || !tableType) {
+      restorePosition();
+      savePosition();
+    }
+  });
+
+  onMount(() => {
     if (!postitionRestored) {
       restorePosition();
       postitionRestored = true;
     }
-    savePosition();
-  }
+  });
 
-  $: if (tableType || !tableType) {
-    restorePosition();
-    savePosition();
-  }
-
-  $: isAdmin = isRoleIncluded(appStore.getRoles(), [ADMIN]);
+  let isAdmin = $derived(isRoleIncluded(appStore.getRoles(), [ADMIN]));
 
   export async function fetchData(): Promise<void> {
     appStore.setDocuments([]);
@@ -263,44 +325,55 @@
 
   const previous = async () => {
     if (offset - limit >= 0) {
-      offset = offset - limit > 0 ? offset - limit : 0;
-      currentPage -= 1;
+      setPaginationParameters({
+        currentPage: currentPage - 1,
+        offset: offset - limit > 0 ? offset - limit : 0
+      });
     }
     await fetchData();
   };
   const next = async () => {
     if (offset + limit <= count) {
-      offset = offset + limit;
-      currentPage += 1;
+      setPaginationParameters({
+        currentPage: currentPage + 1,
+        offset: offset + limit
+      });
     }
     await fetchData();
   };
 
   const first = async () => {
-    offset = 0;
-    currentPage = 1;
+    setPaginationParameters({
+      currentPage: 1,
+      offset: 0
+    });
     await fetchData();
   };
 
   const last = async () => {
-    offset = (numberOfPages - 1) * limit;
-    currentPage = numberOfPages;
+    setPaginationParameters({
+      currentPage: numberOfPages,
+      offset: (numberOfPages - 1) * limit
+    });
     await fetchData();
   };
 
   const switchSort = async (column: string) => {
     let found = orderBy.find((c) => c === column);
     let foundMinus = orderBy.find((c) => c === "-" + column);
+    let tmpOrderBy: string[] = [];
     if (foundMinus) {
-      orderBy = orderBy.filter((c) => c !== "-" + column);
+      tmpOrderBy = orderBy.filter((c) => c !== "-" + column);
     }
     if (found) {
-      orderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
+      tmpOrderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
     }
     if (!found && !foundMinus) {
-      orderBy.push(column);
+      tmpOrderBy.push(column);
     }
-    orderBy = orderBy;
+    setPaginationParameters({
+      orderBy: tmpOrderBy
+    });
     await tick();
     await fetchData();
   };
@@ -309,7 +382,7 @@
     await fetchData();
   };
 
-  $: numberOfPages = Math.ceil(count / limit);
+  let numberOfPages = $derived(Math.ceil(count / limit));
 
   const getColumnOrder = (orderBy: string[], column: string): string => {
     let index = orderBy.indexOf(column);
@@ -328,10 +401,7 @@
 
 <svelte:window bind:innerWidth />
 
-<DeleteModal
-  on:deleted={onDeleted}
-  documents={$appStore.app.documentsToDelete || []}
-  type={tableType}
+<DeleteModal {onDeleted} documents={appStore.state.app.documentsToDelete || []} type={tableType}
 ></DeleteModal>
 
 <div class="flex-grow">
@@ -342,7 +412,7 @@
           <div class="flex items-center gap-2">
             {#if appStore.isAdmin()}
               <Button
-                on:click={() => {
+                onclick={() => {
                   appStore.setDocumentsToDelete(selectedDocuments);
                   appStore.setIsDeleteModalOpen(true);
                 }}
@@ -363,16 +433,15 @@
                 <i class="bx bx-git-commit text-black-700 dark:text-gray-300"></i>
               </Button>
               <Dropdown
-                bind:open={dropdownOpen}
-                on:show={(event) => {
-                  if (!event.detail) {
+                bind:isOpen={dropdownOpen}
+                ontoggle={(event) => {
+                  if (event.newState) {
                     changeWorkflowStateError = null;
                   }
                 }}
                 placement="top-start"
                 triggeredBy="#state-icon"
-                class="w-full max-w-sm divide-y divide-gray-100 rounded p-4 shadow dark:divide-gray-700 dark:bg-gray-800"
-                containerClass="divide-y z-50 border border-gray-300"
+                class="z-50 w-full max-w-sm divide-y divide-gray-100 rounded border border-gray-300 p-4 shadow dark:divide-gray-700 dark:bg-gray-800"
               >
                 <div class="flex flex-col gap-3">
                   <div class="flex w-fit flex-col gap-3">
@@ -382,11 +451,11 @@
                         bind:value={selectedState}
                         items={workflowOptions}
                         placeholder="Choose..."
-                        defaultClass={selectClass}
+                        class={selectClass}
                       ></Select>
                     </Label>
                     <Button
-                      on:click={() => {
+                      onclick={() => {
                         changeWorkflowState();
                       }}
                       disabled={!selectedState}
@@ -411,9 +480,11 @@
               { name: "100", value: 100 }
             ]}
             bind:value={limit}
-            on:change={() => {
-              offset = 0;
-              currentPage = 1;
+            onchange={() => {
+              setPaginationParameters({
+                currentPage: 1,
+                offset: 0
+              });
               fetchData();
             }}
           ></Select>
@@ -431,22 +502,27 @@
       <div>
         <div class="mx-3 flex flex-row">
           <div class:invisible={currentPage === 1} class:flex={true} class:mr-3={true}>
-            <PaginationItem on:click={first}>
+            <PaginationItem onclick={first}>
               <i class="bx bx-arrow-to-left"></i>
             </PaginationItem>
-            <PaginationItem on:click={previous}>
+            <PaginationItem onclick={previous}>
               <i class="bx bx-chevrons-left"></i>
             </PaginationItem>
           </div>
           <div class="flex items-center">
             <input
               class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-800`}
-              on:change={() => {
-                if (!parseInt("" + currentPage)) currentPage = 1;
-                currentPage = Math.floor(currentPage);
-                if (currentPage < 1) currentPage = 1;
-                if (currentPage > numberOfPages) currentPage = numberOfPages;
-                offset = (currentPage - 1) * limit;
+              onchange={() => {
+                let tmpCurrentPage = currentPage;
+                if (!parseInt("" + tmpCurrentPage)) tmpCurrentPage = 1;
+                tmpCurrentPage = Math.floor(tmpCurrentPage);
+                if (tmpCurrentPage < 1) tmpCurrentPage = 1;
+                if (tmpCurrentPage > numberOfPages) tmpCurrentPage = numberOfPages;
+                const tmpOffset = (tmpCurrentPage - 1) * limit;
+                setPaginationParameters({
+                  currentPage: tmpCurrentPage,
+                  offset: tmpOffset
+                });
                 fetchData();
               }}
               bind:value={currentPage}
@@ -454,10 +530,10 @@
             <span class="mr-3 ml-2 text-nowrap">of {numberOfPages} pages</span>
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
-            <PaginationItem on:click={next}>
+            <PaginationItem onclick={next}>
               <i class="bx bx-chevrons-right"></i>
             </PaginationItem>
-            <PaginationItem on:click={last}>
+            <PaginationItem onclick={last}>
               <i class="bx bx-arrow-to-right"></i>
             </PaginationItem>
           </div>
@@ -484,14 +560,14 @@
   <ErrorMessage {error}></ErrorMessage>
   {#if documents?.length > 0}
     <div class="w-auto">
-      <Table style="w-auto" hoverable={true} noborder={true}>
-        <TableHead class="cursor-pointer">
+      <Table style="w-auto" hoverable={true} border={false}>
+        <TableHead class="cursor-pointer dark:bg-gray-800">
           {#if isMultiSelectionAllowed}
-            <TableHeadCell padding="px-0">
+            <TableHeadCell class="px-1">
               <CCheckbox
                 checked={areAllSelected}
-                on:click={(event) => {
-                  const isChecked = event.detail.target.checked;
+                onClicked={(event) => {
+                  const isChecked = event.target.checked;
                   if (isChecked) {
                     for (let i = 0; i < documentIDs.length; i++) {
                       appStore.addSelectedDocumentID(documentIDs[i]);
@@ -503,15 +579,15 @@
               ></CCheckbox>
             </TableHeadCell>
           {/if}
-          <TableHeadCell padding="px-0"></TableHeadCell>
+          <TableHeadCell class="px-0"></TableHeadCell>
           {#if areThereAnyComments}
-            <TableHeadCell padding={tablePadding} class="cursor-default">Comment</TableHeadCell>
+            <TableHeadCell class={`${tablePadding} cursor-default`}>Comment</TableHeadCell>
           {/if}
           {#each columns as column}
             {#if column !== searchColumnName}
               <TableHeadCell
-                padding={tablePadding}
-                on:click={() => {
+                class={tablePadding}
+                onclick={() => {
                   switchSort(column);
                 }}
                 >{getColumnDisplayName(column)}<i
@@ -535,11 +611,11 @@
                 : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"}
             >
               {#if isMultiSelectionAllowed}
-                <TableBodyCell tdClass="px-0">
+                <TableBodyCell class="px-1">
                   <CCheckbox
-                    checked={$appStore.app.selectedDocumentIDs.has(item.id)}
-                    on:click={(event) => {
-                      const isChecked = event.detail.target.checked;
+                    checked={appStore.state.app.selectedDocumentIDs.has(item.id)}
+                    onClicked={(event) => {
+                      const isChecked = event.target.checked;
                       if (isChecked) {
                         appStore.addSelectedDocumentID(item.id);
                       } else {
@@ -549,11 +625,11 @@
                   ></CCheckbox>
                 </TableBodyCell>
               {/if}
-              <TableBodyCell tdClass="px-0">
+              <TableBodyCell class="px-0">
                 <div class="flex items-center">
                   {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
                     <CIconButton
-                      on:click={() => {
+                      onClicked={() => {
                         appStore.setDocumentsToDelete([item]);
                         appStore.setIsDeleteModalOpen(true);
                       }}
@@ -563,8 +639,9 @@
                     ></CIconButton>
                   {/if}
                   <button
-                    on:click|stopPropagation={(e) => {
-                      if ($appStore.app.diff.docA_ID) {
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      if (appStore.state.app.diff.docA_ID) {
                         appStore.setDiffDocB_ID(item.id);
                       } else {
                         appStore.setDiffDocA_ID(item.id);
@@ -572,11 +649,11 @@
                       appStore.openToolbox();
                       e.preventDefault();
                     }}
-                    class:invisible={!$appStore.app.isToolboxOpen &&
-                      $appStore.app.diff.docA_ID === undefined &&
-                      $appStore.app.diff.docB_ID === undefined}
-                    disabled={$appStore.app.diff.docA_ID === item.id.toString() ||
-                      $appStore.app.diff.docB_ID === item.id.toString() ||
+                    class:invisible={!appStore.state.app.isToolboxOpen &&
+                      appStore.state.app.diff.docA_ID === undefined &&
+                      appStore.state.app.diff.docB_ID === undefined}
+                    disabled={appStore.state.app.diff.docA_ID === item.id.toString() ||
+                      appStore.state.app.diff.docB_ID === item.id.toString() ||
                       disableDiffButtons}
                     class="min-w-[26px] p-1"
                     title={`compare ${item.tracking_id}`}
@@ -584,8 +661,8 @@
                     <Img
                       src="plus-minus.svg"
                       class={`${
-                        $appStore.app.diff.docA_ID === item.id.toString() ||
-                        $appStore.app.diff.docB_ID === item.id.toString() ||
+                        appStore.state.app.diff.docA_ID === item.id.toString() ||
+                        appStore.state.app.diff.docB_ID === item.id.toString() ||
                         disableDiffButtons
                           ? "invert-[70%]"
                           : "dark:invert"
@@ -595,10 +672,11 @@
                 </div>
               </TableBodyCell>
               {#if areThereAnyComments}
-                <TableBodyCell {tdClass}
+                <TableBodyCell class={tdClass}
                   ><a
                     class="absolute top-0 right-0 bottom-0 left-0"
                     href={getAdvisoryAnchorLink(item)}
+                    aria-label="View advisory details"
                   >
                   </a>
                   <div class="m-2 table w-full text-wrap">
@@ -621,10 +699,11 @@
               {#each columns as column}
                 {#if column !== searchColumnName}
                   {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        aria-label="View advisory details"
                       >
                       </a>
                       <div class="m-2 table w-full text-wrap">
@@ -636,10 +715,11 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "ssvc"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
+                        aria-label="View advisory details"
                       >
                       </a>
                       <div class="m-2 table w-16 text-wrap">
@@ -649,8 +729,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "state"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -669,8 +750,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "initial_release_date"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -680,8 +762,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "current_release_date"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -691,8 +774,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "title"}
-                    <TableBodyCell tdClass={title + " relative"}
+                    <TableBodyCell class={title + " relative"}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -702,8 +786,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "publisher"}
-                    <TableBodyCell tdClass={publisher + " relative"}
+                    <TableBodyCell class={publisher + " relative"}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -713,8 +798,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "recent"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -726,9 +812,10 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "four_cves"}
-                    <TableBodyCell {tdClass}>
+                    <TableBodyCell class={tdClass}>
                       {#if !(item[column] && item[column][0] && item[column].length > 1)}
                         <a
+                          aria-label="View advisory details"
                           class="absolute top-0 right-0 bottom-0 left-0"
                           href={getAdvisoryAnchorLink(item)}
                         >
@@ -737,12 +824,15 @@
                       <div class="w-32">
                         <div class="z-50 table p-2 text-wrap">
                           {#if item[column] && item[column][0]}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
                             {#if item[column].length > 1}
                               <div
                                 class="mr-2 flex cursor-pointer items-center"
-                                on:click|stopPropagation={() => toggleRow(i)}
+                                onclick={(event) => {
+                                  event.stopPropagation();
+                                  toggleRow(i);
+                                }}
                               >
                                 <div class="flex-grow">
                                   {item[column][0]}
@@ -772,8 +862,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "critical"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -787,8 +878,9 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "tracking_id"}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -798,8 +890,9 @@
                       </div></TableBodyCell
                     >
                   {:else}
-                    <TableBodyCell {tdClass}
+                    <TableBodyCell class={tdClass}
                       ><a
+                        aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
                       >
@@ -817,7 +910,7 @@
                 class={(i % 2 == 1 ? "bg-white" : "bg-gray-100") +
                   " border border-y-indigo-500/100"}
               >
-                <TableBodyCell colspan={columns.length} {tdClass}
+                <TableBodyCell colspan={columns.length} class={tdClass}
                   >{@html item[searchColumnName]}</TableBodyCell
                 >
               </TableBodyRow>

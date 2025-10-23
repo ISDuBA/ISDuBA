@@ -9,35 +9,59 @@
 -->
 
 <script lang="ts">
-  export let header: string;
-  export let title: string | undefined = undefined;
-  export let open = false;
-  export let showBorder = true;
-  export let level = 2;
-  export let highlight = false;
-  const uuid = crypto.randomUUID();
-  export let onOpen = () => {
-    //default: Do nothing
-  };
-  export let onClose = () => {
-    //default: Do nothing
-  };
-  let visibility = "none";
-  $: if (open) {
-    visibility = "block";
-  } else {
-    visibility = "none";
+  import type { Snippet } from "svelte";
+
+  interface Props {
+    header: string;
+    title?: string;
+    open?: boolean;
+    showBorder?: boolean;
+    level?: number;
+    highlight?: boolean;
+    onOpen?: () => any;
+    onClose?: () => any;
+    children: Snippet;
+    headerSlot?: Snippet;
   }
-  let icon = "bx-chevron-down";
+  let {
+    header,
+    title = undefined,
+    open = false,
+    showBorder = true,
+    level = 2,
+    highlight = false,
+    onOpen = () => {
+      //default: Do nothing
+    },
+    onClose = () => {
+      //default: Do nothing
+    },
+    children,
+    headerSlot = undefined
+  }: Props = $props();
+  const uuid = crypto.randomUUID();
+
+  let visibility = $state("none");
+  $effect(() => {
+    if (open) {
+      visibility = "block";
+    } else {
+      visibility = "none";
+    }
+  });
   /**
    * toggle toggles visibility of content.
    */
   const toggle = () => {
     if (visibility === "block") {
-      onClose();
+      if (onClose) {
+        onClose();
+      }
       visibility = "none";
     } else {
-      onOpen();
+      if (onOpen) {
+        onOpen();
+      }
       setTimeout(() => {
         const element = document.getElementById(`${uuid}`);
         if (element) {
@@ -48,11 +72,13 @@
       visibility = "block";
     }
   };
-  $: if (visibility === "block") {
-    icon = "bx-chevron-down";
-  } else {
-    icon = "bx-chevron-right";
-  }
+  let icon = $derived.by(() => {
+    if (visibility === "block") {
+      return "bx-chevron-down";
+    } else {
+      return "bx-chevron-right";
+    }
+  });
 
   const getClass = (level: number) => {
     switch (level) {
@@ -71,18 +97,22 @@
 </script>
 
 <div class:collapsible={true} class:highlight-section={highlight}>
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div {title} id={header}>
-    <div class="inline-flex items-center" on:click={toggle}>
-      <i class="bx {getClass(level)} {icon}" />
-      <slot class={getClass(level)} name="header"
-        ><span class={getClass(level)}>{header}</span></slot
-      >
+    <div class="inline-flex items-center" onclick={toggle}>
+      <i class="bx {getClass(level)} {icon}"></i>
+      <div class={getClass(level)}>
+        {#if headerSlot}
+          {@render headerSlot()}
+        {:else}
+          <span class={getClass(level)}>{header}</span>
+        {/if}
+      </div>
     </div>
     {#if visibility === "block"}
       <div id={uuid} class={`ml-2 pl-2 ${showBorder ? "border-l-2 border-l-gray-200" : ""}`}>
-        <slot />
+        {@render children()}
       </div>
     {/if}
   </div>

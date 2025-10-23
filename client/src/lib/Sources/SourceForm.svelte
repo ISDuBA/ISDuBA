@@ -12,13 +12,35 @@
   import { type Source, fetchSourceDefaultConfig } from "$lib/Sources/source";
   import { Accordion, AccordionItem, Button, Input, Label, Select } from "flowbite-svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import CFileinput from "$lib/Components/CFileinput.svelte";
-  export let formClass: string = "";
-  export let source: Source;
-  export let oldSource: Source | undefined = undefined;
-  export let enableActive: boolean = false;
-  export let parseSource: boolean = true;
+
+  // Define enum first
+  enum AgeUnit {
+    hours = "h",
+    days = "d",
+    weeks = "w",
+    months = "m",
+    years = "y"
+  }
+
+  interface Props {
+    formClass?: string;
+    source: Source;
+    oldSource?: Source | undefined;
+    enableActive?: boolean;
+    parseSource?: boolean;
+    inputChange?: () => void;
+  }
+
+  let {
+    formClass = "",
+    source = $bindable(),
+    oldSource = undefined,
+    enableActive = false,
+    parseSource = $bindable(true),
+    inputChange = () => {}
+  }: Props = $props();
   export const updateSource = async () => {
     formatHeaders();
     await loadCerts();
@@ -62,16 +84,6 @@
     ageUnit = baseUnit;
   };
 
-  export let inputChange = () => {};
-
-  enum AgeUnit {
-    hours = "h",
-    days = "d",
-    weeks = "w",
-    months = "m",
-    years = "y"
-  }
-
   const ageUnits: { value: AgeUnit; name: string }[] = [
     { value: AgeUnit.hours, name: "hours" },
     { value: AgeUnit.days, name: "days" },
@@ -88,20 +100,20 @@
     y: 24 * 365
   };
 
-  let headers: [string, string][] = [["", ""]];
-  let privateCert: FileList | undefined;
-  let privateCertReset: boolean = false;
-  let publicCert: FileList | undefined;
-  let publicCertReset: boolean = false;
+  let headers: [string, string][] = $state([["", ""]]);
+  let privateCert: FileList | undefined = $state();
+  let privateCertReset: boolean = $state(false);
+  let publicCert: FileList | undefined = $state();
+  let publicCertReset: boolean = $state(false);
 
-  let ageUnit: AgeUnit;
-  let ageNumber: number | undefined;
+  let ageUnit: AgeUnit = $state(AgeUnit.years);
+  let ageNumber: number | undefined = $state(undefined);
   let previousAgeNumber: number | undefined;
 
-  let displayActiveHighlight: boolean = true;
+  let displayActiveHighlight: boolean = $state(true);
 
-  let ratePlaceholder = 0;
-  let slotPlaceholder = 2;
+  let ratePlaceholder = $state(0);
+  let slotPlaceholder = $state(2);
 
   const loadSourceDefaults = async () => {
     const resp = await fetchSourceDefaultConfig();
@@ -168,13 +180,6 @@
     inputChange();
   };
 
-  $: if (source.headers) {
-    if (parseSource) {
-      parseHeaders();
-      parseSource = false;
-    }
-  }
-
   const parseHeaders = () => {
     headers = [];
     for (const header of source.headers) {
@@ -214,16 +219,23 @@
       }
     }
   };
+  $effect(() => {
+    untrack(() => headers);
+    if (source.headers && parseSource) {
+      parseHeaders();
+      parseSource = false;
+    }
+  });
 </script>
 
 <form class={formClass}>
   <Label>Name</Label>
-  <Input class="mb-3" on:input={inputChange} bind:value={source.name}></Input>
+  <Input class="mb-3" oninput={inputChange} bind:value={source.name}></Input>
   <div class={!source.active && displayActiveHighlight ? "blink" : ""}>
     {#if enableActive}
       <CCheckbox
         class="mb-3"
-        on:change={() => {
+        onChanged={() => {
           displayActiveHighlight = false;
           inputChange();
         }}
@@ -232,14 +244,16 @@
     {/if}
   </div>
   <Accordion>
-    <AccordionItem
-      ><span slot="header">Credentials</span>
+    <AccordionItem>
+      {#snippet header()}
+        <span>Credentials</span>
+      {/snippet}
       <Label>Private cert</Label>
       <CFileinput
         bind:files={privateCert}
         bind:isFileReset={privateCertReset}
         oldFile={oldSource?.client_cert_private}
-        on:change={inputChange}
+        onChanged={inputChange}
         id="private-cert"
         titleClearButton="Remove private cert"
       ></CFileinput>
@@ -248,7 +262,7 @@
         bind:files={publicCert}
         bind:isFileReset={publicCertReset}
         oldFile={oldSource?.client_cert_public}
-        on:change={inputChange}
+        onChanged={inputChange}
         id="public-cert"
         titleClearButton="Remove public cert"
       ></CFileinput>
@@ -256,12 +270,12 @@
       <div class="mb-3 inline-flex w-full">
         <Input
           class="rounded-none rounded-l-lg"
-          on:input={inputChange}
+          oninput={inputChange}
           bind:value={source.client_cert_passphrase}
         />
         <Button
-          on:click={() => {
-            source.client_cert_passphrase = null;
+          onclick={() => {
+            source.client_cert_passphrase = "";
           }}
           title="Remove passphrase"
           class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
@@ -271,8 +285,10 @@
         </Button>
       </div>
     </AccordionItem>
-    <AccordionItem
-      ><span slot="header">Advanced options</span>
+    <AccordionItem>
+      {#snippet header()}
+        <span>Advanced options</span>
+      {/snippet}
       <div class="mb-3 grid w-full gap-x-2 gap-y-4 md:grid-cols-[minmax(190px,1fr)_1fr_1fr]">
         <div>
           <Label>Maximum document age</Label>
@@ -282,14 +298,14 @@
               type="number"
               min="0"
               placeholder="0"
-              on:input={onChangedAge}
+              oninput={onChangedAge}
               bind:value={ageNumber}
             ></Input>
             <Select
               class="rounded-none rounded-r-lg border-l-0"
               items={ageUnits}
               bind:value={ageUnit}
-              on:change={onChangedAge}
+              onchange={onChangedAge}
             />
           </div>
         </div>
@@ -299,7 +315,7 @@
             type="number"
             step="0.01"
             placeholder={ratePlaceholder.toString()}
-            on:input={inputChange}
+            oninput={inputChange}
             min="0"
             bind:value={source.rate}
           />
@@ -311,7 +327,7 @@
             step="1"
             placeholder={slotPlaceholder.toString()}
             min="1"
-            on:input={inputChange}
+            oninput={inputChange}
             bind:value={source.slots}
           />
         </div>
@@ -319,27 +335,27 @@
 
       <Label>Options</Label>
       <div class="mb-3 flex w-full gap-4">
-        <CCheckbox on:change={inputChange} bind:checked={source.strict_mode}>Strict mode</CCheckbox>
-        <CCheckbox on:change={inputChange} bind:checked={source.secure}
+        <CCheckbox onChanged={inputChange} bind:checked={source.strict_mode}>Strict mode</CCheckbox>
+        <CCheckbox onChanged={inputChange} bind:checked={source.secure}
           >Check TLS certificates</CCheckbox
         >
-        <CCheckbox on:change={inputChange} bind:checked={source.signature_check}
+        <CCheckbox onChanged={inputChange} bind:checked={source.signature_check}
           >Check document OpenPGP signature</CCheckbox
         >
       </div>
 
       <Label>Ignore patterns</Label>
-      {#each source.ignore_patterns as pattern, index (index)}
+      {#each source.ignore_patterns as _pattern, index (index)}
         <div class="mb-3 inline-flex w-full">
           <Label class="grow">
             <Input
               class="rounded-none rounded-l-lg"
-              on:input={onChangedIgnorePatterns}
-              bind:value={pattern}
+              oninput={onChangedIgnorePatterns}
+              bind:value={source.ignore_patterns[index]}
             />
           </Label>
           <Button
-            on:click={() => removePattern(index)}
+            onclick={() => removePattern(index)}
             title="Remove pattern"
             class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
             color="light"
@@ -360,7 +376,7 @@
           </Label>
           <Input
             class="col-span-2 row-start-2 rounded-none rounded-t-lg sm:col-span-1 sm:rounded-l-lg sm:rounded-tr-none"
-            on:input={onChangedHeaders}
+            oninput={onChangedHeaders}
             bind:value={header[0]}
           />
           <Label class="collapse col-span-2 col-start-1 row-start-1 sm:visible sm:col-start-2">
@@ -368,12 +384,12 @@
           </Label>
           <Input
             class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-t sm:border-l-0"
-            on:input={onChangedHeaders}
+            oninput={onChangedHeaders}
             bind:value={header[1]}
           />
           {#if headers.length > 1}
             <Button
-              on:click={() => removeHeader(index)}
+              onclick={() => removeHeader(index)}
               title="Remove field-name-field-value-pair"
               class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
               color="light"

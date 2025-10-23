@@ -15,27 +15,36 @@
   import { Button, ButtonGroup } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { push } from "svelte-spa-router";
-  import { createEventDispatcher } from "svelte";
   import { type Query } from "$lib/Queries/query";
   import { truncate } from "$lib/utils";
 
-  const dispatch = createEventDispatcher();
+  let queries: any[] = $state([]);
+  let sortedQueries = $derived(
+    queries.toSorted((a: any, b: any) => {
+      if (a.global && !b.global) {
+        return -1;
+      } else if (!a.global && b.global) {
+        return 1;
+      }
+      return 0;
+    })
+  );
+  let selectedIndex = $state(-2);
+  interface Props {
+    selectedQuery?: boolean;
+    queryString: any;
+    defaultQuery: any;
+    onQuerySelected: (query: any) => void;
+  }
 
-  let queries: any[] = [];
-  $: sortedQueries = queries.sort((a: any, b: any) => {
-    if (a.global && !b.global) {
-      return -1;
-    } else if (!a.global && b.global) {
-      return 1;
-    }
-    return 0;
-  });
-  let selectedIndex = -2;
-  export let selectedQuery: boolean = false;
-  export let defaultQuery: any;
-  export let queryString: any;
-  let ignoredQueries: Query[] = [];
-  let errorMessage: ErrorDetails | null = null;
+  let {
+    selectedQuery = $bindable(false),
+    defaultQuery = $bindable(null),
+    queryString,
+    onQuerySelected
+  }: Props = $props();
+  let ignoredQueries: Query[] = $state([]);
+  let errorMessage: ErrorDetails | null = $state(null);
   let advancedQueryErrorMessage: ErrorDetails | null = null;
   const globalQueryButtonColor = "primary";
   const defaultQueryButtonClass = "flex flex-col p-0";
@@ -88,7 +97,7 @@
           selectedIndex = -2;
           currentQueryTitle = query.name;
           if (query) {
-            dispatch("querySelected", query);
+            onQuerySelected(query);
             selectedQuery = true;
           }
         } else {
@@ -98,7 +107,7 @@
     }
   });
 
-  let currentQueryTitle: string | undefined;
+  let currentQueryTitle: string | undefined = $state();
 
   const selectQuery = (index: number) => {
     if (selectedIndex === index || index === -1) {
@@ -107,7 +116,7 @@
       selectedQuery = false;
     } else {
       selectedIndex = index;
-      dispatch("querySelected", sortedQueries[selectedIndex]);
+      onQuerySelected(sortedQueries[selectedIndex]);
       currentQueryTitle = sortedQueries[selectedIndex].name;
       selectedQuery = true;
     }
@@ -121,7 +130,7 @@
         {#if !ignoredQueries.includes(query.id)}
           <Button
             size="xs"
-            on:click={() => selectQuery(index)}
+            onclick={() => selectQuery(index)}
             class={getClass(query.global, index === selectedIndex)}
           >
             <span title={query.description} class="p-2">{truncate(query.name, 30)}</span>
@@ -129,14 +138,14 @@
         {/if}
       {/each}
       {#if currentQueryTitle && selectedIndex < 0}
-        <Button size="xs" on:click={() => selectQuery(-1)} class={getClass(true, true)}>
+        <Button size="xs" onclick={() => selectQuery(-1)} class={getClass(true, true)}>
           <span class="p-2">{truncate(currentQueryTitle, 30)}</span>
         </Button>
       {/if}
       <Button
         title="Configure queries"
         size="xs"
-        on:click={() => {
+        onclick={() => {
           push("/queries");
         }}
       >

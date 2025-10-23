@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   /**
    * updateUI waits until UI is settled and goes back to the last anchor.
    * @param id
@@ -26,13 +26,13 @@
    * @param e
    */
   const backPressed = (e: Event) => {
-    const lastElement = $appStore.webview.ui.history[0];
+    const lastElement = appStore.state.webview.ui.history[0];
     appStore.shiftHistory();
     updateUI(lastElement);
     e.preventDefault();
   };
 </script>
 
-{#if $appStore.webview.ui.history.length > 0}
-  <a class="backbutton" href="#top" on:click={backPressed}>Last pos. <i class="bx bx-undo" /></a>
+{#if appStore.state.webview.ui.history.length > 0}
+  <a class="backbutton" href="#top" onclick={backPressed}>Last pos. <i class="bx bx-undo"></i></a>
 {/if}

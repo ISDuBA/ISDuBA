@@ -13,14 +13,18 @@
   import { Button } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import { fetchSource } from "../source";
 
-  export let source: SourceInfo;
-  export let entry: AggregatorEntry;
+  interface Props {
+    source: SourceInfo;
+    entry: AggregatorEntry;
+  }
 
-  let isActive: undefined | boolean;
+  let { source, entry }: Props = $props();
+
+  let isActive: undefined | boolean = $state();
 
   const sortFeeds = (a: FeedInfo, b: FeedInfo) => {
     if (a.highlight && !b.highlight) {

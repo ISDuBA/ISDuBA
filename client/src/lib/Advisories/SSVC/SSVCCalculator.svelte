@@ -23,34 +23,50 @@
     type SSVCObject,
     type SSVCOption
   } from "./SSVCCalculator";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import ComplexDecision from "./ComplexDecision.svelte";
   import SsvcInput from "./SSVCInput.svelte";
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    disabled: boolean;
+    documentID: string;
+    allowEditing: any;
+    isEditing: boolean;
+    vectorInput: string;
+    updateSSVC?: () => void;
+  }
 
-  export let disabled = false;
-  export let documentID: string;
-  export let allowEditing: any;
-  export let isEditing = false;
-  export let vectorInput = "";
+  let {
+    allowEditing,
+    disabled = false,
+    documentID,
+    isEditing = $bindable(),
+    vectorInput = "",
+    updateSSVC = undefined
+  }: Props = $props();
 
-  let isVectorInputValid = false;
-  let startedCalculation = false;
-  let isComplex = false;
-  let currentStep = 0;
-  let steps: string[] = [];
-  let mainDecisions: SSVCDecision[] = [];
-  let decisionPoints: SSVCDecision[] = [];
-  let decisionsTable: SSVCDecisionCombination[] = [];
-  let userDecisions: SSVCDecisionCombination;
-  let vector: string;
-  let result: SSVCObject | null = null;
-  let saveSSVCError: ErrorDetails | null;
-  $: resultStyle = result?.color ? `color: ${result.color}` : "";
+  let isVectorInputValid = $state(false);
+  let startedCalculation = $state(false);
+  let isComplex = $state(false);
+  let currentStep = $state(0);
+  let steps: string[] = $state([]);
+  let mainDecisions: SSVCDecision[] = $state([]);
+  let decisionPoints: SSVCDecision[] = $state([]);
+  let decisionsTable: SSVCDecisionCombination[] = $state([]);
+  let userDecisions: SSVCDecisionCombination = $state({});
+  let vector: string = $state("");
+  let result: SSVCObject | null = $state(null);
+  let saveSSVCError: ErrorDetails | null = $state(null);
+  let resultStyle = $derived.by(() => {
+    if (result?.color) {
+      return `color: ${result.color}`;
+    } else {
+      return "";
+    }
+  });
 
   onMount(async () => {
     loadDecisionTree();
@@ -146,7 +162,7 @@
   }
 
   function calculateResult() {
-    let filteredDecisions = decisionsTable;
+    let filteredDecisions = $state.snapshot(decisionsTable);
     for (const key of Object.keys(userDecisions)) {
       filteredDecisions = filteredDecisions.filter((decision) => {
         return decision[key] && userDecisions[key] && decision[key] === userDecisions[key];
@@ -230,7 +246,9 @@
       isEditing = false;
       startedCalculation = false;
       resetUserDecisions();
-      dispatch("updateSSVC");
+      if (updateSSVC) {
+        updateSSVC();
+      }
     } else if (response.error) {
       saveSSVCError = getErrorDetails(`Could not save SSVC.`, response);
     }
@@ -240,7 +258,9 @@
     isEditing = !isEditing;
   };
 
-  $: onChangeDisabled(disabled);
+  $effect(() => {
+    onChangeDisabled(disabled);
+  });
 
   const onChangeDisabled = (disabled: boolean) => {
     if (disabled) {
@@ -257,7 +277,7 @@
         {#if !vectorInput}
           <span class="h-6 text-lg">Please enter a SSVC</span>
         {/if}
-        <button class="mr-auto h-6" {disabled} on:click={toggleEditing}
+        <button class="mr-auto h-6" {disabled} onclick={toggleEditing} aria-label="Edit SSVC"
           ><i class="bx bx-edit-alt ml-1"></i></button
         >
       </div>
@@ -270,11 +290,11 @@
       <SsvcInput
         autofocus
         disabled={disabled || !isEditing}
-        on:keyup={(e) => {
+        onKeyup={(e) => {
+          resetError();
           if (e.detail.key === "Enter") saveSSVC(vectorInput);
           if (e.detail.key === "Escape") toggleEditing();
         }}
-        on:input={resetError}
         bind:value={vectorInput}
         bind:isValid={isVectorInputValid}
       ></SsvcInput>
@@ -284,7 +304,7 @@
           outline
           size="xs"
           class="h-8"
-          on:click={() => {
+          onclick={() => {
             isEditing = false;
           }}
         >
@@ -296,7 +316,7 @@
           size="xs"
           class="h-8"
           {disabled}
-          on:click={() => (startedCalculation = true)}
+          onclick={() => (startedCalculation = true)}
         >
           Evaluate
         </Button>
@@ -305,7 +325,7 @@
           disabled={!isVectorInputValid}
           size="xs"
           class="h-8"
-          on:click={() => saveSSVC(vectorInput)}>Save</Button
+          onclick={() => saveSSVC(vectorInput)}>Save</Button
         >
       </div>
     </div>
@@ -322,7 +342,7 @@
         completedCustom=""
         currentCustom=""
         color="primary"
-        size="h-1"
+        class="h-1"
         currentStep={currentStep + 1}
         {steps}
         hideLabel
@@ -341,7 +361,7 @@
                   outline
                   size="xs"
                   title={option.description}
-                  on:click={() => selectOption(option)}
+                  onclick={() => selectOption(option)}
                   class="h-6"
                   >{option.label}
                 </Button>
@@ -356,7 +376,7 @@
                     outline
                     title={option.description}
                     size="xs"
-                    on:click={() => selectOption(option)}>{option.label}</Button
+                    onclick={() => selectOption(option)}>{option.label}</Button
                   >
                 {/each}
                 or
@@ -364,16 +384,13 @@
                   class="h-6"
                   outline
                   size="xs"
-                  on:click={() => {
+                  onclick={() => {
                     isComplex = true;
                   }}>Custom</Button
                 >
               </div>
             {:else}
-              <ComplexDecision
-                on:calculateComplexOption={calculateComplexOption}
-                children={mainDecisions[currentStep].children}
-                {decisionPoints}
+              <ComplexDecision children={mainDecisions[currentStep].children} {decisionPoints}
               ></ComplexDecision>
             {/if}
           {/if}
@@ -388,15 +405,15 @@
       <div class="mt-4 flex flex-col">
         <div class="ml-auto flex flex-row gap-x-3">
           {#if currentStep > 0}
-            <Button color="light" size="xs" class="h-6 p-3" on:click={stepBack}>Back</Button>
+            <Button color="light" size="xs" class="h-6 p-3" onclick={stepBack}>Back</Button>
           {/if}
-          <Button size="xs" color="light" class="h-6 p-3 text-nowrap" on:click={resetUserDecisions}>
+          <Button size="xs" color="light" class="h-6 p-3 text-nowrap" onclick={resetUserDecisions}>
             Restart
           </Button>
           {#if isComplex || result}
             <Button
               color={currentStep === steps.length - 1 ? "green" : "primary"}
-              on:click={() => {
+              onclick={() => {
                 if (currentStep === steps.length - 1) {
                   saveSSVC(vector);
                 } else {
@@ -412,7 +429,7 @@
             size="xs"
             class="h-6 p-3"
             title="Cancel SSVC input"
-            on:click={() => {
+            onclick={() => {
               resetUserDecisions();
               startedCalculation = false;
               isEditing = false;

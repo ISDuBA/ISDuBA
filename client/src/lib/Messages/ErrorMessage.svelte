@@ -12,7 +12,11 @@
   import Message from "./Message.svelte";
   import { MESSAGE } from "./messagetypes";
 
-  export let message = "";
+  interface Props {
+    message?: string;
+  }
+
+  let { message = "" }: Props = $props();
 </script>
 
 <div class="my-2">

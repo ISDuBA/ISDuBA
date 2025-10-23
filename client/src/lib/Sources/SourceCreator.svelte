@@ -30,25 +30,32 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
   import validator from "validator";
+  import type { InputProps } from "flowbite-svelte";
 
-  export let params: any = null;
+  interface Props {
+    params: any;
+  }
+  let { params = null }: Props = $props();
 
-  let errorMessage: ErrorDetails | null;
+  let errorMessage: ErrorDetails | null = $state(null);
 
-  let sourceForm: any;
+  let sourceForm: any = $state(null);
   let updateSourceForm: any;
 
-  let validUrl: boolean | null = false;
-  let urlColor: "red" | "green" | "base" = "base";
-  $: if (validUrl !== undefined) {
-    if (validUrl === null) {
-      urlColor = "base";
-    } else if (validUrl) {
-      urlColor = "green";
-    } else {
-      urlColor = "red";
+  let validUrl: boolean | null = $state(false);
+
+  let urlColor: InputProps["color"] = $derived.by(() => {
+    if (validUrl !== undefined) {
+      if (validUrl === null) {
+        return "default";
+      } else if (validUrl) {
+        return "green";
+      } else {
+        return "red";
+      }
     }
-  }
+    return "default";
+  });
 
   let source: Source = {
     name: "",
@@ -58,16 +65,17 @@
     active: false,
     headers: [""],
     ignore_patterns: [""],
-    attention: false
+    attention: false,
+    client_cert_passphrase: ""
   };
 
   let formClass = "max-w-[800pt]";
   const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
   const ddClass: string = "break-words font-semibold ml-2 mb-1";
-  let loadingPMD: boolean = false;
+  let loadingPMD: boolean = $state(false);
 
-  let pmd: CSAFProviderMetadata | null = null;
-  let pmdFeeds: Feed[] = [];
+  let pmd: CSAFProviderMetadata | null = $state(null);
+  let pmdFeeds: Feed[] = $state([]);
 
   const loadPMD = async () => {
     loadingPMD = true;
@@ -154,26 +162,29 @@
   {#if params?.domain}
     <List tag="dl" class="divide-y divide-gray-200 text-sm 2xl:w-max">
       <div>
-        <DescriptionList tag="dt" {dtClass}>Domain/PMD</DescriptionList>
-        <DescriptionList tag="dd" {ddClass}>{source.url}</DescriptionList>
+        <DescriptionList tag="dt" class={dtClass}>Domain/PMD</DescriptionList>
+        <DescriptionList tag="dd" class={ddClass}>{source.url}</DescriptionList>
       </div>
       {#if pmd}
         <div>
-          <DescriptionList tag="dt" {dtClass}>Canonical URL</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.canonical_url}</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Canonical URL</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{pmd.canonical_url}</DescriptionList>
         </div>
         <div>
-          <DescriptionList tag="dt" {dtClass}>Publisher Name</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.name}</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Publisher Name</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.name}</DescriptionList>
         </div>
         <div>
-          <DescriptionList tag="dt" {dtClass}>Publisher Contact</DescriptionList>
-          <DescriptionList tag="dd" {ddClass}>{pmd.publisher.contact_details}</DescriptionList>
+          <DescriptionList tag="dt" class={dtClass}>Publisher Contact</DescriptionList>
+          <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.contact_details}</DescriptionList
+          >
         </div>
         <div>
           {#if pmd.publisher.issuing_authority}
-            <DescriptionList tag="dt" {dtClass}>Issuing Authority</DescriptionList>
-            <DescriptionList tag="dd" {ddClass}>{pmd.publisher.issuing_authority}</DescriptionList>
+            <DescriptionList tag="dt" class={dtClass}>Issuing Authority</DescriptionList>
+            <DescriptionList tag="dd" class={ddClass}
+              >{pmd.publisher.issuing_authority}</DescriptionList
+            >
           {/if}
         </div>
       {/if}
@@ -182,14 +193,14 @@
     <SourceForm bind:this={sourceForm} {inputChange} {formClass} {source}></SourceForm>
     <FeedView feeds={pmdFeeds}></FeedView>
 
-    <Button on:click={saveAll} color="green">
+    <Button onclick={saveAll} color="green">
       <i class="bx bxs-save me-2"></i>
       <span>Save source</span>
     </Button>
   {:else}
-    <form on:submit={loadPMD} class={formClass}>
+    <form onsubmit={loadPMD} class={formClass}>
       <Label>Domain/PMD</Label>
-      <Input bind:value={source.url} on:input={checkUrl} color={urlColor}></Input>
+      <Input bind:value={source.url} oninput={checkUrl} color={urlColor}></Input>
       <br />
       <div class:hidden={!loadingPMD} class:mb-4={true}>
         Loading ...

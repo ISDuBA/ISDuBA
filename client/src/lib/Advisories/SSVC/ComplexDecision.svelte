@@ -14,8 +14,12 @@
   import type { SSVCDecision, SSVCDecisionChild } from "./SSVCCalculator";
   import { getDecision } from "./SSVCCalculator";
 
-  export let children: SSVCDecisionChild[] | undefined;
-  export let decisionPoints: SSVCDecision[] | undefined;
+  interface Props {
+    children: SSVCDecisionChild[] | undefined;
+    decisionPoints: SSVCDecision[];
+  }
+
+  let { children, decisionPoints }: Props = $props();
 
   onMount(() => {
     children?.forEach((child) => {
@@ -42,7 +46,7 @@
                 <Radio
                   name={child.label}
                   value={option.label}
-                  class="flex h-6 flex-col text-xs tracking-tight"
+                  class="flex flex-col text-xs tracking-tight"
                   ><span class="mt-2">{option.label}</span></Radio
                 >
               </div>

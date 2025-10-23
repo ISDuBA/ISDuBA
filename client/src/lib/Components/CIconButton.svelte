@@ -9,28 +9,39 @@
 -->
 
 <script lang="ts">
-  import { type ColorVariant } from "flowbite-svelte";
-  import { createEventDispatcher } from "svelte";
+  import type { ColorVariant } from "./types";
+  import type { HTMLButtonAttributes } from "svelte/elements";
 
-  export let icon = "";
-  export let disabled = false;
-  export let color: ColorVariant = "dark";
-  export let title = "";
+  type Props = {
+    color?: ColorVariant;
+    icon?: string;
+    disabled?: boolean;
+    title?: string;
+    onClicked?: (event?: any) => void;
+  } & HTMLButtonAttributes;
 
-  const dispatch = createEventDispatcher();
+  let {
+    color = "dark",
+    disabled = false,
+    icon = "",
+    title = "",
+    onClicked = () => {},
+    ...restProps
+  }: Props = $props();
 </script>
 
 <button
-  on:click|preventDefault={(event) => {
-    event.stopPropagation();
-    dispatch("click", event);
+  onclick={(event) => {
+    event.preventDefault();
+    onClicked(event);
   }}
   {disabled}
   {title}
-  id={$$props.id}
+  aria-label={title || `Icon button ${icon}`}
+  id={restProps.id}
   class="p-1"
 >
   <i
-    class={`bx bx-${icon} text-${color}-600 text-lg ${$$props.class} ${disabled ? "contrast-0 saturate-0" : ""}`}
+    class={`bx bx-${icon} text-${color}-600 text-lg ${restProps.class} ${disabled ? "contrast-0 saturate-0" : ""}`}
   ></i>
 </button>

@@ -9,17 +9,21 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store";
-  import { tick } from "svelte";
+  import { appStore } from "$lib/store.svelte";
+  import { tick, untrack } from "svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
   import type { Relationship } from "$lib/pmdTypes";
   import { A } from "flowbite-svelte";
-  export let relation: Relationship;
-  let highlight = false;
-  let blink = false;
-  export let basePath = "";
+
+  interface Props {
+    basePath: string;
+    relation: Relationship;
+  }
+  let { basePath, relation }: Props = $props();
+
+  let blink = $state(false);
   async function updateUI() {
     await tick();
     document
@@ -29,23 +33,25 @@
     await new Promise((res) => setTimeout(res, 5000));
     blink = false;
   }
-  $: selectedProduct = $appStore.webview.ui.selectedProduct;
-  $: productID = relation.full_product_name.product_id;
-  $: if (selectedProduct === productID) {
-    highlight = true;
-    updateUI();
-  } else {
-    highlight = false;
-  }
+  let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
+  let productID = $derived(relation.full_product_name.product_id);
+  let highlight = $derived(selectedProduct === productID);
+  $effect(() => {
+    untrack(() => selectedProduct);
+    untrack(() => blink);
+    if (selectedProduct === productID) {
+      updateUI();
+    }
+  });
 </script>
 
 <Collapsible
   header={`${relation.full_product_name.product_id}`}
   level={4}
-  open={relation.full_product_name.product_id === $appStore.webview.ui.selectedProduct}
+  open={relation.full_product_name.product_id === appStore.state.webview.ui.selectedProduct}
   {highlight}
   onClose={() => {
-    if ($appStore.webview.ui.selectedProduct === relation.full_product_name.product_id) {
+    if (appStore.state.webview.ui.selectedProduct === relation.full_product_name.product_id) {
       appStore.resetSelectedProduct();
     }
   }}
@@ -70,7 +76,7 @@
           <td>Product reference</td>
           <td
             ><A
-              color="text-primary-700 dark:text-primary-400"
+              class="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.product_reference)}`}
               >{relation.product_reference}</A
@@ -81,7 +87,7 @@
           <td>Relates to</td>
           <td
             ><A
-              color="text-primary-700 dark:text-primary-400"
+              class="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.relates_to_product_reference)}`}
               >{relation.relates_to_product_reference}</A

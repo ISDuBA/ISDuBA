@@ -41,5 +41,8 @@ export default defineConfig({
         statements: 60
       }
     }
+  },
+  optimizeDeps: {
+    include: ["svelte"]
   }
 });

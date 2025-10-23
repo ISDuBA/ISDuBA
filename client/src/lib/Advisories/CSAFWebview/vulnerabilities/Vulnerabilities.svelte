@@ -8,10 +8,14 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import Vulnerability from "./vulnerability/Vulnerability.svelte";
-  $: vulnerabilities = $appStore.webview.doc?.vulnerabilities;
-  export let basePath = "";
+
+  interface Props {
+    basePath?: string;
+  }
+  let { basePath = "" }: Props = $props();
+  let vulnerabilities = $derived(appStore.state.webview.doc?.vulnerabilities);
 </script>
 
 <div>

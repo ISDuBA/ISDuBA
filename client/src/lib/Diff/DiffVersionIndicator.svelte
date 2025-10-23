@@ -9,15 +9,25 @@
 -->
 
 <script lang="ts">
-  export let color: "red" | "green" | "gray";
-  export let icon: "minus" | "plus";
-  export let hoverIcon: "minus" | "plus" | undefined;
-  export let isDisabled = false;
-  export let permanent = false;
-  $: containerClass = `h-4 flex items-center rounded-full border-solid border-${color}-700 dark:border-${color}-300 ${isDisabled ? "" : "group-hover:border"}`;
+  interface Props {
+    color: "red" | "green" | "gray";
+    icon: "minus" | "plus";
+    hoverIcon: "minus" | "plus" | undefined;
+    isDisabled?: boolean;
+    permanent?: boolean;
+  }
+
+  let { color, icon, hoverIcon, isDisabled = false, permanent = false }: Props = $props();
+  let containerClass = $derived(
+    `h-4 flex items-center rounded-full border-solid border-${color}-700 dark:border-${color}-300 ${isDisabled ? "" : "group-hover:border"}`
+  );
   let basicIconClass = "bx flex h-4 items-center";
-  $: iconClass = `${basicIconClass} bx-${icon} text-${color}-700 dark:text-${color}-300 ${!permanent ? "!hidden" : ""} ${isDisabled ? "" : "group-hover:!hidden"}`;
-  $: hoverClass = `${basicIconClass} bx-${hoverIcon ?? icon} text-${color}-700 dark:text-${color}-300 !hidden ${isDisabled ? "" : "group-hover:!inline"}`;
+  let iconClass = $derived(
+    `${basicIconClass} bx-${icon} text-${color}-700 dark:text-${color}-300 ${!permanent ? "!hidden" : ""} ${isDisabled ? "" : "group-hover:!hidden"}`
+  );
+  let hoverClass = $derived(
+    `${basicIconClass} bx-${hoverIcon ?? icon} text-${color}-700 dark:text-${color}-300 !hidden ${isDisabled ? "" : "group-hover:!inline"}`
+  );
 </script>
 
 <div class={containerClass}>

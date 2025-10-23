@@ -9,31 +9,35 @@
 -->
 
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
-  import { appStore } from "$lib/store";
+  import { appStore } from "$lib/store.svelte";
   import { querystring } from "svelte-spa-router";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
 
-  let searchTerm: string | null;
-  let advisoryTable: any;
-  let advancedSearch = false;
-  let searchResults = true;
-  let selectedCustomQuery: boolean;
-  let queryString: any;
-  let defaultQuery: any;
+  let searchTerm: string | undefined = $state(undefined);
+  let advisoryTable: any = $state(null);
+  let advancedSearch = $state(false);
+  let searchResults = $state(true);
+  let selectedCustomQuery: boolean = $state(false);
+  let queryString: any = $state();
+  let defaultQuery: any = $state(null);
   // let searchqueryTimer: any = null;
 
-  $: if (defaultQuery) {
-    if (!selectedCustomQuery) {
-      query = getDefaultQuery();
+  $effect(() => {
+    untrack(() => selectedCustomQuery);
+    untrack(() => query);
+    if (defaultQuery) {
+      if (!selectedCustomQuery) {
+        query = getDefaultQuery();
+      }
     }
-  }
+  });
 
   const getDefaultQuery = () => {
     let searchType = SEARCHTYPES.ADVISORY;
@@ -61,7 +65,7 @@
     }
   };
 
-  let query = getDefaultQuery();
+  let query = $state(getDefaultQuery());
 
   const setQueryBack = async () => {
     query = getDefaultQuery();
@@ -71,9 +75,14 @@
     advisoryTable.fetchData();
   };
 
-  $: if (!selectedCustomQuery) {
-    setQueryBack();
-  }
+  $effect(() => {
+    untrack(() => query);
+    untrack(() => searchTerm);
+    untrack(() => advisoryTable);
+    if (!selectedCustomQuery) {
+      setQueryBack();
+    }
+  });
 
   const triggerSearch = async () => {
     if (!advancedSearch) {
@@ -140,8 +149,7 @@
 </svelte:head>
 
 <Queries
-  on:querySelected={async (e) => {
-    let { detail } = e;
+  onQuerySelected={async (detail: any) => {
     query = {
       query: detail.query,
       queryReset: detail.query,
@@ -163,7 +171,7 @@
       size="sm"
       placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
       bind:value={searchTerm}
-      on:keyup={(e) => {
+      onkeyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
         if (e.key === "Enter") triggerSearch();
         // if (searchTerm && searchTerm.length > 2) {
@@ -178,7 +186,7 @@
       {#if searchTerm}
         <button
           class="mr-3"
-          on:click={() => {
+          onclick={() => {
             clearSearch();
           }}>x</button
         >
@@ -186,7 +194,7 @@
     </Search>
     <Button
       size="xs"
-      on:click={() => {
+      onclick={() => {
         triggerSearch();
       }}>{advancedSearch ? "Apply" : "Search"}</Button
     >
@@ -203,7 +211,7 @@
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.ADVISORY ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           query.queryType = SEARCHTYPES.ADVISORY;
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
@@ -217,7 +225,7 @@
         size="xs"
         color="light"
         class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.DOCUMENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        on:click={() => {
+        onclick={() => {
           query.queryType = SEARCHTYPES.DOCUMENT;
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
@@ -232,7 +240,7 @@
           size="xs"
           color="light"
           class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.EVENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-          on:click={() => {
+          onclick={() => {
             query.queryType = SEARCHTYPES.EVENT;
             query.columns = SEARCHPAGECOLUMNS.EVENT;
             query.orders = ["-time"];
@@ -243,7 +251,7 @@
     </ButtonGroup>
   {/if}
 </div>
-{#if searchTerm !== null}
+{#if searchTerm !== undefined}
   <AdvisoryTable
     defaultOrderBy={query.orders}
     columns={query.columns}

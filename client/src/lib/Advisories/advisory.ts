@@ -7,7 +7,7 @@
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 import { getAccessToken } from "$lib/request";
-import { appStore } from "$lib/store";
+import { appStore } from "$lib/store.svelte";
 import type { WorkflowState } from "$lib/workflow";
 import { push } from "svelte-spa-router";
 
