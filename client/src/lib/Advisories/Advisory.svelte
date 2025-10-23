@@ -55,6 +55,7 @@
   let lastSuccessfulForwardTarget: number | undefined = $state(undefined);
   let isInconsistent = $state(false);
   let documentNotFound = $state(false);
+  let couldNotLoadDocument = $state(false);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -147,6 +148,7 @@
     document = {};
     isInconsistent = false;
     documentNotFound = false;
+    couldNotLoadDocument = false;
     const response = await request(`/api/documents/${params.id}`, "GET");
     if (response.ok) {
       const result = await response.content;
@@ -162,6 +164,7 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
+      couldNotLoadDocument = true;
       if (response.error === "404") {
         documentNotFound = true;
       } else {
@@ -468,7 +471,7 @@
     </div>
   {:else if isInconsistent}
     <InconsistencyMessage {advisoryVersions} {document} {params}></InconsistencyMessage>
-  {:else}
+  {:else if !couldNotLoadDocument && !isInconsistent}
     <div class="flex w-full flex-none flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">
@@ -496,7 +499,7 @@
   <ErrorMessage error={stateError}></ErrorMessage>
   <ErrorMessage error={loadDocumentError}></ErrorMessage>
   <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
-  {#if !documentNotFound && !isInconsistent}
+  {#if !couldNotLoadDocument && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}
         <div
