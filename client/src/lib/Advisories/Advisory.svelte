@@ -54,6 +54,7 @@
   let processRunning = $state(false);
   let lastSuccessfulForwardTarget: number | undefined = $state(undefined);
   let isInconsistent = $state(false);
+  let documentNotFound = $state(false);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -145,6 +146,7 @@
   const loadDocument = async () => {
     document = {};
     isInconsistent = false;
+    documentNotFound = false;
     const response = await request(`/api/documents/${params.id}`, "GET");
     if (response.ok) {
       const result = await response.content;
@@ -160,7 +162,11 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
-      loadDocumentError = getErrorDetails(`Could not load document.`, response);
+      if (response.error === "404") {
+        documentNotFound = true;
+      } else {
+        loadDocumentError = getErrorDetails(`Could not load document.`, response);
+      }
     }
   };
 
@@ -455,7 +461,12 @@
 </Modal>
 
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
-  {#if isInconsistent}
+  {#if documentNotFound}
+    <div class="mb-2 font-bold">
+      <i class="bx bx-error-circle" aria-hidden></i>
+      <span>The URL doesn't reference any document</span>
+    </div>
+  {:else if isInconsistent}
     <InconsistencyMessage {advisoryVersions} {document} {params}></InconsistencyMessage>
   {:else}
     <div class="flex w-full flex-none flex-col">
@@ -485,7 +496,7 @@
   <ErrorMessage error={stateError}></ErrorMessage>
   <ErrorMessage error={loadDocumentError}></ErrorMessage>
   <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
-  {#if !isInconsistent}
+  {#if !documentNotFound && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}
         <div
