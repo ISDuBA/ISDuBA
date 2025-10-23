@@ -281,9 +281,9 @@
 -->
 <svelte:head>
   <script>
-    if ("color-theme" in localStorage) {
+    if ("THEME_PREFERENCE_KEY" in localStorage) {
       // explicit preference - overrides author's choice
-      localStorage.getItem("color-theme") === "dark"
+      localStorage.getItem("THEME_PREFERENCE_KEY") === "dark"
         ? window.document.documentElement.classList.add("dark")
         : window.document.documentElement.classList.remove("dark");
     } else {
