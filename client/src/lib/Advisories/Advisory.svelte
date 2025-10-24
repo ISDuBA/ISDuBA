@@ -27,7 +27,7 @@
   import Tlp from "./TLP.svelte";
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
-  import type { TrackingStatus, AdvisoryVersion } from "./advisory.ts";
+  import { type AdvisoryVersion, loadAdvisoryVersions } from "$lib/Advisories/advisory";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
 
   let { params } = $props();
@@ -54,6 +54,8 @@
   let processRunning = $state(false);
   let lastSuccessfulForwardTarget: number | undefined = $state(undefined);
   let isInconsistent = $state(false);
+  let documentNotFound = $state(false);
+  let couldNotLoadDocument = $state(false);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -81,12 +83,10 @@
     appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin()
   );
   let encodedTrackingID = $derived(
-    params.trackingID ? encodeURIComponent(addSlashes(params.trackingID)) : undefined
+    document.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
   );
   let encodedPublisherNamespace = $derived(
-    params.publisherNamespace
-      ? encodeURIComponent(addSlashes(params.publisherNamespace))
-      : undefined
+    document.publisher?.name ? encodeURIComponent(addSlashes(document.publisher?.name)) : undefined
   );
 
   const setAsReadTimeout: number[] = [];
@@ -96,63 +96,35 @@
   let availableForwardSelection: any[] = $state([]);
   let selectedForwardTarget: number | undefined = $state();
 
-  const loadAdvisoryVersions = async () => {
-    const response = await request(
-      `/api/documents?&columns=id version tracking_id tracking_status&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
-      "GET"
-    );
-    if (response.ok) {
-      const result = await response.content;
-      if (result.documents) {
-        advisoryVersions = result.documents.map((doc: any) => {
-          return {
-            id: doc.id,
-            version: doc.version,
-            tracking_id: doc.tracking_id,
-            tracking_status: doc.tracking_status as TrackingStatus
-          };
-        });
-
-        // Define the order of tracking statuses
-        const statusOrder: Record<TrackingStatus, number> = {
-          draft: 3,
-          interim: 2,
-          final: 1
-        };
-
-        // Sort the advisoryVersions array
-        advisoryVersions.sort((a, b) => {
-          // If versions are different, maintain original sort (or any default sort)
-          if (a.version !== b.version) {
-            return 0; // Keep original order for different versions
-          }
-
-          // If versions are the same, sort by tracking_status
-          return statusOrder[a.tracking_status] - statusOrder[b.tracking_status];
-        });
-
-        advisoryVersionByDocumentID = advisoryVersions.reduce(
-          (acc: any, version: AdvisoryVersion) => {
-            acc[version.id] = version.version;
-            return acc;
-          },
-          {}
-        );
+  const getAdvisoryVersions = async () => {
+    if (!encodedTrackingID || !encodedPublisherNamespace) return;
+    const result = await loadAdvisoryVersions(encodedTrackingID, encodedPublisherNamespace);
+    if (result) {
+      if (result.error) {
+        loadAdvisoryVersionsError = result.error;
+      } else if (result.advisoryVersions) {
+        advisoryVersions = result.advisoryVersions;
       }
-    } else if (response.error) {
-      loadAdvisoryVersionsError = getErrorDetails(`Could not load versions.`, response);
     }
+    advisoryVersionByDocumentID = advisoryVersions.reduce((acc: any, version: AdvisoryVersion) => {
+      acc[version.id] = version.version;
+      return acc;
+    }, {});
   };
 
   const loadDocument = async () => {
     document = {};
     isInconsistent = false;
+    documentNotFound = false;
+    couldNotLoadDocument = false;
     const response = await request(`/api/documents/${params.id}`, "GET");
     if (response.ok) {
       const result = await response.content;
       if (
-        result.document.tracking.id !== params.trackingID ||
-        result.document.publisher.name !== params.publisherNamespace
+        params.trackingID &&
+        params.publisherNamespace &&
+        (result.document.tracking.id !== params.trackingID ||
+          result.document.publisher.name !== params.publisherNamespace)
       ) {
         isInconsistent = true;
       }
@@ -160,7 +132,12 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
-      loadDocumentError = getErrorDetails(`Could not load document.`, response);
+      couldNotLoadDocument = true;
+      if (response.error === "404") {
+        documentNotFound = true;
+      } else {
+        loadDocumentError = getErrorDetails(`Could not load document.`, response);
+      }
     }
   };
 
@@ -334,7 +311,8 @@
 
   const loadData = async () => {
     await loadDocument();
-    await loadAdvisoryVersions();
+    await getAdvisoryVersions();
+    if (couldNotLoadDocument || isInconsistent) return;
     if (document) {
       await loadFourCVEs();
       await loadDocumentSSVC();
@@ -432,7 +410,7 @@
 </script>
 
 <svelte:head>
-  <title>{params.trackingID}</title>
+  <title>{documentNotFound ? "Document not found" : document.tracking?.id}</title>
 </svelte:head>
 
 <Modal bind:open={openForwardModal}>
@@ -455,13 +433,18 @@
 </Modal>
 
 <div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
-  {#if isInconsistent}
-    <InconsistencyMessage {advisoryVersions} {document} {params}></InconsistencyMessage>
-  {:else}
+  {#if documentNotFound}
+    <div class="mb-2 font-bold">
+      <i class="bx bx-error-circle" aria-hidden="true"></i>
+      <span>The URL doesn't reference any document</span>
+    </div>
+  {:else if isInconsistent}
+    <InconsistencyMessage {document} {params}></InconsistencyMessage>
+  {:else if !couldNotLoadDocument && !isInconsistent}
     <div class="flex w-full flex-none flex-col">
       <div class="flex gap-2">
         <Label class="text-lg">
-          <span class="mr-2">{params.trackingID}</span>
+          <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
           {#if appStore.state.webview.doc?.tlp.label}
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
@@ -471,7 +454,7 @@
         class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
       >
         <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
-          >{params.publisherNamespace}</Label
+          >{document.publisher ? document.publisher.name : ""}</Label
         >
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
@@ -485,7 +468,7 @@
   <ErrorMessage error={stateError}></ErrorMessage>
   <ErrorMessage error={loadDocumentError}></ErrorMessage>
   <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
-  {#if !isInconsistent}
+  {#if !couldNotLoadDocument && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}
         <div
@@ -573,11 +556,11 @@
         <div class="flex flex-row">
           {#if advisoryVersions?.length > 0}
             <Version
-              publisherNamespace={params.publisherNamespace}
+              publisherNamespace={document.publisher?.name}
               {advisoryVersions}
               selectedDocumentVersion={{
                 id: document.id,
-                tracking_id: params.trackingID,
+                tracking_id: document.tracking?.id,
                 tracking_status: document.tracking?.status,
                 version: document.tracking?.version
               }}
@@ -595,9 +578,9 @@
                 <Webview
                   widthOffset={canSeeCommentArea ? 464 : 0}
                   basePath={"#/advisories/" +
-                    params.publisherNamespace +
+                    document.publisher?.name +
                     "/" +
-                    params.trackingID +
+                    document.tracking?.id +
                     "/documents/" +
                     params.id +
                     "/"}

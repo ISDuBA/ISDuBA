@@ -175,6 +175,11 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
+    "/documents/:id/:position?": wrap({
+      component: Advisory as any,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
     "/search": wrap({
       component: Search as any,
       userData: loginRequired,
