@@ -30,7 +30,7 @@
     }
   };
 
-  const getSeverityClass = (severity: string | undefined, score: string | undefined) => {
+  const getClass = (severity: string | undefined, score: string | undefined) => {
     if (severity && score) {
       if (severity.toLowerCase() !== getCVSSTextualRating(Number(score)).toLowerCase()) {
         return "";
@@ -48,7 +48,7 @@
 </script>
 
 {#if baseScore !== null && baseScore !== undefined}
-  <div class={"score " + getSeverityClass(baseSeverity, baseScore)}>
+  <div class={"score " + getClass(baseSeverity, baseScore)}>
     <span class="baseScore">{baseScore}</span>
     {#if baseSeverity && !baseScore}
       <span class="baseSeverity">{baseSeverity}</span>
