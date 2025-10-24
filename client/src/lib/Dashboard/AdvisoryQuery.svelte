@@ -22,6 +22,7 @@
   import { getRelativeTime } from "$lib/time";
   import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
+  import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
 
   interface Props {
     storedQuery: any;
@@ -103,9 +104,7 @@
               {#snippet topLeftSlot()}
                 <div>
                   {#if doc.critical}
-                    <span class:text-red-500={Number(doc.critical) > 5.0}>
-                      {doc.critical}
-                    </span>
+                    <CVSS baseScore={doc.critical}></CVSS>
                   {/if}
                 </div>
               {/snippet}

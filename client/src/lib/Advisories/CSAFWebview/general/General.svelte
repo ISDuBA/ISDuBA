@@ -37,15 +37,15 @@
 
 <div class="w-full">
   <div class="mb-3">
-    <div class="flex flex-row">
+    <div class="flex flex-row gap-2">
       <div>
-        <span class="text-xl">{title} </span>
+        <span class="-mt-1 inline-block text-xl text-balance">{title} </span>
         {#if appStore.state.webview.doc?.status !== Status.final}
           <span class="ml-3 text-lg text-gray-400">{status}</span>
         {/if}
       </div>
       {#if appStore.state.webview.doc?.highestScore}
-        <Cvss {baseScore} {baseSeverity}></Cvss>
+        <Cvss {baseScore} baseSeverity={baseSeverity ?? ""}></Cvss>
       {/if}
     </div>
   </div>
