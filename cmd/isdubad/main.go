@@ -23,14 +23,14 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ISDuBA/ISDuBA/internal/aggregators"
-	"github.com/ISDuBA/ISDuBA/internal/config"
-	"github.com/ISDuBA/ISDuBA/internal/database"
-	"github.com/ISDuBA/ISDuBA/internal/forwarder"
-	"github.com/ISDuBA/ISDuBA/internal/sources"
-	"github.com/ISDuBA/ISDuBA/internal/tempstore"
-	"github.com/ISDuBA/ISDuBA/internal/version"
-	"github.com/ISDuBA/ISDuBA/internal/web"
+	"github.com/ISDuBA/ISDuBA/pkg/aggregators"
+	"github.com/ISDuBA/ISDuBA/pkg/config"
+	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/forwarder"
+	"github.com/ISDuBA/ISDuBA/pkg/sources"
+	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
+	"github.com/ISDuBA/ISDuBA/pkg/version"
+	"github.com/ISDuBA/ISDuBA/pkg/web"
 	"github.com/gocsaf/csaf/v3/csaf"
 )
 

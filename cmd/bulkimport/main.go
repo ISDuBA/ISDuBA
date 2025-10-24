@@ -15,9 +15,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/ISDuBA/ISDuBA/internal/config"
-	"github.com/ISDuBA/ISDuBA/internal/database"
-	"github.com/ISDuBA/ISDuBA/internal/version"
+	"github.com/ISDuBA/ISDuBA/pkg/config"
+	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -30,7 +30,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISDuBA/ISDuBA/internal/models"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
 func processFile(
