@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ISDuBA/ISDuBA/internal/cache"
+	"github.com/ISDuBA/ISDuBA/pkg/cache"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 )
 

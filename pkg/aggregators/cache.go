@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ISDuBA/ISDuBA/internal/cache"
+	"github.com/ISDuBA/ISDuBA/pkg/cache"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gocsaf/csaf/v3/csaf"

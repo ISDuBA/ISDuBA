@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ISDuBA/ISDuBA/internal/cache"
+	"github.com/ISDuBA/ISDuBA/pkg/cache"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"gopkg.in/square/go-jose.v2/jwt"
