@@ -164,3 +164,4 @@ Where and how to configure the ISDuBA application is outlined [in isdubad-config
 
 If other problems still persist, see if they are outlined [in the troubleshooting guide.](./troubleshooting.md)
 
+If you want to call the API, you may consider using the [Python Client.](https://github.com/ISDuBA/isduba-python-client)
