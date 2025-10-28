@@ -224,8 +224,7 @@
     cloneQuery,
     openDeleteModal: onOpenDeleteModal,
     updateIgnored,
-    setNewOrder,
-    loading
+    setNewOrder
   });
 </script>
 
