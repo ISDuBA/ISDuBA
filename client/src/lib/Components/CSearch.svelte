@@ -45,7 +45,7 @@
 <div class={containerClass ?? "relative flex w-full md:w-fit"}>
   <div class="relative w-full md:w-96">
     <Input
-      class="w-full !rounded-e-none disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right"
+      class="w-full min-w-60 !rounded-e-none disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right"
       size="md"
       {placeholder}
       bind:value={searchTerm}

@@ -166,8 +166,8 @@
   bind:selectedQuery={selectedCustomQuery}
   bind:defaultQuery
 ></Queries>
-<div class="mb-3 flex">
-  <div class="flex w-2/3 flex-row">
+<div class="mb-3 flex flex-wrap">
+  <div class="flex flex-row flex-wrap gap-2">
     <CSearch
       buttonText={advancedSearch ? "Apply" : "Search"}
       placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
