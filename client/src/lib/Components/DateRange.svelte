@@ -111,14 +111,13 @@
   };
 
   const onFromTimeChanged = (event: any) => {
-    if (event.detail) {
-      const detail = event.detail;
+    if (event) {
       if (!from) from = new Date();
-      if (detail.hours !== undefined) {
-        from.setUTCHours(Number(detail.hours));
+      if (event.hours !== undefined) {
+        from.setUTCHours(Number(event.hours));
       }
-      if (detail.minutes !== undefined) {
-        from.setUTCMinutes(Number(detail.minutes));
+      if (event.minutes !== undefined) {
+        from.setUTCMinutes(Number(event.minutes));
       }
       from = from;
       onChange();
@@ -126,14 +125,13 @@
   };
 
   const onToTimeChanged = (event: any) => {
-    if (event.detail) {
-      const detail = event.detail;
+    if (event) {
       if (!to) to = new Date();
-      if (detail.hours !== undefined) {
-        to.setUTCHours(Number(detail.hours));
+      if (event.hours !== undefined) {
+        to.setUTCHours(Number(event.hours));
       }
-      if (detail.minutes !== undefined) {
-        to.setUTCMinutes(Number(detail.minutes));
+      if (event.minutes !== undefined) {
+        to.setUTCMinutes(Number(event.minutes));
       }
       to = to;
       onChange();
