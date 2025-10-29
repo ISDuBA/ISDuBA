@@ -462,6 +462,7 @@
                 onChanged={() => {
                   setVisible(index);
                 }}
+                ariaLabel={`Set visibility of column ${col.name}`}
                 checked={currentSearch.columns[index].visible}
                 disabled={!isAllowedToEdit}
               ></CCheckbox>
