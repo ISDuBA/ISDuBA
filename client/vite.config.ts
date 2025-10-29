@@ -7,7 +7,7 @@
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 import { sveltekit } from "@sveltejs/kit/vite";
-import { coverageConfigDefaults, defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   server: {
@@ -28,12 +28,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "json", "html"],
-      exclude: [
-        "**/build/**",
-        "**/.svelte-kit/**",
-        "**/*.config.*",
-        ...coverageConfigDefaults.exclude
-      ],
+      exclude: ["**/build/**", "**/.svelte-kit/**", "**/*.config.*"],
       thresholds: {
         lines: 60,
         branches: 60,
