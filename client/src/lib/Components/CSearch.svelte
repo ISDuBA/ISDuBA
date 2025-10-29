@@ -12,20 +12,33 @@
   import { Button, Input } from "flowbite-svelte";
 
   interface Props {
+    buttonText?: string;
     containerClass?: string | undefined;
+    onClear?: () => void;
+    onKeyup?: (event: any) => void;
+    placeholder?: string;
     searchTerm: string;
-    search: () => void;
+    search?: () => void;
   }
 
-  let { containerClass = undefined, searchTerm = $bindable(), search }: Props = $props();
+  let {
+    buttonText = "Search",
+    containerClass = undefined,
+    onClear = undefined,
+    onKeyup = undefined,
+    placeholder = "Enter a search term",
+    searchTerm = $bindable(),
+    search
+  }: Props = $props();
 
   const dispatchSearchEvent = () => {
-    search();
+    if (search) search();
   };
 
   const clearInput = () => {
     searchTerm = "";
     dispatchSearchEvent();
+    if (onClear) onClear();
   };
 </script>
 
@@ -34,9 +47,10 @@
     <Input
       class="w-full !rounded-e-none disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right"
       size="md"
-      placeholder="Enter a search term"
+      {placeholder}
       bind:value={searchTerm}
       onkeyup={(e) => {
+        if (onKeyup) onKeyup(e);
         if (e.key === "Enter") dispatchSearchEvent();
       }}
     >
@@ -51,5 +65,5 @@
       {/snippet}
     </Input>
   </div>
-  <Button size="xs" class="rounded-s-none" onclick={dispatchSearchEvent}>Search</Button>
+  <Button size="sm" class="rounded-s-none" onclick={dispatchSearchEvent}>{buttonText}</Button>
 </div>

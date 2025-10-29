@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { onMount, tick, untrack } from "svelte";
-  import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
+  import { Button, ButtonGroup, Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
@@ -19,8 +19,9 @@
   import { querystring } from "svelte-spa-router";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
+  import CSearch from "$lib/Components/CSearch.svelte";
 
-  let searchTerm: string | undefined = $state(undefined);
+  let searchTerm: string = $state("");
   let advisoryTable: any = $state(null);
   let advancedSearch = $state(false);
   let searchResults = $state(true);
@@ -167,11 +168,13 @@
 ></Queries>
 <div class="mb-3 flex">
   <div class="flex w-2/3 flex-row">
-    <Search
-      size="sm"
+    <CSearch
+      buttonText={advancedSearch ? "Apply" : "Search"}
       placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
-      bind:value={searchTerm}
-      onkeyup={(e) => {
+      search={() => {
+        triggerSearch();
+      }}
+      onKeyup={(e) => {
         sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
         if (e.key === "Enter") triggerSearch();
         // if (searchTerm && searchTerm.length > 2) {
@@ -182,22 +185,8 @@
         // }
         if (searchTerm === "") clearSearch();
       }}
-    >
-      {#if searchTerm}
-        <button
-          class="mr-3"
-          onclick={() => {
-            clearSearch();
-          }}>x</button
-        >
-      {/if}
-    </Search>
-    <Button
-      size="xs"
-      onclick={() => {
-        triggerSearch();
-      }}>{advancedSearch ? "Apply" : "Search"}</Button
-    >
+      bind:searchTerm
+    ></CSearch>
     <div class="mt-1" title="Define finer grained search queries">
       <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
     </div>
