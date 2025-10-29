@@ -8,4 +8,4 @@
 
 CREATE OR REPLACE FUNCTION public.text_to_status(text) RETURNS public.status AS $$
     SELECT $1::public.status
-$$ LANGUAGE SQL IMMUTABLEM
+$$ LANGUAGE SQL IMMUTABLE
