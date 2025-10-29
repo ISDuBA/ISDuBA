@@ -74,7 +74,7 @@
     query = "",
     searchTerm = "",
     tableType,
-    searchResults,
+    searchResults = $bindable(true),
     orderBy = $bindable(["title"]),
     defaultOrderBy = ["title"]
   }: Props = $props();
@@ -111,12 +111,6 @@
   let areThereAnyComments = $derived(
     tableType === SEARCHTYPES.EVENT && documents?.find((d: any) => d.event === "add_comment")
   );
-
-  $effect(() => {
-    if (searchResults !== undefined) {
-      fetchData();
-    }
-  });
 
   let selectedState: any = $state(null);
   let dropdownOpen = $state(false);

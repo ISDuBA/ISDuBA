@@ -202,7 +202,13 @@
       <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
     </div>
     <div class="mt-1" title="Show every single time the search term was found">
-      <Toggle bind:checked={searchResults} class="ml-3">Detailed</Toggle>
+      <Toggle
+        onchange={() => {
+          advisoryTable.fetchData();
+        }}
+        bind:checked={searchResults}
+        class="ml-3">Detailed</Toggle
+      >
     </div>
   </div>
   {#if !selectedCustomQuery}
