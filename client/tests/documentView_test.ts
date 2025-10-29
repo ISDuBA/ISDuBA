@@ -12,7 +12,7 @@ import { test } from "./fixtures";
 test("Advisory view is working", async ({ page }) => {
   await page.goto("/#/search");
   await page.getByPlaceholder("Enter a search term").fill("avendor");
-  await page.getByRole("button", { name: "Search" }).click();
+  await page.getByRole("button", { name: "Search", exact: true }).click();
   await page.getByText("Avendor-advisory-0004").first().click({ force: true });
   await expect(page.getByText("Test CSAF document")).toBeVisible();
 });

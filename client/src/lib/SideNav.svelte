@@ -153,7 +153,7 @@
         </SidebarWrapper>
       </Sidebar>
     </Drawer>
-    <div class="h-screen w-16 bg-white p-2 dark:bg-gray-800">
+    <div class="h-screen w-12 bg-white p-1 dark:bg-gray-800">
       <button
         onclick={toggleDrawer}
         aria-label={drawerOpen ? "open navigation" : "close navigation"}
