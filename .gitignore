@@ -49,6 +49,7 @@ dist/
 cov/
 /web/
 client/playwright/.auth
+client/playwright/output
 
 # IDE
 .vscode
