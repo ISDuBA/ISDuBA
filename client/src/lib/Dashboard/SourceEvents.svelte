@@ -9,7 +9,6 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import {
     type Attention,
@@ -64,50 +63,48 @@
   });
 </script>
 
-{#if appStore.state.app.isUserLoggedIn && appStore.isSourceManager()}
-  <div class="mb-8 flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
-    <SectionHeader title="Changed sources"></SectionHeader>
-    <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
-      {#if isLoading}
-        <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
-          Loading ...
-          <Spinner color="gray" size="4"></Spinner>
-        </div>
-      {/if}
-      {#if attentions}
-        {#if attentions.length > 0}
-          {#each attentions as attention}
-            <Activity
-              onClicked={() => {
-                if (attention.id) {
-                  if (attention.isSource) {
-                    push(`/sources/${attention.id}`);
-                  } else {
-                    push(`/sources/aggregators/${attention.id}`);
-                  }
+<div class="mb-8 flex flex-col gap-4 md:w-[46%] md:max-w-[46%]">
+  <SectionHeader title="Changed sources"></SectionHeader>
+  <div class="grid grid-cols-[repeat(auto-fit,_minmax(200pt,_1fr))] gap-6">
+    {#if isLoading}
+      <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
+        Loading ...
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+    {/if}
+    {#if attentions}
+      {#if attentions.length > 0}
+        {#each attentions as attention}
+          <Activity
+            onClicked={() => {
+              if (attention.id) {
+                if (attention.isSource) {
+                  push(`/sources/${attention.id}`);
+                } else {
+                  push(`/sources/aggregators/${attention.id}`);
                 }
-              }}
-            >
-              {#snippet topLeftSlot()}
-                <div>
-                  {attention.isSource ? "Source change" : "Aggregator change"}
-                </div>{/snippet}
-              <div>{attention.name}</div>
-            </Activity>
-          {/each}
-        {:else}
-          <div class="text-gray-600 dark:text-gray-400">No source changes found.</div>
-        {/if}
+              }
+            }}
+          >
+            {#snippet topLeftSlot()}
+              <div>
+                {attention.isSource ? "Source change" : "Aggregator change"}
+              </div>{/snippet}
+            <div>{attention.name}</div>
+          </Activity>
+        {/each}
+      {:else}
+        <div class="text-gray-600 dark:text-gray-400">No source changes found.</div>
       {/if}
-    </div>
-    <Button
-      onclick={async () => await push(`/sources/`)}
-      color="light"
-      class="h-fit w-fit rounded-md !px-2 !py-1"
-    >
-      <i class="bx bx-git-repo-forked text-lg"></i>
-    </Button>
-    {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
-    <ErrorMessage error={loadAttentionError}></ErrorMessage>
+    {/if}
   </div>
-{/if}
+  <Button
+    onclick={async () => await push(`/sources/`)}
+    color="light"
+    class="h-fit w-fit rounded-md !px-2 !py-1"
+  >
+    <i class="bx bx-git-repo-forked text-lg"></i>
+  </Button>
+  {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
+  <ErrorMessage error={loadAttentionError}></ErrorMessage>
+</div>
