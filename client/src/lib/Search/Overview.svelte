@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { onMount, tick, untrack } from "svelte";
-  import { Button, ButtonGroup, Toggle } from "flowbite-svelte";
+  import { Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
@@ -20,6 +20,7 @@
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";
+  import TypeToggle from "$lib/Search/TypeToggle.svelte";
 
   let searchTerm: string = $state("");
   let advisoryTable: any = $state(null);
@@ -201,49 +202,34 @@
     </div>
   </div>
   {#if !selectedCustomQuery}
-    <ButtonGroup class="ml-auto h-7">
-      <Button
-        size="xs"
-        color="light"
-        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.ADVISORY ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        onclick={() => {
-          query.queryType = SEARCHTYPES.ADVISORY;
+    <TypeToggle
+      selected={query.queryType}
+      eventButtonVisible={appStore.isEditor() ||
+        appStore.isReviewer() ||
+        appStore.isAdmin() ||
+        appStore.isAuditor()}
+      onSelect={(newType: SEARCHTYPES) => {
+        query.queryType = newType;
+        if (newType === SEARCHTYPES.ADVISORY) {
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
-          if (query.orders.length === 0) {
-            query.orders = ["-critical"];
-          }
-          clearSearch();
-        }}>Advisories</Button
-      >
-      <Button
-        size="xs"
-        color="light"
-        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.DOCUMENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        onclick={() => {
-          query.queryType = SEARCHTYPES.DOCUMENT;
+        } else if (newType === SEARCHTYPES.DOCUMENT) {
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
-          if (query.orders.length === 0) {
-            query.orders = ["-critical"];
-          }
-          clearSearch();
-        }}>Documents</Button
-      >
-      {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAdmin() || appStore.isAuditor()}
-        <Button
-          size="xs"
-          color="light"
-          class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.EVENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-          onclick={() => {
-            query.queryType = SEARCHTYPES.EVENT;
-            query.columns = SEARCHPAGECOLUMNS.EVENT;
-            query.orders = ["-time"];
-            clearSearch();
-          }}>Events</Button
-        >
-      {/if}
-    </ButtonGroup>
+        } else if (newType === SEARCHTYPES.EVENT) {
+          query.columns = SEARCHPAGECOLUMNS.EVENT;
+        }
+        if (
+          (newType === SEARCHTYPES.ADVISORY || newType === SEARCHTYPES.DOCUMENT) &&
+          query.orders.length === 0
+        ) {
+          query.orders = ["-critical"];
+        } else if (newType === SEARCHTYPES.EVENT) {
+          query.orders = ["-time"];
+        }
+        clearSearch();
+      }}
+    ></TypeToggle>
   {/if}
 </div>
 {#if searchTerm !== undefined}
