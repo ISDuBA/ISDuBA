@@ -47,7 +47,7 @@
   let errorMessage: ErrorDetails | null = $state(null);
   let advancedQueryErrorMessage: ErrorDetails | null = null;
   const globalQueryButtonColor = "primary";
-  const defaultQueryButtonClass = "flex flex-col p-0";
+  const defaultQueryButtonClass = "flex flex-col py-0 text-xs";
   const queryButtonClass = "bg-white hover:bg-gray-100";
   const pressedQueryButtonClass =
     "bg-gray-200 text-black hover:text-black hover:!bg-gray-100 dark:bg-gray-600 dark:hover:!bg-gray-700";
@@ -123,26 +123,28 @@
   };
 </script>
 
-<div class="mb-8 flex flex-col flex-wrap gap-4">
+<div class="flex flex-col flex-wrap gap-4">
   <div class="flex items-center gap-x-4">
-    <ButtonGroup class="flex-wrap">
+    <ButtonGroup class="h-7 flex-wrap">
       {#each sortedQueries as query, index}
         {#if !ignoredQueries.includes(query.id)}
           <Button
-            size="xs"
+            color="light"
             onclick={() => selectQuery(index)}
             class={getClass(query.global, index === selectedIndex)}
           >
-            <span title={query.description} class="p-2">{truncate(query.name, 30)}</span>
+            <span title={query.description}>{truncate(query.name, 30)}</span>
           </Button>
         {/if}
       {/each}
       {#if currentQueryTitle && selectedIndex < 0}
-        <Button size="xs" onclick={() => selectQuery(-1)} class={getClass(true, true)}>
-          <span class="p-2">{truncate(currentQueryTitle, 30)}</span>
+        <Button color="light" onclick={() => selectQuery(-1)} class={getClass(true, true)}>
+          <span>{truncate(currentQueryTitle, 30)}</span>
         </Button>
       {/if}
       <Button
+        class="py-1"
+        color="light"
         title="Configure queries"
         size="xs"
         onclick={() => {

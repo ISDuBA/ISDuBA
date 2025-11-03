@@ -38,7 +38,7 @@
   const selectedClass = "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700";
 </script>
 
-<ButtonGroup class="ml-auto h-7">
+<ButtonGroup class="h-7">
   {#if advisoryButtonVisible}
     <Button
       disabled={advisoryButtonDisabled}

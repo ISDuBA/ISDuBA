@@ -150,57 +150,24 @@
   <title>Search</title>
 </svelte:head>
 
-<Queries
-  onQuerySelected={async (detail: any) => {
-    query = {
-      query: detail.query,
-      queryReset: detail.query,
-      columns: [...detail.columns],
-      queryType: detail.kind,
-      orders: detail.orders || []
-    };
-    searchTerm = "";
-    await tick();
-    advisoryTable.fetchData();
-  }}
-  {queryString}
-  bind:selectedQuery={selectedCustomQuery}
-  bind:defaultQuery
-></Queries>
-<div class="mb-3 flex flex-wrap">
-  <div class="flex flex-row flex-wrap gap-2">
-    <CSearch
-      buttonText={advancedSearch ? "Apply" : "Search"}
-      placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
-      search={() => {
-        triggerSearch();
-      }}
-      onKeyup={(e) => {
-        sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
-        if (e.key === "Enter") triggerSearch();
-        // if (searchTerm && searchTerm.length > 2) {
-        //   if (searchqueryTimer) clearTimeout(searchqueryTimer);
-        //   searchqueryTimer = setTimeout(() => {
-        //     triggerSearch();
-        //   }, 500);
-        // }
-        if (searchTerm === "") clearSearch();
-      }}
-      bind:searchTerm
-    ></CSearch>
-    <div class="mt-1" title="Define finer grained search queries">
-      <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
-    </div>
-    <div class="mt-1" title="Show every single time the search term was found">
-      <Toggle
-        onchange={() => {
-          advisoryTable.fetchData();
-        }}
-        bind:checked={searchResults}
-        class="ml-3">Detailed</Toggle
-      >
-    </div>
-  </div>
+<div class="mb-8 flex flex-wrap justify-between gap-4">
+  <Queries
+    onQuerySelected={async (detail: any) => {
+      query = {
+        query: detail.query,
+        queryReset: detail.query,
+        columns: [...detail.columns],
+        queryType: detail.kind,
+        orders: detail.orders || []
+      };
+      searchTerm = "";
+      await tick();
+      advisoryTable.fetchData();
+    }}
+    {queryString}
+    bind:selectedQuery={selectedCustomQuery}
+    bind:defaultQuery
+  ></Queries>
   {#if !selectedCustomQuery}
     <TypeToggle
       selected={query.queryType}
@@ -231,6 +198,39 @@
       }}
     ></TypeToggle>
   {/if}
+</div>
+<div class="mb-3 flex flex-row flex-wrap gap-2">
+  <CSearch
+    buttonText={advancedSearch ? "Apply" : "Search"}
+    placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
+    search={() => {
+      triggerSearch();
+    }}
+    onKeyup={(e) => {
+      sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
+      if (e.key === "Enter") triggerSearch();
+      // if (searchTerm && searchTerm.length > 2) {
+      //   if (searchqueryTimer) clearTimeout(searchqueryTimer);
+      //   searchqueryTimer = setTimeout(() => {
+      //     triggerSearch();
+      //   }, 500);
+      // }
+      if (searchTerm === "") clearSearch();
+    }}
+    bind:searchTerm
+  ></CSearch>
+  <div class="mt-1" title="Define finer grained search queries">
+    <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
+  </div>
+  <div class="mt-1" title="Show every single time the search term was found">
+    <Toggle
+      onchange={() => {
+        advisoryTable.fetchData();
+      }}
+      bind:checked={searchResults}
+      class="ml-3">Detailed</Toggle
+    >
+  </div>
 </div>
 {#if searchTerm !== undefined}
   <AdvisoryTable
