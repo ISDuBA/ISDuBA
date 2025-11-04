@@ -82,7 +82,9 @@
         <EventQuery storedQuery={query}></EventQuery>
       {/if}
     {/each}
-    <SourceEvents></SourceEvents>
+    {#if appStore.state.app.isUserLoggedIn && appStore.isSourceManager()}
+      <SourceEvents></SourceEvents>
+    {/if}
   </div>
   <ErrorMessage error={loadQueryError}></ErrorMessage>
   <ErrorMessage error={loadIgnoredError}></ErrorMessage>
