@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { onMount, tick, untrack } from "svelte";
-  import { Button, ButtonGroup, Search, Toggle } from "flowbite-svelte";
+  import { Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
@@ -19,8 +19,10 @@
   import { querystring } from "svelte-spa-router";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
+  import CSearch from "$lib/Components/CSearch.svelte";
+  import TypeToggle from "$lib/Search/TypeToggle.svelte";
 
-  let searchTerm: string | undefined = $state(undefined);
+  let searchTerm: string = $state("");
   let advisoryTable: any = $state(null);
   let advancedSearch = $state(false);
   let searchResults = $state(true);
@@ -148,114 +150,87 @@
   <title>Search</title>
 </svelte:head>
 
-<Queries
-  onQuerySelected={async (detail: any) => {
-    query = {
-      query: detail.query,
-      queryReset: detail.query,
-      columns: [...detail.columns],
-      queryType: detail.kind,
-      orders: detail.orders || []
-    };
-    searchTerm = "";
-    await tick();
-    advisoryTable.fetchData();
-  }}
-  {queryString}
-  bind:selectedQuery={selectedCustomQuery}
-  bind:defaultQuery
-></Queries>
-<div class="mb-3 flex">
-  <div class="flex w-2/3 flex-row">
-    <Search
-      size="sm"
-      placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
-      bind:value={searchTerm}
-      onkeyup={(e) => {
-        sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
-        if (e.key === "Enter") triggerSearch();
-        // if (searchTerm && searchTerm.length > 2) {
-        //   if (searchqueryTimer) clearTimeout(searchqueryTimer);
-        //   searchqueryTimer = setTimeout(() => {
-        //     triggerSearch();
-        //   }, 500);
-        // }
-        if (searchTerm === "") clearSearch();
-      }}
-    >
-      {#if searchTerm}
-        <button
-          class="mr-3"
-          onclick={() => {
-            clearSearch();
-          }}>x</button
-        >
-      {/if}
-    </Search>
-    <Button
-      size="xs"
-      onclick={() => {
-        triggerSearch();
-      }}>{advancedSearch ? "Apply" : "Search"}</Button
-    >
-    <div class="mt-1" title="Define finer grained search queries">
-      <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
-    </div>
-    <div class="mt-1" title="Show every single time the search term was found">
-      <Toggle
-        onchange={() => {
-          advisoryTable.fetchData();
-        }}
-        bind:checked={searchResults}
-        class="ml-3">Detailed</Toggle
-      >
-    </div>
-  </div>
+<div class="mb-8 flex flex-wrap justify-between gap-4">
+  <Queries
+    onQuerySelected={async (detail: any) => {
+      query = {
+        query: detail.query,
+        queryReset: detail.query,
+        columns: [...detail.columns],
+        queryType: detail.kind,
+        orders: detail.orders || []
+      };
+      searchTerm = "";
+      await tick();
+      advisoryTable.fetchData();
+    }}
+    {queryString}
+    bind:selectedQuery={selectedCustomQuery}
+    bind:defaultQuery
+  ></Queries>
   {#if !selectedCustomQuery}
-    <ButtonGroup class="ml-auto h-7">
-      <Button
-        size="xs"
-        color="light"
-        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.ADVISORY ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        onclick={() => {
-          query.queryType = SEARCHTYPES.ADVISORY;
+    <TypeToggle
+      selected={query.queryType}
+      eventButtonVisible={appStore.isEditor() ||
+        appStore.isReviewer() ||
+        appStore.isAdmin() ||
+        appStore.isAuditor()}
+      onSelect={(newType: SEARCHTYPES) => {
+        query.queryType = newType;
+        if (newType === SEARCHTYPES.ADVISORY) {
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
-          if (query.orders.length === 0) {
-            query.orders = ["-critical"];
-          }
-          clearSearch();
-        }}>Advisories</Button
-      >
-      <Button
-        size="xs"
-        color="light"
-        class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.DOCUMENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-        onclick={() => {
-          query.queryType = SEARCHTYPES.DOCUMENT;
+        } else if (newType === SEARCHTYPES.DOCUMENT) {
           query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
-          if (query.orders.length === 0) {
-            query.orders = ["-critical"];
-          }
-          clearSearch();
-        }}>Documents</Button
-      >
-      {#if appStore.isEditor() || appStore.isReviewer() || appStore.isAdmin() || appStore.isAuditor()}
-        <Button
-          size="xs"
-          color="light"
-          class={`h-7 py-1 text-xs ${query.queryType === SEARCHTYPES.EVENT ? "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700" : ""}`}
-          onclick={() => {
-            query.queryType = SEARCHTYPES.EVENT;
-            query.columns = SEARCHPAGECOLUMNS.EVENT;
-            query.orders = ["-time"];
-            clearSearch();
-          }}>Events</Button
-        >
-      {/if}
-    </ButtonGroup>
+        } else if (newType === SEARCHTYPES.EVENT) {
+          query.columns = SEARCHPAGECOLUMNS.EVENT;
+        }
+        if (
+          (newType === SEARCHTYPES.ADVISORY || newType === SEARCHTYPES.DOCUMENT) &&
+          query.orders.length === 0
+        ) {
+          query.orders = ["-critical"];
+        } else if (newType === SEARCHTYPES.EVENT) {
+          query.orders = ["-time"];
+        }
+        clearSearch();
+      }}
+    ></TypeToggle>
   {/if}
+</div>
+<div class="mb-3 flex flex-row flex-wrap gap-2">
+  <CSearch
+    buttonText={advancedSearch ? "Apply" : "Search"}
+    placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
+    search={() => {
+      triggerSearch();
+    }}
+    onKeyup={(e) => {
+      sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
+      if (e.key === "Enter") triggerSearch();
+      // if (searchTerm && searchTerm.length > 2) {
+      //   if (searchqueryTimer) clearTimeout(searchqueryTimer);
+      //   searchqueryTimer = setTimeout(() => {
+      //     triggerSearch();
+      //   }, 500);
+      // }
+      if (searchTerm === "") clearSearch();
+    }}
+    bind:searchTerm
+  ></CSearch>
+  <div class="mt-1" title="Define finer grained search queries">
+    <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
+  </div>
+  <div class="mt-1" title="Show every single time the search term was found">
+    <Toggle
+      onchange={() => {
+        advisoryTable.fetchData();
+      }}
+      bind:checked={searchResults}
+      class="ml-3">Detailed</Toggle
+    >
+  </div>
 </div>
 {#if searchTerm !== undefined}
   <AdvisoryTable

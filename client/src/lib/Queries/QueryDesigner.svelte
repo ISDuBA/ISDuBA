@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Input, Spinner, Button, Img, ButtonGroup, Label, Select } from "flowbite-svelte";
+  import { Input, Spinner, Button, Img, Label, Select } from "flowbite-svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { request } from "$lib/request";
   import {
@@ -33,6 +33,7 @@
   import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import Sortable from "sortablejs";
+  import TypeToggle from "$lib/Search/TypeToggle.svelte";
 
   interface Props {
     params?: any;
@@ -53,10 +54,6 @@
   let ignoredQueries: number[] = [];
   let isAllowedToEdit = $state(true);
   let sortable: any = $state(null);
-
-  const basicButtonClass = "h-8";
-  const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
-  const pressedButtonClass = `${basicButtonClass} bg-gray-200 text-black hover:!bg-gray-100 dark:bg-gray-600 dark:hover:!bg-gray-700`;
 
   // Prop items of (Multi-)Select doesn't accept simple strings
   const roles = [{ name: "<no role>", value: "" }].concat(
@@ -407,29 +404,15 @@
       {/if}
     </div>
     <div class="mb-2">
-      <ButtonGroup>
-        <Button
-          class={currentSearch.searchType === SEARCHTYPES.ADVISORY
-            ? pressedButtonClass
-            : buttonClass}
-          disabled={!isAllowedToEdit}
-          onclick={() => setSearchType(SEARCHTYPES.ADVISORY)}
-        >
-          Advisories</Button
-        >
-        <Button
-          class={currentSearch.searchType === SEARCHTYPES.DOCUMENT
-            ? pressedButtonClass
-            : buttonClass}
-          disabled={!isAllowedToEdit}
-          onclick={() => setSearchType(SEARCHTYPES.DOCUMENT)}>Documents</Button
-        >
-        <Button
-          class={currentSearch.searchType === SEARCHTYPES.EVENT ? pressedButtonClass : buttonClass}
-          disabled={!isAllowedToEdit}
-          onclick={() => setSearchType(SEARCHTYPES.EVENT)}>Events</Button
-        >
-      </ButtonGroup>
+      <TypeToggle
+        advisoryButtonDisabled={!isAllowedToEdit}
+        documentButtonDisabled={!isAllowedToEdit}
+        eventButtonDisabled={!isAllowedToEdit}
+        selected={currentSearch.searchType}
+        onSelect={(newType) => {
+          setSearchType(newType);
+        }}
+      ></TypeToggle>
     </div>
     <small class:text-red-500={noColumnSelected} class:text-gray-400={!noColumnSelected}
       >Select at least 1 column</small
