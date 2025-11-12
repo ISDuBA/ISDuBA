@@ -651,7 +651,7 @@
                       appStore.state.app.diff.docB_ID === item.id.toString() ||
                       disableDiffButtons}
                     class="min-w-[26px] p-1"
-                    title={`compare ${item.tracking_id}`}
+                    title={`Add to comparison: ${item.tracking_id}`}
                   >
                     <Img
                       src="plus-minus.svg"
