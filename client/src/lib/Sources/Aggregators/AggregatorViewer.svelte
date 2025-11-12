@@ -772,9 +772,10 @@
           <form transition:scale onsubmit={submitAggregator} class={formClass}>
             <div class="flex w-96 flex-col gap-2">
               <div>
-                <Label>Name</Label>
+                <Label for="new-aggregator-name">Name</Label>
                 <Input
                   bind:value={aggregator.name}
+                  id="new-aggregator-name"
                   oninput={() => {
                     checkName();
                   }}
@@ -782,9 +783,10 @@
                 ></Input>
               </div>
               <div>
-                <Label>URL</Label>
+                <Label for="new-aggregator-url">URL</Label>
                 <Input
                   bind:value={aggregator.url}
+                  id="new-aggregator-url"
                   oninput={() => {
                     checkUrl();
                   }}

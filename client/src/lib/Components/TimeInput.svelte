@@ -87,6 +87,7 @@
   bind:value={hours}
   class="w-20 rounded-s-none rounded-e-none"
   placeholder="hh"
+  title="Hours"
   type="number"
 />
 <Input
@@ -94,5 +95,6 @@
   bind:value={minutes}
   class={minutesInputClass}
   placeholder="mm"
+  title="Minutes"
   type="number"
 />

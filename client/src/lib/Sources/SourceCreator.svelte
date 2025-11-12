@@ -199,8 +199,8 @@
     </Button>
   {:else}
     <form onsubmit={loadPMD} class={formClass}>
-      <Label>Domain/PMD</Label>
-      <Input bind:value={source.url} oninput={checkUrl} color={urlColor}></Input>
+      <Label for="domain-pmd">Domain/PMD</Label>
+      <Input bind:value={source.url} id="domain-pmd" oninput={checkUrl} color={urlColor}></Input>
       <br />
       <div class:hidden={!loadingPMD} class:mb-4={true}>
         Loading ...
