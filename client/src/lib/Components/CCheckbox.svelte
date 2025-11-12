@@ -15,6 +15,7 @@
   import type { HTMLButtonAttributes } from "svelte/elements";
 
   type Props = {
+    ariaLabel?: string;
     checked?: boolean;
     choices?: CheckboxItem[];
     color?: FormColorType;
@@ -30,6 +31,7 @@
   } & HTMLButtonAttributes;
 
   let {
+    ariaLabel = undefined,
     checked = $bindable(false),
     choices = [],
     color = "primary",
@@ -48,6 +50,7 @@
 
 <Checkbox
   bind:checked
+  aria-label={ariaLabel}
   class={`min-h-[20px] min-w-[20px]`}
   classes={{ div: `p-[6px]! py-[6px]! cursor-pointer ${restProps.class}` }}
   {choices}
