@@ -41,6 +41,7 @@
   let intervalID: ReturnType<typeof setTimeout> | undefined = undefined;
   let isLoadingDocA = $state(false);
   let isLoadingDocB = $state(false);
+  let isLoadingTempDocs = $state(false);
 
   const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
   const padding = "pe-5 pt-2";
@@ -178,6 +179,7 @@
   };
 
   const getTempDocuments = async () => {
+    isLoadingTempDocs = true;
     loadTempDocsErrorMessage = null;
     const response = await request("/api/tempdocuments", "GET");
     if (response.ok) {
@@ -200,6 +202,7 @@
     } else if (response.error) {
       loadTempDocsErrorMessage = getErrorDetails(`Could not load temporary document.`, response);
     }
+    isLoadingTempDocs = false;
   };
 
   const deleteTempDocument = async (id: number) => {
@@ -373,6 +376,11 @@
   <ErrorMessage error={loadDocumentAErrorMessage}></ErrorMessage>
   <ErrorMessage error={loadDocumentBErrorMessage}></ErrorMessage>
   <div class="flex flex-col">
+    {#if isLoadingTempDocs}
+      <div class="loadingFadeIn flex justify-center">
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+    {/if}
     {#if tempDocuments?.length > 0}
       <span class="mb-1">Temporary documents:</span>
       <Table>
