@@ -333,6 +333,7 @@
               }}
               color="light"
               class="border-0 p-1"
+              title={`Remove from selection`}
             >
               <i class="bx bx-x text-lg"></i>
             </Button>
@@ -404,7 +405,7 @@
                       deleteTempDocument(document.file.id);
                     }}
                     color="red"
-                    title={`delete ${doc.title} - ${doc.tracking.id}`}
+                    title={`Delete temporary document: ${doc.title} - ${doc.tracking.id}`}
                     icon="trash"
                   ></CIconButton>
                   <button
@@ -419,7 +420,7 @@
                     }}
                     class:invisible={!appStore.state.app.isToolboxOpen}
                     disabled={docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons}
-                    title={`compare ${doc.title} - ${doc.tracking.id}`}
+                    title={`Add to comparison: ${doc.title} - ${doc.tracking.id}`}
                   >
                     <Img
                       src="plus-minus.svg"
