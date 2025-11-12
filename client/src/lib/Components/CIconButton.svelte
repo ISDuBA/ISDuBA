@@ -13,6 +13,7 @@
   import type { HTMLButtonAttributes } from "svelte/elements";
 
   type Props = {
+    ariaLabel?: string;
     color?: ColorVariant;
     icon?: string;
     disabled?: boolean;
@@ -21,6 +22,7 @@
   } & HTMLButtonAttributes;
 
   let {
+    ariaLabel = undefined,
     color = "dark",
     disabled = false,
     icon = "",
@@ -37,11 +39,12 @@
   }}
   {disabled}
   {title}
-  aria-label={title || `Icon button ${icon}`}
+  aria-label={ariaLabel || `Icon button ${icon}`}
   id={restProps.id}
   class="p-1"
 >
   <i
+    aria-hidden="true"
     class={`bx bx-${icon} text-${color}-600 text-lg ${restProps.class} ${disabled ? "contrast-0 saturate-0" : ""}`}
   ></i>
 </button>

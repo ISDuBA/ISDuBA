@@ -229,8 +229,8 @@
 </script>
 
 <form class={formClass}>
-  <Label>Name</Label>
-  <Input class="mb-3" oninput={inputChange} bind:value={source.name}></Input>
+  <Label for="source-name">Name</Label>
+  <Input class="mb-3" id="source-name" oninput={inputChange} bind:value={source.name}></Input>
   <div class={!source.active && displayActiveHighlight ? "blink" : ""}>
     {#if enableActive}
       <CCheckbox

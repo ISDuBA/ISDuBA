@@ -205,6 +205,7 @@
                     feed.enable = true;
                     await updateFeed(feed);
                   }}
+                  ariaLabel={`Enable feed with label ${feed.label}`}
                   icon="plus"
                 ></CIconButton>
               {/if}
