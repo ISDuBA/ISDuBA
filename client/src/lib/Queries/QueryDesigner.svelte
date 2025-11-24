@@ -342,11 +342,13 @@
       <div class="flex flex-row flex-wrap gap-4">
         <div class="flex w-1/3 min-w-56 flex-col gap-x-2">
           <div>
-            <Label class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : ""}
-              >Name:</Label
+            <Label
+              class={wasNameEdited && currentSearch.name === "" ? "text-red-500" : ""}
+              for="query-name">Name:</Label
             >
             <Input
               disabled={!isAllowedToEdit}
+              id="query-name"
               oninput={() => {
                 wasNameEdited = true;
               }}
@@ -445,6 +447,7 @@
                 onChanged={() => {
                   setVisible(index);
                 }}
+                ariaLabel={`Set visibility of column ${col.name}`}
                 checked={currentSearch.columns[index].visible}
                 disabled={!isAllowedToEdit}
               ></CCheckbox>
@@ -472,10 +475,8 @@
       </section>
     </div>
     <div class="mt-6 w-full">
-      <h5 class="text-lg font-medium text-gray-500 dark:text-gray-400">Query criteria</h5>
-      <div class="flex flex-row">
-        <Input disabled={!isAllowedToEdit} bind:value={currentSearch.query} />
-      </div>
+      <Label for="query-criteria">Query criteria:</Label>
+      <Input disabled={!isAllowedToEdit} id="query-criteria" bind:value={currentSearch.query} />
       {#if saveErrorMessage}
         <div class="mt-2 flex md:justify-end">
           <ErrorMessage error={saveErrorMessage}></ErrorMessage>
