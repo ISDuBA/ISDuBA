@@ -40,6 +40,17 @@ setup("authenticate and upload document", async ({ page }) => {
     .setInputFiles("../docs/example-advisories/avendor-advisory-0004.json");
   await uploadButton.click();
 
+  const exampleDocumentURL =
+    "https://raw.githubusercontent.com/oasis-tcs/csaf/refs/heads/master/csaf_2.0/examples/csaf/bsi-2022-0001.json";
+  const response = await fetch(exampleDocumentURL);
+  const arrayBuffer = await response.arrayBuffer();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "example-document.txt",
+    mimeType: "text/json",
+    buffer: Buffer.from(arrayBuffer)
+  });
+  await uploadButton.click();
+
   // End of authentication steps.
 
   await page.context().storageState({ path: authFile });

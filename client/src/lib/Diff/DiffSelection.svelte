@@ -41,6 +41,7 @@
   let intervalID: ReturnType<typeof setTimeout> | undefined = undefined;
   let isLoadingDocA = $state(false);
   let isLoadingDocB = $state(false);
+  let isLoadingTempDocs = $state(false);
 
   const tdClass = "pe-5 py-0 whitespace-nowrap font-medium";
   const padding = "pe-5 pt-2";
@@ -178,6 +179,7 @@
   };
 
   const getTempDocuments = async () => {
+    isLoadingTempDocs = true;
     loadTempDocsErrorMessage = null;
     const response = await request("/api/tempdocuments", "GET");
     if (response.ok) {
@@ -200,6 +202,7 @@
     } else if (response.error) {
       loadTempDocsErrorMessage = getErrorDetails(`Could not load temporary document.`, response);
     }
+    isLoadingTempDocs = false;
   };
 
   const deleteTempDocument = async (id: number) => {
@@ -330,6 +333,7 @@
               }}
               color="light"
               class="border-0 p-1"
+              title={`Remove from selection`}
             >
               <i class="bx bx-x text-lg"></i>
             </Button>
@@ -373,6 +377,11 @@
   <ErrorMessage error={loadDocumentAErrorMessage}></ErrorMessage>
   <ErrorMessage error={loadDocumentBErrorMessage}></ErrorMessage>
   <div class="flex flex-col">
+    {#if isLoadingTempDocs}
+      <div class="loadingFadeIn flex justify-center">
+        <Spinner color="gray" size="4"></Spinner>
+      </div>
+    {/if}
     {#if tempDocuments?.length > 0}
       <span class="mb-1">Temporary documents:</span>
       <Table>
@@ -396,7 +405,7 @@
                       deleteTempDocument(document.file.id);
                     }}
                     color="red"
-                    title={`delete ${doc.title} - ${doc.tracking.id}`}
+                    title={`Delete temporary document: ${doc.title} - ${doc.tracking.id}`}
                     icon="trash"
                   ></CIconButton>
                   <button
@@ -411,7 +420,7 @@
                     }}
                     class:invisible={!appStore.state.app.isToolboxOpen}
                     disabled={docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons}
-                    title={`compare ${doc.title} - ${doc.tracking.id}`}
+                    title={`Add to comparison: ${doc.title} - ${doc.tracking.id}`}
                   >
                     <Img
                       src="plus-minus.svg"
