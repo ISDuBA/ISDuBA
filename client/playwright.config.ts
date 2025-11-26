@@ -20,7 +20,8 @@ const config: PlaywrightTestConfig = {
         ...devices["Desktop Chrome"],
         // Use prepared auth state.
         storageState: "playwright/.auth/user.json",
-        screenshot: "only-on-failure"
+        screenshot: "only-on-failure",
+        trace: "retain-on-failure"
       },
       dependencies: ["setup"],
       outputDir: "./playwright/output"
@@ -32,7 +33,8 @@ const config: PlaywrightTestConfig = {
         ...devices["Desktop Firefox"],
         // Use prepared auth state.
         storageState: "playwright/.auth/user.json",
-        screenshot: "only-on-failure"
+        screenshot: "only-on-failure",
+        trace: "retain-on-failure"
       },
       dependencies: ["setup"],
       outputDir: "./playwright/output"
