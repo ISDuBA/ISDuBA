@@ -7,24 +7,24 @@
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 # Username  First_Name  Last_Name      Email-Adress       Password Group      Role
-  beate     Beate       Bear           bea@example.com    beate    all        editor
-  revy      Revy        Reviewer       rev@example.com    revy     all        reviewer
-  imke      Imke        Importer       imk@example.com    imke     all        importer
-  augustus  Augustus    Auditor        aug@example.com    augustus all        auditor
-  admin     Admin       Administrator  adm@example.com    admin    all        admin
-  adrian    Adrian      Karma          adr@example.com    adrian   all        editor
-  alex      Alex        Klein          ale@example.com    alex     all        editor
-  max       Max         Maier          max@example.com    max      all        editor
-  white     White       Weiss          whi@example.com    white    white      editor
-  green     Green       Gruen          gru@example.com    green    green      editor
-  amber     Amber       Bernstein      amb@example.com    amber    amber      editor
-  red       Red         Rot            red@example.com    red      red        editor
-  low       Low         Niedrig        low@example.com    low      whitegreen editor
-  medium    Medium      Geisterseher   med@example.com    medium   greenamber editor
-  high      High        Hoch           hig@example.com    high     amberred   editor
-  all       All         Alle           all@example.com    all      all        editor
-  srcm      Source      Manager        src@example.com    srcm     all        source-manager
+#  beate     Beate       Bear           bea@example.com    beate    all        editor
+#  revy      Revy        Reviewer       rev@example.com    revy     all        reviewer
+#  imke      Imke        Importer       imk@example.com    imke     all        importer
+#  augustus  Augustus    Auditor        aug@example.com    augustus all        auditor
+#  admin     Admin       Administrator  adm@example.com    admin    all        admin
+#  adrian    Adrian      Karma          adr@example.com    adrian   all        editor
+#  alex      Alex        Klein          ale@example.com    alex     all        editor
+#  max       Max         Maier          max@example.com    max      all        editor
+#  white     White       Weiss          whi@example.com    white    white      editor
+#  green     Green       Gruen          gru@example.com    green    green      editor
+#  amber     Amber       Bernstein      amb@example.com    amber    amber      editor
+#  red       Red         Rot            red@example.com    red      red        editor
+#  low       Low         Niedrig        low@example.com    low      whitegreen editor
+#  medium    Medium      Geisterseher   med@example.com    medium   greenamber editor
+#  high      High        Hoch           hig@example.com    high     amberred   editor
+#  all       All         Alle           all@example.com    all      all        editor
+#  srcm      Source      Manager        src@example.com    srcm     all        source-manager
 # The following users are intentionally not functional and for testing purposes only. The none group and role do not grant access to anything.
-  none      None        Noone          non@example.com    none     none       none
-  defr      Def         Role           der@example.com    defr     all        none
-  defg      Def         Group          deg@example.com    defg     none       editor
+#  none      None        Noone          non@example.com    none     none       none
+#  defr      Def         Role           der@example.com    defr     all        none
+#  defg      Def         Group          deg@example.com    defg     none       editor
