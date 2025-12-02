@@ -30,7 +30,7 @@
     onTimeChanged
   }: Props = $props();
 
-  const minutesInputClass = `w-20 rounded-s-none ${roundEnd ? "" : "rounded-e-none"}`;
+  const minutesInputClass = `max-w-20 rounded-s-none ${roundEnd ? "" : "rounded-e-none"}`;
   const numberRegex = /\d/i;
 
   const timeChanged = () => {
@@ -85,7 +85,7 @@
 <Input
   oninput={hoursChanged}
   bind:value={hours}
-  class="w-20 rounded-s-none rounded-e-none"
+  class="max-w-20 rounded-s-none rounded-e-none"
   placeholder="hh"
   title="Hours"
   type="number"
