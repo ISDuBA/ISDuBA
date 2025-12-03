@@ -18,7 +18,7 @@ test("Sources are working", async ({ page }) => {
     exact: false
   });
   expect(checkUrlButton).toBeDisabled();
-  await page.getByLabel("Domain/PMD").fill("bsi.de");
+  await page.getByLabel("Domain/PMD").fill("intevation.de");
   await checkUrlButton.click();
   const sourceName = `Source ${Math.random()}`;
   await page.getByLabel("Name").fill(sourceName);

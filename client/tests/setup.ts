@@ -18,6 +18,8 @@ const authFile = path.join(__dirname, "../playwright/.auth/user.json");
 setup("authenticate and upload document", async ({ page }) => {
   // Perform authentication steps. Replace these actions with your own.
   await page.goto("/");
+  await expect(page.getByRole("link", { name: "Github" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "API" })).toBeVisible();
   await page.getByRole("button", { name: "Login" }).click();
   await page.getByLabel("Username or email").fill("test-user");
   await page.getByLabel("Password", { exact: true }).fill("test-user");
