@@ -10,12 +10,15 @@
 
 set -e # to exit if a command in the script fails
 
-keycloak_running=false
+args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -k|--keycloakRunning)
       echo "Assuming keycloak is running..."
-      keycloak_running=true
+      args+=(-k)
+      ;;
+    -q|--quick)
+      args+=(-q)
       ;;
     *)
       echo "Unknown option: $1"
@@ -36,11 +39,9 @@ sudo -u postgres bash ./configurepostgres.sh # creates necessary postgres users 
 ./installkeycloak.sh # installs keycloak
 
 cd keycloak
-if $keycloak_running; then
-  ./configureKeycloak.sh -k # configures keycloak
-else
-  ./configureKeycloak.sh # configures keycloak
-fi
+
+./configureKeycloak.sh "${args[@]}"
+
 cd ..
 
 ./installplaywright.sh # prepare frontend
