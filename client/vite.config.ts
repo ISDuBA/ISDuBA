@@ -24,7 +24,7 @@ export default defineConfig({
   },
   plugins: [sveltekit()],
   test: {
-    include: ["src/**/*.{test,spec}.{js,ts}"],
+    include: ["tests/**/*.{test,spec}.{js,ts}"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "json", "html"],
