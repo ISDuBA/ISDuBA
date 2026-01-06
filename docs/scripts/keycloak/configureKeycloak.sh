@@ -173,9 +173,10 @@ fi
 
 ./createRole.sh 'source-manager' 'Source Manager'          false
 
-./createRole.sh 'none'           'Role outside the system' false
 
 if ! $quick; then
+  ./createRole.sh 'none'           'Role outside the system' false
+
   # create Users    file containing users            login
   ./createUsers.sh  -f ./../../developer/users.txt  --noLogin
 fi
