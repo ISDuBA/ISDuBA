@@ -9,7 +9,7 @@
 -->
 
 After being downloaded, every document is given an internal ID which can be used to find that document
-via #/documents/{internal id} or #/advisories/{publisher}/{cve}/documents/{internal id}.
+via appending #/documents/{internal id} or #/advisories/{publisher}/{cve}/documents/{internal id} to the base url (e.g. https://isduba-demo.ntvtn.de/).
 
 # Search
 On the search page, a full-text search of all current (meaning most recent version) documents can be performed.
