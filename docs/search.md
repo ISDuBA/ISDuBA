@@ -8,6 +8,14 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 
+After being downloaded, every document is given an internal ID which can be used to find that document
+via #/documents/{internal id} or #/advisories/{publisher}/{cve}/documents/{internal id}.
+
+# Search
+On the search page, a full-text search of all current (meaning most recent version) documents can be performed.
+By toggling on detailed search, a preview of where
+each search term was found within the document is shown, showing a preview for each instance in each document. 
+
 # Filter expressions
 
 When searching using ISDuBA's advanced search function, or when using queries, manageable via the cogwheel on

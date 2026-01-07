@@ -18,7 +18,7 @@ Decide how to test or setup your own ISDuBA instance.
  2. Want to support the ISDuBA project with your own code? [Here's how to setup a development instance of ISDuBA](#development-setup)
  3. Want to use ISDuBA for yourself or your organization? [Here's how to setup ISDuBA for production](#production-setup)
  4. Having set up an instance of ISDuBA, you can read about what to do now within the [first steps guide](./first_steps.md)
- 5. Want to use the ISDuBA API? Head over to http://isduba.example.com/swagger/index.html and enjoy the swagger documentation of the interface.
+ 5. Want to use the ISDuBA API? Head over to https://isduba-demo.ntvtn.de/swagger/index.html and enjoy the swagger documentation of the interface. (Every ISDuBA instance (example.isduba) contains their own API documentation (example.isduba/swagger/index.html).)
 
 When starting the application, you will be prompted to safe your aes_key. This can be ignored for test or development instances and is further explained in [the aes-keys section of the security considerations documentation](./security_considerations.md#aes-keys).
 
