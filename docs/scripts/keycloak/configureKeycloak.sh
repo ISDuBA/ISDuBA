@@ -18,7 +18,7 @@ echo "  -k, --keycloakRunning            Skip checks on whether keycloak is runn
 echo "  -f, --file                       Specify file storing the keycloak admin password. (optional, default: ./../password.txt)"
 echo "  -l, --live                       Specify the port which accepts keycloak health checks. (Optional, default: 9000)"
 echo "  -p, --password                   Specify the keycloak admin password directly (optional)."
-echo "  -q, --quick                      Skip creation of users outside of and groups not necessary for test-user"
+echo "  -q, --quick                      Skip creation of groups not necessary for and users outside except test-user"
 }
 
 
@@ -177,7 +177,7 @@ fi
 if ! $quick; then
   ./createRole.sh 'none'           'Role outside the system' false
 
-  # create Users    file containing users            login
+  # create users    file containing users            login
   ./createUsers.sh  -f ./../../developer/users.txt  --noLogin
 fi
 
