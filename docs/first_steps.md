@@ -36,11 +36,11 @@ Also, any change only takes effect after it has been saved via the "Save source"
 
 ## Finding Advisories
 
-When trying to find advisories, the search tab can be used to view all advisories that are accessible via the current permissions. Via the search bar, terms can be searched. An advanced search function, triggered by flipping the `Advanced` switch allows filtering more precisely [via filter expressions.](./search.md#filter-expressions)
+When trying to find advisories, the search tab can be used to view all advisories that are accessible with the current permissions. Via the search bar, terms can be searched. An advanced search function, triggered by flipping the `Advanced` switch allows filtering more precisely [via filter expressions.](./search.md#filter-expressions)
 ![Search](./images/ISDuBA_Search.png)
 
 
-Furthermore, the cogwheel on the upper left of the page allows creating stored queries which can be safed and used to quickly filter advisories. The Dashboard option will cause the stored query to appear on the dashboard. The Hide option will cause the story query to be hidden everywhere, potentially to make room for other queries. `Query criteria` also allow filtering [via filter expressions.](./search.md#filter-expressions)
+Furthermore, the cogwheel on the upper left of the page allows creating stored queries which can be saved and used to quickly filter advisories. The `Dashboard` option will cause the stored query to appear on the dashboard. The `Hide` option will cause the stored query to be hidden everywhere, potentially to make room for other queries. `Query criteria` also allow filtering [via filter expressions.](./search.md#filter-expressions)
 
 
 When the desired avisory is found, a detailed advisory view can be entered by clicking on it. Here, SSVC can be set and the advisory can be commented.

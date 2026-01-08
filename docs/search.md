@@ -9,12 +9,11 @@
 -->
 
 After being downloaded, every document is given an internal ID unique to this instance which can be used to find that document
-via appending #/documents/{internal id} or #/advisories/{publisher}/{cve}/documents/{internal id} to the instances url.
+via appending #/documents/{internal id} or #/advisories/{publisher}/{cve}/documents/{internal id} to the instances URL.
 
 # Search
 On the search page, a full-text search of all current (meaning most recent version) documents can be performed.
-By toggling on detailed search, a preview of where
-each search term was found within the document is shown, showing a preview for each instance in each document. 
+When the Detailed Search toggle is enabled, a preview is displayed for every occurrence of the search term across all searched documents.
 
 # Filter expressions
 
