@@ -10,7 +10,7 @@
 
 set -e # to exit if a command in the script fails
 
-keycloak_running=false
+args=()
 
 # Help function if --help was called
 help() {
@@ -19,6 +19,7 @@ echo "where OPTIONS:"
 echo "  -h, --help                       show this help text and exit script (optional)"
 echo "  -b, --branch=name                set up on branch 'name' instead of main (optional)"
 echo "  -k, --keycloakRunning            signal the script that there is a keycloak running"
+echo "  -q, --quick                      skip creation of groups and users not necessary for testing."
 echo "                                   on port 8080 (optional)"
 
 }
@@ -58,16 +59,19 @@ while [[ $# -gt 0 ]]; do
       help
       exit 0
       ;;
+    -q|--quick)
+      args+=(-q)
+      ;;
     -k|--keycloakRunning)
       echo "Assuming keycloak is running..."
-      keycloak_running=true
+      args+=(-k)
       ;;
     -b|--branch)
-      if [[ -n "$2" ]]; then
+      if [[ -n "$2" && "$2" != -* ]]; then
         ISDUBA_BRANCH_NAME="$2"
         shift
       else
-        echo "Error: Branch requires a value."
+        echo "Error: Branch requires a value (not starting with '-')."
         help
         exit 1
       fi
@@ -86,10 +90,4 @@ if [ ! -z "$ISDUBA_BRANCH_NAME" ]; then # check out branch if given
   checkout "$ISDUBA_BRANCH_NAME"
 fi
 
-
-
-if $keycloak_running; then
-  ./setup.sh -k # Execute all other setup scripts, assuming keycloak is running
-else
-  ./setup.sh # Execute all the other setup scripts
-fi
+./setup.sh "${args[@]}"

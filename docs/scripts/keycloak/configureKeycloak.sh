@@ -18,10 +18,12 @@ echo "  -k, --keycloakRunning            Skip checks on whether keycloak is runn
 echo "  -f, --file                       Specify file storing the keycloak admin password. (optional, default: ./../password.txt)"
 echo "  -l, --live                       Specify the port which accepts keycloak health checks. (Optional, default: 9000)"
 echo "  -p, --password                   Specify the keycloak admin password directly (optional)."
+echo "  -q, --quick                      Skip creation of groups not necessary for and users outside except test-user"
 }
 
 
 keycloak_running=false
+quick=false
 file="./../password.txt"
 live="9000"
 
@@ -35,8 +37,12 @@ while [[ $# -gt 0 ]]; do
       echo "Assuming keycloak is running..."
       keycloak_running=true
       ;;
+    -q|--quick)
+      echo "skipping creation of files users and their groups"
+      quick=true
+      ;;
     -f|--file)
-      if [[ -n "$2" ]]; then
+      if [[ -n "$2" && "$2" != -* ]]; then
         file="$2"
         shift
       else
@@ -45,7 +51,7 @@ while [[ $# -gt 0 ]]; do
       fi
       ;;
     -l|--live)
-      if [[ -n "$2" ]]; then
+      if [[ -n "$2" && "$2" != -* ]]; then
         live="$2"
         shift
       else
@@ -54,11 +60,11 @@ while [[ $# -gt 0 ]]; do
       fi
       ;;
     -p|--password)
-      if [[ -n "$2" ]]; then
+      if [[ -n "$2" && "$2" != -* ]]; then
         export KEYCLOAK_ADMIN_PASSWORD="$2"
         shift
       else
-        echo "Error: Options -p and --pw require an argument."
+        echo "Error: Options -p and --password require an argument."
         exit 1
       fi
       ;;
@@ -132,24 +138,27 @@ else
 ./createRealm.sh
 fi
 
+
 # create groups  name                tlps        login
-./createGroup.sh --name 'white'      -w          --noLogin
-
-./createGroup.sh --name 'green'      -g          --noLogin
-
-./createGroup.sh --name 'amber'      -a          --noLogin
-
-./createGroup.sh --name 'red'        -r          --noLogin
-
-./createGroup.sh --name 'whitegreen' -w -g       --noLogin
-
-./createGroup.sh --name 'greenamber' -g -a       --noLogin
-
-./createGroup.sh --name 'amberred'   -a -r       --noLogin
-
 ./createGroup.sh --name 'all'        -w -g -a -r --noLogin
 
-./createGroup.sh --name 'none'                   --noLogin
+if ! $quick; then
+  ./createGroup.sh --name 'white'      -w          --noLogin
+
+  ./createGroup.sh --name 'green'      -g          --noLogin
+
+  ./createGroup.sh --name 'amber'      -a          --noLogin
+
+  ./createGroup.sh --name 'red'        -r          --noLogin
+
+  ./createGroup.sh --name 'whitegreen' -w -g       --noLogin
+
+  ./createGroup.sh --name 'greenamber' -g -a       --noLogin
+
+  ./createGroup.sh --name 'amberred'   -a -r       --noLogin
+
+  ./createGroup.sh --name 'none'                   --noLogin
+fi
 
 # create roles  name             description               login
 ./createRole.sh 'editor'         'Bearbeiter'              false
@@ -164,10 +173,23 @@ fi
 
 ./createRole.sh 'source-manager' 'Source Manager'          false
 
-./createRole.sh 'none'           'Role outside the system' false
 
-# create Users    file containing users            login
-./createUsers.sh  -f ./../../developer/users.txt  --noLogin
+if ! $quick; then
+  ./createRole.sh 'none'           'Role outside the system' false
+
+  # create users    file containing users            login
+  ./createUsers.sh  -f ./../../developer/users.txt  --noLogin
+fi
+
+# test-user with all privileges etc.
+./createUser.sh "test-user" "test-FirstName" "test-LastName" "test-Email@example.com" "test-user" false
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "editor" --group "all"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "reviewer"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "admin"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "auditor"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "source-manager"
+./assignUserToRoleAndGroup.sh --name "test-user" --noLogin --role "importer"
+
 
 # end keycloak now that setup is done.
 if [ ! -z "$nkid" ]; then
