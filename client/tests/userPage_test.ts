@@ -25,3 +25,9 @@ test("User page has expected field Realm", async ({ page }) => {
   await page.goto("/#/login");
   await expect(page.getByText("Realm")).toBeVisible();
 });
+
+test("User page has link to Git repo and API", async ({ page }) => {
+  await page.goto("/#/login");
+  await expect(page.getByRole("link", { name: "Github" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "API" })).toBeVisible();
+});

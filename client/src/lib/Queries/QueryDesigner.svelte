@@ -363,8 +363,12 @@
           </div>
         </div>
         <div class="mb-4 flex w-1/3 min-w-56 flex-col gap-x-2 md:mb-0 md:min-w-96">
-          <Label>Description:</Label>
-          <Input disabled={!isAllowedToEdit} bind:value={currentSearch.description} />
+          <Label for="query-description">Description:</Label>
+          <Input
+            disabled={!isAllowedToEdit}
+            id="query-description"
+            bind:value={currentSearch.description}
+          />
         </div>
       </div>
     </div>
