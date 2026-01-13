@@ -16,11 +16,13 @@
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
   import { appStore } from "$lib/store.svelte";
-  import { querystring } from "svelte-spa-router";
+  import { push, querystring } from "svelte-spa-router";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";
   import TypeToggle from "$lib/Search/TypeToggle.svelte";
+
+  let { params } = $props();
 
   let searchTerm: string = $state("");
   let advisoryTable: any = $state(null);
@@ -81,7 +83,7 @@
     untrack(() => query);
     untrack(() => searchTerm);
     untrack(() => advisoryTable);
-    if (!selectedCustomQuery) {
+    if (!selectedCustomQuery && !params?.searchTerm) {
       setQueryBack();
     }
   });
@@ -116,6 +118,7 @@
       }
     }
     await tick();
+    push("/search/" + encodeURIComponent(searchTerm));
     advisoryTable.fetchData();
   };
 
@@ -133,6 +136,10 @@
   onMount(async () => {
     if ($querystring) {
       queryString = parse($querystring);
+    }
+    if (params?.searchTerm) {
+      searchTerm = params.searchTerm;
+      triggerSearch();
     }
   });
 
