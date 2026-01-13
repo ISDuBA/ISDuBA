@@ -21,15 +21,34 @@
   import Toolbox from "./Toolbox.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";
   import TypeToggle from "$lib/Search/TypeToggle.svelte";
+  import { request } from "$lib/request";
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import type { PaginationParameters } from "./search";
+
+  let { params } = $props();
 
   let searchTerm: string = $state("");
   let advisoryTable: any = $state(null);
   let advancedSearch = $state(false);
   let searchResults = $state(true);
+  let loading = $state(false);
   let selectedCustomQuery: boolean = $state(false);
   let queryString: any = $state();
   let defaultQuery: any = $state(null);
+  let openRow: number | null = $state(null);
+  let count = $state(0);
+  let offset = $state(0);
+  let limit = $state(10);
+  let currentPage = $state(1);
+  let error: ErrorDetails | null = $state(null);
+  let prevQuery = "";
+  let abortController: AbortController;
+  let requestOngoing = false;
+  let documents: any = $state(null);
+  let postitionRestored: boolean = $state(false);
   // let searchqueryTimer: any = null;
+
+  let numberOfPages = $derived(Math.ceil(count / limit));
 
   $effect(() => {
     untrack(() => selectedCustomQuery);
@@ -74,14 +93,14 @@
     searchTerm = "";
     sessionStorage.setItem("documentSearchTerm", "");
     await tick();
-    advisoryTable.fetchData();
+    fetchData();
   };
 
   $effect(() => {
     untrack(() => query);
     untrack(() => searchTerm);
     untrack(() => advisoryTable);
-    if (!selectedCustomQuery) {
+    if (!selectedCustomQuery && !params?.searchTerm) {
       setQueryBack();
     }
   });
@@ -116,7 +135,7 @@
       }
     }
     await tick();
-    advisoryTable.fetchData();
+    fetchData();
   };
 
   const clearSearch = async () => {
@@ -126,13 +145,153 @@
       return c !== searchColumnName;
     });
     await tick();
-    advisoryTable.fetchData();
+    fetchData();
     sessionStorage.setItem("documentSearchTerm", "");
   };
 
+  const savePosition = () => {
+    let position = [
+      $state.snapshot(offset),
+      $state.snapshot(currentPage),
+      $state.snapshot(limit),
+      $state.snapshot(query).orders
+    ];
+    sessionStorage.setItem(
+      "tablePosition" + query.query + query.queryType,
+      JSON.stringify(position)
+    );
+  };
+
+  const setPaginationParameters = (paginationParameters: PaginationParameters, fetch = true) => {
+    if (paginationParameters.offset !== undefined) {
+      offset = paginationParameters.offset;
+    }
+    if (paginationParameters.currentPage !== undefined) {
+      currentPage = paginationParameters.currentPage;
+    }
+    if (paginationParameters.limit !== undefined) {
+      limit = paginationParameters.limit;
+    }
+    if (paginationParameters.orderBy !== undefined) {
+      query.orders = paginationParameters.orderBy;
+    }
+    if (fetch) fetchData();
+  };
+
+  const restorePosition = () => {
+    let position = sessionStorage.getItem("tablePosition" + query.query + query.queryType);
+    if (position) {
+      const [offset, currentPage, limit, orderBy] = JSON.parse(position);
+      setPaginationParameters(
+        {
+          offset,
+          currentPage,
+          limit,
+          orderBy
+        },
+        false
+      );
+    } else {
+      setPaginationParameters(
+        {
+          offset: 0,
+          currentPage: 1,
+          limit: 10,
+          orderBy: ["-critical"]
+        },
+        false
+      );
+    }
+  };
+
+  const last = async () => {
+    setPaginationParameters({
+      currentPage: numberOfPages,
+      offset: (numberOfPages - 1) * limit
+    });
+  };
+
+  async function fetchData(): Promise<void> {
+    appStore.setDocuments([]);
+    appStore.clearSelectedDocumentIDs();
+    openRow = null;
+    if (query.query !== prevQuery) {
+      restorePosition();
+      savePosition();
+      prevQuery = query.query;
+    }
+    const searchSuffix = searchTerm ? `"${searchTerm}" search ${searchColumnName} as ` : "";
+    const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
+    let queryParam = "";
+    if (query.query || searchSuffix) {
+      queryParam = `query=${query.query}${searchSuffix}`;
+    }
+    let fetchColumns = [...query.columns];
+    let requiredColumns = ["id", "tracking_id", "publisher"];
+    for (let c of requiredColumns) {
+      if (!fetchColumns.includes(c)) {
+        fetchColumns.push(c);
+      }
+    }
+    let documentURL = "";
+
+    if (query.queryType === SEARCHTYPES.EVENT) {
+      documentURL = encodeURI(
+        `/api/events?${queryParam}&count=1&orders=${query.orders.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      );
+    } else {
+      const loadAdvisories = query.queryType === SEARCHTYPES.ADVISORY;
+      documentURL = encodeURI(
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${query.orders.join(" ")}&limit=${limit}&offset=${offset}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      );
+    }
+
+    error = null;
+    loading = true;
+    if (!requestOngoing) {
+      requestOngoing = true;
+      abortController = new AbortController();
+    } else {
+      abortController.abort();
+    }
+    const response = await request(documentURL, "GET");
+    if (response.ok) {
+      ({ count, documents } = response.content);
+      if (query.queryType === SEARCHTYPES.EVENT) {
+        count = response.content.count;
+        documents = response.content.events;
+      } else {
+        ({ count, documents } = response.content);
+      }
+      appStore.setDocuments(documents);
+      // We are outside the range of available documents,
+      // try the last page
+      if (offset >= count) {
+        await last();
+      }
+    } else if (response.error) {
+      error =
+        response.error === "400"
+          ? getErrorDetails(`Please check your search syntax.`, response)
+          : response.content.includes("deadline exceeded")
+            ? getErrorDetails(`The server wasn't able to answer your request in time.`)
+            : getErrorDetails(`Could not load query.`, response);
+    }
+    loading = false;
+    requestOngoing = false;
+  }
+
   onMount(async () => {
+    if (!postitionRestored) {
+      restorePosition();
+      postitionRestored = true;
+    }
     if ($querystring) {
       queryString = parse($querystring);
+    }
+    if (params?.searchTerm) {
+      searchTerm = params.searchTerm;
+      triggerSearch();
     }
   });
 
@@ -162,7 +321,7 @@
       };
       searchTerm = "";
       await tick();
-      advisoryTable.fetchData();
+      fetchData();
     }}
     {queryString}
     bind:selectedQuery={selectedCustomQuery}
@@ -176,7 +335,9 @@
         appStore.isAdmin() ||
         appStore.isAuditor()}
       onSelect={(newType: SEARCHTYPES) => {
+        savePosition();
         query.queryType = newType;
+        restorePosition();
         if (newType === SEARCHTYPES.ADVISORY) {
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
@@ -225,7 +386,7 @@
   <div class="mt-1" title="Show every single time the search term was found">
     <Toggle
       onchange={() => {
-        advisoryTable.fetchData();
+        fetchData();
       }}
       bind:checked={searchResults}
       class="ml-3">Detailed</Toggle
@@ -234,12 +395,22 @@
 </div>
 {#if searchTerm !== undefined}
   <AdvisoryTable
-    defaultOrderBy={query.orders}
     columns={query.columns}
+    {documents}
+    {error}
+    {loading}
+    {numberOfPages}
+    dataChanged={fetchData}
     tableType={query.queryType}
     query={`${query.query}`}
-    orderBy={query.orders}
-    bind:this={advisoryTable}
+    bind:currentPage
+    bind:count
+    bind:limit
+    bind:offset
+    bind:openRow
+    bind:orderBy={query.orders}
+    {last}
+    {setPaginationParameters}
     {searchResults}
   ></AdvisoryTable>
 {/if}

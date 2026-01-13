@@ -162,6 +162,12 @@
     return appStore.getIsUserLoggedIn();
   };
 
+  const searchRoute = wrap({
+    component: Search as any,
+    userData: loginRequired,
+    conditions: [loginCondition]
+  });
+
   const routes = {
     "/": wrap({
       component: Dashboard as any,
@@ -191,11 +197,8 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/search": wrap({
-      component: Search as any,
-      userData: loginRequired,
-      conditions: [loginCondition]
-    }),
+    "/search": searchRoute,
+    "/search/:searchTerm": searchRoute,
     "/configuration": wrap({
       component: Configuration as any,
       userData: loginRequired,
