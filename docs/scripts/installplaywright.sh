@@ -21,7 +21,7 @@ echo "Successfully installed node."
 cd ../../client # change directory
 
 # install dependencies
-npm install
+npm ci
 echo "Successfully installed client dependencies."
 
 # enable pre-commit hook

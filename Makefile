@@ -41,7 +41,7 @@ build_pkg:
 	cd pkg && go build $(GO_FLAGS) ./...
 
 build_client:
-	cd client && npm install && npm run build
+	cd client && npm ci && npm run build
 
 test:
 	go test ./...
