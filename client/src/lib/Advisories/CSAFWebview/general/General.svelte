@@ -12,6 +12,13 @@
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
+  import { Button } from "flowbite-svelte";
+  import { push } from "svelte-spa-router";
+
+  interface Props {
+    basePath: string;
+  }
+  let { basePath = "" }: Props = $props();
 
   let trackingVersion = $derived(appStore.state.webview.doc?.trackingVersion);
   let generator = $derived(appStore.state.webview.doc?.generator);
@@ -33,6 +40,10 @@
   let baseScore = $derived(appStore.state.webview.doc?.highestScore?.baseScore);
   const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
   const cellStyleKey = "content-center w-40 py-0";
+
+  const openRelatedDocuments = () => {
+    push(`${basePath}${basePath.endsWith("/") ? "" : "/"}related/documents`);
+  };
 </script>
 
 <div class="w-full">
@@ -47,6 +58,9 @@
       {#if appStore.state.webview.doc?.highestScore}
         <Cvss {baseScore} baseSeverity={baseSeverity ?? ""}></Cvss>
       {/if}
+      <Button onclick={openRelatedDocuments} color="light" size="sm">
+        <i class="bx bx-file"></i>
+      </Button>
     </div>
   </div>
   <div class="flex w-full flex-row flex-wrap">

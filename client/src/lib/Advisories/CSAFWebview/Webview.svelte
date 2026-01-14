@@ -172,7 +172,7 @@
 <div class="flex w-full flex-col">
   {#if appStore.state.webview.doc}
     <div class="mb-4 w-full">
-      <General />
+      <General {basePath} />
     </div>
   {/if}
   {#if aliases}
