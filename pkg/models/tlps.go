@@ -71,6 +71,8 @@ func (ptlps PublishersTLPs) AsExpr() *query.Expr {
 	return ptlps.AsExprPublisher("publisher")
 }
 
+// AsExprPublisher returns the list of TLP rules as an expression tree with a given
+// publisher field name.
 func (ptlps PublishersTLPs) AsExprPublisher(publisher string) *query.Expr {
 	// Make build process deterministic.
 	pubs := make([]Publisher, 0, len(ptlps))
