@@ -46,7 +46,7 @@
             {#each Object.keys(stats) as key}
               {@const count = stats[key]?.[index][1]}
               <TableBodyCell
-                class={`$class={tdClass} ${typeof count === "number" && count !== 0 ? "" : "!text-gray-400"}`}
+                class={`${tdClass} ${typeof count === "number" && count !== 0 ? "" : "!text-gray-400"}`}
                 >{count ?? 0}</TableBodyCell
               >
             {/each}
