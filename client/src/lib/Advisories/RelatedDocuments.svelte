@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { tdClass } from "$lib/Table/defaults";
+  import { tdClass, type TableHeader } from "$lib/Table/defaults";
   import { Button, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import { onMount } from "svelte";
 
@@ -20,8 +20,12 @@
   let documents: any[] | undefined = $state(undefined);
   let cves: Related | undefined = $state(undefined);
 
+  const bodyCellClass = "border-x-2 border-gray-400 dark:border-gray-600";
+  const topBodyCellClass = `${bodyCellClass} rounded-t-lg border-t-2`;
+  const bottomBodyCellClass = `${bodyCellClass} rounded-b-lg border-b-2`;
+
   let headers = $derived.by(() => {
-    const tmpHeaders = [
+    const tmpHeaders: TableHeader[] = [
       {
         label: "CVE",
         attribute: "cve"
@@ -29,11 +33,10 @@
     ];
     if (documents) {
       tmpHeaders.push(
-        ...(documents as string[]).map((document: string) => {
-          return {
-            label: document,
-            attribute: document
-          };
+        ...(documents as string[]).map((document: string, index: number) => {
+          const header: TableHeader = { label: document, attribute: document };
+          if (index === 0) header["class"] = topBodyCellClass;
+          return header;
         })
       );
     }
@@ -74,8 +77,8 @@
         {#each Object.keys(cves as Related) as string[] as cve, index (index)}
           <TableBodyRow>
             <TableBodyCell class={`${tdClass}`}>{cve}</TableBodyCell>
-            {#each documents as _doc}
-              <TableBodyCell class={`${tdClass}`}>
+            {#each documents as _doc, index}
+              <TableBodyCell class={`${tdClass} ${index === 0 ? bodyCellClass : ""}`}>
                 {@const i = Math.random()}
                 {#if i < 0.5}
                   <i class="bx bx-check"></i>
@@ -86,14 +89,15 @@
         {/each}
         <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}>Status</TableBodyCell>
-          {#each documents as _doc}
-            <TableBodyCell class={`${tdClass}`}></TableBodyCell>
+          {#each documents as _doc, index}
+            <TableBodyCell class={`${tdClass} ${index === 0 ? bodyCellClass : ""}`}></TableBodyCell>
           {/each}
         </TableBodyRow>
         <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}>SSVC</TableBodyCell>
-          {#each documents as _doc}
-            <TableBodyCell class={`${tdClass}`}></TableBodyCell>
+          {#each documents as _doc, index}
+            <TableBodyCell class={`${tdClass} ${index === 0 ? bottomBodyCellClass : ""}`}
+            ></TableBodyCell>
           {/each}
         </TableBodyRow>
         <TableBodyRow>

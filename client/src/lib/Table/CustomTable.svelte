@@ -55,6 +55,7 @@
     classes={{
       div: "relative"
     }}
+    class="border-separate border-spacing-0"
     hoverable={true}
     border={false}
     {striped}
