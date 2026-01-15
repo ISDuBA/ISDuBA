@@ -20,7 +20,7 @@
   let documents: any[] | undefined = $state(undefined);
   let cves: Related | undefined = $state(undefined);
 
-  const bodyCellClass = "border-x-2 border-gray-400 dark:border-gray-600";
+  const bodyCellClass = "border-x-2 border-gray-400 dark:border-gray-600 text-center";
   const topBodyCellClass = `${bodyCellClass} rounded-t-lg border-t-2`;
   const bottomBodyCellClass = `${bodyCellClass} rounded-b-lg border-b-2`;
 
@@ -36,6 +36,7 @@
         ...(documents as string[]).map((document: string, index: number) => {
           const header: TableHeader = { label: document, attribute: document };
           if (index === 0) header["class"] = topBodyCellClass;
+          else header["class"] = "text-center";
           return header;
         })
       );
@@ -78,7 +79,7 @@
           <TableBodyRow>
             <TableBodyCell class={`${tdClass}`}>{cve}</TableBodyCell>
             {#each documents as _doc, index}
-              <TableBodyCell class={`${tdClass} ${index === 0 ? bodyCellClass : ""}`}>
+              <TableBodyCell class={`${tdClass} text-center ${index === 0 ? bodyCellClass : ""}`}>
                 {@const i = Math.random()}
                 {#if i < 0.5}
                   <i class="bx bx-check"></i>
@@ -90,20 +91,22 @@
         <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}>Status</TableBodyCell>
           {#each documents as _doc, index}
-            <TableBodyCell class={`${tdClass} ${index === 0 ? bodyCellClass : ""}`}></TableBodyCell>
+            <TableBodyCell class={`${tdClass} text-center ${index === 0 ? bodyCellClass : ""}`}
+            ></TableBodyCell>
           {/each}
         </TableBodyRow>
         <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}>SSVC</TableBodyCell>
           {#each documents as _doc, index}
-            <TableBodyCell class={`${tdClass} ${index === 0 ? bottomBodyCellClass : ""}`}
+            <TableBodyCell
+              class={`${tdClass} text-center ${index === 0 ? bottomBodyCellClass : ""}`}
             ></TableBodyCell>
           {/each}
         </TableBodyRow>
         <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}></TableBodyCell>
           {#each documents as _doc, index}
-            <TableBodyCell class={`${tdClass}`}>
+            <TableBodyCell class={`${tdClass} text-center`}>
               {#if index > 0}
                 <Button color="light">Compare</Button>
               {/if}
