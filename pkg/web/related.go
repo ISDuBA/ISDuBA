@@ -3,16 +3,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
-// Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+// SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 
 package web
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
+	"net/http"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const selectCVERelatedSQL = `
@@ -47,24 +53,61 @@ others AS (
     JOIN documents  d   ON others.documents_id = d.id
 	JOIN advisories ads ON d.advisories_id = ads.id
   WHERE %[1]s
-) select * from info
 `
 
+// cveRelatedDocuments is an endpoint that returns the documents
+// that are related with the given document by CVEs.
+//
+//	@Summary        Returns CVE related documents.
+//	@Description    Returns the documents related to this document by CVE.
+//	@Produce        json
+//	@Success        200 {array}     models.RelatedDocument
+//	@Failure        400 {object}    models.Error
+//	@Failure        401
+//	@Failure        500 {object}    models.Error
+//	@Router         /documents/{id}/cve_related [get]
 func (c *Controller) cveRelatedDocuments(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
 	if !ok {
 		return
 	}
+
 	var (
-		sb         = query.SQLBuilder{Replacements: []any{docID}}
-		tlps       = c.tlps(ctx)
-		allowedDoc = tlps.AsExprPublisher("ads.publisher")
-		tlpCheck   = sb.CreateWhere(allowedDoc)
-		tlpSQL     = fmt.Sprintf(selectCVERelatedSQL, tlpCheck)
+		sb               = query.SQLBuilder{Replacements: []any{docID}}
+		tlps             = c.tlps(ctx)
+		allowedDoc       = tlps.AsExprPublisher("ads.publisher")
+		tlpCheck         = sb.CreateWhere(allowedDoc)
+		selectSQL        = fmt.Sprintf(selectCVERelatedSQL, tlpCheck)
+		relatedDocuments []*models.RelatedDocument
 	)
 
-	// TODO: Query and create JSON
-
-	_ = tlpSQL
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			rows, _ := conn.Query(rctx, selectSQL, sb.Replacements...)
+			var err error
+			relatedDocuments, err = pgx.CollectRows(rows,
+				func(row pgx.CollectableRow) (*models.RelatedDocument, error) {
+					var related models.RelatedDocument
+					if err := row.Scan(
+						&related.DocumentID,
+						&related.CVE,
+						&related.State,
+						&related.Title,
+						&related.TrackingID,
+						&related.Publisher,
+					); err != nil {
+						return nil, err
+					}
+					return &related, nil
+				})
+			return err
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, relatedDocuments)
 }
