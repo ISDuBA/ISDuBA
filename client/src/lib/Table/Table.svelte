@@ -25,7 +25,7 @@
     Table,
     Img
   } from "flowbite-svelte";
-  import { tablePadding, title, publisher, searchColumnName } from "$lib/Table/defaults";
+  import { tablePadding, title, publisher, searchColumnName, tdClass } from "$lib/Table/defaults";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -79,7 +79,7 @@
     defaultOrderBy = ["title"]
   }: Props = $props();
 
-  const tdClass = "whitespace-nowrap relative";
+  const tdClassRelative = `${tdClass} relative`;
 
   let disableDiffButtons = $derived(
     appStore.state.app.diff.docA_ID !== undefined && appStore.state.app.diff.docB_ID !== undefined
@@ -667,7 +667,7 @@
                 </div>
               </TableBodyCell>
               {#if areThereAnyComments}
-                <TableBodyCell class={tdClass}
+                <TableBodyCell class={tdClassRelative}
                   ><a
                     class="absolute top-0 right-0 bottom-0 left-0"
                     href={getAdvisoryAnchorLink(item)}
@@ -694,7 +694,7 @@
               {#each columns as column}
                 {#if column !== searchColumnName}
                   {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
@@ -704,7 +704,7 @@
                       <CVSS baseScore={item[column]}></CVSS>
                     </TableBodyCell>
                   {:else if column === "ssvc"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         class="absolute top-0 right-0 bottom-0 left-0"
                         href={getAdvisoryAnchorLink(item)}
@@ -718,7 +718,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "state"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -739,7 +739,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "initial_release_date"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -751,7 +751,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "current_release_date"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -787,7 +787,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "recent"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -801,7 +801,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "four_cves"}
-                    <TableBodyCell class={tdClass}>
+                    <TableBodyCell class={tdClassRelative}>
                       {#if !(item[column] && item[column][0] && item[column].length > 1)}
                         <a
                           aria-label="View advisory details"
@@ -851,7 +851,7 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "critical"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -861,7 +861,7 @@
                       <CVSS baseScore={item[column]}></CVSS>
                     </TableBodyCell>
                   {:else if column === "tracking_id"}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -873,7 +873,7 @@
                       </div></TableBodyCell
                     >
                   {:else}
-                    <TableBodyCell class={tdClass}
+                    <TableBodyCell class={tdClassRelative}
                       ><a
                         aria-label="View advisory details"
                         class="absolute top-0 right-0 bottom-0 left-0"
@@ -893,7 +893,7 @@
                 class={(i % 2 == 1 ? "bg-white" : "bg-gray-100") +
                   " border border-y-indigo-500/100"}
               >
-                <TableBodyCell colspan={columns.length} class={tdClass}
+                <TableBodyCell colspan={columns.length} class={tdClassRelative}
                   >{@html item[searchColumnName]}</TableBodyCell
                 >
               </TableBodyRow>
