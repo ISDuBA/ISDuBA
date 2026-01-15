@@ -139,7 +139,7 @@
             <TableBodyCell class="w-fit max-w-10">
               <i class="bx bx-git-repo-forked"></i>
             </TableBodyCell>
-            <TableBodyCell class={`$class={tdClass} break-words hyphens-auto`}>
+            <TableBodyCell class={`${tdClass} break-words hyphens-auto`}>
               <div class="whitespace-break-spaces">
                 <span>{source.name}</span>
                 {#if source.attention}
@@ -148,7 +148,7 @@
               </div>
             </TableBodyCell>
             {#if source.id !== 0}
-              <TableBodyCell class={`$class={tdClass} break-all whitespace-normal`}
+              <TableBodyCell class={`${tdClass} break-all whitespace-normal`}
                 >{source.url}</TableBodyCell
               >
               <TableBodyCell class={tdClass}
@@ -162,12 +162,12 @@
                 ></i></TableBodyCell
               >
             {:else}
-              <TableBodyCell></TableBodyCell>
-              <TableBodyCell></TableBodyCell>
-              <TableBodyCell></TableBodyCell>
-              <TableBodyCell></TableBodyCell>
+              <TableBodyCell class={tdClass}></TableBodyCell>
+              <TableBodyCell class={tdClass}></TableBodyCell>
+              <TableBodyCell class={tdClass}></TableBodyCell>
+              <TableBodyCell class={tdClass}></TableBodyCell>
             {/if}
-            <TableBodyCell>
+            <TableBodyCell class={tdClass}>
               {#if source.id !== undefined}
                 {@const yesterday = Date.now() - DAY_MS}
                 <SourceBasicStats

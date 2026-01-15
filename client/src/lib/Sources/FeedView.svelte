@@ -212,7 +212,7 @@
             </TableBodyCell>
             <TableBodyCell
               onclick={async () => await clickFeed(feed)}
-              class={`$class={tdClass} break-all whitespace-normal`}
+              class={`${tdClass} break-all whitespace-normal`}
             >
               {#if edit && feed.enable}
                 <a
