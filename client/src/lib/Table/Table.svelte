@@ -53,6 +53,7 @@
   let offset = $state(0);
   let count = $state(0);
   let currentPage = $state(1);
+  let oldColumns: string[] | null = $state(null);
   let documents: any = $state(null);
   let documentIDs = $derived(documents?.map((d: any) => d.id) ?? []);
   let loading = $state(false);
@@ -223,7 +224,8 @@
 
   $effect(() => {
     untrack(() => orderBy);
-    if (columns) {
+    if (!oldColumns && columns && JSON.stringify(oldColumns) !== JSON.stringify(columns)) {
+      oldColumns = columns;
       setOrderBy();
     }
   });
@@ -356,18 +358,17 @@
   const switchSort = async (column: string) => {
     let found = orderBy.find((c) => c === column);
     let foundMinus = orderBy.find((c) => c === "-" + column);
-    let tmpOrderBy: string[] = [];
     if (foundMinus) {
-      tmpOrderBy = orderBy.filter((c) => c !== "-" + column);
+      orderBy = orderBy.filter((c) => c !== "-" + column);
     }
     if (found) {
-      tmpOrderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
+      orderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
     }
     if (!found && !foundMinus) {
-      tmpOrderBy.push(column);
+      orderBy.push(column);
     }
     setPaginationParameters({
-      orderBy: tmpOrderBy
+      orderBy: orderBy
     });
     await tick();
     await fetchData();
