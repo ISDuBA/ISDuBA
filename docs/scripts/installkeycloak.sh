@@ -12,7 +12,7 @@ set -e # to exit if a command in the script fails
 
 sudo apt install -y unzip # needed to unzip the keycloak archive
 
-version="26.0.0"
+version="26.5.0"
 
 if [ ! -z "$1" ]; then
   version="$1"

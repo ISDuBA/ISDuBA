@@ -64,7 +64,7 @@
       class={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : "dark:bg-gray-800"}
     >
       {#each headers as header}
-        <TableHeadCell class={header.class ?? ""} padding={tablePadding} onclick={() => {}}>
+        <TableHeadCell class={header.class ?? tablePadding} onclick={() => {}}>
           <span>{header.label}</span>
           <i
             class:bx={true}
