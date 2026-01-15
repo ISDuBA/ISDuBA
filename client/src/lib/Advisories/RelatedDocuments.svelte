@@ -10,7 +10,7 @@
 <script lang="ts">
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { tdClass } from "$lib/Table/defaults";
-  import { Button, TableBodyCell } from "flowbite-svelte";
+  import { Button, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import { onMount } from "svelte";
 
   interface Related {
@@ -72,7 +72,7 @@
     <CustomTable title="Documents having the same CVEs as document ESA-2024-0001" {headers}>
       {#snippet mainSlot()}
         {#each Object.keys(cves as Related) as string[] as cve, index (index)}
-          <tr>
+          <TableBodyRow>
             <TableBodyCell class={`${tdClass}`}>{cve}</TableBodyCell>
             {#each documents as _doc}
               <TableBodyCell class={`${tdClass}`}>
@@ -82,15 +82,21 @@
                 {/if}
               </TableBodyCell>
             {/each}
-          </tr>
+          </TableBodyRow>
         {/each}
-        <tr>
+        <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}>Status</TableBodyCell>
-        </tr>
-        <tr>
+          {#each documents as _doc}
+            <TableBodyCell class={`${tdClass}`}></TableBodyCell>
+          {/each}
+        </TableBodyRow>
+        <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}>SSVC</TableBodyCell>
-        </tr>
-        <tr>
+          {#each documents as _doc}
+            <TableBodyCell class={`${tdClass}`}></TableBodyCell>
+          {/each}
+        </TableBodyRow>
+        <TableBodyRow>
           <TableBodyCell class={`${tdClass}`}></TableBodyCell>
           {#each documents as _doc, index}
             <TableBodyCell class={`${tdClass}`}>
@@ -99,7 +105,7 @@
               {/if}
             </TableBodyCell>
           {/each}
-        </tr>
+        </TableBodyRow>
       {/snippet}
     </CustomTable>
   {/if}

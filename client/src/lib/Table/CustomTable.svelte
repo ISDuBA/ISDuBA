@@ -17,6 +17,7 @@
     title?: string;
     headers: TableHeader[];
     stickyHeaders?: boolean;
+    striped?: boolean;
     bottomSlot?: Snippet;
     headerRightSlot?: Snippet;
     mainSlot: Snippet;
@@ -26,6 +27,7 @@
     title = undefined,
     headers,
     stickyHeaders = false,
+    striped = true,
     bottomSlot = undefined,
     headerRightSlot = undefined,
     mainSlot,
@@ -55,6 +57,7 @@
     }}
     hoverable={true}
     border={false}
+    {striped}
   >
     <TableHead
       class={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : "dark:bg-gray-800"}
