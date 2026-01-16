@@ -22,7 +22,7 @@ Some source code files are machine generated. At the moment is only:
 
 If you change the source files please regenerate the generated files
 with `go generate ./...` in the root folder and add the updated files
-to the version control.
+to the version control. This will update the swagger documentation.
 
 If you plan to add further machine generated files ensure that they
 are marked with comments like
