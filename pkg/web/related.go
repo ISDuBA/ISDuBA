@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -31,7 +32,7 @@ WITH related AS (
      JOIN unique_cves uc ON dc.cve_id          = uc.id
      JOIN documents docs ON dc.documents_id    = docs.id
      JOIN advisories ads ON docs.advisories_id = ads.id
-   WHERE documents_id = $1 AND %[1]s
+   WHERE documents_id = :doc_placeholder AND %[1]s
 ),
 others AS (
   SELECT
@@ -39,7 +40,7 @@ others AS (
     related.cve
   FROM documents_cves dc2
     JOIN related ON dc2.cve_id = related.cve_id
-  WHERE dc2.documents_id <> $1
+  WHERE dc2.documents_id <> :doc_placeholder
 )
 SELECT
   others.documents_id,
@@ -74,13 +75,21 @@ func (c *Controller) cveRelatedDocuments(ctx *gin.Context) {
 	}
 
 	var (
-		sb               = query.SQLBuilder{Replacements: []any{docID}}
-		tlps             = c.tlps(ctx)
-		allowedDoc       = tlps.AsExprPublisher("ads.publisher")
-		tlpCheck         = sb.CreateWhere(allowedDoc)
-		selectSQL        = fmt.Sprintf(selectCVERelatedSQL, tlpCheck)
-		relatedDocuments []*models.RelatedDocument
+		sb = query.SQLBuilder{
+			Replacements: []any{},
+		}
+		tlps       = c.tlps(ctx)
+		allowedDoc = tlps.AsExprPublisher("ads.publisher")
+		tlpCheck   = sb.CreateWhere(allowedDoc)
 	)
+
+	sb.Replacements = append(sb.Replacements, docID)
+	docIndex := len(sb.Replacements)
+	selectSQL := fmt.Sprintf(selectCVERelatedSQL, tlpCheck)
+
+	var relatedDocuments []*models.RelatedDocument
+
+	selectSQL = strings.ReplaceAll(selectSQL, ":doc_placeholder", fmt.Sprintf("$%d", docIndex))
 
 	if err := c.db.Run(
 		ctx.Request.Context(),
@@ -94,6 +103,7 @@ func (c *Controller) cveRelatedDocuments(ctx *gin.Context) {
 						&related.DocumentID,
 						&related.CVE,
 						&related.State,
+						&related.SSVC,
 						&related.Title,
 						&related.TrackingID,
 						&related.Publisher,
