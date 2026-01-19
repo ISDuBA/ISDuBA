@@ -181,7 +181,12 @@
       userData: loginRequired,
       conditions: [loginCondition]
     }),
-    "/advisories/:publisherNamespace/:trackingID/documents/:id/related/documents": wrap({
+    "/advisories/:publisherNamespace/:trackingID/documents/:id/related/documents/:cve?": wrap({
+      component: RelatedDocuments as any,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/documents/:id/related/documents/:cve?": wrap({
       component: RelatedDocuments as any,
       userData: loginRequired,
       conditions: [loginCondition]

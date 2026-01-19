@@ -7,112 +7,179 @@
  SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
+
 <script lang="ts">
+  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { request } from "$lib/request";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { tdClass, type TableHeader } from "$lib/Table/defaults";
-  import { Button, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  import { onMount } from "svelte";
+  import { Button, TableBodyCell, TableBodyRow, TableHeadCell } from "flowbite-svelte";
+  import { onMount, tick } from "svelte";
+  import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
+  import { fetchDocumentSSVC } from "./advisory";
+  import SSVCBadge from "./SSVC/SSVCBadge.svelte";
+  import { push } from "svelte-spa-router";
+  import { appStore } from "$lib/store.svelte";
+  import { addSlashes } from "$lib/utils";
 
   interface Related {
     [key: string]: string[];
   }
 
-  let documents: any[] | undefined = $state(undefined);
+  interface Props {
+    params?: any;
+  }
+
+  let { params = null }: Props = $props();
+
+  let document: any | undefined = $state(undefined);
+  let documents: any | undefined = $state(undefined);
   let cves: Related | undefined = $state(undefined);
+  let ssvc: string | undefined = $state(undefined);
+  let advisoryState: string | undefined = $state(undefined);
+  let loadError: ErrorDetails | null = $state(null);
 
-  const bodyCellClass = "border-x-2 border-gray-400 dark:border-gray-600 text-center";
-  const topBodyCellClass = `${bodyCellClass} rounded-t-lg border-t-2`;
-  const bottomBodyCellClass = `${bodyCellClass} rounded-b-lg border-b-2`;
+  let encodedTrackingID = $derived(
+    document?.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
+  );
+  let encodedPublisherNamespace = $derived(
+    document?.publisher?.name ? encodeURIComponent(addSlashes(document.publisher?.name)) : undefined
+  );
 
-  let headers = $derived.by(() => {
-    const tmpHeaders: TableHeader[] = [
-      {
-        label: "CVE",
-        attribute: "cve"
-      }
-    ];
-    if (documents) {
-      tmpHeaders.push(
-        ...(documents as string[]).map((document: string, index: number) => {
-          const header: TableHeader = { label: document, attribute: document };
-          if (index === 0) header["class"] = topBodyCellClass;
-          else header["class"] = "text-center";
-          return header;
-        })
-      );
+  const baseClass = "text-center px-2 py-2 w-fit min-w-0";
+
+  const loadAdvisoryState = async () => {
+    const response = await request(
+      `/api/documents?advisories=true&columns=state&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
+      "GET"
+    );
+    if (response.ok) {
+      const result = response.content;
+      advisoryState = result.documents?.[0].state;
+      return result.documents?.[0].state;
+    } else if (response.error) {
+      loadError = getErrorDetails(`Couldn't load state.`, response);
     }
-    return tmpHeaders;
-  });
+  };
 
-  onMount(() => {
-    //const response = request("ENDPOINT", "GET");
-    const docs = [
-      "ESA-2024-0001",
-      "ESA-2024-0002",
-      "ESA-2024-0003",
-      "ESA-2024-0004",
-      "ESA-2024-0005"
-    ];
-    cves = {
-      "CVE-1970-0001": [docs[3], docs[4]],
-      "CVE-1970-0002": [docs[0], docs[1], docs[2], docs[3]],
-      "CVE-1970-0003": [docs[0], docs[3], docs[4]],
-      "CVE-1970-0004": [docs[1], docs[2], docs[3], docs[4]]
-    };
-    documents = [];
-    Object.keys(cves).forEach((key) => {
-      cves?.[key].forEach((doc) => {
-        if (!documents?.includes(doc)) {
-          documents?.push(doc);
+  const loadDocument = async () => {
+    const response = await request(`/api/documents/${params.id}`, "GET");
+    if (response.ok) {
+      const result = await response.content;
+      ({ document } = result);
+    } else if (response.error) {
+      loadError = getErrorDetails(`Could not load document.`, response);
+    }
+  };
+
+  onMount(async () => {
+    await loadDocument();
+    if (loadError) return;
+    await tick();
+    if (!encodedTrackingID || !encodedPublisherNamespace) return;
+    const result = await fetchDocumentSSVC(encodedTrackingID, encodedPublisherNamespace);
+    if (typeof result === "string") {
+      ssvc = result;
+    } else if (result?.message) {
+      loadError = result;
+      return;
+    }
+    loadAdvisoryState();
+    if (loadError) return;
+    const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
+    if (response.ok) {
+      cves = {};
+      documents = {};
+      response.content.forEach((doc: any) => {
+        if (cves && !cves[doc.cve]) {
+          cves[doc.cve] = [doc];
+        } else if (cves) {
+          cves[doc.cve].push(doc);
+        }
+
+        if (!documents[doc.document_id]) {
+          documents[doc.document_id] = doc;
+          documents[doc.document_id].cve = [doc.cve];
+        } else if (documents) {
+          documents[doc.document_id].cve.push(doc.cve);
         }
       });
-    });
-    documents.sort();
+    } else if (response.error) {
+      loadError = getErrorDetails(`Could not load documents.`, response);
+    }
   });
+
+  const compare = (doc: any) => {
+    appStore.setDiffDocA_ID(params.id);
+    appStore.setDiffDocB_ID(doc.document_id);
+    push("/diff");
+  };
 </script>
 
-<div>
+<div style="max-height: 90vh;">
+  <ErrorMessage error={loadError}></ErrorMessage>
   {#if documents && cves}
-    <CustomTable title="Documents having the same CVEs as document ESA-2024-0001" {headers}>
+    <CustomTable
+      tableClass="h-fit w-fit border-separate border-spacing-0"
+      tableContainerClass="h-full"
+      containerClass="h-full"
+      hoverable={false}
+      title={`Documents having the same CVEs as ${params.trackingID ?? document?.tracking?.id}`}
+      stickyHeaders={true}
+    >
+      {#snippet tableHeadSlot()}
+        <TableHeadCell class="text-center align-top">
+          <div class="flex flex-col items-center gap-2">
+            <span>{params.trackingID ?? document?.tracking?.id}</span>
+            <div class="flex items-center gap-2">
+              {#if advisoryState}
+                <WorkflowStateIcon {advisoryState}></WorkflowStateIcon>
+              {/if}
+              {#if ssvc}
+                <SSVCBadge vector={ssvc}></SSVCBadge>
+              {/if}
+            </div>
+          </div>
+        </TableHeadCell>
+        {#each Object.values(documents) as doc}
+          {@const d = doc as any}
+          <TableHeadCell class="text-center align-top">
+            <div class="flex h-full flex-col items-center justify-between gap-2">
+              <a
+                class="text-primary-700 dark:text-primary-400 hover:underline"
+                href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
+                >{d.tracking_id}</a
+              >
+              <div class="flex items-center gap-2">
+                {#if advisoryState}
+                  <WorkflowStateIcon advisoryState={d.state}></WorkflowStateIcon>
+                {/if}
+                {#if d.ssvc}
+                  <SSVCBadge vector={d.ssvc}></SSVCBadge>
+                {/if}
+              </div>
+              <Button color="light" size="xs" class="h-6" onclick={() => compare(d)}>
+                Compare
+              </Button>
+            </div>
+          </TableHeadCell>
+        {/each}
+      {/snippet}
       {#snippet mainSlot()}
         {#each Object.keys(cves as Related) as string[] as cve, index (index)}
-          <TableBodyRow>
-            <TableBodyCell class={`${tdClass}`}>{cve}</TableBodyCell>
-            {#each documents as _doc, index}
-              <TableBodyCell class={`${tdClass} text-center ${index === 0 ? bodyCellClass : ""}`}>
-                {@const i = Math.random()}
-                {#if i < 0.5}
+          <TableBodyRow
+            class={cve && cve === params.cve ? "!bg-primary-100 dark:!bg-primary-800" : ""}
+          >
+            <TableBodyCell class={baseClass}>{cve}</TableBodyCell>
+            {#each Object.values(documents) as doc}
+              <TableBodyCell class={baseClass}>
+                {#if (doc as any).cve.includes(cve)}
                   <i class="bx bx-check"></i>
                 {/if}
               </TableBodyCell>
             {/each}
           </TableBodyRow>
         {/each}
-        <TableBodyRow>
-          <TableBodyCell class={`${tdClass}`}>Status</TableBodyCell>
-          {#each documents as _doc, index}
-            <TableBodyCell class={`${tdClass} text-center ${index === 0 ? bodyCellClass : ""}`}
-            ></TableBodyCell>
-          {/each}
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell class={`${tdClass}`}>SSVC</TableBodyCell>
-          {#each documents as _doc, index}
-            <TableBodyCell
-              class={`${tdClass} text-center ${index === 0 ? bottomBodyCellClass : ""}`}
-            ></TableBodyCell>
-          {/each}
-        </TableBodyRow>
-        <TableBodyRow>
-          <TableBodyCell class={`${tdClass}`}></TableBodyCell>
-          {#each documents as _doc, index}
-            <TableBodyCell class={`${tdClass} text-center`}>
-              {#if index > 0}
-                <Button color="light">Compare</Button>
-              {/if}
-            </TableBodyCell>
-          {/each}
-        </TableBodyRow>
       {/snippet}
     </CustomTable>
   {/if}

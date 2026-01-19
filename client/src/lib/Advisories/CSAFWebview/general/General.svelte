@@ -14,6 +14,7 @@
   import Cvss from "./CVSS.svelte";
   import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
+  import { getContext } from "svelte";
 
   interface Props {
     basePath: string;
@@ -44,6 +45,8 @@
   const openRelatedDocuments = () => {
     push(`${basePath}${basePath.endsWith("/") ? "" : "/"}related/documents`);
   };
+
+  const relatedDocuments: any = getContext("advisory");
 </script>
 
 <div class="w-full">
@@ -58,9 +61,17 @@
       {#if appStore.state.webview.doc?.highestScore}
         <Cvss {baseScore} baseSeverity={baseSeverity ?? ""}></Cvss>
       {/if}
-      <Button onclick={openRelatedDocuments} color="light" size="sm">
-        <i class="bx bx-file"></i>
-      </Button>
+      {#if relatedDocuments?.()}
+        {@const len = Object.keys(relatedDocuments()).length}
+        {#if len > 0}
+          <Button onclick={openRelatedDocuments} color="light" size="xs" class="h-7">
+            <div class="flex items-center gap-1">
+              <i class="bx bx-link-alt"></i>
+              {len}
+            </div>
+          </Button>
+        {/if}
+      {/if}
     </div>
   </div>
   <div class="flex w-full flex-row flex-wrap">
