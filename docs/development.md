@@ -24,7 +24,7 @@ Some source code files are machine generated. At the moment is only:
 If you change the source files please regenerate the generated files
 with `go generate ./...` in the root folder and add the updated files
 to the version control. This requires the latest OpenAPI 2.0 which can
-be found via github.com/swaggo/swag/cmd/swag@latest.
+be installed via `go get github.com/swaggo/swag/cmd/swag@latest`.
 This will also update the OpenAPI 2.0 documentation.
 
 If you plan to add further machine generated files ensure that they
