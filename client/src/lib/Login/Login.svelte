@@ -92,7 +92,7 @@
         >
         {#if appStore.state.app.userManager && !appStore.state.app.isUserLoggedIn}
           {#if appStore.state.app.sessionExpired}
-            <div class="text-yellow-400">
+            <div class="text-orange-700 dark:text-yellow-400">
               <i class="bx bx-message-alt-error"></i> Your session is expired: {appStore.state.app
                 .sessionExpiredMessage || "Please login"}
             </div>
