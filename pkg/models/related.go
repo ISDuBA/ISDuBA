@@ -10,11 +10,13 @@ package models
 
 // RelatedDocument is a document that relates to another document by an CVE.
 type RelatedDocument struct {
-	DocumentID int64   `json:"document_id"`
-	CVE        string  `json:"cve"`
-	State      string  `json:"state"`
-	SSVC       *string `json:"ssvc,omitempty"`
-	Title      *string `json:"title,omitempty"`
-	TrackingID string  `json:"tracking_id"`
-	Publisher  string  `json:"publisher"`
+	DocumentID      int64   `json:"document_id"`
+	CVE             string  `json:"cve"`
+	State           string  `json:"state"`
+	SSVC            *string `json:"ssvc,omitempty"`
+	Title           *string `json:"title,omitempty"`
+	TrackingID      string  `json:"tracking_id"`
+	TrackingStatus  string  `json:"tracking_status"`
+	Publisher       string  `json:"publisher"`
+	TrackingVersion string  `json:"tracking_version"`
 }

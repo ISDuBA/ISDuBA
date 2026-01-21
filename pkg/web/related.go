@@ -48,7 +48,9 @@ SELECT
   d.ssvc,
   d.title,
   ads.tracking_id,
-  ads.publisher
+  d.tracking_status,
+  ads.publisher,
+  d.version
 FROM others
   JOIN documents  d   ON others.documents_id = d.id
   JOIN advisories ads ON d.advisories_id     = ads.id
@@ -100,7 +102,9 @@ func (c *Controller) cveRelatedDocuments(ctx *gin.Context) {
 						&related.SSVC,
 						&related.Title,
 						&related.TrackingID,
+						&related.TrackingStatus,
 						&related.Publisher,
+						&related.TrackingVersion,
 					); err != nil {
 						return nil, err
 					}
