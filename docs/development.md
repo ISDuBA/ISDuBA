@@ -25,11 +25,13 @@ Some files in the repository are machine generated:
 | `client/src/lib/workflow.ts` | `pkg/models/workflow.go` |
 | `docs/images/workflow.svg`   | "                        |
 
-If you change the source files please regenerate the generated files
-with `go generate ./...` in the root folder and update the files in the repository.
-This requires `swaggo`,
+If you change any of the input files
+please use `go generate ./...` in the root folder
+and commit updates results to the repository.
+
+Regeneration requires `swaggo`,
 to be installed via `go get github.com/swaggo/swag/cmd/swag@latest`.
-This component will also update the OpenAPI 2.0 documentation.
+This component will update the OpenAPI 2.0 documentation.
 
 If you plan to add further machine generated files ensure that they
 are marked with comments like
