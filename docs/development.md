@@ -16,16 +16,20 @@ Not everything was implemented as it was proposed in there.
 
 ## Generated files
 
-Some source code files are machine generated. At the moment is only:
+Some files in the repository are machine generated:
 
-* [docs.go](../pkg/web/docs/docs.go)
-
+| generation result | input |
+|-------------------|-------|
+| [docs.go](../pkg/web/docs/docs.go)           | `pkg/web/*.go` |
+| [swagger.json](../pkg/web/docs/swagger.json) | "              |
+| `client/src/lib/workflow.ts` | `pkg/models/workflow.go` |
+| `docs/images/workflow.svg`   | "                        |
 
 If you change the source files please regenerate the generated files
-with `go generate ./...` in the root folder and add the updated files
-to the version control. This requires the latest OpenAPI 2.0 which can
-be installed via `go get github.com/swaggo/swag/cmd/swag@latest`.
-This will also update the OpenAPI 2.0 documentation.
+with `go generate ./...` in the root folder and update the files in the repository.
+This requires `swaggo`,
+to be installed via `go get github.com/swaggo/swag/cmd/swag@latest`.
+This component will also update the OpenAPI 2.0 documentation.
 
 If you plan to add further machine generated files ensure that they
 are marked with comments like
