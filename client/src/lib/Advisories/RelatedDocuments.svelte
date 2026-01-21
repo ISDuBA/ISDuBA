@@ -114,7 +114,46 @@
     appStore.setDiffDocB_ID(doc.document_id);
     push("/diff");
   };
+
+  // Find out if there is a document of the same advisory with same version number but different tracking status because we show
+  // tracking status only if there are at least two documents with same version number.
+  const hasDocWithSameVersion = (doc: any) => {
+    return (
+      Object.values(documents).find(
+        (d: any) =>
+          d.publisher === doc.publisher &&
+          d.tracking_id === doc.tracking_id &&
+          d.tracking_version === doc.tracking_version &&
+          d.tracking_status !== doc.tracking_status
+      ) !== undefined
+    );
+  };
 </script>
+
+{#snippet generalInformation(
+  state: string | undefined,
+  tracking_version: string,
+  ssvc: string | undefined,
+  tracking_status: string | undefined,
+  sameVersion: boolean
+)}
+  <div class="flex items-center gap-2">
+    {#if state}
+      <WorkflowStateIcon advisoryState={state}></WorkflowStateIcon>
+    {/if}
+    <div
+      class="flex h-6 min-w-6 items-center justify-center border-1 border-gray-100 px-1 normal-case dark:border-gray-700"
+    >
+      {tracking_version}
+      {#if sameVersion && tracking_status}
+        ({tracking_status})
+      {/if}
+    </div>
+    {#if ssvc}
+      <SSVCBadge vector={ssvc}></SSVCBadge>
+    {/if}
+  </div>
+{/snippet}
 
 <div style="max-height: 90vh;">
   <ErrorMessage error={loadError}></ErrorMessage>
@@ -131,18 +170,18 @@
         <TableHeadCell class="text-center align-top">
           <div class="flex flex-col items-center gap-2">
             <span>{params.trackingID ?? document?.tracking?.id}</span>
-            <div class="flex items-center gap-2">
-              {#if advisoryState}
-                <WorkflowStateIcon {advisoryState}></WorkflowStateIcon>
-              {/if}
-              {#if ssvc}
-                <SSVCBadge vector={ssvc}></SSVCBadge>
-              {/if}
-            </div>
+            {@render generalInformation(
+              advisoryState,
+              document?.tracking.version,
+              ssvc,
+              undefined,
+              false
+            )}
           </div>
         </TableHeadCell>
         {#each Object.values(documents) as doc}
           {@const d = doc as any}
+          {@const sameVersion = hasDocWithSameVersion(d)}
           <TableHeadCell class="text-center align-top">
             <div class="flex h-full flex-col items-center justify-between gap-2">
               <a
@@ -150,14 +189,13 @@
                 href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
                 >{d.tracking_id}</a
               >
-              <div class="flex items-center gap-2">
-                {#if advisoryState}
-                  <WorkflowStateIcon advisoryState={d.state}></WorkflowStateIcon>
-                {/if}
-                {#if d.ssvc}
-                  <SSVCBadge vector={d.ssvc}></SSVCBadge>
-                {/if}
-              </div>
+              {@render generalInformation(
+                d.state,
+                d.tracking_version,
+                d.ssvc,
+                d.tracking_status,
+                sameVersion
+              )}
               <Button color="light" size="xs" class="h-6" onclick={() => compare(d)}>
                 Compare
               </Button>
