@@ -86,13 +86,13 @@
     <Card class="p-4 sm:p-6 md:p-8">
       <div class="flex flex-col gap-4">
         <P class="flex flex-col"
-          ><span><b>Server URL: </b>{appStore.getKeycloakURL()}</span><span
-            ><b>Realm: </b>{appStore.getKeycloakRealm()}</span
+          ><span><b>Server URL:</b>&nbsp;{appStore.getKeycloakURL()}</span><span
+            ><b>Realm:</b>&nbsp;{appStore.getKeycloakRealm()}</span
           ></P
         >
         {#if appStore.state.app.userManager && !appStore.state.app.isUserLoggedIn}
           {#if appStore.state.app.sessionExpired}
-            <div class="text-yellow-400">
+            <div class="text-orange-700 dark:text-yellow-400">
               <i class="bx bx-message-alt-error"></i> Your session is expired: {appStore.state.app
                 .sessionExpiredMessage || "Please login"}
             </div>
