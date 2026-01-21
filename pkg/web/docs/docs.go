@@ -1190,6 +1190,11 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "boolean",
+                        "name": "default_query",
+                        "in": "formData"
+                    },
+                    {
                         "type": "string",
                         "name": "definer",
                         "in": "formData"
@@ -1266,14 +1271,6 @@ const docTemplate = `{
                             "Reviewer": "Reviewer role",
                             "SourceManager": "Source Manager role"
                         },
-                        "x-enum-descriptions": [
-                            "Admin role",
-                            "Importer role",
-                            "Editor role",
-                            "Reviewer role",
-                            "Auditor role",
-                            "Source Manager role"
-                        ],
                         "x-enum-varnames": [
                             "Admin",
                             "Importer",
@@ -1559,6 +1556,11 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "boolean",
+                        "name": "default_query",
+                        "in": "formData"
+                    },
+                    {
                         "type": "string",
                         "name": "definer",
                         "in": "formData"
@@ -1635,14 +1637,6 @@ const docTemplate = `{
                             "Reviewer": "Reviewer role",
                             "SourceManager": "Source Manager role"
                         },
-                        "x-enum-descriptions": [
-                            "Admin role",
-                            "Importer role",
-                            "Editor role",
-                            "Reviewer role",
-                            "Auditor role",
-                            "Source Manager role"
-                        ],
                         "x-enum-varnames": [
                             "Admin",
                             "Importer",
@@ -2109,20 +2103,19 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            1,
                             0,
                             1,
                             2,
-                            3,
-                            1
+                            3
                         ],
                         "type": "integer",
-                        "format": "int32",
                         "x-enum-varnames": [
+                            "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
                             "InfoFeedLogLevel",
                             "WarnFeedLogLevel",
-                            "ErrorFeedLogLevel",
-                            "defaultSourcesFeedLogLevel"
+                            "ErrorFeedLogLevel"
                         ],
                         "name": "log_level",
                         "in": "formData"
@@ -3537,20 +3530,19 @@ const docTemplate = `{
         },
         "config.FeedLogLevel": {
             "type": "integer",
-            "format": "int32",
             "enum": [
+                1,
                 0,
                 1,
                 2,
-                3,
-                1
+                3
             ],
             "x-enum-varnames": [
+                "defaultSourcesFeedLogLevel",
                 "DebugFeedLogLevel",
                 "InfoFeedLogLevel",
                 "WarnFeedLogLevel",
-                "ErrorFeedLogLevel",
-                "defaultSourcesFeedLogLevel"
+                "ErrorFeedLogLevel"
             ]
         },
         "forwarder.ForwardTarget": {
@@ -3621,17 +3613,6 @@ const docTemplate = `{
                 "ImportDocumentEvent": "ImportDocumentEvent represents a document import.",
                 "StateChangeEvent": "StateChangeEvent represents changing the advisory state."
             },
-            "x-enum-descriptions": [
-                "ImportDocumentEvent represents a document import.",
-                "DeleteDocumentEvent represents a document deletion.",
-                "StateChangeEvent represents changing the advisory state.",
-                "AddSSVCEvent represents the addtion of a SSVC score.",
-                "ChangeSSVCEvent represents the change of a SSVC score.",
-                "DeleteSSVCEvent represents the deletion of a SSVC score.",
-                "AddCommentEvent represents the addition of a comment.",
-                "ChangeCommentEvent represents the change of a comment.",
-                "DeleteCommentEvent represents the deletion of a comment."
-            ],
             "x-enum-varnames": [
                 "ImportDocumentEvent",
                 "DeleteDocumentEvent",
@@ -3671,6 +3652,9 @@ const docTemplate = `{
                     }
                 },
                 "dashboard": {
+                    "type": "boolean"
+                },
+                "default_query": {
                     "type": "boolean"
                 },
                 "definer": {
@@ -3730,12 +3714,6 @@ const docTemplate = `{
                 "TLPRed": "TLPRed   represents TLP:RED",
                 "TLPWhite": "TLPWhite represents TLP:WHITE"
             },
-            "x-enum-descriptions": [
-                "TLPWhite represents TLP:WHITE",
-                "TLPGreen represents TLP:GREEN",
-                "TLPAmber represents TLP:AMBER",
-                "TLPRed   represents TLP:RED"
-            ],
             "x-enum-varnames": [
                 "TLPWhite",
                 "TLPGreen",
@@ -3761,14 +3739,6 @@ const docTemplate = `{
                 "ReadWorkflow": "ReadWorkflow represents 'read'.",
                 "ReviewWorkflow": "ReviewWorkflow represents 'review'."
             },
-            "x-enum-descriptions": [
-                "NewWorkflow represents 'new'.",
-                "ReadWorkflow represents 'read'.",
-                "AssessingWorkflow represents 'assessing',",
-                "ReviewWorkflow represents 'review'.",
-                "ArchivedWorkflow represents 'archived'.",
-                "DeleteWorkflow represents 'delete'."
-            ],
             "x-enum-varnames": [
                 "NewWorkflow",
                 "ReadWorkflow",
@@ -3796,14 +3766,6 @@ const docTemplate = `{
                 "Reviewer": "Reviewer role",
                 "SourceManager": "Source Manager role"
             },
-            "x-enum-descriptions": [
-                "Admin role",
-                "Importer role",
-                "Editor role",
-                "Reviewer role",
-                "Auditor role",
-                "Source Manager role"
-            ],
             "x-enum-varnames": [
                 "Admin",
                 "Importer",
@@ -4315,6 +4277,9 @@ const docTemplate = `{
                 },
                 "event_type": {
                     "$ref": "#/definitions/models.Event"
+                },
+                "prev_ssvc": {
+                    "type": "string"
                 },
                 "state": {
                     "$ref": "#/definitions/models.Workflow"
