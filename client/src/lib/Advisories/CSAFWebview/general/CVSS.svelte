@@ -100,7 +100,7 @@
     font-size: small;
     font-weight: bolder;
     padding: 0.25em;
-    height: fit-content;
+    height: 28px;
     min-width: fit-content;
     width: 36pt;
   }
