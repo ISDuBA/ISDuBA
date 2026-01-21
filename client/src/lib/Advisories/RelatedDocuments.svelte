@@ -219,11 +219,15 @@
           <TableBodyRow
             class={cve && cve === params.cve ? "!bg-primary-100 dark:!bg-primary-800" : ""}
           >
-            <TableBodyCell class={baseClass}>{cve}</TableBodyCell>
+            <TableBodyCell class={`${baseClass} ${cve && cve === params.cve ? "!font-bold" : ""}`}>
+              {cve}
+            </TableBodyCell>
             {#each Object.values(documents) as doc}
               <TableBodyCell class={baseClass}>
                 {#if (doc as any).cve.includes(cve)}
-                  <i class="bx bx-check text-2xl"></i>
+                  <i
+                    class={`${baseClass} bx bx-check text-2xl ${cve && cve === params.cve ? "!font-bold" : ""}`}
+                  ></i>
                 {/if}
               </TableBodyCell>
             {/each}
