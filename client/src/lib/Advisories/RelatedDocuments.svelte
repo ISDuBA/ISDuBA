@@ -223,7 +223,7 @@
             {#each Object.values(documents) as doc}
               <TableBodyCell class={baseClass}>
                 {#if (doc as any).cve.includes(cve)}
-                  <i class="bx bx-check"></i>
+                  <i class="bx bx-check text-2xl"></i>
                 {/if}
               </TableBodyCell>
             {/each}
