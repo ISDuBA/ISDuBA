@@ -13,7 +13,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { Button, TableBodyCell, TableBodyRow, TableHeadCell } from "flowbite-svelte";
+  import { Button, Spinner, TableBodyCell, TableBodyRow, TableHeadCell } from "flowbite-svelte";
   import { onMount, tick } from "svelte";
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
   import { fetchDocumentSSVC } from "./advisory";
@@ -36,6 +36,7 @@
   let documents: any | undefined = $state(undefined);
   let cves: Related | undefined = $state(undefined);
   let ssvc: string | undefined = $state(undefined);
+  let isLoading: boolean = $state(false);
   let advisoryState: string | undefined = $state(undefined);
   let loadError: ErrorDetails | null = $state(null);
 
@@ -73,39 +74,44 @@
   };
 
   onMount(async () => {
-    await loadDocument();
-    if (loadError) return;
-    await tick();
-    if (!encodedTrackingID || !encodedPublisherNamespace) return;
-    const result = await fetchDocumentSSVC(encodedTrackingID, encodedPublisherNamespace);
-    if (typeof result === "string") {
-      ssvc = result;
-    } else if (result?.message) {
-      loadError = result;
-      return;
-    }
-    loadAdvisoryState();
-    if (loadError) return;
-    const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
-    if (response.ok) {
-      cves = {};
-      documents = {};
-      response.content.forEach((doc: any) => {
-        if (cves && !cves[doc.cve]) {
-          cves[doc.cve] = [doc];
-        } else if (cves) {
-          cves[doc.cve].push(doc);
-        }
+    isLoading = true;
+    try {
+      await loadDocument();
+      if (loadError) return;
+      await tick();
+      if (!encodedTrackingID || !encodedPublisherNamespace) return;
+      const result = await fetchDocumentSSVC(encodedTrackingID, encodedPublisherNamespace);
+      if (typeof result === "string") {
+        ssvc = result;
+      } else if (result?.message) {
+        loadError = result;
+        return;
+      }
+      loadAdvisoryState();
+      if (loadError) return;
+      const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
+      if (response.ok) {
+        cves = {};
+        documents = {};
+        response.content.forEach((doc: any) => {
+          if (cves && !cves[doc.cve]) {
+            cves[doc.cve] = [doc];
+          } else if (cves) {
+            cves[doc.cve].push(doc);
+          }
 
-        if (!documents[doc.document_id]) {
-          documents[doc.document_id] = doc;
-          documents[doc.document_id].cve = [doc.cve];
-        } else if (documents) {
-          documents[doc.document_id].cve.push(doc.cve);
-        }
-      });
-    } else if (response.error) {
-      loadError = getErrorDetails(`Could not load documents.`, response);
+          if (!documents[doc.document_id]) {
+            documents[doc.document_id] = doc;
+            documents[doc.document_id].cve = [doc.cve];
+          } else if (documents) {
+            documents[doc.document_id].cve.push(doc.cve);
+          }
+        });
+      } else if (response.error) {
+        loadError = getErrorDetails(`Could not load documents.`, response);
+      }
+    } finally {
+      isLoading = false;
     }
   });
 
@@ -157,7 +163,12 @@
 
 <div style="max-height: 90vh;">
   <ErrorMessage error={loadError}></ErrorMessage>
-  {#if documents && cves}
+  {#if isLoading}
+    <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
+      Loading ...
+      <Spinner color="gray" size="4"></Spinner>
+    </div>
+  {:else if documents && cves}
     <CustomTable
       tableClass="h-fit w-fit border-separate border-spacing-0"
       tableContainerClass="h-full"
