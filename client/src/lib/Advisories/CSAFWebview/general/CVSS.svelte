@@ -47,7 +47,7 @@
   };
 </script>
 
-{#if baseScore !== null || baseSeverity !== undefined}
+{#if (baseScore !== null && baseScore !== undefined) || baseSeverity !== undefined}
   <div class={"score " + getClass(baseSeverity, baseScore)}>
     <span class="baseScore">{baseScore}</span>
     {#if (baseSeverity && baseScore === null) || baseScore === undefined}
