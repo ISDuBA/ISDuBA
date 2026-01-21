@@ -65,8 +65,8 @@
         {@const len = Object.keys(relatedDocuments()).length}
         {#if len > 0}
           <Button onclick={openRelatedDocuments} color="light" size="xs" class="h-7">
-            <div class="flex items-center gap-1">
-              <i class="bx bx-link-alt"></i>
+            <div class="flex items-center">
+              <i class="bx bx-link-alt bx-rotate-90"></i>
               {len}
             </div>
           </Button>
