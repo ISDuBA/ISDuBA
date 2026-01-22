@@ -68,6 +68,12 @@ func or[T ~string](field string, tlps []T) *query.Expr {
 
 // AsExpr returns the list of TLP rules as an expression tree.
 func (ptlps PublishersTLPs) AsExpr() *query.Expr {
+	return ptlps.AsExprPublisher("publisher")
+}
+
+// AsExprPublisher returns the list of TLP rules as an expression tree with a given
+// publisher field name.
+func (ptlps PublishersTLPs) AsExprPublisher(publisher string) *query.Expr {
 	// Make build process deterministic.
 	pubs := make([]Publisher, 0, len(ptlps))
 	for pub := range ptlps {
@@ -84,7 +90,7 @@ func (ptlps PublishersTLPs) AsExpr() *query.Expr {
 			// List is empty.
 			continue
 		}
-		curr := query.FieldEqString("publisher", string(pub)).
+		curr := query.FieldEqString(publisher, string(pub)).
 			And(ts)
 
 		if root == nil {
@@ -100,7 +106,7 @@ func (ptlps PublishersTLPs) AsExpr() *query.Expr {
 			// If we have other publishers,
 			// don't apply wildcard in these cases.
 			if len(pubs) > 0 {
-				ts = ts.And(or("publisher", pubs).Not())
+				ts = ts.And(or(publisher, pubs).Not())
 			}
 			if root == nil {
 				root = ts

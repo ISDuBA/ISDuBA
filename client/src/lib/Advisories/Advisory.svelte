@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { Button, Select, Label, Modal, Spinner } from "flowbite-svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, setContext } from "svelte";
   import { appStore } from "$lib/store.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
@@ -27,7 +27,11 @@
   import Tlp from "./TLP.svelte";
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
-  import { type AdvisoryVersion, loadAdvisoryVersions } from "$lib/Advisories/advisory";
+  import {
+    type AdvisoryVersion,
+    fetchDocumentSSVC,
+    loadAdvisoryVersions
+  } from "$lib/Advisories/advisory";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
 
   let { params } = $props();
@@ -44,6 +48,7 @@
   let loadDocumentSSVCError: ErrorDetails | null = $state(null);
   let loadForwardTargetsError: ErrorDetails | null = $state(null);
   let stateError: ErrorDetails | null = $state(null);
+  let loadRelatedError: ErrorDetails | null = $state(null);
   let advisoryVersions: AdvisoryVersion[] = $state([]);
   let advisoryVersionByDocumentID: any = $state(undefined);
   let advisoryState: string = $state("");
@@ -56,6 +61,7 @@
   let isInconsistent = $state(false);
   let documentNotFound = $state(false);
   let couldNotLoadDocument = $state(false);
+  let relatedDocuments: any = $state(undefined);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -142,17 +148,13 @@
   };
 
   const loadDocumentSSVC = async () => {
-    const response = await request(
-      `/api/documents?columns=ssvc&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
-      "GET"
-    );
-    if (response.ok) {
-      const result = await response.content;
-      if (result.documents?.[0].ssvc) {
-        ssvcVector = result.documents[0].ssvc;
+    if (encodedTrackingID && encodedPublisherNamespace) {
+      const result = await fetchDocumentSSVC(encodedTrackingID, encodedPublisherNamespace);
+      if (typeof result === "string") {
+        ssvcVector = result;
+      } else if (result?.message) {
+        loadDocumentSSVCError = result;
       }
-    } else if (response.error) {
-      loadDocumentSSVCError = getErrorDetails(`Could not load SSVC.`, response);
     }
   };
 
@@ -309,6 +311,23 @@
     }
   };
 
+  const loadRelatedDocuments = async () => {
+    const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
+    if (response.ok) {
+      relatedDocuments = {};
+      response.content.forEach((doc: any) => {
+        if (!relatedDocuments[doc.document_id]) {
+          relatedDocuments[doc.document_id] = doc;
+          relatedDocuments[doc.document_id].cve = [doc.cve];
+        } else if (relatedDocuments) {
+          relatedDocuments[doc.document_id].cve.push(doc.cve);
+        }
+      });
+    } else if (response.error) {
+      loadRelatedError = getErrorDetails(`Could not load documents.`, response);
+    }
+  };
+
   const loadData = async () => {
     await loadDocument();
     await getAdvisoryVersions();
@@ -321,6 +340,7 @@
         await buildHistory();
       }
       await loadAdvisoryState();
+      loadRelatedDocuments();
       // Only set state to 'read' if editor opens the current version.
       if (
         advisoryState === NEW &&
@@ -407,6 +427,8 @@
     }
   });
   let openForwardModal = $state(false);
+
+  setContext("advisory", () => relatedDocuments);
 </script>
 
 <svelte:head>
@@ -468,6 +490,7 @@
   <ErrorMessage error={stateError}></ErrorMessage>
   <ErrorMessage error={loadDocumentError}></ErrorMessage>
   <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
+  <ErrorMessage error={loadRelatedError}></ErrorMessage>
   {#if !couldNotLoadDocument && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}

@@ -121,6 +121,9 @@ func (c *Controller) Bind() http.Handler {
 	// Admin can delete documents
 	api.DELETE("/documents/:id", authAd, c.deleteDocument)
 
+	// Related CVEs
+	api.GET("/documents/:id/cve_related", authAdAuEdRe, c.cveRelatedDocuments)
+
 	// Advisories
 	api.DELETE("/advisory/:publisher/:trackingid", authAd, c.deleteAdvisory)
 

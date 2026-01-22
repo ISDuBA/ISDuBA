@@ -15,8 +15,14 @@
   import type { Snippet } from "svelte";
   interface Props {
     title?: string;
-    headers: TableHeader[];
+    headers?: TableHeader[];
+    hoverable?: boolean;
     stickyHeaders?: boolean;
+    striped?: boolean;
+    containerClass?: string;
+    tableContainerClass?: string;
+    tableClass?: string;
+    tableHeadSlot?: Snippet;
     bottomSlot?: Snippet;
     headerRightSlot?: Snippet;
     mainSlot: Snippet;
@@ -24,8 +30,14 @@
   }
   let {
     title = undefined,
-    headers,
+    headers = undefined,
+    hoverable = true,
     stickyHeaders = false,
+    striped = true,
+    containerClass = "mb-6",
+    tableClass = "h-100 w-fit border-separate border-spacing-0",
+    tableContainerClass = "relative",
+    tableHeadSlot = undefined,
     bottomSlot = undefined,
     headerRightSlot = undefined,
     mainSlot,
@@ -34,7 +46,7 @@
   let orderBy = $state("");
 </script>
 
-<div class="mb-6">
+<div class={containerClass}>
   {#if title}
     <SectionHeader {title}>
       {#snippet rightSlot()}
@@ -51,35 +63,42 @@
   {/if}
   <Table
     classes={{
-      div: "relative"
+      div: tableContainerClass
     }}
-    hoverable={true}
+    class={tableClass}
+    {hoverable}
     border={false}
+    {striped}
   >
     <TableHead
       class={stickyHeaders ? "sticky top-[0] bg-white dark:bg-gray-800" : "dark:bg-gray-800"}
     >
-      {#each headers as header}
-        <TableHeadCell class={header.class ?? tablePadding} onclick={() => {}}>
-          <span>{header.label}</span>
-          <i
-            class:bx={true}
-            class:bx-caret-up={orderBy == header.attribute}
-            class:bx-caret-down={orderBy == `-${header.attribute}`}
-          ></i>
-          {#if header.progressDuration}
-            <div class="mt-1 h-1 min-h-1">
-              <div class="progressmeter">
-                <span class="w-full"
-                  ><span
-                    style="animation-duration: {header.progressDuration}s"
-                    class="infiniteprogress bg-primary-500"
-                  ></span></span
-                >
+      {#if tableHeadSlot}
+        {@render tableHeadSlot()}
+      {:else if headers}
+        {#each headers as header}
+          <TableHeadCell class={header.class ?? tablePadding} onclick={() => {}}>
+            <span>{header.label}</span>
+            <i
+              class:bx={true}
+              class:bx-caret-up={orderBy == header.attribute}
+              class:bx-caret-down={orderBy == `-${header.attribute}`}
+            ></i>
+            {#if header.progressDuration}
+              <div class="mt-1 h-1 min-h-1">
+                <div class="progressmeter">
+                  <span class="w-full"
+                    ><span
+                      style="animation-duration: {header.progressDuration}s"
+                      class="infiniteprogress bg-primary-500"
+                    ></span></span
+                  >
+                </div>
               </div>
-            </div>
-          {/if}
-        </TableHeadCell>{/each}
+            {/if}
+          </TableHeadCell>
+        {/each}
+      {/if}
     </TableHead>
     <TableBody>
       {@render mainSlot()}

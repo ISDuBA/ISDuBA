@@ -12,6 +12,14 @@
   import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
+  import { Button } from "flowbite-svelte";
+  import { push } from "svelte-spa-router";
+  import { getContext } from "svelte";
+
+  interface Props {
+    basePath: string;
+  }
+  let { basePath = "" }: Props = $props();
 
   let trackingVersion = $derived(appStore.state.webview.doc?.trackingVersion);
   let generator = $derived(appStore.state.webview.doc?.generator);
@@ -33,6 +41,12 @@
   let baseScore = $derived(appStore.state.webview.doc?.highestScore?.baseScore);
   const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
   const cellStyleKey = "content-center w-40 py-0";
+
+  const openRelatedDocuments = () => {
+    push(`${basePath}${basePath.endsWith("/") ? "" : "/"}related/documents`);
+  };
+
+  const relatedDocuments: any = getContext("advisory");
 </script>
 
 <div class="w-full">
@@ -46,6 +60,17 @@
       </div>
       {#if appStore.state.webview.doc?.highestScore}
         <Cvss {baseScore} baseSeverity={baseSeverity ?? ""}></Cvss>
+      {/if}
+      {#if relatedDocuments?.()}
+        {@const len = Object.keys(relatedDocuments()).length}
+        {#if len > 0}
+          <Button onclick={openRelatedDocuments} color="light" size="xs" class="h-7">
+            <div class="flex items-center">
+              <i class="bx bx-link-alt bx-rotate-90"></i>
+              {len}
+            </div>
+          </Button>
+        {/if}
       {/if}
     </div>
   </div>

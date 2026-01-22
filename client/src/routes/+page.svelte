@@ -39,6 +39,7 @@
   import AggregatorViewer from "$lib/Sources/Aggregators/AggregatorViewer.svelte";
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
   import { onMount } from "svelte";
+  import RelatedDocuments from "$lib/Advisories/RelatedDocuments.svelte";
 
   let loadConfigError: ErrorDetails | null = $state(null);
 
@@ -177,6 +178,16 @@
     }),
     "/documents/:id/:position?": wrap({
       component: Advisory as any,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/advisories/:publisherNamespace/:trackingID/documents/:id/related/documents/:cve?": wrap({
+      component: RelatedDocuments as any,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/documents/:id/related/documents/:cve?": wrap({
+      component: RelatedDocuments as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
