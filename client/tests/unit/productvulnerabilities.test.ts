@@ -11,8 +11,8 @@ import {
   extractProducts,
   extractVulnerabilities,
   generateProductVulnerabilities
-} from "./productvulnerabilities";
-import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
+} from "$lib/Advisories/CSAFWebview/productvulnerabilities/productvulnerabilities";
+import { ProductStatusSymbol } from "$lib/Advisories/CSAFWebview/productvulnerabilities/productvulnerabilitiestypes";
 
 const emptyObject = {};
 
