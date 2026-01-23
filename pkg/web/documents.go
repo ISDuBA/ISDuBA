@@ -18,6 +18,7 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -475,7 +476,9 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if results, err = scanRows(rows, fields, builder.Aliases, builder.IgnoreFields); err != nil {
+			filtered := builder.RemoveIgnoredFields(fields)
+			escape := needsEscaping(filtered, builder.Aliases)
+			if results, err = scanRows(rows, filtered, escape); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -501,17 +504,10 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 func scanRows(
 	rows pgx.Rows,
 	fields []string,
-	aliases map[string]string,
-	ignoreFields map[string]struct{},
+	escape []bool,
 ) ([]map[string]any, error) {
-	f := []string{}
-	for _, field := range fields {
-		if _, found := ignoreFields[field]; !found {
-			f = append(f, field)
-		}
-	}
-	values := make([]any, len(f))
-	ptrs := make([]any, len(f))
+	values := make([]any, len(fields))
+	ptrs := make([]any, len(fields))
 	for i := range ptrs {
 		ptrs[i] = &values[i]
 	}
@@ -520,11 +516,11 @@ func scanRows(
 		if err := rows.Scan(ptrs...); err != nil {
 			return nil, fmt.Errorf("scanning row failed: %w", err)
 		}
-		result := make(map[string]any, len(f))
-		for i, p := range f {
+		result := make(map[string]any, len(fields))
+		for i, p := range fields {
 			v := values[i]
 			// XXX: A little bit hacky to support client.
-			if _, ok := aliases[p]; ok {
+			if escape[i] {
 				if s, ok := v.(string); ok {
 					v = template.HTMLEscapeString(s)
 				}
@@ -537,6 +533,74 @@ func scanRows(
 		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
 	return results, nil
+}
+
+type (
+	aggregatedSection struct {
+		id      int64
+		results []any
+	}
+	aggregatedResult struct {
+		fields   []string
+		escape   []bool
+		sections []aggregatedSection
+	}
+)
+
+func needsEscaping(fields []string, aliases map[string]string) []bool {
+	escape := make([]bool, len(fields))
+	for i, field := range fields {
+		_, ok := aliases[field]
+		escape[i] = ok
+	}
+	return escape
+}
+
+// scanRows turns a result set into a slice of maps.
+func scanAggregatedRows(
+	rows pgx.Rows,
+	fields []string,
+	escape []bool,
+) (*aggregatedResult, error) {
+	idIdx := slices.Index(fields, "id")
+	if idIdx == -1 {
+		return nil, errors.New("missing id column to aggregate")
+	}
+	values := make([]any, len(fields))
+	ptrs := make([]any, len(fields))
+	for i := range ptrs {
+		ptrs[i] = &values[i]
+	}
+	ag := aggregatedResult{
+		fields: fields,
+		escape: escape,
+	}
+	lastID := int64(-1)
+	for rows.Next() {
+		if err := rows.Scan(ptrs...); err != nil {
+			return nil, fmt.Errorf("scanning row failed: %w", err)
+		}
+		results := slices.Clone(values)
+		id, ok := values[idIdx].(int64)
+		if !ok {
+			// XXX: Should we panic here!?
+			return nil, errors.New("id column is not an int64")
+		}
+		if id != lastID {
+			ag.sections = append(ag.sections, aggregatedSection{
+				id:      id,
+				results: results,
+			})
+			lastID = id
+		} else {
+			last := &ag.sections[len(ag.sections)-1].results
+			*last = append(*last, results)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("scanning failed: %w", err)
+	}
+	return &ag, nil
 }
 
 var (

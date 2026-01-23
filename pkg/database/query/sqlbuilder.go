@@ -42,6 +42,17 @@ var (
 	whiteSpaces = regexp.MustCompile(`\s+`)
 )
 
+// RemoveIgnoredFields removes fields that should be ignored.
+func (sb *SQLBuilder) RemoveIgnoredFields(fields []string) []string {
+	filtered := make([]string, len(fields))
+	for _, f := range fields {
+		if _, found := sb.IgnoreFields[f]; !found {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
+}
+
 // LikeEscape quotes a query string to be more convenient
 // to use with LIKE filters.
 func LikeEscape(query string) string {
