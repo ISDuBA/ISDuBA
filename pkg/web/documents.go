@@ -429,11 +429,9 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	var (
-		calcCount     bool
+		calcCount           = ctx.Query("count") != ""
 		limit, offset int64 = -1, -1
 	)
-
-	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
 		if limit, ok = parse(ctx, toInt64, lim); !ok {
@@ -460,7 +458,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			&builder,
 		)
 	}
-
 }
 
 func (c *Controller) flatResults(
