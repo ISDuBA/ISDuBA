@@ -10,11 +10,13 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"slices"
+	"text/template"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -26,7 +28,7 @@ import (
 type (
 	aggregatedSection struct {
 		id      int64
-		results []any
+		results [][]any
 	}
 	aggregatedResult struct {
 		fields   []string
@@ -72,16 +74,81 @@ func (c *Controller) aggregatedResults(
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	// TODO: Produce output.
-	if err := result.window(limit, offset, func(as *aggregatedSection) error {
-		// TODO: Implement me
-		_ = as
-		return nil
-	}); err != nil {
-		slog.Error("writing window failed", "err", err)
+	ctx.Render(http.StatusOK, jsonStream(func(w http.ResponseWriter) error {
+		// TODO: Produce output.
+		_ = calcCount
+		fmt.Fprint(w, "{")
+		if calcCount {
+			fmt.Fprintf(w, `"count": %d`, len(result.sections))
+		}
+		// Only produce documents when we have them.
+		if len(result.sections) > 0 {
+			if calcCount {
+				fmt.Fprint(w, ',')
+			}
+			fmt.Fprint(w, `{"documents":[`)
+			firstSection := true
+			data := make(map[string]any, len(fields))
+			enc := json.NewEncoder(w)
+
+			if err := result.window(limit, offset, func(as *aggregatedSection) error {
+				if firstSection {
+					firstSection = false
+				} else {
+					fmt.Fprint(w, ',')
+				}
+				fmt.Fprintf(w, `"document":{"id:%d,"data":["`, as.id)
+
+				for i, result := range as.results {
+					if i > 0 {
+						fmt.Fprint(w, ',')
+					}
+					clear(data)
+					for j, v := range result {
+						name := fields[j]
+						if name == "id" {
+							continue
+						}
+						if escape[j] {
+							// XXX: A little bit hacky to support client.
+							if s, ok := v.(string); ok {
+								v = template.HTMLEscapeString(s)
+							}
+						}
+						data[name] = v
+					}
+					if err := enc.Encode(data); err != nil {
+						return err
+					}
+				}
+
+				_, err := fmt.Fprint(w, ']')
+				return err
+			}); err != nil {
+				slog.Error("writing window failed", "err", err)
+				return err
+			}
+			if _, err := fmt.Fprint(w, `]}`); err != nil {
+				return err
+			}
+			_ = escape
+		}
+		_, err := fmt.Fprint(w, '}')
+		return err
+	}))
+}
+
+type jsonStream func(http.ResponseWriter) error
+
+var jsonContentType = []string{"application/json; charset=utf-8"}
+
+func (js jsonStream) Render(w http.ResponseWriter) error { return js(w) }
+
+func (jsonStream) WriteContentType(w http.ResponseWriter) {
+	header := w.Header()
+	if val := header["Content-Type"]; len(val) == 0 {
+		header["Content-Type"] = jsonContentType
 	}
-	_ = calcCount
-	_ = escape
 }
 
 // scanAggregatedRows turns a result set into an aggregatedResult.
@@ -115,7 +182,7 @@ func scanAggregatedRows(
 		if id != lastID {
 			ag.sections = append(ag.sections, aggregatedSection{
 				id:      id,
-				results: results,
+				results: [][]any{results},
 			})
 			lastID = id
 		} else {
