@@ -26,14 +26,11 @@ import (
 )
 
 type (
-	aggregatedSection struct {
-		id      int64
-		results [][]any
+	aggregatedDocument struct {
+		id   int64
+		rows [][]any
 	}
-	aggregatedResult struct {
-		fields   []string
-		sections []aggregatedSection
-	}
+	aggregatedDocuments []aggregatedDocument
 )
 
 func (c *Controller) aggregatedResults(
@@ -45,7 +42,7 @@ func (c *Controller) aggregatedResults(
 	builder *query.SQLBuilder,
 ) {
 	var (
-		result   *aggregatedResult
+		ads      aggregatedDocuments
 		sql      = builder.CreateQuery(fields, order, -1, -1)
 		rctx     = ctx.Request.Context()
 		filtered = builder.RemoveIgnoredFields(fields)
@@ -63,7 +60,7 @@ func (c *Controller) aggregatedResults(
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if result, err = scanAggregatedRows(rows, filtered); err != nil {
+			if ads, err = scanAggregatedDocuments(rows, filtered); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -75,38 +72,37 @@ func (c *Controller) aggregatedResults(
 		return
 	}
 	ctx.Render(http.StatusOK, jsonStream(func(w http.ResponseWriter) error {
-		// TODO: Produce output.
-		_ = calcCount
 		fmt.Fprint(w, "{")
 		if calcCount {
-			fmt.Fprintf(w, `"count": %d`, len(result.sections))
+			fmt.Fprintf(w, `"count":%d`, len(ads))
 		}
 		// Only produce documents when we have them.
-		if len(result.sections) > 0 {
+		if len(ads) > 0 {
 			if calcCount {
 				fmt.Fprint(w, ',')
 			}
 			fmt.Fprint(w, `{"documents":[`)
-			firstSection := true
+			firstDocument := true
 			data := make(map[string]any, len(fields))
 			enc := json.NewEncoder(w)
 
-			if err := result.window(limit, offset, func(as *aggregatedSection) error {
-				if firstSection {
-					firstSection = false
+			idIdx := slices.Index(fields, "id")
+
+			if err := ads.window(limit, offset, func(ad *aggregatedDocument) error {
+				if firstDocument {
+					firstDocument = false
 				} else {
 					fmt.Fprint(w, ',')
 				}
-				fmt.Fprintf(w, `"document":{"id:%d,"data":["`, as.id)
+				fmt.Fprintf(w, `"document":{"id":%d,"data":["`, ad.id)
 
-				for i, result := range as.results {
+				for i, row := range ad.rows {
 					if i > 0 {
 						fmt.Fprint(w, ',')
 					}
 					clear(data)
-					for j, v := range result {
-						name := fields[j]
-						if name == "id" {
+					for j, v := range row {
+						if j == idIdx {
 							continue
 						}
 						if escape[j] {
@@ -115,13 +111,12 @@ func (c *Controller) aggregatedResults(
 								v = template.HTMLEscapeString(s)
 							}
 						}
-						data[name] = v
+						data[fields[j]] = v
 					}
 					if err := enc.Encode(data); err != nil {
 						return err
 					}
 				}
-
 				_, err := fmt.Fprint(w, ']')
 				return err
 			}); err != nil {
@@ -131,7 +126,6 @@ func (c *Controller) aggregatedResults(
 			if _, err := fmt.Fprint(w, `]}`); err != nil {
 				return err
 			}
-			_ = escape
 		}
 		_, err := fmt.Fprint(w, '}')
 		return err
@@ -151,11 +145,11 @@ func (jsonStream) WriteContentType(w http.ResponseWriter) {
 	}
 }
 
-// scanAggregatedRows turns a result set into an aggregatedResult.
-func scanAggregatedRows(
+// scanAggregatedDocuments returns a result set into a slice of aggregated documents.
+func scanAggregatedDocuments(
 	rows pgx.Rows,
 	fields []string,
-) (*aggregatedResult, error) {
+) (aggregatedDocuments, error) {
 	idIdx := slices.Index(fields, "id")
 	if idIdx == -1 {
 		return nil, errors.New("missing id column to aggregate")
@@ -165,9 +159,7 @@ func scanAggregatedRows(
 	for i := range ptrs {
 		ptrs[i] = &values[i]
 	}
-	ag := aggregatedResult{
-		fields: fields,
-	}
+	ads := make(aggregatedDocuments, 0, 512)
 	lastID := int64(-1)
 	for rows.Next() {
 		if err := rows.Scan(ptrs...); err != nil {
@@ -180,40 +172,39 @@ func scanAggregatedRows(
 			return nil, errors.New("id column is not an int64")
 		}
 		if id != lastID {
-			ag.sections = append(ag.sections, aggregatedSection{
-				id:      id,
-				results: [][]any{results},
+			ads = append(ads, aggregatedDocument{
+				id:   id,
+				rows: [][]any{results},
 			})
 			lastID = id
 		} else {
-			last := &ag.sections[len(ag.sections)-1].results
+			last := &ads[len(ads)-1].rows
 			*last = append(*last, results)
 		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
-	return &ag, nil
+	return ads, nil
 }
 
-func (ar *aggregatedResult) window(
+func (ads aggregatedDocuments) window(
 	limit, offset int64,
-	write func(*aggregatedSection) error,
+	write func(*aggregatedDocument) error,
 ) error {
-	sections := ar.sections
 	var start, end int
 	if offset < 0 {
 		start = 0
 	} else {
-		start = min(int(offset), len(sections))
+		start = min(int(offset), len(ads))
 	}
 	if limit < 0 {
-		end = len(sections)
+		end = len(ads)
 	} else {
-		end = min(int(offset+limit), len(sections))
+		end = min(int(offset+limit), len(ads))
 	}
 	for i := start; i < end; i++ {
-		if err := write(&sections[i]); err != nil {
+		if err := write(&ads[i]); err != nil {
 			return err
 		}
 	}
