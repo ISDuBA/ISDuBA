@@ -529,7 +529,7 @@ func (c *Controller) flatResults(
 func scanRows(
 	rows pgx.Rows,
 	fields []string,
-	escape []bool,
+	esc escaping,
 ) ([]map[string]any, error) {
 	values := make([]any, len(fields))
 	ptrs := make([]any, len(fields))
@@ -543,14 +543,7 @@ func scanRows(
 		}
 		result := make(map[string]any, len(fields))
 		for i, p := range fields {
-			v := values[i]
-			// XXX: A little bit hacky to support client.
-			if escape[i] {
-				if s, ok := v.(string); ok {
-					v = template.HTMLEscapeString(s)
-				}
-			}
-			result[p] = v
+			result[p] = esc.escape(i, values[i])
 		}
 		results = append(results, result)
 	}
@@ -560,11 +553,22 @@ func scanRows(
 	return results, nil
 }
 
-func needsEscaping(fields []string, aliases map[string]string) []bool {
-	escape := make([]bool, len(fields))
+type escaping []bool
+
+func needsEscaping(fields []string, aliases map[string]string) escaping {
+	escape := make(escaping, len(fields))
 	for i, field := range fields {
 		_, ok := aliases[field]
 		escape[i] = ok
 	}
 	return escape
+}
+
+func (esc escaping) escape(i int, v any) any {
+	if esc[i] {
+		if s, ok := v.(string); ok {
+			v = template.HTMLEscapeString(s)
+		}
+	}
+	return v
 }

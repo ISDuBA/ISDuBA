@@ -16,7 +16,6 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
-	"text/template"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
@@ -46,7 +45,7 @@ func (c *Controller) aggregatedResults(
 		sql      = builder.CreateQuery(fields, order, -1, -1)
 		rctx     = ctx.Request.Context()
 		filtered = builder.RemoveIgnoredFields(fields)
-		escape   = needsEscaping(filtered, builder.Aliases)
+		esc      = needsEscaping(filtered, builder.Aliases)
 	)
 
 	if slog.Default().Enabled(rctx, slog.LevelDebug) {
@@ -102,16 +101,9 @@ func (c *Controller) aggregatedResults(
 					}
 					clear(data)
 					for j, v := range row {
-						if j == idIdx {
-							continue
+						if j != idIdx {
+							data[fields[j]] = esc.escape(j, v)
 						}
-						if escape[j] {
-							// XXX: A little bit hacky to support client.
-							if s, ok := v.(string); ok {
-								v = template.HTMLEscapeString(s)
-							}
-						}
-						data[fields[j]] = v
 					}
 					if err := enc.Encode(data); err != nil {
 						return err
