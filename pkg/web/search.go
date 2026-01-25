@@ -28,7 +28,7 @@ type (
 	}
 )
 
-// scanRows turns a result set into a slice of maps.
+// scanAggregatedRows turns a result set into an aggregatedResult.
 func scanAggregatedRows(
 	rows pgx.Rows,
 	fields []string,

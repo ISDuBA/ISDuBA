@@ -17,6 +17,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -351,18 +352,20 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 //	@Param			offset		query	int		false	"Offset"
 //	@Param			results		query	bool	false	"Return search results"
 //	@Produce		json
-//	@Success		200	{object}	web.overviewDocuments.documentResult
+//	@Success		200	{object}	web.flatResults.documentResult
 //	@Failure		400	{object}	models.Error
 //	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/documents [get]
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
-	type documentResult struct {
-		Count     *int64           `json:"count,omitempty"`
-		Documents []map[string]any `json:"documents"`
-	}
 	// Use the advisories.
 	advisory, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("advisories", "false"))
+	if !ok {
+		return
+	}
+
+	// Use the advisories.
+	aggregate, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("aggregate", "false"))
 	if !ok {
 		return
 	}
@@ -407,6 +410,11 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
+	// If we are in aggregation mode we need the id.
+	if aggregate && !slices.Contains(fields, "id") {
+		fields = append(fields, "id")
+	}
+
 	if err := builder.CheckProjections(fields); err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
@@ -422,7 +430,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	var (
 		calcCount     bool
-		count         int64
 		limit, offset int64 = -1, -1
 	)
 
@@ -440,8 +447,38 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		}
 	}
 
-	var results []map[string]any
+	if aggregate {
+		// TODO: Implement me!
+		_ = aggregate
+	} else {
+		c.flatResults(
+			ctx,
+			calcCount,
+			limit, offset,
+			fields,
+			order,
+			&builder,
+		)
+	}
 
+}
+
+func (c *Controller) flatResults(
+	ctx *gin.Context,
+	calcCount bool,
+	limit, offset int64,
+	fields []string,
+	order string,
+	builder *query.SQLBuilder,
+) {
+	type documentResult struct {
+		Count     *int64           `json:"count,omitempty"`
+		Documents []map[string]any `json:"documents"`
+	}
+	var (
+		results []map[string]any
+		count   int64
+	)
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
