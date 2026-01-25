@@ -9,11 +9,18 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"net/http"
 	"slices"
 
+	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/ISDuBA/ISDuBA/pkg/models"
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type (
@@ -23,16 +30,64 @@ type (
 	}
 	aggregatedResult struct {
 		fields   []string
-		escape   []bool
 		sections []aggregatedSection
 	}
 )
+
+func (c *Controller) aggregatedResults(
+	ctx *gin.Context,
+	calcCount bool,
+	limit, offset int64,
+	fields []string,
+	order string,
+	builder *query.SQLBuilder,
+) {
+	var (
+		result   *aggregatedResult
+		sql      = builder.CreateQuery(fields, order, -1, -1)
+		rctx     = ctx.Request.Context()
+		filtered = builder.RemoveIgnoredFields(fields)
+		escape   = needsEscaping(filtered, builder.Aliases)
+	)
+
+	if slog.Default().Enabled(rctx, slog.LevelDebug) {
+		slog.Debug("documents", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
+	}
+	if err := c.db.Run(
+		rctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			rows, err := conn.Query(rctx, sql, builder.Replacements...)
+			if err != nil {
+				return fmt.Errorf("cannot fetch results: %w", err)
+			}
+			defer rows.Close()
+			if result, err = scanAggregatedRows(rows, filtered); err != nil {
+				return fmt.Errorf("loading data failed: %w", err)
+			}
+			return nil
+		},
+		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
+	); err != nil {
+		slog.Error("database error", "err", err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	// TODO: Produce output.
+	if err := result.window(limit, offset, func(as *aggregatedSection) error {
+		// TODO: Implement me
+		_ = as
+		return nil
+	}); err != nil {
+		slog.Error("writing window failed", "err", err)
+	}
+	_ = calcCount
+	_ = escape
+}
 
 // scanAggregatedRows turns a result set into an aggregatedResult.
 func scanAggregatedRows(
 	rows pgx.Rows,
 	fields []string,
-	escape []bool,
 ) (*aggregatedResult, error) {
 	idIdx := slices.Index(fields, "id")
 	if idIdx == -1 {
@@ -45,7 +100,6 @@ func scanAggregatedRows(
 	}
 	ag := aggregatedResult{
 		fields: fields,
-		escape: escape,
 	}
 	lastID := int64(-1)
 	for rows.Next() {
@@ -73,4 +127,28 @@ func scanAggregatedRows(
 		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
 	return &ag, nil
+}
+
+func (ar *aggregatedResult) window(
+	limit, offset int64,
+	write func(*aggregatedSection) error,
+) error {
+	sections := ar.sections
+	var start, end int
+	if offset < 0 {
+		start = 0
+	} else {
+		start = min(int(offset), len(sections))
+	}
+	if limit < 0 {
+		end = len(sections)
+	} else {
+		end = min(int(offset+limit), len(sections))
+	}
+	for i := start; i < end; i++ {
+		if err := write(&sections[i]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
