@@ -17,11 +17,9 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
@@ -78,7 +76,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			const deletePrefix = `DELETE FROM documents WHERE `
 			deleteSQL := deletePrefix + builder.WhereClause
 			slog.Debug("delete document", "SQL",
-				qndSQLReplace(deleteSQL, builder.Replacements))
+				query.InterpolateSQLqnd(deleteSQL, builder.Replacements))
 
 			tags, err := tx.Exec(rctx, deleteSQL, builder.Replacements...)
 			if err != nil {
@@ -451,7 +449,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			if calcCount {
 				countSQL := builder.CreateCountSQL()
 				if slog.Default().Enabled(rctx, slog.LevelDebug) {
-					slog.Debug("count", "SQL", qndSQLReplace(countSQL, builder.Replacements))
+					slog.Debug("count", "SQL", query.InterpolateSQLqnd(countSQL, builder.Replacements))
 				}
 				if err := conn.QueryRow(
 					rctx,
@@ -469,7 +467,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			sql := builder.CreateQuery(fields, order, limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
-				slog.Debug("documents", "SQL", qndSQLReplace(sql, builder.Replacements))
+				slog.Debug("documents", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
 			}
 			rows, err := conn.Query(rctx, sql, builder.Replacements...)
 			if err != nil {
@@ -601,24 +599,4 @@ func scanAggregatedRows(
 		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
 	return &ag, nil
-}
-
-var (
-	dirtyReplace     *regexp.Regexp
-	dirtyReplaceOnce sync.Once
-)
-
-// qndSQLReplace is a quick and dirty hack to re-substitute strings
-// into SQL statements. Warning: USE FOR LOGGING ONLY!
-// The separation SQL <-> replacements were done beforehand to
-// prevent injections!
-func qndSQLReplace(sql string, replacements []any) string {
-	dirtyReplaceOnce.Do(func() {
-		dirtyReplace = regexp.MustCompile(`\$([\d]+)`)
-	})
-	sql = dirtyReplace.ReplaceAllStringFunc(sql, func(s string) string {
-		m := dirtyReplace.FindStringSubmatch(s)
-		return `'%[` + m[1] + `]s'`
-	})
-	return fmt.Sprintf(sql, replacements...)
 }
