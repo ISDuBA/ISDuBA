@@ -20,6 +20,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/render"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -126,15 +127,10 @@ func (c *Controller) aggregatedResults(
 
 type jsonStream func(http.ResponseWriter) error
 
-var jsonContentType = []string{"application/json; charset=utf-8"}
-
 func (js jsonStream) Render(w http.ResponseWriter) error { return js(w) }
 
 func (jsonStream) WriteContentType(w http.ResponseWriter) {
-	header := w.Header()
-	if val := header["Content-Type"]; len(val) == 0 {
-		header["Content-Type"] = jsonContentType
-	}
+	render.JSON{}.WriteContentType(w)
 }
 
 // scanAggregatedDocuments returns a result set into a slice of aggregated documents.
