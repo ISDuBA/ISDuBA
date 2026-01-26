@@ -79,9 +79,9 @@ func (c *Controller) aggregatedResults(
 		// Only produce documents when we have them.
 		if len(ads) > 0 {
 			if calcCount {
-				fmt.Fprint(w, ',')
+				fmt.Fprint(w, ",")
 			}
-			fmt.Fprint(w, `{"documents":[`)
+			fmt.Fprint(w, `"documents":[`)
 			firstDocument := true
 			data := make(map[string]any, len(fields))
 			enc := json.NewEncoder(w)
@@ -90,23 +90,25 @@ func (c *Controller) aggregatedResults(
 				if firstDocument {
 					firstDocument = false
 				} else {
-					fmt.Fprint(w, ',')
+					fmt.Fprint(w, ",")
 				}
-				fmt.Fprintf(w, `"document":{"id":%d,"data":["`, ad.id)
+				fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
 
 				for i, row := range ad.rows {
 					if i > 0 {
-						fmt.Fprint(w, ',')
+						fmt.Fprint(w, ",")
 					}
 					clear(data)
 					for j, v := range row {
-						data[fields[j]] = esc.escape(j, v)
+						if name := fields[j]; name != "id" {
+							data[name] = esc.escape(j, v)
+						}
 					}
 					if err := enc.Encode(data); err != nil {
 						return err
 					}
 				}
-				_, err := fmt.Fprint(w, ']')
+				_, err := fmt.Fprint(w, "]}")
 				return err
 			}); err != nil {
 				slog.Error("writing window failed", "err", err)
@@ -149,14 +151,7 @@ func scanAggregatedDocuments(
 		if err := rows.Scan(ptrs...); err != nil {
 			return nil, fmt.Errorf("scanning row failed: %w", err)
 		}
-		// We don't need to copy the id.
-		results := make([]any, 0, len(values)-1)
-		// XXX: It maybe cheaper to call copy() twice?
-		for i, v := range values {
-			if i != idIdx {
-				results = append(results, v)
-			}
-		}
+		results := slices.Clone(values)
 		id, ok := asInt64(values[idIdx])
 		if !ok {
 			// XXX: Should we panic here!?
