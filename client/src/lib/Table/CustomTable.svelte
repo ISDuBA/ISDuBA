@@ -35,7 +35,7 @@
     stickyHeaders = false,
     striped = true,
     containerClass = "mb-6",
-    tableClass = "h-100 w-fit border-separate border-spacing-0",
+    tableClass = "h-fit w-fit border-separate border-spacing-0",
     tableContainerClass = "relative",
     tableHeadSlot = undefined,
     bottomSlot = undefined,
