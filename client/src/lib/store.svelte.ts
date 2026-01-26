@@ -38,7 +38,6 @@ type AppStore = {
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
     errors: ErrorMessage[];
-    documents: any[] | null;
     documentsToDelete: any[] | null;
     selectedDocumentIDs: SvelteSet<number>;
     isToolboxOpen: boolean;
@@ -50,6 +49,11 @@ type AppStore = {
       docB: any | undefined;
     };
     isDarkMode: boolean;
+    search: {
+      count: number | null;
+      results: any[] | null;
+    };
+    routerParams: any;
   };
   webview: {
     doc: DocModel | null;
@@ -102,12 +106,16 @@ const generateInitialState = (): AppStore => {
       tokenParsed: null,
       userManager: null,
       errors: [],
-      documents: null,
       documentsToDelete: null,
       isDeleteModalOpen: false,
       selectedDocumentIDs: new SvelteSet<number>(),
       isToolboxOpen: false,
-      isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false
+      isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false,
+      search: {
+        count: null,
+        results: null
+      },
+      routerParams: null
     },
     webview: {
       doc: null,
@@ -317,8 +325,12 @@ export const appStore = {
     state.app.diff.docB = doc;
   },
 
-  setDocuments: (newDocuments: any[]) => {
-    state.app.documents = newDocuments;
+  setSearchResultCount: (newCount: number | null) => {
+    state.app.search.count = newCount;
+  },
+
+  setSearchResults: (newDocuments: any[]) => {
+    state.app.search.results = newDocuments;
   },
 
   setDocumentsToDelete: (documents: any[]) => {
@@ -359,6 +371,10 @@ export const appStore = {
   displayInfoMessage: (msg: string) => {
     const errorMessage = generateMessage(msg, MESSAGE.INFO);
     state.app.errors = [errorMessage, ...state.app.errors];
+  },
+
+  setRouterParams: (newParams: any) => {
+    state.app.routerParams = newParams;
   },
 
   removeError: (id: string) => {

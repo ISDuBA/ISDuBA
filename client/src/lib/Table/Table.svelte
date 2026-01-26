@@ -19,12 +19,12 @@
     Select,
     TableBody,
     TableBodyCell,
-    TableBodyRow,
     TableHead,
     TableHeadCell,
     Table,
     Img
   } from "flowbite-svelte";
+  import DOMPurify from "dompurify";
   import { tablePadding, title, publisher, searchColumnName, tdClass } from "$lib/Table/defaults";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/request";
@@ -80,6 +80,8 @@
     defaultOrderBy = ["title"]
   }: Props = $props();
 
+  const aggregate = true;
+
   const tdClassRelative = `${tdClass} relative`;
 
   let disableDiffButtons = $derived(
@@ -92,7 +94,7 @@
   );
 
   let selectedDocuments = $derived(
-    appStore.state.app.documents?.filter((d: any) =>
+    appStore.state.app.search.results?.filter((d: any) =>
       appStore.state.app.selectedDocumentIDs.has(d.id)
     ) ?? []
   );
@@ -251,7 +253,7 @@
   let isAdmin = $derived(isRoleIncluded(appStore.getRoles(), [ADMIN]));
 
   export async function fetchData(): Promise<void> {
-    appStore.setDocuments([]);
+    appStore.setSearchResults([]);
     appStore.clearSelectedDocumentIDs();
     openRow = null;
     if (query !== prevQuery) {
@@ -281,7 +283,7 @@
     } else {
       const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
       documentURL = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=${aggregate}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     }
 
@@ -295,14 +297,18 @@
     }
     const response = await request(documentURL, "GET");
     if (response.ok) {
-      ({ count, documents } = response.content);
       if (tableType === SEARCHTYPES.EVENT) {
         count = response.content.count;
         documents = response.content.events;
       } else {
-        ({ count, documents } = response.content);
+        if (aggregate) {
+          ({ count, documents } = JSON.parse(response.content));
+        } else {
+          ({ count, documents } = response.content);
+        }
       }
-      appStore.setDocuments(documents);
+      appStore.setSearchResults($state.snapshot(documents));
+      appStore.setSearchResultCount($state.snapshot(count));
       // We are outside the range of available documents,
       // try the last page
       if (offset >= count) {
@@ -600,7 +606,14 @@
           {/each}
         </TableHead>
         <TableBody>
-          {#each documents as item, i}
+          {#each documents as doc, i}
+            {@const item =
+              aggregate === true
+                ? {
+                    id: doc.id,
+                    ...doc.data[0]
+                  }
+                : doc}
             <tr
               class={i % 2 == 1
                 ? "bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"
@@ -889,15 +902,22 @@
                 {/if}
               {/each}
             </tr>
-            {#if item[searchColumnName]}
-              <TableBodyRow
-                class={(i % 2 == 1 ? "bg-white" : "bg-gray-100") +
-                  " border border-y-indigo-500/100"}
-              >
-                <TableBodyCell colspan={columns.length} class={tdClassRelative}
-                  >{@html item[searchColumnName]}</TableBodyCell
-                >
-              </TableBodyRow>
+            {#if aggregate}
+              {#each doc.data as result}
+                {#if result[searchColumnName]}
+                  <tr
+                    class={i % 2 == 1
+                      ? "border-t border-t-gray-200 bg-white dark:border-t-gray-700 dark:bg-gray-800"
+                      : "border-t border-t-gray-300 bg-gray-100 dark:border-t-gray-600 dark:bg-gray-700"}
+                  >
+                    <TableBodyCell colspan={columns.length} class={tdClassRelative}>
+                      {@html DOMPurify.sanitize(result[searchColumnName], {
+                        USE_PROFILES: { html: true }
+                      })}
+                    </TableBodyCell>
+                  </tr>
+                {/if}
+              {/each}
             {/if}
           {/each}
         </TableBody>

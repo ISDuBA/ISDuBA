@@ -162,6 +162,10 @@
     return appStore.getIsUserLoggedIn();
   };
 
+  const routeLoaded = (event: any) => {
+    appStore.setRouterParams(event.detail.params);
+  };
+
   const routes = {
     "/": wrap({
       component: Dashboard as any,
@@ -318,7 +322,7 @@
     class="flex max-h-screen w-full flex-col overflow-auto bg-white px-2 py-6 lg:px-6 dark:bg-gray-800"
   >
     {#if appStore.state.app.userManager}
-      <Router {routes} on:conditionsFailed={conditionsFailed} />
+      <Router {routes} on:conditionsFailed={conditionsFailed} on:routeLoaded={routeLoaded} />
     {/if}
     <ErrorMessage error={loadConfigError}></ErrorMessage>
   </main>

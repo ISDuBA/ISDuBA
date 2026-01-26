@@ -21,16 +21,15 @@
   import { appStore } from "$lib/store.svelte";
   import { page } from "$app/stores";
   import { truncate } from "$lib/utils";
+  import PrevNext from "./Search/PrevNext.svelte";
+  import { activeClass, nonActiveClass, sidebarItemClass, sidebarItemLinkClass } from "./sidenav";
 
   let activeUrl = $derived("/" + $page.url.hash);
-
-  let activeClass =
-    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-gray-950 dark:text-white hover:bg-primary-100 dark:hover:bg-black";
-  let nonActiveClass =
-    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 dark:hover:bg-black hover:text-primary-900";
-  const sidebarItemClass = "px-0 py-0";
-  const sidebarItemLinkClass =
-    "px-6 py-4 rounded-none! hover:text-primary-700 dark:hover:text-white";
+  let searchLabel = $derived(
+    appStore.state.app.search.count !== null
+      ? `Search (${appStore.state.app.search.count})`
+      : "Search"
+  );
 
   let transitionParams = {
     x: -320,
@@ -96,13 +95,14 @@
             <SidebarItem
               class={sidebarItemClass}
               aClass={sidebarItemLinkClass}
-              label="Search"
+              label={searchLabel}
               href="/#/search"
             >
               {#snippet icon()}
                 <i class="bx bx-spreadsheet"></i>
               {/snippet}
             </SidebarItem>
+            <PrevNext />
             {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager() || appStore.isImporter()}
               <SidebarItem
                 class={sidebarItemClass}
