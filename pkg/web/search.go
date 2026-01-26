@@ -94,14 +94,22 @@ func (c *Controller) aggregatedResults(
 				}
 				fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
 
+				have := make(map[string]any, len(fields))
+
 				for i, row := range ad.rows {
 					if i > 0 {
 						fmt.Fprint(w, ",")
 					}
 					clear(data)
 					for j, v := range row {
-						if name := fields[j]; name != "id" {
-							data[name] = esc.escape(j, v)
+						name := fields[j]
+						if name == "id" {
+							continue
+						}
+						v = esc.escape(j, v)
+						if x, ok := have[name]; !ok || x != v {
+							data[name] = v
+							have[name] = v
 						}
 					}
 					if err := enc.Encode(data); err != nil {
@@ -114,11 +122,11 @@ func (c *Controller) aggregatedResults(
 				slog.Error("writing window failed", "err", err)
 				return err
 			}
-			if _, err := fmt.Fprint(w, `]}`); err != nil {
+			if _, err := fmt.Fprint(w, "]"); err != nil {
 				return err
 			}
 		}
-		_, err := fmt.Fprint(w, '}')
+		_, err := fmt.Fprint(w, "}")
 		return err
 	}))
 }
