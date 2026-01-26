@@ -157,10 +157,10 @@ func scanAggregatedDocuments(
 				results = append(results, v)
 			}
 		}
-		id, ok := values[idIdx].(int64)
+		id, ok := asInt64(values[idIdx])
 		if !ok {
 			// XXX: Should we panic here!?
-			return nil, errors.New("id column is not an int64")
+			return nil, fmt.Errorf("id column is not an int: %T", values[idIdx])
 		}
 		if id != lastID {
 			ads = append(ads, aggregatedDocument{
@@ -177,6 +177,32 @@ func scanAggregatedDocuments(
 		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
 	return ads, nil
+}
+
+func asInt64(x any) (int64, bool) {
+	switch v := x.(type) {
+	case int64:
+		return v, true
+	case int8:
+		return int64(v), true
+	case int16:
+		return int64(v), true
+	case int32:
+		return int64(v), true
+	case uint64:
+		return int64(v), true
+	case uint8:
+		return int64(v), true
+	case uint16:
+		return int64(v), true
+	case uint32:
+		return int64(v), true
+	case int:
+		return int64(v), true
+	case uint:
+		return int64(v), true
+	}
+	return 0, false
 }
 
 func (ads aggregatedDocuments) window(
