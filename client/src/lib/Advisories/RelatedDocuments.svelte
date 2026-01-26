@@ -21,9 +21,23 @@
   import { push } from "svelte-spa-router";
   import { appStore } from "$lib/store.svelte";
   import { addSlashes } from "$lib/utils";
+  import type { WorkflowState } from "$lib/workflow";
 
-  interface Related {
-    [key: string]: string[];
+  interface RelatedCVE {
+    cve: string;
+    documentIDs: string[];
+  }
+
+  interface RelatedDocument {
+    cve: string;
+    document_id: string;
+    state: WorkflowState;
+    ssvc: string;
+    title: string;
+    publisher: string;
+    tracking_id: string;
+    tracking_status: string;
+    tracking_version: string;
   }
 
   interface Props {
@@ -34,7 +48,7 @@
 
   let document: any | undefined = $state(undefined);
   let documents: any | undefined = $state(undefined);
-  let cves: Related | undefined = $state(undefined);
+  let cves: RelatedCVE[] | undefined = $state(undefined);
   let ssvc: string | undefined = $state(undefined);
   let isLoading: boolean = $state(false);
   let advisoryState: string | undefined = $state(undefined);
@@ -91,13 +105,14 @@
       if (loadError) return;
       const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
       if (response.ok) {
-        cves = {};
+        const tmpCves: RelatedCVE[] = [];
         documents = {};
-        response.content.forEach((doc: any) => {
-          if (cves && !cves[doc.cve]) {
-            cves[doc.cve] = [doc];
-          } else if (cves) {
-            cves[doc.cve].push(doc);
+        response.content.forEach((doc: RelatedDocument) => {
+          const cveIndex = tmpCves.findIndex((c) => c.cve === doc.cve);
+          if (cveIndex === -1) {
+            tmpCves.push({ cve: doc.cve, documentIDs: [doc.document_id] });
+          } else {
+            tmpCves[cveIndex].documentIDs.push(doc.document_id);
           }
 
           if (!documents[doc.document_id]) {
@@ -107,6 +122,19 @@
             documents[doc.document_id].cve.push(doc.cve);
           }
         });
+        // CVEs should be sorted so that CVEs with more documents come first.
+        tmpCves.sort((a: RelatedCVE, b: RelatedCVE) => {
+          const aLen = a.documentIDs.length;
+          const bLen = b.documentIDs.length;
+          if (aLen < bLen) {
+            return -1;
+          } else if (aLen > bLen) {
+            return 1;
+          }
+          return 0;
+        });
+        tmpCves.reverse();
+        cves = tmpCves;
       } else if (response.error) {
         loadError = getErrorDetails(`Could not load documents.`, response);
       }
@@ -215,16 +243,16 @@
         {/each}
       {/snippet}
       {#snippet mainSlot()}
-        {#each Object.keys(cves as Related) as string[] as cve, index (index)}
+        {#each cves as cve, index (index)}
           <TableBodyRow
             class={cve && cve === params.cve ? "!bg-primary-100 dark:!bg-primary-800" : ""}
           >
             <TableBodyCell class={`${baseClass} ${cve && cve === params.cve ? "!font-bold" : ""}`}>
-              {cve}
+              {cve.cve}
             </TableBodyCell>
             {#each Object.values(documents) as doc}
               <TableBodyCell class={baseClass}>
-                {#if (doc as any).cve.includes(cve)}
+                {#if (doc as any).cve.includes(cve.cve)}
                   <i
                     class={`${baseClass} bx bx-check text-2xl ${cve && cve === params.cve ? "!font-bold" : ""}`}
                   ></i>
