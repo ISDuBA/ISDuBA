@@ -45,7 +45,7 @@ var (
 
 // RemoveIgnoredFields removes fields that should be ignored.
 func (sb *SQLBuilder) RemoveIgnoredFields(fields []string) []string {
-	filtered := make([]string, len(fields))
+	filtered := make([]string, 0, len(fields))
 	for _, f := range fields {
 		if _, found := sb.IgnoreFields[f]; !found {
 			filtered = append(filtered, f)
