@@ -86,8 +86,6 @@ func (c *Controller) aggregatedResults(
 			data := make(map[string]any, len(fields))
 			enc := json.NewEncoder(w)
 
-			idIdx := slices.Index(fields, "id")
-
 			if err := ads.window(limit, offset, func(ad *aggregatedDocument) error {
 				if firstDocument {
 					firstDocument = false
@@ -102,9 +100,7 @@ func (c *Controller) aggregatedResults(
 					}
 					clear(data)
 					for j, v := range row {
-						if j != idIdx {
-							data[fields[j]] = esc.escape(j, v)
-						}
+						data[fields[j]] = esc.escape(j, v)
 					}
 					if err := enc.Encode(data); err != nil {
 						return err
@@ -153,7 +149,14 @@ func scanAggregatedDocuments(
 		if err := rows.Scan(ptrs...); err != nil {
 			return nil, fmt.Errorf("scanning row failed: %w", err)
 		}
-		results := slices.Clone(values)
+		// We don't need to copy the id.
+		results := make([]any, 0, len(values)-1)
+		// XXX: It maybe cheaper to call copy() twice?
+		for i, v := range values {
+			if i != idIdx {
+				results = append(results, v)
+			}
+		}
 		id, ok := values[idIdx].(int64)
 		if !ok {
 			// XXX: Should we panic here!?
