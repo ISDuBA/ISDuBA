@@ -170,7 +170,7 @@
     <span class="text-2xl">{title}</span>
   </div>
   <hr class="mb-6" />
-  <div id={tableContainerID} class="mb-2 max-h-[66vh] overflow-auto">
+  <div id={tableContainerID} class="mb-2 max-h-[66vh] overflow-auto pe-2">
     <Table hoverable={true} border={false}>
       <TableHead class="dark:bg-gray-800">
         <TableHeadCell class={tablePadding}></TableHeadCell>
