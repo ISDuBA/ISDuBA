@@ -36,7 +36,7 @@ jobs:
           node-version: "20.x"
 
       - name: "Install Deps"
-        run: cd client; npm install
+        run: cd client; npm clean-install
 
       - name: Build
         run: make dist

@@ -21,7 +21,7 @@ echo "Successfully installed node."
 cd ../../client # change directory
 
 # install dependencies
-npm install
+npm clean-install
 echo "Successfully installed client dependencies."
 
 sudo npx playwright install --with-deps
