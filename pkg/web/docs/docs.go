@@ -989,6 +989,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/documents/{id}/cve_related": {
+            "get": {
+                "description": "Returns the documents related to this document by CVE.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns CVE related documents.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RelatedDocument"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/events": {
             "get": {
                 "description": "Returns all events that match the specified query.",
@@ -3639,6 +3674,38 @@ const docTemplate = `{
                 "type": "array",
                 "items": {
                     "$ref": "#/definitions/models.TLP"
+                }
+            }
+        },
+        "models.RelatedDocument": {
+            "type": "object",
+            "properties": {
+                "cve": {
+                    "type": "string"
+                },
+                "document_id": {
+                    "type": "integer"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "ssvc": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tracking_id": {
+                    "type": "string"
+                },
+                "tracking_status": {
+                    "type": "string"
+                },
+                "tracking_version": {
+                    "type": "string"
                 }
             }
         },
