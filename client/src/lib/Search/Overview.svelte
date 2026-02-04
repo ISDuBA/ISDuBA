@@ -220,11 +220,10 @@
       savePosition();
       prevQuery = query.query;
     }
-    const searchSuffix = searchTerm ? `"${searchTerm}" search ${searchColumnName} as ` : "";
     const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";
-    if (query.query || searchSuffix) {
-      queryParam = `query=${query.query}${searchSuffix}`;
+    if (query.query) {
+      queryParam = `query=${query.query}`;
     }
     let fetchColumns = [...query.columns];
     let requiredColumns = ["id", "tracking_id", "publisher"];
