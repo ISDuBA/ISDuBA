@@ -37,7 +37,7 @@ user distinguish between multiple targets.
 
 ## Filtering
 Currently it is only possible to select which publisher should be forwarded. If
-no publisher is configured all documents are uploaded.
+no publisher is configured all documents are forwarded.
 
 
 ## Forward request
@@ -49,6 +49,6 @@ The form data contains the following fields:
 `valid`, `invalid` or `not_validated`.
 
 ## Error handling
-If the response to the forward request was `201` it will store the document as
-successfully forwarded for this URL. If request failed it will retry to forward
-the document at the next poll interval.
+If the response to the forward request was `201` the document will be
+recorded as successfully forwarded for the URL.
+If the request fails ISDuBA will retry at the next poll interval.
