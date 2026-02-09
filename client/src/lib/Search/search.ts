@@ -6,11 +6,15 @@
 // SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 
-interface PaginationParameters {
-  offset?: number;
+import type { SEARCHTYPES } from "$lib/Queries/query";
+
+interface SearchParameters {
   currentPage?: number;
   limit?: number;
   orderBy?: string[];
+  type?: SEARCHTYPES;
+  detailed?: boolean;
+  searchTerm?: string;
 }
 
-export type { PaginationParameters };
+export type { SearchParameters };

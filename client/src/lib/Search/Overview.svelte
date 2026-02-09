@@ -9,103 +9,96 @@
 -->
 
 <script lang="ts">
-  import { onMount, tick, untrack } from "svelte";
+  import { onMount, tick } from "svelte";
   import { Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
   import { appStore } from "$lib/store.svelte";
-  import { querystring } from "svelte-spa-router";
+  import { push, querystring as qs } from "svelte-spa-router";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";
   import TypeToggle from "$lib/Search/TypeToggle.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import type { PaginationParameters } from "./search";
+  import type { SearchParameters } from "./search";
 
-  let { params } = $props();
+  const INITIAL_LIMIT = 10;
+  const INITIAL_ORDER = ["-critical"];
 
-  let searchTerm: string = $state("");
-  let advisoryTable: any = $state(null);
   let advancedSearch = $state(false);
-  let searchResults = $state(true);
   let loading = $state(false);
   let selectedCustomQuery: boolean = $state(false);
-  let queryString: any = $state();
   let defaultQuery: any = $state(null);
   let openRow: number | null = $state(null);
   let count = $state(0);
-  let offset = $state(0);
-  let limit = $state(10);
-  let currentPage = $state(1);
+  let searchTermInputValue = $state("");
   let error: ErrorDetails | null = $state(null);
   let prevQuery = "";
   let abortController: AbortController;
   let requestOngoing = false;
   let documents: any = $state(null);
-  let postitionRestored: boolean = $state(false);
   // let searchqueryTimer: any = null;
+
+  // Variables derived from URL parameters
+  let queryString: any = $derived($qs ? parse($qs) : undefined);
+  let searchTerm: string = $derived(queryString?.searchTerm ? queryString.searchTerm : "");
+  let orderBy: string[] = $derived(
+    queryString?.orderBy ? queryString.orderBy.split(" ") : INITIAL_ORDER
+  );
+  let detailed: boolean = $derived(
+    queryString?.detailed !== undefined ? (queryString.detailed === "true" ? true : false) : true
+  );
+  let type = $derived(queryString?.type !== undefined ? queryString.type : SEARCHTYPES.ADVISORY);
+  let currentPage: number = $derived(Number(queryString?.page ?? 1));
+  let limit: number = $derived(Number(queryString?.limit ?? INITIAL_LIMIT));
+  let offset: number = $derived(Number((currentPage - 1) * limit));
 
   let numberOfPages = $derived(Math.ceil(count / limit));
 
   $effect(() => {
-    untrack(() => selectedCustomQuery);
-    untrack(() => query);
-    if (defaultQuery) {
-      if (!selectedCustomQuery) {
-        query = getDefaultQuery();
-      }
+    if (searchTerm) {
+      searchTermInputValue = $state.snapshot(searchTerm);
     }
   });
 
-  const getDefaultQuery = () => {
-    let searchType = SEARCHTYPES.ADVISORY;
-    if (defaultQuery) {
-      searchType = defaultQuery.kind;
-    }
-    let position = sessionStorage.getItem("tablePosition" + "" + searchType);
-    const orderBy = position ? JSON.parse(position)[3] : undefined;
+  const getDefaultQuery = (): SearchQuery => {
     if (defaultQuery) {
       return {
         columns: defaultQuery.columns,
         queryType: defaultQuery.kind,
         query: defaultQuery.query,
         queryReset: "",
-        orders: orderBy ?? defaultQuery.orders
+        orders: defaultQuery.orders
       };
     } else {
       return {
         columns: [...SEARCHPAGECOLUMNS.ADVISORY],
         queryType: SEARCHTYPES.ADVISORY,
-        orders: orderBy ?? ["-critical"],
+        orders: INITIAL_ORDER,
         query: "",
         queryReset: ""
       };
     }
   };
 
-  let query = $state(getDefaultQuery());
+  interface SearchQuery {
+    columns: string[];
+    queryType: SEARCHTYPES;
+    orders: string[];
+    query: string;
+    queryReset: string;
+  }
+
+  let query: SearchQuery = $state(getDefaultQuery());
 
   const setQueryBack = async () => {
     query = getDefaultQuery();
-    searchTerm = "";
-    sessionStorage.setItem("documentSearchTerm", "");
-    await tick();
-    fetchData();
   };
 
-  $effect(() => {
-    untrack(() => query);
-    untrack(() => searchTerm);
-    untrack(() => advisoryTable);
-    if (!selectedCustomQuery && !params?.searchTerm) {
-      setQueryBack();
-    }
-  });
-
-  const triggerSearch = async () => {
+  const prepareSearch = async () => {
     if (!advancedSearch) {
       if (!selectedCustomQuery) {
         query.query = searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
@@ -135,79 +128,94 @@
       }
     }
     await tick();
-    fetchData();
   };
 
   const clearSearch = async () => {
-    searchTerm = "";
     query.query = query.queryReset;
     query.columns = query.columns.filter((c: any) => {
       return c !== searchColumnName;
     });
-    await tick();
-    fetchData();
-    sessionStorage.setItem("documentSearchTerm", "");
   };
 
-  const savePosition = () => {
-    let position = [
-      $state.snapshot(offset),
-      $state.snapshot(currentPage),
-      $state.snapshot(limit),
-      $state.snapshot(query).orders
-    ];
-    sessionStorage.setItem(
-      "tablePosition" + query.query + query.queryType,
-      JSON.stringify(position)
-    );
+  const getCurrentSearchParameters = (): SearchParameters => {
+    return {
+      type,
+      limit,
+      currentPage,
+      searchTerm,
+      orderBy,
+      detailed
+    };
   };
 
-  const setPaginationParameters = (paginationParameters: PaginationParameters, fetch = true) => {
-    if (paginationParameters.offset !== undefined) {
-      offset = paginationParameters.offset;
+  const setSearchParameters = async (searchParameters: SearchParameters, fetch = true) => {
+    // Don't save non-default parameters in the URL to keep the URL as short as possible.
+    let newURL = "/search?";
+    if (searchParameters.searchTerm) {
+      newURL = newURL.concat(`&searchTerm=${encodeURIComponent(searchParameters.searchTerm)}`);
+    } else if (searchParameters.searchTerm === undefined && searchTerm) {
+      newURL = newURL.concat(`&searchTerm=${encodeURIComponent(searchTerm)}`);
     }
-    if (paginationParameters.currentPage !== undefined) {
-      currentPage = paginationParameters.currentPage;
-    }
-    if (paginationParameters.limit !== undefined) {
-      limit = paginationParameters.limit;
-    }
-    if (paginationParameters.orderBy !== undefined) {
-      query.orders = paginationParameters.orderBy;
-    }
-    if (fetch) fetchData();
-  };
 
-  const restorePosition = () => {
-    let position = sessionStorage.getItem("tablePosition" + query.query + query.queryType);
-    if (position) {
-      const [offset, currentPage, limit, orderBy] = JSON.parse(position);
-      setPaginationParameters(
-        {
-          offset,
-          currentPage,
-          limit,
-          orderBy
-        },
-        false
-      );
+    if (searchParameters.type && searchParameters.type !== SEARCHTYPES.ADVISORY) {
+      newURL = newURL.concat(`&type=${encodeURIComponent(searchParameters.type)}`);
+    } else if (searchParameters.type === undefined && type !== SEARCHTYPES.ADVISORY) {
+      newURL = newURL.concat(`&type=${encodeURIComponent(type)}`);
+    }
+
+    if (
+      searchParameters.orderBy &&
+      JSON.stringify(searchParameters.orderBy) !== JSON.stringify(INITIAL_ORDER)
+    ) {
+      newURL = newURL.concat(`&orderBy=${encodeURIComponent(searchParameters.orderBy.join(" "))}`);
+    } else if (
+      !searchParameters.orderBy &&
+      JSON.stringify(orderBy) !== JSON.stringify(INITIAL_ORDER)
+    ) {
+      newURL = newURL.concat(`&orderBy=${encodeURIComponent(orderBy.join(" "))}`);
+    }
+
+    if (searchParameters.currentPage !== undefined && searchParameters.currentPage !== 1) {
+      newURL = newURL.concat(`&page=${searchParameters.currentPage}`);
+    } else if (currentPage !== 1 && !searchParameters.currentPage) {
+      newURL = newURL.concat(`&page=${currentPage}`);
+    }
+
+    if (searchParameters.limit !== undefined && searchParameters.limit !== INITIAL_LIMIT) {
+      newURL = newURL.concat(`&limit=${searchParameters.limit}`);
+    } else if (limit !== INITIAL_LIMIT && !searchParameters.limit) {
+      newURL = newURL.concat(`&limit=${limit}`);
+    }
+
+    if (searchParameters.detailed !== undefined && searchParameters.detailed !== true) {
+      newURL = newURL.concat(`&detailed=${searchParameters.detailed}`);
+    } else if (searchParameters.detailed === undefined && detailed !== true) {
+      newURL = newURL.concat(`&detailed=${encodeURIComponent(detailed)}`);
+    }
+    // Don't extend the history if the new URL would not contain any new information. Otherwise
+    // the user had to go back multiple times to get to a page with older search parameters.
+    if (newURL === "/search?" && $qs?.length && $qs.length > 0) {
+      push(newURL.replace("?", ""));
+      appStore.setSearchURL(undefined);
+    } else if (newURL !== "/search?") {
+      push(newURL);
+      appStore.setSearchURL(newURL);
     } else {
-      setPaginationParameters(
-        {
-          offset: 0,
-          currentPage: 1,
-          limit: 10,
-          orderBy: ["-critical"]
-        },
-        false
-      );
+      appStore.setSearchURL(undefined);
     }
+
+    // Need to wait for the derived values to be updated
+    setTimeout(() => {
+      if (fetch) {
+        prepareSearch();
+        fetchData();
+      }
+    }, 200);
   };
 
   const last = async () => {
-    setPaginationParameters({
-      currentPage: numberOfPages,
-      offset: (numberOfPages - 1) * limit
+    setSearchParameters({
+      currentPage: Math.max(numberOfPages, 1)
     });
   };
 
@@ -216,8 +224,6 @@
     appStore.clearSelectedDocumentIDs();
     openRow = null;
     if (query.query !== prevQuery) {
-      restorePosition();
-      savePosition();
       prevQuery = query.query;
     }
     const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
@@ -225,6 +231,7 @@
     if (query.query) {
       queryParam = `query=${query.query}`;
     }
+    const orderByParam = selectedCustomQuery ? (query.orders ?? []) : orderBy;
     let fetchColumns = [...query.columns];
     let requiredColumns = ["id", "tracking_id", "publisher"];
     for (let c of requiredColumns) {
@@ -234,14 +241,17 @@
     }
     let documentURL = "";
 
-    if (query.queryType === SEARCHTYPES.EVENT) {
+    if (
+      (selectedCustomQuery && query.queryType === SEARCHTYPES.EVENT) ||
+      type === SEARCHTYPES.EVENT
+    ) {
       documentURL = encodeURI(
-        `/api/events?${queryParam}&count=1&orders=${query.orders.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/events?${queryParam}&count=1&orders=${orderByParam.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     } else {
-      const loadAdvisories = query.queryType === SEARCHTYPES.ADVISORY;
+      const loadAdvisories = type === SEARCHTYPES.ADVISORY;
       documentURL = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${query.orders.join(" ")}&limit=${limit}&offset=${offset}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderByParam.join(" ")}&limit=${limit}&offset=${offset}&results=${detailed}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     }
 
@@ -263,11 +273,6 @@
         ({ count, documents } = response.content);
       }
       appStore.setDocuments(documents);
-      // We are outside the range of available documents,
-      // try the last page
-      if (offset >= count) {
-        await last();
-      }
     } else if (response.error) {
       error =
         response.error === "400"
@@ -280,20 +285,6 @@
     requestOngoing = false;
   }
 
-  onMount(async () => {
-    if (!postitionRestored) {
-      restorePosition();
-      postitionRestored = true;
-    }
-    if ($querystring) {
-      queryString = parse($querystring);
-    }
-    if (params?.searchTerm) {
-      searchTerm = params.searchTerm;
-      triggerSearch();
-    }
-  });
-
   const filterOrderCriteria = (orders: string[], possibleOrders: string[]) => {
     return orders.filter((criterium) => {
       if (criterium.charAt(0) === "-") {
@@ -302,6 +293,10 @@
       return possibleOrders.indexOf(criterium) != -1;
     });
   };
+
+  onMount(() => {
+    fetchData();
+  });
 </script>
 
 <svelte:head>
@@ -310,17 +305,21 @@
 
 <div class="mb-8 flex flex-wrap justify-between gap-4">
   <Queries
-    onQuerySelected={async (detail: any) => {
-      query = {
-        query: detail.query,
-        queryReset: detail.query,
-        columns: [...detail.columns],
-        queryType: detail.kind,
-        orders: detail.orders || []
-      };
-      searchTerm = "";
-      await tick();
-      fetchData();
+    onQuerySelected={(detail: any) => {
+      if (detail) {
+        query = {
+          query: detail.query,
+          queryReset: detail.query,
+          columns: [...detail.columns],
+          queryType: detail.kind,
+          orders: detail.orders || []
+        };
+      } else {
+        setQueryBack();
+      }
+      setSearchParameters({
+        searchTerm: ""
+      });
     }}
     {queryString}
     bind:selectedQuery={selectedCustomQuery}
@@ -334,9 +333,9 @@
         appStore.isAdmin() ||
         appStore.isAuditor()}
       onSelect={(newType: SEARCHTYPES) => {
-        savePosition();
+        appStore.setSearchParametersForType(type, getCurrentSearchParameters());
         query.queryType = newType;
-        restorePosition();
+        const newParameters = $state.snapshot(appStore.getSearchParametersForType(newType));
         if (newType === SEARCHTYPES.ADVISORY) {
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
@@ -346,15 +345,14 @@
         } else if (newType === SEARCHTYPES.EVENT) {
           query.columns = SEARCHPAGECOLUMNS.EVENT;
         }
-        if (
-          (newType === SEARCHTYPES.ADVISORY || newType === SEARCHTYPES.DOCUMENT) &&
-          query.orders.length === 0
-        ) {
-          query.orders = ["-critical"];
-        } else if (newType === SEARCHTYPES.EVENT) {
-          query.orders = ["-time"];
-        }
         clearSearch();
+        searchTermInputValue = "";
+        if (newParameters) {
+          searchTermInputValue = "";
+          setSearchParameters(newParameters);
+        } else {
+          setSearchParameters({ searchTerm: "", type: newType });
+        }
       }}
     ></TypeToggle>
   {/if}
@@ -363,31 +361,28 @@
   <CSearch
     buttonText={advancedSearch ? "Apply" : "Search"}
     placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
-    search={() => {
-      triggerSearch();
+    search={(term) => {
+      if (term === "") {
+        setSearchParameters({
+          searchTerm: ""
+        });
+      } else {
+        setSearchParameters({
+          searchTerm: term
+        });
+      }
     }}
-    onKeyup={(e) => {
-      sessionStorage.setItem("documentSearchTerm", searchTerm ?? "");
-      if (e.key === "Enter") triggerSearch();
-      // if (searchTerm && searchTerm.length > 2) {
-      //   if (searchqueryTimer) clearTimeout(searchqueryTimer);
-      //   searchqueryTimer = setTimeout(() => {
-      //     triggerSearch();
-      //   }, 500);
-      // }
-      if (searchTerm === "") clearSearch();
-    }}
-    bind:searchTerm
+    searchTerm={searchTermInputValue}
   ></CSearch>
   <div class="mt-1" title="Define finer grained search queries">
     <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
   </div>
   <div class="mt-1" title="Show every single time the search term was found">
     <Toggle
-      onchange={() => {
-        fetchData();
+      onclick={() => {
+        setSearchParameters({ detailed: !$state.snapshot(detailed) });
       }}
-      bind:checked={searchResults}
+      checked={detailed}
       class="ml-3">Detailed</Toggle
     >
   </div>
@@ -399,18 +394,17 @@
     {error}
     {loading}
     {numberOfPages}
+    {limit}
+    {offset}
+    {currentPage}
+    {orderBy}
     dataChanged={fetchData}
     tableType={query.queryType}
     query={`${query.query}`}
-    bind:currentPage
     bind:count
-    bind:limit
-    bind:offset
     bind:openRow
-    bind:orderBy={query.orders}
     {last}
-    {setPaginationParameters}
-    {searchResults}
+    {setSearchParameters}
   ></AdvisoryTable>
 {/if}
 

@@ -41,7 +41,7 @@
   import DeleteModal from "./DeleteModal.svelte";
   import { updateMultipleStates } from "$lib/Advisories/advisory";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
-  import type { PaginationParameters } from "$lib/Search/search";
+  import type { SearchParameters } from "$lib/Search/search";
 
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
@@ -52,7 +52,6 @@
     query?: string;
     tableType: SEARCHTYPES;
     orderBy?: string[];
-    searchResults: boolean;
     loading: boolean;
     openRow?: number | null;
     count: number;
@@ -64,7 +63,7 @@
     documents: any;
     dataChanged: () => void;
     last: () => void;
-    setPaginationParameters: (paginationParameters: PaginationParameters) => void;
+    setSearchParameters: (SearchParameters: SearchParameters) => void;
   }
 
   let {
@@ -75,16 +74,15 @@
     error = null,
     loading = false,
     openRow = $bindable(null),
-    searchResults = $bindable(true),
-    orderBy = $bindable(["title"]),
+    orderBy = ["title"],
     count = $bindable(0),
-    offset = $bindable(0),
-    limit = $bindable(10),
-    currentPage = $bindable(1),
+    offset = 0,
+    limit = 10,
+    currentPage = 1,
     numberOfPages = $bindable(0),
     dataChanged = () => {},
     last = () => {},
-    setPaginationParameters = (_paginationParameters: PaginationParameters) => {}
+    setSearchParameters = (_paginationParameters: SearchParameters) => {}
   }: Props = $props();
 
   const tdClassRelative = `${tdClass} relative`;
@@ -179,25 +177,22 @@
 
   const previous = async () => {
     if (offset - limit >= 0) {
-      setPaginationParameters({
-        currentPage: currentPage - 1,
-        offset: offset - limit > 0 ? offset - limit : 0
+      setSearchParameters({
+        currentPage: currentPage - 1
       });
     }
   };
   const next = async () => {
     if (offset + limit <= count) {
-      setPaginationParameters({
-        currentPage: currentPage + 1,
-        offset: offset + limit
+      setSearchParameters({
+        currentPage: currentPage + 1
       });
     }
   };
 
   const first = async () => {
-    setPaginationParameters({
-      currentPage: 1,
-      offset: 0
+    setSearchParameters({
+      currentPage: 1
     });
   };
 
@@ -214,7 +209,7 @@
     if (!found && !foundMinus) {
       newOrderBy.push(column);
     }
-    setPaginationParameters({
+    setSearchParameters({
       orderBy: newOrderBy
     });
   };
@@ -318,11 +313,11 @@
               { name: "50", value: 50 },
               { name: "100", value: 100 }
             ]}
-            bind:value={limit}
-            onchange={() => {
-              setPaginationParameters({
+            value={limit}
+            onchange={(event: any) => {
+              setSearchParameters({
                 currentPage: 1,
-                offset: 0
+                limit: event.target.value
               });
             }}
           ></Select>
@@ -356,13 +351,11 @@
                 tmpCurrentPage = Math.floor(tmpCurrentPage);
                 if (tmpCurrentPage < 1) tmpCurrentPage = 1;
                 if (tmpCurrentPage > numberOfPages) tmpCurrentPage = numberOfPages;
-                const tmpOffset = (tmpCurrentPage - 1) * limit;
-                setPaginationParameters({
-                  currentPage: tmpCurrentPage,
-                  offset: tmpOffset
+                setSearchParameters({
+                  currentPage: tmpCurrentPage
                 });
               }}
-              bind:value={currentPage}
+              value={currentPage}
             />
             <span class="mr-3 ml-2 text-nowrap">of {numberOfPages} pages</span>
           </div>

@@ -11,6 +11,8 @@ import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./wo
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
+import type { SearchParameters } from "./Search/search";
+import type { SEARCHTYPES } from "./Queries/query";
 
 type ErrorMessage = {
   id: string;
@@ -50,6 +52,14 @@ type AppStore = {
       docB: any | undefined;
     };
     isDarkMode: boolean;
+    search: {
+      parameters: {
+        advisories: SearchParameters | undefined;
+        documents: SearchParameters | undefined;
+        events: SearchParameters | undefined;
+      };
+      searchURL: string | undefined;
+    };
   };
   webview: {
     doc: DocModel | null;
@@ -107,7 +117,15 @@ const generateInitialState = (): AppStore => {
       isDeleteModalOpen: false,
       selectedDocumentIDs: new SvelteSet<number>(),
       isToolboxOpen: false,
-      isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false
+      isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false,
+      search: {
+        parameters: {
+          advisories: undefined,
+          documents: undefined,
+          events: undefined
+        },
+        searchURL: undefined
+      }
     },
     webview: {
       doc: null,
@@ -369,6 +387,18 @@ export const appStore = {
 
   setConfig: (newConfig: any) => {
     state.app.config = newConfig;
+  },
+
+  setSearchURL: (newSearchURL: string | undefined) => {
+    state.app.search.searchURL = newSearchURL;
+  },
+
+  setSearchParametersForType: (type: SEARCHTYPES, parameters: SearchParameters) => {
+    state.app.search.parameters[type] = parameters;
+  },
+
+  getSearchParametersForType: (type: SEARCHTYPES) => {
+    return state.app.search.parameters[type];
   },
 
   reset: () => {

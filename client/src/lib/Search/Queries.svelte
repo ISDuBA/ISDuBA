@@ -114,6 +114,7 @@
       selectedIndex = -1;
       currentQueryTitle = undefined;
       selectedQuery = false;
+      onQuerySelected(undefined);
     } else {
       selectedIndex = index;
       onQuerySelected(sortedQueries[selectedIndex]);
