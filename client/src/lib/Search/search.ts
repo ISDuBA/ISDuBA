@@ -15,6 +15,7 @@ interface SearchParameters {
   type?: SEARCHTYPES;
   detailed?: boolean;
   searchTerm?: string;
+  queryID?: number;
 }
 
 export type { SearchParameters };

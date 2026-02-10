@@ -14,6 +14,7 @@
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
+  import type { Query } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
   import { appStore } from "$lib/store.svelte";
   import { push, querystring as qs } from "svelte-spa-router";
@@ -30,13 +31,13 @@
 
   let advancedSearch = $state(false);
   let loading = $state(false);
+  let queries: any[] = $state([]);
   let selectedCustomQuery: boolean = $state(false);
   let defaultQuery: any = $state(null);
   let openRow: number | null = $state(null);
   let count = $state(0);
   let searchTermInputValue = $state("");
   let error: ErrorDetails | null = $state(null);
-  let prevQuery = "";
   let abortController: AbortController;
   let requestOngoing = false;
   let documents: any = $state(null);
@@ -55,6 +56,9 @@
   let currentPage: number = $derived(Number(queryString?.page ?? 1));
   let limit: number = $derived(Number(queryString?.limit ?? INITIAL_LIMIT));
   let offset: number = $derived(Number((currentPage - 1) * limit));
+  let queryID: number | undefined = $derived(
+    queryString?.queryID ? Number(queryString.queryID) : undefined
+  );
 
   let numberOfPages = $derived(Math.ceil(count / limit));
 
@@ -64,8 +68,18 @@
     }
   });
 
-  const getDefaultQuery = (): SearchQuery => {
-    if (defaultQuery) {
+  interface SearchQuery {
+    columns: string[];
+    queryType: SEARCHTYPES;
+    orders: string[];
+    query: string;
+    queryReset: string;
+  }
+
+  let query: SearchQuery = $derived.by(() => {
+    if (queryID !== undefined) {
+      return queries.find((q) => q.id === queryID);
+    } else if (defaultQuery) {
       return {
         columns: defaultQuery.columns,
         queryType: defaultQuery.kind,
@@ -82,29 +96,26 @@
         queryReset: ""
       };
     }
-  };
+  });
 
-  interface SearchQuery {
-    columns: string[];
-    queryType: SEARCHTYPES;
-    orders: string[];
-    query: string;
-    queryReset: string;
-  }
-
-  let query: SearchQuery = $state(getDefaultQuery());
-
-  const setQueryBack = async () => {
-    query = getDefaultQuery();
-  };
+  let queryQuery: string = $derived.by(() => {
+    if (!advancedSearch) {
+      if (!selectedCustomQuery) {
+        return searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
+      } else {
+        return `${query.queryReset} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
+      }
+    } else {
+      if (!selectedCustomQuery) {
+        return searchTerm || "";
+      } else {
+        return `${query.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
+      }
+    }
+  });
 
   const prepareSearch = async () => {
     if (!advancedSearch) {
-      if (!selectedCustomQuery) {
-        query.query = searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
-      } else {
-        query.query = `${query.queryReset} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
-      }
       if (
         searchTerm &&
         !query.columns.find((c: any) => {
@@ -121,17 +132,11 @@
       query.columns = query.columns.filter((c: any) => {
         return c !== searchColumnName;
       });
-      if (!selectedCustomQuery) {
-        query.query = searchTerm || "";
-      } else {
-        query.query = `${query.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
-      }
     }
     await tick();
   };
 
   const clearSearch = async () => {
-    query.query = query.queryReset;
     query.columns = query.columns.filter((c: any) => {
       return c !== searchColumnName;
     });
@@ -192,6 +197,13 @@
     } else if (searchParameters.detailed === undefined && detailed !== true) {
       newURL = newURL.concat(`&detailed=${encodeURIComponent(detailed)}`);
     }
+
+    if (searchParameters.queryID !== undefined) {
+      newURL = newURL.concat(`&queryID=${searchParameters.queryID}`);
+    } else if (searchParameters.queryID === undefined && queryID !== undefined) {
+      newURL = newURL.concat(`&queryID=${encodeURIComponent(queryID)}`);
+    }
+
     // Don't extend the history if the new URL would not contain any new information. Otherwise
     // the user had to go back multiple times to get to a page with older search parameters.
     if (newURL === "/search?" && $qs?.length && $qs.length > 0) {
@@ -223,13 +235,11 @@
     appStore.setDocuments([]);
     appStore.clearSelectedDocumentIDs();
     openRow = null;
-    if (query.query !== prevQuery) {
-      prevQuery = query.query;
-    }
+
     const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";
-    if (query.query) {
-      queryParam = `query=${query.query}`;
+    if (queryQuery) {
+      queryParam = `query=${queryQuery}`;
     }
     const orderByParam = selectedCustomQuery ? (query.orders ?? []) : orderBy;
     let fetchColumns = [...query.columns];
@@ -305,8 +315,12 @@
 
 <div class="mb-8 flex flex-wrap justify-between gap-4">
   <Queries
-    onQuerySelected={(detail: any) => {
+    onQuerySelected={(detail: Query) => {
+      const newParameters: SearchParameters = {
+        searchTerm: ""
+      };
       if (detail) {
+        newParameters.queryID = detail.id;
         query = {
           query: detail.query,
           queryReset: detail.query,
@@ -314,16 +328,13 @@
           queryType: detail.kind,
           orders: detail.orders || []
         };
-      } else {
-        setQueryBack();
       }
-      setSearchParameters({
-        searchTerm: ""
-      });
+      setSearchParameters(newParameters);
     }}
     {queryString}
     bind:selectedQuery={selectedCustomQuery}
     bind:defaultQuery
+    bind:queries
   ></Queries>
   {#if !selectedCustomQuery}
     <TypeToggle
@@ -400,7 +411,7 @@
     {orderBy}
     dataChanged={fetchData}
     tableType={query.queryType}
-    query={`${query.query}`}
+    query={`${queryQuery}`}
     bind:count
     bind:openRow
     {last}
