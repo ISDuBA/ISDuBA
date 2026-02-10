@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"reflect"
 	"slices"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
@@ -107,7 +108,7 @@ func (c *Controller) aggregatedResults(
 							continue
 						}
 						v = esc.escape(j, v)
-						if x, ok := have[name]; !ok || x != v {
+						if x, ok := have[name]; !ok || !reflect.DeepEqual(x, v) {
 							data[name] = v
 							have[name] = v
 						}
