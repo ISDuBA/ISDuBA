@@ -14,6 +14,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -54,7 +55,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 		//			`ON docs.advisories_id = ads.id ` +
 		//			`WHERE docs.id = $1`
 		// First part taken from above
-		findSSVC = `SELECT sh.ssvc, ads.tracking_id, ads.publisher, docs.tlp, ads.state::text` +
+		findSSVC = `SELECT sh.ssvc, ads.tracking_id, ads.publisher, docs.tlp, ads.state::text ` +
 			`FROM documents docs JOIN advisories ads ` +
 			`ON docs.advisories_id = ads.id ` +
 			// LEFT JOIN so we just get an empty ssvc if there is none in the history
@@ -70,8 +71,10 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 			`WHERE (tracking_id, publisher) = ($1, $2)`
 		insertLog = `INSERT INTO events_log (event, state, actor, documents_id) ` +
 			`VALUES ($1::events, $2::workflow, $3, $4)`
-		updateSSVC = `INSERT INTO ssvc_history (actor, documents_id, ssvc) ` +
-			`VALUES ($1::varchar, $2::integer, $3)`
+		updateSSVC = `INSERT INTO ssvc_history (actor, documents_id, ssvc, change_number) VALUES ` +
+			`($1::varchar, $2::integer, $3, ( ` +
+			`SELECT COALESCE(MAX(change_number), 0::bigint) + 1 FROM ssvc_history WHERE documents_id = $2 ` +
+			`))`
 	)
 
 	var forbidden, unchanged, bad bool
@@ -145,14 +148,6 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 				return err
 			}
 
-			// Log the SSVC change.
-			event := models.ChangeSSVCEvent
-			if !ssvc.Valid { // It's new.
-				event = models.AddSSVCEvent
-			}
-			if err := logEvent(event, models.AssessingWorkflow); err != nil {
-				return err
-			}
 			return tx.Commit(rctx)
 		}, 0,
 	); err != nil {
@@ -165,7 +160,6 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 		return
 	}
 	switch {
-	// ToDo: Shouldn't this be also a not found error to prevent leaking the existence of the advisory?
 	case forbidden:
 		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
 	case unchanged:
@@ -180,23 +174,14 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 // ViewSSVC is an endpoint that returns the SSVC of the specified document.
 //
 //	@Summary		Returns the SSVC.
-//	@Description	This returns the SSVC of the specified document.
-//	@Param			document	path	int		true	"Document ID"
-//	@Produce		json
-//	@Success		200	{object}	models.Success
-//	@Failure		400	{object}	models.Error
-//	@Failure		401
-//	@Failure		403	{object}	models.Error
-//	@Failure		404	{object}	models.Error
-//	@Failure		500	{object}	models.Error
-//	@Router			/sources/{document} [delete]
+// ToDo: Finish me
 func (c *Controller) viewSSVC(ctx *gin.Context) {
 	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
 		return
 	}
 
-	const findSSVC = `SELECT sh.ssvc, ads.publisher, docs.tlp` +
+	const findSSVC = `SELECT sh.ssvc, ads.publisher, docs.tlp ` +
 		`FROM documents docs JOIN advisories ads ` +
 		`ON docs.advisories_id = ads.id ` +
 		`LEFT JOIN LATERAL ` +
@@ -246,10 +231,11 @@ func (c *Controller) viewSSVC(ctx *gin.Context) {
 	case forbidden:
 		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
 	default:
-		models.SendSuccess(ctx, http.StatusOK, gin.H{"ssvc": ssvc})
+		ctx.JSON(http.StatusOK, gin.H{"ssvc": ssvc})
 	}
 }
 
+// SSVCHistoryEntry represents a singular ssvc change event
 type SSVCHistoryEntry struct {
 	SSVC         *string   `json:"ssvc"`
 	ChangeDate   time.Time `json:"changedate"`
@@ -257,20 +243,11 @@ type SSVCHistoryEntry struct {
 	Actor        *string   `json:"actor"`
 }
 
-// viewSSVCHistory is an endpointt that returns the SSVC History of the specified document.
+// viewSSVCHistory is an endpoint that returns the SSVC History of the specified document.
 //
 //	@Summary		View the SSVC History.
-//	@Description	This returns the SSVC of the specified document.
-//	@Param			document	path	int		true	"Document ID"
-//	@Param			vector		query	string	true	"SSVC vector"
-//	@Produce		json
-//	@Success		200	{object}	models.Success
-//	@Failure		400	{object}	models.Error
-//	@Failure		401
-//	@Failure		403	{object}	models.Error
-//	@Failure		404	{object}	models.Error
-//	@Failure		500	{object}	models.Error
-//	@Router			/sources/{document} [delete]
+//	@Description	This returns the SSVC History of the specified document.
+// ToDo: Finish me
 func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
@@ -282,9 +259,9 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 		`ON docs.advisories_id = ads.id ` +
 		`WHERE docs.id = $1 `
 	// fetch entire history if exists
-	const findSSVCHistory = `SELECT ssvc, changedate, change_number, actor` +
+	const findSSVCHistory = `SELECT ssvc, changedate, change_number, actor ` +
 		`FROM ssvc_history ` +
-		`WHERE document_id = $1 ` +
+		`WHERE documents_id = $1 ` +
 		`ORDER BY changedate DESC, change_number DESC;`
 
 	var (
@@ -356,6 +333,6 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 	case len(ssvcHistory) == 0:
 		models.SendErrorMessage(ctx, http.StatusNotFound, "No History found")
 	default:
-		models.SendSuccess(ctx, http.StatusOK, gin.H{"ssvcHistory": ssvcHistory})
+		ctx.JSON(http.StatusOK, gin.H{"ssvcHistory": ssvcHistory})
 	}
 }

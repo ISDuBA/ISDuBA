@@ -18,9 +18,9 @@ BEGIN;
 CREATE TABLE ssvc_history (
     actor         varchar,
     changedate    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    change_number bigint      NOT NULL DEFAULT 0 ,
+    change_number bigint      NOT NULL,
     documents_id  integer     NOT NULL                            REFERENCES documents(id) ON DELETE CASCADE,
-    ssvc          text
+    ssvc          text,
 
     PRIMARY KEY (documents_id, change_number)
 );
@@ -38,7 +38,7 @@ WITH timeline AS (
         ROW_NUMBER() OVER (
             PARTITION BY documents_id
             ORDER BY time ASC
-        ) AS change_number
+        ) AS change_number,
         documents_id,
         LEAD(prev_ssvc) OVER (
             PARTITION BY documents_id
@@ -106,7 +106,8 @@ BEGIN
     )
     VALUES (
         v_event,
-        (SELECT workflow FROM documents WHERE id = NEW.documents_id),
+        (SELECT ads.state FROM advisories ads JOIN documents docs
+	ON docs.advisories_id = ads.id WHERE docs.id = NEW.documents_id),
         NEW.changedate,
         NEW.actor,
         NEW.documents_id,

@@ -117,8 +117,6 @@ func (c *Controller) Bind() http.Handler {
 	api.GET("/documents", authAll, c.overviewDocuments)
 	api.GET("/documents/:id", authAll, c.viewDocument)
 	api.GET("/documents/forward", authAdEdImReSM, c.viewForwardTargets)
-	// ToDo: See what is really needed
-	api.GET("/documents/ssvc", authAll, c.viewSSVC)
 	api.POST("/documents/forward/:id/:target", authAdEdImReSM, c.forwardDocument)
 	// Admin can delete documents
 	api.DELETE("/documents/:id", authAd, c.deleteDocument)
@@ -154,8 +152,10 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/status/:publisher/:trackingid/:state", authAdEdRe, c.changeStatus)
 	api.PUT("/status", authAdEdRe, c.changeStatusBulk)
 
-	// SSVC change
+	// SSVC view/change
 	api.PUT("/ssvc/:document", authEd, c.changeSSVC)
+	api.GET("/ssvc/:document/latest", authAll, c.viewSSVC)
+	api.GET("/ssvc/:document", authAll, c.viewSSVCHistory)
 
 	// Calculate diff
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)
