@@ -485,12 +485,12 @@
       <div class="mt-2 mb-4"></div>
     </div>
   {/if}
-  <ErrorMessage error={loadForwardTargetsError}></ErrorMessage>
-  <ErrorMessage error={loadAdvisoryVersionsError}></ErrorMessage>
-  <ErrorMessage error={stateError}></ErrorMessage>
-  <ErrorMessage error={loadDocumentError}></ErrorMessage>
-  <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
-  <ErrorMessage error={loadRelatedError}></ErrorMessage>
+  <ErrorMessage bind:error={loadForwardTargetsError}></ErrorMessage>
+  <ErrorMessage bind:error={loadAdvisoryVersionsError}></ErrorMessage>
+  <ErrorMessage bind:error={stateError}></ErrorMessage>
+  <ErrorMessage bind:error={loadDocumentError}></ErrorMessage>
+  <ErrorMessage bind:error={loadFourCVEsError}></ErrorMessage>
+  <ErrorMessage bind:error={loadRelatedError}></ErrorMessage>
   {#if !couldNotLoadDocument && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}
@@ -541,7 +541,7 @@
               </div>
             {/if}
           </div>
-          <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
+          <ErrorMessage bind:error={loadDocumentSSVCError}></ErrorMessage>
           <div class="h-auto">
             <div class="mt-6 h-full">
               <History
@@ -567,8 +567,8 @@
                 {/snippet}
               </History>
             </div>
-            <ErrorMessage error={loadEventsError}></ErrorMessage>
-            <ErrorMessage error={loadCommentsError}></ErrorMessage>
+            <ErrorMessage bind:error={loadEventsError}></ErrorMessage>
+            <ErrorMessage bind:error={loadCommentsError}></ErrorMessage>
           </div>
         </div>
       {/if}

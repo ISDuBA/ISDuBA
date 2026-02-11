@@ -15,14 +15,30 @@
     error: ErrorDetails | null;
   }
 
-  let { error }: Props = $props();
+  let { error = $bindable(null) }: Props = $props();
 
+  let alertStatus = $state(true);
   let showDetails: boolean = $state(false);
+
+  // If the user dismisses the alert the alertStatus is set to false and stays in this status
+  // so we have to set it to true manually.
+  $effect(() => {
+    if (error) {
+      alertStatus = true;
+    }
+  });
+
+  // Necessary to detect if the error occurs more than once.
+  $effect(() => {
+    if (!alertStatus) {
+      error = null;
+    }
+  });
 </script>
 
 {#if error}
   <div class="w-fit">
-    <Alert color="red" class="gap-3 p-4 text-sm dark:bg-[#302834]" dismissable>
+    <Alert bind:alertStatus color="red" class="gap-3 p-4 text-sm dark:bg-[#302834]" dismissable>
       <span class="text-lg"> {error.message}</span>
       {#if error.details}
         <a href={"javascript:void(0);"} onclick={() => (showDetails = !showDetails)}>
