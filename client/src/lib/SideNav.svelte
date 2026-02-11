@@ -19,10 +19,10 @@
   } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { appStore } from "$lib/store.svelte";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { truncate } from "$lib/utils";
 
-  let activeUrl = $derived("/" + $page.url.hash);
+  let activeUrl = $derived("/" + page.url.hash);
 
   let activeClass =
     "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-gray-950 dark:text-white hover:bg-primary-100 dark:hover:bg-black";
