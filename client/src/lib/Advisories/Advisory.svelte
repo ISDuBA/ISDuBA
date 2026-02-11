@@ -40,7 +40,9 @@
   let ssvcVector: string = $state("");
   let comment: string = $state("");
   let loadCommentsError: ErrorDetails | null = $state(null);
+  let loadCommentsAbortController: AbortController | null = $state(null);
   let loadEventsError: ErrorDetails | null = $state(null);
+  let loadEventsAbortController: AbortController | null = $state(null);
   let loadAdvisoryVersionsError: ErrorDetails | null = $state(null);
   let loadDocumentError: ErrorDetails | null = $state(null);
   let loadFourCVEsError: ErrorDetails | null = $state(null);
@@ -159,22 +161,38 @@
   };
 
   const loadEvents = async () => {
+    if (!document || !encodedPublisherNamespace || !encodedTrackingID) return;
+    if (loadEventsAbortController) {
+      loadEventsAbortController.abort();
+    }
+    loadEventsAbortController = new AbortController();
     const response = await request(
       `/api/events/${encodedPublisherNamespace}/${encodedTrackingID}`,
-      "GET"
+      "GET",
+      undefined,
+      loadEventsAbortController
     );
     if (response.ok) {
       return await response.content;
     } else if (response.error) {
-      loadEventsError = getErrorDetails(`Could not load events.`, response);
+      if (response.error !== "AbortError") {
+        loadEventsError = getErrorDetails(`Could not load events.`, response);
+      }
       return [];
     }
   };
 
   const loadComments = async () => {
+    if (!document || !encodedPublisherNamespace || !encodedTrackingID) return;
+    if (loadCommentsAbortController) {
+      loadCommentsAbortController.abort();
+    }
+    loadCommentsAbortController = new AbortController();
     const response = await request(
       `/api/comments/${encodedPublisherNamespace}/${encodedTrackingID}`,
-      "GET"
+      "GET",
+      undefined,
+      loadCommentsAbortController
     );
     if (response.ok) {
       let comments = await response.content;
@@ -183,18 +201,24 @@
       }
       return comments;
     } else if (response.error) {
-      loadEventsError = getErrorDetails(`Could not load comments.`, response);
+      if (response.error !== "AbortError") {
+        loadCommentsError = getErrorDetails(`Could not load comments.`, response);
+      }
       return [];
     }
   };
 
   const buildHistory = async () => {
-    if (!canSeeCommentArea) {
+    if (!canSeeCommentArea || !document || !encodedPublisherNamespace || !encodedTrackingID) {
       historyEntries = [];
       return;
     }
     const comments = await loadComments();
     let events = await loadEvents();
+    if (!events || !comments) {
+      historyEntries = [];
+      return;
+    }
     const commentsByTime = comments.reduce((o: any, n: any) => {
       o[`${n.time}:${n.commentator}`] = {
         message: n.message,
