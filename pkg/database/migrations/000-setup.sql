@@ -523,6 +523,25 @@ CREATE TRIGGER ssvc_history_log_event
 AFTER INSERT ON ssvc_history
 FOR EACH ROW EXECUTE FUNCTION log_ssvc_history_to_events();
 
+-- Automatically generate change number
+CREATE FUNCTION generate_ssvc_change_number()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.change_number := (
+        SELECT COALESCE(MAX(change_number), 0) + 1
+        FROM ssvc_history
+        WHERE documents_id = NEW.documents_id
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ssvc_history_change_number
+BEFORE INSERT ON ssvc_history
+FOR EACH ROW
+EXECUTE FUNCTION generate_ssvc_change_number();
+
+
 --
 -- forwarded documents
 --
