@@ -183,7 +183,7 @@
       }
       return comments;
     } else if (response.error) {
-      loadEventsError = getErrorDetails(`Could not comments.`, response);
+      loadEventsError = getErrorDetails(`Could not load comments.`, response);
       return [];
     }
   };
