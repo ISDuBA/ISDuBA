@@ -176,6 +176,7 @@
         appStore.isAdmin() ||
         appStore.isAuditor()}
       onSelect={(newType: SEARCHTYPES) => {
+        appStore.setSearchType(newType);
         query.queryType = newType;
         if (newType === SEARCHTYPES.ADVISORY) {
           query.columns = SEARCHPAGECOLUMNS.ADVISORY;

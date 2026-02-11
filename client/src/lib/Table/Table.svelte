@@ -274,18 +274,21 @@
         fetchColumns.push(c);
       }
     }
-    let documentURL = "";
+    let URLWithoutOffsetAndLimit = "";
+    appStore.setSearchOffset(offset);
 
     if (tableType === SEARCHTYPES.EVENT) {
-      documentURL = encodeURI(
-        `/api/events?${queryParam}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      URLWithoutOffsetAndLimit = encodeURI(
+        `/api/events?${queryParam}&count=1&orders=${orderBy.join(" ")}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     } else {
       const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
-      documentURL = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=${aggregate}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
+      URLWithoutOffsetAndLimit = encodeURI(
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=${aggregate}&count=1&orders=${orderBy.join(" ")}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
       );
     }
+    appStore.setSearchRequestURL(URLWithoutOffsetAndLimit);
+    const documentURL = URLWithoutOffsetAndLimit + `&offset=${offset}&limit=${limit}`;
 
     error = null;
     loading = true;

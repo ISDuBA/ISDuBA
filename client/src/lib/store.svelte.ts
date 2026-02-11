@@ -11,6 +11,7 @@ import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./wo
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
+import { SEARCHTYPES } from "./Queries/query";
 
 type ErrorMessage = {
   id: string;
@@ -51,7 +52,10 @@ type AppStore = {
     isDarkMode: boolean;
     search: {
       count: number | null;
+      offset: number | null;
+      requestURL: string | null;
       results: any[] | null;
+      type: SEARCHTYPES;
     };
     routerParams: any;
   };
@@ -113,7 +117,10 @@ const generateInitialState = (): AppStore => {
       isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false,
       search: {
         count: null,
-        results: null
+        offset: null,
+        requestURL: null,
+        results: null,
+        type: SEARCHTYPES.ADVISORY
       },
       routerParams: null
     },
@@ -329,8 +336,21 @@ export const appStore = {
     state.app.search.count = newCount;
   },
 
+  setSearchOffset: (newOffset: number | null) => {
+    state.app.search.offset = newOffset;
+  },
+
+  // Pass the URL to load documents/events without the offset parameter so we can attach the offset of the store.
+  setSearchRequestURL: (newURL: string | null) => {
+    state.app.search.requestURL = newURL;
+  },
+
   setSearchResults: (newDocuments: any[]) => {
     state.app.search.results = newDocuments;
+  },
+
+  setSearchType: (newType: SEARCHTYPES) => {
+    state.app.search.type = newType;
   },
 
   setDocumentsToDelete: (documents: any[]) => {
