@@ -122,6 +122,7 @@
 
   const loadDocument = async () => {
     document = {};
+    appStore.setDocument(null);
     isInconsistent = false;
     documentNotFound = false;
     couldNotLoadDocument = false;
@@ -353,6 +354,8 @@
   };
 
   const loadData = async () => {
+    advisoryState = "";
+    historyEntries = [];
     await loadDocument();
     await getAdvisoryVersions();
     if (couldNotLoadDocument || isInconsistent) return;
