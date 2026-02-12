@@ -422,6 +422,9 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	orderFields := strings.Fields(
 		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
+	if aggregate && !slices.Contains(orderFields, "id") {
+		orderFields = append(orderFields, "id")
+	}
 	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
