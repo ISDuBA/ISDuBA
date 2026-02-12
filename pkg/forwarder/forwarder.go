@@ -62,7 +62,7 @@ type target struct {
 // ForwardManager forwards documents to specified targets.
 type ForwardManager struct {
 	cfg     *config.Forwarder
-	targets []target
+	targets []*target
 	db      *database.DB
 	fns     chan func(*ForwardManager)
 	done    bool
@@ -70,7 +70,7 @@ type ForwardManager struct {
 
 // NewForwardManager creates a new forward manager.
 func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
-	var targets []target
+	var targets []*target
 
 	for _, targetCfg := range cfg.Targets {
 
@@ -103,7 +103,7 @@ func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
 			headers.Add(h[0], h[1])
 		}
 
-		t := target{
+		targets = append(targets, &target{
 			client:    client,
 			url:       targetCfg.URL,
 			name:      targetCfg.Name,
@@ -111,9 +111,7 @@ func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
 			header:    headers,
 			running:   &sync.Mutex{},
 			automatic: targetCfg.Automatic,
-		}
-
-		targets = append(targets, t)
+		})
 	}
 	return &ForwardManager{
 		cfg:     cfg,
@@ -141,8 +139,7 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 
 // runTargets fetches and sends all new documents to the configured targets.
 func (fm *ForwardManager) runTargets(ctx context.Context) {
-	for index := range fm.targets {
-		target := &fm.targets[index]
+	for _, target := range fm.targets {
 		if !target.automatic || !target.running.TryLock() {
 			continue
 		}
@@ -212,7 +209,11 @@ func createFormFile(w *multipart.Writer, fieldname, filename, mimeType string) (
 	return w.CreatePart(h)
 }
 
-func (fm *ForwardManager) buildRequest(doc string, filename string, status validationStatus, target *target) (*http.Request, error) {
+func (fm *ForwardManager) buildRequest(
+	doc, filename string,
+	status validationStatus,
+	target *target,
+) (*http.Request, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 
@@ -235,11 +236,7 @@ func (fm *ForwardManager) buildRequest(doc string, filename string, status valid
 	part("advisory", base, "application/json", doc)
 	part("validation_status", "", "text/plain", string(status))
 
-	if err != nil {
-		return nil, err
-	}
-
-	if err := writer.Close(); err != nil {
+	if err := errors.Join(err, writer.Close()); err != nil {
 		return nil, err
 	}
 
@@ -256,27 +253,38 @@ func (fm *ForwardManager) buildRequest(doc string, filename string, status valid
 }
 
 func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) (*document, error) {
-	expr := query.FieldEqInt("id", documentID)
 
 	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
+	builder.CreateWhere(query.FieldEqInt("id", documentID))
 
-	var original []byte
-	var filename string
-	var failedValidation *bool
-	validationStatus := notValidatedValidationStatus
+	var (
+		original         []byte
+		filename         string
+		failedValidation *bool
+	)
+
+	const selectSQL = `SELECT ` +
+		`original,` +
+		`filename,` +
+		`(filename_failed OR remote_failed OR checksum_failed OR signature_failed)` +
+		`FROM documents JOIN downloads ` +
+		`ON documents.id = downloads.documents_id ` +
+		`WHERE `
 
 	if err := fm.db.Run(
 		ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			fetchSQL := `SELECT original, filename, (filename_failed OR remote_failed OR checksum_failed OR signature_failed) FROM documents` +
-				` JOIN downloads ON documents.id = downloads.documents_id` +
-				` WHERE ` + builder.WhereClause
-			return conn.QueryRow(rctx, fetchSQL, builder.Replacements...).Scan(&original, &filename, &failedValidation)
+			fetchSQL := selectSQL + builder.WhereClause
+			return conn.QueryRow(rctx, fetchSQL, builder.Replacements...).Scan(
+				&original,
+				&filename,
+				&failedValidation)
 		}, 0,
 	); err != nil {
 		return nil, err
 	}
+
+	validationStatus := notValidatedValidationStatus
 	if failedValidation != nil {
 		if *failedValidation {
 			validationStatus = invalidValidationStatus
@@ -284,26 +292,40 @@ func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) (*
 			validationStatus = validValidationStatus
 		}
 	}
-	documentString := string(original)
-	return &document{documentString, filename, validationStatus}, nil
+	return &document{
+		data:      string(original),
+		filename:  filename,
+		valStatus: validationStatus,
+	}, nil
 }
 
-func (fm *ForwardManager) fetchNewDocuments(ctx context.Context, url string, publisher *string) ([]int64, error) {
+func (fm *ForwardManager) fetchNewDocuments(
+	ctx context.Context,
+	url string,
+	publisher *string,
+) ([]int64, error) {
+
 	var wherePublisher string
 	args := []any{url}
 	if publisher != nil {
 		wherePublisher = "publisher = $2 AND "
 		args = append(args, *publisher)
 	}
-	var documentIDs []int64
 
+	const selectSQL = `SELECT ` +
+		`documents_id ` +
+		`FROM events_log ` +
+		`WHERE documents_id IN ` +
+		`(SELECT id FROM documents` +
+		` WHERE %s` +
+		` id NOT IN (SELECT documents_id FROM forwarded_documents WHERE url = $1)) ` +
+		`ORDER BY time DESC`
+	fetchSQL := fmt.Sprintf(selectSQL, wherePublisher)
+
+	var documentIDs []int64
 	if err := fm.db.Run(
 		ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
-			fetchSQL := `SELECT documents_id FROM events_log ` +
-				`WHERE documents_id in ` +
-				`(SELECT id FROM documents WHERE ` + wherePublisher +
-				`id NOT IN (SELECT documents_id FROM forwarded_documents WHERE url = $1)) ORDER BY time DESC`
 			rows, _ := conn.Query(rctx, fetchSQL, args...)
 			var err error
 			documentIDs, err = pgx.CollectRows(
@@ -316,9 +338,8 @@ func (fm *ForwardManager) fetchNewDocuments(ctx context.Context, url string, pub
 			return err
 		}, 0,
 	); err != nil {
-		return documentIDs, err
+		return nil, err
 	}
-
 	return documentIDs, nil
 }
 
@@ -347,8 +368,7 @@ func (fm *ForwardManager) Targets() []ForwardTarget {
 	result := make(chan []ForwardTarget)
 	fm.fns <- func(fm *ForwardManager) {
 		targets := make([]ForwardTarget, 0, len(fm.targets))
-		for i := range fm.targets {
-			target := &fm.targets[i]
+		for i, target := range fm.targets {
 			if !target.automatic {
 				targets = append(targets, ForwardTarget{ID: i, URL: target.url, Name: target.name})
 			}
@@ -372,7 +392,7 @@ func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, doc
 			result <- err
 			return
 		}
-		result <- fm.uploadDocument(ctx, document, documentID, &fm.targets[targetID])
+		result <- fm.uploadDocument(ctx, document, documentID, fm.targets[targetID])
 	}
 	return <-result
 }
