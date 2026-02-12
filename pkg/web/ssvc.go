@@ -12,6 +12,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -31,11 +32,11 @@ import (
 //	@Produce		json
 //	@Success		200	{object}	models.Success
 //	@Failure		400	{object}	models.Error
-//	@Failure		401
+//	@Failure		401	{object}	models.Error
 //	@Failure		403	{object}	models.Error
 //	@Failure		404	{object}	models.Error
 //	@Failure		500	{object}	models.Error
-//	@Router			/sources/{document} [delete]
+//	@Router			/ssvc/{document} [put]
 func (c *Controller) changeSSVC(ctx *gin.Context) {
 	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
@@ -49,15 +50,29 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 	}
 
 	const (
-		findSSVC = `SELECT docs.ssvc, ads.tracking_id, ads.publisher, docs.tlp, ads.state::text ` +
+		//		findSSVC = `SELECT docs.ssvc, ads.tracking_id, ads.publisher, docs.tlp, ads.state::text ` +
+		//			`FROM documents docs JOIN advisories ads ` +
+		//			`ON docs.advisories_id = ads.id ` +
+		//			`WHERE docs.id = $1`
+		// First part taken from above
+		findSSVC = `SELECT sh.ssvc, ads.tracking_id, ads.publisher, docs.tlp, ads.state::text ` +
 			`FROM documents docs JOIN advisories ads ` +
 			`ON docs.advisories_id = ads.id ` +
-			`WHERE docs.id = $1`
+			// LEFT JOIN so we just get an empty ssvc if there is none in the history
+			// LATERAL so immediately the latest one is taken
+			// Find ssvc from ssvc_history instead
+			`LEFT JOIN LATERAL ` +
+			`(SELECT ssvc FROM ssvc_history ` +
+			// find document
+			// use latest with change number as last resort tiebreaker (unique)
+			`WHERE documents_id = docs.id ORDER BY changedate DESC, change_number DESC LIMIT 1) ` +
+			`sh ON true WHERE docs.id = $1;`
 		switchToAssessing = `UPDATE advisories SET state = 'assessing' ` +
 			`WHERE (tracking_id, publisher) = ($1, $2)`
-		insertLog = `INSERT INTO events_log (event, state, actor, documents_id, prev_ssvc) ` +
-			`VALUES ($1::events, $2::workflow, $3, $4, $5)`
-		updateSSVC = `UPDATE documents SET ssvc = $1 WHERE id = $2`
+		insertLog = `INSERT INTO events_log (event, state, actor, documents_id) ` +
+			`VALUES ($1::events, $2::workflow, $3, $4)`
+		updateSSVC = `INSERT INTO ssvc_history (actor, documents_id, ssvc) VALUES ` +
+			`($1::varchar, $2::integer, $3)`
 	)
 
 	var forbidden, unchanged, bad bool
@@ -103,8 +118,8 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 			}
 
 			actor := c.currentUser(ctx)
-			logEvent := func(event models.Event, state models.Workflow, prevSSVC *string) error {
-				_, err := tx.Exec(rctx, insertLog, string(event), string(state), actor, documentID, prevSSVC)
+			logEvent := func(event models.Event, state models.Workflow) error {
+				_, err := tx.Exec(rctx, insertLog, string(event), string(state), actor, documentID)
 				return err
 			}
 
@@ -121,32 +136,21 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 					return err
 				}
 				// Log the state change.
-				if err := logEvent(models.StateChangeEvent, models.AssessingWorkflow, nil); err != nil {
+				if err := logEvent(models.StateChangeEvent, models.AssessingWorkflow); err != nil {
 					return err
 				}
 			}
 
 			// Now do the actual SSVC update.
-			if _, err := tx.Exec(rctx, updateSSVC, vector, documentID); err != nil {
+			if _, err := tx.Exec(rctx, updateSSVC, actor, documentID, vector); err != nil {
 				return err
 			}
 
-			// Log the SSVC change.
-			event := models.ChangeSSVCEvent
-			var prevSSVC *string
-			if !ssvc.Valid { // It's new.
-				event = models.AddSSVCEvent
-			} else {
-				prevSSVC = &ssvc.String
-			}
-			if err := logEvent(event, models.AssessingWorkflow, prevSSVC); err != nil {
-				return err
-			}
 			return tx.Commit(rctx)
 		}, 0,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "advisory not found"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
 		} else {
 			slog.Error("database error", "err", err)
 			models.SendError(ctx, http.StatusInternalServerError, err)
@@ -162,5 +166,162 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 		models.SendErrorMessage(ctx, http.StatusBadRequest, "unsuited state")
 	default:
 		models.SendSuccess(ctx, http.StatusOK, "changed")
+	}
+}
+
+// viewSSVC is an endpoint that returns the SSVC of the specified document.
+//
+//	@Summary		Returns the latest SSVC.
+//	@Description	Fetches the most recent SSVC for a specific document.
+//	@Produce		json
+//	@Param			document	path		int	true	"Document ID"
+//	@Success		200			{object}	map[string]string
+//	@Failure		403			{object}	models.Error
+//	@Failure		404			{object}	models.Error
+//	@Failure		500			{object}	models.Error
+//	@Router			/ssvc/{document}/latest [get]
+func (c *Controller) viewSSVC(ctx *gin.Context) {
+	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
+		return
+	}
+
+	const findSSVC = `SELECT sh.ssvc, ads.publisher, docs.tlp ` +
+		`FROM documents docs JOIN advisories ads ` +
+		`ON docs.advisories_id = ads.id ` +
+		`LEFT JOIN LATERAL ` +
+		`(SELECT ssvc FROM ssvc_history ` +
+		`WHERE documents_id = docs.id ORDER BY changedate DESC, change_number DESC LIMIT 1) ` +
+		`sh ON true WHERE docs.id = $1;`
+
+	var (
+		forbidden bool
+		ssvc      string
+	)
+
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+
+			var (
+				ssvcdb    sql.NullString
+				publisher string
+				tlp       string
+			)
+			if err := conn.QueryRow(rctx, findSSVC, documentID).Scan(
+				&ssvcdb,
+				&publisher,
+				&tlp,
+			); err != nil {
+				return err
+			}
+
+			// check if we are allowed to do
+			if tlps := c.tlps(ctx); len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
+				forbidden = true
+				return nil
+			}
+
+			ssvc = ssvcdb.String
+			return nil
+		}, 0,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		} else {
+			slog.Error("database error", "err", err)
+			models.SendError(ctx, http.StatusInternalServerError, err)
+		}
+		return
+	}
+	switch {
+	case forbidden:
+		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
+	default:
+		ctx.JSON(http.StatusOK, gin.H{"ssvc": ssvc})
+	}
+}
+
+// viewSSVCHistory is an endpoint that returns the SSVC History of the specified document.
+//
+//	@Summary		View the SSVC History.
+//	@Description	Returns a list of all SSVC changes for the specified document, ordered by changedate.
+//	@Produce		json
+//	@Param			document	path		int	true	"Document ID"
+//	@Success		200			{object}	map[string][]models.SSVCHistoryEntry
+//	@Failure		403			{object}	models.Error
+//	@Failure		404			{object}	models.Error
+//	@Failure		500			{object}	models.Error
+//	@Router			/ssvc/{document} [get]
+func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
+	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
+	if !ok {
+		return
+	}
+	// fetch access data
+	const findPublisherTLP = `SELECT ads.publisher, docs.tlp ` +
+		`FROM documents docs  JOIN advisories ads ` +
+		`ON docs.advisories_id = ads.id ` +
+		`WHERE docs.id = $1 `
+	// fetch entire history if exists
+	const findSSVCHistory = `SELECT ssvc, changedate, change_number, actor ` +
+		`FROM ssvc_history ` +
+		`WHERE documents_id = $1 ` +
+		`ORDER BY changedate DESC, change_number DESC;`
+
+	var (
+		forbidden   bool
+		ssvcHistory = []models.SSVCHistoryEntry{}
+	)
+	tlps := c.tlps(ctx)
+	if err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+
+			var publisher, tlp string
+			err := conn.QueryRow(rctx, findPublisherTLP, documentID).Scan(&publisher, &tlp)
+			if err != nil {
+				return fmt.Errorf("Failed to find authorization information for queried document: %w", err)
+			}
+			if len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
+				forbidden = true
+				return nil
+			}
+
+			rows, err := conn.Query(rctx, findSSVCHistory, documentID)
+			if err != nil {
+				return fmt.Errorf("scanning for SSVCHistory failed: %w", err)
+			}
+
+			defer rows.Close()
+
+			ssvcHistory, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.SSVCHistoryEntry, error) {
+				var entry models.SSVCHistoryEntry
+				err := row.Scan(
+					&entry.SSVC,
+					&entry.ChangeDate,
+					&entry.ChangeNumber,
+					&entry.Actor,
+				)
+				return entry, err
+			})
+			if err != nil {
+				return fmt.Errorf("collecting SSVCHistory failed: %w", err)
+			}
+
+			return nil
+		}, 0,
+	); err != nil {
+		slog.Error("database error", "err", err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	switch {
+	case forbidden:
+		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
+	case len(ssvcHistory) == 0:
+		models.SendErrorMessage(ctx, http.StatusNotFound, "No History found")
+	default:
+		ctx.JSON(http.StatusOK, gin.H{"ssvcHistory": ssvcHistory})
 	}
 }
