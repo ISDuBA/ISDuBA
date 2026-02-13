@@ -40,7 +40,9 @@
   let ssvcVector: string = $state("");
   let comment: string = $state("");
   let loadCommentsError: ErrorDetails | null = $state(null);
+  let loadCommentsAbortController: AbortController | null = $state(null);
   let loadEventsError: ErrorDetails | null = $state(null);
+  let loadEventsAbortController: AbortController | null = $state(null);
   let loadAdvisoryVersionsError: ErrorDetails | null = $state(null);
   let loadDocumentError: ErrorDetails | null = $state(null);
   let loadFourCVEsError: ErrorDetails | null = $state(null);
@@ -120,6 +122,7 @@
 
   const loadDocument = async () => {
     document = {};
+    appStore.setDocument(null);
     isInconsistent = false;
     documentNotFound = false;
     couldNotLoadDocument = false;
@@ -159,22 +162,38 @@
   };
 
   const loadEvents = async () => {
+    if (!document || !encodedPublisherNamespace || !encodedTrackingID) return;
+    if (loadEventsAbortController) {
+      loadEventsAbortController.abort();
+    }
+    loadEventsAbortController = new AbortController();
     const response = await request(
       `/api/events/${encodedPublisherNamespace}/${encodedTrackingID}`,
-      "GET"
+      "GET",
+      undefined,
+      loadEventsAbortController
     );
     if (response.ok) {
       return await response.content;
     } else if (response.error) {
-      loadEventsError = getErrorDetails(`Could not load events.`, response);
+      if (response.error !== "AbortError") {
+        loadEventsError = getErrorDetails(`Could not load events.`, response);
+      }
       return [];
     }
   };
 
   const loadComments = async () => {
+    if (!document || !encodedPublisherNamespace || !encodedTrackingID) return;
+    if (loadCommentsAbortController) {
+      loadCommentsAbortController.abort();
+    }
+    loadCommentsAbortController = new AbortController();
     const response = await request(
       `/api/comments/${encodedPublisherNamespace}/${encodedTrackingID}`,
-      "GET"
+      "GET",
+      undefined,
+      loadCommentsAbortController
     );
     if (response.ok) {
       let comments = await response.content;
@@ -183,18 +202,24 @@
       }
       return comments;
     } else if (response.error) {
-      loadEventsError = getErrorDetails(`Could not comments.`, response);
+      if (response.error !== "AbortError") {
+        loadCommentsError = getErrorDetails(`Could not load comments.`, response);
+      }
       return [];
     }
   };
 
   const buildHistory = async () => {
-    if (!canSeeCommentArea) {
+    if (!canSeeCommentArea || !document || !encodedPublisherNamespace || !encodedTrackingID) {
       historyEntries = [];
       return;
     }
     const comments = await loadComments();
     let events = await loadEvents();
+    if (!events || !comments) {
+      historyEntries = [];
+      return;
+    }
     const commentsByTime = comments.reduce((o: any, n: any) => {
       o[`${n.time}:${n.commentator}`] = {
         message: n.message,
@@ -329,6 +354,8 @@
   };
 
   const loadData = async () => {
+    advisoryState = "";
+    historyEntries = [];
     await loadDocument();
     await getAdvisoryVersions();
     if (couldNotLoadDocument || isInconsistent) return;
@@ -482,12 +509,12 @@
       <div class="mt-2 mb-4"></div>
     </div>
   {/if}
-  <ErrorMessage error={loadForwardTargetsError}></ErrorMessage>
-  <ErrorMessage error={loadAdvisoryVersionsError}></ErrorMessage>
-  <ErrorMessage error={stateError}></ErrorMessage>
-  <ErrorMessage error={loadDocumentError}></ErrorMessage>
-  <ErrorMessage error={loadFourCVEsError}></ErrorMessage>
-  <ErrorMessage error={loadRelatedError}></ErrorMessage>
+  <ErrorMessage bind:error={loadForwardTargetsError}></ErrorMessage>
+  <ErrorMessage bind:error={loadAdvisoryVersionsError}></ErrorMessage>
+  <ErrorMessage bind:error={stateError}></ErrorMessage>
+  <ErrorMessage bind:error={loadDocumentError}></ErrorMessage>
+  <ErrorMessage bind:error={loadFourCVEsError}></ErrorMessage>
+  <ErrorMessage bind:error={loadRelatedError}></ErrorMessage>
   {#if !couldNotLoadDocument && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}
@@ -538,7 +565,7 @@
               </div>
             {/if}
           </div>
-          <ErrorMessage error={loadDocumentSSVCError}></ErrorMessage>
+          <ErrorMessage bind:error={loadDocumentSSVCError}></ErrorMessage>
           <div class="h-auto">
             <div class="mt-6 h-full">
               <History
@@ -564,8 +591,8 @@
                 {/snippet}
               </History>
             </div>
-            <ErrorMessage error={loadEventsError}></ErrorMessage>
-            <ErrorMessage error={loadCommentsError}></ErrorMessage>
+            <ErrorMessage bind:error={loadEventsError}></ErrorMessage>
+            <ErrorMessage bind:error={loadCommentsError}></ErrorMessage>
           </div>
         </div>
       {/if}

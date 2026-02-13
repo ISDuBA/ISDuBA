@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // SQLBuilder helps to construct a SQL query.
@@ -41,6 +42,17 @@ var (
 		`_`, `\_`).Replace
 	whiteSpaces = regexp.MustCompile(`\s+`)
 )
+
+// RemoveIgnoredFields removes fields that should be ignored.
+func (sb *SQLBuilder) RemoveIgnoredFields(fields []string) []string {
+	filtered := make([]string, 0, len(fields))
+	for _, f := range fields {
+		if _, found := sb.IgnoreFields[f]; !found {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
+}
 
 // LikeEscape quotes a query string to be more convenient
 // to use with LIKE filters.
@@ -539,4 +551,39 @@ func (sb *SQLBuilder) CheckProjections(proj []string) error {
 		}
 	}
 	return nil
+}
+
+var (
+	dirtyReplace     *regexp.Regexp
+	dirtyReplaceOnce sync.Once
+)
+
+// InterpolateSQLqnd is a quick and dirty hack to re-substitute strings
+// into SQL statements. Warning: USE FOR LOGGING ONLY!
+// The separation SQL <-> replacements were done beforehand to
+// prevent injections!
+func InterpolateSQLqnd(sql string, replacements []any) string {
+	dirtyReplaceOnce.Do(func() {
+		dirtyReplace = regexp.MustCompile(`\$([\d]+)`)
+	})
+	sql = dirtyReplace.ReplaceAllStringFunc(sql, func(s string) string {
+		m := dirtyReplace.FindStringSubmatch(s)
+		index, _ := strconv.Atoi(m[1])
+		if index--; index < 0 || index >= len(replacements) {
+			return fmt.Sprintf("BAD INDEX %d", index+1)
+		}
+		var verb string
+		switch replacements[index].(type) {
+		case string:
+			verb = "s"
+		case int, uint, int8, uint8, int16, uint16, int32, uint32, int64, uint64:
+			verb = "d"
+		case float32, float64:
+			verb = "f"
+		default:
+			verb = "v"
+		}
+		return `'%[` + m[1] + `]` + verb + `'`
+	})
+	return fmt.Sprintf(sql, replacements...)
 }

@@ -113,14 +113,16 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 			sql := builder.CreateQuery(fields, order, limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
-				slog.Debug("events", "SQL", qndSQLReplace(sql, builder.Replacements))
+				slog.Debug("events", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
 			}
 			rows, err := conn.Query(rctx, sql, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if results, err = scanRows(rows, fields, builder.Aliases, builder.IgnoreFields); err != nil {
+			filtered := builder.RemoveIgnoredFields(fields)
+			escape := needsEscaping(filtered, builder.Aliases)
+			if results, err = scanRows(rows, filtered, escape); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil

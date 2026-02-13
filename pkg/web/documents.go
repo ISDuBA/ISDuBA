@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
-// Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+// SPDX-FileCopyrightText: 2024, 2025, 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering: 2024, 2025, 2026 Intevation GmbH <https://intevation.de>
 
 package web
 
@@ -17,10 +17,9 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"regexp"
+	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
@@ -77,7 +76,7 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			const deletePrefix = `DELETE FROM documents WHERE `
 			deleteSQL := deletePrefix + builder.WhereClause
 			slog.Debug("delete document", "SQL",
-				qndSQLReplace(deleteSQL, builder.Replacements))
+				query.InterpolateSQLqnd(deleteSQL, builder.Replacements))
 
 			tags, err := tx.Exec(rctx, deleteSQL, builder.Replacements...)
 			if err != nil {
@@ -353,18 +352,20 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 //	@Param			offset		query	int		false	"Offset"
 //	@Param			results		query	bool	false	"Return search results"
 //	@Produce		json
-//	@Success		200	{object}	web.overviewDocuments.documentResult
+//	@Success		200	{object}	web.flatResults.documentResult
 //	@Failure		400	{object}	models.Error
 //	@Failure		401
 //	@Failure		500	{object}	models.Error
 //	@Router			/documents [get]
 func (c *Controller) overviewDocuments(ctx *gin.Context) {
-	type documentResult struct {
-		Count     *int64           `json:"count,omitempty"`
-		Documents []map[string]any `json:"documents"`
-	}
 	// Use the advisories.
 	advisory, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("advisories", "false"))
+	if !ok {
+		return
+	}
+
+	// Use the advisories.
+	aggregate, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("aggregate", "false"))
 	if !ok {
 		return
 	}
@@ -409,6 +410,11 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
+	// If we are in aggregation mode we need the id.
+	if aggregate && !slices.Contains(fields, "id") {
+		fields = append(fields, "id")
+	}
+
 	if err := builder.CheckProjections(fields); err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
@@ -416,6 +422,9 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 
 	orderFields := strings.Fields(
 		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
+	if aggregate && !slices.Contains(orderFields, "id") {
+		orderFields = append(orderFields, "id")
+	}
 	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
@@ -423,12 +432,9 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	}
 
 	var (
-		calcCount     bool
-		count         int64
+		calcCount           = ctx.Query("count") != ""
 		limit, offset int64 = -1, -1
 	)
-
-	calcCount = ctx.Query("count") != ""
 
 	if lim := ctx.Query("limit"); lim != "" {
 		if limit, ok = parse(ctx, toInt64, lim); !ok {
@@ -442,15 +448,38 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		}
 	}
 
-	var results []map[string]any
+	var deliver func(*Controller, *gin.Context, bool, int64, int64, []string, string, *query.SQLBuilder)
+	if aggregate {
+		deliver = (*Controller).aggregatedResults
+	} else {
+		deliver = (*Controller).flatResults
+	}
+	deliver(c, ctx, calcCount, limit, offset, fields, order, &builder)
+}
 
+func (c *Controller) flatResults(
+	ctx *gin.Context,
+	calcCount bool,
+	limit, offset int64,
+	fields []string,
+	order string,
+	builder *query.SQLBuilder,
+) {
+	type documentResult struct {
+		Count     *int64           `json:"count,omitempty"`
+		Documents []map[string]any `json:"documents"`
+	}
+	var (
+		results []map[string]any
+		count   int64
+	)
 	if err := c.db.Run(
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			if calcCount {
 				countSQL := builder.CreateCountSQL()
 				if slog.Default().Enabled(rctx, slog.LevelDebug) {
-					slog.Debug("count", "SQL", qndSQLReplace(countSQL, builder.Replacements))
+					slog.Debug("count", "SQL", query.InterpolateSQLqnd(countSQL, builder.Replacements))
 				}
 				if err := conn.QueryRow(
 					rctx,
@@ -468,14 +497,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 			sql := builder.CreateQuery(fields, order, limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
-				slog.Debug("documents", "SQL", qndSQLReplace(sql, builder.Replacements))
+				slog.Debug("documents", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
 			}
 			rows, err := conn.Query(rctx, sql, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if results, err = scanRows(rows, fields, builder.Aliases, builder.IgnoreFields); err != nil {
+			filtered := builder.RemoveIgnoredFields(fields)
+			escape := needsEscaping(filtered, builder.Aliases)
+			if results, err = scanRows(rows, filtered, escape); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -501,17 +532,10 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 func scanRows(
 	rows pgx.Rows,
 	fields []string,
-	aliases map[string]string,
-	ignoreFields map[string]struct{},
+	esc escaping,
 ) ([]map[string]any, error) {
-	f := []string{}
-	for _, field := range fields {
-		if _, found := ignoreFields[field]; !found {
-			f = append(f, field)
-		}
-	}
-	values := make([]any, len(f))
-	ptrs := make([]any, len(f))
+	values := make([]any, len(fields))
+	ptrs := make([]any, len(fields))
 	for i := range ptrs {
 		ptrs[i] = &values[i]
 	}
@@ -520,16 +544,9 @@ func scanRows(
 		if err := rows.Scan(ptrs...); err != nil {
 			return nil, fmt.Errorf("scanning row failed: %w", err)
 		}
-		result := make(map[string]any, len(f))
-		for i, p := range f {
-			v := values[i]
-			// XXX: A little bit hacky to support client.
-			if _, ok := aliases[p]; ok {
-				if s, ok := v.(string); ok {
-					v = template.HTMLEscapeString(s)
-				}
-			}
-			result[p] = v
+		result := make(map[string]any, len(fields))
+		for i, p := range fields {
+			result[p] = esc.escape(i, values[i])
 		}
 		results = append(results, result)
 	}
@@ -539,22 +556,22 @@ func scanRows(
 	return results, nil
 }
 
-var (
-	dirtyReplace     *regexp.Regexp
-	dirtyReplaceOnce sync.Once
-)
+type escaping []bool
 
-// qndSQLReplace is a quick and dirty hack to re-substitute strings
-// into SQL statements. Warning: USE FOR LOGGING ONLY!
-// The separation SQL <-> replacements were done beforehand to
-// prevent injections!
-func qndSQLReplace(sql string, replacements []any) string {
-	dirtyReplaceOnce.Do(func() {
-		dirtyReplace = regexp.MustCompile(`\$([\d]+)`)
-	})
-	sql = dirtyReplace.ReplaceAllStringFunc(sql, func(s string) string {
-		m := dirtyReplace.FindStringSubmatch(s)
-		return `'%[` + m[1] + `]s'`
-	})
-	return fmt.Sprintf(sql, replacements...)
+func needsEscaping(fields []string, aliases map[string]string) escaping {
+	escape := make(escaping, len(fields))
+	for i, field := range fields {
+		_, ok := aliases[field]
+		escape[i] = ok
+	}
+	return escape
+}
+
+func (esc escaping) escape(i int, v any) any {
+	if esc[i] {
+		if s, ok := v.(string); ok {
+			v = template.HTMLEscapeString(s)
+		}
+	}
+	return v
 }
