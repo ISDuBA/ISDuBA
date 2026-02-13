@@ -32,9 +32,12 @@ func newForwarder(cfg *config.ForwardTarget, db *database.DB) (*forwarder, error
 	// Init http clients
 	var tlsConfig tls.Config
 	if cfg.ClientPrivateCert != "" && cfg.ClientPublicCert != "" {
-		clientCert, err := tls.LoadX509KeyPair(cfg.ClientPublicCert, cfg.ClientPrivateCert)
+		clientCert, err := tls.LoadX509KeyPair(
+			cfg.ClientPublicCert,
+			cfg.ClientPrivateCert)
 		if err != nil {
-			return nil, fmt.Errorf("cannot load client cert for forward target %q: %w",
+			return nil, fmt.Errorf(
+				"cannot load client cert for forward target %q: %w",
 				cfg.URL, err)
 		}
 		tlsConfig.Certificates = []tls.Certificate{clientCert}
@@ -78,4 +81,8 @@ func (f *forwarder) run(ctx context.Context) {
 
 func (f *forwarder) kill() {
 	f.fns <- func(f *forwarder) { f.done = true }
+}
+
+func (f *forwarder) acceptsPublisher(publisher string) bool {
+	return f.cfg.Publisher == nil || publisher == *f.cfg.Publisher
 }
