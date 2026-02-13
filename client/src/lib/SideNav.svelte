@@ -19,12 +19,12 @@
   } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { appStore } from "$lib/store.svelte";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { truncate } from "$lib/utils";
   import PrevNext from "./Search/PrevNext.svelte";
   import { activeClass, nonActiveClass, sidebarItemClass, sidebarItemLinkClass } from "./sidenav";
 
-  let activeUrl = $derived("/" + $page.url.hash);
+  let activeUrl = $derived("/" + page.url.hash);
   let searchLabel = $derived(
     appStore.state.app.search.count !== null
       ? `Search (${appStore.state.app.search.count})`

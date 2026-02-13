@@ -12,7 +12,8 @@ RUN apk update && apk add --no-cache make
 WORKDIR /app
 
 COPY client/package.json client/package.json
-RUN cd client && npm install
+COPY client/package-lock.json client/package-lock.json
+RUN cd client && npm clean-install
 
 COPY client client
 COPY Makefile Makefile

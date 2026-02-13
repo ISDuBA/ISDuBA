@@ -11,4 +11,5 @@ Things to do for a release.
 * Check that `make dist` will produce all assets.
 * Check that github Actions have all run as expected
 * Run the client tests
+* Test the docker setup
 * ...TODO
