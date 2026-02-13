@@ -433,7 +433,27 @@ func Load(file string) (*Config, error) {
 		return nil, err
 	}
 	cfg.presetEmptyDefaults()
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("configuration is not valid: %w", err)
+	}
 	return cfg, nil
+}
+
+func (cfg *Config) validate() error {
+	return cfg.Forwarder.validate()
+}
+
+func (f *Forwarder) validate() error {
+	// Check if the URLs od the target are unique.
+	urls := make(map[string]struct{}, len(f.Targets))
+	for i := range f.Targets {
+		url := f.Targets[i].URL
+		if _, found := urls[url]; found {
+			return fmt.Errorf("forwarder target URL %q is not unique", url)
+		}
+		urls[url] = struct{}{}
+	}
+	return nil
 }
 
 func parsedDefaultBlockedRanges() []IPRange {
