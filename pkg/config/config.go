@@ -444,7 +444,6 @@ func (cfg *Config) validate() error {
 }
 
 func (f *Forwarder) validate() error {
-	// Check if the URLs od the target are unique.
 	urls := make(map[string]struct{}, len(f.Targets))
 	for i := range f.Targets {
 		url := f.Targets[i].URL
@@ -452,6 +451,13 @@ func (f *Forwarder) validate() error {
 			return fmt.Errorf("forwarder target URL %q is not unique", url)
 		}
 		urls[url] = struct{}{}
+		for _, header := range f.Targets[i].Header {
+			if _, _, ok := strings.Cut(header, ":"); !ok {
+				return fmt.Errorf(
+					"header %q of forward target %q is missing a ':'",
+					header, url)
+			}
+		}
 	}
 	return nil
 }

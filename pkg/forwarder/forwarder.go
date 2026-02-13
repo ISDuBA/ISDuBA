@@ -69,38 +69,37 @@ type ForwardManager struct {
 }
 
 // NewForwardManager creates a new forward manager.
-func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
+func NewForwardManager(cfg *config.Forwarder, db *database.DB) (*ForwardManager, error) {
 	var targets []*target
 
 	for _, targetCfg := range cfg.Targets {
 
 		// Init http clients
-		client := http.Client{
-			Timeout: targetCfg.Timeout,
-		}
-
 		var tlsConfig tls.Config
 		if targetCfg.ClientPrivateCert != "" && targetCfg.ClientPublicCert != "" {
 			clientCert, err := tls.LoadX509KeyPair(targetCfg.ClientPublicCert, targetCfg.ClientPrivateCert)
 			if err != nil {
-				slog.Error("could not configure forward target client cert", "err", err)
-			} else {
-				tlsConfig.Certificates = []tls.Certificate{clientCert}
+				return nil, fmt.Errorf("cannot load client cert for forward target %q: %w",
+					targetCfg.URL, err)
 			}
+			tlsConfig.Certificates = []tls.Certificate{clientCert}
+		}
+		client := http.Client{
+			Timeout: targetCfg.Timeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tlsConfig,
+			},
 		}
 
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tlsConfig,
-		}
-
-		headers := http.Header{}
+		headers := make(http.Header, len(targetCfg.Header))
 		for _, header := range targetCfg.Header {
-			h := strings.Split(header, ":")
-			if len(h) != 2 {
-				slog.Error("forwarder init: could not set invalid header key:pair value", "header", header)
-				continue
+			if k, v, ok := strings.Cut(header, ":"); ok {
+				headers.Add(k, v)
+			} else {
+				return nil, fmt.Errorf(
+					"header %q of forwarder target %q is missing ':'",
+					header, targetCfg.URL)
 			}
-			headers.Add(h[0], h[1])
 		}
 
 		targets = append(targets, &target{
@@ -118,7 +117,7 @@ func NewForwardManager(cfg *config.Forwarder, db *database.DB) *ForwardManager {
 		targets: targets,
 		db:      db,
 		fns:     make(chan func(manager *ForwardManager)),
-	}
+	}, nil
 }
 
 // Run runs the forward manager. To be used in a Go routine.
