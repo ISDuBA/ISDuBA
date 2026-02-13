@@ -53,7 +53,12 @@
     if (index === count || offset + index > count - 1) {
       a.push(index - 3);
     }
-    if (index < 3 || (count > 2 && index >= count - 1) || offset + index > count - 2) {
+    if (
+      index < 2 ||
+      (index < 3 && offset === 0) ||
+      (count > 2 && index >= count - 1) ||
+      offset + index > count - 2
+    ) {
       a.push(index - 2);
     }
     if (count > 1 && index > 0) {
