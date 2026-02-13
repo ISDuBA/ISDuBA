@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
-// Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+// SPDX-FileCopyrightText: 2024, 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering: 2024, 2026 Intevation GmbH <https://intevation.de>
 
 // Package forwarder implements the document forwarder.
 package forwarder
@@ -12,7 +12,6 @@ package forwarder
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -22,7 +21,6 @@ import (
 	"net/textproto"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
@@ -49,79 +47,50 @@ type document struct {
 	valStatus validationStatus
 }
 
-type target struct {
-	url       string
-	name      string
-	publisher *string
-	header    http.Header
-	client    http.Client
-	running   *sync.Mutex
-	automatic bool
-}
-
 // ForwardManager forwards documents to specified targets.
 type ForwardManager struct {
-	cfg     *config.Forwarder
-	targets []*target
-	db      *database.DB
-	fns     chan func(*ForwardManager)
-	done    bool
+	cfg        *config.Forwarder
+	db         *database.DB
+	fns        chan func(*ForwardManager)
+	forwarders []*forwarder
+	done       bool
 }
 
 // NewForwardManager creates a new forward manager.
-func NewForwardManager(cfg *config.Forwarder, db *database.DB) (*ForwardManager, error) {
-	var targets []*target
-
-	for _, targetCfg := range cfg.Targets {
-
-		// Init http clients
-		var tlsConfig tls.Config
-		if targetCfg.ClientPrivateCert != "" && targetCfg.ClientPublicCert != "" {
-			clientCert, err := tls.LoadX509KeyPair(targetCfg.ClientPublicCert, targetCfg.ClientPrivateCert)
-			if err != nil {
-				return nil, fmt.Errorf("cannot load client cert for forward target %q: %w",
-					targetCfg.URL, err)
-			}
-			tlsConfig.Certificates = []tls.Certificate{clientCert}
+func NewForwardManager(
+	cfg *config.Forwarder,
+	db *database.DB,
+) (*ForwardManager, error) {
+	forwarders := make([]*forwarder, 0, len(cfg.Targets))
+	for i := range cfg.Targets {
+		tcfg := &cfg.Targets[i]
+		forwarder, err := newForwarder(tcfg, db)
+		if err != nil {
+			return nil,
+				fmt.Errorf("create automatic forwarder for %q failed: %w",
+					tcfg.URL, err)
 		}
-		client := http.Client{
-			Timeout: targetCfg.Timeout,
-			Transport: &http.Transport{
-				TLSClientConfig: &tlsConfig,
-			},
-		}
-
-		headers := make(http.Header, len(targetCfg.Header))
-		for _, header := range targetCfg.Header {
-			if k, v, ok := strings.Cut(header, ":"); ok {
-				headers.Add(k, v)
-			} else {
-				return nil, fmt.Errorf(
-					"header %q of forwarder target %q is missing ':'",
-					header, targetCfg.URL)
-			}
-		}
-
-		targets = append(targets, &target{
-			client:    client,
-			url:       targetCfg.URL,
-			name:      targetCfg.Name,
-			publisher: targetCfg.Publisher,
-			header:    headers,
-			running:   &sync.Mutex{},
-			automatic: targetCfg.Automatic,
-		})
+		forwarders = append(forwarders, forwarder)
 	}
 	return &ForwardManager{
-		cfg:     cfg,
-		targets: targets,
-		db:      db,
-		fns:     make(chan func(manager *ForwardManager)),
+		cfg:        cfg,
+		db:         db,
+		fns:        make(chan func(manager *ForwardManager)),
+		forwarders: forwarders,
 	}, nil
 }
 
 // Run runs the forward manager. To be used in a Go routine.
 func (fm *ForwardManager) Run(ctx context.Context) {
+
+	// Start the automatic forwarders.
+	for _, forwarder := range fm.forwarders {
+		if forwarder.cfg.Automatic {
+			go forwarder.run(ctx)
+			defer forwarder.kill()
+		}
+	}
+
 	ticker := time.NewTicker(fm.cfg.UpdateInterval)
 	defer ticker.Stop()
 	for !fm.done {
@@ -138,59 +107,66 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 
 // runTargets fetches and sends all new documents to the configured targets.
 func (fm *ForwardManager) runTargets(ctx context.Context) {
-	for _, target := range fm.targets {
-		if !target.automatic || !target.running.TryLock() {
-			continue
+
+	/*
+		for _, target := range fm.targets {
+			if !target.automatic || !target.running.TryLock() {
+				continue
+			}
+			documentIDs, err := fm.fetchNewDocuments(ctx, target.url, target.publisher)
+			if err != nil {
+				slog.Error("could not fetch documents to forward", "err", err)
+				target.running.Unlock()
+				continue
+			}
+			if len(documentIDs) > 0 {
+				go fm.uploadDocuments(ctx, target, documentIDs)
+			} else {
+				target.running.Unlock()
+			}
 		}
-		documentIDs, err := fm.fetchNewDocuments(ctx, target.url, target.publisher)
-		if err != nil {
-			slog.Error("could not fetch documents to forward", "err", err)
-			target.running.Unlock()
-			continue
-		}
-		if len(documentIDs) > 0 {
-			go fm.uploadDocuments(ctx, target, documentIDs)
-		} else {
-			target.running.Unlock()
-		}
-	}
+	*/
 }
 
-func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *target, documentIDs []int64) {
-	defer target.running.Unlock()
-	for _, documentID := range documentIDs {
-		document, err := fm.loadDocument(ctx, documentID)
-		if err != nil {
-			slog.Error("could not load document to forward", "err", err)
-			continue
+func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *forwarder, documentIDs []int64) {
+	/*
+		defer target.running.Unlock()
+		for _, documentID := range documentIDs {
+			document, err := fm.loadDocument(ctx, documentID)
+			if err != nil {
+				slog.Error("could not load document to forward", "err", err)
+				continue
+			}
+			if err := fm.uploadDocument(ctx, document, documentID, target); err != nil {
+				slog.Error("could not forward document", "err", err)
+			}
 		}
-		if err := fm.uploadDocument(ctx, document, documentID, target); err != nil {
-			slog.Error("could not forward document", "err", err)
-		}
-	}
+	*/
 }
 
-func (fm *ForwardManager) uploadDocument(ctx context.Context, doc *document, documentID int64, target *target) error {
-	req, err := fm.buildRequest(doc.data, doc.filename, doc.valStatus, target)
-	if err != nil {
-		slog.Error("building forward request failed", "err", err)
-		return err
-	}
-	res, err := target.client.Do(req)
-	if err != nil {
-		slog.Error("sending forward request failed", "err", err)
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusCreated {
-		slog.Error("forwarding failed", "status", res.StatusCode)
-		body, err := io.ReadAll(res.Body)
-		if err == nil {
-			slog.Error("forward request failed", "response", string(body))
+func (fm *ForwardManager) uploadDocument(ctx context.Context, doc *document, documentID int64, target *forwarder) error {
+	/*
+		req, err := fm.buildRequest(doc.data, doc.filename, doc.valStatus, target)
+		if err != nil {
+			slog.Error("building forward request failed", "err", err)
+			return err
 		}
-		return errors.New("forwarding failed " + res.Status)
-	}
-	fm.logDocument(ctx, target.url, documentID)
+		res, err := target.client.Do(req)
+		if err != nil {
+			slog.Error("sending forward request failed", "err", err)
+			return err
+		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusCreated {
+			slog.Error("forwarding failed", "status", res.StatusCode)
+			body, err := io.ReadAll(res.Body)
+			if err == nil {
+				slog.Error("forward request failed", "response", string(body))
+			}
+			return errors.New("forwarding failed " + res.Status)
+		}
+		fm.logDocument(ctx, target.url, documentID)
+	*/
 	return nil
 }
 
@@ -208,10 +184,11 @@ func createFormFile(w *multipart.Writer, fieldname, filename, mimeType string) (
 	return w.CreatePart(h)
 }
 
-func (fm *ForwardManager) buildRequest(
+func buildRequest(
 	doc, filename string,
 	status validationStatus,
-	target *target,
+	url string,
+	headers http.Header,
 ) (*http.Request, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
@@ -239,14 +216,16 @@ func (fm *ForwardManager) buildRequest(
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, target.url, body)
+	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
 	}
-	contentType := writer.FormDataContentType()
-	if target.header != nil {
-		req.Header = target.header.Clone()
+	for k, vs := range headers {
+		for _, v := range vs {
+			req.Header.Add(k, v)
+		}
 	}
+	contentType := writer.FormDataContentType()
 	req.Header.Set("Content-Type", contentType)
 	return req, nil
 }
@@ -366,13 +345,18 @@ type ForwardTarget struct {
 func (fm *ForwardManager) Targets() []ForwardTarget {
 	result := make(chan []ForwardTarget)
 	fm.fns <- func(fm *ForwardManager) {
-		targets := make([]ForwardTarget, 0, len(fm.targets))
-		for i, target := range fm.targets {
-			if !target.automatic {
-				targets = append(targets, ForwardTarget{ID: i, URL: target.url, Name: target.name})
+		forwarders := make([]ForwardTarget, 0, len(fm.forwarders))
+		for i, forwarder := range fm.forwarders {
+			if !forwarder.cfg.Automatic {
+				forwarders = append(
+					forwarders, ForwardTarget{
+						ID:   i,
+						URL:  forwarder.cfg.URL,
+						Name: forwarder.cfg.Name,
+					})
 			}
 		}
-		result <- targets
+		result <- forwarders
 	}
 	return <-result
 }
@@ -381,7 +365,7 @@ func (fm *ForwardManager) Targets() []ForwardTarget {
 func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, documentID int64) error {
 	result := make(chan error)
 	fm.fns <- func(fm *ForwardManager) {
-		if len(fm.targets) <= targetID {
+		if targetID < 0 || targetID >= len(fm.forwarders) || fm.forwarders[targetID].cfg.Automatic {
 			result <- errors.New("could not find target with specified id")
 			return
 		}
@@ -391,7 +375,7 @@ func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, doc
 			result <- err
 			return
 		}
-		result <- fm.uploadDocument(ctx, document, documentID, fm.targets[targetID])
+		result <- fm.uploadDocument(ctx, document, documentID, fm.forwarders[targetID])
 	}
 	return <-result
 }
