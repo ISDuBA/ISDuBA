@@ -93,16 +93,34 @@
                 <i class="bx bxs-dashboard"></i>
               {/snippet}
             </SidebarItem>
-            <SidebarItem
-              class={sidebarItemClass}
-              aClass={sidebarItemLinkClass}
-              label={searchLabel}
-              href="/#/search"
-            >
-              {#snippet icon()}
-                <i class="bx bx-spreadsheet"></i>
-              {/snippet}
-            </SidebarItem>
+            {#if appStore.state.app.search.searchURL && !activeUrl.startsWith("/#/search")}
+              <!--
+              For the case the user wants to return to the previous result list, for example from the advisory view.
+              Unfortunetly, it was not possible to use the second SidebarItem for Search because any parameters were
+              omitted when the href variable was created dynamically.
+              -->
+              <SidebarItem
+                class={sidebarItemClass}
+                aClass={sidebarItemLinkClass}
+                label={searchLabel}
+                href={"#" + appStore.state.app.search.searchURL}
+              >
+                {#snippet icon()}
+                  <i class="bx bx-spreadsheet"></i>
+                {/snippet}
+              </SidebarItem>
+            {:else}
+              <SidebarItem
+                class={sidebarItemClass}
+                aClass={sidebarItemLinkClass}
+                label={searchLabel}
+                href="/#/search"
+              >
+                {#snippet icon()}
+                  <i class="bx bx-spreadsheet"></i>
+                {/snippet}
+              </SidebarItem>
+            {/if}
             {#if params?.publisherNamespace && params?.trackingID && params?.id}
               <PrevNext />
             {/if}

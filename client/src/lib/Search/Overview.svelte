@@ -9,7 +9,6 @@
 -->
 
 <script lang="ts">
-  import { onMount, tick } from "svelte";
   import { Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
@@ -133,7 +132,6 @@
         return c !== searchColumnName;
       });
     }
-    await tick();
   };
 
   const clearSearch = async () => {
@@ -215,14 +213,6 @@
     } else {
       appStore.setSearchURL(undefined);
     }
-
-    // Need to wait for the derived values to be updated
-    setTimeout(() => {
-      if (fetch) {
-        prepareSearch();
-        fetchData();
-      }
-    }, 200);
   };
 
   const last = async () => {
@@ -230,6 +220,13 @@
       currentPage: Math.max(numberOfPages, 1)
     });
   };
+
+  $effect(() => {
+    if ($qs !== undefined) {
+      prepareSearch();
+      fetchData();
+    }
+  });
 
   async function fetchData(): Promise<void> {
     appStore.setSearchResults([]);
@@ -307,10 +304,6 @@
       return possibleOrders.indexOf(criterium) != -1;
     });
   };
-
-  onMount(() => {
-    fetchData();
-  });
 </script>
 
 <svelte:head>
