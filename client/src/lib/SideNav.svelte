@@ -30,6 +30,7 @@
       ? `Search (${appStore.state.app.search.count})`
       : "Search"
   );
+  let params = $derived(appStore.state.app.routerParams);
 
   let transitionParams = {
     x: -320,
@@ -102,7 +103,9 @@
                 <i class="bx bx-spreadsheet"></i>
               {/snippet}
             </SidebarItem>
-            <PrevNext />
+            {#if params?.publisherNamespace && params?.trackingID && params?.id}
+              <PrevNext />
+            {/if}
             {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager() || appStore.isImporter()}
               <SidebarItem
                 class={sidebarItemClass}

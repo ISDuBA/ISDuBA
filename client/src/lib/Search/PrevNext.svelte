@@ -128,8 +128,9 @@
     } else if (
       index !== -1 &&
       oldIndex !== -1 &&
-      index !== oldIndex &&
-      Math.abs(index - oldIndex) < 2
+      ((index !== oldIndex && Math.abs(index - oldIndex) < 2) ||
+        index === results.length - 1 ||
+        (index === 0 && offset > 0))
     ) {
       if (index > results.length - 3 && index + offset < count - 4) {
         appStore.setSearchOffset(Math.min(Math.max(offset + 1, 0), count - 5));
