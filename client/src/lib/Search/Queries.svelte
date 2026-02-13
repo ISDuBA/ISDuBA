@@ -19,23 +19,36 @@
   import { truncate } from "$lib/utils";
 
   interface Props {
-    selectedQuery?: boolean;
-    queryString: any;
+    selectedQueryID?: number | null;
     defaultQuery: any;
     queries: any[];
-    onQuerySelected: (query: any) => void;
+    onQuerySelected: (id: number | undefined) => void;
   }
 
   let {
-    selectedQuery = $bindable(false),
+    selectedQueryID = null,
     defaultQuery = $bindable(null),
     queries = $bindable([]),
-    queryString,
     onQuerySelected
   }: Props = $props();
 
+  let ignoredQueries: number[] = $state([]);
+  let { visibleQueries, invisibleQueries }: { visibleQueries: Query[]; invisibleQueries: Query[] } =
+    $derived.by(() => {
+      const visible = [];
+      const invisible = [];
+      for (let i = 0; i < queries.length; i++) {
+        const q = queries[i];
+        if (!q.dashboard && !q.default_query && !ignoredQueries.includes(q.id)) {
+          visible.push(q);
+        } else {
+          invisible.push(q);
+        }
+      }
+      return { visibleQueries: visible, invisibleQueries: invisible };
+    });
   let sortedQueries = $derived(
-    queries.toSorted((a: any, b: any) => {
+    visibleQueries.toSorted((a: any, b: any) => {
       if (a.global && !b.global) {
         return -1;
       } else if (!a.global && b.global) {
@@ -44,8 +57,7 @@
       return 0;
     })
   );
-  let selectedIndex = $state(-2);
-  let ignoredQueries: Query[] = $state([]);
+  let selectedInvisibleQuery = $derived(invisibleQueries.find((q) => q.id === selectedQueryID));
   let errorMessage: ErrorDetails | null = $state(null);
   let advancedQueryErrorMessage: ErrorDetails | null = null;
   const globalQueryButtonColor = "primary";
@@ -80,7 +92,7 @@
     fetchIgnored();
     const response = await request("/api/queries", "GET");
     if (response.ok) {
-      queries = response.content.filter((q: Query) => !q.dashboard && !q.default_query);
+      queries = response.content;
       let defaultQueries = response.content.filter((q: Query) => q.default_query);
       if (defaultQueries?.length > 0) {
         defaultQuery = defaultQueries[0];
@@ -88,62 +100,28 @@
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
-    if (queryString?.query) {
-      // Need to wait until sortedQueries is filled.
-      setTimeout(() => {
-        const index = sortedQueries.findIndex((q) => q.id === Number(queryString.query));
-
-        // Probably a dashboard query
-        if (index === -1) {
-          const query = response.content.filter((q: any) => `${q.id}` === queryString.query)?.[0];
-          selectedIndex = -2;
-          currentQueryTitle = query.name;
-          if (query) {
-            onQuerySelected(query);
-            selectedQuery = true;
-          }
-        } else {
-          selectQuery(index);
-        }
-      }, 100);
-    }
   });
 
-  let currentQueryTitle: string | undefined = $state();
-
-  const selectQuery = (index: number) => {
-    if (selectedIndex === index || index === -1) {
-      selectedIndex = -1;
-      currentQueryTitle = undefined;
-      selectedQuery = false;
-      onQuerySelected(undefined);
-    } else {
-      selectedIndex = index;
-      const newSelectedQuery = $state.snapshot(sortedQueries)[selectedIndex];
-      onQuerySelected(newSelectedQuery);
-      currentQueryTitle = newSelectedQuery.name;
-      selectedQuery = true;
-    }
+  const selectQuery = (id: number | undefined) => {
+    onQuerySelected(id);
   };
 </script>
 
 <div class="flex flex-col flex-wrap gap-4">
   <div class="flex items-center gap-x-4">
     <ButtonGroup class="h-7 flex-wrap">
-      {#each sortedQueries as query, index}
-        {#if !ignoredQueries.includes(query.id)}
-          <Button
-            color="light"
-            onclick={() => selectQuery(index)}
-            class={getClass(query.global, index === selectedIndex)}
-          >
-            <span title={query.description}>{truncate(query.name, 30)}</span>
-          </Button>
-        {/if}
+      {#each sortedQueries as query}
+        <Button
+          color="light"
+          onclick={() => selectQuery(query.id)}
+          class={getClass(query.global, query.id === selectedQueryID)}
+        >
+          <span title={query.description}>{truncate(query.name, 30)}</span>
+        </Button>
       {/each}
-      {#if currentQueryTitle && selectedIndex < 0}
-        <Button color="light" onclick={() => selectQuery(-1)} class={getClass(true, true)}>
-          <span>{truncate(currentQueryTitle, 30)}</span>
+      {#if selectedInvisibleQuery}
+        <Button color="light" onclick={() => selectQuery(undefined)} class={getClass(true, true)}>
+          <span>{truncate(selectedInvisibleQuery.name, 30)}</span>
         </Button>
       {/if}
       <Button

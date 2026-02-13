@@ -31,7 +31,6 @@
   let advancedSearch = $state(false);
   let loading = $state(false);
   let queries: any[] = $state([]);
-  let selectedCustomQuery: boolean = $state(false);
   let defaultQuery: any = $state(null);
   let openRow: number | null = $state(null);
   let count = $state(0);
@@ -58,6 +57,10 @@
   let queryID: number | undefined = $derived(
     queryString?.queryID ? Number(queryString.queryID) : undefined
   );
+  let selectedQuery: Query | null = $derived.by(() => {
+    if (!queryID) return null;
+    return $state.snapshot(queries).find((q) => q.id === queryID) ?? null;
+  });
 
   let numberOfPages = $derived(Math.ceil(count / limit));
 
@@ -99,46 +102,53 @@
 
   let queryQuery: string = $derived.by(() => {
     if (!advancedSearch) {
-      if (!selectedCustomQuery) {
+      if (!selectedQuery) {
         return searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
       } else {
-        return `${query.queryReset} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
+        return `${selectedQuery.query} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
       }
     } else {
-      if (!selectedCustomQuery) {
+      if (!selectedQuery) {
         return searchTerm || "";
       } else {
-        return `${query.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
+        return `${selectedQuery.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
       }
     }
   });
 
-  const prepareSearch = async () => {
+  let columns = $derived.by(() => {
+    let tmpColumns: string[];
+    if (selectedQuery) {
+      tmpColumns = selectedQuery.columns;
+    } else {
+      if (type === SEARCHTYPES.ADVISORY) {
+        tmpColumns = SEARCHPAGECOLUMNS.ADVISORY;
+      } else if (type === SEARCHTYPES.DOCUMENT) {
+        tmpColumns = SEARCHPAGECOLUMNS.DOCUMENT;
+      } else {
+        tmpColumns = SEARCHPAGECOLUMNS.EVENT;
+      }
+    }
     if (!advancedSearch) {
       if (
         searchTerm &&
-        !query.columns.find((c: any) => {
+        !tmpColumns.find((c: any) => {
           return c === searchColumnName;
         })
       ) {
-        query.columns.push(searchColumnName);
+        tmpColumns.push(searchColumnName);
       }
       if (!searchTerm)
-        query.columns = query.columns.filter((c: any) => {
+        tmpColumns = tmpColumns.filter((c: any) => {
           return c !== searchColumnName;
         });
     } else {
-      query.columns = query.columns.filter((c: any) => {
+      tmpColumns = tmpColumns.filter((c: any) => {
         return c !== searchColumnName;
       });
     }
-  };
-
-  const clearSearch = async () => {
-    query.columns = query.columns.filter((c: any) => {
-      return c !== searchColumnName;
-    });
-  };
+    return tmpColumns;
+  });
 
   const getCurrentSearchParameters = (): SearchParameters => {
     return {
@@ -198,7 +208,7 @@
 
     if (searchParameters.queryID !== undefined) {
       newURL = newURL.concat(`&queryID=${searchParameters.queryID}`);
-    } else if (searchParameters.queryID === undefined && queryID !== undefined) {
+    } else if (!Object.keys(searchParameters).includes("queryID") && queryID !== undefined) {
       newURL = newURL.concat(`&queryID=${encodeURIComponent(queryID)}`);
     }
 
@@ -223,7 +233,6 @@
 
   $effect(() => {
     if ($qs !== undefined) {
-      prepareSearch();
       fetchData();
     }
   });
@@ -238,8 +247,8 @@
     if (queryQuery) {
       queryParam = `query=${queryQuery}`;
     }
-    const orderByParam = selectedCustomQuery ? (query.orders ?? []) : orderBy;
-    let fetchColumns = [...query.columns];
+    const orderByParam = selectedQuery ? (query.orders ?? []) : orderBy;
+    let fetchColumns = [...$state.snapshot(columns)];
     let requiredColumns = ["id", "tracking_id", "publisher"];
     for (let c of requiredColumns) {
       if (!fetchColumns.includes(c)) {
@@ -247,19 +256,17 @@
       }
     }
     let URLWithoutOffsetAndLimit = "";
+    const columnsParam = `columns=${fetchColumns.join(" ")}${searchColumn}`;
     appStore.setSearchOffset(offset);
 
-    if (
-      (selectedCustomQuery && query.queryType === SEARCHTYPES.EVENT) ||
-      type === SEARCHTYPES.EVENT
-    ) {
+    if ((selectedQuery && selectedQuery.kind === SEARCHTYPES.EVENT) || type === SEARCHTYPES.EVENT) {
       URLWithoutOffsetAndLimit = encodeURI(
-        `/api/events?${queryParam}&count=1&orders=${orderByParam.join(" ")}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/events?${queryParam}&count=1&orders=${orderByParam.join(" ")}&${columnsParam}`
       );
     } else {
       const loadAdvisories = type === SEARCHTYPES.ADVISORY;
       URLWithoutOffsetAndLimit = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderByParam.join(" ")}&results=${detailed}&columns=${fetchColumns.join(" ")}${searchColumn}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderByParam.join(" ")}&results=${detailed}&${columnsParam}`
       );
     }
     appStore.setSearchRequestURL(URLWithoutOffsetAndLimit);
@@ -276,7 +283,10 @@
     const response = await request(documentURL, "GET");
     if (response.ok) {
       ({ count, documents } = response.content);
-      if (query.queryType === SEARCHTYPES.EVENT) {
+      if (
+        (selectedQuery && selectedQuery.kind === SEARCHTYPES.EVENT) ||
+        type === SEARCHTYPES.EVENT
+      ) {
         count = response.content.count;
         documents = response.content.events;
       } else {
@@ -312,30 +322,20 @@
 
 <div class="mb-8 flex flex-wrap justify-between gap-4">
   <Queries
-    onQuerySelected={(detail: Query) => {
+    onQuerySelected={(id: number | undefined) => {
       const newParameters: SearchParameters = {
+        queryID: id,
         searchTerm: ""
       };
-      if (detail) {
-        newParameters.queryID = detail.id;
-        query = {
-          query: detail.query,
-          queryReset: detail.query,
-          columns: [...detail.columns],
-          queryType: detail.kind,
-          orders: detail.orders || []
-        };
-      }
       setSearchParameters(newParameters);
     }}
-    {queryString}
-    bind:selectedQuery={selectedCustomQuery}
+    selectedQueryID={queryID}
     bind:defaultQuery
     bind:queries
   ></Queries>
-  {#if !selectedCustomQuery}
+  {#if !selectedQuery}
     <TypeToggle
-      selected={query.queryType}
+      selected={type}
       eventButtonVisible={appStore.isEditor() ||
         appStore.isReviewer() ||
         appStore.isAdmin() ||
@@ -346,15 +346,10 @@
         query.queryType = newType;
         const newParameters = $state.snapshot(appStore.getSearchParametersForType(newType));
         if (newType === SEARCHTYPES.ADVISORY) {
-          query.columns = SEARCHPAGECOLUMNS.ADVISORY;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
         } else if (newType === SEARCHTYPES.DOCUMENT) {
-          query.columns = SEARCHPAGECOLUMNS.DOCUMENT;
           query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
-        } else if (newType === SEARCHTYPES.EVENT) {
-          query.columns = SEARCHPAGECOLUMNS.EVENT;
         }
-        clearSearch();
         searchTermInputValue = "";
         if (newParameters) {
           searchTermInputValue = "";
@@ -398,7 +393,7 @@
 </div>
 {#if searchTerm !== undefined}
   <AdvisoryTable
-    columns={query.columns}
+    {columns}
     {documents}
     {error}
     {loading}
@@ -408,7 +403,7 @@
     {currentPage}
     {orderBy}
     dataChanged={fetchData}
-    tableType={query.queryType}
+    tableType={type}
     query={`${queryQuery}`}
     bind:count
     bind:openRow
