@@ -18,7 +18,22 @@
   import { type Query } from "$lib/Queries/query";
   import { truncate } from "$lib/utils";
 
-  let queries: any[] = $state([]);
+  interface Props {
+    selectedQuery?: boolean;
+    queryString: any;
+    defaultQuery: any;
+    queries: any[];
+    onQuerySelected: (query: any) => void;
+  }
+
+  let {
+    selectedQuery = $bindable(false),
+    defaultQuery = $bindable(null),
+    queries = $bindable([]),
+    queryString,
+    onQuerySelected
+  }: Props = $props();
+
   let sortedQueries = $derived(
     queries.toSorted((a: any, b: any) => {
       if (a.global && !b.global) {
@@ -30,19 +45,6 @@
     })
   );
   let selectedIndex = $state(-2);
-  interface Props {
-    selectedQuery?: boolean;
-    queryString: any;
-    defaultQuery: any;
-    onQuerySelected: (query: any) => void;
-  }
-
-  let {
-    selectedQuery = $bindable(false),
-    defaultQuery = $bindable(null),
-    queryString,
-    onQuerySelected
-  }: Props = $props();
   let ignoredQueries: Query[] = $state([]);
   let errorMessage: ErrorDetails | null = $state(null);
   let advancedQueryErrorMessage: ErrorDetails | null = null;
@@ -80,7 +82,7 @@
     if (response.ok) {
       queries = response.content.filter((q: Query) => !q.dashboard && !q.default_query);
       let defaultQueries = response.content.filter((q: Query) => q.default_query);
-      if (defaultQueries) {
+      if (defaultQueries?.length > 0) {
         defaultQuery = defaultQueries[0];
       }
     } else if (response.error) {
@@ -114,10 +116,12 @@
       selectedIndex = -1;
       currentQueryTitle = undefined;
       selectedQuery = false;
+      onQuerySelected(undefined);
     } else {
       selectedIndex = index;
-      onQuerySelected(sortedQueries[selectedIndex]);
-      currentQueryTitle = sortedQueries[selectedIndex].name;
+      const newSelectedQuery = $state.snapshot(sortedQueries)[selectedIndex];
+      onQuerySelected(newSelectedQuery);
+      currentQueryTitle = newSelectedQuery.name;
       selectedQuery = true;
     }
   };

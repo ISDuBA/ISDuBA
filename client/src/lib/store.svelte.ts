@@ -11,6 +11,7 @@ import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./wo
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
+import type { SearchParameters } from "./Search/search";
 import { SEARCHTYPES } from "./Queries/query";
 
 type ErrorMessage = {
@@ -56,6 +57,12 @@ type AppStore = {
       requestURL: string | null;
       results: any[] | null;
       type: SEARCHTYPES;
+      searchURL: string | undefined;
+      parameters: {
+        advisories: SearchParameters | undefined;
+        documents: SearchParameters | undefined;
+        events: SearchParameters | undefined;
+      };
     };
     routerParams: any;
   };
@@ -120,7 +127,13 @@ const generateInitialState = (): AppStore => {
         offset: null,
         requestURL: null,
         results: null,
-        type: SEARCHTYPES.ADVISORY
+        type: SEARCHTYPES.ADVISORY,
+        parameters: {
+          advisories: undefined,
+          documents: undefined,
+          events: undefined
+        },
+        searchURL: undefined
       },
       routerParams: null
     },
@@ -405,6 +418,18 @@ export const appStore = {
 
   setConfig: (newConfig: any) => {
     state.app.config = newConfig;
+  },
+
+  setSearchURL: (newSearchURL: string | undefined) => {
+    state.app.search.searchURL = newSearchURL;
+  },
+
+  setSearchParametersForType: (type: SEARCHTYPES, parameters: SearchParameters) => {
+    state.app.search.parameters[type] = parameters;
+  },
+
+  getSearchParametersForType: (type: SEARCHTYPES) => {
+    return state.app.search.parameters[type];
   },
 
   reset: () => {

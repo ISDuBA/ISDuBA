@@ -59,7 +59,7 @@
       {#if showFileInput}
         <Fileupload
           wrapperClass="cursor-pointer disabled:cursor-not-allowed !p-0 dark:text-gray-400"
-          class="file:bg-primary-800"
+          class="file:bg-primary-700 hover:file:bg-primary-800 dark:file:bg-primary-600 dark:hover:file:bg-primary-700 text-white dark:text-white"
           value=""
           bind:files
           multiple

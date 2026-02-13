@@ -10,7 +10,6 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { onMount, tick, untrack } from "svelte";
   import {
     Button,
     Dropdown,
@@ -42,42 +41,48 @@
   import DeleteModal from "./DeleteModal.svelte";
   import { updateMultipleStates } from "$lib/Advisories/advisory";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
+  import type { SearchParameters } from "$lib/Search/search";
 
-  let openRow: number | null = $state(null);
-  let abortController: AbortController;
-  let requestOngoing = false;
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
   };
-  let limit = $state(10);
-  let offset = $state(0);
-  let count = $state(0);
-  let currentPage = $state(1);
-  let oldColumns: string[] | null = $state(null);
-  let documents: any = $state(null);
-  let documentIDs = $derived(documents?.map((d: any) => d.id) ?? []);
-  let loading = $state(false);
-  let error: ErrorDetails | null = $state(null);
   let changeWorkflowStateError: ErrorDetails | null = $state(null);
-  let prevQuery = "";
   interface Props {
     columns: string[];
     query?: string;
-    searchTerm?: string;
     tableType: SEARCHTYPES;
     orderBy?: string[];
-    defaultOrderBy?: any;
-    searchResults: boolean;
+    loading: boolean;
+    openRow?: number | null;
+    count: number;
+    offset: number;
+    limit: number;
+    currentPage: number;
+    numberOfPages: number;
+    error: ErrorDetails | null;
+    documents: any;
+    dataChanged: () => void;
+    last: () => void;
+    setSearchParameters: (SearchParameters: SearchParameters) => void;
   }
 
   let {
     columns,
     query = "",
-    searchTerm = "",
     tableType,
-    searchResults = $bindable(true),
-    orderBy = $bindable(["title"]),
-    defaultOrderBy = ["title"]
+    documents = null,
+    error = null,
+    loading = false,
+    openRow = $bindable(null),
+    orderBy = ["title"],
+    count = $bindable(0),
+    offset = 0,
+    limit = 10,
+    currentPage = 1,
+    numberOfPages = $bindable(0),
+    dataChanged = () => {},
+    last = () => {},
+    setSearchParameters = (_paginationParameters: SearchParameters) => {}
   }: Props = $props();
 
   const aggregate = true;
@@ -87,6 +92,8 @@
   let disableDiffButtons = $derived(
     appStore.state.app.diff.docA_ID !== undefined && appStore.state.app.diff.docB_ID !== undefined
   );
+
+  let documentIDs = $derived(documents?.map((d: any) => d.id) ?? []);
 
   let areAllSelected = $derived(
     documents &&
@@ -137,7 +144,7 @@
     changeWorkflowStateError = null;
     const response = await updateMultipleStates(changes);
     if (response.ok) {
-      fetchData();
+      dataChanged();
       dropdownOpen = false;
       selectedState = undefined;
     } else if (response.error) {
@@ -168,226 +175,50 @@
     return names[column] ?? column;
   };
 
-  const savePosition = () => {
-    let position = [offset, currentPage, limit, orderBy];
-    sessionStorage.setItem("tablePosition" + query + tableType, JSON.stringify(position));
-  };
-
-  let postitionRestored: boolean = $state(false);
-  const restorePosition = () => {
-    let position = sessionStorage.getItem("tablePosition" + query + tableType);
-    if (position) {
-      setPaginationParameters(JSON.parse(position));
-    } else {
-      setPaginationParameters({
-        offset: 0,
-        currentPage: 1
-      });
-    }
-  };
-
-  const setOrderBy = async () => {
-    await tick();
-    orderBy
-      .map((c) => {
-        return c.replace("-", "");
-      })
-      .forEach((c) => {
-        if (!orderBy.includes(c)) {
-          setPaginationParameters({
-            orderBy: defaultOrderBy
-          });
-        }
-      });
-  };
-
-  interface PaginationParameters {
-    offset?: number;
-    currentPage?: number;
-    limit?: number;
-    orderBy?: string[];
-  }
-
-  const setPaginationParameters = (paginationParameters: PaginationParameters) => {
-    if (paginationParameters.offset !== undefined) {
-      offset = paginationParameters.offset;
-    }
-    if (paginationParameters.currentPage !== undefined) {
-      currentPage = paginationParameters.currentPage;
-    }
-    if (paginationParameters.limit !== undefined) {
-      limit = paginationParameters.limit;
-    }
-    if (paginationParameters.orderBy !== undefined) {
-      orderBy = paginationParameters.orderBy;
-    }
-    savePosition();
-  };
-
-  $effect(() => {
-    untrack(() => orderBy);
-    if (!oldColumns && columns && JSON.stringify(oldColumns) !== JSON.stringify(columns)) {
-      oldColumns = columns;
-      setOrderBy();
-    }
-  });
-
-  $effect(() => {
-    untrack(() => offset);
-    untrack(() => currentPage);
-    untrack(() => limit);
-    untrack(() => orderBy);
-    if (tableType || !tableType) {
-      restorePosition();
-      savePosition();
-    }
-  });
-
-  onMount(() => {
-    if (!postitionRestored) {
-      restorePosition();
-      postitionRestored = true;
-    }
-  });
-
   let isAdmin = $derived(isRoleIncluded(appStore.getRoles(), [ADMIN]));
-
-  export async function fetchData(): Promise<void> {
-    appStore.setSearchResults([]);
-    appStore.clearSelectedDocumentIDs();
-    openRow = null;
-    if (query !== prevQuery) {
-      restorePosition();
-      savePosition();
-      prevQuery = query;
-    }
-    const searchSuffix = searchTerm ? `"${searchTerm}" search ${searchColumnName} as ` : "";
-    const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
-    let queryParam = "";
-    if (query || searchSuffix) {
-      queryParam = `query=${query}${searchSuffix}`;
-    }
-    let fetchColumns = [...columns];
-    let requiredColumns = ["id", "tracking_id", "publisher"];
-    for (let c of requiredColumns) {
-      if (!fetchColumns.includes(c)) {
-        fetchColumns.push(c);
-      }
-    }
-    let URLWithoutOffsetAndLimit = "";
-    appStore.setSearchOffset(offset);
-
-    if (tableType === SEARCHTYPES.EVENT) {
-      URLWithoutOffsetAndLimit = encodeURI(
-        `/api/events?${queryParam}&count=1&orders=${orderBy.join(" ")}&columns=${fetchColumns.join(" ")}${searchColumn}`
-      );
-    } else {
-      const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
-      URLWithoutOffsetAndLimit = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=${aggregate}&count=1&orders=${orderBy.join(" ")}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
-      );
-    }
-    appStore.setSearchRequestURL(URLWithoutOffsetAndLimit);
-    const documentURL = URLWithoutOffsetAndLimit + `&offset=${offset}&limit=${limit}`;
-
-    error = null;
-    loading = true;
-    if (!requestOngoing) {
-      requestOngoing = true;
-      abortController = new AbortController();
-    } else {
-      abortController.abort();
-    }
-    const response = await request(documentURL, "GET");
-    if (response.ok) {
-      if (tableType === SEARCHTYPES.EVENT) {
-        count = response.content.count;
-        documents = response.content.events;
-      } else {
-        if (aggregate) {
-          ({ count, documents } = JSON.parse(response.content));
-        } else {
-          ({ count, documents } = response.content);
-        }
-      }
-      appStore.setSearchResults($state.snapshot(documents));
-      appStore.setSearchResultCount($state.snapshot(count));
-      // We are outside the range of available documents,
-      // try the last page
-      if (offset >= count) {
-        await last();
-      }
-    } else if (response.error) {
-      error =
-        response.error === "400"
-          ? getErrorDetails(`Please check your search syntax.`, response)
-          : response.content.includes("deadline exceeded")
-            ? getErrorDetails(`The server wasn't able to answer your request in time.`)
-            : getErrorDetails(`Could not load query.`, response);
-    }
-    loading = false;
-    requestOngoing = false;
-  }
 
   const previous = async () => {
     if (offset - limit >= 0) {
-      setPaginationParameters({
-        currentPage: currentPage - 1,
-        offset: offset - limit > 0 ? offset - limit : 0
+      setSearchParameters({
+        currentPage: currentPage - 1
       });
     }
-    await fetchData();
   };
   const next = async () => {
     if (offset + limit <= count) {
-      setPaginationParameters({
-        currentPage: currentPage + 1,
-        offset: offset + limit
+      setSearchParameters({
+        currentPage: currentPage + 1
       });
     }
-    await fetchData();
   };
 
   const first = async () => {
-    setPaginationParameters({
-      currentPage: 1,
-      offset: 0
+    setSearchParameters({
+      currentPage: 1
     });
-    await fetchData();
-  };
-
-  const last = async () => {
-    setPaginationParameters({
-      currentPage: numberOfPages,
-      offset: (numberOfPages - 1) * limit
-    });
-    await fetchData();
   };
 
   const switchSort = async (column: string) => {
-    let found = orderBy.find((c) => c === column);
-    let foundMinus = orderBy.find((c) => c === "-" + column);
+    let newOrderBy = structuredClone($state.snapshot(orderBy));
+    let found = newOrderBy.find((c) => c === column);
+    let foundMinus = newOrderBy.find((c) => c === "-" + column);
     if (foundMinus) {
-      orderBy = orderBy.filter((c) => c !== "-" + column);
+      newOrderBy = newOrderBy.filter((c) => c !== "-" + column);
     }
     if (found) {
-      orderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
+      newOrderBy = newOrderBy.map((c) => (c === column ? `-${column}` : c));
     }
     if (!found && !foundMinus) {
-      orderBy.push(column);
+      newOrderBy.push(column);
     }
-    setPaginationParameters({
-      orderBy: orderBy
+    setSearchParameters({
+      orderBy: newOrderBy
     });
-    await tick();
-    await fetchData();
   };
 
   const onDeleted = async () => {
-    await fetchData();
+    dataChanged();
   };
-
-  let numberOfPages = $derived(Math.ceil(count / limit));
 
   const getColumnOrder = (orderBy: string[], column: string): string => {
     let index = orderBy.indexOf(column);
@@ -484,13 +315,12 @@
               { name: "50", value: 50 },
               { name: "100", value: 100 }
             ]}
-            bind:value={limit}
-            onchange={() => {
-              setPaginationParameters({
+            value={limit}
+            onchange={(event: any) => {
+              setSearchParameters({
                 currentPage: 1,
-                offset: 0
+                limit: event.target.value
               });
-              fetchData();
             }}
           ></Select>
           <Label class="mr-3 text-nowrap"
@@ -523,14 +353,11 @@
                 tmpCurrentPage = Math.floor(tmpCurrentPage);
                 if (tmpCurrentPage < 1) tmpCurrentPage = 1;
                 if (tmpCurrentPage > numberOfPages) tmpCurrentPage = numberOfPages;
-                const tmpOffset = (tmpCurrentPage - 1) * limit;
-                setPaginationParameters({
-                  currentPage: tmpCurrentPage,
-                  offset: tmpOffset
+                setSearchParameters({
+                  currentPage: tmpCurrentPage
                 });
-                fetchData();
               }}
-              bind:value={currentPage}
+              value={currentPage}
             />
             <span class="mr-3 ml-2 text-nowrap">of {numberOfPages} pages</span>
           </div>
