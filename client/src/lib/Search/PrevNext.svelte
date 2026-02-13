@@ -152,7 +152,7 @@
 
 {#if searchResults && openedDocument}
   {#if leading > 0}
-    {@render leadingFollowingIndicator(`${leading} ...`)}
+    {@render leadingFollowingIndicator(`${loading ? "" : leading} ...`)}
   {/if}
   {#each searchResults as result, i}
     {#if indices.includes(i)}
@@ -176,6 +176,6 @@
     {/if}
   {/each}
   {#if following > 0}
-    {@render leadingFollowingIndicator(`... ${following}`)}
+    {@render leadingFollowingIndicator(`... ${loading ? "" : following}`)}
   {/if}
 {/if}
