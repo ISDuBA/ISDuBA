@@ -153,7 +153,7 @@
     };
   };
 
-  const setSearchParameters = async (searchParameters: SearchParameters, fetch = true) => {
+  const setSearchParameters = async (searchParameters: SearchParameters) => {
     // Don't save non-default parameters in the URL to keep the URL as short as possible.
     let newURL = "/search?";
     if (searchParameters.searchTerm) {
