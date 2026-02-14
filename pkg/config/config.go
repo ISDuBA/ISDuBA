@@ -3,157 +3,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
-// Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+// SPDX-FileCopyrightText: 2024, 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering: 2024, 2026 Intevation GmbH <https://intevation.de>
 
 // Package config implements the configuration mechanisms.
 package config
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/gin-gonic/gin"
 	"github.com/gocsaf/csaf/v3/csaf"
 
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
-
-// DefaultConfigFile is the name of the default config file.
-const DefaultConfigFile = "isduba.toml"
-
-const (
-	defaultAdvisoryUploadLimit   = 512 * 1024 * 1024
-	defaultAnonymousEventLogging = false
-)
-
-var (
-	defaultURLPorts      = []PortRange{{80, 80}, {443, 443}}
-	defaultBlockedRanges = []string{
-		// Taken from https://gist.github.com/stefansundin/32e8399f0c67c07c372b5ab51560e004
-		"127.0.0.0/8",    // IPv4 loopback
-		"10.0.0.0/8",     // RFC1918
-		"172.16.0.0/12",  // RFC1918
-		"192.168.0.0/16", // RFC1918
-		"169.254.0.0/16", // RFC3927 link-local
-		"::1/128",        // IPv6 loopback
-		"fe80::/10",      // IPv6 link-local
-		"fc00::/7",       // IPv6 unique local addr
-	}
-)
-
-const (
-	defaultBlockLoopback = true
-)
-
-const (
-	defaultLogFile   = "isduba.log"
-	defaultLogLevel  = slog.LevelInfo
-	defaultLogSource = false
-	defaultLogJSON   = false
-)
-
-const (
-	defaultKeycloakURL           = "http://localhost:8080"
-	defaultKeycloakRealm         = "isduba"
-	defaultKeycloakCertsCaching  = 8 * time.Hour
-	defaultKeycloakTimeout       = 30 * time.Second
-	defaultKeycloakFullCertsPath = ""
-)
-
-const (
-	defaultWebHost    = "localhost"
-	defaultWebPort    = 8081
-	defaultWebGinMode = "release"
-	defaultWebStatic  = "web"
-)
-
-const (
-	defaultDatabaseHost                    = "localhost"
-	defaultDatabasePort                    = 5432
-	defaultDatabaseDatabase                = "isduba"
-	defaultDatabaseUser                    = "isduba"
-	defaultDatabasePassword                = "isduba"
-	defaultDatabaseAdminDatabase           = "postgres"
-	defaultDatabaseAdminUser               = "postgres"
-	defaultDatabaseAdminPassword           = "postgres"
-	defaultDatabaseMigrate                 = false
-	defaultDatabaseTerminateAfterMigration = true
-	defaultMaxQueryDuration                = 30 * time.Second
-)
-
-var (
-	defaultPublishersTLPs = models.PublishersTLPs{
-		"*": []models.TLP{models.TLPWhite},
-	}
-	defaultSourcesPublishersTLPs = models.PublishersTLPs{
-		"*": []models.TLP{
-			models.TLPWhite,
-			models.TLPGreen,
-			models.TLPAmber,
-			models.TLPRed,
-		},
-	}
-)
-
-const (
-	defaultTempStorageFilesTotal = 10
-	defaultTempStorageFilesUser  = 2
-	defaultTempStorageDuration   = 30 * time.Minute
-)
-
-const (
-	defaultSourcesDownloadSlots     = 100
-	defaultSourcesMaxSlotsPerSource = 2
-	defaultSourcesMaxRatePerSlot    = 0
-	defaultSourcesOpenPGPCaching    = 24 * time.Hour
-	defaultSourcesFeedRefresh       = 15 * time.Minute
-	defaultSourcesTimeout           = 30 * time.Second
-	defaultSourcesFeedLogLevel      = InfoFeedLogLevel
-	defaultSourcesFeedImporter      = "feedimporter"
-	defaultSourcesDefaultMessage    = "Missing something? To suggest new CSAF sources, " +
-		"please contact your CSAF source manager. Otherwise contact your administrator."
-	defaultSourcesStrictMode     = true
-	defaultSourcesSecure         = true
-	defaultSourcesSignatureCheck = true
-	defaultSourcesAge            = 17520 * time.Hour
-	defaultSourcesAESKey         = ""
-	defaultSourcesChecking       = 2 * time.Hour
-	defaultKeepFeedLogs          = 3 * 31 * 24 * time.Hour
-)
-
-const (
-	defaultForwarderUpdateInterval = 5 * time.Minute
-)
-
-const (
-	defaultRemoteValidatorURL   = ""
-	defaultRemoteValidatorCache = ""
-)
-
-var defaultRemoteValidatorPresets = []string{"mandatory"}
-
-const (
-	defaultClientKeycloakRealm    = "isduba"
-	defaultClientKeycloakClientID = "auth"
-	defaultClientUpdateInterval   = 5 * time.Minute
-	defaultClientIdleTimeout      = 30 * time.Minute
-)
-
-const (
-	defaultAggregatorsTimeout        = 30 * time.Second
-	defaultAggregatorsUpdateInterval = 1 * time.Hour
-)
-
-// HumanSize de-serializes sizes from integer strings
-// with suffix "k" (1000), "K" (1024), "m", "M", "g", "G".
-// With no suffix given bytes are assumed.
-type HumanSize int64
 
 // General are the overarching settings.
 type General struct {
@@ -319,6 +191,18 @@ func (w *Web) Addr() string {
 	return net.JoinHostPort(w.Host, strconv.Itoa(w.Port))
 }
 
+// Configure sets up the global web server attributes.
+func (w *Web) Configure() {
+	// If there is a fighting env var, warn the user.
+	if ginMode, ok := os.LookupEnv("GIN_MODE"); ok && ginMode != w.GinMode {
+		slog.Warn(
+			"GIN_MODE env var conflicts configuration. The configuration always wins.",
+			"env", ginMode,
+			"cfg", w.GinMode)
+	}
+	gin.SetMode(w.GinMode)
+}
+
 // Config returns a Keycloak Config configured by the given settings.
 func (kc *Keycloak) Config(mapper ginkeycloak.ClaimMapperFunc) *ginkeycloak.Config {
 	return ginkeycloak.NewConfig(
@@ -330,6 +214,33 @@ func (kc *Keycloak) Config(mapper ginkeycloak.ClaimMapperFunc) *ginkeycloak.Conf
 		ginkeycloak.Timeout(kc.Timeout),
 		ginkeycloak.CustomClaimsMapper(mapper),
 	)
+}
+
+// Config applies the logging configuration to the default slog logger.
+func (lg *Log) Config() error {
+	var w io.Writer
+	if lg.File == "" {
+		w = os.Stderr
+	} else {
+		f, err := os.OpenFile(lg.File, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
+		if err != nil {
+			return err
+		}
+		w = f
+	}
+	opts := slog.HandlerOptions{
+		AddSource: lg.Source,
+		Level:     lg.Level,
+	}
+	var handler slog.Handler
+	if lg.JSON {
+		handler = slog.NewJSONHandler(w, &opts)
+	} else {
+		handler = slog.NewTextHandler(w, &opts)
+	}
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+	return nil
 }
 
 // Load loads the configuration from a given file. An empty string
@@ -554,35 +465,4 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_AGGREGATORS_TIMEOUT", storeDuration(&cfg.Aggregators.Timeout)},
 		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
 	)
-}
-
-// UnmarshalText implements [encoding.TextUnmarshaler].
-func (hs *HumanSize) UnmarshalText(b []byte) error {
-	scale := int64(1)
-	if l := len(b); l > 0 {
-		switch b[l-1] {
-		case 'k':
-			scale = 1000
-		case 'K':
-			scale = 1024
-		case 'm':
-			scale = 1000 * 1000
-		case 'M':
-			scale = 1024 * 1024
-		case 'g':
-			scale = 1000 * 1000 * 1000
-		case 'G':
-			scale = 1024 * 1024 * 1024
-		default:
-			goto noUnits
-		}
-		b = b[:l-1]
-	}
-noUnits:
-	x, err := strconv.ParseInt(string(b), 10, 64)
-	if err != nil {
-		return err
-	}
-	*hs = HumanSize(scale * x)
-	return nil
 }
