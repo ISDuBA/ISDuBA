@@ -412,14 +412,15 @@ func (f *Forwarder) presetsEmptyDefaults() {
 
 func (cfg *Config) fillFromEnv() error {
 	var (
-		storeString       = store(noparse)
-		storeInt          = store(strconv.Atoi)
-		storeBool         = store(strconv.ParseBool)
-		storeLevel        = store(storeLevel)
-		storeDuration     = store(time.ParseDuration)
-		storeHumanSize    = store(storeHumanSize)
-		storeFeedLogLevel = store(storeFeedLogLevel)
-		storeFloat64      = store(parseFloat64)
+		storeString            = store(noparse)
+		storeInt               = store(strconv.Atoi)
+		storeBool              = store(strconv.ParseBool)
+		storeLevel             = store(storeLevel)
+		storeDuration          = store(time.ParseDuration)
+		storeHumanSize         = store(storeHumanSize)
+		storeFeedLogLevel      = store(storeFeedLogLevel)
+		storeForwarderStrategy = store(ParseForwarderStrategy)
+		storeFloat64           = store(parseFloat64)
 	)
 	return storeFromEnv(
 		envStore{"ISDUBA_ADVISORY_UPLOAD_LIMIT", storeHumanSize(&cfg.General.AdvisoryUploadLimit)},
@@ -475,6 +476,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
+		envStore{"ISDUBA_FORWARDER_STRATEGY", storeForwarderStrategy(&cfg.Forwarder.Strategy)},
 		envStore{"ISDUBA_AGGREGATORS_TIMEOUT", storeDuration(&cfg.Aggregators.Timeout)},
 		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
 	)
