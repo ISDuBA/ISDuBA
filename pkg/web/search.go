@@ -47,7 +47,6 @@ func (c *Controller) aggregatedResults(
 		sql      = builder.CreateQuery(fields, order, -1, -1)
 		rctx     = ctx.Request.Context()
 		filtered = builder.RemoveIgnoredFields(fields)
-		esc      = needsEscaping(filtered, builder.Aliases)
 	)
 
 	if slog.Default().Enabled(rctx, slog.LevelDebug) {
@@ -107,7 +106,6 @@ func (c *Controller) aggregatedResults(
 						if name == "id" {
 							continue
 						}
-						v = esc.escape(j, v)
 						if x, ok := have[name]; !ok || !reflect.DeepEqual(x, v) {
 							data[name] = v
 							have[name] = v
