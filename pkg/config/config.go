@@ -107,20 +107,22 @@ type Sources struct {
 
 // ForwardTarget are the config options for the forward target.
 type ForwardTarget struct {
-	URL               string        `toml:"url"`
-	Name              string        `toml:"name"`
-	ClientPrivateCert string        `toml:"private_cert"`
-	ClientPublicCert  string        `toml:"public_cert"`
-	Publisher         *string       `toml:"publisher"`
-	Header            []string      `toml:"header"`
-	Automatic         bool          `toml:"automatic"`
-	Timeout           time.Duration `toml:"timeout"`
+	URL               string             `toml:"url"`
+	Name              string             `toml:"name"`
+	ClientPrivateCert string             `toml:"private_cert"`
+	ClientPublicCert  string             `toml:"public_cert"`
+	Publisher         *string            `toml:"publisher"`
+	Header            []string           `toml:"header"`
+	Automatic         bool               `toml:"automatic"`
+	Timeout           time.Duration      `toml:"timeout"`
+	Strategy          *ForwarderStrategy `toml:"strategy"`
 }
 
 // Forwarder are the config options for the document forwarder.
 type Forwarder struct {
-	Targets        []ForwardTarget `toml:"target"`
-	UpdateInterval time.Duration   `toml:"update_interval"`
+	Targets        []ForwardTarget   `toml:"target"`
+	UpdateInterval time.Duration     `toml:"update_interval"`
+	Strategy       ForwarderStrategy `toml:"strategy"`
 }
 
 // Aggregators are the config options for the aggregators.
@@ -313,6 +315,7 @@ func Load(file string) (*Config, error) {
 		},
 		Forwarder: Forwarder{
 			UpdateInterval: defaultForwarderUpdateInterval,
+			Strategy:       defaultForwarderStratgy,
 		},
 		RemoteValidator: csaf.RemoteValidatorOptions{
 			URL:     defaultRemoteValidatorURL,
@@ -394,6 +397,16 @@ func (cfg *Config) presetEmptyDefaults() {
 	}
 	if cfg.Client.KeycloakURL == "" {
 		cfg.Client.KeycloakURL = cfg.Keycloak.URL
+	}
+	cfg.Forwarder.presetsEmptyDefaults()
+}
+
+func (f *Forwarder) presetsEmptyDefaults() {
+	// If the strategy is not set in the targets inherit the global value.
+	for i := range f.Targets {
+		if target := &f.Targets[i]; target.Strategy == nil {
+			target.Strategy = &f.Strategy
+		}
 	}
 }
 
