@@ -113,7 +113,7 @@
       {#each sortedQueries as query}
         <Button
           color="light"
-          onclick={() => selectQuery(query.id)}
+          onclick={() => selectQuery(query.id === selectedQueryID ? undefined : query.id)}
           class={getClass(query.global, query.id === selectedQueryID)}
         >
           <span title={query.description}>{truncate(query.name, 30)}</span>
