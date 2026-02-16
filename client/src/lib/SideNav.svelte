@@ -26,7 +26,7 @@
 
   let activeUrl = $derived("/" + page.url.hash);
   let searchLabel = $derived(
-    appStore.state.app.search.count !== null
+    appStore.state.app.search.count !== null && appStore.state.app.search.count !== undefined
       ? `Search (${appStore.state.app.search.count})`
       : "Search"
   );
