@@ -398,16 +398,6 @@ func (cfg *Config) presetEmptyDefaults() {
 	if cfg.Client.KeycloakURL == "" {
 		cfg.Client.KeycloakURL = cfg.Keycloak.URL
 	}
-	cfg.Forwarder.presetsEmptyDefaults()
-}
-
-func (f *Forwarder) presetsEmptyDefaults() {
-	// If the strategy is not set in the targets inherit the global value.
-	for i := range f.Targets {
-		if target := &f.Targets[i]; target.Strategy == nil {
-			target.Strategy = &f.Strategy
-		}
-	}
 }
 
 func (cfg *Config) fillFromEnv() error {

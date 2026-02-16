@@ -23,10 +23,13 @@ type HumanSize int64
 // FeedLogLevel represents a log level in feeds.
 type FeedLogLevel int32
 
+// ForwarderStrategy is the filter strategy used by a forwarder.
 type ForwarderStrategy int
 
 const (
+	// ForwarderStrategyAll forwards all documents to a target.
 	ForwarderStrategyAll ForwarderStrategy = iota
+	// ForwarderStrategyImportant only forwards important documents to a target.
 	ForwarderStrategyImportant
 )
 

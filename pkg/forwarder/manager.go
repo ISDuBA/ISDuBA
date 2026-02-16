@@ -11,6 +11,7 @@ package forwarder
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -56,6 +57,42 @@ type ForwardManager struct {
 	done       bool
 	forwarders []*forwarder
 	changes    changedAdvisories
+}
+
+type (
+	trackingStatus int
+
+	versionInfo struct {
+		id            int64
+		version       string
+		status        trackingStatus
+		historyLength int
+		current       *time.Time
+		initial       *time.Time
+	}
+)
+
+const (
+	unknownStatus = trackingStatus(iota)
+	draftStatus
+	interimStatus
+	finalStatus
+)
+
+func parseTrackingStatus(s *string) trackingStatus {
+	if s == nil {
+		return unknownStatus
+	}
+	switch *s {
+	case "final":
+		return finalStatus
+	case "interim":
+		return interimStatus
+	case "draft":
+		return draftStatus
+	default:
+		return unknownStatus
+	}
 }
 
 // NewForwardManager creates a new forward manager.
@@ -129,13 +166,37 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 // the manager. If the manager is ready a fresh changedAdvisories map
 // is returned. If the delivery would block the given map is
 // returned so that the poller can go on detecting avoiding duplicates.
-func (m *ForwardManager) changesDetected(changes changedAdvisories) changedAdvisories {
+func (fm *ForwardManager) changesDetected(changes changedAdvisories) changedAdvisories {
 	select {
-	case m.fns <- func(m *ForwardManager) { m.changes = changes }:
+	case fm.fns <- func(fm *ForwardManager) { fm.changes = changes }:
 		return changedAdvisories{}
 	default:
 		return changes
 	}
+}
+
+var (
+	filterIndex = map[config.ForwarderStrategy]int{
+		config.ForwarderStrategyAll:       0,
+		config.ForwarderStrategyImportant: 1,
+	}
+	filters = [2]func([]versionInfo) []int{
+		filterAll,
+		filterImportant,
+	}
+)
+
+func filterAll(vis []versionInfo) []int {
+	indices := make([]int, len(vis))
+	for i := range indices {
+		indices[i] = i
+	}
+	return indices
+}
+
+func filterImportant(vis []versionInfo) []int {
+	// TODO: Implement me!
+	return filterAll(vis)
 }
 
 // fillForwarderQueues takes the advisory changes aggregated by the poller
@@ -153,7 +214,9 @@ func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
 			fw.ping()
 		}
 	}()
-
+	// Do not recalculate indices when having more than forwarder
+	// with same strategy.
+	indicesCache := make([][]int, len(filterIndex))
 	if err := fm.db.Run(
 		ctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
@@ -165,14 +228,32 @@ func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
 				}) {
 					continue
 				}
-
-				// TODO: Implement me!
-
-				// Register forwarders which need a ping afterwards.
+				vis, err := loadVersionInfos(rctx, conn, adv.id)
+				if err != nil {
+					return err
+				}
+				clear(indicesCache)
 				for _, fw := range fm.forwarders {
-					if fw.cfg.Automatic && fw.acceptsPublisher(adv.publisher) {
-						pings[fw] = struct{}{}
+					if !fw.cfg.Automatic || !fw.acceptsPublisher(adv.publisher) {
+						continue
 					}
+					strategy := fm.cfg.Strategy
+					if fw.cfg.Strategy != nil {
+						strategy = *fw.cfg.Strategy
+					}
+					fi := filterIndex[strategy]
+					if indicesCache[fi] == nil {
+						indicesCache[fi] = filters[fi](vis)
+					}
+					if err := storeIndicesInQueue(
+						ctx, conn,
+						vis, indicesCache[fi],
+						fw.cfg.URL,
+					); err != nil {
+						return err
+					}
+					// Forwarder needs a ping afterwards.
+					pings[fw] = struct{}{}
 				}
 			}
 			return nil
@@ -181,8 +262,102 @@ func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
 		// Store the remaining unhandled changes back for later.
 		fm.changes = ordered.changes()
 		slog.Error("forwarder", "error", err)
-		return
 	}
+}
+
+func storeIndicesInQueue(
+	ctx context.Context,
+	conn *pgxpool.Conn,
+	vis []versionInfo,
+	indices []int,
+	url string,
+) error {
+	const upsertSQL = `` +
+		`INSERT INTO forwarders_queue` +
+		` (forwarders_id, documents_id) ` +
+		`SELECT id, $1` +
+		` FROM forwarders` +
+		` WHERE url = $2` +
+		` ON CONFLICT (forwarders_id, documents_id) DO NOTHING`
+	// XXX: Maybe using batches here is a bit to aggressive?!
+	batch := &pgx.Batch{}
+	for _, idx := range indices {
+		batch.Queue(upsertSQL, vis[idx].id, url)
+	}
+	if err := conn.SendBatch(ctx, batch).Close(); err != nil {
+		return fmt.Errorf(
+			"sending documents to queue failed: %w", err)
+	}
+	return nil
+}
+
+func loadVersionInfos(
+	ctx context.Context,
+	conn *pgxpool.Conn,
+	advisoryID int64,
+) ([]versionInfo, error) {
+	const versionSQL = `` +
+		`SELECT` +
+		` id,` +
+		` version,` +
+		` tracking_status::text,` +
+		` coalesce(rev_history_length, 0),` +
+		` current_release_date,` +
+		` initial_release_date ` +
+		`FROM documents ` +
+		`WHERE` +
+		` advisories_id = $1`
+	rows, _ := conn.Query(ctx, versionSQL, advisoryID)
+	vis, err := pgx.CollectRows(
+		rows,
+		func(row pgx.CollectableRow) (versionInfo, error) {
+			var vi versionInfo
+			var status *string
+			err := row.Scan(
+				&vi.id,
+				&vi.version,
+				&status,
+				&vi.historyLength,
+				&vi.current,
+				&vi.initial)
+			vi.status = parseTrackingStatus(status)
+			if vi.current != nil {
+				*vi.current = vi.current.UTC()
+			}
+			if vi.initial != nil {
+				*vi.initial = vi.initial.UTC()
+			}
+			return vi, err
+		})
+	if err != nil {
+		return nil, fmt.Errorf("loading version infos failed: %w", err)
+	}
+	orderVersionInfos(vis)
+	return vis, nil
+}
+
+func compare[T interface{ Compare(T) int }](a, b *T) int {
+	switch {
+	case a == nil && b == nil:
+		return 0
+	case a == nil:
+		return +1
+	case b == nil:
+		return -1
+	default:
+		return (*a).Compare(*b)
+	}
+}
+
+func orderVersionInfos(vis []versionInfo) {
+	slices.SortFunc(vis, func(a, b versionInfo) int {
+		return cmp.Or(
+			compare(a.initial, b.initial),
+			compare(a.current, b.current),
+			cmp.Compare(a.status, b.status),
+			cmp.Compare(a.historyLength, b.historyLength),
+		)
+	})
 }
 
 func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *forwarder, documentIDs []int64) {
