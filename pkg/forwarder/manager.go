@@ -352,10 +352,10 @@ func compare[T interface{ Compare(T) int }](a, b *T) int {
 func orderVersionInfos(vis []versionInfo) {
 	slices.SortFunc(vis, func(a, b versionInfo) int {
 		return cmp.Or(
-			compare(a.initial, b.initial),
-			compare(a.current, b.current),
-			cmp.Compare(a.status, b.status),
-			cmp.Compare(a.historyLength, b.historyLength),
+			compare(b.initial, a.initial),
+			compare(b.current, a.current),
+			cmp.Compare(b.status, a.status),
+			cmp.Compare(b.historyLength, a.historyLength),
 		)
 	})
 }
