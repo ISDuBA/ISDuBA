@@ -52,8 +52,9 @@ type ForwardManager struct {
 	cfg        *config.Forwarder
 	db         *database.DB
 	fns        chan func(*ForwardManager)
-	forwarders []*forwarder
 	done       bool
+	forwarders []*forwarder
+	changes    changedAdvisories
 }
 
 // NewForwardManager creates a new forward manager.
@@ -91,6 +92,10 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 		}
 	}
 
+	poller := newPoller(fm)
+	go poller.run(ctx)
+	defer poller.kill()
+
 	ticker := time.NewTicker(fm.cfg.UpdateInterval)
 	defer ticker.Stop()
 	for !fm.done {
@@ -102,6 +107,19 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 		case <-ticker.C:
 			fm.runTargets(ctx)
 		}
+	}
+}
+
+// changesDetected tries to deliver detected advisory changes to
+// the manager. If the manager is ready a fresh changedAdvisories map
+// is returned. If the delivery would block the given map is
+// returned so that the poller can go on detecting avoiding duplicates.
+func (m *ForwardManager) changesDetected(changes changedAdvisories) changedAdvisories {
+	select {
+	case m.fns <- func(m *ForwardManager) { m.changes = changes }:
+		return changedAdvisories{}
+	default:
+		return changes
 	}
 }
 
