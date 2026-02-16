@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -83,29 +84,43 @@ func NewForwardManager(
 
 // Run runs the forward manager. To be used in a Go routine.
 func (fm *ForwardManager) Run(ctx context.Context) {
-
+	hasAutomatic := false
 	// Start the automatic forwarders.
 	for _, forwarder := range fm.forwarders {
 		if forwarder.cfg.Automatic {
+			hasAutomatic = true
 			go forwarder.run(ctx)
 			defer forwarder.kill()
 		}
 	}
-
+	// No need to poll if there are no automatic forwarders.
+	if !hasAutomatic {
+		for !fm.done {
+			select {
+			case fn := <-fm.fns:
+				fn(fm)
+			case <-ctx.Done():
+				return
+			}
+		}
+		return
+	}
+	// Start the poller
 	poller := newPoller(fm)
 	go poller.run(ctx)
 	defer poller.kill()
-
+	// The poller should wake us up but in case wake up
+	// on our own timer based.
 	ticker := time.NewTicker(fm.cfg.UpdateInterval / 2)
 	defer ticker.Stop()
 	for !fm.done {
+		fm.fillForwarderQueues(ctx)
 		select {
 		case fn := <-fm.fns:
 			fn(fm)
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			fm.runTargets(ctx)
 		}
 	}
 }
@@ -123,27 +138,39 @@ func (m *ForwardManager) changesDetected(changes changedAdvisories) changedAdvis
 	}
 }
 
-// runTargets fetches and sends all new documents to the configured targets.
-func (fm *ForwardManager) runTargets(ctx context.Context) {
+// fillForwarderQueues takes the advisory changes aggregated by the poller
+func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
+	if len(fm.changes) == 0 {
+		return
+	}
+	ordered := fm.changes.order()
+	fm.changes = nil
 
-	/*
-		for _, target := range fm.targets {
-			if !target.automatic || !target.running.TryLock() {
-				continue
-			}
-			documentIDs, err := fm.fetchNewDocuments(ctx, target.url, target.publisher)
-			if err != nil {
-				slog.Error("could not fetch documents to forward", "err", err)
-				target.running.Unlock()
-				continue
-			}
-			if len(documentIDs) > 0 {
-				go fm.uploadDocuments(ctx, target, documentIDs)
-			} else {
-				target.running.Unlock()
+	pings := map[*forwarder]struct{}{}
+	defer func() {
+		// Notify forwarders that have new jobs.
+		for fw := range pings {
+			fw.ping()
+		}
+	}()
+
+	for _, adv := range ordered {
+		// Ignore advisories no forwarder is interested in.
+		if !slices.ContainsFunc(fm.forwarders, func(fw *forwarder) bool {
+			return fw.cfg.Automatic && fw.acceptsPublisher(adv.publisher)
+		}) {
+			continue
+		}
+
+		// TODO: Implement me!
+
+		// Register forwarders which need a ping afterwards.
+		for _, fw := range fm.forwarders {
+			if fw.cfg.Automatic && fw.acceptsPublisher(adv.publisher) {
+				pings[fw] = struct{}{}
 			}
 		}
-	*/
+	}
 }
 
 func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *forwarder, documentIDs []int64) {
