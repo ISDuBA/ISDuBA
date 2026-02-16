@@ -20,7 +20,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"text/template"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gocsaf/csaf/v3/csaf"
@@ -505,8 +504,7 @@ func (c *Controller) flatResults(
 			}
 			defer rows.Close()
 			filtered := builder.RemoveIgnoredFields(fields)
-			escape := needsEscaping(filtered, builder.Aliases)
-			if results, err = scanRows(rows, filtered, escape); err != nil {
+			if results, err = scanRows(rows, filtered); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -532,7 +530,6 @@ func (c *Controller) flatResults(
 func scanRows(
 	rows pgx.Rows,
 	fields []string,
-	esc escaping,
 ) ([]map[string]any, error) {
 	values := make([]any, len(fields))
 	ptrs := make([]any, len(fields))
@@ -546,7 +543,7 @@ func scanRows(
 		}
 		result := make(map[string]any, len(fields))
 		for i, p := range fields {
-			result[p] = esc.escape(i, values[i])
+			result[p] = values[i]
 		}
 		results = append(results, result)
 	}
@@ -554,24 +551,4 @@ func scanRows(
 		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
 	return results, nil
-}
-
-type escaping []bool
-
-func needsEscaping(fields []string, aliases map[string]string) escaping {
-	escape := make(escaping, len(fields))
-	for i, field := range fields {
-		_, ok := aliases[field]
-		escape[i] = ok
-	}
-	return escape
-}
-
-func (esc escaping) escape(i int, v any) any {
-	if esc[i] {
-		if s, ok := v.(string); ok {
-			v = template.HTMLEscapeString(s)
-		}
-	}
-	return v
 }

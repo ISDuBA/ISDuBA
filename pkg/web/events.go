@@ -121,8 +121,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 			}
 			defer rows.Close()
 			filtered := builder.RemoveIgnoredFields(fields)
-			escape := needsEscaping(filtered, builder.Aliases)
-			if results, err = scanRows(rows, filtered, escape); err != nil {
+			if results, err = scanRows(rows, filtered); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
