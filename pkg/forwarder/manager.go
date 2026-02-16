@@ -96,7 +96,7 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 	go poller.run(ctx)
 	defer poller.kill()
 
-	ticker := time.NewTicker(fm.cfg.UpdateInterval)
+	ticker := time.NewTicker(fm.cfg.UpdateInterval / 2)
 	defer ticker.Stop()
 	for !fm.done {
 		select {
