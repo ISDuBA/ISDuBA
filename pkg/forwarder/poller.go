@@ -77,7 +77,9 @@ func (p *poller) poll(ctx context.Context) {
 		` JOIN documents docs ON docs.advisories_id = ads.id ` +
 		` JOIN events_log el  ON docs.id            = el.documents_id ` +
 		`WHERE` +
-		` ads.recent >= $1 AND el.event = 'import_document`
+		` ads.recent >= $1 AND` +
+		` el.event = 'import_document' AND` +
+		` el.time >= $1`
 
 	if err := p.manager.db.Run(
 		ctx,
@@ -105,7 +107,7 @@ func (p *poller) poll(ctx context.Context) {
 				// This should only deliver many results the first time.
 				// Subsequent polls should only deliver what have
 				// changed since.
-				if ca.first.After(p.latest) {
+				if p.latest.IsZero() || ca.first.After(p.latest) {
 					p.latest = ca.first
 				}
 				if old := p.changes[id]; old == nil {

@@ -183,7 +183,6 @@ func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
 		slog.Error("forwarder", "error", err)
 		return
 	}
-
 }
 
 func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *forwarder, documentIDs []int64) {
