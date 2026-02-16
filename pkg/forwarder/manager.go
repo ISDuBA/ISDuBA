@@ -154,23 +154,36 @@ func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
 		}
 	}()
 
-	for _, adv := range ordered {
-		// Ignore advisories no forwarder is interested in.
-		if !slices.ContainsFunc(fm.forwarders, func(fw *forwarder) bool {
-			return fw.cfg.Automatic && fw.acceptsPublisher(adv.publisher)
-		}) {
-			continue
-		}
+	if err := fm.db.Run(
+		ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			for ; len(ordered) > 0; ordered = ordered[1:] {
+				adv := &ordered[0]
+				// Ignore advisories no forwarder is interested in.
+				if !slices.ContainsFunc(fm.forwarders, func(fw *forwarder) bool {
+					return fw.cfg.Automatic && fw.acceptsPublisher(adv.publisher)
+				}) {
+					continue
+				}
 
-		// TODO: Implement me!
+				// TODO: Implement me!
 
-		// Register forwarders which need a ping afterwards.
-		for _, fw := range fm.forwarders {
-			if fw.cfg.Automatic && fw.acceptsPublisher(adv.publisher) {
-				pings[fw] = struct{}{}
+				// Register forwarders which need a ping afterwards.
+				for _, fw := range fm.forwarders {
+					if fw.cfg.Automatic && fw.acceptsPublisher(adv.publisher) {
+						pings[fw] = struct{}{}
+					}
+				}
 			}
-		}
+			return nil
+		}, 0,
+	); err != nil {
+		// Store the remaining unhandled changes back for later.
+		fm.changes = ordered.changes()
+		slog.Error("forwarder", "error", err)
+		return
 	}
+
 }
 
 func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *forwarder, documentIDs []int64) {

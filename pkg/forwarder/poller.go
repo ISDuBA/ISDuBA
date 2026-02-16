@@ -29,6 +29,7 @@ type (
 		*changedAdvisory
 		id int64
 	}
+	orderedAdvisories []changedIDAdvisory
 )
 
 type poller struct {
@@ -135,8 +136,8 @@ func (p *poller) poll(ctx context.Context) {
 	}
 }
 
-func (cas changedAdvisories) order() []changedIDAdvisory {
-	caids := make([]changedIDAdvisory, 0, len(cas))
+func (cas changedAdvisories) order() orderedAdvisories {
+	caids := make(orderedAdvisories, 0, len(cas))
 	for id, advisory := range cas {
 		caids = append(caids, changedIDAdvisory{changedAdvisory: advisory, id: id})
 	}
@@ -147,4 +148,12 @@ func (cas changedAdvisories) order() []changedIDAdvisory {
 		)
 	})
 	return caids
+}
+
+func (oas orderedAdvisories) changes() changedAdvisories {
+	changes := make(changedAdvisories, len(oas))
+	for _, adv := range oas {
+		changes[adv.id] = adv.changedAdvisory
+	}
+	return changes
 }
