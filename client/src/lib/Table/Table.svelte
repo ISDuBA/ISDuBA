@@ -84,9 +84,6 @@
     last = () => {},
     setSearchParameters = (_paginationParameters: SearchParameters) => {}
   }: Props = $props();
-
-  const aggregate = true;
-
   const tdClassRelative = `${tdClass} relative`;
 
   let disableDiffButtons = $derived(
@@ -437,13 +434,12 @@
         </TableHead>
         <TableBody>
           {#each documents as doc, i}
-            {@const item =
-              aggregate === true
-                ? {
-                    id: doc.id,
-                    ...doc.data[0]
-                  }
-                : doc}
+            {@const item = [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)
+              ? {
+                  id: doc.id,
+                  ...doc.data[0]
+                }
+              : doc}
             <tr
               class={i % 2 == 1
                 ? "bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"
@@ -732,7 +728,7 @@
                 {/if}
               {/each}
             </tr>
-            {#if aggregate}
+            {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)}
               {#each doc.data as result}
                 {#if result[searchColumnName]}
                   <tr
