@@ -38,7 +38,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "^10.4.24",
     "babel-plugin-istanbul": "^7.0.1",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^2.46.1",
     "flowbite": "^4.0.1",
