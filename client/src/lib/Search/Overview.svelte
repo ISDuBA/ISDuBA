@@ -369,15 +369,10 @@
     buttonText={advancedSearch ? "Apply" : "Search"}
     placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
     search={(term) => {
-      if (term === "") {
-        setSearchParameters({
-          searchTerm: ""
-        });
-      } else {
-        setSearchParameters({
-          searchTerm: term
-        });
-      }
+      setSearchParameters({
+        currentPage: 1,
+        searchTerm: term
+      });
     }}
     searchTerm={searchTermInputValue}
   ></CSearch>
