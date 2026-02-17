@@ -94,7 +94,11 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 				state      string
 			)
 			if err := tx.QueryRow(rctx, findSSVC, documentID).Scan(
-				&ssvc, &trackingID, &publisher, &tlp, &state,
+				&ssvc,
+				&trackingID,
+				&publisher,
+				&tlp,
+				&state,
 			); err != nil {
 				return err
 			}
@@ -192,11 +196,11 @@ func (c *Controller) viewSSVC(ctx *gin.Context) {
 		`LEFT JOIN LATERAL ` +
 		`(SELECT ssvc FROM ssvc_history ` +
 		`WHERE documents_id = docs.id ORDER BY changedate DESC, change_number DESC LIMIT 1) ` +
-		`sh ON true WHERE docs.id = $1;`
+		`sh ON true WHERE docs.id = $1`
 
 	var (
 		forbidden bool
-		ssvc      string
+		ssvc      models.SSVCResponse
 	)
 
 	if err := c.db.Run(
@@ -222,7 +226,9 @@ func (c *Controller) viewSSVC(ctx *gin.Context) {
 				return nil
 			}
 
-			ssvc = ssvcdb.String
+			if ssvcdb.Valid {
+				ssvc.SSVC = &ssvcdb.String
+			}
 			return nil
 		}, 0,
 	); err != nil {
@@ -238,7 +244,7 @@ func (c *Controller) viewSSVC(ctx *gin.Context) {
 	case forbidden:
 		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
 	default:
-		ctx.JSON(http.StatusOK, gin.H{"ssvc": ssvc})
+		ctx.JSON(http.StatusOK, ssvc)
 	}
 }
 
@@ -320,7 +326,7 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 	case forbidden:
 		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
 	case len(ssvcHistory) == 0:
-		models.SendErrorMessage(ctx, http.StatusNotFound, "No History found")
+		models.SendErrorMessage(ctx, http.StatusNotFound, "no History found")
 	default:
 		ctx.JSON(http.StatusOK, gin.H{"ssvcHistory": ssvcHistory})
 	}

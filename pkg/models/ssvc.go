@@ -65,7 +65,12 @@ type SSVCHistoryEntry struct {
 	SSVC         *string   `json:"ssvc"`
 	ChangeDate   time.Time `json:"changedate"`
 	ChangeNumber int64     `json:"change_number"`
-	Actor        *string   `json:"actor"`
+	Actor        *string   `json:"actor, omitempty"`
+}
+
+// SSVCResponse represents a singular SSVC
+type SSVCResponse struct {
+	SSVC *string `json:"ssvc,omitempty"`
 }
 
 func (dp *ssvcDecisionPoint) findOption(option string) *ssvcDecisionPointOption {
