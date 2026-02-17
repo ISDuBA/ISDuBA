@@ -172,7 +172,7 @@
 
     if (searchParameters.type && searchParameters.type !== SEARCHTYPES.ADVISORY) {
       newURL = newURL.concat(`&type=${encodeURIComponent(searchParameters.type)}`);
-    } else if (searchParameters.type === undefined && type !== SEARCHTYPES.ADVISORY) {
+    } else if (!Object.keys(searchParameters).includes("type") && type !== SEARCHTYPES.ADVISORY) {
       newURL = newURL.concat(`&type=${encodeURIComponent(type)}`);
     }
 
@@ -202,7 +202,7 @@
 
     if (searchParameters.detailed !== undefined && searchParameters.detailed !== true) {
       newURL = newURL.concat(`&detailed=${searchParameters.detailed}`);
-    } else if (searchParameters.detailed === undefined && detailed !== true) {
+    } else if (!Object.keys(searchParameters).includes("detailed") && detailed !== true) {
       newURL = newURL.concat(`&detailed=${encodeURIComponent(detailed)}`);
     }
 
@@ -324,8 +324,11 @@
   <Queries
     onQuerySelected={(id: number | undefined) => {
       const newParameters: SearchParameters = {
+        currentPage: 1,
+        limit: INITIAL_LIMIT,
         queryID: id,
-        searchTerm: ""
+        searchTerm: "",
+        type: undefined
       };
       setSearchParameters(newParameters);
     }}
