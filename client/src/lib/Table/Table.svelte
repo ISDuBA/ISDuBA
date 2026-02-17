@@ -10,7 +10,6 @@
 
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { onMount, tick, untrack } from "svelte";
   import {
     Button,
     Dropdown,
@@ -19,12 +18,12 @@
     Select,
     TableBody,
     TableBodyCell,
-    TableBodyRow,
     TableHead,
     TableHeadCell,
     Table,
     Img
   } from "flowbite-svelte";
+  import DOMPurify from "dompurify";
   import { tablePadding, title, publisher, searchColumnName, tdClass } from "$lib/Table/defaults";
   import { Spinner } from "flowbite-svelte";
   import { request } from "$lib/request";
@@ -42,49 +41,56 @@
   import DeleteModal from "./DeleteModal.svelte";
   import { updateMultipleStates } from "$lib/Advisories/advisory";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
+  import type { SearchParameters } from "$lib/Search/search";
 
-  let openRow: number | null = $state(null);
-  let abortController: AbortController;
-  let requestOngoing = false;
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
   };
-  let limit = $state(10);
-  let offset = $state(0);
-  let count = $state(0);
-  let currentPage = $state(1);
-  let oldColumns: string[] | null = $state(null);
-  let documents: any = $state(null);
-  let documentIDs = $derived(documents?.map((d: any) => d.id) ?? []);
-  let loading = $state(false);
-  let error: ErrorDetails | null = $state(null);
   let changeWorkflowStateError: ErrorDetails | null = $state(null);
-  let prevQuery = "";
   interface Props {
     columns: string[];
     query?: string;
-    searchTerm?: string;
     tableType: SEARCHTYPES;
     orderBy?: string[];
-    defaultOrderBy?: any;
-    searchResults: boolean;
+    loading: boolean;
+    openRow?: number | null;
+    count: number;
+    offset: number;
+    limit: number;
+    currentPage: number;
+    numberOfPages: number;
+    error: ErrorDetails | null;
+    documents: any;
+    dataChanged: () => void;
+    last: () => void;
+    setSearchParameters: (SearchParameters: SearchParameters) => void;
   }
 
   let {
     columns,
     query = "",
-    searchTerm = "",
     tableType,
-    searchResults = $bindable(true),
-    orderBy = $bindable(["title"]),
-    defaultOrderBy = ["title"]
+    documents = null,
+    error = null,
+    loading = false,
+    openRow = $bindable(null),
+    orderBy = ["title"],
+    count = $bindable(0),
+    offset = 0,
+    limit = 10,
+    currentPage = 1,
+    numberOfPages = $bindable(0),
+    dataChanged = () => {},
+    last = () => {},
+    setSearchParameters = (_paginationParameters: SearchParameters) => {}
   }: Props = $props();
-
   const tdClassRelative = `${tdClass} relative`;
 
   let disableDiffButtons = $derived(
     appStore.state.app.diff.docA_ID !== undefined && appStore.state.app.diff.docB_ID !== undefined
   );
+
+  let documentIDs = $derived(documents?.map((d: any) => d.id) ?? []);
 
   let areAllSelected = $derived(
     documents &&
@@ -92,7 +98,7 @@
   );
 
   let selectedDocuments = $derived(
-    appStore.state.app.documents?.filter((d: any) =>
+    appStore.state.app.search.results?.filter((d: any) =>
       appStore.state.app.selectedDocumentIDs.has(d.id)
     ) ?? []
   );
@@ -135,7 +141,7 @@
     changeWorkflowStateError = null;
     const response = await updateMultipleStates(changes);
     if (response.ok) {
-      fetchData();
+      dataChanged();
       dropdownOpen = false;
       selectedState = undefined;
     } else if (response.error) {
@@ -166,219 +172,50 @@
     return names[column] ?? column;
   };
 
-  const savePosition = () => {
-    let position = [offset, currentPage, limit, orderBy];
-    sessionStorage.setItem("tablePosition" + query + tableType, JSON.stringify(position));
-  };
-
-  let postitionRestored: boolean = $state(false);
-  const restorePosition = () => {
-    let position = sessionStorage.getItem("tablePosition" + query + tableType);
-    if (position) {
-      setPaginationParameters(JSON.parse(position));
-    } else {
-      setPaginationParameters({
-        offset: 0,
-        currentPage: 1
-      });
-    }
-  };
-
-  const setOrderBy = async () => {
-    await tick();
-    orderBy
-      .map((c) => {
-        return c.replace("-", "");
-      })
-      .forEach((c) => {
-        if (!orderBy.includes(c)) {
-          setPaginationParameters({
-            orderBy: defaultOrderBy
-          });
-        }
-      });
-  };
-
-  interface PaginationParameters {
-    offset?: number;
-    currentPage?: number;
-    limit?: number;
-    orderBy?: string[];
-  }
-
-  const setPaginationParameters = (paginationParameters: PaginationParameters) => {
-    if (paginationParameters.offset !== undefined) {
-      offset = paginationParameters.offset;
-    }
-    if (paginationParameters.currentPage !== undefined) {
-      currentPage = paginationParameters.currentPage;
-    }
-    if (paginationParameters.limit !== undefined) {
-      limit = paginationParameters.limit;
-    }
-    if (paginationParameters.orderBy !== undefined) {
-      orderBy = paginationParameters.orderBy;
-    }
-    savePosition();
-  };
-
-  $effect(() => {
-    untrack(() => orderBy);
-    if (!oldColumns && columns && JSON.stringify(oldColumns) !== JSON.stringify(columns)) {
-      oldColumns = columns;
-      setOrderBy();
-    }
-  });
-
-  $effect(() => {
-    untrack(() => offset);
-    untrack(() => currentPage);
-    untrack(() => limit);
-    untrack(() => orderBy);
-    if (tableType || !tableType) {
-      restorePosition();
-      savePosition();
-    }
-  });
-
-  onMount(() => {
-    if (!postitionRestored) {
-      restorePosition();
-      postitionRestored = true;
-    }
-  });
-
   let isAdmin = $derived(isRoleIncluded(appStore.getRoles(), [ADMIN]));
-
-  export async function fetchData(): Promise<void> {
-    appStore.setDocuments([]);
-    appStore.clearSelectedDocumentIDs();
-    openRow = null;
-    if (query !== prevQuery) {
-      restorePosition();
-      savePosition();
-      prevQuery = query;
-    }
-    const searchSuffix = searchTerm ? `"${searchTerm}" search ${searchColumnName} as ` : "";
-    const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
-    let queryParam = "";
-    if (query || searchSuffix) {
-      queryParam = `query=${query}${searchSuffix}`;
-    }
-    let fetchColumns = [...columns];
-    let requiredColumns = ["id", "tracking_id", "publisher"];
-    for (let c of requiredColumns) {
-      if (!fetchColumns.includes(c)) {
-        fetchColumns.push(c);
-      }
-    }
-    let documentURL = "";
-
-    if (tableType === SEARCHTYPES.EVENT) {
-      documentURL = encodeURI(
-        `/api/events?${queryParam}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&columns=${fetchColumns.join(" ")}${searchColumn}`
-      );
-    } else {
-      const loadAdvisories = tableType === SEARCHTYPES.ADVISORY;
-      documentURL = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&count=1&orders=${orderBy.join(" ")}&limit=${limit}&offset=${offset}&results=${searchResults}&columns=${fetchColumns.join(" ")}${searchColumn}`
-      );
-    }
-
-    error = null;
-    loading = true;
-    if (!requestOngoing) {
-      requestOngoing = true;
-      abortController = new AbortController();
-    } else {
-      abortController.abort();
-    }
-    const response = await request(documentURL, "GET");
-    if (response.ok) {
-      ({ count, documents } = response.content);
-      if (tableType === SEARCHTYPES.EVENT) {
-        count = response.content.count;
-        documents = response.content.events;
-      } else {
-        ({ count, documents } = response.content);
-      }
-      appStore.setDocuments(documents);
-      // We are outside the range of available documents,
-      // try the last page
-      if (offset >= count) {
-        await last();
-      }
-    } else if (response.error) {
-      error =
-        response.error === "400"
-          ? getErrorDetails(`Please check your search syntax.`, response)
-          : response.content.includes("deadline exceeded")
-            ? getErrorDetails(`The server wasn't able to answer your request in time.`)
-            : getErrorDetails(`Could not load query.`, response);
-    }
-    loading = false;
-    requestOngoing = false;
-  }
 
   const previous = async () => {
     if (offset - limit >= 0) {
-      setPaginationParameters({
-        currentPage: currentPage - 1,
-        offset: offset - limit > 0 ? offset - limit : 0
+      setSearchParameters({
+        currentPage: currentPage - 1
       });
     }
-    await fetchData();
   };
   const next = async () => {
     if (offset + limit <= count) {
-      setPaginationParameters({
-        currentPage: currentPage + 1,
-        offset: offset + limit
+      setSearchParameters({
+        currentPage: currentPage + 1
       });
     }
-    await fetchData();
   };
 
   const first = async () => {
-    setPaginationParameters({
-      currentPage: 1,
-      offset: 0
+    setSearchParameters({
+      currentPage: 1
     });
-    await fetchData();
-  };
-
-  const last = async () => {
-    setPaginationParameters({
-      currentPage: numberOfPages,
-      offset: (numberOfPages - 1) * limit
-    });
-    await fetchData();
   };
 
   const switchSort = async (column: string) => {
-    let found = orderBy.find((c) => c === column);
-    let foundMinus = orderBy.find((c) => c === "-" + column);
+    let newOrderBy = structuredClone($state.snapshot(orderBy));
+    let found = newOrderBy.find((c) => c === column);
+    let foundMinus = newOrderBy.find((c) => c === "-" + column);
     if (foundMinus) {
-      orderBy = orderBy.filter((c) => c !== "-" + column);
+      newOrderBy = newOrderBy.filter((c) => c !== "-" + column);
     }
     if (found) {
-      orderBy = orderBy.map((c) => (c === column ? `-${column}` : c));
+      newOrderBy = newOrderBy.map((c) => (c === column ? `-${column}` : c));
     }
     if (!found && !foundMinus) {
-      orderBy.push(column);
+      newOrderBy.push(column);
     }
-    setPaginationParameters({
-      orderBy: orderBy
+    setSearchParameters({
+      orderBy: newOrderBy
     });
-    await tick();
-    await fetchData();
   };
 
   const onDeleted = async () => {
-    await fetchData();
+    dataChanged();
   };
-
-  let numberOfPages = $derived(Math.ceil(count / limit));
 
   const getColumnOrder = (orderBy: string[], column: string): string => {
     let index = orderBy.indexOf(column);
@@ -475,13 +312,12 @@
               { name: "50", value: 50 },
               { name: "100", value: 100 }
             ]}
-            bind:value={limit}
-            onchange={() => {
-              setPaginationParameters({
+            value={limit}
+            onchange={(event: any) => {
+              setSearchParameters({
                 currentPage: 1,
-                offset: 0
+                limit: event.target.value
               });
-              fetchData();
             }}
           ></Select>
           <Label class="mr-3 text-nowrap"
@@ -514,14 +350,11 @@
                 tmpCurrentPage = Math.floor(tmpCurrentPage);
                 if (tmpCurrentPage < 1) tmpCurrentPage = 1;
                 if (tmpCurrentPage > numberOfPages) tmpCurrentPage = numberOfPages;
-                const tmpOffset = (tmpCurrentPage - 1) * limit;
-                setPaginationParameters({
-                  currentPage: tmpCurrentPage,
-                  offset: tmpOffset
+                setSearchParameters({
+                  currentPage: tmpCurrentPage
                 });
-                fetchData();
               }}
-              bind:value={currentPage}
+              value={currentPage}
             />
             <span class="mr-3 ml-2 text-nowrap">of {numberOfPages} pages</span>
           </div>
@@ -600,7 +433,13 @@
           {/each}
         </TableHead>
         <TableBody>
-          {#each documents as item, i}
+          {#each documents as doc, i}
+            {@const item = [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)
+              ? {
+                  id: doc.id,
+                  ...doc.data[0]
+                }
+              : doc}
             <tr
               class={i % 2 == 1
                 ? "bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"
@@ -889,15 +728,22 @@
                 {/if}
               {/each}
             </tr>
-            {#if item[searchColumnName]}
-              <TableBodyRow
-                class={(i % 2 == 1 ? "bg-white" : "bg-gray-100") +
-                  " border border-y-indigo-500/100"}
-              >
-                <TableBodyCell colspan={columns.length} class={tdClassRelative}
-                  >{@html item[searchColumnName]}</TableBodyCell
-                >
-              </TableBodyRow>
+            {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)}
+              {#each doc.data as result}
+                {#if result[searchColumnName]}
+                  <tr
+                    class={i % 2 == 1
+                      ? "border-t border-t-gray-200 bg-white dark:border-t-gray-700 dark:bg-gray-800"
+                      : "border-t border-t-gray-300 bg-gray-100 dark:border-t-gray-600 dark:bg-gray-700"}
+                  >
+                    <TableBodyCell colspan={columns.length} class={tdClassRelative}>
+                      {@html DOMPurify.sanitize(result[searchColumnName], {
+                        USE_PROFILES: { html: true }
+                      })}
+                    </TableBodyCell>
+                  </tr>
+                {/if}
+              {/each}
             {/if}
           {/each}
         </TableBody>

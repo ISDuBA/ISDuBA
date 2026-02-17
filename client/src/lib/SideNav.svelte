@@ -21,16 +21,16 @@
   import { appStore } from "$lib/store.svelte";
   import { page } from "$app/state";
   import { truncate } from "$lib/utils";
+  import PrevNext from "./Search/PrevNext.svelte";
+  import { activeClass, nonActiveClass, sidebarItemClass, sidebarItemLinkClass } from "./sidenav";
 
   let activeUrl = $derived("/" + page.url.hash);
-
-  let activeClass =
-    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-gray-950 dark:text-white hover:bg-primary-100 dark:hover:bg-black";
-  let nonActiveClass =
-    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 dark:hover:bg-black hover:text-primary-900";
-  const sidebarItemClass = "px-0 py-0";
-  const sidebarItemLinkClass =
-    "px-6 py-4 rounded-none! hover:text-primary-700 dark:hover:text-white";
+  let searchLabel = $derived(
+    appStore.state.app.search.count !== null && appStore.state.app.search.count !== undefined
+      ? `Search (${appStore.state.app.search.count})`
+      : "Search"
+  );
+  let params = $derived(appStore.state.app.routerParams);
 
   let transitionParams = {
     x: -320,
@@ -93,16 +93,37 @@
                 <i class="bx bxs-dashboard"></i>
               {/snippet}
             </SidebarItem>
-            <SidebarItem
-              class={sidebarItemClass}
-              aClass={sidebarItemLinkClass}
-              label="Search"
-              href="/#/search"
-            >
-              {#snippet icon()}
-                <i class="bx bx-spreadsheet"></i>
-              {/snippet}
-            </SidebarItem>
+            {#if appStore.state.app.search.searchURL && !activeUrl.startsWith("/#/search")}
+              <!--
+              For the case the user wants to return to the previous result list, for example from the advisory view.
+              Unfortunetly, it was not possible to use the second SidebarItem for Search because any parameters were
+              omitted when the href variable was created dynamically.
+              -->
+              <SidebarItem
+                class={sidebarItemClass}
+                aClass={sidebarItemLinkClass}
+                label={searchLabel}
+                href={"#" + appStore.state.app.search.searchURL}
+              >
+                {#snippet icon()}
+                  <i class="bx bx-spreadsheet"></i>
+                {/snippet}
+              </SidebarItem>
+            {:else}
+              <SidebarItem
+                class={sidebarItemClass}
+                aClass={sidebarItemLinkClass}
+                label={searchLabel}
+                href="/#/search"
+              >
+                {#snippet icon()}
+                  <i class="bx bx-spreadsheet"></i>
+                {/snippet}
+              </SidebarItem>
+            {/if}
+            {#if params?.publisherNamespace && params?.trackingID && params?.id}
+              <PrevNext />
+            {/if}
             {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager() || appStore.isImporter()}
               <SidebarItem
                 class={sidebarItemClass}

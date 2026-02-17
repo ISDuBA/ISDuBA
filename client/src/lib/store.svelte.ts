@@ -11,6 +11,8 @@ import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./wo
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
+import type { SearchParameters } from "./Search/search";
+import { SEARCHTYPES } from "./Queries/query";
 
 type ErrorMessage = {
   id: string;
@@ -38,7 +40,6 @@ type AppStore = {
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
     errors: ErrorMessage[];
-    documents: any[] | null;
     documentsToDelete: any[] | null;
     selectedDocumentIDs: SvelteSet<number>;
     isToolboxOpen: boolean;
@@ -50,6 +51,20 @@ type AppStore = {
       docB: any | undefined;
     };
     isDarkMode: boolean;
+    search: {
+      count: number | null;
+      offset: number | null;
+      requestURL: string | null;
+      results: any[] | null;
+      type: SEARCHTYPES;
+      searchURL: string | undefined;
+      parameters: {
+        advisories: SearchParameters | undefined;
+        documents: SearchParameters | undefined;
+        events: SearchParameters | undefined;
+      };
+    };
+    routerParams: any;
   };
   webview: {
     doc: DocModel | null;
@@ -102,12 +117,25 @@ const generateInitialState = (): AppStore => {
       tokenParsed: null,
       userManager: null,
       errors: [],
-      documents: null,
       documentsToDelete: null,
       isDeleteModalOpen: false,
       selectedDocumentIDs: new SvelteSet<number>(),
       isToolboxOpen: false,
-      isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false
+      isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false,
+      search: {
+        count: null,
+        offset: null,
+        requestURL: null,
+        results: null,
+        type: SEARCHTYPES.ADVISORY,
+        parameters: {
+          advisories: undefined,
+          documents: undefined,
+          events: undefined
+        },
+        searchURL: undefined
+      },
+      routerParams: null
     },
     webview: {
       doc: null,
@@ -317,8 +345,25 @@ export const appStore = {
     state.app.diff.docB = doc;
   },
 
-  setDocuments: (newDocuments: any[]) => {
-    state.app.documents = newDocuments;
+  setSearchResultCount: (newCount: number | null) => {
+    state.app.search.count = newCount;
+  },
+
+  setSearchOffset: (newOffset: number | null) => {
+    state.app.search.offset = newOffset;
+  },
+
+  // Pass the URL to load documents/events without the offset parameter so we can attach the offset of the store.
+  setSearchRequestURL: (newURL: string | null) => {
+    state.app.search.requestURL = newURL;
+  },
+
+  setSearchResults: (newDocuments: any[]) => {
+    state.app.search.results = newDocuments;
+  },
+
+  setSearchType: (newType: SEARCHTYPES) => {
+    state.app.search.type = newType;
   },
 
   setDocumentsToDelete: (documents: any[]) => {
@@ -361,6 +406,10 @@ export const appStore = {
     state.app.errors = [errorMessage, ...state.app.errors];
   },
 
+  setRouterParams: (newParams: any) => {
+    state.app.routerParams = newParams;
+  },
+
   removeError: (id: string) => {
     state.app.errors = state.app.errors.filter((msg: ErrorMessage) => {
       return msg.id !== id;
@@ -369,6 +418,18 @@ export const appStore = {
 
   setConfig: (newConfig: any) => {
     state.app.config = newConfig;
+  },
+
+  setSearchURL: (newSearchURL: string | undefined) => {
+    state.app.search.searchURL = newSearchURL;
+  },
+
+  setSearchParametersForType: (type: SEARCHTYPES, parameters: SearchParameters) => {
+    state.app.search.parameters[type] = parameters;
+  },
+
+  getSearchParametersForType: (type: SEARCHTYPES) => {
+    return state.app.search.parameters[type];
   },
 
   reset: () => {
