@@ -67,6 +67,8 @@
   $effect(() => {
     if (searchTerm) {
       searchTermInputValue = $state.snapshot(searchTerm);
+    } else {
+      searchTermInputValue = "";
     }
   });
 
