@@ -434,12 +434,13 @@
         </TableHead>
         <TableBody>
           {#each documents as doc, i}
-            {@const item = [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)
-              ? {
-                  id: doc.id,
-                  ...doc.data[0]
-                }
-              : doc}
+            {@const item =
+              [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType) && doc.data
+                ? {
+                    id: doc.id,
+                    ...doc.data[0]
+                  }
+                : doc}
             <tr
               class={i % 2 == 1
                 ? "bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"
