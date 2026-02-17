@@ -18,19 +18,12 @@ import (
 	"slices"
 	"time"
 
-	"github.com/ISDuBA/ISDuBA/pkg/database/query"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 )
-
-type document struct {
-	data      string
-	filename  string
-	valStatus validationStatus
-}
 
 // ForwardManager forwards documents to specified targets.
 type ForwardManager struct {
@@ -345,152 +338,6 @@ func (vis versionInfos) order() {
 	})
 }
 
-func (fm *ForwardManager) uploadDocuments(ctx context.Context, target *forwarder, documentIDs []int64) {
-	/*
-		defer target.running.Unlock()
-		for _, documentID := range documentIDs {
-			document, err := fm.loadDocument(ctx, documentID)
-			if err != nil {
-				slog.Error("could not load document to forward", "err", err)
-				continue
-			}
-			if err := fm.uploadDocument(ctx, document, documentID, target); err != nil {
-				slog.Error("could not forward document", "err", err)
-			}
-		}
-	*/
-}
-
-func (fm *ForwardManager) uploadDocument(ctx context.Context, doc *document, documentID int64, target *forwarder) error {
-	/*
-		req, err := fm.buildRequest(doc.data, doc.filename, doc.valStatus, target)
-		if err != nil {
-			slog.Error("building forward request failed", "err", err)
-			return err
-		}
-		res, err := target.client.Do(req)
-		if err != nil {
-			slog.Error("sending forward request failed", "err", err)
-			return err
-		}
-		defer res.Body.Close()
-		if res.StatusCode != http.StatusCreated {
-			slog.Error("forwarding failed", "status", res.StatusCode)
-			body, err := io.ReadAll(res.Body)
-			if err == nil {
-				slog.Error("forward request failed", "response", string(body))
-			}
-			return errors.New("forwarding failed " + res.Status)
-		}
-		fm.logDocument(ctx, target.url, documentID)
-	*/
-	return nil
-}
-
-func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) (*document, error) {
-
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(query.FieldEqInt("id", documentID))
-
-	var (
-		original         []byte
-		filename         string
-		failedValidation *bool
-	)
-
-	const selectSQL = `SELECT ` +
-		`original,` +
-		`filename,` +
-		`(filename_failed OR remote_failed OR checksum_failed OR signature_failed)` +
-		`FROM documents JOIN downloads ` +
-		`ON documents.id = downloads.documents_id ` +
-		`WHERE `
-
-	if err := fm.db.Run(
-		ctx,
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			fetchSQL := selectSQL + builder.WhereClause
-			return conn.QueryRow(rctx, fetchSQL, builder.Replacements...).Scan(
-				&original,
-				&filename,
-				&failedValidation)
-		}, 0,
-	); err != nil {
-		return nil, err
-	}
-
-	validationStatus := notValidatedValidationStatus
-	if failedValidation != nil {
-		if *failedValidation {
-			validationStatus = invalidValidationStatus
-		} else {
-			validationStatus = validValidationStatus
-		}
-	}
-	return &document{
-		data:      string(original),
-		filename:  filename,
-		valStatus: validationStatus,
-	}, nil
-}
-
-func (fm *ForwardManager) fetchNewDocuments(
-	ctx context.Context,
-	url string,
-	publisher *string,
-) ([]int64, error) {
-
-	var wherePublisher string
-	args := []any{url}
-	if publisher != nil {
-		wherePublisher = "publisher = $2 AND "
-		args = append(args, *publisher)
-	}
-
-	const selectSQL = `SELECT ` +
-		`documents_id ` +
-		`FROM events_log ` +
-		`WHERE documents_id IN ` +
-		`(SELECT id FROM documents` +
-		` WHERE %s` +
-		` id NOT IN (SELECT documents_id FROM forwarded_documents WHERE url = $1)) ` +
-		`ORDER BY time DESC`
-	fetchSQL := fmt.Sprintf(selectSQL, wherePublisher)
-
-	var documentIDs []int64
-	if err := fm.db.Run(
-		ctx,
-		func(rctx context.Context, conn *pgxpool.Conn) error {
-			rows, _ := conn.Query(rctx, fetchSQL, args...)
-			var err error
-			documentIDs, err = pgx.CollectRows(
-				rows,
-				func(row pgx.CollectableRow) (int64, error) {
-					var documentID int64
-					err := row.Scan(&documentID)
-					return documentID, err
-				})
-			return err
-		}, 0,
-	); err != nil {
-		return nil, err
-	}
-	return documentIDs, nil
-}
-
-func (fm *ForwardManager) logDocument(ctx context.Context, url string, documentID int64) {
-	const sql = `INSERT INTO forwarded_documents (url, documents_id) VALUES ($1, $2)`
-	if err := fm.db.Run(
-		ctx,
-		func(ctx context.Context, con *pgxpool.Conn) error {
-			_, err := con.Exec(ctx, sql, url, documentID)
-			return err
-		}, 0,
-	); err != nil {
-		slog.Error("database error", "err", err)
-	}
-}
-
 // ForwardTarget contains information about the available target.
 type ForwardTarget struct {
 	URL  string `json:"url"`
@@ -519,29 +366,19 @@ func (fm *ForwardManager) Targets() []ForwardTarget {
 }
 
 // ForwardDocument sends the document to the specified target.
-func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, documentID int64) error {
+func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, docID int64) error {
 	result := make(chan error)
 	fm.fns <- func(fm *ForwardManager) {
 		if targetID < 0 || targetID >= len(fm.forwarders) || fm.forwarders[targetID].cfg.Automatic {
 			result <- errors.New("could not find target with specified id")
 			return
 		}
-		document, err := fm.loadDocument(ctx, documentID)
-		if err != nil {
-			slog.Error("could not load document to forward", "err", err)
-			result <- err
-			return
-		}
-		result <- fm.uploadDocument(ctx, document, documentID, fm.forwarders[targetID])
+		result <- fm.forwarders[targetID].forwardDocument(ctx, docID)
 	}
 	return <-result
 }
 
-func (fm *ForwardManager) kill() {
-	fm.done = true
-}
-
 // Kill shuts down the forward manager.
 func (fm *ForwardManager) Kill() {
-	fm.fns <- (*ForwardManager).kill
+	fm.fns <- func(fm *ForwardManager) { fm.done = true }
 }

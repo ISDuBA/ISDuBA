@@ -79,7 +79,6 @@ func newForwarder(cfg *config.ForwardTarget, db *database.DB) (*forwarder, error
 func (f *forwarder) run(ctx context.Context) {
 	ticker := time.NewTicker(forwarderWakeupInterval)
 	defer ticker.Stop()
-	// TODO: Implement me!
 	for !f.done {
 		if err := f.forward(ctx); err != nil {
 			slog.Error("forwarder has issues", "error", err, "forwarder", f.cfg.URL)
@@ -143,6 +142,64 @@ func (f *forwarder) loadDocIDs(ctx context.Context) ([]int64, error) {
 	return docIDs, nil
 }
 
+func (f *forwarder) forwardDocument(ctx context.Context, docID int64) error {
+	const documentSQL = `` +
+		`SELECT` +
+		` original,` +
+		` filename,` +
+		` publisher,` +
+		` (filename_failed OR remote_failed OR checksum_failed OR signature_failed) ` +
+		`FROM documents` +
+		` JOIN downloads ON documents.id = downloads.documents_id` +
+		` JOIN advisories ON documents.advisories_id = advisories.id ` +
+		`WHERE` +
+		` documents.id = $1`
+	var (
+		doc              []byte
+		filename         *string
+		failedValidation *bool
+		publisher        string
+	)
+	switch err := f.db.Run(
+		ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			return conn.QueryRow(rctx, documentSQL, docID).Scan(
+				&doc,
+				&filename,
+				&publisher,
+				&failedValidation)
+		}, 0,
+	); {
+	case errors.Is(err, pgx.ErrNoRows):
+		return errors.New("document not found")
+	case err != nil:
+		return fmt.Errorf("loading document failed: %w", err)
+	}
+	if !f.acceptsPublisher(publisher) {
+		return errors.New("not allowed to forward to target")
+	}
+	// Build the request.
+	req, err := buildRequest(
+		doc,
+		filename,
+		parseValidationStatus(failedValidation),
+		f.cfg.URL,
+		f.headers)
+	if err != nil {
+		return fmt.Errorf("building request failed: %w", err)
+	}
+	// Try to forward.
+	res, err := f.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("sending request failed: %w", err)
+	}
+	if res.StatusCode != http.StatusCreated {
+		return fmt.Errorf(
+			"forwarding failed: code: %d, status: %q", res.StatusCode, res.Status)
+	}
+	return nil
+}
+
 func (f *forwarder) loadForwardDocuments(
 	ctx context.Context,
 	docIDs []int64,
@@ -153,8 +210,8 @@ func (f *forwarder) loadForwardDocuments(
 			` original,` +
 			` filename,` +
 			` (filename_failed OR remote_failed OR checksum_failed OR signature_failed) ` +
-			`FROM documents JOIN downloads` +
-			` ON documents.id = downloads.documents_id` +
+			`FROM documents` +
+			` JOIN downloads ON documents.id = downloads.documents_id` +
 			`WHERE` +
 			` documents.id = $1`
 		updateQueueSQL = `` +
@@ -238,7 +295,7 @@ func (f *forwarder) kill() {
 // ping should be called by the manager to signal the fowarder
 // that there are documents to forward.
 func (f *forwarder) ping() {
-	f.fns <- func(f *forwarder) {}
+	f.fns <- func(*forwarder) {}
 }
 
 func (f *forwarder) acceptsPublisher(publisher string) bool {
