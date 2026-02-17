@@ -10,19 +10,12 @@
 package forwarder
 
 import (
-	"bytes"
 	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
-	"mime/multipart"
-	"net/http"
-	"net/textproto"
-	"path/filepath"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
@@ -31,16 +24,6 @@ import (
 
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/database"
-)
-
-// validationStatus represents the validation status
-// known to the HTTP endpoint.
-type validationStatus string
-
-const (
-	validValidationStatus        = validationStatus("valid")
-	invalidValidationStatus      = validationStatus("invalid")
-	notValidatedValidationStatus = validationStatus("not_validated")
 )
 
 type document struct {
@@ -60,8 +43,6 @@ type ForwardManager struct {
 }
 
 type (
-	trackingStatus int
-
 	versionInfo struct {
 		id            int64
 		version       string
@@ -70,7 +51,10 @@ type (
 		current       *time.Time
 		initial       *time.Time
 	}
+	versionInfos []versionInfo
 )
+
+type trackingStatus int
 
 const (
 	unknownStatus = trackingStatus(iota)
@@ -180,13 +164,13 @@ var (
 		config.ForwarderStrategyAll:       0,
 		config.ForwarderStrategyImportant: 1,
 	}
-	filters = [2]func([]versionInfo) []int{
-		filterAll,
-		filterImportant,
+	filters = [2]func(versionInfos) []int{
+		versionInfos.filterAll,
+		versionInfos.filterImportant,
 	}
 )
 
-func filterAll(vis []versionInfo) []int {
+func (vis versionInfos) filterAll() []int {
 	indices := make([]int, len(vis))
 	for i := range indices {
 		indices[i] = i
@@ -194,9 +178,9 @@ func filterAll(vis []versionInfo) []int {
 	return indices
 }
 
-func filterImportant(vis []versionInfo) []int {
+func (vis versionInfos) filterImportant() []int {
 	// TODO: Implement me!
-	return filterAll(vis)
+	return vis.filterAll()
 }
 
 // fillForwarderQueues takes the advisory changes aggregated by the poller
@@ -295,7 +279,7 @@ func loadVersionInfos(
 	ctx context.Context,
 	conn *pgxpool.Conn,
 	advisoryID int64,
-) ([]versionInfo, error) {
+) (versionInfos, error) {
 	const versionSQL = `` +
 		`SELECT` +
 		` id,` +
@@ -308,7 +292,7 @@ func loadVersionInfos(
 		`WHERE` +
 		` advisories_id = $1`
 	rows, _ := conn.Query(ctx, versionSQL, advisoryID)
-	vis, err := pgx.CollectRows(
+	vs, err := pgx.CollectRows(
 		rows,
 		func(row pgx.CollectableRow) (versionInfo, error) {
 			var vi versionInfo
@@ -332,7 +316,8 @@ func loadVersionInfos(
 	if err != nil {
 		return nil, fmt.Errorf("loading version infos failed: %w", err)
 	}
-	orderVersionInfos(vis)
+	vis := versionInfos(vs)
+	vis.order()
 	return vis, nil
 }
 
@@ -349,7 +334,7 @@ func compare[T interface{ Compare(T) int }](a, b *T) int {
 	}
 }
 
-func orderVersionInfos(vis []versionInfo) {
+func (vis versionInfos) order() {
 	slices.SortFunc(vis, func(a, b versionInfo) int {
 		return cmp.Or(
 			compare(b.initial, a.initial),
@@ -400,66 +385,6 @@ func (fm *ForwardManager) uploadDocument(ctx context.Context, doc *document, doc
 		fm.logDocument(ctx, target.url, documentID)
 	*/
 	return nil
-}
-
-var escapeQuotes = strings.NewReplacer("\\", "\\\\", `"`, "\\\"").Replace
-
-// CreateFormFile creates an [io.Writer] like [mime/multipart.Writer.CreateFromFile].
-// This version allows to set the mime type, too.
-func createFormFile(w *multipart.Writer, fieldname, filename, mimeType string) (io.Writer, error) {
-	// Source: https://cs.opensource.google/go/go/+/refs/tags/go1.20:src/mime/multipart/writer.go;l=140
-	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition",
-		fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
-			escapeQuotes(fieldname), escapeQuotes(filename)))
-	h.Set("Content-Type", mimeType)
-	return w.CreatePart(h)
-}
-
-func buildRequest(
-	doc, filename string,
-	status validationStatus,
-	url string,
-	headers http.Header,
-) (*http.Request, error) {
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
-
-	var err error
-	part := func(name, fname, mimeType, content string) {
-		if err != nil {
-			return
-		}
-		if fname == "" {
-			err = writer.WriteField(name, content)
-			return
-		}
-		var w io.Writer
-		if w, err = createFormFile(writer, name, fname, mimeType); err == nil {
-			_, err = w.Write([]byte(content))
-		}
-	}
-
-	base := filepath.Base(filename)
-	part("advisory", base, "application/json", doc)
-	part("validation_status", "", "text/plain", string(status))
-
-	if err := errors.Join(err, writer.Close()); err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, url, body)
-	if err != nil {
-		return nil, err
-	}
-	for k, vs := range headers {
-		for _, v := range vs {
-			req.Header.Add(k, v)
-		}
-	}
-	contentType := writer.FormDataContentType()
-	req.Header.Set("Content-Type", contentType)
-	return req, nil
 }
 
 func (fm *ForwardManager) loadDocument(ctx context.Context, documentID int64) (*document, error) {

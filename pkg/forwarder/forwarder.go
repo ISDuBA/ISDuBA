@@ -11,6 +11,7 @@ package forwarder
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -93,6 +94,23 @@ func (f *forwarder) run(ctx context.Context) {
 }
 
 func (f *forwarder) forward(ctx context.Context) error {
+	for {
+		docIDs, err := f.loadDocIDs(ctx)
+		if err != nil {
+			return fmt.Errorf(
+				"loading document ids failed: %w", err)
+		}
+		if len(docIDs) == 0 {
+			break
+		}
+		if err := f.loadForwardDocuments(ctx, docIDs); err != nil {
+			return fmt.Errorf("load and forwarding docs failed: %w", err)
+		}
+	}
+	return nil
+}
+
+func (f *forwarder) loadDocIDs(ctx context.Context) ([]int64, error) {
 	const docIDsSQL = `` +
 		`SELECT` +
 		` documents_id ` +
@@ -101,33 +119,114 @@ func (f *forwarder) forward(ctx context.Context) error {
 		`WHERE` +
 		` fwq.state IN ('pending', 'failed')` +
 		` AND fw.url = $1 ` +
-		`ORDER BY documents_id DESC ` + // Assuming older docs have lower ids.
+		`ORDER BY upload_order DESC ` +
 		`LIMIT 20` // Poll in smaller batches.
+	var docIDs []int64
+	if err := f.db.Run(
+		ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			rows, _ := conn.Query(rctx, docIDsSQL, f.cfg.URL)
+			var err error
+			docIDs, err = pgx.CollectRows(
+				rows,
+				func(row pgx.CollectableRow) (int64, error) {
+					var docID int64
+					err := row.Scan(&docID)
+					return docID, err
+				})
+			return err
+		}, 0,
+	); err != nil {
+		return nil, fmt.Errorf(
+			"scanning for pending/failed documents failed: %w", err)
+	}
+	return docIDs, nil
+}
 
-	for {
-		var docIDs []int64
+func (f *forwarder) loadForwardDocuments(
+	ctx context.Context,
+	docIDs []int64,
+) error {
+	const (
+		documentSQL = `` +
+			`SELECT` +
+			` original,` +
+			` filename,` +
+			` (filename_failed OR remote_failed OR checksum_failed OR signature_failed) ` +
+			`FROM documents JOIN downloads` +
+			` ON documents.id = downloads.documents_id` +
+			`WHERE` +
+			` documents.id = $1`
+		updateQueueSQL = `` +
+			`UPDATE forwarders_queue` +
+			` SET state = $1::forward_state ` +
+			`WHERE` +
+			` documents_id = $2 AND` +
+			` forwarders_id = (SELECT id FROM forwarders WHERE url = $3)`
+	)
+	for _, docID := range docIDs {
+		var (
+			doc              []byte
+			filename         *string
+			failedValidation *bool
+		)
+		switch err := f.db.Run(
+			ctx,
+			func(rctx context.Context, conn *pgxpool.Conn) error {
+				return conn.QueryRow(rctx, documentSQL, docID).Scan(
+					&doc,
+					&filename,
+					&failedValidation)
+			}, 0,
+		); {
+		case errors.Is(err, pgx.ErrNoRows):
+			// Document may be deleted -> ignore it.
+			continue
+		case err != nil:
+			return fmt.Errorf("loading document failed: %w", err)
+		}
+		// Build the request.
+		req, err := buildRequest(
+			doc,
+			filename,
+			parseValidationStatus(failedValidation),
+			f.cfg.URL,
+			f.headers)
+		if err != nil {
+			return fmt.Errorf("building request failed: %w", err)
+		}
+		res, err := f.client.Do(req)
+		if err != nil {
+			slog.Warn(
+				"forwarder",
+				"msg", "sending request request failed",
+				"err", err)
+			// Try again later.
+			continue
+		}
+		var result string
+		if res.StatusCode == http.StatusCreated {
+			result = "uploaded"
+		} else {
+			slog.Warn(
+				"forwarder",
+				"error", "failed",
+				"code", res.StatusCode,
+				"status", res.Status)
+			result = "failed"
+		}
+		// Update the queue to the result of the upload.
 		if err := f.db.Run(
 			ctx,
 			func(rctx context.Context, conn *pgxpool.Conn) error {
-				rows, _ := conn.Query(rctx, docIDsSQL, f.cfg.URL)
-				var err error
-				docIDs, err = pgx.CollectRows(
-					rows,
-					func(row pgx.CollectableRow) (int64, error) {
-						var docID int64
-						err := row.Scan(&docID)
-						return docID, err
-					})
+				_, err := conn.Exec(
+					rctx, updateQueueSQL,
+					result, docID, f.cfg.URL)
 				return err
 			}, 0,
 		); err != nil {
-			return fmt.Errorf(
-				"scanning for pending/failed documents failed: %w", err)
+			return fmt.Errorf("updating queue failed: %w", err)
 		}
-		if len(docIDs) == 0 {
-			break
-		}
-		// TODO: Load docs, forward them and store the result.
 	}
 	return nil
 }
