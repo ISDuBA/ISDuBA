@@ -65,7 +65,7 @@ type SSVCHistoryEntry struct {
 	SSVC         *string   `json:"ssvc"`
 	ChangeDate   time.Time `json:"changedate"`
 	ChangeNumber int64     `json:"change_number"`
-	Actor        *string   `json:"actor, omitempty"`
+	Actor        *string   `json:"actor,omitempty"`
 }
 
 // SSVCResponse represents a singular SSVC

@@ -6,9 +6,6 @@
 -- SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 -- Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 
-
-BEGIN;
-
 -- actor taken from event_log. Nice to have, but not sure if necessary? (E.g. if user is deleted, or a users changes have to be rolled back?)
 -- changedate taken from event_log, time of change
 -- change_number Primary key to differentiate
@@ -62,9 +59,6 @@ JOIN documents d ON t.documents_id = d.id;
 -- Drop no longer necessary column
 ALTER TABLE documents DROP COLUMN IF EXISTS ssvc;
 ALTER TABLE events_log DROP COLUMN IF EXISTS prev_ssvc;
-
-COMMIT;
-
 
 CREATE FUNCTION log_ssvc_history_to_events()
 RETURNS trigger
