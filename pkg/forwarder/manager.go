@@ -219,12 +219,18 @@ func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
 						strategy = *fw.cfg.Strategy
 					}
 					fi := filterIndex[strategy]
+					cachedIndices := indicesCache[fi]
 					if indicesCache[fi] == nil {
-						indicesCache[fi] = filters[fi](vis)
+						cachedIndices = filters[fi](vis)
+						indicesCache[fi] = cachedIndices
+					}
+					// Nothing to do.
+					if len(cachedIndices) == 0 {
+						continue
 					}
 					if err := storeIndicesInQueue(
 						ctx, conn,
-						vis, indicesCache[fi],
+						vis, cachedIndices,
 						fw.cfg.URL,
 					); err != nil {
 						return err
