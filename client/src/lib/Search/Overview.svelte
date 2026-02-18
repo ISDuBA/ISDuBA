@@ -24,6 +24,7 @@
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import type { SearchParameters } from "./search";
+  import { page } from "$app/state";
 
   const INITIAL_LIMIT = 10;
   const INITIAL_ORDER = ["-critical"];
@@ -242,7 +243,9 @@
   };
 
   $effect(() => {
-    if ($qs !== undefined) {
+    // This rune is also called when a different was opened. In this case the parameters are reset to their defaults
+    // and the count and the results saved in the store are not the expected ones.
+    if ($qs !== undefined && page.url.hash.startsWith("#/search")) {
       fetchData();
     }
   });
