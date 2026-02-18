@@ -730,17 +730,23 @@
               {/each}
             </tr>
             {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)}
-              {#each doc.data as result}
+              {#each doc.data.slice() as result}
                 {#if result[searchColumnName]}
                   <tr
                     class={i % 2 == 1
-                      ? "border-t border-t-gray-200 bg-white dark:border-t-gray-700 dark:bg-gray-800"
-                      : "border-t border-t-gray-300 bg-gray-100 dark:border-t-gray-600 dark:bg-gray-700"}
+                      ? "border-t border-t-gray-200 bg-white hover:bg-gray-200 dark:border-t-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
+                      : "border-t border-t-gray-300 bg-gray-100 hover:bg-gray-200 dark:border-t-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"}
                   >
-                    <TableBodyCell colspan={columns.length} class={tdClassRelative}>
-                      {@html DOMPurify.sanitize(result[searchColumnName], {
-                        USE_PROFILES: { html: true }
-                      })}
+                    <TableBodyCell colspan={columns.length} class="px-2 py-0 whitespace-nowrap">
+                      <a
+                        aria-label="View advisory details"
+                        class="block py-2"
+                        href={getAdvisoryAnchorLink(item)}
+                      >
+                        {@html DOMPurify.sanitize(result[searchColumnName], {
+                          USE_PROFILES: { html: true }
+                        })}
+                      </a>
                     </TableBodyCell>
                   </tr>
                 {/if}
