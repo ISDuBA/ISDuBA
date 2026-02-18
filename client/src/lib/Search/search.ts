@@ -9,6 +9,7 @@
 import type { SEARCHTYPES } from "$lib/Queries/query";
 
 interface SearchParameters {
+  advanced?: boolean;
   currentPage?: number;
   limit?: number;
   orderBy?: string[];

@@ -28,7 +28,6 @@
   const INITIAL_LIMIT = 10;
   const INITIAL_ORDER = ["-critical"];
 
-  let advancedSearch = $state(false);
   let loading = $state(false);
   let queries: any[] = $state([]);
   let defaultQuery: any = $state(null);
@@ -46,6 +45,9 @@
   let searchTerm: string = $derived(queryString?.searchTerm ? queryString.searchTerm : "");
   let orderBy: string[] = $derived(
     queryString?.orderBy ? queryString.orderBy.split(" ") : INITIAL_ORDER
+  );
+  let advanced: boolean = $derived(
+    queryString?.advanced !== undefined ? (queryString.advanced === "true" ? true : false) : false
   );
   let detailed: boolean = $derived(
     queryString?.detailed !== undefined ? (queryString.detailed === "true" ? true : false) : true
@@ -103,7 +105,7 @@
   });
 
   let queryQuery: string = $derived.by(() => {
-    if (!advancedSearch) {
+    if (!advanced) {
       if (!selectedQuery) {
         return searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
       } else {
@@ -131,7 +133,7 @@
         tmpColumns = SEARCHPAGECOLUMNS.EVENT;
       }
     }
-    if (!advancedSearch) {
+    if (!advanced) {
       if (
         searchTerm &&
         !tmpColumns.find((c: any) => {
@@ -206,6 +208,12 @@
       newURL = newURL.concat(`&detailed=${searchParameters.detailed}`);
     } else if (!Object.keys(searchParameters).includes("detailed") && detailed !== true) {
       newURL = newURL.concat(`&detailed=${encodeURIComponent(detailed)}`);
+    }
+
+    if (searchParameters.advanced !== undefined && searchParameters.advanced !== false) {
+      newURL = newURL.concat(`&advanced=${searchParameters.advanced}`);
+    } else if (!Object.keys(searchParameters).includes("advanced") && advanced !== false) {
+      newURL = newURL.concat(`&advanced=${encodeURIComponent(advanced)}`);
     }
 
     if (searchParameters.queryID !== undefined) {
@@ -368,8 +376,8 @@
 </div>
 <div class="mb-3 flex flex-row flex-wrap gap-2">
   <CSearch
-    buttonText={advancedSearch ? "Apply" : "Search"}
-    placeholder={advancedSearch ? "Enter a query" : "Enter a search term"}
+    buttonText={advanced ? "Apply" : "Search"}
+    placeholder={advanced ? "Enter a query" : "Enter a search term"}
     search={(term) => {
       setSearchParameters({
         currentPage: 1,
@@ -379,7 +387,13 @@
     searchTerm={searchTermInputValue}
   ></CSearch>
   <div class="mt-1" title="Define finer grained search queries">
-    <Toggle bind:checked={advancedSearch} class="ml-3">Advanced</Toggle>
+    <Toggle
+      onclick={() => {
+        setSearchParameters({ advanced: !$state.snapshot(advanced) });
+      }}
+      checked={advanced}
+      class="ml-3">Advanced</Toggle
+    >
   </div>
   <div class="mt-1" title="Show every single time the search term was found">
     <Toggle
