@@ -12,6 +12,7 @@ go 1.25.3
 
 require (
 	github.com/BurntSushi/toml v1.6.0
+	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/ProtonMail/gopenpgp/v2 v2.9.0
 	github.com/gin-contrib/static v1.1.5
 	github.com/gin-gonic/gin v1.11.0

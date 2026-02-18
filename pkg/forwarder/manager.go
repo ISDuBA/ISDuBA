@@ -16,8 +16,10 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"strconv"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -164,6 +166,7 @@ var (
 )
 
 func (vis versionInfos) filterAll() []int {
+	// Index all.
 	indices := make([]int, len(vis))
 	for i := range indices {
 		indices[i] = i
@@ -172,8 +175,32 @@ func (vis versionInfos) filterAll() []int {
 }
 
 func (vis versionInfos) filterImportant() []int {
-	// TODO: Implement me!
-	return vis.filterAll()
+	// TODO: Implement more cases.
+	var lastSemVer *semver.Version
+	indices := make([]int, 0, len(vis))
+	for i := range vis {
+		vi := &vis[i]
+		// All versions with numbers should be forwarded
+		// if they are not in draft status.
+		if _, err := strconv.Atoi(vi.version); err == nil {
+			if vi.status != draftStatus {
+				indices = append(indices, i)
+			}
+			continue
+		}
+		sv, err := semver.NewVersion(vi.version)
+		if err != nil {
+			// It could only be integer or SemVer.
+			// Ignore version which are none of these.
+			continue
+		}
+		// If the major part increases its important.
+		if lastSemVer == nil || sv.Major() > lastSemVer.Major() {
+			indices = append(indices, i)
+		}
+		lastSemVer = sv
+	}
+	return indices
 }
 
 // fillForwarderQueues takes the advisory changes aggregated by the poller
