@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,15 +31,20 @@ import (
 const forwarderWakeupInterval = 2 * time.Minute
 
 type forwarder struct {
-	cfg     *config.ForwardTarget
-	db      *database.DB
-	fns     chan (func(*forwarder))
-	done    bool
-	client  *http.Client
-	headers http.Header
+	cfg         *config.ForwardTarget
+	externalURL *url.URL
+	db          *database.DB
+	fns         chan (func(*forwarder))
+	done        bool
+	client      *http.Client
+	headers     http.Header
 }
 
-func newForwarder(cfg *config.ForwardTarget, db *database.DB) (*forwarder, error) {
+func newForwarder(
+	cfg *config.ForwardTarget,
+	externalURL *url.URL,
+	db *database.DB,
+) (*forwarder, error) {
 	// Init http clients
 	var tlsConfig tls.Config
 	if cfg.ClientPrivateCert != "" && cfg.ClientPublicCert != "" {
@@ -68,11 +75,12 @@ func newForwarder(cfg *config.ForwardTarget, db *database.DB) (*forwarder, error
 			header, cfg.URL)
 	}
 	return &forwarder{
-		cfg:     cfg,
-		db:      db,
-		fns:     make(chan func(*forwarder)),
-		client:  client,
-		headers: headers,
+		cfg:         cfg,
+		externalURL: externalURL,
+		db:          db,
+		fns:         make(chan func(*forwarder)),
+		client:      client,
+		headers:     headers,
 	}, nil
 }
 
@@ -184,7 +192,8 @@ func (f *forwarder) forwardDocument(ctx context.Context, docID int64) error {
 		filename,
 		parseValidationStatus(failedValidation),
 		f.cfg.URL,
-		f.headers)
+		f.headers,
+		f.documentURL(docID))
 	if err != nil {
 		return fmt.Errorf("building request failed: %w", err)
 	}
@@ -198,6 +207,14 @@ func (f *forwarder) forwardDocument(ctx context.Context, docID int64) error {
 			"forwarding failed: code: %d, status: %q", res.StatusCode, res.Status)
 	}
 	return nil
+}
+
+func (f *forwarder) documentURL(docID int64) string {
+	if f.externalURL == nil {
+		return ""
+	}
+	return f.externalURL.JoinPath(
+		"api", "documents", strconv.FormatInt(docID, 10)).String()
 }
 
 func (f *forwarder) loadForwardDocuments(
@@ -248,7 +265,8 @@ func (f *forwarder) loadForwardDocuments(
 			filename,
 			parseValidationStatus(failedValidation),
 			f.cfg.URL,
-			f.headers)
+			f.headers,
+			f.documentURL(docID))
 		if err != nil {
 			return fmt.Errorf("building request failed: %w", err)
 		}

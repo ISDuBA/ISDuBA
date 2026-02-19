@@ -41,6 +41,7 @@
 # port = 8081
 # gin_mode = "release"
 # static = "web"
+# external_url = ""
 
 # [database]
 # host = "localhost"

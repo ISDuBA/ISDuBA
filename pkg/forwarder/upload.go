@@ -60,6 +60,7 @@ func buildRequest(
 	status validationStatus,
 	url string,
 	headers http.Header,
+	documentURL string,
 ) (*http.Request, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
@@ -86,6 +87,9 @@ func buildRequest(
 	}
 	part("advisory", fn, "application/json", string(doc))
 	part("validation_status", "", "text/plain", string(status))
+	if documentURL != "" {
+		part("document_url", "", "text/plain", documentURL)
+	}
 
 	if err := errors.Join(err, writer.Close()); err != nil {
 		return nil, err

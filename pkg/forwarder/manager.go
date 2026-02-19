@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"slices"
 	"strconv"
 	"time"
@@ -77,12 +78,13 @@ func parseTrackingStatus(s *string) trackingStatus {
 // NewForwardManager creates a new forward manager.
 func NewForwardManager(
 	cfg *config.Forwarder,
+	externalURL *url.URL,
 	db *database.DB,
 ) (*ForwardManager, error) {
 	forwarders := make([]*forwarder, 0, len(cfg.Targets))
 	for i := range cfg.Targets {
 		tcfg := &cfg.Targets[i]
-		forwarder, err := newForwarder(tcfg, db)
+		forwarder, err := newForwarder(tcfg, externalURL, db)
 		if err != nil {
 			return nil,
 				fmt.Errorf("create automatic forwarder for %q failed: %w",

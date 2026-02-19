@@ -14,6 +14,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -56,10 +57,11 @@ type Keycloak struct {
 
 // Web are the config options for the web interface.
 type Web struct {
-	Host    string `toml:"host"`
-	Port    int    `toml:"port"`
-	GinMode string `toml:"gin_mode"`
-	Static  string `toml:"static"`
+	Host        string   `toml:"host"`
+	Port        int      `toml:"port"`
+	GinMode     string   `toml:"gin_mode"`
+	Static      string   `toml:"static"`
+	ExternalURL *url.URL `toml:"external_url"`
 }
 
 // Database are the config options for the database.
@@ -411,6 +413,7 @@ func (cfg *Config) fillFromEnv() error {
 		storeFeedLogLevel      = store(storeFeedLogLevel)
 		storeForwarderStrategy = store(ParseForwarderStrategy)
 		storeFloat64           = store(parseFloat64)
+		storeURL               = store(url.Parse)
 	)
 	return storeFromEnv(
 		envStore{"ISDUBA_ADVISORY_UPLOAD_LIMIT", storeHumanSize(&cfg.General.AdvisoryUploadLimit)},
@@ -428,6 +431,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_WEB_PORT", storeInt(&cfg.Web.Port)},
 		envStore{"ISDUBA_WEB_GIN_MODE", storeString(&cfg.Web.GinMode)},
 		envStore{"ISDUBA_WEB_STATIC", storeString(&cfg.Web.Static)},
+		envStore{"ISDUBA_WEB_EXTERNAL_URL", storeURL(&cfg.Web.ExternalURL)},
 		envStore{"ISDUBA_DB_HOST", storeString(&cfg.Database.Host)},
 		envStore{"ISDUBA_DB_PORT", storeInt(&cfg.Database.Port)},
 		envStore{"ISDUBA_DB_DATABASE", storeString(&cfg.Database.Database)},
