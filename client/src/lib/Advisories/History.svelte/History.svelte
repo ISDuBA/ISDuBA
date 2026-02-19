@@ -64,7 +64,7 @@
                       Statechange ({event.actor})
                     {/if}
                     {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv"}
-                      SSVC added: ({event.actor}) <br />
+                      SSVC added (by {event.actor}) on version: {event.documentVersion} <br />
                       <span style="font-size: 10px">
                         {event.ssvc}
                       </span>
@@ -76,7 +76,7 @@
                       Edit comment ({event.actor})
                     {/if}
                     {#if event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
-                      SSVC changed ({event.actor})
+                      SSVC changed (by {event.actor}) on version: {event.documentVersion}
                       {#if event.prev_ssvc}
                         <br />
                         <span style="font-size: 10px">

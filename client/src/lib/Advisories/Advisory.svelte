@@ -196,7 +196,12 @@
     );
     if (response.ok) {
       return await response.content;
-    } else if (response.error) {
+    }
+    // Not found -> Empty History
+    if (response.error === "404") {
+      return { ssvcChanges: [] };
+    }
+    if (response.error) {
       loadDocumentSSVCError = getErrorDetails(`Could not load SSVC history`, response);
       return { ssvcChanges: [] };
     }
@@ -258,6 +263,7 @@
         if (ssvcMatch) {
           e["ssvc"] = ssvcMatch.ssvc;
           e["prev_ssvc"] = ssvcMatch.ssvc_prev;
+          e["documentVersion"] = ssvcMatch.documents_version;
         }
       }
 

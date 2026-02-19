@@ -279,16 +279,16 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 
 	// fetch entire history if exists
 	const findSSVCHistory = `WITH advisory_docs AS ( ` +
-		`SELECT docs.id ` +
+		`SELECT docs.id, docs.version ` +
 		`FROM documents docs ` +
 		`JOIN advisories ads ON docs.advisories_id = ads.id ` +
 		`WHERE ads.publisher = $1 ` +
 		`AND ads.tracking_id = $2 ` +
 		`) ` +
-		`SELECT ssvc, changedate, change_number, actor, documents_id ` +
-		`FROM ssvc_history ` +
-		`WHERE documents_id IN (SELECT id FROM advisory_docs) ` +
-		`ORDER BY documents_id ASC, changedate DESC, change_number DESC;`
+		`SELECT h.ssvc, h.changedate, h.change_number, h.actor, h.documents_id, ad.version ` +
+		`FROM ssvc_history h ` +
+		`JOIN advisory_docs ad ON h.documents_id = ad.id ` +
+		`ORDER BY h.documents_id ASC, h.changedate DESC, h.change_number DESC;`
 
 	var (
 		forbidden   bool
@@ -324,6 +324,7 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 					&entry.ChangeNumber,
 					&entry.Actor,
 					&entry.DocumentsID,
+					&entry.DocumentsVersion,
 				)
 				return entry, err
 			})

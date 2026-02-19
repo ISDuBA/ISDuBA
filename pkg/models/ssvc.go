@@ -62,11 +62,12 @@ type ssvc struct {
 
 // SSVCHistoryEntry represents a singular ssvc change event
 type SSVCHistoryEntry struct {
-	SSVC         *string   `json:"ssvc"`
-	ChangeDate   time.Time `json:"changedate"`
-	ChangeNumber int64     `json:"change_number"`
-	Actor        *string   `json:"actor,omitempty"`
-	DocumentsID  int64     `json:"documents_id"`
+	SSVC             *string   `json:"ssvc"`
+	ChangeDate       time.Time `json:"changedate"`
+	ChangeNumber     int64     `json:"change_number"`
+	Actor            *string   `json:"actor,omitempty"`
+	DocumentsID      int64     `json:"documents_id"`
+	DocumentsVersion *string   `json:"documents_version"`
 }
 
 // SSVCResponse represents a singular SSVC
