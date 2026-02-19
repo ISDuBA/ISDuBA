@@ -25,6 +25,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import type { SearchParameters } from "./search";
   import { page } from "$app/state";
+  import { untrack } from "svelte";
 
   const INITIAL_LIMIT = 10;
   const INITIAL_ORDER = ["-critical"];
@@ -245,7 +246,8 @@
   $effect(() => {
     // This rune is also called when a different was opened. In this case the parameters are reset to their defaults
     // and the count and the results saved in the store are not the expected ones.
-    if ($qs !== undefined && page.url.hash.startsWith("#/search")) {
+    const hash = untrack(() => page.url.hash);
+    if ($qs !== undefined && hash.startsWith("#/search")) {
       fetchData();
     }
   });
