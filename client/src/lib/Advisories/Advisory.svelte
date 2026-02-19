@@ -18,12 +18,12 @@
   import Diff from "$lib/Diff/Diff.svelte";
   import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
   import { canSetStateRead } from "$lib/permissions";
-  import CommentTextArea from "./Comments/CommentTextArea.svelte";
+  import CommentTextArea from "./Events/Comments/CommentTextArea.svelte";
   import { request } from "$lib/request";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import WorkflowStates from "./WorkflowStates.svelte";
-  import History from "./History.svelte/History.svelte";
+  import History from "./Events/Events.svelte";
   import Tlp from "./TLP.svelte";
   import SsvcBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";

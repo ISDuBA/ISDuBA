@@ -70,15 +70,15 @@ type SSVCHistoryEntry struct {
 	DocumentsVersion *string   `json:"documents_version"`
 }
 
-// SSVCResponse represents a singular SSVC
-type SSVCResponse struct {
-	SSVC *string `json:"ssvc,omitempty"`
-}
-
 // SSVCChange bundles a SSVCHistoryEntry with the previous SSVC
 type SSVCChange struct {
 	SSVCHistoryEntry
 	SSVCPrev *string `json:"ssvc_prev"`
+}
+
+// SSVCResponse represents a singular SSVC
+type SSVCResponse struct {
+	SSVC *string `json:"ssvc,omitempty"`
 }
 
 func (dp *ssvcDecisionPoint) findOption(option string) *ssvcDecisionPointOption {

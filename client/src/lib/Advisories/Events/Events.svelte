@@ -16,9 +16,10 @@
     TableBodyCell,
     TableBodyRow
   } from "flowbite-svelte";
-  import Comment from "$lib/Advisories/Comments/Comment.svelte";
+  import Comment from "$lib/Advisories/Events/Comments/Comment.svelte";
   import { getReadableDateString } from "../CSAFWebview/helpers";
   import type { Snippet } from "svelte";
+  import SSVCEntry from "$lib/Advisories/Events/SSVCEntry/SSVCEntry.svelte";
 
   const intlFormat = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
@@ -51,7 +52,7 @@
     <TableBody>
       {#each historyEntries as event}
         <TableBodyRow color="default">
-          {#if event.event_type !== "add_comment"}
+          {#if event.event_type !== "add_comment" && event.event_type !== "add_ssvc" && event.event_type !== "add_sscv" && event.event_type !== "change_ssvc" && event.event_type !== "change_sscv"}
             <TableBodyCell class={tdClass}>
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
@@ -63,26 +64,11 @@
                     {#if event.event_type === "state_change"}
                       Statechange ({event.actor})
                     {/if}
-                    {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv"}
-                      SSVC added (by {event.actor}) on version: {event.documentVersion} <br />
-                      <span style="font-size: 10px">
-                        {event.ssvc}
-                      </span>
-                    {/if}
                     {#if event.event_type === "import_document"}
                       Import ({event.actor})
                     {/if}
                     {#if event.event_type === "change_comment"}
                       Edit comment ({event.actor})
-                    {/if}
-                    {#if event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
-                      SSVC changed (by {event.actor}) on version: {event.documentVersion}
-                      {#if event.prev_ssvc}
-                        <br />
-                        <span style="font-size: 10px">
-                          From {event.prev_ssvc} <br /> to {event.ssvc}
-                        </span>
-                      {/if}
                     {/if}
                   </small>
                   {#if /state_change|import_document/.test(event.event_type)}
@@ -93,6 +79,9 @@
                 </div>
               </div>
             </TableBodyCell>
+          {/if}
+          {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv" || event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
+            <SSVCEntry ssvcData={event} />
           {/if}
           {#if event.event_type === "add_comment"}
             <Comment
