@@ -477,7 +477,7 @@ CREATE TABLE forwarders_queue (
     PRIMARY KEY(forwarders_id, documents_id)
 );
 
-CREATE INDEX ON forwarders_queue(state) WHERE state <> 'uploaded';
+CREATE INDEX ON forwarders_queue(state) WHERE state = 'pending';
 
 --
 -- aggregators

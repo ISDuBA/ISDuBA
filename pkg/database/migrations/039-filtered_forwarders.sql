@@ -33,7 +33,7 @@ INSERT INTO forwarders_queue (forwarders_id, documents_id, state)
 
 DROP TABLE forwarded_documents;
 
-CREATE INDEX ON forwarders_queue(state) WHERE state <> 'uploaded';
+CREATE INDEX ON forwarders_queue(state) WHERE state = 'pending';
 
 GRANT INSERT, DELETE, SELECT, UPDATE ON forwarders       TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON forwarders_queue TO {{ .User | sanitize }};

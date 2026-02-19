@@ -116,7 +116,7 @@ func (f *forwarder) loadDocIDs(ctx context.Context) ([]int64, error) {
 		`FROM forwarders_queue fwq ` +
 		`JOIN forwarders fw ON fwq.forwarders_id = fw.id ` +
 		`WHERE` +
-		` fwq.state IN ('pending', 'failed')` +
+		` fwq.state = 'pending'` +
 		` AND fw.url = $1 ` +
 		`ORDER BY upload_order DESC ` +
 		`LIMIT 20` // Poll in smaller batches.
