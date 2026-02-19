@@ -31,7 +31,7 @@
   const INITIAL_ORDER = ["-critical"];
 
   let loading = $state(false);
-  let queries: any[] = $state([]);
+  let queries: any[] | null = $state(null);
   let defaultQuery: any = $state(null);
   let openRow: number | null = $state(null);
   let count = $state(0);
@@ -62,7 +62,7 @@
     queryString?.queryID ? Number(queryString.queryID) : undefined
   );
   let selectedQuery: Query | null = $derived.by(() => {
-    if (!queryID) return null;
+    if (!queryID || queries === null) return null;
     return $state.snapshot(queries).find((q) => q.id === queryID) ?? null;
   });
 
@@ -85,7 +85,7 @@
   }
 
   let query: SearchQuery = $derived.by(() => {
-    if (queryID !== undefined) {
+    if (queryID !== undefined && queries !== null) {
       return queries.find((q) => q.id === queryID);
     } else if (defaultQuery) {
       return {
@@ -244,6 +244,12 @@
   };
 
   $effect(() => {
+    // If queryID is defined we expect the data for that query to be fetched but initially the queries are not
+    // loaded so we have to wait until they are. Then we can read the necessary information from selectedQuery
+    // and do the request.
+    const qID = untrack(() => queryID);
+    if (qID !== undefined && queries === null) return;
+
     // This rune is also called when a different was opened. In this case the parameters are reset to their defaults
     // and the count and the results saved in the store are not the expected ones.
     const hash = untrack(() => page.url.hash);

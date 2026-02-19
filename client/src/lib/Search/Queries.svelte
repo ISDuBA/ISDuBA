@@ -21,7 +21,7 @@
   interface Props {
     selectedQueryID?: number | null;
     defaultQuery: any;
-    queries: any[];
+    queries: any[] | null;
     onQuerySelected: (id: number | undefined) => void;
   }
 
@@ -35,6 +35,7 @@
   let ignoredQueries: number[] = $state([]);
   let { visibleQueries, invisibleQueries }: { visibleQueries: Query[]; invisibleQueries: Query[] } =
     $derived.by(() => {
+      if (queries === null) return { visibleQueries: [], invisibleQueries: [] };
       const visible = [];
       const invisible = [];
       for (let i = 0; i < queries.length; i++) {
