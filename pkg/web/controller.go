@@ -154,8 +154,8 @@ func (c *Controller) Bind() http.Handler {
 
 	// SSVC view/change
 	api.PUT("/ssvc/:document", authEd, c.changeSSVC)
-	api.GET("/ssvc/:document/latest", authAll, c.viewSSVC)
-	api.GET("/ssvc/:document", authAll, c.viewSSVCHistory)
+	api.GET("/ssvc/documents/:document", authAll, c.viewSSVC)
+	api.GET("/ssvc/history/:publisher/:trackingid", authAll, c.viewSSVCHistory)
 
 	// Calculate diff
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)

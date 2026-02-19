@@ -64,7 +64,10 @@
                       Statechange ({event.actor})
                     {/if}
                     {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv"}
-                      SSVC added ({event.actor})
+                      SSVC added: ({event.actor}) <br />
+                      <span style="font-size: 10px">
+                        {event.ssvc}
+                      </span>
                     {/if}
                     {#if event.event_type === "import_document"}
                       Import ({event.actor})
@@ -75,7 +78,10 @@
                     {#if event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
                       SSVC changed ({event.actor})
                       {#if event.prev_ssvc}
-                        Previous SSVC: {event.prev_ssvc}
+                        <br />
+                        <span style="font-size: 10px">
+                          From {event.prev_ssvc} <br /> to {event.ssvc}
+                        </span>
                       {/if}
                     {/if}
                   </small>

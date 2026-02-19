@@ -148,8 +148,8 @@
   };
 
   const loadDocumentSSVC = async () => {
-    if (encodedTrackingID && encodedPublisherNamespace) {
-      const result = await fetchDocumentSSVC(encodedTrackingID, encodedPublisherNamespace);
+    if (params.id) {
+      const result = await fetchDocumentSSVC(params.id);
       if (typeof result === "string") {
         ssvcVector = result;
       } else if (result?.message) {
@@ -188,6 +188,20 @@
     }
   };
 
+  // Similar structure to loadComments()
+  const loadSSVCHistory = async () => {
+    const response = await request(
+      `/api/ssvc/history/${encodedPublisherNamespace}/${encodedTrackingID}`,
+      "GET"
+    );
+    if (response.ok) {
+      return await response.content;
+    } else if (response.error) {
+      loadDocumentSSVCError = getErrorDetails(`Could not load SSVC history`, response);
+      return { ssvcChanges: [] };
+    }
+  };
+
   const buildHistory = async () => {
     if (!canSeeCommentArea) {
       historyEntries = [];
@@ -195,6 +209,10 @@
     }
     const comments = await loadComments();
     let events = await loadEvents();
+    const ssvcData = await loadSSVCHistory();
+
+    const ssvcChanges = ssvcData.ssvcChanges || [];
+
     const commentsByTime = comments.reduce((o: any, n: any) => {
       o[`${n.time}:${n.commentator}`] = {
         message: n.message,
@@ -203,6 +221,13 @@
       };
       return o;
     }, {});
+
+    // Same logic as commentsByTime
+    const ssvcByTime = ssvcChanges.reduce((o: any, n: any) => {
+      o[`${n.changedate}:${n.actor}:${n.documents_id}`] = n;
+      return o;
+    }, {});
+
     const commentsEdited = events
       .filter((e: any) => {
         return e.event_type === "change_comment";
@@ -228,8 +253,17 @@
           e["times"] = commentsEdited[comment.id];
         }
       }
+      if (e.event_type === "add_sscv" || e.event_type === "change_sscv") {
+        const ssvcMatch = ssvcByTime[`${e.time}:${e.actor}:${params.id}`];
+        if (ssvcMatch) {
+          e["ssvc"] = ssvcMatch.ssvc;
+          e["prev_ssvc"] = ssvcMatch.ssvc_prev;
+        }
+      }
+
       return e;
     });
+
     historyEntries = events;
   };
 

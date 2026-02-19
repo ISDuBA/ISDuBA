@@ -203,7 +203,7 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 			if !exists {
 				return nil
 			}
-			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id,  FROM events_log ` +
+			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
 				`WHERE documents_id in (` +
 				`SELECT documents.id ` +
 				`FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +

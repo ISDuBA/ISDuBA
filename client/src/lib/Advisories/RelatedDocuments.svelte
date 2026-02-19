@@ -80,7 +80,7 @@
       if (loadError) return;
       await tick();
       if (!encodedTrackingID || !encodedPublisherNamespace) return;
-      const result = await fetchDocumentSSVC(encodedTrackingID, encodedPublisherNamespace);
+      const result = await fetchDocumentSSVC(params.id);
       if (typeof result === "string") {
         ssvc = result;
       } else if (result?.message) {

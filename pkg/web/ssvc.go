@@ -183,7 +183,7 @@ func (c *Controller) changeSSVC(ctx *gin.Context) {
 //	@Failure		403			{object}	models.Error
 //	@Failure		404			{object}	models.Error
 //	@Failure		500			{object}	models.Error
-//	@Router			/ssvc/{document}/latest [get]
+//	@Router			/ssvc/documents/{document} [get]
 func (c *Controller) viewSSVC(ctx *gin.Context) {
 	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
 	if !ok {
@@ -248,32 +248,47 @@ func (c *Controller) viewSSVC(ctx *gin.Context) {
 	}
 }
 
-// viewSSVCHistory is an endpoint that returns the SSVC History of the specified document.
+// viewSSVCHistory is an endpoint that returns the SSVC History of the specified advisory.
 //
 //	@Summary		View the SSVC History.
-//	@Description	Returns a list of all SSVC changes for the specified document, ordered by changedate.
+//	@Description	Returns a list of all SSVC changes for the specified advisory, ordered by changedate.
 //	@Produce		json
-//	@Param			document	path		int	true	"Document ID"
-//	@Success		200			{object}	map[string][]models.SSVCHistoryEntry
+//	@Success		200			{object}	map[string][]models.SSVCChange
+//	@Param			publisher	path	string	true	"Advisory publisher"
+//	@Param			trackingid	path	string	true	"Advisory tracking ID"
 //	@Failure		403			{object}	models.Error
 //	@Failure		404			{object}	models.Error
 //	@Failure		500			{object}	models.Error
-//	@Router			/ssvc/{document} [get]
+//	@Router			/ssvc/history/{publisher}/{trackingid} [get]
 func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
-	documentID, ok := parse(ctx, toInt64, ctx.Param("document"))
-	if !ok {
-		return
-	}
+	publisherNamespace := ctx.Param("publisher")
+	trackingID := ctx.Param("trackingid")
+
 	// fetch access data
-	const findPublisherTLP = `SELECT ads.publisher, docs.tlp ` +
-		`FROM documents docs  JOIN advisories ads ` +
-		`ON docs.advisories_id = ads.id ` +
-		`WHERE docs.id = $1 `
+	const findPublisherTLP = `WITH advisory_docs AS ( ` +
+		`SELECT docs.id, ads.publisher, docs.tlp ` +
+		`FROM documents docs ` +
+		`JOIN advisories ads ON docs.advisories_id = ads.id ` +
+		`WHERE ads.publisher = $1 ` +
+		`AND ads.tracking_id = $2 ` +
+		`ORDER BY docs.id ` +
+		`) ` +
+		`SELECT publisher, tlp ` +
+		`FROM advisory_docs ` +
+		`LIMIT 1;`
+
 	// fetch entire history if exists
-	const findSSVCHistory = `SELECT ssvc, changedate, change_number, actor ` +
+	const findSSVCHistory = `WITH advisory_docs AS ( ` +
+		`SELECT docs.id ` +
+		`FROM documents docs ` +
+		`JOIN advisories ads ON docs.advisories_id = ads.id ` +
+		`WHERE ads.publisher = $1 ` +
+		`AND ads.tracking_id = $2 ` +
+		`) ` +
+		`SELECT ssvc, changedate, change_number, actor, documents_id ` +
 		`FROM ssvc_history ` +
-		`WHERE documents_id = $1 ` +
-		`ORDER BY changedate DESC, change_number DESC;`
+		`WHERE documents_id IN (SELECT id FROM advisory_docs) ` +
+		`ORDER BY documents_id ASC, changedate DESC, change_number DESC;`
 
 	var (
 		forbidden   bool
@@ -285,7 +300,7 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 
 			var publisher, tlp string
-			err := conn.QueryRow(rctx, findPublisherTLP, documentID).Scan(&publisher, &tlp)
+			err := conn.QueryRow(rctx, findPublisherTLP, publisherNamespace, trackingID).Scan(&publisher, &tlp)
 			if err != nil {
 				return fmt.Errorf("Failed to find authorization information for queried document: %w", err)
 			}
@@ -294,7 +309,7 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 				return nil
 			}
 
-			rows, err := conn.Query(rctx, findSSVCHistory, documentID)
+			rows, err := conn.Query(rctx, findSSVCHistory, publisherNamespace, trackingID)
 			if err != nil {
 				return fmt.Errorf("scanning for SSVCHistory failed: %w", err)
 			}
@@ -308,6 +323,7 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 					&entry.ChangeDate,
 					&entry.ChangeNumber,
 					&entry.Actor,
+					&entry.DocumentsID,
 				)
 				return entry, err
 			})
@@ -328,6 +344,30 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 	case len(ssvcHistory) == 0:
 		models.SendErrorMessage(ctx, http.StatusNotFound, "no History found")
 	default:
-		ctx.JSON(http.StatusOK, gin.H{"ssvcHistory": ssvcHistory})
+		// also return the previous ssvc for easier consumption
+		ssvcChanges := buildSSVCChange(ssvcHistory)
+		ctx.JSON(http.StatusOK, gin.H{"ssvcChanges": ssvcChanges})
 	}
+}
+
+// buildSSVCChange turns an array of SSVCHistoryEntry's into an Array of SSVCChange's by looking up the last ssvc if it's not the oldest entry.
+func buildSSVCChange(history []models.SSVCHistoryEntry) []models.SSVCChange {
+	var changes []models.SSVCChange
+	// Iterate over history
+	for i, entry := range history {
+		// if there exists an older entry for the same document
+		// Only works if history is grouped by documents then sorted by time from new to old
+		if i+1 < len(history) && history[i+1].DocumentsID == entry.DocumentsID {
+			changes = append(changes, models.SSVCChange{
+				SSVCHistoryEntry: entry,
+				SSVCPrev:         history[i+1].SSVC,
+			})
+			// Else -> Oldest entry for this document -> Add SSVC event
+		} else {
+			changes = append(changes, models.SSVCChange{
+				SSVCHistoryEntry: entry,
+			})
+		}
+	}
+	return changes
 }

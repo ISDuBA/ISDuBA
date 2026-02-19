@@ -131,21 +131,23 @@ const loadAdvisoryVersions = async (
 };
 
 const fetchDocumentSSVC = async (
-  encodedTrackingID: string,
-  encodedPublisherNamespace: string
+  documentId: string | number
 ): Promise<string | ErrorDetails | undefined> => {
-  const response = await request(
-    `/api/documents?columns=ssvc&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
-    "GET"
-  );
-  if (response.ok) {
-    const result = await response.content;
-    if (result.documents?.[0].ssvc) {
-      return result.documents[0].ssvc;
-    }
-  } else if (response.error) {
-    return getErrorDetails(`Could not load SSVC.`, response);
+  const response = await request(`/api/ssvc/documents/${documentId}`, "GET");
+
+  // Any error
+  if (!response.ok) {
+    return getErrorDetails("Could not load SSVC.", response);
   }
+
+  const result = await response.content;
+
+  // got a non-empty result
+  if (result && typeof result.ssvc === "string" && result.ssvc !== "") {
+    return result.ssvc;
+  }
+  // no SSVC
+  return undefined;
 };
 
 export { updateMultipleStates, loadAdvisoryVersions, fetchDocumentSSVC };
