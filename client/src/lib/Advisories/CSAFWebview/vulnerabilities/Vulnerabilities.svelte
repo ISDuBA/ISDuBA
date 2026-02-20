@@ -15,11 +15,14 @@
     basePath?: string;
   }
   let { basePath = "" }: Props = $props();
+
+  const uid = $props.id();
+
   let vulnerabilities = $derived(appStore.state.webview.doc?.vulnerabilities);
 </script>
 
 <div>
-  {#each vulnerabilities as vulnerability, index (index)}
+  {#each vulnerabilities as vulnerability, index (`vulnerabilities-${uid}-${index}`)}
     <Vulnerability {vulnerability} index={index + 1} {basePath} />
   {/each}
 </div>

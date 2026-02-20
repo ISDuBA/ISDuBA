@@ -19,6 +19,8 @@
     helper: any;
   }
   let { helper }: Props = $props();
+
+  const uid = $props.id();
 </script>
 
 <div>
@@ -31,7 +33,7 @@
     <KeyValue keys={["cpe"]} values={helper.cpe} />
   {/if}
   {#if helper.hashes}
-    {#each helper.hashes as hash, i (i)}
+    {#each helper.hashes as hash, i (`pidh-${uid}-${i}`)}
       <FileHash {hash} />
     {/each}
   {/if}

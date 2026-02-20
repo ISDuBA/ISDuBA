@@ -39,6 +39,8 @@
 
   let { params = null }: Props = $props();
 
+  const uid = $props.id();
+
   let logs: any[] = $state([]);
   let loadingLogs: boolean = $state(false);
   let isDownloadingLogs: boolean = $state(false);
@@ -275,7 +277,7 @@
       <ErrorMessage error={loadKeepLogsError}></ErrorMessage>
       <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
-        {#each realLogLevels as level, i (i)}
+        {#each realLogLevels as level, i (`feedlogviewer-${uid}-${i}`)}
           <CCheckbox
             checked={selectedLogLevels.includes(level.value)}
             onClicked={() => {
@@ -389,7 +391,7 @@
         ]}
       >
         {#snippet mainSlot()}
-          {#each logs as log, index (index)}
+          {#each logs as log, index (`feedlogviewer-${uid}-${index}`)}
             <tr>
               <TableBodyCell class={`${tdClass} min-w-[170pt] align-baseline`}
                 >{log.time}</TableBodyCell

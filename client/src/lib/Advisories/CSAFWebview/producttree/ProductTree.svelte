@@ -23,6 +23,8 @@
   }
   let { basePath }: Props = $props();
 
+  const uid = $props.id();
+
   let openSubBranches = $state(false);
   let openBranches = $state(false);
   let openRelationships = $state(false);
@@ -55,7 +57,7 @@
     open={!!selectedProduct ||
       appStore.state.webview.doc?.productTree.branches.length <= productTreeCutoffs.level1}
   >
-    {#each appStore.state.webview.doc?.productTree.branches as branch, i (i)}
+    {#each appStore.state.webview.doc?.productTree.branches as branch, i (`producttree-${uid}-${i}`)}
       <Branch {branch} {openSubBranches} open={openBranches} />
     {/each}
   </Collapsible>

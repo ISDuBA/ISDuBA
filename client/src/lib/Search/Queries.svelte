@@ -45,6 +45,9 @@
     queryString,
     onQuerySelected
   }: Props = $props();
+
+  const uid = $props.id();
+
   let ignoredQueries: Query[] = $state([]);
   let errorMessage: ErrorDetails | null = $state(null);
   let advancedQueryErrorMessage: ErrorDetails | null = null;
@@ -128,7 +131,7 @@
 <div class="flex flex-col flex-wrap gap-4">
   <div class="flex items-center gap-x-4">
     <ButtonGroup class="h-7 flex-wrap">
-      {#each sortedQueries as query, index (index)}
+      {#each sortedQueries as query, index (`queries-${uid}-${index}`)}
         {#if !ignoredQueries.includes(query.id)}
           <Button
             color="light"

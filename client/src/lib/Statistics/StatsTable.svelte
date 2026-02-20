@@ -20,6 +20,8 @@
   }
   let { stats = null }: Props = $props();
 
+  const uid = $props.id();
+
   let dates = $derived(stats ? (stats[Object.keys(stats)[0]]?.map((s) => s[0]) ?? []) : []);
 </script>
 
@@ -38,13 +40,13 @@
       stickyHeaders
     >
       {#snippet mainSlot()}
-        {#each dates as date, index (index)}
+        {#each dates as date, i (`statstable-1-${uid}-${i}`)}
           <tr class="odd:bg-white even:bg-gray-100 dark:odd:bg-gray-800 dark:even:bg-gray-700">
             {#if date instanceof Date}
               <TableBodyCell class={tdClass}>{toLocaleISOString(date)}</TableBodyCell>
             {/if}
-            {#each Object.keys(stats) as key (key)}
-              {@const count = stats[key]?.[index][1]}
+            {#each Object.keys(stats) as key, j (`statstable-2-${uid}-${j}`)}
+              {@const count = stats[key]?.[i][1]}
               <TableBodyCell
                 class={`${tdClass} ${typeof count === "number" && count !== 0 ? "" : "!text-gray-400"}`}
                 >{count ?? 0}</TableBodyCell

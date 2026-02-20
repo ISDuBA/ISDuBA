@@ -34,6 +34,8 @@
     uploadInfo = $bindable([])
   }: Props = $props();
 
+  const uid = $props.id();
+
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
     if (success !== undefined) {
@@ -115,7 +117,7 @@
     </div>
     {#if filesCache}
       <Listgroup class="mt-6">
-        {#each filesCache as file, i (file.name)}
+        {#each filesCache as file, i (`upload-1-${uid}-${i}`)}
           {@const info = uploadInfo[i]}
           {@const color = getColor(info)}
           <ListgroupItem>
@@ -135,7 +137,7 @@
       </Listgroup>
     {:else if files}
       <Listgroup class="mt-6">
-        {#each files as file (file.name)}
+        {#each files as file, i (`upload-2-${uid}-${i}`)}
           <ListgroupItem>
             <div class="flex items-center gap-1">
               <div class="font-bold text-black dark:text-white">{file.name}</div>
