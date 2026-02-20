@@ -38,29 +38,35 @@
 </script>
 
 <TableBodyCell class={tdClass}>
-  <div class="grid grid-cols-[max-content_1fr]">
-    <small class="text-xs text-slate-400" title={ssvcData.time}>
-      {getReadableDateString(ssvcData.time, intlFormat)}
-    </small>
-    <small class="text-right">
-      {getLabel()}
-      <span class="ml-1 text-xs text-slate-400">
-        on version: {ssvcData.documentVersion}
-      </span>
-    </small>
-    <div>
-      {#if ssvcData.prev_ssvc}
-        <SSVCBadge vector={ssvcData.prev_ssvc} />
-        &rarr;
-      {/if}
-      <SSVCBadge vector={ssvcData.ssvc} />
+  <div class="flex flex-col">
+    <div class="flex flex-row items-baseline justify-between">
+      <small class="w-40 text-xs text-slate-400" title={ssvcData.time}>
+        {getReadableDateString(ssvcData.time, intlFormat)}
+      </small>
+      <div class="flex grow justify-between">
+        <small class="ml-1 text-right">
+          {getLabel()}
+        </small>
+        <span class="ml-1 text-xs text-slate-400">
+          on version: {ssvcData.documentVersion}
+        </span>
+      </div>
     </div>
-    <small class="text-right text-[10px] text-gray-400">
-      {#if ssvcData.prev_ssvc}
-        From {ssvcData.prev_ssvc}<br />
-        to
-      {/if}
-      {ssvcData.ssvc}
-    </small>
+    <div class="flex flex-row items-baseline justify-between">
+      <small class="text-right text-[10px] text-gray-400">
+        {#if ssvcData.prev_ssvc}
+          From {ssvcData.prev_ssvc}<br />
+          to
+        {/if}
+        {ssvcData.ssvc}
+      </small>
+      <div>
+        {#if ssvcData.prev_ssvc}
+          <SSVCBadge vector={ssvcData.prev_ssvc} />
+          &rarr;
+        {/if}
+        <SSVCBadge vector={ssvcData.ssvc} />
+      </div>
+    </div>
   </div>
 </TableBodyCell>
