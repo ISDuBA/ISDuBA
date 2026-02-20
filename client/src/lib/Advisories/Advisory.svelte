@@ -376,9 +376,6 @@
       await loadFourCVEs();
       await loadDocumentSSVC();
       await buildHistory();
-      if (appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor()) {
-        await buildHistory();
-      }
       await loadAdvisoryState();
       loadRelatedDocuments();
       // Only set state to 'read' if editor opens the current version.
