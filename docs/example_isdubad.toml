@@ -100,7 +100,7 @@
 
 # [forwarder]
 # update_interval = "5m"
-# strategy = "all" # valid values: "all", "important"
+# strategy = "all" # valid values: "all", "new_major"
 
 ## These are example targets to show the forwarder target syntax.
 ## [[forwarder.target]]

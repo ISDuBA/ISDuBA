@@ -29,8 +29,8 @@ type ForwarderStrategy int
 const (
 	// ForwarderStrategyAll forwards all documents to a target.
 	ForwarderStrategyAll ForwarderStrategy = iota
-	// ForwarderStrategyImportant only forwards important documents to a target.
-	ForwarderStrategyImportant
+	// ForwarderStrategyNewAndMajor only forwards important documents to a target.
+	ForwarderStrategyNewAndMajor
 )
 
 const (
@@ -140,8 +140,8 @@ func (fs ForwarderStrategy) String() string {
 	switch fs {
 	case ForwarderStrategyAll:
 		return "all"
-	case ForwarderStrategyImportant:
-		return "important"
+	case ForwarderStrategyNewAndMajor:
+		return "new_major"
 	default:
 		return fmt.Sprintf("unknown forward strategy %d", fs)
 	}
@@ -157,8 +157,8 @@ func ParseForwarderStrategy(s string) (ForwarderStrategy, error) {
 	switch strings.ToLower(s) {
 	case "all":
 		return ForwarderStrategyAll, nil
-	case "important":
-		return ForwarderStrategyImportant, nil
+	case "new_major":
+		return ForwarderStrategyNewAndMajor, nil
 	default:
 		return 0, fmt.Errorf("unknown forward strategy %q", s)
 	}

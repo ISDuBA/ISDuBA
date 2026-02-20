@@ -158,12 +158,12 @@ func (fm *Manager) changesDetected(changes changedAdvisories) changedAdvisories 
 
 var (
 	filterIndex = map[config.ForwarderStrategy]int{
-		config.ForwarderStrategyAll:       0,
-		config.ForwarderStrategyImportant: 1,
+		config.ForwarderStrategyAll:         0,
+		config.ForwarderStrategyNewAndMajor: 1,
 	}
 	filters = [2]func(versionInfos) []int{
 		versionInfos.filterAll,
-		versionInfos.filterImportant,
+		versionInfos.filterNewAndMajor,
 	}
 )
 
@@ -176,11 +176,26 @@ func (vis versionInfos) filterAll() []int {
 	return indices
 }
 
-func (vis versionInfos) filterImportant() []int {
+func (vis versionInfos) filterNewAndMajor() []int {
 	// TODO: Implement more cases.
-	var lastSemVer *semver.Version
-	indices := make([]int, 0, len(vis))
-	for i := range vis {
+	var (
+		lastSemVer *semver.Version
+		indices    = make([]int, 0, len(vis))
+	)
+	if len(vis) == 0 {
+		return indices
+	}
+	// The first one is always important.
+	if _, err := strconv.Atoi(vis[0].version); err == nil {
+		// Even if its a draft include it.
+		indices = append(indices, 0)
+	} else if sv, err := semver.NewVersion(vis[0].version); err == nil {
+		lastSemVer = sv
+		indices = append(indices, 0)
+	}
+
+	// Handle the rest.
+	for i := range vis[1:] {
 		vi := &vis[i]
 		// All versions with numbers should be forwarded
 		// if they are not in draft status.
