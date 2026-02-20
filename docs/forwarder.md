@@ -32,12 +32,20 @@ forwarded to endpoint. The backend polls for documents that were not uploaded
 for the URL and forwards them. Already imported documents are also forwarded.
 If set to false only those that are manually forwarded are sent to the URL.
 
-`name` specifies the name of the forward target. This is required to let the
-user distinguish between multiple targets.
+`url` has to be unique for all the forwarder targets.
 
 ## Filtering
 Currently it is only possible to select which publisher should be forwarded. If
-no publisher is configured, all documents are forwarded.
+no publisher is configured, all documents are forwarded. The `strategy`
+determines which documents are forwarded. They are currently two strategies
+`all` and `new_major`. As `all` implies all documents are forwarded,
+`new_major` sends new advisories, all not draft versions. If you have
+semantical versioned documents new are documents are forwarded if they
+are a major change in comparison to the former once.
+
+The default strategy is 'all'. You can adjust the strategy for each
+forwarder target. If not specified there the global strategy from
+forwarder is used.
 
 
 ## Forward request

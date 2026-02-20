@@ -50,14 +50,14 @@ The configuration consists of the following sections:
   handling are not allowed to access. Defaults to:
   ```
   [
-	"127.0.0.0/8",    # IPv4 loopback
-	"10.0.0.0/8",     # RFC1918
-	"172.16.0.0/12",  # RFC1918
-	"192.168.0.0/16", # RFC1918
-	"169.254.0.0/16", # RFC3927 link-local
-	"::1/128",        # IPv6 loopback
-	"fe80::/10",      # IPv6 link-local
-	"fc00::/7"        # IPv6 unique local addr
+    "127.0.0.0/8",    # IPv4 loopback
+    "10.0.0.0/8",     # RFC1918
+    "172.16.0.0/12",  # RFC1918
+    "192.168.0.0/16", # RFC1918
+    "169.254.0.0/16", # RFC3927 link-local
+    "::1/128",        # IPv6 loopback
+    "fe80::/10",      # IPv6 link-local
+    "fc00::/7"        # IPv6 unique local addr
   ]
   ```
   Configuring this will replace this preset.
@@ -87,6 +87,7 @@ In this case all appearance of `{port}` in ths `host` string are replaced by the
 - `port`: Port the web server listens on. Defaults to `8081`.
 - `gin_mode`: Mode the Gin middleware is running in. Defaults to `"release"`.
 - `static`: Folder to be served under **<http://host:port/>**. Defaults to `"web"`.
+- `external_url`: URL where the isdubad web server can be reached from the outside. Defaults to not set.
 
 ### <a name="section_database"></a> Section `[database]` Database credentials
 
@@ -168,9 +169,10 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_forwarder"></a> Section `[forwarder]` Forwarder configuration
 
-For more information regarding how to configure the forwarder, [read the dedicated forwarder documentation](./forwarder.md) 
+For more information regarding how to configure the forwarder, [read the dedicated forwarder documentation](./forwarder.md)
 
 - `update_interval`: Specifies how often the database is checked for new documents. Defaults to `"5m"`.
+- `strategy`: Global strategy. Defaults to `"all"`.
 
 #### Section `[[forwarder.target]]` Forwarder target configuration
 
@@ -212,6 +214,7 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_WEB_PORT`                     | `web port`                           |
 | `ISDUBA_WEB_GIN_MODE`                 | `web gin_mode`                       |
 | `ISDUBA_WEB_STATIC`                   | `web static`                         |
+| `ISDUBA_WEB_EXTERNAL_URL`             | `web external_url`                         |
 | `ISDUBA_DB_HOST`                      | `database host`                      |
 | `ISDUBA_DB_PORT`                      | `database port`                      |
 | `ISDUBA_DB_DATABASE`                  | `database database`                  |
@@ -249,5 +252,6 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_CLIENT_UPDATE_INTERVAL`       | `client update_interval`             |
 | `ISDUBA_CLIENT_IDLE_TIMEOUT`          | `client idle_timeout`                |
 | `ISDUBA_FORWARDER_UPDATE_INTERVAL`    | `forwarder update_interval`          |
+| `ISDUBA_FORWARDER_STRATEGY`           | `forwarder strategy`                 |
 | `ISDUBA_AGGREGATORS_UPDATE_INTERVAL`  | `aggregators update_interval`        |
 | `ISDUBA_AGGREGATORS_TIMEOUT`          | `aggregators timeout`                |

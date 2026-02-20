@@ -62,7 +62,13 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
-	forwardManager := forwarder.NewForwardManager(&cfg.Forwarder, db)
+	forwardManager, err := forwarder.NewManager(
+		&cfg.Forwarder,
+		cfg.Web.ExternalURL,
+		db)
+	if err != nil {
+		return fmt.Errorf("creating forwarder failed: %w", err)
+	}
 	go forwardManager.Run(ctx)
 
 	agg := aggregators.NewManager(cfg, db)
