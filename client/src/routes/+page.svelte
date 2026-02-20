@@ -111,7 +111,7 @@
       if (!user) {
         userManager
           .signinRedirectCallback()
-          .then(function (user) {
+          .then(function (user: any) {
             appStore.setIsUserLoggedIn(true);
             appStore.setSessionExpired(false);
             appStore.setTokenParsed(jwtDecode(user.access_token));

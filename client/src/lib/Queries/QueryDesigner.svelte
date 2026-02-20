@@ -223,24 +223,24 @@
   };
 
   const generateQueryFrom = (result: any): Search => {
-    let searchType = SEARCHTYPES.DOCUMENT;
-    let columns = [];
+    let searchType: SEARCHTYPES;
+    let columnNames: string[];
     if (result.kind === SEARCHTYPES.ADVISORY) {
       searchType = SEARCHTYPES.ADVISORY;
-      columns = COLUMNS.ADVISORY;
+      columnNames = COLUMNS.ADVISORY;
     } else if (result.kind === SEARCHTYPES.DOCUMENT) {
       searchType = SEARCHTYPES.DOCUMENT;
-      columns = COLUMNS.DOCUMENT;
+      columnNames = COLUMNS.DOCUMENT;
     } else {
       searchType = SEARCHTYPES.EVENT;
-      columns = COLUMNS.EVENT;
+      columnNames = COLUMNS.EVENT;
     }
-    columns = result.columns.concat(
-      columns.filter((c: string) => {
+    columnNames = result.columns.concat(
+      columnNames.filter((c: string) => {
         if (!result.columns.includes(c)) return c;
       })
     );
-    columns = columnsFromNames(columns);
+    let columns = columnsFromNames(columnNames);
     columns = columns.map((c) => {
       if (result.columns.includes(c.name)) c.visible = true;
       return c;

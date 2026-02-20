@@ -163,7 +163,7 @@
       {/if}
       {#if resultingActivities}
         {#if resultingActivities.length > 0}
-          {#each resultingActivities as activity}
+          {#each resultingActivities as activity, i (i)}
             <Activity
               onClicked={() => {
                 if (activity.documentURL) push(activity.documentURL);
@@ -239,7 +239,7 @@
                     <div
                       class="my-2 rounded-sm border p-2 text-xs text-gray-800 dark:text-gray-200"
                     >
-                      {#each Object.keys(activity).sort() as key}
+                      {#each Object.keys(activity).sort() as key, j (j)}
                         {#if !ignoredColumns.includes(key) && activity[key] !== undefined && activity[key] !== null}
                           <div>{key}: {activity[key]}</div>
                         {/if}

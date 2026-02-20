@@ -22,7 +22,7 @@
 <P>{label}</P>
 {#if values}
   <List>
-    {#each values as value}
+    {#each values as value (value)}
       <Li>{value}</Li>
     {/each}
   </List>

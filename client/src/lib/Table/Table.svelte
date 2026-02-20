@@ -272,7 +272,7 @@
         fetchColumns.push(c);
       }
     }
-    let documentURL = "";
+    let documentURL: string;
 
     if (tableType === SEARCHTYPES.EVENT) {
       documentURL = encodeURI(
@@ -579,7 +579,7 @@
           {#if areThereAnyComments}
             <TableHeadCell class={`${tablePadding} cursor-default`}>Comment</TableHeadCell>
           {/if}
-          {#each columns as column}
+          {#each columns as column, i (i)}
             {#if column !== searchColumnName}
               <TableHeadCell
                 class={tablePadding}
@@ -600,7 +600,7 @@
           {/each}
         </TableHead>
         <TableBody>
-          {#each documents as item, i}
+          {#each documents as item, i (i)}
             <tr
               class={i % 2 == 1
                 ? "bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"
@@ -692,7 +692,7 @@
                   </div></TableBodyCell
                 >
               {/if}
-              {#each columns as column}
+              {#each columns as column, i (i)}
                 {#if column !== searchColumnName}
                   {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
                     <TableBodyCell class={tdClassRelative}
@@ -828,7 +828,7 @@
                                   {item[column][0]}
                                   {#if openRow === i}
                                     <div>
-                                      {#each item.four_cves as cve, i}
+                                      {#each item.four_cves as cve, i (i)}
                                         {#if i !== 0}
                                           <p>{cve}</p>
                                         {/if}

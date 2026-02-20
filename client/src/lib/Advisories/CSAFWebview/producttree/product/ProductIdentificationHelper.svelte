@@ -31,7 +31,7 @@
     <KeyValue keys={["cpe"]} values={helper.cpe} />
   {/if}
   {#if helper.hashes}
-    {#each helper.hashes as hash}
+    {#each helper.hashes as hash, i (i)}
       <FileHash {hash} />
     {/each}
   {/if}

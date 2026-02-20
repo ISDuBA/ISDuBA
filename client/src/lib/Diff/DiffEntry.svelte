@@ -26,7 +26,7 @@
 
 <div style={containerStyle}>
   {#if Array.isArray(content) && !content[0]["m"]}
-    {#each content as val, index}
+    {#each content as val, index (index)}
       <div class="mb-4 flex">
         {index + 1}.&ensp;<DiffEntry content={val} depth={depth + 1} {operation}></DiffEntry>
       </div>
@@ -34,7 +34,7 @@
   {:else if Array.isArray(content) && operation === "replace"}
     <ReplaceOperation {content} {isSideBySideViewActivated}></ReplaceOperation>
   {:else if typeof content === "object"}
-    {#each Object.keys(content) as key}
+    {#each Object.keys(content) as key, index (index)}
       <div>
         {key}:&ensp;
         {#if typeof content[key] === "string"}

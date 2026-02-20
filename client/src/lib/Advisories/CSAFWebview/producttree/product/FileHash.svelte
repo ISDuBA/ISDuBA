@@ -18,6 +18,6 @@
   let { hash }: Props = $props();
 </script>
 
-{#each hash as hashEntry}
+{#each hash as hashEntry (hashEntry.value)}
   <KeyValue keys={["algorithm", "value"]} values={[hashEntry.algorithm, hashEntry.value]} />
 {/each}

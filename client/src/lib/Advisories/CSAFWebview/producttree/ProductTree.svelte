@@ -55,7 +55,7 @@
     open={!!selectedProduct ||
       appStore.state.webview.doc?.productTree.branches.length <= productTreeCutoffs.level1}
   >
-    {#each appStore.state.webview.doc?.productTree.branches as branch}
+    {#each appStore.state.webview.doc?.productTree.branches as branch, i (i)}
       <Branch {branch} {openSubBranches} open={openBranches} />
     {/each}
   </Collapsible>

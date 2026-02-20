@@ -180,13 +180,13 @@
           {#if placeholderFeed}
             <TableBodyCell class={tdClass}>{feed.label}</TableBodyCell>
             <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
-              <a
-                href={"javascript:void(0);"}
+              <Button
+                color="light"
                 onclick={async () => await clickFeed(feed)}
                 aria-label="View feed archive"
               >
-                <i class="bx bx-archive"> </i></a
-              >
+                <i class="bx bx-archive"> </i>
+              </Button>
             </TableBodyCell>
           {:else}
             <TableBodyCell class={tdClass}>
@@ -215,11 +215,13 @@
               class={`${tdClass} break-all whitespace-normal`}
             >
               {#if edit && feed.enable}
-                <a
-                  href={"javascript:void(0);"}
+                <Button
+                  class="cursor-pointer border-0"
+                  color="light"
                   onclick={async () => await clickFeed(feed)}
-                  aria-label="View feed details">{feed.url}</a
-                >
+                  aria-label="View feed details"
+                  >{feed.url}
+                </Button>
               {:else}
                 <span class="text-amber-600">
                   {feed.url}
@@ -250,13 +252,13 @@
               >
               {#if feed.enable}
                 <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
-                  <a
-                    href={"javascript:void(0);"}
+                  <Button
+                    color="light"
                     onclick={async () => await clickFeed(feed)}
                     aria-label="View feed archive"
                   >
-                    <i class="bx bx-archive"> </i></a
-                  >
+                    <i class="bx bx-archive"> </i>
+                  </Button>
                 </TableBodyCell>
               {/if}
             {/if}

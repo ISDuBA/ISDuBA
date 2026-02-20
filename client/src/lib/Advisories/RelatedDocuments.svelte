@@ -190,7 +190,7 @@
             )}
           </div>
         </TableHeadCell>
-        {#each Object.values(documents) as doc}
+        {#each Object.values(documents) as doc ((doc as any).document_id)}
           {@const d = doc as any}
           {@const sameVersion = hasDocWithSameVersion(d)}
           <TableHeadCell class="text-center align-top">
@@ -222,7 +222,7 @@
             <TableBodyCell class={`${baseClass} ${cve && cve === params.cve ? "!font-bold" : ""}`}>
               {cve}
             </TableBodyCell>
-            {#each Object.values(documents) as doc}
+            {#each Object.values(documents) as doc, i (i)}
               <TableBodyCell class={baseClass}>
                 {#if (doc as any).cve.includes(cve)}
                   <i

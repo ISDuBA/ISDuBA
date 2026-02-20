@@ -32,7 +32,7 @@
       </div>
     {/snippet}
     {#if branch.branches}
-      {#each branch.branches as b}
+      {#each branch.branches as b, i (i)}
         <Self branch={b} open={openSubBranches} {openSubBranches} />
       {/each}
     {/if}

@@ -80,7 +80,7 @@
         Or do you want to open one of the following documents with publisher {params.publisherNamespace}
         and tracking ID {params.trackingID}?
         <List tag="ul" class="space-y-1 text-gray-500 dark:text-gray-400">
-          {#each advisoryVersions as version}
+          {#each advisoryVersions as version, i (i)}
             <Li>
               <A
                 href={`#/advisories/${params.publisherNamespace}/${params.trackingID}/documents/${version.id}`}

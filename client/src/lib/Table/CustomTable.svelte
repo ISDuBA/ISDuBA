@@ -76,7 +76,7 @@
       {#if tableHeadSlot}
         {@render tableHeadSlot()}
       {:else if headers}
-        {#each headers as header}
+        {#each headers as header, i (i)}
           <TableHeadCell class={header.class ?? tablePadding} onclick={() => {}}>
             <span>{header.label}</span>
             <i

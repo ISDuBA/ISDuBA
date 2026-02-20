@@ -51,7 +51,7 @@
 <Checkbox
   bind:checked
   aria-label={ariaLabel}
-  class={`min-h-[20px] min-w-[20px]`}
+  class="min-h-[20px] min-w-[20px]"
   classes={{ div: `p-[6px]! py-[6px]! cursor-pointer ${restProps.class}` }}
   {choices}
   {color}

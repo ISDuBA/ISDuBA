@@ -31,7 +31,7 @@
 
 <div class="complex-decision flex flex-row gap-x-5">
   {#if children && decisionPoints}
-    {#each children as child}
+    {#each children as child, i (i)}
       {@const childOptions = getDecision(decisionPoints, child.label)?.options}
       {#if childOptions}
         <div class="flex flex-col">
@@ -41,7 +41,7 @@
             {child.label}
           </span>
           <div class="flex flex-row gap-x-3">
-            {#each childOptions as option}
+            {#each childOptions as option, j (j)}
               <div title={option.description} class="mb-2 cursor-pointer">
                 <Radio
                   name={child.label}
