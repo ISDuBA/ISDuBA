@@ -55,6 +55,8 @@
   import { SvelteMap } from "svelte/reactivity";
   import CBadge from "$lib/Components/CBadge.svelte";
 
+  const uid = $props.id();
+
   const textFlushOpen = "text-black dark:text-white";
   const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full`;
   let loadingAggregators: boolean = $state(false);
@@ -684,7 +686,7 @@
               </CBadge>
             {/if}
             <div class="ps-4">
-              {#each list as entry, i (i)}
+              {#each list as entry, i (`aggregatorviewer-1-${uid}-${i}`)}
                 <Collapsible header="" showBorder={false}>
                   {#snippet headerSlot()}
                     <div class="mb-2 flex items-center gap-2">
@@ -693,10 +695,10 @@
                       >
                         <span>{entry.name}</span>
                         <span class="flex w-fit gap-1">
-                          {#each new Array(entry.feedsSubscribed) as _a, j (j)}
+                          {#each new Array(entry.feedsSubscribed) as _a, j (`aggregatorviewer-2-${uid}-${j}`)}
                             <FeedBulletPoint filled></FeedBulletPoint>
                           {/each}
-                          {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a, k (k)}
+                          {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a, k (`aggregatorviewer-3-${uid}-${k}`)}
                             <FeedBulletPoint></FeedBulletPoint>
                           {/each}
                         </span>

@@ -43,6 +43,8 @@
   }
   let { params = null }: Props = $props();
 
+  const uid = $props.id();
+
   const shortLoadInterval = 5;
   const longLoadMultiplier = 6;
 
@@ -354,7 +356,7 @@
         <div>
           <DescriptionList tag="dt" class={dtClass}>Status</DescriptionList>
           {#if source.status}
-            {#each source.status as s, i (i)}
+            {#each source.status as s, i (`sourceeditor-${uid}-${i}`)}
               <DescriptionList tag="dd" class={ddClass}>{s}</DescriptionList>
             {/each}
           {:else}

@@ -32,6 +32,8 @@
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import { getRelativeTime } from "$lib/time";
 
+  const uid = $props.id();
+
   let freeTempDocuments = $state(0);
   let tempDocuments: any[] = $state([]);
   let loadDocumentAErrorMessage: ErrorDetails | null = $state(null);
@@ -394,7 +396,7 @@
           <TableHeadCell {padding}>File name</TableHeadCell>
         </TableHead>
         <TableBody>
-          {#each tempDocuments as document (document.file.id)}
+          {#each tempDocuments as document, i (`diffselection-${uid}-${i}`)}
             {@const doc = document.document}
             {@const tempDocID = `tempdocument${document.file.id}`}
             <TableBodyRow>
