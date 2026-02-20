@@ -11,7 +11,7 @@
   import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR, REVIEWER } from "$lib/workflow";
   import { allowedToChangeWorkflow, isRoleIncluded } from "$lib/permissions";
   import { appStore } from "$lib/store.svelte";
-  import CBadge from "$lib/Components/CBadge.svelte";
+  import WorkflowButton from "./WorkflowButton.svelte";
 
   interface Props {
     advisoryState: string;
@@ -37,112 +37,94 @@
 </script>
 
 {#if advisoryState}
-  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(NEW)}>
-    <CBadge title="Mark as new" class="flex w-fit gap-1" color={getBadgeColor(NEW, advisoryState)}>
+  <WorkflowButton
+    onClick={() => updateStateIfAllowed(NEW)}
+    color={getBadgeColor(NEW, advisoryState)}
+    label={NEW}
+    tooltip="Mark as read"
+  >
+    {#snippet icon()}
       <i class="bx bxs-certification"></i>
-      <span>{NEW}</span>
-    </CBadge>
-  </a>
-  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(READ)}>
-    <CBadge
-      title="Mark as read"
-      class="flex w-fit gap-1"
-      color={getBadgeColor(READ, advisoryState)}
-    >
+    {/snippet}
+  </WorkflowButton>
+  <WorkflowButton
+    onClick={() => updateStateIfAllowed(READ)}
+    color={getBadgeColor(READ, advisoryState)}
+    label={READ}
+    tooltip="Mark as read"
+  >
+    {#snippet icon()}
       <i class="bx bx-show"></i>
-      <span>{READ}</span></CBadge
-    >
-  </a>
-  {#if isRoleIncluded(appStore.getRoles(), [EDITOR, REVIEWER]) && advisoryState === REVIEW}
-    <a
-      href={"javascript:void(0);"}
-      class="inline-flex"
-      onclick={() => {
+    {/snippet}
+  </WorkflowButton>
+  {#if (isRoleIncluded( appStore.getRoles(), [EDITOR, REVIEWER] ) && advisoryState === REVIEW) || (isRoleIncluded( appStore.getRoles(), [EDITOR] ) && advisoryState === ARCHIVED)}
+    <WorkflowButton
+      onClick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
+      color="dark"
+      label={ASSESSING}
+      tooltip="Mark as assesing"
     >
-      <CBadge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
+      {#snippet icon()}
         <i class="bx bxs-analyse"></i>
-        <span>{ASSESSING}</span></CBadge
-      >
-    </a>
-  {:else if isRoleIncluded(appStore.getRoles(), [EDITOR]) && advisoryState === ARCHIVED}
-    <a
-      href={"javascript:void(0);"}
-      class="inline-flex"
-      onclick={() => {
-        document.getElementById("comment-textarea")?.focus();
-      }}
-    >
-      <CBadge title="Mark as assesing" class="flex w-fit gap-1" color="dark">
-        <i class="bx bxs-analyse"></i>
-        <span>{ASSESSING}</span>
-      </CBadge>
-    </a>
+      {/snippet}
+    </WorkflowButton>
   {:else}
-    <a
-      href={"javascript:void(0);"}
-      class="inline-flex"
-      onclick={() => updateStateIfAllowed(ASSESSING)}
+    <WorkflowButton
+      onClick={() => updateStateIfAllowed(ASSESSING)}
+      color={getBadgeColor(ASSESSING, advisoryState)}
+      label={ASSESSING}
+      tooltip="Mark as assesing"
     >
-      <CBadge
-        title="Mark as assesing"
-        class="flex w-fit gap-1"
-        color={getBadgeColor(ASSESSING, advisoryState)}
-      >
+      {#snippet icon()}
         <i class="bx bxs-analyse"></i>
-        <span>{ASSESSING}</span>
-      </CBadge>
-    </a>
+      {/snippet}
+    </WorkflowButton>
   {/if}
   {#if advisoryState === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
-    <a
-      href={"javascript:void(0);"}
-      class="inline-flex"
-      onclick={() => {
+    <WorkflowButton
+      onClick={() => {
         document.getElementById("comment-textarea")?.focus();
       }}
+      color="dark"
+      label={REVIEW}
+      tooltip="Release for review"
     >
-      <CBadge title="Release for review" class="flex w-fit gap-1" color="dark">
+      {#snippet icon()}
         <i class="bx bx-book-open"></i>
-        <span>{REVIEW}</span>
-      </CBadge>
-    </a>
+      {/snippet}
+    </WorkflowButton>
   {:else}
-    <a
-      href={"javascript:void(0);"}
-      class="inline-flex"
-      onclick={() => updateStateIfAllowed(REVIEW)}
+    <WorkflowButton
+      onClick={() => updateStateIfAllowed(REVIEW)}
+      color={getBadgeColor(REVIEW, advisoryState)}
+      label={REVIEW}
+      tooltip="Release for review"
     >
-      <CBadge
-        title="Release for review"
-        class="flex w-fit gap-1"
-        color={getBadgeColor(REVIEW, advisoryState)}
-      >
+      {#snippet icon()}
         <i class="bx bx-book-open"></i>
-        <span>{REVIEW}</span>
-      </CBadge>
-    </a>
+      {/snippet}
+    </WorkflowButton>
   {/if}
-  <a
-    href={"javascript:void(0);"}
-    class="inline-flex"
-    onclick={() => updateStateIfAllowed(ARCHIVED)}
+  <WorkflowButton
+    onClick={() => updateStateIfAllowed(ARCHIVED)}
+    color={getBadgeColor(ARCHIVED, advisoryState)}
+    label={ARCHIVED}
+    tooltip="Archive"
   >
-    <CBadge title="Archive" class="flex w-fit gap-1" color={getBadgeColor(ARCHIVED, advisoryState)}>
+    {#snippet icon()}
       <i class="bx bx-archive"></i>
-      <span>{ARCHIVED}</span>
-    </CBadge>
-  </a>
-  <a href={"javascript:void(0);"} class="inline-flex" onclick={() => updateStateIfAllowed(DELETE)}>
-    <CBadge
-      title="Mark for deletion"
-      onclick={() => updateStateFn(DELETE)}
-      class="flex w-fit gap-1"
-      color={getBadgeColor(DELETE, advisoryState)}
-    >
+    {/snippet}
+  </WorkflowButton>
+  <WorkflowButton
+    onClick={() => updateStateFn(DELETE)}
+    color={getBadgeColor(DELETE, advisoryState)}
+    label={DELETE}
+    tooltip="Mark for deletion"
+  >
+    {#snippet icon()}
       <i class="bx bx-trash"></i>
-      <span>{DELETE}</span>
-    </CBadge>
-  </a>
+    {/snippet}
+  </WorkflowButton>
 {/if}
