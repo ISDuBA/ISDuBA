@@ -28,11 +28,11 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/database"
 )
 
-// ForwardManager forwards documents to specified targets.
-type ForwardManager struct {
+// Manager forwards documents to specified targets.
+type Manager struct {
 	cfg        *config.Forwarder
 	db         *database.DB
-	fns        chan func(*ForwardManager)
+	fns        chan func(*Manager)
 	done       bool
 	forwarders []*forwarder
 	changes    changedAdvisories
@@ -75,12 +75,12 @@ func parseTrackingStatus(s *string) trackingStatus {
 	}
 }
 
-// NewForwardManager creates a new forward manager.
-func NewForwardManager(
+// NewManager creates a new forward manager.
+func NewManager(
 	cfg *config.Forwarder,
 	externalURL *url.URL,
 	db *database.DB,
-) (*ForwardManager, error) {
+) (*Manager, error) {
 	forwarders := make([]*forwarder, 0, len(cfg.Targets))
 	for i := range cfg.Targets {
 		tcfg := &cfg.Targets[i]
@@ -92,16 +92,16 @@ func NewForwardManager(
 		}
 		forwarders = append(forwarders, forwarder)
 	}
-	return &ForwardManager{
+	return &Manager{
 		cfg:        cfg,
 		db:         db,
-		fns:        make(chan func(manager *ForwardManager)),
+		fns:        make(chan func(manager *Manager)),
 		forwarders: forwarders,
 	}, nil
 }
 
 // Run runs the forward manager. To be used in a Go routine.
-func (fm *ForwardManager) Run(ctx context.Context) {
+func (fm *Manager) Run(ctx context.Context) {
 	hasAutomatic := false
 	// Start the automatic forwarders.
 	for _, forwarder := range fm.forwarders {
@@ -147,9 +147,9 @@ func (fm *ForwardManager) Run(ctx context.Context) {
 // the manager. If the manager is ready a fresh changedAdvisories map
 // is returned. If the delivery would block the given map is
 // returned so that the poller can go on detecting avoiding duplicates.
-func (fm *ForwardManager) changesDetected(changes changedAdvisories) changedAdvisories {
+func (fm *Manager) changesDetected(changes changedAdvisories) changedAdvisories {
 	select {
-	case fm.fns <- func(fm *ForwardManager) { fm.changes = changes }:
+	case fm.fns <- func(fm *Manager) { fm.changes = changes }:
 		return changedAdvisories{}
 	default:
 		return changes
@@ -206,7 +206,7 @@ func (vis versionInfos) filterImportant() []int {
 }
 
 // fillForwarderQueues takes the advisory changes aggregated by the poller
-func (fm *ForwardManager) fillForwarderQueues(ctx context.Context) {
+func (fm *Manager) fillForwarderQueues(ctx context.Context) {
 	if len(fm.changes) == 0 {
 		return
 	}
@@ -381,9 +381,9 @@ type ForwardTarget struct {
 }
 
 // Targets returns a list of forward targets.
-func (fm *ForwardManager) Targets() []ForwardTarget {
+func (fm *Manager) Targets() []ForwardTarget {
 	result := make(chan []ForwardTarget)
-	fm.fns <- func(fm *ForwardManager) {
+	fm.fns <- func(fm *Manager) {
 		forwarders := make([]ForwardTarget, 0, len(fm.forwarders))
 		for i, forwarder := range fm.forwarders {
 			if !forwarder.cfg.Automatic {
@@ -401,9 +401,9 @@ func (fm *ForwardManager) Targets() []ForwardTarget {
 }
 
 // ForwardDocument sends the document to the specified target.
-func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, docID int64) error {
+func (fm *Manager) ForwardDocument(ctx context.Context, targetID int, docID int64) error {
 	result := make(chan error)
-	fm.fns <- func(fm *ForwardManager) {
+	fm.fns <- func(fm *Manager) {
 		if targetID < 0 || targetID >= len(fm.forwarders) || fm.forwarders[targetID].cfg.Automatic {
 			result <- errors.New("could not find target with specified id")
 			return
@@ -414,6 +414,6 @@ func (fm *ForwardManager) ForwardDocument(ctx context.Context, targetID int, doc
 }
 
 // Kill shuts down the forward manager.
-func (fm *ForwardManager) Kill() {
-	fm.fns <- func(fm *ForwardManager) { fm.done = true }
+func (fm *Manager) Kill() {
+	fm.fns <- func(fm *Manager) { fm.done = true }
 }

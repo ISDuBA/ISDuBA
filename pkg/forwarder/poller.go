@@ -33,14 +33,14 @@ type (
 )
 
 type poller struct {
-	manager *ForwardManager
+	manager *Manager
 	done    bool
 	fns     chan func(*poller)
 	changes changedAdvisories
 	latest  time.Time
 }
 
-func newPoller(manager *ForwardManager) *poller {
+func newPoller(manager *Manager) *poller {
 	return &poller{
 		manager: manager,
 		fns:     make(chan func(*poller)),

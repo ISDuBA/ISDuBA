@@ -62,7 +62,7 @@ func run(cfg *config.Config) error {
 	tmpStore := tempstore.NewStore(&cfg.TempStore)
 	go tmpStore.Run(ctx)
 
-	forwardManager, err := forwarder.NewForwardManager(
+	forwardManager, err := forwarder.NewManager(
 		&cfg.Forwarder,
 		cfg.Web.ExternalURL,
 		db)
