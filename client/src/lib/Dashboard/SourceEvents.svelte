@@ -74,7 +74,7 @@
     {/if}
     {#if attentions}
       {#if attentions.length > 0}
-        {#each attentions as attention}
+        {#each attentions as attention (attention.id)}
           <Activity
             onClicked={() => {
               if (attention.id) {

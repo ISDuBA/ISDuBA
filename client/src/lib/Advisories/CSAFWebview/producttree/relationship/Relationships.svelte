@@ -19,6 +19,6 @@
   let { basePath = "", relationships }: Props = $props();
 </script>
 
-{#each relationships as relation}
+{#each relationships as relation, i (i)}
   <Relation {basePath} {relation} />
 {/each}

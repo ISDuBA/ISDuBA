@@ -24,7 +24,7 @@
   <div class="mt-1 w-full pl-5">
     <Table border={false} striped={true}>
       <TableBody>
-        {#each references as reference}
+        {#each references as reference, i (i)}
           <TableBodyRow>
             <TableBodyCell class={cellStyle}>{reference.category}</TableBodyCell>
             <TableBodyCell class={cellStyle}

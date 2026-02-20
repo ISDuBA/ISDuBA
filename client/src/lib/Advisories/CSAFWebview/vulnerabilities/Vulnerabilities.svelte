@@ -19,7 +19,7 @@
 </script>
 
 <div>
-  {#each vulnerabilities as vulnerability, index}
+  {#each vulnerabilities as vulnerability, index (index)}
     <Vulnerability {vulnerability} index={index + 1} {basePath} />
   {/each}
 </div>

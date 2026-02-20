@@ -240,7 +240,7 @@
             }
           }}
           color={isDownloadingLogs ? "red" : "light"}
-          class={`ml-3 h-8 py-1 text-xs`}
+          class="ml-3 h-8 py-1 text-xs"
           outline={isDownloadingLogs}
         >
           {#if isDownloadingLogs}
@@ -275,7 +275,7 @@
       <ErrorMessage error={loadKeepLogsError}></ErrorMessage>
       <div class="flex flex-wrap items-center gap-1">
         <Label for="log-level-selection">Log levels:</Label>
-        {#each realLogLevels as level}
+        {#each realLogLevels as level, i (i)}
           <CCheckbox
             checked={selectedLogLevels.includes(level.value)}
             onClicked={() => {

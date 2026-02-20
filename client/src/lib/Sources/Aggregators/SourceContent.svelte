@@ -69,7 +69,7 @@
   {/if}
 </div>
 <div class="flex flex-col items-start">
-  {#each source.feeds.toSorted(sortFeeds) as feed}
+  {#each source.feeds.toSorted(sortFeeds) as feed (feed.id)}
     {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
     <div class="ms-8 mb-2">
       <div>

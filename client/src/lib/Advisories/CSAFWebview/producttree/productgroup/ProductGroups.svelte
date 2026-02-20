@@ -18,7 +18,7 @@
 </script>
 
 {#if productGroups}
-  {#each productGroups as productGroup}
+  {#each productGroups as productGroup, i (i)}
     <ProductGroup {productGroup} />
   {/each}
 {/if}

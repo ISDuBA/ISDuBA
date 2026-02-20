@@ -24,7 +24,7 @@
 <div class="ml-2 w-fit">
   <Table border={false}>
     <TableBody>
-      {#each keys as key, index}
+      {#each keys as key, index (key)}
         {#if key === "text" || key === "Text"}
           <TableBodyRow color="default">
             <TableBodyCell class={cellStyle}>{key}</TableBodyCell>

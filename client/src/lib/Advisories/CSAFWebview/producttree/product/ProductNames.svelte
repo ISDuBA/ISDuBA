@@ -26,7 +26,7 @@
 </script>
 
 {#if productNames}
-  {#each productNames as product}
+  {#each productNames as product, i (i)}
     <ProductName {product} />
   {/each}
 {/if}

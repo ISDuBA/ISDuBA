@@ -75,7 +75,7 @@
 
 {#if appStore.state.app.isUserLoggedIn}
   <div class="mt-8 mb-8 flex flex-row flex-wrap gap-10">
-    {#each filteredQueries as query}
+    {#each filteredQueries as query, i (i)}
       {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)}
         <AdvisoryQuery storedQuery={query}></AdvisoryQuery>
       {:else}
