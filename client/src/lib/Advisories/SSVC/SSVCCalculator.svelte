@@ -360,7 +360,7 @@
         {#if currentStep < mainDecisions.length - 1}
           {#if mainDecisions[currentStep].decision_type === "simple"}
             <div class="flex flex-row items-baseline gap-3">
-              {#each mainDecisions[currentStep].options as option}
+              {#each mainDecisions[currentStep].options as option (`${option.key}-1`)}
                 <Button
                   outline
                   size="xs"
@@ -374,7 +374,7 @@
           {:else if mainDecisions[currentStep].decision_type === "complex"}
             {#if !isComplex}
               <div class="flex flex-row gap-x-3">
-                {#each mainDecisions[currentStep].options as option}
+                {#each mainDecisions[currentStep].options as option (`${option.key}-2`)}
                   <Button
                     class="h-6"
                     outline

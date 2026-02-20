@@ -39,6 +39,9 @@
   };
   let breakPoint: number = 1280;
   let width: number = $state(0);
+
+  // Just to keep eslint silent. Could be fixed in the future.
+  /* eslint-disable-next-line svelte/prefer-writable-derived */
   let drawerOpen: boolean = $state(true);
   $effect(() => {
     drawerOpen = width >= breakPoint;

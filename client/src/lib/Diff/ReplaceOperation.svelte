@@ -36,7 +36,7 @@
       <div class="flex w-6/12 items-center gap-1">
         <i class="bx bx-minus"></i>
         <div class="h-fit w-fit bg-red-200 dark:bg-[#412732]">
-          {#each sideBySideContent[0] as part}
+          {#each sideBySideContent[0] as part, i (i)}
             <span>{part.t}</span>
           {/each}
         </div>
@@ -44,14 +44,14 @@
       <div class="flex w-6/12 items-center gap-1">
         <i class="bx bx-plus"></i>
         <div class="h-fit w-fit bg-green-200 dark:bg-[#1a363c]">
-          {#each sideBySideContent[1] as part}
+          {#each sideBySideContent[1] as part, i (i)}
             <span>{part.t}</span>
           {/each}
         </div>
       </div>
     </div>
   {:else if content}
-    {#each content as part}
+    {#each content as part, i (i)}
       <span class={"dark:text-gray-200 " + getSpanClass(part.m)}>{part.t}</span>
     {/each}
   {/if}

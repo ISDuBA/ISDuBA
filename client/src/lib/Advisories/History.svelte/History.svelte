@@ -49,7 +49,7 @@
 <div class="flex max-h-[470px] flex-col overflow-auto p-1">
   <Table>
     <TableBody>
-      {#each historyEntries as event}
+      {#each historyEntries as event, i (i)}
         <TableBodyRow color="default">
           {#if event.event_type !== "add_comment"}
             <TableBodyCell class={tdClass}>

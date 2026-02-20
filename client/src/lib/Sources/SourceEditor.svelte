@@ -354,7 +354,7 @@
         <div>
           <DescriptionList tag="dt" class={dtClass}>Status</DescriptionList>
           {#if source.status}
-            {#each source.status as s}
+            {#each source.status as s, i (i)}
               <DescriptionList tag="dd" class={ddClass}>{s}</DescriptionList>
             {/each}
           {:else}

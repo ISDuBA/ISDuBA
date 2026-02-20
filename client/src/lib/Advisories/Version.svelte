@@ -124,7 +124,7 @@
     <div class="flex">
       <div class="me-2 flex flex-row flex-wrap gap-2">
         {#if diffModeActivated}
-          {#each reversedAdvisoryVersions as version, index}
+          {#each reversedAdvisoryVersions as version, index (index)}
             {@const isDisabled =
               (nextColor === "red" && index === reversedAdvisoryVersions.length - 1) ||
               (nextColor === "green" &&
@@ -174,7 +174,7 @@
             </div>
           {/each}
         {:else}
-          {#each reversedAdvisoryVersions as version, index}
+          {#each reversedAdvisoryVersions as version, index (index)}
             <Button
               class={`${diffButtonBaseClass}`}
               disabled={selectedDocumentVersion.version === version.version &&
