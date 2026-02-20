@@ -60,6 +60,27 @@ type ssvc struct {
 	DecisionTable  []ssvcDecision      `json:"decisions_table"`
 }
 
+// SSVCHistoryEntry represents a singular ssvc change event
+type SSVCHistoryEntry struct {
+	SSVC             *string   `json:"ssvc"`
+	ChangeDate       time.Time `json:"changedate"`
+	ChangeNumber     int64     `json:"change_number"`
+	Actor            *string   `json:"actor,omitempty"`
+	DocumentsID      int64     `json:"documents_id"`
+	DocumentsVersion *string   `json:"documents_version"`
+}
+
+// SSVCChange bundles a SSVCHistoryEntry with the previous SSVC
+type SSVCChange struct {
+	SSVCHistoryEntry
+	SSVCPrev *string `json:"ssvc_prev"`
+}
+
+// SSVCResponse represents a singular SSVC
+type SSVCResponse struct {
+	SSVC *string `json:"ssvc,omitempty"`
+}
+
 func (dp *ssvcDecisionPoint) findOption(option string) *ssvcDecisionPointOption {
 	for i := range dp.Options {
 		opt := &dp.Options[i]

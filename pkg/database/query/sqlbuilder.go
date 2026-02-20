@@ -233,6 +233,8 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 		}
 	case "event_state":
 		b.WriteString("events_log.state")
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc")
 	default:
 		b.WriteString(column)
 	}
@@ -381,6 +383,13 @@ func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 			`LEFT JOIN (SELECT message, id FROM comments) AS comment ON events_log.comments_id = comment.id`)
 	}
 
+	// Add SSVC if exists
+	b.WriteString(` LEFT JOIN LATERAL ( ` +
+		`SELECT ssvc FROM ssvc_history ` +
+		`WHERE documents_id = documents.id ` +
+		`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
+		`) AS ssvc_current ON TRUE`)
+
 	if sb.TextTables {
 		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
@@ -421,6 +430,8 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 			b.WriteString("COALESCE(")
 			b.WriteString(field)
 			b.WriteString(",0)")
+		case "ssvc":
+			b.WriteString("ssvc_current.ssvc")
 		case "version":
 			// TODO: This is not optimal (SemVer).
 			b.WriteString(
@@ -510,6 +521,8 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			b.WriteString("events_log.state::text AS event_state")
 		case "versions":
 			b.WriteString(versionsCount + `AS versions`)
+		case "ssvc":
+			b.WriteString("ssvc_current.ssvc AS ssvc")
 		case "comments":
 			switch sb.Mode {
 			case AdvisoryMode:
