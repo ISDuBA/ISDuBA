@@ -15,10 +15,12 @@
     productGroups: any;
   }
   let { productGroups }: Props = $props();
+
+  const uid = $props.id();
 </script>
 
 {#if productGroups}
-  {#each productGroups as productGroup, i (i)}
+  {#each productGroups as productGroup, i (`productgroups-${uid}-${i}`)}
     <ProductGroup {productGroup} />
   {/each}
 {/if}

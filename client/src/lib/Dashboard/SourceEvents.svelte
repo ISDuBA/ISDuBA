@@ -26,6 +26,8 @@
     isSource: boolean;
   }
 
+  const uid = $props.id();
+
   let attentionCount = $state(0);
   let attentions: MergedAttention[] = $state([]);
   let loadAttentionError: ErrorDetails | null = $state(null);
@@ -74,7 +76,7 @@
     {/if}
     {#if attentions}
       {#if attentions.length > 0}
-        {#each attentions as attention (attention.id)}
+        {#each attentions as attention, i (`sourcevents-${uid}-${i}`)}
           <Activity
             onClicked={() => {
               if (attention.id) {

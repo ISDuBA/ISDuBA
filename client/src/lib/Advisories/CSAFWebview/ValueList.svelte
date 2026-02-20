@@ -17,12 +17,14 @@
     values?: any;
   }
   let { label = "", values = [] }: Props = $props();
+
+  const uid = $props.id();
 </script>
 
 <P>{label}</P>
 {#if values}
   <List>
-    {#each values as value (value)}
+    {#each values as value, i (`valuelist-${uid}-${i}`)}
       <Li>{value}</Li>
     {/each}
   </List>

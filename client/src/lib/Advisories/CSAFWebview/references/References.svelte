@@ -16,6 +16,8 @@
   }
   let { references }: Props = $props();
 
+  const uid = $props.id();
+
   const baseCellStyle = "py-2 px-2";
   const cellStyle = "" + baseCellStyle;
 </script>
@@ -24,7 +26,7 @@
   <div class="mt-1 w-full pl-5">
     <Table border={false} striped={true}>
       <TableBody>
-        {#each references as reference, i (i)}
+        {#each references as reference, i (`references-${uid}-${i}`)}
           <TableBodyRow>
             <TableBodyCell class={cellStyle}>{reference.category}</TableBodyCell>
             <TableBodyCell class={cellStyle}
