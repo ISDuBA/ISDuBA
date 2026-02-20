@@ -23,6 +23,9 @@
   }
 
   let { showTitle = true }: Props = $props();
+
+  const uid = $props.id();
+
   let title = $state("");
   let diffDocuments: any;
   let error: ErrorDetails | null = $state(null);
@@ -135,7 +138,7 @@
             </div>
           </div>
         {/snippet}
-        {#each addChanges as change}
+        {#each addChanges as change, i (`diff-1-${uid}-${i}`)}
           <div class={getBodyClass("add")}>
             {#if change.value}
               <div class="mb-1 text-sm font-bold">
@@ -157,7 +160,7 @@
             </div>
           </div>
         {/snippet}
-        {#each removeChanges as change}
+        {#each removeChanges as change, i (`diff-2-${uid}-${i}`)}
           <div class={getBodyClass("remove")}>
             {#if change.value}
               <div class="mb-1 text-sm font-bold">
@@ -203,7 +206,7 @@
             </div>
           </div>
         {/snippet}
-        {#each replaceChanges as change}
+        {#each replaceChanges as change, i (`diff-3-${uid}-${i}`)}
           <div class={getBodyClass("replace")}>
             {#if change.value}
               <div class="mb-1 text-sm font-bold dark:text-gray-200">

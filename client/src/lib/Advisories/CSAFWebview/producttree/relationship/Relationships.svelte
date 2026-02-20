@@ -17,8 +17,10 @@
     basePath: string;
   }
   let { basePath = "", relationships }: Props = $props();
+
+  const uid = $props.id();
 </script>
 
-{#each relationships as relation}
+{#each relationships as relation, i (`relationships-${uid}-${i}`)}
   <Relation {basePath} {relation} />
 {/each}

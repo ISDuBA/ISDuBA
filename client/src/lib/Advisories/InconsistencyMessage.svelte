@@ -15,22 +15,34 @@
   import type { ErrorDetails } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
 
-  export let params: any = null;
-  export let document: any = {};
+  interface Props {
+    params: any;
+    document: any;
+  }
 
-  let loadAdvisoryVersionsError: ErrorDetails | null = null;
-  let advisoryVersions: AdvisoryVersion[] = [];
+  let { params = null, document = {} }: Props = $props();
 
-  $: suggestedPublisherNamespace = document.publisher.name;
-  $: suggestedTrackingID = document.tracking.id;
-  $: encodedTrackingID = document.tracking?.id
-    ? encodeURIComponent(addSlashes(suggestedTrackingID))
-    : undefined;
-  $: encodedPublisherNamespace = document.publisher?.name
-    ? encodeURIComponent(addSlashes(suggestedPublisherNamespace))
-    : undefined;
-  $: suggestedLinkByID = `/advisories/${suggestedPublisherNamespace}/${suggestedTrackingID}/documents/${params.id}`;
-  $: encodedSuggestedLinkByID = `/advisories/${encodedPublisherNamespace}/${encodedTrackingID}/documents/${params.id}`;
+  const uid = $props.id();
+
+  let loadAdvisoryVersionsError: ErrorDetails | null = $state(null);
+  let advisoryVersions: AdvisoryVersion[] = $state([]);
+
+  let suggestedPublisherNamespace = $derived(document.publisher.name);
+  let suggestedTrackingID = $derived(document.tracking.id);
+  let encodedTrackingID = $derived(
+    document.tracking?.id ? encodeURIComponent(addSlashes(suggestedTrackingID)) : undefined
+  );
+  let encodedPublisherNamespace = $derived(
+    document.publisher?.name
+      ? encodeURIComponent(addSlashes(suggestedPublisherNamespace))
+      : undefined
+  );
+  let suggestedLinkByID = $derived(
+    `/advisories/${suggestedPublisherNamespace}/${suggestedTrackingID}/documents/${params.id}`
+  );
+  let encodedSuggestedLinkByID = $derived(
+    `/advisories/${encodedPublisherNamespace}/${encodedTrackingID}/documents/${params.id}`
+  );
 
   const getAdvisoryVersions = async () => {
     if (!encodedTrackingID || !encodedPublisherNamespace) return;
@@ -80,7 +92,7 @@
         Or do you want to open one of the following documents with publisher {params.publisherNamespace}
         and tracking ID {params.trackingID}?
         <List tag="ul" class="space-y-1 text-gray-500 dark:text-gray-400">
-          {#each advisoryVersions as version}
+          {#each advisoryVersions as version, i (`inconsistencymessage-${uid}-${i}`)}
             <Li>
               <A
                 href={`#/advisories/${params.publisherNamespace}/${params.trackingID}/documents/${version.id}`}
