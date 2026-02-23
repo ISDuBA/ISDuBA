@@ -15,7 +15,7 @@
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
-  import { getReadableDateString } from "../CSAFWebview/helpers";
+  import { getReadableDateString } from "../../CSAFWebview/helpers";
   import { untrack } from "svelte";
 
   interface Props {
