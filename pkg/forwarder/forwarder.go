@@ -228,7 +228,7 @@ func (f *forwarder) loadForwardDocuments(
 			` filename,` +
 			` (filename_failed OR remote_failed OR checksum_failed OR signature_failed) ` +
 			`FROM documents` +
-			` JOIN downloads ON documents.id = downloads.documents_id` +
+			` JOIN downloads ON documents.id = downloads.documents_id ` +
 			`WHERE` +
 			` documents.id = $1`
 		updateQueueSQL = `` +
