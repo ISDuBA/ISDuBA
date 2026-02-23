@@ -106,9 +106,13 @@ func (fm *Manager) Run(ctx context.Context) {
 	// Start the automatic forwarders.
 	for _, forwarder := range fm.forwarders {
 		if forwarder.cfg.Automatic {
-			hasAutomatic = true
-			go forwarder.run(ctx)
-			defer forwarder.kill()
+			if err := fm.createForwarder(ctx, forwarder.cfg.URL); err != nil {
+				slog.Error("forwarder", "error", err)
+			} else {
+				hasAutomatic = true
+				go forwarder.run(ctx)
+				defer forwarder.kill()
+			}
 		}
 	}
 	// No need to poll if there are no automatic forwarders.
@@ -141,6 +145,24 @@ func (fm *Manager) Run(ctx context.Context) {
 		case <-ticker.C:
 		}
 	}
+}
+
+// createForwarder ensure the existence of a forwarder in the forwarder
+// lookup table.
+func (fm *Manager) createForwarder(ctx context.Context, url string) error {
+	const insertForwarderSQL = `` +
+		`INSERT INTO forwarders (url) VALUES ($1) ` +
+		`ON CONFLICT (url) DO NOTHING`
+	if err := fm.db.Run(
+		ctx,
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			_, err := conn.Exec(rctx, insertForwarderSQL, url)
+			return err
+		}, 0,
+	); err != nil {
+		return fmt.Errorf("inserting forwarder %q failed: %w", url, err)
+	}
+	return nil
 }
 
 // changesDetected tries to deliver detected advisory changes to
