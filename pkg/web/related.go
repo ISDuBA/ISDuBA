@@ -45,7 +45,7 @@ SELECT
   others.documents_id,
   others.cve,
   ads.state,
-  d.ssvc,
+  sh.ssvc,
   d.title,
   ads.tracking_id,
   d.tracking_status,
@@ -54,6 +54,13 @@ SELECT
 FROM others
   JOIN documents  d   ON others.documents_id = d.id
   JOIN advisories ads ON d.advisories_id     = ads.id
+  LEFT JOIN LATERAL (
+    SELECT ssvc
+    FROM ssvc_history
+    WHERE documents_id = d.id
+    ORDER BY changedate DESC, change_number DESC
+    LIMIT 1
+  ) sh ON true
 WHERE %[1]s
 `
 

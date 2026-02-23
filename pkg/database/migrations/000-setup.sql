@@ -99,7 +99,6 @@ CREATE TABLE documents (
                     coalesce(max_cvss3_score(document), max_cvss2_score(document))) STORED,
     four_cves   jsonb
                 GENERATED ALWAYS AS (first_four_cves(document)) STORED,
-    ssvc        text,
     -- The data
     document    jsonb COMPRESSION lz4 NOT NULL,
     original    bytea COMPRESSION lz4 NOT NULL,
@@ -267,8 +266,7 @@ CREATE TABLE events_log (
     time         timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actor        varchar,
     documents_id int REFERENCES documents(id) ON DELETE SET NULL,
-    comments_id  int REFERENCES comments(id) ON DELETE SET NULL,
-    prev_ssvc    text
+    comments_id  int REFERENCES comments(id) ON DELETE SET NULL
 );
 
 CREATE INDEX events_log_time_idx ON events_log(time);
@@ -458,6 +456,92 @@ CREATE TRIGGER extract_cves_trigger_update AFTER UPDATE
     WHEN (NEW.document <> OLD.document)
     EXECUTE FUNCTION extract_cves();
 
+CREATE TABLE ssvc_history (
+    actor         varchar,
+    changedate    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    change_number bigint      NOT NULL,
+    documents_id  integer     NOT NULL                            REFERENCES documents(id) ON DELETE CASCADE,
+    ssvc          text,
+
+    PRIMARY KEY (documents_id, change_number)
+);
+
+CREATE FUNCTION log_ssvc_history_to_events()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_prev_ssvc text;
+    v_event     events;
+BEGIN
+    -- Find the most recent previous SSVC value for this document
+    SELECT ssvc
+      INTO v_prev_ssvc
+      FROM ssvc_history
+     WHERE documents_id = NEW.documents_id
+       AND change_number < NEW.change_number
+     ORDER BY change_number DESC
+     LIMIT 1;
+
+    -- Determine event based on the change
+    IF v_prev_ssvc IS NULL THEN
+        -- No previous value existed: add
+        v_event := 'add_sscv';
+        -- Not possible yet, but future-proofing:
+    ELSIF NEW.ssvc IS NULL THEN
+        -- Had value before, now null: delete
+        v_event := 'delete_sscv';
+    ELSE
+        -- Only a change: change
+        v_event := 'change_sscv';
+    END IF;
+
+    INSERT INTO events_log (
+        event,
+        state,
+        time,
+        actor,
+        documents_id,
+        comments_id
+    )
+    VALUES (
+        v_event,
+        (SELECT ads.state FROM advisories ads JOIN documents docs
+        ON docs.advisories_id = ads.id WHERE docs.id = NEW.documents_id),
+        NEW.changedate,
+        NEW.actor,
+        NEW.documents_id,
+        NULL
+    );
+    RETURN NEW;
+END;
+$$;
+
+--- Trigger to automatically log ssvc events
+
+CREATE TRIGGER ssvc_history_log_event
+AFTER INSERT ON ssvc_history
+FOR EACH ROW EXECUTE FUNCTION log_ssvc_history_to_events();
+
+-- Automatically generate change number
+CREATE FUNCTION generate_ssvc_change_number()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.change_number := (
+        SELECT COALESCE(MAX(change_number), 0) + 1
+        FROM ssvc_history
+        WHERE documents_id = NEW.documents_id
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ssvc_history_change_number
+BEFORE INSERT ON ssvc_history
+FOR EACH ROW
+EXECUTE FUNCTION generate_ssvc_change_number();
+
+
 --
 -- forwarded documents
 --
@@ -515,7 +599,7 @@ GRANT INSERT, DELETE, SELECT, UPDATE ON documents_cves          TO {{ .User | sa
 GRANT INSERT, DELETE, SELECT, UPDATE ON forwarders              TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON forwarders_queue        TO {{ .User | sanitize }};
 GRANT INSERT, DELETE, SELECT, UPDATE ON aggregators             TO {{ .User | sanitize }};
-
+GRANT INSERT, DELETE, SELECT, UPDATE ON ssvc_history            TO {{ .User | sanitize }};
 --
 -- default queries
 --
