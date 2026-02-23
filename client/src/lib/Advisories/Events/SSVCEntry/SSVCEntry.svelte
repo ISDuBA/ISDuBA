@@ -55,10 +55,12 @@
     <div class="flex flex-row items-baseline justify-between">
       <small class="text-right text-[10px] text-gray-400">
         {#if ssvcData.prev_ssvc}
-          From {ssvcData.prev_ssvc}<br />
-          to
+          TO:
         {/if}
         {ssvcData.ssvc}
+        {#if ssvcData.prev_ssvc}
+          <br /> FROM: {ssvcData.prev_ssvc}
+        {/if}
       </small>
       <div>
         {#if ssvcData.prev_ssvc}
