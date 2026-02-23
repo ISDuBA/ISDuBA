@@ -119,7 +119,7 @@
 ## url = "https://example.org/api/v1/import"
 ## header = [ "x-api-key:secret" ]
 ## timeout = "5s"
-## strategy = "important" # optional. If not set the strategy value of forwarder is used.
+## strategy = "all" # optional. If not set the strategy value of forwarder is used.
 
 # [aggregators]
 # timeout = "30s"
