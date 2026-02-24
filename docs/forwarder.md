@@ -67,3 +67,25 @@ The form data contains the following fields:
 If the response to the forward request is `201`, then the document will be
 recorded as successfully forwarded for the URL.
 If the request fails, ISDuBA retries at the next poll interval.
+
+## Architecture
+
+The forwarding subsystem consists of three parts.
+The central component is the 'Manager'. It reacts to direct
+upload request from the API to none automatic forwarders.
+It also gets signaled by the 'Poller' if new documents are
+integrated into the database. The poller checks for new
+documents at the rate configured by `update_interval`.
+The manager filters the list of new documents given by the
+poller by publisher and strategy configured for the automatic
+targets and writes upload request in a database queue for each
+'Forwarder'. These forwarders poll from there respective
+upload request and try to forward the documents to the
+configured URLs. The result of these upload attempts are
+stored back in the queue. If the where successfull the
+document is never forwarded again with this forwarder.
+Same on the case of explicit rejection by the endpoint.
+If there is e.g. an network error the not uploaded documents
+stay in a pending state and are tried to upload later again.
+
+![Architecture text](./images/forwarder.svg)
