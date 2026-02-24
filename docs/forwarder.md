@@ -11,7 +11,13 @@
 
 # Forwarder
 
-## Configuration
+The forwarder needs at least one target to get started.
+A target is an external endpoint where the documents are send to.
+An example implementation of such a target can befound [here](https://github.com/gocsaf/forwardertarget).
+
+The target are fed in intervals. This can be configured with `update_interval`.
+This secifies how often the database is checked for new documents. Defaults to `"5m"`.
+
 To forward documents that are stored in the database, a forwarder target needs
 to be configured.
 An example configuration can look like this:
@@ -35,18 +41,19 @@ If set to false only those that are manually forwarded are sent to the URL.
 `url` has to be unique for all the forwarder targets.
 
 ## Filtering
-Currently it is only possible to select which publisher should be forwarded. If
-no publisher is configured, all documents are forwarded. The `strategy`
-determines which documents are forwarded. They are currently two strategies
-`all` and `new_major`. As `all` implies all documents are forwarded,
-`new_major` sends new advisories, all not draft versions. If you have
-semantical versioned documents new are documents are forwarded if they
+The first level of filtering is the `publisher`. If specified
+only the documents for the given publisher are forwarded to
+the target endpoint.
+no publisher is configured, all documents are forwarded.
+The second level is the `strategy`. This determines which documents are forwarded.
+They are currently two strategies `all` and `new_major`.
+As `all` implies all documents are forwarded, `new_major` sends new advisories, all not draft versions.
+If you have semantical versioned documents new are documents are forwarded if they
 are a major change in comparison to the former once.
 
-The default strategy is 'all'. You can adjust the strategy for each
+The default strategy is `all`. You can adjust the strategy for each
 forwarder target. If not specified there the global strategy from
 forwarder is used.
-
 
 ## Forward request
 The forwarder sends a POST request to the specified URL. The data is encoded
