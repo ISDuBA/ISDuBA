@@ -32,6 +32,8 @@
 
   let { params = null }: Props = $props();
 
+  const uid = $props.id();
+
   let document: any | undefined = $state(undefined);
   let documents: any | undefined = $state(undefined);
   let cves: Related | undefined = $state(undefined);
@@ -190,7 +192,7 @@
             )}
           </div>
         </TableHeadCell>
-        {#each Object.values(documents) as doc}
+        {#each Object.values(documents) as doc, i (`relateddocuments-1-${uid}-${i}`)}
           {@const d = doc as any}
           {@const sameVersion = hasDocWithSameVersion(d)}
           <TableHeadCell class="text-center align-top">
@@ -215,14 +217,14 @@
         {/each}
       {/snippet}
       {#snippet mainSlot()}
-        {#each Object.keys(cves as Related) as string[] as cve, index (index)}
+        {#each Object.keys(cves as Related) as string[] as cve, j (`relateddocuments-1-${uid}-${j}`)}
           <TableBodyRow
             class={cve && cve === params.cve ? "!bg-primary-100 dark:!bg-primary-800" : ""}
           >
             <TableBodyCell class={`${baseClass} ${cve && cve === params.cve ? "!font-bold" : ""}`}>
               {cve}
             </TableBodyCell>
-            {#each Object.values(documents) as doc}
+            {#each Object.values(documents) as doc, k (`relateddocuments-1-${uid}-${k}`)}
               <TableBodyCell class={baseClass}>
                 {#if (doc as any).cve.includes(cve)}
                   <i

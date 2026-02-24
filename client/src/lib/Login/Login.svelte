@@ -17,6 +17,8 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import DarkMode from "flowbite-svelte/DarkMode.svelte";
 
+  const uid = $props.id();
+
   let viewError: ErrorDetails | null = $state(null);
   let versionError: ErrorDetails | null = $state(null);
 
@@ -129,10 +131,10 @@
             <span class="text-xl">View: </span>
             <List tag="ul" class="list-none space-y-1">
               {#await getView() then view}
-                {#each view.entries() as [publisher, tlps]}
+                {#each view.entries() as [publisher, tlps], i (`login-1-${uid}-${i}`)}
                   <Li class="ml-3"
                     >{publisher === "*" ? "all" : publisher}:
-                    {#each tlps as tlp}
+                    {#each tlps as tlp, j (`login-2-${uid}-${j}`)}
                       <div
                         class={getTLPClass(tlp)}
                         style="width: fit-content; display: inline; margin-right: 0.25em;"

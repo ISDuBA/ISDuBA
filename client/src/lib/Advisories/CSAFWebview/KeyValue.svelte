@@ -18,13 +18,15 @@
   }
   let { keys, values }: Props = $props();
 
+  const uid = $props.id();
+
   const cellStyle = "px-6 py-1";
 </script>
 
 <div class="ml-2 w-fit">
   <Table border={false}>
     <TableBody>
-      {#each keys as key, index}
+      {#each keys as key, index (`keyvalue-${uid}-${index}`)}
         {#if key === "text" || key === "Text"}
           <TableBodyRow color="default">
             <TableBodyCell class={cellStyle}>{key}</TableBodyCell>

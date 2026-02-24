@@ -23,7 +23,7 @@
 </script>
 
 {#if notes}
-  {#each notes as note}
+  {#each notes as note (note.title)}
     <Collapsible
       header={note.title ? `${note.category}: ${note.title}` : note.category}
       level={4}

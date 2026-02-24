@@ -29,6 +29,9 @@
   }
 
   let { storedQuery }: Props = $props();
+
+  const uid = $props.id();
+
   let documents: any[] | null = $state(null);
   let newDocumentsError: ErrorDetails | null = $state(null);
   let isLoading = $state(false);
@@ -99,7 +102,7 @@
       {/if}
       {#if documents}
         {#if documents.length > 0}
-          {#each documents as doc}
+          {#each documents as doc, i (`advisoryquery-${uid}-${i}`)}
             <Activity onClicked={() => openDocument(doc)}>
               {#snippet topLeftSlot()}
                 <div>
@@ -145,7 +148,7 @@
                 <div>
                   {#if Object.keys(doc).filter((k) => !ignoredColumns.includes(k)).length > 0}
                     <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
-                      {#each Object.keys(doc).sort() as key}
+                      {#each Object.keys(doc).sort() as key, i (`advisoryquery-2-${uid}-${i}`)}
                         {#if !ignoredColumns.includes(key) && doc[key] !== undefined && doc[key] !== null}
                           <div>{key}: {doc[key]}</div>
                         {/if}

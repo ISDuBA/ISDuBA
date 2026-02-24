@@ -21,6 +21,8 @@
     openSubBranches: boolean;
   }
   let { branch, open, openSubBranches = false }: Props = $props();
+
+  const uid = $props.id();
 </script>
 
 <div class="pl-3">
@@ -32,7 +34,7 @@
       </div>
     {/snippet}
     {#if branch.branches}
-      {#each branch.branches as b}
+      {#each branch.branches as b, i (`branch-${uid}-${i}`)}
         <Self branch={b} open={openSubBranches} {openSubBranches} />
       {/each}
     {/if}

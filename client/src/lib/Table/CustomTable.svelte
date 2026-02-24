@@ -43,6 +43,9 @@
     mainSlot,
     topSlot = undefined
   }: Props = $props();
+
+  const uid = $props.id();
+
   let orderBy = $state("");
 </script>
 
@@ -76,7 +79,7 @@
       {#if tableHeadSlot}
         {@render tableHeadSlot()}
       {:else if headers}
-        {#each headers as header}
+        {#each headers as header, i (`customtable-${uid}-${i}`)}
           <TableHeadCell class={header.class ?? tablePadding} onclick={() => {}}>
             <span>{header.label}</span>
             <i

@@ -35,7 +35,7 @@
 
   const deleteDocuments = async () => {
     errorMessage = null;
-    let url = "";
+    let url: string;
     let failed = false;
     isLoading = true;
     for (let i = 0; i < documents.length; i++) {
