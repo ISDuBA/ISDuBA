@@ -71,21 +71,21 @@ If the request fails, ISDuBA retries at the next poll interval.
 ## Architecture
 
 The forwarding subsystem consists of three parts.
-The central component is the 'Manager'. It reacts to direct
+The central component is the **Manager**. It reacts to direct
 upload request from the API to none automatic forwarders.
-It also gets signaled by the 'Poller' if new documents are
+It also gets signaled by the **Poller** if new documents are
 integrated into the database. The poller checks for new
 documents at the rate configured by `update_interval`.
 The manager filters the list of new documents given by the
 poller by publisher and strategy configured for the automatic
 targets and writes upload request in a database queue for each
-'Forwarder'. These forwarders poll from there respective
+**Forwarder**. These forwarders poll from their respective
 upload request and try to forward the documents to the
-configured URLs. The result of these upload attempts are
+configured target URLs. The result of these upload attempts are
 stored back in the queue. If the where successfull the
-document is never forwarded again with this forwarder.
-Same on the case of explicit rejection by the endpoint.
-If there is e.g. an network error the not uploaded documents
+document is never forwarded again by this forwarder.
+Same holds in the case of explicit rejection by the endpoint.
+If there is e.g. a network error the not uploaded documents
 stay in a pending state and are tried to upload later again.
 
 ![Architecture text](./images/forwarder.svg)
