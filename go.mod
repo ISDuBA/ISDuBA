@@ -8,7 +8,7 @@
 
 module github.com/ISDuBA/ISDuBA
 
-go 1.25.3
+go 1.26.0
 
 require (
 	github.com/BurntSushi/toml v1.6.0
