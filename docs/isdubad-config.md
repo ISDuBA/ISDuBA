@@ -29,7 +29,7 @@ The configuration consists of the following sections:
 - [`[sources]`](#section_sources) Sources
 - [`[remote_validator]`](#section_remote_validator) Remote validator
 - [`[client]`](#section_client) Client configuration
-- [`[forwarder]`](#section_forwarder) Forwarder configuration
+- [`[forwarder]`][Forwarder configuration](./forwarder.md)
 - [`[aggregators]`](#section_aggregators) Aggregators configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
@@ -166,25 +166,6 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `keycloak_client_id`: The public client identifier. Defaults to `"auth"`.
 - `update_interval`: Specifies how often the token should be renewed. Defaults to `"5m"`.
 - `idle_timeout`: When the user should be logged out after inactivity. Defaults to `"30m"`.
-
-### <a name="section_forwarder"></a> Section `[forwarder]` Forwarder configuration
-
-On how to configure the forwarder, [read the dedicated forwarder documentation](./forwarder.md)
-
-
-#### Section `[[forwarder.target]]` Forwarder target configuration
-
-Only documents that are successfully imported into the database are forwarded.
-Documents that are discarded because of failed validation are not forwarded.
-
-- `automatic`: Specifies if the target automatically receives new documents. If disabled the target only receives documents on manual forwarding.
-- `url`: The URL of the forward target.
-- `name`: The name of target. This value will be displayed on manual forwarding the document.
-- `publisher`: Specifies the publisher of the documents that need to be forwarded.
-- `header`: List all headers that are sent to the target. The format is `key:value`.
-- `private_cert`: The location of the private client certificate.
-- `public_cert`: The location of the public client certificate.
-- `timeout`: Sets the http client timeout. Set this value if the network is unstable.
 
 ### <a name="section_aggregators"></a> Section `[aggregators]` Aggregators configuration
 

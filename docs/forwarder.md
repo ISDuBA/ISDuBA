@@ -9,18 +9,37 @@
 -->
 
 
-# Forwarder
+# Forwarder configuration
+
+- [`[forwarder]`](#global) Global
+- [`[[forwarder.target]]`](#target) Target
+
+## <a name="global"></a> `[forwarder]` Global
+
+- `update_interval`: Secifies how often the database is checked for new documents. Defaults to `"5m"`.
+- `document_url`: If configured the URL is postfixed with `/api/documents/{id}` (with `id` being the internal ISDuBA id of the document) and is send to the targets to enable them to download the document over the API of the ISDuBA server. Set this to the URL where your ISDuBA server is reachable. The documents will be sent either way. Defaults to not set.
+
+## <a name="target"></a> `[[forwarder.target]]` Target
 
 The forwarder needs at least one target to get started.
 A target is an external endpoint where the documents are send to.
 An example implementation of such a target can befound [here](https://github.com/gocsaf/forwardertarget).
-
 The target are fed in intervals. This can be configured with `update_interval`.
-This secifies how often the database is checked for new documents. Defaults to `"5m"`.
-
-To forward documents that are stored in the database, a forwarder target needs
+This To forward documents that are stored in the database, a forwarder target needs
 to be configured.
+Only documents that are successfully imported into the database are forwarded.
+
+- `automatic`: Specifies if the target automatically receives new documents. If disabled the target only receives documents on manual forwarding.
+- `url`: The URL of the forward target and has to be unique for all the forwarder targets.
+- `name`: The name of target. This value will be displayed on manual forwarding the document.
+- `publisher`: Specifies the publisher of the documents that need to be forwarded.
+- `header`: List all headers that are sent to the target. The format is `key:value`.
+- `private_cert`: The location of the private client certificate.
+- `public_cert`: The location of the public client certificate.
+- `timeout`: Sets the http client timeout. Set this value if the network is unstable.
+
 An example configuration can look like this:
+
 ```TOML
 [[forwarder.target]]
 automatic = true
@@ -33,12 +52,9 @@ public_cert = "public-cert-file"
 timeout = "5s"
 ```
 
-If the `automatic` is set to true all documents that match the filter are
-forwarded to endpoint. The backend polls for documents that were not uploaded
-for the URL and forwards them. Already imported documents are also forwarded.
+The backend polls for documents that were not uploaded
+for the configure URL and forwards them. Already imported documents are also forwarded.
 If set to false only those that are manually forwarded are sent to the URL.
-
-`url` has to be unique for all the forwarder targets.
 
 ## Filtering
 The first level of filtering is the `publisher`. If specified
