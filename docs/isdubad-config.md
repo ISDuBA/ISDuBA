@@ -29,8 +29,8 @@ The configuration consists of the following sections:
 - [`[sources]`](#section_sources) Sources
 - [`[remote_validator]`](#section_remote_validator) Remote validator
 - [`[client]`](#section_client) Client configuration
-- [`[forwarder]`][Forwarder configuration](./forwarder.md)
 - [`[aggregators]`](#section_aggregators) Aggregators configuration
+- [`[forwarder]`](./forwarder.md) Forwarder configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
 
