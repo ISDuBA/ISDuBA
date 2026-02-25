@@ -202,6 +202,7 @@ func (f *forwarder) forwardDocument(ctx context.Context, docID int64) error {
 	if err != nil {
 		return fmt.Errorf("sending request failed: %w", err)
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusCreated {
 		return fmt.Errorf(
 			"forwarding failed: code: %d, status: %q", res.StatusCode, res.Status)
@@ -271,6 +272,7 @@ func (f *forwarder) loadForwardDocuments(
 			return fmt.Errorf("building request failed: %w", err)
 		}
 		res, err := f.client.Do(req)
+		doc, req = nil, nil
 		if err != nil {
 			slog.Warn(
 				"forwarder",
@@ -290,6 +292,8 @@ func (f *forwarder) loadForwardDocuments(
 				"status", res.Status)
 			result = "failed"
 		}
+		// Close body to prevent memory leak.
+		res.Body.Close()
 		// Update the queue to the result of the upload.
 		if err := f.db.Run(
 			ctx,

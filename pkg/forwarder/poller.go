@@ -49,6 +49,8 @@ func newPoller(manager *Manager) *poller {
 }
 
 func (p *poller) run(ctx context.Context) {
+	// Do an initial poll to fill the manager early.
+	p.poll(ctx)
 	ticker := time.NewTicker(p.manager.cfg.UpdateInterval)
 	defer ticker.Stop()
 	for !p.done {
