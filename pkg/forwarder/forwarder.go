@@ -271,15 +271,11 @@ func (f *forwarder) loadForwardDocuments(
 		if err != nil {
 			return fmt.Errorf("building request failed: %w", err)
 		}
+		doc = nil // Not needed any longer as it is wrapped in the request.
 		res, err := f.client.Do(req)
-		doc, req = nil, nil
+		req = nil
 		if err != nil {
-			slog.Warn(
-				"forwarder",
-				"msg", "sending request request failed",
-				"err", err)
-			// Try again later.
-			continue
+			return fmt.Errorf("sending request failed: %w", err)
 		}
 		var result string
 		if res.StatusCode == http.StatusCreated {
