@@ -96,6 +96,7 @@ func (f *forwarder) run(ctx context.Context) {
 			fn(f)
 		case <-ctx.Done():
 			return
+		case <-ticker.C:
 		}
 	}
 }
