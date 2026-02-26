@@ -302,7 +302,7 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 			var publisher, tlp string
 			err := conn.QueryRow(rctx, findPublisherTLP, publisherNamespace, trackingID).Scan(&publisher, &tlp)
 			if err != nil {
-				return fmt.Errorf("Failed to find authorization information for queried document: %w", err)
+				return fmt.Errorf("failed to find authorization information for queried document: %w", err)
 			}
 			if len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
 				forbidden = true
