@@ -36,7 +36,7 @@ import (
 type Controller struct {
 	cfg *config.Config
 	db  *database.DB
-	fm  *forwarder.ForwardManager
+	fm  *forwarder.Manager
 	ts  *tempstore.Store
 	sm  *sources.Manager
 	am  *aggregators.Manager
@@ -47,7 +47,7 @@ type Controller struct {
 func NewController(
 	cfg *config.Config,
 	db *database.DB,
-	fm *forwarder.ForwardManager,
+	fm *forwarder.Manager,
 	ts *tempstore.Store,
 	dl *sources.Manager,
 	am *aggregators.Manager,
