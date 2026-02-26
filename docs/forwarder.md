@@ -17,10 +17,12 @@
 ## <a name="global"></a> `[forwarder]` Global
 
 - `update_interval`: Secifies how often the database is checked for new documents. Defaults to `"5m"`.
-- `document_url`: If configured the URL is postfixed with `/api/documents/{id}` (with `id` being the internal ISDuBA id of the document) and is send to the targets to enable them to download the document over the API of the ISDuBA server. Set this to the URL where your ISDuBA server is reachable. The documents will be sent either way. Defaults to not set.
+- `strategy`: Filtering strategy. See [Filtering](#filtering) for details. Defaults to `"all"`.
+
+If `external_url` in [`[web]`](./example_isdubad.toml#section_web) is configured
+this URL is postfixed with `/api/documents/{id}` (with `id` being the internal ISDuBA id of the document) and is send to the targets to enable them to download the document over the API of the ISDuBA server. Set this to the URL where your ISDuBA server is reachable. The documents will be sent either way. Defaults to not set.
 
 ## <a name="target"></a> `[[forwarder.target]]` Target
-
 The forwarder needs at least one target to get started.
 A target is an external endpoint where the documents are send to.
 An example implementation of such a target can befound [here](https://github.com/gocsaf/forwardertarget).
@@ -56,20 +58,19 @@ The backend polls for documents that were not uploaded
 for the configure URL and forwards them. Already imported documents are also forwarded.
 If set to false only those that are manually forwarded are sent to the URL.
 
-## Filtering
+## <a name="filtering"></a> Filtering
 The first level of filtering is the `publisher`. If specified
 only the documents for the given publisher are forwarded to
 the target endpoint.
-no publisher is configured, all documents are forwarded.
+If no publisher is configured all documents are forwarded.
 The second level is the `strategy`. This determines which documents are forwarded.
 They are currently two strategies `all` and `new_major`.
-As `all` implies all documents are forwarded, `new_major` sends new advisories, all not draft versions.
+`all` implies all documents are forwarded, `new_major` sends new advisories, all not draft versions.
 If you have semantical versioned documents new are documents are forwarded if they
 are a major change in comparison to the former once.
 
-The default strategy is `all`. You can adjust the strategy for each
-forwarder target. If not specified there the global strategy from
-forwarder is used.
+You can adjust the strategy for each forwarder target. If no target specific strategy
+is given the global strategy will be used.
 
 ## Forward request
 The forwarder sends a POST request to the specified URL. The data is encoded
@@ -78,6 +79,8 @@ The form data contains the following fields:
 - `advisory`: The JSON document that is forwarded.
 - `validation_status`: The validation status of the document. This can be
 `valid`, `invalid` or `not_validated`.
+- `document_url`: The API endpoint URL where to download the document from. Only send if
+`[web]`/`external_url` is configured (see above).
 
 ## Error handling
 If the response to the forward request is `201`, then the document will be
