@@ -77,14 +77,23 @@ func parseTrackingStatus(s *string) trackingStatus {
 
 // NewManager creates a new forward manager.
 func NewManager(
-	cfg *config.Forwarder,
-	externalURL *url.URL,
+	cfg *config.Config,
 	db *database.DB,
 ) (*Manager, error) {
-	forwarders := make([]*forwarder, 0, len(cfg.Targets))
-	for i := range cfg.Targets {
-		tcfg := &cfg.Targets[i]
-		forwarder, err := newForwarder(tcfg, externalURL, db)
+	// TODO: Move this parsing to config.
+	var extURL *url.URL
+	if cfg.Web.ExternalURL != "" {
+		eu, err := url.Parse(cfg.Web.ExternalURL)
+		if err != nil {
+			return nil, fmt.Errorf("external URL is invalid: %w", err)
+		}
+		extURL = eu
+	}
+	fwdCfg := &cfg.Forwarder
+	forwarders := make([]*forwarder, 0, len(fwdCfg.Targets))
+	for i := range fwdCfg.Targets {
+		tcfg := &fwdCfg.Targets[i]
+		forwarder, err := newForwarder(tcfg, extURL, db)
 		if err != nil {
 			return nil,
 				fmt.Errorf("create automatic forwarder for %q failed: %w",
@@ -93,7 +102,7 @@ func NewManager(
 		forwarders = append(forwarders, forwarder)
 	}
 	return &Manager{
-		cfg:        cfg,
+		cfg:        fwdCfg,
 		db:         db,
 		fns:        make(chan func(manager *Manager)),
 		forwarders: forwarders,
