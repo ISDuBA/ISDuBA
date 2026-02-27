@@ -3860,6 +3860,9 @@ const docTemplate = `{
                 "documents_id": {
                     "type": "integer"
                 },
+                "documents_version": {
+                    "type": "string"
+                },
                 "ssvc": {
                     "type": "string"
                 },
