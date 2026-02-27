@@ -30,7 +30,7 @@ please use `go generate ./...` in the root folder
 and commit updates results to the repository.
 
 Regeneration requires `swaggo`,
-to be installed via `go get github.com/swaggo/swag/cmd/swag@latest`.
+to be installed via `go install github.com/swaggo/swag/cmd/swag@latest`.
 This component will update the OpenAPI 2.0 documentation.
 
 If you plan to add further machine generated files ensure that they
