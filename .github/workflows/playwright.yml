@@ -34,13 +34,13 @@ jobs:
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
           go tool cover -func=coverage.out
         shell: bash
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: monocart-report
           path: client/test-results/monocart-report
           retention-days: 30
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-output
