@@ -45,7 +45,7 @@
     "flowbite-svelte": "^1.28.1",
     "husky": "^9.1.7",
     "monocart-reporter": "^2.10.0",
-    "nyc": "^17.1.0",
+    "nyc": "^18.0.0",
     "postcss": "^8.5.6",
     "postcss-load-config": "^6.0.1",
     "prettier": "^3.8.1",
