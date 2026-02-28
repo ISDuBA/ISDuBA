@@ -22,4 +22,4 @@
   let style = $derived(ssvc.color ? `color: white; background-color: ${ssvc.color};` : "");
 </script>
 
-<Badge class="h-6 w-fit" title={ssvc.vector} {style}>{ssvc.label}</Badge>
+<Badge class="h-fit w-fit rounded-none px-1 py-1" title={ssvc.vector} {style}>{ssvc.label}</Badge>

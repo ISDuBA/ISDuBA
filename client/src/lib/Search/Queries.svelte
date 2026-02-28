@@ -80,7 +80,7 @@
     if (response.ok) {
       queries = response.content.filter((q: Query) => !q.dashboard && !q.default_query);
       let defaultQueries = response.content.filter((q: Query) => q.default_query);
-      if (defaultQueries) {
+      if (defaultQueries?.length > 0) {
         defaultQuery = defaultQueries[0];
       }
     } else if (response.error) {

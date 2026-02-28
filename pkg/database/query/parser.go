@@ -542,10 +542,8 @@ func (e *Expr) checkValueType(vt valueType) {
 }
 
 func (e *Expr) checkExprType(eTypes ...exprType) {
-	for _, et := range eTypes {
-		if e.exprType == et {
-			return
-		}
+	if slices.Contains(eTypes, e.exprType) {
+		return
 	}
 	panic(parseError(
 		fmt.Sprintf("expression type mismatch: %q %v", e.exprType, eTypes)))

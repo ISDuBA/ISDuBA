@@ -36,7 +36,7 @@ import (
 type Controller struct {
 	cfg *config.Config
 	db  *database.DB
-	fm  *forwarder.ForwardManager
+	fm  *forwarder.Manager
 	ts  *tempstore.Store
 	sm  *sources.Manager
 	am  *aggregators.Manager
@@ -47,7 +47,7 @@ type Controller struct {
 func NewController(
 	cfg *config.Config,
 	db *database.DB,
-	fm *forwarder.ForwardManager,
+	fm *forwarder.Manager,
 	ts *tempstore.Store,
 	dl *sources.Manager,
 	am *aggregators.Manager,
@@ -152,8 +152,10 @@ func (c *Controller) Bind() http.Handler {
 	api.PUT("/status/:publisher/:trackingid/:state", authAdEdRe, c.changeStatus)
 	api.PUT("/status", authAdEdRe, c.changeStatusBulk)
 
-	// SSVC change
+	// SSVC view/change
 	api.PUT("/ssvc/:document", authEd, c.changeSSVC)
+	api.GET("/ssvc/documents/:document", authAll, c.viewSSVC)
+	api.GET("/ssvc/history/:publisher/:trackingid", authAll, c.viewSSVCHistory)
 
 	// Calculate diff
 	api.GET("/diff/:document1/:document2", authEdRe, c.viewDiff)

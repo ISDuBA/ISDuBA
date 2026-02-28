@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -31,12 +31,12 @@ jobs:
           go-version: "stable"
 
       - name: "Install Node"
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: "20.x"
+          node-version: lts/*
 
       - name: "Install Deps"
-        run: cd client; npm install
+        run: cd client; npm clean-install
 
       - name: Build
         run: make dist
@@ -52,7 +52,7 @@ jobs:
           format: cyclonedx-json
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/isduba-*.zip

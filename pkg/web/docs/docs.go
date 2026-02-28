@@ -989,6 +989,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/documents/{id}/cve_related": {
+            "get": {
+                "description": "Returns the documents related to this document by CVE.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns CVE related documents.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RelatedDocument"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/events": {
             "get": {
                 "description": "Returns all events that match the specified query.",
@@ -1271,6 +1306,14 @@ const docTemplate = `{
                             "Reviewer": "Reviewer role",
                             "SourceManager": "Source Manager role"
                         },
+                        "x-enum-descriptions": [
+                            "Admin role",
+                            "Importer role",
+                            "Editor role",
+                            "Reviewer role",
+                            "Auditor role",
+                            "Source Manager role"
+                        ],
                         "x-enum-varnames": [
                             "Admin",
                             "Importer",
@@ -1637,6 +1680,14 @@ const docTemplate = `{
                             "Reviewer": "Reviewer role",
                             "SourceManager": "Source Manager role"
                         },
+                        "x-enum-descriptions": [
+                            "Admin role",
+                            "Importer role",
+                            "Editor role",
+                            "Reviewer role",
+                            "Auditor role",
+                            "Source Manager role"
+                        ],
                         "x-enum-varnames": [
                             "Admin",
                             "Importer",
@@ -2110,6 +2161,7 @@ const docTemplate = `{
                             3
                         ],
                         "type": "integer",
+                        "format": "int32",
                         "x-enum-varnames": [
                             "defaultSourcesFeedLogLevel",
                             "DebugFeedLogLevel",
@@ -2264,66 +2316,6 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/sources/{document}": {
-            "delete": {
-                "description": "This updates the SSVC of the specified document.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Changes the SSVC.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Document ID",
-                        "name": "document",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "SSVC vector",
-                        "name": "vector",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Success"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
                     }
                 }
             }
@@ -2710,6 +2702,173 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/ssvc/documents/{document}": {
+            "get": {
+                "description": "Fetches the most recent SSVC for a specific document.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Returns the latest SSVC.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "document",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/ssvc/history/{publisher}/{trackingid}": {
+            "get": {
+                "description": "Returns a list of all SSVC changes for the specified advisory, ordered by changedate.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "View the SSVC History.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Advisory publisher",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Advisory tracking ID",
+                        "name": "trackingid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/models.SSVCChange"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/ssvc/{document}": {
+            "put": {
+                "description": "This updates the SSVC of the specified document.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Changes the SSVC.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "document",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SSVC vector",
+                        "name": "vector",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
                     },
                     "404": {
                         "description": "Not Found",
@@ -3530,6 +3689,7 @@ const docTemplate = `{
         },
         "config.FeedLogLevel": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 0,
@@ -3613,6 +3773,17 @@ const docTemplate = `{
                 "ImportDocumentEvent": "ImportDocumentEvent represents a document import.",
                 "StateChangeEvent": "StateChangeEvent represents changing the advisory state."
             },
+            "x-enum-descriptions": [
+                "ImportDocumentEvent represents a document import.",
+                "DeleteDocumentEvent represents a document deletion.",
+                "StateChangeEvent represents changing the advisory state.",
+                "AddSSVCEvent represents the addtion of a SSVC score.",
+                "ChangeSSVCEvent represents the change of a SSVC score.",
+                "DeleteSSVCEvent represents the deletion of a SSVC score.",
+                "AddCommentEvent represents the addition of a comment.",
+                "ChangeCommentEvent represents the change of a comment.",
+                "DeleteCommentEvent represents the deletion of a comment."
+            ],
             "x-enum-varnames": [
                 "ImportDocumentEvent",
                 "DeleteDocumentEvent",
@@ -3639,6 +3810,64 @@ const docTemplate = `{
                 "type": "array",
                 "items": {
                     "$ref": "#/definitions/models.TLP"
+                }
+            }
+        },
+        "models.RelatedDocument": {
+            "type": "object",
+            "properties": {
+                "cve": {
+                    "type": "string"
+                },
+                "document_id": {
+                    "type": "integer"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "ssvc": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tracking_id": {
+                    "type": "string"
+                },
+                "tracking_status": {
+                    "type": "string"
+                },
+                "tracking_version": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SSVCChange": {
+            "type": "object",
+            "properties": {
+                "actor": {
+                    "type": "string"
+                },
+                "change_number": {
+                    "type": "integer"
+                },
+                "changedate": {
+                    "type": "string"
+                },
+                "documents_id": {
+                    "type": "integer"
+                },
+                "documents_version": {
+                    "type": "string"
+                },
+                "ssvc": {
+                    "type": "string"
+                },
+                "ssvc_prev": {
+                    "type": "string"
                 }
             }
         },
@@ -3714,6 +3943,12 @@ const docTemplate = `{
                 "TLPRed": "TLPRed   represents TLP:RED",
                 "TLPWhite": "TLPWhite represents TLP:WHITE"
             },
+            "x-enum-descriptions": [
+                "TLPWhite represents TLP:WHITE",
+                "TLPGreen represents TLP:GREEN",
+                "TLPAmber represents TLP:AMBER",
+                "TLPRed   represents TLP:RED"
+            ],
             "x-enum-varnames": [
                 "TLPWhite",
                 "TLPGreen",
@@ -3739,6 +3974,14 @@ const docTemplate = `{
                 "ReadWorkflow": "ReadWorkflow represents 'read'.",
                 "ReviewWorkflow": "ReviewWorkflow represents 'review'."
             },
+            "x-enum-descriptions": [
+                "NewWorkflow represents 'new'.",
+                "ReadWorkflow represents 'read'.",
+                "AssessingWorkflow represents 'assessing',",
+                "ReviewWorkflow represents 'review'.",
+                "ArchivedWorkflow represents 'archived'.",
+                "DeleteWorkflow represents 'delete'."
+            ],
             "x-enum-varnames": [
                 "NewWorkflow",
                 "ReadWorkflow",
@@ -3766,6 +4009,14 @@ const docTemplate = `{
                 "Reviewer": "Reviewer role",
                 "SourceManager": "Source Manager role"
             },
+            "x-enum-descriptions": [
+                "Admin role",
+                "Importer role",
+                "Editor role",
+                "Reviewer role",
+                "Auditor role",
+                "Source Manager role"
+            ],
             "x-enum-varnames": [
                 "Admin",
                 "Importer",
@@ -4277,9 +4528,6 @@ const docTemplate = `{
                 },
                 "event_type": {
                     "$ref": "#/definitions/models.Event"
-                },
-                "prev_ssvc": {
-                    "type": "string"
                 },
                 "state": {
                     "$ref": "#/definitions/models.Workflow"

@@ -1,4 +1,4 @@
-# This file is Free Software under the Apache-2.0 License
+#  This file is Free Software under the Apache-2.0 License
 # without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -41,7 +41,7 @@ build_pkg:
 	cd pkg && go build $(GO_FLAGS) ./...
 
 build_client:
-	cd client && npm install && npm run build
+	cd client && npm clean-install && npm run build
 
 test:
 	go test ./...
