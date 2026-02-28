@@ -447,11 +447,9 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		}
 	}
 
-	var deliver func(*Controller, *gin.Context, bool, int64, int64, []string, string, *query.SQLBuilder)
+	deliver := (*Controller).flatResults
 	if aggregate {
 		deliver = (*Controller).aggregatedResults
-	} else {
-		deliver = (*Controller).flatResults
 	}
 	deliver(c, ctx, calcCount, limit, offset, fields, order, &builder)
 }
