@@ -41,6 +41,7 @@
 # port = 8081
 # gin_mode = "release"
 # static = "web"
+# external_url = ""
 
 # [database]
 # host = "localhost"
@@ -99,6 +100,7 @@
 
 # [forwarder]
 # update_interval = "5m"
+# strategy = "all" # valid values: "all", "new_major"
 
 ## These are example targets to show the forwarder target syntax.
 ## [[forwarder.target]]
@@ -109,6 +111,7 @@
 ## header = [ "x-api-key:secret" ]
 ## private_cert = "private-cert-file"
 ## public_cert = "public-cert-file"
+## strategy = "all" # optional. If not set the strategy value of forwarder is used.
 ##
 ## [[forwarder.target]]
 ## automatic = false
@@ -116,6 +119,7 @@
 ## url = "https://example.org/api/v1/import"
 ## header = [ "x-api-key:secret" ]
 ## timeout = "5s"
+## strategy = "all" # optional. If not set the strategy value of forwarder is used.
 
 # [aggregators]
 # timeout = "30s"
