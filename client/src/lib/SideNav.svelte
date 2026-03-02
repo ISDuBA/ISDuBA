@@ -93,7 +93,7 @@
                 <i class="bx bxs-dashboard"></i>
               {/snippet}
             </SidebarItem>
-            {#if appStore.state.app.search.searchURL && !activeUrl.startsWith("/#/search")}
+            {#if appStore.state.app.search.searchURL}
               <!--
               For the case the user wants to return to the previous result list, for example from the advisory view.
               Unfortunetly, it was not possible to use the second SidebarItem for Search because any parameters were
