@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"reflect"
 	"slices"
@@ -29,7 +30,7 @@ import (
 type (
 	aggregatedDocument struct {
 		id   int64
-		rows [][]any
+		rows []map[string]any
 	}
 	aggregatedDocuments []aggregatedDocument
 )
@@ -83,7 +84,6 @@ func (c *Controller) aggregatedResults(
 			}
 			fmt.Fprint(w, `"documents":[`)
 			firstDocument := true
-			data := make(map[string]any, len(fields))
 			enc := json.NewEncoder(w)
 
 			if err := ads.window(limit, offset, func(ad *aggregatedDocument) error {
@@ -93,25 +93,11 @@ func (c *Controller) aggregatedResults(
 					fmt.Fprint(w, ",")
 				}
 				fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
-
-				have := make(map[string]any, len(fields))
-
 				for i, row := range ad.rows {
 					if i > 0 {
 						fmt.Fprint(w, ",")
 					}
-					clear(data)
-					for j, v := range row {
-						name := fields[j]
-						if name == "id" {
-							continue
-						}
-						if x, ok := have[name]; !ok || !reflect.DeepEqual(x, v) {
-							data[name] = v
-							have[name] = v
-						}
-					}
-					if err := enc.Encode(data); err != nil {
+					if err := enc.Encode(row); err != nil {
 						return err
 					}
 				}
@@ -154,25 +140,43 @@ func scanAggregatedDocuments(
 	}
 	ads := make(aggregatedDocuments, 0, 512)
 	lastID := int64(-1)
+	have := make(map[string]any)
 	for rows.Next() {
 		if err := rows.Scan(ptrs...); err != nil {
 			return nil, fmt.Errorf("scanning row failed: %w", err)
 		}
-		results := slices.Clone(values)
 		id, ok := asInt64(values[idIdx])
 		if !ok {
 			// XXX: Should we panic here!?
 			return nil, fmt.Errorf("id column is not an int: %T", values[idIdx])
 		}
-		if id != lastID {
+		if id != lastID { // A new document bundle.
+			lastID = id
+			clear(have)
+			for j, v := range values {
+				// Ignore id as it will be already stored in the aggregatedDocument.
+				if name := fields[j]; name != "id" {
+					have[name] = v
+				}
+			}
 			ads = append(ads, aggregatedDocument{
 				id:   id,
-				rows: [][]any{results},
+				rows: []map[string]any{maps.Clone(have)},
 			})
-			lastID = id
-		} else {
+		} else { // We already have documents for this bundle.
+			row := make(map[string]any, 1) // The diff should be small.
+			for j, v := range values {
+				name := fields[j]
+				if name == "id" {
+					continue
+				}
+				if x, ok := have[name]; !ok || !reflect.DeepEqual(x, v) {
+					row[name] = v
+					have[name] = v
+				}
+			}
 			last := &ads[len(ads)-1].rows
-			*last = append(*last, results)
+			*last = append(*last, row)
 		}
 	}
 	if err := rows.Err(); err != nil {
