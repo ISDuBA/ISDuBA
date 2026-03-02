@@ -396,6 +396,7 @@
   const loadData = async () => {
     advisoryState = "";
     historyEntries = [];
+    ssvcVector = "";
     await loadDocument();
     await getAdvisoryVersions();
     if (couldNotLoadDocument || isInconsistent) return;
