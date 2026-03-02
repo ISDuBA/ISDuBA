@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Toggle } from "flowbite-svelte";
+  import { Button, Toggle } from "flowbite-svelte";
   import AdvisoryTable from "$lib/Table/Table.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
@@ -325,6 +325,18 @@
       return possibleOrders.indexOf(criterium) != -1;
     });
   };
+
+  const resetSearch = () => {
+    setSearchParameters({
+      searchTerm: "",
+      currentPage: 1,
+      limit: INITIAL_LIMIT,
+      orderBy: INITIAL_ORDER,
+      queryID: undefined,
+      type: SEARCHTYPES.ADVISORY,
+      advanced: false
+    });
+  };
 </script>
 
 <svelte:head>
@@ -375,27 +387,30 @@
     ></TypeToggle>
   {/if}
 </div>
-<div class="mb-3 flex flex-row flex-wrap gap-2">
-  <CSearch
-    buttonText={advanced ? "Apply" : "Search"}
-    placeholder={advanced ? "Enter a query" : "Enter a search term"}
-    search={(term) => {
-      setSearchParameters({
-        currentPage: 1,
-        searchTerm: term
-      });
-    }}
-    searchTerm={searchTermInputValue}
-  ></CSearch>
-  <div class="mt-1" title="Define finer grained search queries">
-    <Toggle
-      onclick={() => {
-        setSearchParameters({ advanced: !$state.snapshot(advanced) });
+<div class="mb-3 flex flex-row flex-wrap items-center gap-4">
+  <div class="flex items-center gap-1">
+    <CSearch
+      buttonText={advanced ? "Apply" : "Search"}
+      placeholder={advanced ? "Enter a query" : "Enter a search term"}
+      search={(term) => {
+        setSearchParameters({
+          currentPage: 1,
+          searchTerm: term
+        });
       }}
-      checked={advanced}
-      class="ml-3">Advanced</Toggle
-    >
+      searchTerm={searchTermInputValue}
+    ></CSearch>
+    <div class="mt-1" title="Define finer grained search queries">
+      <Toggle
+        onclick={() => {
+          setSearchParameters({ advanced: !$state.snapshot(advanced) });
+        }}
+        checked={advanced}
+        class="ml-3">Advanced</Toggle
+      >
+    </div>
   </div>
+  <Button onclick={resetSearch} color="light" size="sm">Reset search</Button>
 </div>
 {#if searchTerm !== undefined}
   <AdvisoryTable
