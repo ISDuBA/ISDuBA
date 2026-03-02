@@ -100,6 +100,7 @@
               omitted when the href variable was created dynamically.
               -->
               <SidebarItem
+                active={activeUrl.startsWith("/#/search")}
                 class={sidebarItemClass}
                 aClass={sidebarItemLinkClass}
                 label={searchLabel}
