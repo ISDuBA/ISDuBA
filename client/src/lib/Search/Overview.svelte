@@ -51,9 +51,6 @@
   let advanced: boolean = $derived(
     queryString?.advanced !== undefined ? (queryString.advanced === "true" ? true : false) : false
   );
-  let detailed: boolean = $derived(
-    queryString?.detailed !== undefined ? (queryString.detailed === "true" ? true : false) : true
-  );
   let type = $derived(queryString?.type !== undefined ? queryString.type : SEARCHTYPES.ADVISORY);
   let currentPage: number = $derived(Number(queryString?.page ?? 1));
   let limit: number = $derived(Number(queryString?.limit ?? INITIAL_LIMIT));
@@ -162,8 +159,7 @@
       limit,
       currentPage,
       searchTerm,
-      orderBy,
-      detailed
+      orderBy
     };
   };
 
@@ -204,12 +200,6 @@
       newURL = newURL.concat(`&limit=${searchParameters.limit}`);
     } else if (limit !== INITIAL_LIMIT && !searchParameters.limit) {
       newURL = newURL.concat(`&limit=${limit}`);
-    }
-
-    if (searchParameters.detailed !== undefined && searchParameters.detailed !== true) {
-      newURL = newURL.concat(`&detailed=${searchParameters.detailed}`);
-    } else if (!Object.keys(searchParameters).includes("detailed") && detailed !== true) {
-      newURL = newURL.concat(`&detailed=${encodeURIComponent(detailed)}`);
     }
 
     if (searchParameters.advanced !== undefined && searchParameters.advanced !== false) {
@@ -287,7 +277,7 @@
     } else {
       const loadAdvisories = type === SEARCHTYPES.ADVISORY;
       URLWithoutOffsetAndLimit = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderByParam.join(" ")}&results=${detailed}&${columnsParam}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderByParam.join(" ")}&${columnsParam}`
       );
     }
     appStore.setSearchRequestURL(URLWithoutOffsetAndLimit);
@@ -404,15 +394,6 @@
       }}
       checked={advanced}
       class="ml-3">Advanced</Toggle
-    >
-  </div>
-  <div class="mt-1" title="Show every single time the search term was found">
-    <Toggle
-      onclick={() => {
-        setSearchParameters({ detailed: !$state.snapshot(detailed) });
-      }}
-      checked={detailed}
-      class="ml-3">Detailed</Toggle
     >
   </div>
 </div>
