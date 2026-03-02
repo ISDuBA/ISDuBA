@@ -77,7 +77,7 @@
     if (count === 5 && index === 0) {
       a.push(index + 4);
     }
-    return a;
+    return a.filter((i) => i >= 0);
   });
 
   const leading = $derived.by(() => {
