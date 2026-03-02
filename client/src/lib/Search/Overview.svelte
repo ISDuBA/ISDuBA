@@ -277,7 +277,7 @@
     } else {
       const loadAdvisories = type === SEARCHTYPES.ADVISORY;
       URLWithoutOffsetAndLimit = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderByParam.join(" ")}&${columnsParam}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderByParam.join(" ")}&results=true&${columnsParam}`
       );
     }
     appStore.setSearchRequestURL(URLWithoutOffsetAndLimit);
