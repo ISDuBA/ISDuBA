@@ -33,6 +33,7 @@
     loadAdvisoryVersions
   } from "$lib/Advisories/advisory";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
+    import SearchHitBar from "./SearchHitBar.svelte";
 
   let { params } = $props();
 
@@ -647,7 +648,7 @@
         class={"flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:pr-6" +
           (canSeeCommentArea ? " lg:overflow-auto" : "")}
       >
-        <div class="flex flex-row">
+        <div class="flex flex-col gap-2 mb-2">
           {#if advisoryVersions?.length > 0}
             <Version
               publisherNamespace={document.publisher?.name}
@@ -661,6 +662,9 @@
               selectedDiffDocuments={() => (isDiffOpen = true)}
               onDisabledDiff={() => (isDiffOpen = false)}
             ></Version>
+          {/if}
+          {#if appStore.state.app.search.term}
+            <SearchHitBar />
           {/if}
         </div>
         <div class="flex flex-col">
