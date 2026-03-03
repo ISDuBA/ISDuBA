@@ -9,9 +9,9 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import { Button, Card, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
-  import { tick } from "svelte";
+  import CFileinput from "./Components/CFileinput.svelte";
 
   interface Props {
     cancel: () => any;
@@ -44,7 +44,6 @@
   let files: FileList | undefined = $state(undefined);
   let filesCache: FileList | undefined = $state(undefined);
   let isUploading = $state(false);
-  let showFileInput = $state(true);
   $effect(() => {
     if (files) {
       uploadInfo = [];
@@ -56,20 +55,16 @@
   <div class={`flex flex-col gap-4 ${files?.length && files.length > 1 ? "mb-4" : "mb-40"}`}>
     <div>
       <Label class="pb-2">{label}</Label>
-      {#if showFileInput}
-        <Fileupload
-          disabled={isUploading}
-          wrapperClass="cursor-pointer disabled:cursor-not-allowed !p-0 dark:text-gray-400"
-          class="file:bg-primary-700 hover:file:bg-primary-800 dark:file:bg-primary-600 dark:hover:file:bg-primary-700 text-white dark:text-white"
-          value=""
-          bind:files
-          multiple
-          accept=".json"
-          onchange={() => {
-            filesCache = undefined;
-          }}
-        />
-      {/if}
+      <CFileinput
+        accept=".json"
+        disabled={isUploading}
+        id="upload-files"
+        multiple
+        bind:files
+        onChanged={() => {
+          filesCache = undefined;
+        }}
+      />
     </div>
     <div class="flex items-center justify-end gap-2">
       {#if isUploading}
@@ -101,11 +96,6 @@
               });
             }
             files = undefined;
-            // This is a hack. The file input has to be re-added to the DOM. Otherwise it would not change
-            // the label "x files selected." to its initial value even if we set files to undefined.
-            showFileInput = false;
-            await tick();
-            showFileInput = true;
             isUploading = false;
           });
         }}

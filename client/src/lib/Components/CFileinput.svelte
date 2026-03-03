@@ -12,6 +12,8 @@
   import { Button, Label } from "flowbite-svelte";
 
   interface Props {
+    accept?: string;
+    browseButtonColor?: "primary" | "light";
     containerClass?: string | undefined;
     clearable?: boolean;
     disabled?: boolean;
@@ -25,6 +27,8 @@
   }
 
   let {
+    accept = "",
+    browseButtonColor = "primary",
     containerClass = undefined,
     clearable = true,
     disabled = false,
@@ -48,8 +52,8 @@
     onclick={() => {
       document.getElementById(id)?.click();
     }}
-    class="rounded-none rounded-l-lg border border-r-0 dark:border-gray-700 dark:bg-gray-800"
-    color="primary"
+    class="cursor-pointer rounded-none rounded-l-lg border-r-0 disabled:cursor-not-allowed"
+    color={browseButtonColor}
     {disabled}>Browse...</Button
   >
   <Label
@@ -68,7 +72,7 @@
       <span>No file selected</span>
     {/if}
   </Label>
-  <input {multiple} onchange={onChange} {disabled} {id} type="file" />
+  <input {multiple} onchange={onChange} {accept} {disabled} {id} type="file" />
   {#if clearable}
     <Button
       onclick={() => {
@@ -77,8 +81,9 @@
         isFileReset = true;
         onChanged();
       }}
+      {disabled}
       title={titleClearButton}
-      class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
+      class="w-fit cursor-pointer rounded-none rounded-r-lg border-l-0 p-1 disabled:cursor-not-allowed dark:border-gray-500 dark:bg-gray-600"
       color="light"
     >
       <i class="bx bx-x"></i>
