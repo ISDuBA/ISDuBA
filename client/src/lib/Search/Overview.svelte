@@ -289,6 +289,7 @@
     let URLWithoutOffsetAndLimit: string;
     const columnsParam = `columns=${fetchColumns.join(" ")}${searchColumn}`;
     appStore.setSearchOffset(offset);
+    appStore.setSearchTerm(searchTerm);
 
     if ((queryForFetch && queryForFetch.kind === SEARCHTYPES.EVENT) || type === SEARCHTYPES.EVENT) {
       URLWithoutOffsetAndLimit = encodeURI(
