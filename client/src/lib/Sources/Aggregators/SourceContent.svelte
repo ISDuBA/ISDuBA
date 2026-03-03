@@ -24,6 +24,8 @@
 
   let { source, entry }: Props = $props();
 
+  const uid = $props.id();
+
   let isActive: undefined | boolean = $state();
 
   const sortFeeds = (a: FeedInfo, b: FeedInfo) => {
@@ -69,7 +71,7 @@
   {/if}
 </div>
 <div class="flex flex-col items-start">
-  {#each source.feeds.toSorted(sortFeeds) as feed}
+  {#each source.feeds.toSorted(sortFeeds) as feed, i (`sourcecontent-${uid}-${i}`)}
     {@const feedClass = `text-sm ${tdClass} ${feed.highlight ? "text-amber-600" : "text-black dark:text-white"}`}
     <div class="ms-8 mb-2">
       <div>
