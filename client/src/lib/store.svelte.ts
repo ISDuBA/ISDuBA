@@ -56,8 +56,10 @@ type AppStore = {
       offset: number | null;
       requestURL: string | null;
       results: any[] | null;
+      indexInsideDoc: number;
       type: SEARCHTYPES;
       searchURL: string | undefined;
+      term: string | undefined;
       parameters: {
         advisories: SearchParameters | undefined;
         documents: SearchParameters | undefined;
@@ -127,13 +129,15 @@ const generateInitialState = (): AppStore => {
         offset: null,
         requestURL: null,
         results: null,
+        indexInsideDoc: -1,
         type: SEARCHTYPES.ADVISORY,
         parameters: {
           advisories: undefined,
           documents: undefined,
           events: undefined
         },
-        searchURL: undefined
+        searchURL: undefined,
+        term: undefined,
       },
       routerParams: null
     },
@@ -362,6 +366,10 @@ export const appStore = {
     state.app.search.results = newDocuments;
   },
 
+  setIndexInsideDoc: (newIndex: number) => {
+    state.app.search.indexInsideDoc = newIndex;
+  },
+
   setSearchType: (newType: SEARCHTYPES) => {
     state.app.search.type = newType;
   },
@@ -422,6 +430,10 @@ export const appStore = {
 
   setSearchURL: (newSearchURL: string | undefined) => {
     state.app.search.searchURL = newSearchURL;
+  },
+
+  setSearchTerm: (newSearchTerm: string | undefined) => {
+    state.app.search.term = newSearchTerm;
   },
 
   setSearchParametersForType: (type: SEARCHTYPES, parameters: SearchParameters) => {

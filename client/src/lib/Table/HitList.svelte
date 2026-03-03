@@ -13,6 +13,7 @@
   import { Button, TableBodyCell } from "flowbite-svelte";
   import { searchColumnName } from "./defaults";
   import { getAdvisoryAnchorLink } from "$lib/Advisories/advisory";
+  import { appStore } from "$lib/store.svelte";
 
   /* eslint-disable svelte/no-at-html-tags */
 
@@ -43,6 +44,9 @@
             ? "block hover:bg-gray-200 dark:hover:bg-gray-600"
             : "block hover:bg-gray-200 dark:hover:bg-gray-600"}
           href={getAdvisoryAnchorLink(doc)}
+          onclick={() => {
+            appStore.setIndexInsideDoc(i);
+          }}
         >
           <span class="block px-2 py-1">
             {@html DOMPurify.sanitize(hit[searchColumnName], {
