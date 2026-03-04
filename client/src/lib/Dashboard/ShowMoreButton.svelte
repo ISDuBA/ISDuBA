@@ -19,7 +19,7 @@
   let { id }: Props = $props();
 
   const showMore = () => {
-    push(`/search?query=${id}`);
+    push(`/search?queryID=${id}`);
   };
 </script>
 

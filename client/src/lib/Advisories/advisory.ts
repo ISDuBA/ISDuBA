@@ -150,5 +150,9 @@ const fetchDocumentSSVC = async (
   return undefined;
 };
 
-export { updateMultipleStates, loadAdvisoryVersions, fetchDocumentSSVC };
+const getAdvisoryLink = (doc: any) =>
+  `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
+const getAdvisoryAnchorLink = (doc: any) => "#" + getAdvisoryLink(doc);
+
+export { updateMultipleStates, loadAdvisoryVersions, fetchDocumentSSVC, getAdvisoryAnchorLink };
 export type { AdvisoryVersion };
