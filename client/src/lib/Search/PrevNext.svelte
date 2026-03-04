@@ -50,10 +50,11 @@
     if (count === 5 && index === 4) {
       a.push(index - 4);
     }
-    if (index === count || offset + index > count - 1) {
+    if (count <= 5 || index === count || offset + index > count - 1) {
       a.push(index - 3);
     }
     if (
+      count <= 5 ||
       index < 2 ||
       (index < 3 && offset === 0) ||
       (count > 2 && index >= count - 1) ||
@@ -61,14 +62,14 @@
     ) {
       a.push(index - 2);
     }
-    if (count > 1 && index > 0) {
+    if (count <= 5 || (count > 1 && index > 0)) {
       a.push(index - 1);
     }
     a.push(index);
     if (count > 1 && index < count) {
       a.push(index + 1);
     }
-    if (count > 2 && index + offset < 2) {
+    if ((count <= 5 && index < 3) || (count > 2 && index + offset < 2)) {
       a.push(index + 2);
     }
     if (count < 6 || index === 0) {
