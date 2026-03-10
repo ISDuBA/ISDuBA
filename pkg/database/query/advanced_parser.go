@@ -39,6 +39,10 @@ type documentColumn struct {
 	sources        columnSources
 }
 
+func (css columnSources) contains(cs columnSource) bool {
+	return slices.Contains(css, cs)
+}
+
 func (css columnSources) add(other columnSources) columnSources {
 	for _, cs := range css {
 		if !slices.Contains(other, cs) {

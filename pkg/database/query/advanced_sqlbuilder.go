@@ -22,7 +22,6 @@ type AdvancedSQLBuilder struct {
 	Aliases             map[string]string
 	IgnoreFields        map[string]struct{}
 	Mode                ParserMode
-	TextTables          bool
 	ReturnSearchResults bool
 	usedTables          columnSources
 }
@@ -52,7 +51,7 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 
 		// We need the text tables to be joined.
-		sb.TextTables = true
+		sb.usedTables = sb.usedTables.add(columnSources{"text_tables"})
 
 		// Handle alias
 		if e.alias == "" {
@@ -371,7 +370,7 @@ func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
 		`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
 		`) AS ssvc_current ON TRUE`)
 
-	if sb.TextTables {
+	if sb.usedTables.contains("text_tables") {
 		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
