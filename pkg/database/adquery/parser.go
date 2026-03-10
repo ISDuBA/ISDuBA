@@ -144,12 +144,16 @@ type Expr struct {
 	children []*Expr
 }
 
+type (
+	columnSource string
+	columnSources []columnSource
+)
 type documentColumn struct {
 	name           string
 	valueType      valueType
 	modes          []ParserMode
 	projectionOnly bool
-	source         string
+	sources        columnSources
 }
 
 type binaryCompat struct {
@@ -184,6 +188,15 @@ var binaryCompatMatrix = map[binaryCompat]valueType{
 	{intType, mul, durationType}:      durationType,
 	{durationType, mul, floatType}:    durationType,
 	{durationType, div, floatType}:    durationType,
+}
+
+func (css columnSources) add(other columnSources) columnSources {
+	for _, cs := range css {
+		if !slices.Contains(other, cs) {
+			other = append(other, cs)
+		}
+	}
+	return other
 }
 
 // String implements [fmt.Stringer].
@@ -325,35 +338,35 @@ var (
 
 // documentColumns are the documentColumns which can be accessed.
 var documentColumns = []documentColumn{
-	{"id", intType, docAdvEvtModes, false, "documents"},
-	{"latest", boolType, docAdvEvtModes, false, "documents"},
-	{"tracking_id", stringType, docAdvEvtModes, false, "advisories"},
-	{"version", stringType, docAdvEvtModes, false, "documents"},
-	{"publisher", stringType, docAdvEvtModes, false, "advisories"},
-	{"current_release_date", timeType, docAdvEvtModes, false, "documents"},
-	{"initial_release_date", timeType, docAdvEvtModes, false, "documents"},
-	{"rev_history_length", intType, docAdvEvtModes, false, "documents"},
-	{"title", stringType, docAdvEvtModes, false, "documents"},
-	{"tlp", stringType, docAdvEvtModes, false, "documents"},
-	{"ssvc", stringType, docAdvEvtModes, false, "ssvc_history"},
-	{"cvss_v2_score", floatType, docAdvEvtModes, false, "documents"},
-	{"cvss_v3_score", floatType, docAdvEvtModes, false, "documents"},
-	{"critical", floatType, docAdvEvtModes, false, "documents"},
-	{"four_cves", stringType, docAdvEvtModes, true, "documents"},
-	{"comments", intType, docAdvEvtModes, false, "advisories"},
-	{"tracking_status", statusType, docAdvEvtModes, false, "documents"},
+	{"id", intType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"latest", boolType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"tracking_id", stringType, docAdvEvtModes, false, columnSources{"advisories"}},
+	{"version", stringType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"publisher", stringType, docAdvEvtModes, false, columnSources{"advisories"}},
+	{"current_release_date", timeType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"initial_release_date", timeType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"rev_history_length", intType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"title", stringType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"tlp", stringType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"ssvc", stringType, docAdvEvtModes, false, columnSources{"ssvc_history"}},
+	{"cvss_v2_score", floatType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"cvss_v3_score", floatType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"critical", floatType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"four_cves", stringType, docAdvEvtModes, true, columnSources{"documents"}},
+	{"comments", intType, docAdvEvtModes, false, columnSources{"advisories"}},
+	{"tracking_status", statusType, docAdvEvtModes, false, columnSources{"documents"}},
 	// Advisories only
-	{"state", workflowType, advModes, false, "advisories"},
-	{"recent", timeType, advModes, false, "advisories"},
+	{"state", workflowType, advModes, false, columnSources{"advisories"}},
+	{"recent", timeType, advModes, false, columnSources{"advisories"}},
 	// ToDo: Column "versions" does not exist, but table versions does?
-	{"versions", intType, advModes, false, "versions"},
+	{"versions", intType, advModes, false, columnSources{"documents", "advisories"}},
 	// Events only
-	{"event", eventsType, evtsModes, false, "events_log"},
-	{"event_state", workflowType, evtsModes, false, "events_log"},
-	{"time", timeType, evtsModes, false, "events_log"},
-	{"actor", stringType, evtsModes, false, "events_log"},
-	{"comments_id", intType, evtsModes, false, "comments"},
-	{"message", stringType, evtsModes, false, "comments"},
+	{"event", eventsType, evtsModes, false, columnSources{"events_log"}},
+	{"event_state", workflowType, evtsModes, false, columnSources{"events_log"}},
+	{"time", timeType, evtsModes, false, columnSources{"events_log"}},
+	{"actor", stringType, evtsModes, false, columnSources{"events_log"}},
+	{"comments_id", intType, evtsModes, false, columnSources{"comments"}},
+	{"message", stringType, evtsModes, false, columnSources{"comments"}},
 }
 
 var (

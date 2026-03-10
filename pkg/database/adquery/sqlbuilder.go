@@ -26,6 +26,7 @@ type SQLBuilder struct {
 	Mode                ParserMode
 	TextTables          bool
 	ReturnSearchResults bool
+	usedTables          columnSources
 }
 
 // CreateWhere construct a WHERE clause for a given expression.
