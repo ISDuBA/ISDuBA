@@ -396,7 +396,7 @@ func (sb *AdvancedSQLBuilder) CreateOrder(fields []string) (string, error) {
 		if desc {
 			field = field[1:]
 		}
-		if _, found := sb.Aliases[field]; !found && !ExistsDocumentColumn(field, sb.Mode) {
+		if _, found := sb.Aliases[field]; !found && !existsDocumentColumn(field, sb.Mode) {
 			return "", fmt.Errorf("order field %q does not exists", field)
 		}
 		if b.Len() > 0 {
@@ -527,7 +527,7 @@ func (sb *AdvancedSQLBuilder) CheckProjections(proj []string) error {
 		if _, found := sb.IgnoreFields[p]; found {
 			continue
 		}
-		if !ExistsDocumentColumn(p, sb.Mode) {
+		if !existsDocumentColumn(p, sb.Mode) {
 			return fmt.Errorf("column %q does not exists", p)
 		}
 	}
