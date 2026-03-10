@@ -20,6 +20,7 @@ type AdvancedSQLBuilder struct {
 	OrderFields         []string
 	Fields              []string
 	WhereClause         string
+	Order               string
 	Replacements        []any
 	replToIdx           map[string]int
 	Aliases             map[string]string
@@ -38,9 +39,9 @@ func (sb *AdvancedSQLBuilder) CreateWhere(e *Expr) string {
 }
 
 // RemoveIgnoredFields removes fields that should be ignored.
-func (sb *AdvancedSQLBuilder) RemoveIgnoredFields(fields []string) []string {
-	filtered := make([]string, 0, len(fields))
-	for _, f := range fields {
+func (sb *AdvancedSQLBuilder) RemoveIgnoredFields() []string {
+	filtered := make([]string, 0, len(sb.Fields))
+	for _, f := range sb.Fields {
 		if _, found := sb.IgnoreFields[f]; !found {
 			filtered = append(filtered, f)
 		}
@@ -428,29 +429,28 @@ func (sb *AdvancedSQLBuilder) CreateOrder() string {
 			b.WriteString(" ASC")
 		}
 	}
-	return b.String()
+	sb.Order = b.String()
+	return sb.Order
 }
 
 // CreateQuery creates an SQL statement to query the documents
 // table and the associated texts if needed.
 // WARN: Make sure that the input is vetted against injections.
 func (sb *AdvancedSQLBuilder) CreateQuery(
-	fields []string,
-	order string,
 	limit, offset int64,
 ) string {
 	var b strings.Builder
 
 	b.WriteString("SELECT ")
-	sb.projectionsWithCasts(&b, fields)
+	sb.projectionsWithCasts(&b, sb.Fields)
 	b.WriteString(" FROM ")
 	sb.createFrom(&b)
 	b.WriteString(" WHERE ")
 	b.WriteString(sb.WhereClause)
 
-	if order != "" {
+	if sb.Order != "" {
 		b.WriteString(" ORDER BY ")
-		b.WriteString(order)
+		b.WriteString(sb.Order)
 	}
 
 	if limit >= 0 {

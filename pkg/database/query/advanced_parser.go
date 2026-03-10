@@ -34,6 +34,7 @@ type (
 	columnSource  string
 	columnSources []columnSource
 )
+
 type documentColumn struct {
 	name           string
 	valueType      valueType

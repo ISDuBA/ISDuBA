@@ -39,15 +39,13 @@ func (c *Controller) aggregatedResults(
 	ctx *gin.Context,
 	calcCount bool,
 	limit, offset int64,
-	fields []string,
-	order string,
 	builder *query.AdvancedSQLBuilder,
 ) {
 	var (
 		ads      aggregatedDocuments
-		sql      = builder.CreateQuery(fields, order, -1, -1)
+		sql      = builder.CreateQuery(-1, -1)
 		rctx     = ctx.Request.Context()
-		filtered = builder.RemoveIgnoredFields(fields)
+		filtered = builder.RemoveIgnoredFields()
 	)
 
 	if slog.Default().Enabled(rctx, slog.LevelDebug) {

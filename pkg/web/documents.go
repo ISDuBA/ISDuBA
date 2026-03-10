@@ -429,7 +429,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
-	order := builder.CreateOrder()
+	builder.CreateOrder()
 	builder.CreateWhere(expr)
 
 	var (
@@ -453,15 +453,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	if aggregate {
 		deliver = (*Controller).aggregatedResults
 	}
-	deliver(c, ctx, calcCount, limit, offset, fields, order, &builder)
+	deliver(c, ctx, calcCount, limit, offset, &builder)
 }
 
 func (c *Controller) flatResults(
 	ctx *gin.Context,
 	calcCount bool,
 	limit, offset int64,
-	fields []string,
-	order string,
 	builder *query.AdvancedSQLBuilder,
 ) {
 	type documentResult struct {
@@ -489,11 +487,11 @@ func (c *Controller) flatResults(
 				}
 			}
 			// Skip fields if they are not requested.
-			if len(fields) == 0 {
+			if len(builder.Fields) == 0 {
 				return nil
 			}
 
-			sql := builder.CreateQuery(fields, order, limit, offset)
+			sql := builder.CreateQuery(limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
 				slog.Debug("documents", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
@@ -503,7 +501,7 @@ func (c *Controller) flatResults(
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			filtered := builder.RemoveIgnoredFields(fields)
+			filtered := builder.RemoveIgnoredFields()
 			if results, err = scanRows(rows, filtered); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
