@@ -380,7 +380,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		mode = query.AdvisoryMode
 	}
 
-	parser := query.Parser{
+	parser := query.AdvancedParser{
 		Mode:            mode,
 		MinSearchLength: MinSearchLength,
 		Me:              ctx.GetString("uid"),
@@ -400,7 +400,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(query.BoolField("latest"))
 	}
 
-	builder := query.SQLBuilder{
+	builder := query.AdvancedSQLBuilder{
 		Mode:                mode,
 		ReturnSearchResults: returnSearchResults,
 	}
@@ -460,7 +460,7 @@ func (c *Controller) flatResults(
 	limit, offset int64,
 	fields []string,
 	order string,
-	builder *query.SQLBuilder,
+	builder *query.AdvancedSQLBuilder,
 ) {
 	type documentResult struct {
 		Count     *int64           `json:"count,omitempty"`

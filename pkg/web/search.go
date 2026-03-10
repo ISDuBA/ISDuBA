@@ -41,7 +41,7 @@ func (c *Controller) aggregatedResults(
 	limit, offset int64,
 	fields []string,
 	order string,
-	builder *query.SQLBuilder,
+	builder *query.AdvancedSQLBuilder,
 ) {
 	var (
 		ads      aggregatedDocuments
