@@ -145,7 +145,7 @@ type Expr struct {
 }
 
 type (
-	columnSource string
+	columnSource  string
 	columnSources []columnSource
 )
 type documentColumn struct {
