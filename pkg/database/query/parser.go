@@ -144,13 +144,6 @@ type Expr struct {
 	children []*Expr
 }
 
-type documentColumn struct {
-	name           string
-	valueType      valueType
-	modes          []ParserMode
-	projectionOnly bool
-}
-
 type binaryCompat struct {
 	left     valueType
 	operator exprType
@@ -321,38 +314,6 @@ var (
 	advModes       = []ParserMode{AdvisoryMode}
 	evtsModes      = []ParserMode{EventMode}
 )
-
-// documentColumns are the documentColumns which can be accessed.
-var documentColumns = []documentColumn{
-	{"id", intType, docAdvEvtModes, false},
-	{"latest", boolType, docAdvEvtModes, false},
-	{"tracking_id", stringType, docAdvEvtModes, false},
-	{"version", stringType, docAdvEvtModes, false},
-	{"publisher", stringType, docAdvEvtModes, false},
-	{"current_release_date", timeType, docAdvEvtModes, false},
-	{"initial_release_date", timeType, docAdvEvtModes, false},
-	{"rev_history_length", intType, docAdvEvtModes, false},
-	{"title", stringType, docAdvEvtModes, false},
-	{"tlp", stringType, docAdvEvtModes, false},
-	{"ssvc", stringType, docAdvEvtModes, false},
-	{"cvss_v2_score", floatType, docAdvEvtModes, false},
-	{"cvss_v3_score", floatType, docAdvEvtModes, false},
-	{"critical", floatType, docAdvEvtModes, false},
-	{"four_cves", stringType, docAdvEvtModes, true},
-	{"comments", intType, docAdvEvtModes, false},
-	{"tracking_status", statusType, docAdvEvtModes, false},
-	// Advisories only
-	{"state", workflowType, advModes, false},
-	{"recent", timeType, advModes, false},
-	{"versions", intType, advModes, false},
-	// Events only
-	{"event", eventsType, evtsModes, false},
-	{"event_state", workflowType, evtsModes, false},
-	{"time", timeType, evtsModes, false},
-	{"actor", stringType, evtsModes, false},
-	{"comments_id", intType, evtsModes, false},
-	{"message", stringType, evtsModes, false},
-}
 
 var (
 	// baseActions are the action available in every parser.

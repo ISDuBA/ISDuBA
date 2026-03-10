@@ -6,18 +6,16 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-package advquery
+package query
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 )
 
-// SQLBuilder helps to construct a SQL query.
-type SQLBuilder struct {
+// AdvancedSQLBuilder helps to construct a SQL query.
+type AdvancedSQLBuilder struct {
 	WhereClause         string
 	Replacements        []any
 	replToIdx           map[string]int
@@ -30,22 +28,15 @@ type SQLBuilder struct {
 }
 
 // CreateWhere construct a WHERE clause for a given expression.
-func (sb *SQLBuilder) CreateWhere(e *Expr) string {
+func (sb *AdvancedSQLBuilder) CreateWhere(e *Expr) string {
 	var b strings.Builder
 	sb.whereRecurse(e, &b)
 	sb.WhereClause = b.String()
 	return sb.WhereClause
 }
 
-var (
-	escapeLike = strings.NewReplacer(
-		`%`, `\%`,
-		`_`, `\_`).Replace
-	whiteSpaces = regexp.MustCompile(`\s+`)
-)
-
 // RemoveIgnoredFields removes fields that should be ignored.
-func (sb *SQLBuilder) RemoveIgnoredFields(fields []string) []string {
+func (sb *AdvancedSQLBuilder) RemoveIgnoredFields(fields []string) []string {
 	filtered := make([]string, 0, len(fields))
 	for _, f := range fields {
 		if _, found := sb.IgnoreFields[f]; !found {
@@ -55,16 +46,7 @@ func (sb *SQLBuilder) RemoveIgnoredFields(fields []string) []string {
 	return filtered
 }
 
-// LikeEscape quotes a query string to be more convenient
-// to use with LIKE filters.
-func LikeEscape(query string) string {
-	query = strings.TrimSpace(query)
-	query = escapeLike(query)
-	query = whiteSpaces.ReplaceAllString(query, `%`)
-	return `%` + query + `%`
-}
-
-func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	if sb.ReturnSearchResults {
 		fmt.Fprintf(b, "txt ILIKE $%d",
 			sb.replacementIndex(LikeEscape(e.stringValue))+1)
@@ -103,7 +85,7 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 
 }
 
-func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 	switch sb.Mode {
 	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
@@ -122,7 +104,7 @@ func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
 	switch sb.Mode {
 	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
@@ -137,7 +119,7 @@ func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 	b.WriteString("CAST(")
 	sb.whereRecurse(e.children[0], b)
 	b.WriteString(" AS ")
@@ -164,7 +146,7 @@ func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
 	b.WriteByte(')')
 }
 
-func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 	switch e.valueType {
 	case stringType:
 		b.WriteByte('$')
@@ -202,7 +184,7 @@ func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *SQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string) {
+func (sb *AdvancedSQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string) {
 	b.WriteByte('(')
 	sb.whereRecurse(e.children[0], b)
 	b.WriteString(op)
@@ -210,22 +192,13 @@ func (sb *SQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string) {
 	b.WriteByte(')')
 }
 
-func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) notWhere(e *Expr, b *strings.Builder) {
 	b.WriteString("(NOT ")
 	sb.whereRecurse(e.children[0], b)
 	b.WriteByte(')')
 }
 
-const (
-	versionsCount = `(SELECT count(*) FROM documents WHERE ` +
-		`documents.advisories_id = advisories.id)`
-	commentsCountDocuments = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = documents.id)`
-	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = documents_id)`
-)
-
-func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	switch column := e.stringValue; column {
 	case "id":
 		b.WriteString("documents.")
@@ -253,16 +226,11 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *SQLBuilder) nowWhere(_ *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) nowWhere(_ *Expr, b *strings.Builder) {
 	b.WriteString("current_timestamp")
 }
 
-const (
-	ilikePrefix = `'%'||regexp_replace(regexp_replace(`
-	ilikeSuffix = `,'(%|_)','\\\1','g'),'(\s+)','%','g')||'%'`
-)
-
-func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
 	b.WriteByte('(')
 	sb.whereRecurse(e.children[0], b)
 	b.WriteString(` ILIKE ` + ilikePrefix)
@@ -270,7 +238,7 @@ func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (sb *SQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_names AS (SELECT jsonb_path_query(` +
 		`document, '$.product_tree.**.product.name')::int num ` +
@@ -282,7 +250,7 @@ func (sb *SQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
 	sb.whereRecurse(e.children[0], b)
 	b.WriteString(ilikeSuffix + `)`)
 }
-func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_ids AS (SELECT jsonb_path_query(` +
 		`document, '$.product_tree.**.product.product_id')::int num ` +
@@ -318,7 +286,7 @@ func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 	*/
 }
 
-func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
 	b.WriteByte('(')
 	switch e.exprType {
 	case access:
@@ -371,7 +339,7 @@ func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
 	b.WriteByte(')')
 }
 
-func (sb *SQLBuilder) replacementIndex(s string) int {
+func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
 	if idx, ok := sb.replToIdx[s]; ok {
 		return idx
 	}
@@ -384,7 +352,7 @@ func (sb *SQLBuilder) replacementIndex(s string) int {
 	return idx
 }
 
-func (sb *SQLBuilder) createFrom(b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
 	switch sb.Mode {
 	case AdvisoryMode, DocumentMode:
 		b.WriteString(`documents ` +
@@ -412,7 +380,7 @@ func (sb *SQLBuilder) createFrom(b *strings.Builder) {
 // CreateCountSQL returns an SQL count statement to count
 // the number of rows which are possible to fetch by the
 // given filter.
-func (sb *SQLBuilder) CreateCountSQL() string {
+func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 	var b strings.Builder
 	b.WriteString("SELECT count(*) FROM ")
 	sb.createFrom(&b)
@@ -422,7 +390,7 @@ func (sb *SQLBuilder) CreateCountSQL() string {
 }
 
 // CreateOrder returns a ORDER BY clause for given columns.
-func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
+func (sb *AdvancedSQLBuilder) CreateOrder(fields []string) (string, error) {
 	var b strings.Builder
 	for _, field := range fields {
 		desc := strings.HasPrefix(field, "-")
@@ -465,7 +433,7 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 // CreateQuery creates an SQL statement to query the documents
 // table and the associated texts if needed.
 // WARN: Make sure that the input is vetted against injections.
-func (sb *SQLBuilder) CreateQuery(
+func (sb *AdvancedSQLBuilder) CreateQuery(
 	fields []string,
 	order string,
 	limit, offset int64,
@@ -497,7 +465,7 @@ func (sb *SQLBuilder) CreateQuery(
 }
 
 // projectionsWithCasts joins given projection adding casts if needed.
-func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
+func (sb *AdvancedSQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 	for i, p := range proj {
 		if _, found := sb.IgnoreFields[p]; found {
 			continue
@@ -552,7 +520,7 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 }
 
 // CheckProjections checks if the requested projections are valid.
-func (sb *SQLBuilder) CheckProjections(proj []string) error {
+func (sb *AdvancedSQLBuilder) CheckProjections(proj []string) error {
 	for _, p := range proj {
 		if _, found := sb.Aliases[p]; found {
 			continue
@@ -565,39 +533,4 @@ func (sb *SQLBuilder) CheckProjections(proj []string) error {
 		}
 	}
 	return nil
-}
-
-var (
-	dirtyReplace     *regexp.Regexp
-	dirtyReplaceOnce sync.Once
-)
-
-// InterpolateSQLqnd is a quick and dirty hack to re-substitute strings
-// into SQL statements. Warning: USE FOR LOGGING ONLY!
-// The separation SQL <-> replacements were done beforehand to
-// prevent injections!
-func InterpolateSQLqnd(sql string, replacements []any) string {
-	dirtyReplaceOnce.Do(func() {
-		dirtyReplace = regexp.MustCompile(`\$([\d]+)`)
-	})
-	sql = dirtyReplace.ReplaceAllStringFunc(sql, func(s string) string {
-		m := dirtyReplace.FindStringSubmatch(s)
-		index, _ := strconv.Atoi(m[1])
-		if index--; index < 0 || index >= len(replacements) {
-			return fmt.Sprintf("BAD INDEX %d", index+1)
-		}
-		var verb string
-		switch replacements[index].(type) {
-		case string:
-			verb = "s"
-		case int, uint, int8, uint8, int16, uint16, int32, uint32, int64, uint64:
-			verb = "d"
-		case float32, float64:
-			verb = "f"
-		default:
-			verb = "v"
-		}
-		return `'%[` + m[1] + `]` + verb + `'`
-	})
-	return fmt.Sprintf(sql, replacements...)
 }
