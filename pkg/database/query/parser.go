@@ -358,8 +358,8 @@ var (
 	}
 )
 
-// ExistsDocumentColumn returns true if a column in document exists.
-func ExistsDocumentColumn(name string, mode ParserMode) bool {
+// existsDocumentColumn returns true if a column in document exists.
+func existsDocumentColumn(name string, mode ParserMode) bool {
 	return findDocumentColumn(name, mode) != nil
 }
 
