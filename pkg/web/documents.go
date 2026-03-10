@@ -408,13 +408,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		orderFields = append(orderFields, "id")
 	}
 
-	builder := query.AdvancedSQLBuilder{
-		OrderFields:         orderFields,
-		Mode:                mode,
-		ReturnSearchResults: returnSearchResults,
-	}
-	builder.CreateWhere(expr)
-
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
 
@@ -423,16 +416,21 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		fields = append(fields, "id")
 	}
 
-	if err := builder.CheckProjections(fields); err != nil {
+	builder := query.AdvancedSQLBuilder{
+		OrderFields:         orderFields,
+		Fields:              fields,
+		Mode:                mode,
+		ReturnSearchResults: returnSearchResults,
+		UsedSources:         parser.UsedSources,
+	}
+
+	if err := builder.Check(); err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	order, err := builder.CreateOrder()
-	if err != nil {
-		models.SendError(ctx, http.StatusBadRequest, err)
-		return
-	}
+	order := builder.CreateOrder()
+	builder.CreateWhere(expr)
 
 	var (
 		calcCount           = ctx.Query("count") != ""

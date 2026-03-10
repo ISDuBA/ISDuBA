@@ -135,7 +135,9 @@ func advancedBuildActions(mode ParserMode) map[string]func(*AdvancedParser, *sta
 	for i := range documentColumns {
 		col := &documentColumns[i]
 		if !col.projectionOnly && slices.Contains(col.modes, mode) {
-			actions["$"+col.name] = func(p *AdvancedParser, st *stack) { p.pushAccess(st, col) }
+			actions["$"+col.name] = func(p *AdvancedParser, st *stack) {
+				p.pushAccess(st, col)
+			}
 		}
 	}
 	return actions
@@ -174,7 +176,8 @@ func (*AdvancedParser) pushBinary(st *stack, et exprType) {
 	})
 }
 
-func (*AdvancedParser) pushAccess(st *stack, column *documentColumn) {
+func (p *AdvancedParser) pushAccess(st *stack, column *documentColumn) {
+	p.UsedSources.add(column.sources...)
 	st.push(&Expr{
 		exprType:    access,
 		valueType:   column.valueType,
@@ -336,6 +339,7 @@ func (p *AdvancedParser) pushSearch(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
+	p.UsedSources.add("text_tables")
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
@@ -347,6 +351,7 @@ func (p *AdvancedParser) pushMentioned(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
+	p.UsedSources.add("events_log")
 	st.push(&Expr{
 		exprType:    mentioned,
 		valueType:   boolType,
@@ -354,9 +359,10 @@ func (p *AdvancedParser) pushMentioned(st *stack) {
 	})
 }
 
-func (*AdvancedParser) pushInvolved(st *stack) {
+func (p *AdvancedParser) pushInvolved(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
+	p.UsedSources.add("events_log")
 	st.push(&Expr{
 		exprType:    involved,
 		valueType:   boolType,
@@ -364,11 +370,12 @@ func (*AdvancedParser) pushInvolved(st *stack) {
 	})
 }
 
-func (*AdvancedParser) pushILike(st *stack) {
+func (p *AdvancedParser) pushILike(st *stack) {
 	needle := st.pop()
 	haystack := st.pop()
 	needle.checkValueType(stringType)
 	haystack.checkValueType(stringType)
+	p.UsedSources.add("text_tables")
 	st.push(&Expr{
 		exprType:  ilike,
 		valueType: boolType,
@@ -376,9 +383,10 @@ func (*AdvancedParser) pushILike(st *stack) {
 	})
 }
 
-func (*AdvancedParser) pushILikePName(st *stack) {
+func (p *AdvancedParser) pushILikePName(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
+	p.UsedSources.add("documents", "text_tables")
 	st.push(&Expr{
 		exprType:  ilikePName,
 		valueType: boolType,
@@ -386,9 +394,10 @@ func (*AdvancedParser) pushILikePName(st *stack) {
 	})
 }
 
-func (*AdvancedParser) pushILikePID(st *stack) {
+func (p *AdvancedParser) pushILikePID(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
+	p.UsedSources.add("documents", "text_tables")
 	st.push(&Expr{
 		exprType:  ilikePID,
 		valueType: boolType,
@@ -443,6 +452,7 @@ func (p *AdvancedParser) pushAs(st *stack) {
 	if _, already := p.aliases[alias.stringValue]; already {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
 	}
+	p.UsedSources.add("text_tables")
 	p.aliases[alias.stringValue] = struct{}{}
 	srch.alias = alias.stringValue
 }

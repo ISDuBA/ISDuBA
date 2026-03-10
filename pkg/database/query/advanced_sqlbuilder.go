@@ -10,6 +10,7 @@ package query
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 )
@@ -17,6 +18,7 @@ import (
 // AdvancedSQLBuilder helps to construct a SQL query.
 type AdvancedSQLBuilder struct {
 	OrderFields         []string
+	Fields              []string
 	WhereClause         string
 	Replacements        []any
 	replToIdx           map[string]int
@@ -24,7 +26,7 @@ type AdvancedSQLBuilder struct {
 	IgnoreFields        map[string]struct{}
 	Mode                ParserMode
 	ReturnSearchResults bool
-	usedTables          columnSources
+	UsedSources         columnSources
 }
 
 // CreateWhere construct a WHERE clause for a given expression.
@@ -53,7 +55,7 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 
 		// We need the text tables to be joined.
 		// TODO: Why does this code path exists?
-		sb.usedTables.add("text_tables")
+		sb.UsedSources.add("text_tables")
 
 		// Handle alias
 		if e.alias == "" {
@@ -372,7 +374,7 @@ func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
 		`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
 		`) AS ssvc_current ON TRUE`)
 
-	if sb.usedTables.contains("text_tables") {
+	if sb.UsedSources.contains("text_tables") {
 		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
@@ -391,16 +393,13 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 }
 
 // CreateOrder returns a ORDER BY clause for given columns.
-func (sb *AdvancedSQLBuilder) CreateOrder() (string, error) {
+func (sb *AdvancedSQLBuilder) CreateOrder() string {
 	// TODO: Add order fields to used tables.
 	var b strings.Builder
 	for _, field := range sb.OrderFields {
 		desc := strings.HasPrefix(field, "-")
 		if desc {
 			field = field[1:]
-		}
-		if _, found := sb.Aliases[field]; !found && !existsDocumentColumn(field, sb.Mode) {
-			return "", fmt.Errorf("order field %q does not exists", field)
 		}
 		if b.Len() > 0 {
 			b.WriteByte(',')
@@ -429,7 +428,7 @@ func (sb *AdvancedSQLBuilder) CreateOrder() (string, error) {
 			b.WriteString(" ASC")
 		}
 	}
-	return b.String(), nil
+	return b.String()
 }
 
 // CreateQuery creates an SQL statement to query the documents
@@ -521,18 +520,35 @@ func (sb *AdvancedSQLBuilder) projectionsWithCasts(b *strings.Builder, proj []st
 	}
 }
 
-// CheckProjections checks if the requested projections are valid.
-func (sb *AdvancedSQLBuilder) CheckProjections(proj []string) error {
-	for _, p := range proj {
+// Check tests for the existence of used columns.
+func (sb *AdvancedSQLBuilder) Check() error {
+	// check projections.
+	for _, p := range sb.Fields {
 		if _, found := sb.Aliases[p]; found {
 			continue
 		}
 		if _, found := sb.IgnoreFields[p]; found {
 			continue
 		}
-		if !existsDocumentColumn(p, sb.Mode) {
+		col := findDocumentColumn(p, sb.Mode)
+		if col == nil {
 			return fmt.Errorf("column %q does not exists", p)
 		}
+		sb.UsedSources.add(col.sources...)
 	}
+	// check order
+	for _, field := range sb.OrderFields {
+		if desc := strings.HasPrefix(field, "-"); desc {
+			field = field[1:]
+		}
+		if _, found := sb.Aliases[field]; !found {
+			col := findDocumentColumn(field, sb.Mode)
+			if col == nil {
+				return fmt.Errorf("order field %q does not exists", field)
+			}
+			sb.UsedSources.add(col.sources...)
+		}
+	}
+	slog.Debug("advanced sqlbuilder", "used sources", sb.UsedSources)
 	return nil
 }

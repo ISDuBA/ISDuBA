@@ -358,11 +358,11 @@ var (
 	}
 )
 
-// existsDocumentColumn returns true if a column in document exists.
 func existsDocumentColumn(name string, mode ParserMode) bool {
 	return findDocumentColumn(name, mode) != nil
 }
 
+// findDocumentColumn returns a column if it exists.
 func findDocumentColumn(name string, mode ParserMode) *documentColumn {
 	for i := range documentColumns {
 		if col := &documentColumns[i]; col.name == name {
