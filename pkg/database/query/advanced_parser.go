@@ -23,6 +23,9 @@ type AdvancedParser struct {
 	// Me is a replacement text for the "me" keyword.
 	Me string
 
+	// UsedSources are the sources found during parsing.
+	UsedSources columnSources
+
 	// aliases defined by 'as'.
 	aliases map[string]struct{}
 }
@@ -43,13 +46,12 @@ func (css columnSources) contains(cs columnSource) bool {
 	return slices.Contains(css, cs)
 }
 
-func (css columnSources) add(other columnSources) columnSources {
-	for _, cs := range css {
-		if !slices.Contains(other, cs) {
-			other = append(other, cs)
+func (css *columnSources) add(others ...columnSource) {
+	for _, other := range others {
+		if !slices.Contains(*css, other) {
+			*css = append(*css, other)
 		}
 	}
-	return other
 }
 
 // documentColumns are the documentColumns which can be accessed.

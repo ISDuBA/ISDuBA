@@ -16,6 +16,7 @@ import (
 
 // AdvancedSQLBuilder helps to construct a SQL query.
 type AdvancedSQLBuilder struct {
+	OrderFields         []string
 	WhereClause         string
 	Replacements        []any
 	replToIdx           map[string]int
@@ -51,7 +52,8 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 
 		// We need the text tables to be joined.
-		sb.usedTables = sb.usedTables.add(columnSources{"text_tables"})
+		// TODO: Why does this code path exists?
+		sb.usedTables.add("text_tables")
 
 		// Handle alias
 		if e.alias == "" {
@@ -389,9 +391,10 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 }
 
 // CreateOrder returns a ORDER BY clause for given columns.
-func (sb *AdvancedSQLBuilder) CreateOrder(fields []string) (string, error) {
+func (sb *AdvancedSQLBuilder) CreateOrder() (string, error) {
+	// TODO: Add order fields to used tables.
 	var b strings.Builder
-	for _, field := range fields {
+	for _, field := range sb.OrderFields {
 		desc := strings.HasPrefix(field, "-")
 		if desc {
 			field = field[1:]

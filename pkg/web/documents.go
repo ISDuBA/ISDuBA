@@ -400,7 +400,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(query.BoolField("latest"))
 	}
 
+	orderFields := strings.Fields(
+		ctx.DefaultQuery(
+			"orders",
+			"publisher tracking_id -current_release_date -rev_history_length"))
+	if aggregate && !slices.Contains(orderFields, "id") {
+		orderFields = append(orderFields, "id")
+	}
+
 	builder := query.AdvancedSQLBuilder{
+		OrderFields:         orderFields,
 		Mode:                mode,
 		ReturnSearchResults: returnSearchResults,
 	}
@@ -419,12 +428,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
-	orderFields := strings.Fields(
-		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
-	if aggregate && !slices.Contains(orderFields, "id") {
-		orderFields = append(orderFields, "id")
-	}
-	order, err := builder.CreateOrder(orderFields)
+	order, err := builder.CreateOrder()
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
