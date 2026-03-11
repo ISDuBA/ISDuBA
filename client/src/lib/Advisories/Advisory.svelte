@@ -377,6 +377,11 @@
   };
 
   const loadRelatedDocuments = async () => {
+    if (
+      !(appStore.isEditor() || appStore.isAdmin() || appStore.isAuditor() || appStore.isReviewer())
+    ) {
+      return;
+    }
     const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
     if (response.ok) {
       relatedDocuments = {};
