@@ -19,12 +19,13 @@
     onClick: (event: any) => void;
   }
   let { color, label, tooltip, icon, onClick }: Props = $props();
+
+  const buttonClass = $derived.by(() => {
+    return `h-fit w-fit rounded-xs border-0 p-0 hover:bg-transparent ${color !== "none" && color !== "green" ? "cursor-pointer" : ""}`;
+  });
 </script>
 
-<button
-  class="h-fit w-fit rounded-xs border-0 p-0 hover:bg-transparent"
-  onclick={(event: any) => onClick(event)}
->
+<button class={buttonClass} onclick={(event: any) => onClick(event)}>
   <CBadge title={tooltip} class="flex w-fit gap-1" {color}>
     {@render icon()}
     <span>{label}</span>
