@@ -27,7 +27,7 @@ type AdvancedSQLBuilder struct {
 	IgnoreFields        map[string]struct{}
 	Mode                ParserMode
 	ReturnSearchResults bool
-	UsedSources         columnSources
+	UsedSources         columnSource
 }
 
 // CreateWhere construct a WHERE clause for a given expression.
@@ -56,7 +56,7 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 
 		// We need the text tables to be joined.
 		// TODO: Why does this code path exists?
-		sb.UsedSources.add("text_tables")
+		sb.UsedSources.add(textTable)
 
 		// Handle alias
 		if e.alias == "" {
@@ -375,7 +375,7 @@ func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
 		`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
 		`) AS ssvc_current ON TRUE`)
 
-	if sb.UsedSources.contains("text_tables") {
+	if sb.UsedSources.contains(textTable) {
 		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
@@ -534,7 +534,7 @@ func (sb *AdvancedSQLBuilder) Check() error {
 		if col == nil {
 			return fmt.Errorf("column %q does not exists", p)
 		}
-		sb.UsedSources.add(col.sources...)
+		sb.UsedSources.add(col.sources)
 	}
 	// check order
 	for _, field := range sb.OrderFields {
@@ -546,7 +546,7 @@ func (sb *AdvancedSQLBuilder) Check() error {
 			if col == nil {
 				return fmt.Errorf("order field %q does not exists", field)
 			}
-			sb.UsedSources.add(col.sources...)
+			sb.UsedSources.add(col.sources)
 		}
 	}
 	slog.Debug("advanced sqlbuilder", "used sources", sb.UsedSources)

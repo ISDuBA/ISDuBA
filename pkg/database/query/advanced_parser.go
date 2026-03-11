@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strings"
 )
 
 // AdvancedParser helps parsing database queries,
@@ -24,15 +25,22 @@ type AdvancedParser struct {
 	Me string
 
 	// UsedSources are the sources found during parsing.
-	UsedSources columnSources
+	UsedSources columnSource
 
 	// aliases defined by 'as'.
 	aliases map[string]struct{}
 }
 
-type (
-	columnSource  string
-	columnSources []columnSource
+type columnSource int
+
+const (
+	noTable        columnSource = 0
+	documentsTable columnSource = 1 << iota
+	advisoriesTable
+	textTable
+	ssvcHistoryTable
+	eventsLogTable
+	commentsTable
 )
 
 type documentColumn struct {
@@ -40,52 +48,73 @@ type documentColumn struct {
 	valueType      valueType
 	modes          []ParserMode
 	projectionOnly bool
-	sources        columnSources
+	sources        columnSource
 }
 
-func (css columnSources) contains(cs columnSource) bool {
-	return slices.Contains(css, cs)
+func (cs columnSource) contains(other columnSource) bool {
+	return cs&other == other
 }
 
-func (css *columnSources) add(others ...columnSource) {
-	for _, other := range others {
-		if !slices.Contains(*css, other) {
-			*css = append(*css, other)
+func (cs *columnSource) add(other columnSource) {
+	*cs |= other
+}
+
+// String implements [fmt.Stringer].
+func (cs columnSource) String() string {
+	var tables []string
+	for _, t := range []struct {
+		mask columnSource
+		desc string
+	}{
+		{documentsTable, "documents"},
+		{advisoriesTable, "advisories"},
+		{textTable, "text"},
+		{ssvcHistoryTable, "ssvc_history"},
+		{eventsLogTable, "events_log"},
+		{commentsTable, "comments"},
+	} {
+		if cs.contains(t.mask) {
+			tables = append(tables, t.desc)
+			cs &= ^t.mask
 		}
 	}
+	if cs != noTable {
+		tables = append(tables, fmt.Sprintf("unknown table(s): %b", cs))
+	}
+	return "[" + strings.Join(tables, ", ") + "]"
 }
 
 // documentColumns are the documentColumns which can be accessed.
 var documentColumns = []documentColumn{
-	{"id", intType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"latest", boolType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"tracking_id", stringType, docAdvEvtModes, false, columnSources{"advisories"}},
-	{"version", stringType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"publisher", stringType, docAdvEvtModes, false, columnSources{"advisories"}},
-	{"current_release_date", timeType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"initial_release_date", timeType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"rev_history_length", intType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"title", stringType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"tlp", stringType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"ssvc", stringType, docAdvEvtModes, false, columnSources{"ssvc_history"}},
-	{"cvss_v2_score", floatType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"cvss_v3_score", floatType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"critical", floatType, docAdvEvtModes, false, columnSources{"documents"}},
-	{"four_cves", stringType, docAdvEvtModes, true, columnSources{"documents"}},
-	{"comments", intType, docAdvEvtModes, false, columnSources{"advisories"}},
-	{"tracking_status", statusType, docAdvEvtModes, false, columnSources{"documents"}},
+	{"id", intType, docAdvEvtModes, false, documentsTable},
+	{"latest", boolType, docAdvEvtModes, false, documentsTable},
+	{"tracking_id", stringType, docAdvEvtModes, false, advisoriesTable},
+	{"version", stringType, docAdvEvtModes, false, documentsTable},
+	{"publisher", stringType, docAdvEvtModes, false, advisoriesTable},
+	{"current_release_date", timeType, docAdvEvtModes, false, documentsTable},
+	{"initial_release_date", timeType, docAdvEvtModes, false, documentsTable},
+	{"rev_history_length", intType, docAdvEvtModes, false, documentsTable},
+	{"title", stringType, docAdvEvtModes, false, documentsTable},
+	{"tlp", stringType, docAdvEvtModes, false, documentsTable},
+	{"ssvc", stringType, docAdvEvtModes, false, ssvcHistoryTable},
+	{"cvss_v2_score", floatType, docAdvEvtModes, false, documentsTable},
+	{"cvss_v3_score", floatType, docAdvEvtModes, false, documentsTable},
+	{"critical", floatType, docAdvEvtModes, false, documentsTable},
+	{"four_cves", stringType, docAdvEvtModes, true, documentsTable},
+	{"comments", intType, docAdvEvtModes, false, documentsTable},
+	{"tracking_status", statusType, docAdvEvtModes, false, documentsTable},
 	// Advisories only
-	{"state", workflowType, advModes, false, columnSources{"advisories"}},
-	{"recent", timeType, advModes, false, columnSources{"advisories"}},
+	{"state", workflowType, advModes, false, advisoriesTable},
+	{"recent", timeType, advModes, false, advisoriesTable},
 	// ToDo: Column "versions" does not exist, but table versions does?
-	{"versions", intType, advModes, false, columnSources{"documents", "advisories"}},
+	{"versions", intType, advModes, false, documentsTable | advisoriesTable},
 	// Events only
-	{"event", eventsType, evtsModes, false, columnSources{"events_log"}},
-	{"event_state", workflowType, evtsModes, false, columnSources{"events_log"}},
-	{"time", timeType, evtsModes, false, columnSources{"events_log"}},
-	{"actor", stringType, evtsModes, false, columnSources{"events_log"}},
-	{"comments_id", intType, evtsModes, false, columnSources{"comments"}},
-	{"message", stringType, evtsModes, false, columnSources{"comments"}},
+	{"event", eventsType, evtsModes, false, eventsLogTable},
+	{"event_state", workflowType, evtsModes, false, eventsLogTable},
+	{"time", timeType, evtsModes, false, eventsLogTable},
+	{"actor", stringType, evtsModes, false, eventsLogTable},
+	{"comments_id", intType, evtsModes, false, commentsTable},
+	{"message", stringType, evtsModes, false, commentsTable},
 }
 
 var (
@@ -178,7 +207,7 @@ func (*AdvancedParser) pushBinary(st *stack, et exprType) {
 }
 
 func (p *AdvancedParser) pushAccess(st *stack, column *documentColumn) {
-	p.UsedSources.add(column.sources...)
+	p.UsedSources.add(column.sources)
 	st.push(&Expr{
 		exprType:    access,
 		valueType:   column.valueType,
@@ -340,7 +369,7 @@ func (p *AdvancedParser) pushSearch(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
-	p.UsedSources.add("text_tables")
+	p.UsedSources.add(textTable)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
@@ -352,7 +381,7 @@ func (p *AdvancedParser) pushMentioned(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
-	p.UsedSources.add("events_log")
+	p.UsedSources.add(eventsLogTable)
 	st.push(&Expr{
 		exprType:    mentioned,
 		valueType:   boolType,
@@ -363,7 +392,7 @@ func (p *AdvancedParser) pushMentioned(st *stack) {
 func (p *AdvancedParser) pushInvolved(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
-	p.UsedSources.add("events_log")
+	p.UsedSources.add(eventsLogTable)
 	st.push(&Expr{
 		exprType:    involved,
 		valueType:   boolType,
@@ -376,7 +405,7 @@ func (p *AdvancedParser) pushILike(st *stack) {
 	haystack := st.pop()
 	needle.checkValueType(stringType)
 	haystack.checkValueType(stringType)
-	p.UsedSources.add("text_tables")
+	p.UsedSources.add(textTable)
 	st.push(&Expr{
 		exprType:  ilike,
 		valueType: boolType,
@@ -387,7 +416,7 @@ func (p *AdvancedParser) pushILike(st *stack) {
 func (p *AdvancedParser) pushILikePName(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
-	p.UsedSources.add("documents", "text_tables")
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:  ilikePName,
 		valueType: boolType,
@@ -398,7 +427,7 @@ func (p *AdvancedParser) pushILikePName(st *stack) {
 func (p *AdvancedParser) pushILikePID(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
-	p.UsedSources.add("documents", "text_tables")
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:  ilikePID,
 		valueType: boolType,
@@ -453,7 +482,7 @@ func (p *AdvancedParser) pushAs(st *stack) {
 	if _, already := p.aliases[alias.stringValue]; already {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
 	}
-	p.UsedSources.add("text_tables")
+	p.UsedSources.add(textTable)
 	p.aliases[alias.stringValue] = struct{}{}
 	srch.alias = alias.stringValue
 }
