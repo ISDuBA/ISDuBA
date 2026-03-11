@@ -31,25 +31,25 @@ type AdvancedParser struct {
 	aliases map[string]struct{}
 }
 
+// columnSource is a type to accumulate the tables needed to build an SQL query.
 type columnSource int
 
 const (
-	noTable        columnSource = 0
+	// noTable means that no table is needed.
+	noTable columnSource = 0
+	// documentsTable means that the documents table is needed.
 	documentsTable columnSource = 1 << iota
+	// advisoriesTable means that the advisories table is needed.
 	advisoriesTable
+	// textTable means that the tables for fulltext search are needed.
 	textTable
+	// ssvcHistoryTable means that the ssvc_history table is needed.
 	ssvcHistoryTable
+	// eventsLogTable means that the events_log table is needed.
 	eventsLogTable
+	// commentsTable means that the comments table is needed.
 	commentsTable
 )
-
-type documentColumn struct {
-	name           string
-	valueType      valueType
-	modes          []ParserMode
-	projectionOnly bool
-	sources        columnSource
-}
 
 var columnSourceTables = [...]string{
 	noTable:          "",
@@ -59,6 +59,14 @@ var columnSourceTables = [...]string{
 	ssvcHistoryTable: "ssvc_history",
 	eventsLogTable:   "events_log",
 	commentsTable:    "comments",
+}
+
+type documentColumn struct {
+	name           string
+	valueType      valueType
+	modes          []ParserMode
+	projectionOnly bool
+	sources        columnSource
 }
 
 func (cs columnSource) contains(other columnSource) bool {
@@ -82,7 +90,7 @@ func (cs columnSource) String() string {
 	if cs != noTable {
 		tables = append(tables, fmt.Sprintf("unknown table(s): %b", cs))
 	}
-	return "[" + strings.Join(tables, ", ") + "]"
+	return strings.Join(tables, "|")
 }
 
 // documentColumns are the documentColumns which can be accessed.
