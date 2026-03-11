@@ -51,6 +51,16 @@ type documentColumn struct {
 	sources        columnSource
 }
 
+var columnSourceTables = [...]string{
+	noTable:          "",
+	documentsTable:   "documents",
+	advisoriesTable:  "advisories",
+	textTable:        "text",
+	ssvcHistoryTable: "ssvc_history",
+	eventsLogTable:   "events_log",
+	commentsTable:    "comments",
+}
+
 func (cs columnSource) contains(other columnSource) bool {
 	return cs&other == other
 }
@@ -62,20 +72,11 @@ func (cs *columnSource) add(other columnSource) {
 // String implements [fmt.Stringer].
 func (cs columnSource) String() string {
 	var tables []string
-	for _, t := range []struct {
-		mask columnSource
-		desc string
-	}{
-		{documentsTable, "documents"},
-		{advisoriesTable, "advisories"},
-		{textTable, "text"},
-		{ssvcHistoryTable, "ssvc_history"},
-		{eventsLogTable, "events_log"},
-		{commentsTable, "comments"},
-	} {
-		if cs.contains(t.mask) {
-			tables = append(tables, t.desc)
-			cs &= ^t.mask
+	for i := range len(columnSourceTables) - 1 {
+		mask := columnSource(1) << i
+		if cs.contains(mask) {
+			tables = append(tables, columnSourceTables[i+1])
+			cs &= ^mask
 		}
 	}
 	if cs != noTable {
