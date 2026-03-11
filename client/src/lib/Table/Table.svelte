@@ -41,6 +41,8 @@
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
   import type { SearchParameters } from "$lib/Search/search";
   import HitList from "./HitList.svelte";
+  import { routerState } from "$routes/router.svelte";
+  import Link from "$lib/Components/Link.svelte";
 
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
@@ -231,6 +233,17 @@
 
 <DeleteModal {onDeleted} documents={appStore.state.app.documentsToDelete || []} type={tableType}
 ></DeleteModal>
+
+{#snippet advisoryLink(doc: any)}
+  <Link
+    onclick={() => {
+      routerState.didPush = true;
+    }}
+    class="absolute top-0 right-0 bottom-0 left-0"
+    href={getAdvisoryAnchorLink(doc)}
+    ariaLabel="View advisory details"
+  ></Link>
+{/snippet}
 
 <div class="flex-grow">
   <div class="mt-2 mb-2 flex flex-row items-baseline justify-between">
@@ -503,13 +516,8 @@
                 </div>
               </TableBodyCell>
               {#if areThereAnyComments}
-                <TableBodyCell class={tdClassRelative}
-                  ><a
-                    class="absolute top-0 right-0 bottom-0 left-0"
-                    href={getAdvisoryAnchorLink(item)}
-                    aria-label="View advisory details"
-                  >
-                  </a>
+                <TableBodyCell class={tdClassRelative}>
+                  {@render advisoryLink(item)}
                   <div class="m-2 table w-full text-wrap">
                     {#if item.comments_id}
                       {#await request(`api/comments/post/${item.comments_id}`, "GET")}
@@ -530,23 +538,13 @@
               {#each columns as column}
                 {#if column !== searchColumnName}
                   {#if column === "cvss_v3_score" || column === "cvss_v2_score"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                        aria-label="View advisory details"
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <CVSS baseScore={item[column]}></CVSS>
                     </TableBodyCell>
                   {:else if column === "ssvc"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                        aria-label="View advisory details"
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-16 text-wrap">
                         {#if item[column]}
                           <SsvcBadge vector={item[column]}></SsvcBadge>
@@ -554,13 +552,8 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "state"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-full text-wrap">
                         <i
                           title={item[column]}
@@ -575,61 +568,36 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "initial_release_date"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-full text-wrap">
                         {item.initial_release_date?.split("T")[0]}
                       </div></TableBodyCell
                     >
                   {:else if column === "current_release_date"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-full text-wrap">
                         {item.current_release_date?.split("T")[0]}
                       </div></TableBodyCell
                     >
                   {:else if column === "title"}
-                    <TableBodyCell class={title + " relative"}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={title + " relative"}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-[min(250px)] text-wrap">
                         <span title={item[column]}>{item[column]}</span>
                       </div></TableBodyCell
                     >
                   {:else if column === "publisher"}
-                    <TableBodyCell class={publisher + " relative"}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={publisher + " relative"}>
+                      {@render advisoryLink(item)}
                       <div class={publisher + " m-2"}>
                         <span title={item[column]}>{getPublisher(item[column], innerWidth)}</span>
                       </div></TableBodyCell
                     >
                   {:else if column === "recent"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-full text-wrap">
                         <span title={item[column]}
                           >{item[column] ? item[column].split("T")[0] : ""}</span
@@ -639,12 +607,7 @@
                   {:else if column === "four_cves"}
                     <TableBodyCell class={tdClassRelative}>
                       {#if !(item[column] && item[column][0] && item[column].length > 1)}
-                        <a
-                          aria-label="View advisory details"
-                          class="absolute top-0 right-0 bottom-0 left-0"
-                          href={getAdvisoryAnchorLink(item)}
-                        >
-                        </a>
+                        {@render advisoryLink(item)}
                       {/if}
                       <div class="w-32">
                         <div class="z-50 table p-2 text-wrap">
@@ -687,35 +650,20 @@
                       </div></TableBodyCell
                     >
                   {:else if column === "critical"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <CVSS baseScore={item[column]}></CVSS>
                     </TableBodyCell>
                   {:else if column === "tracking_id"}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-40 text-wrap">
                         {item[column] ?? ""}
                       </div></TableBodyCell
                     >
                   {:else}
-                    <TableBodyCell class={tdClassRelative}
-                      ><a
-                        aria-label="View advisory details"
-                        class="absolute top-0 right-0 bottom-0 left-0"
-                        href={getAdvisoryAnchorLink(item)}
-                      >
-                      </a>
+                    <TableBodyCell class={tdClassRelative}>
+                      {@render advisoryLink(item)}
                       <div class="m-2 table w-full text-wrap">
                         {item[column] ?? ""}
                       </div></TableBodyCell

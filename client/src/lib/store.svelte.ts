@@ -358,7 +358,7 @@ export const appStore = {
     state.app.search.requestURL = newURL;
   },
 
-  setSearchResults: (newDocuments: any[]) => {
+  setSearchResults: (newDocuments: any[] | null) => {
     state.app.search.results = newDocuments;
   },
 

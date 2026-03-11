@@ -13,6 +13,7 @@
   import { Button, TableBodyCell } from "flowbite-svelte";
   import { searchColumnName } from "./defaults";
   import { getAdvisoryAnchorLink } from "$lib/Advisories/advisory";
+  import Link from "$lib/Components/Link.svelte";
 
   /* eslint-disable svelte/no-at-html-tags */
 
@@ -37,7 +38,7 @@
         : "border-t border-t-gray-300 bg-gray-100 dark:border-t-gray-600 dark:bg-gray-700"}
     >
       <TableBodyCell {colspan} class="px-0 py-0 whitespace-nowrap">
-        <a
+        <Link
           aria-label="View advisory details"
           class={index % 2 == 1
             ? "block hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -49,7 +50,7 @@
               USE_PROFILES: { html: true }
             })}
           </span>
-        </a>
+        </Link>
         {#if !expanded && visibleHits.length < hits.length && i === visibleHits.length - 1}
           <Button
             onclick={() => {

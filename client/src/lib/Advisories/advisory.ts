@@ -10,7 +10,7 @@ import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 import { getAccessToken, request } from "$lib/request";
 import { appStore } from "$lib/store.svelte";
 import type { WorkflowState } from "$lib/workflow";
-import { push } from "svelte-spa-router";
+import { push } from "$routes/router.svelte";
 
 type StateChange = {
   publisher: string;

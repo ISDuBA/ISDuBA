@@ -44,7 +44,7 @@
   } from "$lib/aggregatorTypes";
   import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import CAccordionItem from "$lib/Components/CAccordionItem.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import { scale } from "svelte/transition";

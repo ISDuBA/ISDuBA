@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { appStore } from "$lib/store.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { request } from "$lib/request";

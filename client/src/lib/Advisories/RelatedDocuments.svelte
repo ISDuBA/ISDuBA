@@ -18,9 +18,10 @@
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
   import { fetchDocumentSSVC } from "./advisory";
   import SSVCBadge from "./SSVC/SSVCBadge.svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { appStore } from "$lib/store.svelte";
   import { addSlashes } from "$lib/utils";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Related {
     [key: string]: string[];
@@ -195,10 +196,10 @@
           {@const sameVersion = hasDocWithSameVersion(d)}
           <TableHeadCell class="text-center align-top">
             <div class="flex h-full flex-col items-center justify-between gap-2">
-              <a
+              <Link
                 class="text-primary-700 dark:text-primary-400 hover:underline"
                 href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
-                >{d.tracking_id}</a
+                >{d.tracking_id}</Link
               >
               {@render generalInformation(
                 d.state,

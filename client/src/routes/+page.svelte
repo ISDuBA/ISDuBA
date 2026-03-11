@@ -40,6 +40,7 @@
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
   import { onMount } from "svelte";
   import RelatedDocuments from "$lib/Advisories/RelatedDocuments.svelte";
+  import { routerState } from "./router.svelte";
 
   let loadConfigError: ErrorDetails | null = $state(null);
 
@@ -164,6 +165,11 @@
 
   const routeLoaded = (event: any) => {
     appStore.setRouterParams(event.detail.params);
+    if (routerState.didPush === false) {
+      appStore.setSearchResults(null);
+      appStore.setSearchResultCount(null);
+    }
+    routerState.didPush = false;
   };
 
   const routes = {

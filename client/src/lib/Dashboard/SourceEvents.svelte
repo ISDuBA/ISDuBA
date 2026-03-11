@@ -20,7 +20,7 @@
   import { type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
   import { Button, Spinner } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
 
   interface MergedAttention extends Attention {
     isSource: boolean;

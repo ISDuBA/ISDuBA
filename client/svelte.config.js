@@ -19,7 +19,10 @@ const config = {
     adapter: adapter({
       pages: "../web/",
       fallback: "index.html" // may differ from host to host
-    })
+    }),
+    alias: {
+      $routes: "./src/routes"
+    }
   }
 };
 

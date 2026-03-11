@@ -13,8 +13,9 @@
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
   import { Button } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { getContext } from "svelte";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Props {
     basePath: string;
@@ -80,9 +81,11 @@
       <div class={cellStyleValue}>{publisherName}</div>
       <div class={cellStyleKey}>Publisher namespace</div>
       <div class={cellStyleValue}>
-        <a href={publisherNamespace} class="underline">
-          <i class="bx bx-link"></i>{publisherNamespace}
-        </a>
+        {#if publisherNamespace}
+          <Link href={publisherNamespace} class="underline">
+            <i class="bx bx-link"></i>{publisherNamespace}
+          </Link>
+        {/if}
       </div>
       {#if publisherContactDetails}
         <div class={cellStyleKey}>Publisher contact details</div>
@@ -114,10 +117,10 @@
         {#if appStore.state.webview.doc?.aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <a href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
+            <Link href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
               <i class="bx bx-link"></i>
               <span>{appStore.state.webview.doc?.aggregateSeverity.namespace}</span>
-            </a>
+            </Link>
           </div>
         {/if}
       {/if}

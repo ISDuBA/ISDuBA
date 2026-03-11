@@ -16,7 +16,8 @@
   import type { Query } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
   import { appStore } from "$lib/store.svelte";
-  import { push, querystring as qs } from "svelte-spa-router";
+  import { querystring as qs } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";

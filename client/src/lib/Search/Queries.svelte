@@ -14,7 +14,7 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { Button, ButtonGroup } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { type Query } from "$lib/Queries/query";
   import { truncate } from "$lib/utils";
 

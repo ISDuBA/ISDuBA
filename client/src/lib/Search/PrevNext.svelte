@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { SidebarItem } from "flowbite-svelte";
+  import CSidebarItem from "$lib/Components/CSidebarItem.svelte";
   import { activeClass, sidebarItemClass, sidebarItemLinkClass } from "$lib/sidenav";
   import { appStore } from "$lib/store.svelte";
   import { request } from "$lib/request";
@@ -168,17 +168,16 @@
         <div
           class={`${indentedSidebarItemClass} ${i === index ? "bg-primary-200 dark:bg-gray-950" : ""} !text-gray-200 dark:!text-gray-400`}
         >
-          <span class="ms-3">{doc.data[0].tracking_id}</span>
+          <span>{doc.data[0].tracking_id}</span>
         </div>
       {:else}
-        <SidebarItem
-          class={i === index ? `${activeClass} px-0 py-0` : sidebarItemClass}
-          aClass={`${indentedSidebarItemClass} ${i === index ? "!text-primary-900 dark:!text-white" : ""}`}
+        <CSidebarItem
+          aClass={`${indentedSidebarItemClass} ${i === index ? `${activeClass} px-0 py-0` : sidebarItemClass} ${i === index ? "!text-primary-900 dark:!text-white" : ""}`}
           label={doc.data[0].tracking_id}
           href={`#/advisories/${doc.data[0].publisher}/${doc.data[0].tracking_id}/documents/${doc.id}`}
         >
           {#snippet icon()}{/snippet}
-        </SidebarItem>
+        </CSidebarItem>
       {/if}
     {/if}
   {/each}
