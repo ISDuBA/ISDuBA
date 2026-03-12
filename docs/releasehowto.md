@@ -11,5 +11,8 @@ Things to do for a release.
 * Check that `make dist` will produce all assets.
 * Check that github Actions have all run as expected
 * Run the client tests
+* Update Node.js version in docker setup, install scripts and the Makefile
+* Update docker images used in the docker setup
 * Test the docker setup
+* Check for vulnerabilities (run `npm audit fix` in `client` if it makes sense)
 * ...TODO

@@ -88,6 +88,14 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
 		case EventMode:
 			// TODO clarify how to handle event search
+			// Current implementation equals AdvisoryMode/DocumentMode to prevent error when searching for strings, but can also search in comments
+			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
+				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
+				"WHERE txt ILIKE $%[1]d "+
+				"AND documents_texts.documents_id = documents.id) "+
+				"OR "+
+				"EXISTS(SELECT 1 FROM comments "+
+				"WHERE message ILIKE $%[1]d AND comments.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
 		}
 
 		// Ignore alias for now to avoid breaking change

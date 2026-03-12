@@ -24,7 +24,7 @@
   import { Input, Label, Button, Spinner, List, DescriptionList } from "flowbite-svelte";
   import SourceForm from "./SourceForm.svelte";
   import type { CSAFProviderMetadata } from "$lib/provider";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import FeedView from "./FeedView.svelte";
   import { onMount } from "svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";

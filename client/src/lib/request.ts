@@ -9,7 +9,7 @@
  */
 
 import { appStore } from "./store.svelte";
-import { push } from "svelte-spa-router";
+import { push } from "$routes/router.svelte";
 import type { User } from "oidc-client-ts";
 import type { HttpResponse } from "./types";
 import { jwtDecode } from "jwt-decode";

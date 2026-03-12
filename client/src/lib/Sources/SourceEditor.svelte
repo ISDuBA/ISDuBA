@@ -32,7 +32,7 @@
   import SourceForm from "./SourceForm.svelte";
   import { request } from "$lib/request";
   import FeedView from "./FeedView.svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { DAY_MS } from "$lib/time";
   import SourceBasicStats from "./SourceBasicStats.svelte";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";

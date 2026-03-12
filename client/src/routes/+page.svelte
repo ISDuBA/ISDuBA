@@ -40,6 +40,7 @@
   import FeedLogViewer from "$lib/Sources/FeedLogViewer.svelte";
   import { onMount } from "svelte";
   import RelatedDocuments from "$lib/Advisories/RelatedDocuments.svelte";
+  import { routerState } from "./router.svelte";
 
   let loadConfigError: ErrorDetails | null = $state(null);
 
@@ -160,6 +161,15 @@
     if (!appStore.getUserManager()) return false;
     if (!checkUserForRoles()) return false;
     return appStore.getIsUserLoggedIn();
+  };
+
+  const routeLoaded = (event: any) => {
+    appStore.setRouterParams(event.detail.params);
+    if (routerState.didPush === false) {
+      appStore.setSearchResults(null);
+      appStore.setSearchResultCount(null);
+    }
+    routerState.didPush = false;
   };
 
   const routes = {
@@ -318,7 +328,7 @@
     class="flex max-h-screen w-full flex-col overflow-auto bg-white px-2 py-6 lg:px-6 dark:bg-gray-800"
   >
     {#if appStore.state.app.userManager}
-      <Router {routes} on:conditionsFailed={conditionsFailed} />
+      <Router {routes} on:conditionsFailed={conditionsFailed} on:routeLoaded={routeLoaded} />
     {/if}
     <ErrorMessage error={loadConfigError}></ErrorMessage>
   </main>

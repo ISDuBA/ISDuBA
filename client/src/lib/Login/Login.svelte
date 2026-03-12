@@ -61,7 +61,7 @@
 
   const getTLPClass = (label: string) => {
     if (label === "WHITE") {
-      return "tlpclear";
+      return "tlpwhite";
     } else if (label === "RED") {
       return "tlpred";
     } else if (label === "AMBER") {
@@ -186,7 +186,7 @@
 </div>
 
 <style>
-  .tlpclear {
+  .tlpwhite {
     background: #000;
     color: #fff;
   }

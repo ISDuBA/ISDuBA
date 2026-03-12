@@ -8,22 +8,20 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
+  import Link from "$lib/Components/Link.svelte";
+
   interface Props {
     tlp?: string;
   }
   let { tlp = "" }: Props = $props();
 </script>
 
-<a
-  href="https://www.first.org/tlp/"
-  class:tlpred={tlp === "RED"}
-  class:tlpamber={tlp === "AMBER"}
-  class:tlpclear={tlp === "WHITE"}
-  class:tlpgreen={tlp === "GREEN"}>{tlp}</a
->
+<Link href="https://www.first.org/tlp/" class={tlp ? `tlp${tlp.toLocaleLowerCase()}` : ""}>
+  {tlp}
+</Link>
 
 <style>
-  .tlpclear {
+  .tlpwhite {
     font-size: small;
     padding: 0.25em;
     background: #000;

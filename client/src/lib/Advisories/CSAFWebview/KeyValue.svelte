@@ -11,6 +11,7 @@
 <script lang="ts">
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import CVSS from "./general/CVSS.svelte";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Props {
     keys: Array<string>;
@@ -54,9 +55,9 @@
             ><TableBodyCell class={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell class={cellStyle}>
               {#if typeof values[index] === "string" && values[index].startsWith && values[index].startsWith("https://")}
-                <a class="underline" href={values[index]}>
+                <Link class="underline" href={values[index]}>
                   <i class="bx bx-link"></i>{values[index]}
-                </a>
+                </Link>
               {:else}
                 {values[index]}
               {/if}

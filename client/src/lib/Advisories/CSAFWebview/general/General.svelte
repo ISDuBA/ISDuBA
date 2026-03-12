@@ -15,6 +15,7 @@
   import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { getContext } from "svelte";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Props {
     basePath: string;
@@ -43,6 +44,8 @@
   const cellStyleKey = "content-center w-40 py-0";
 
   const openRelatedDocuments = () => {
+    // Use push of external router since we want PrevNext to disappear when user navigates to related
+    // documents.
     push(`${basePath}${basePath.endsWith("/") ? "" : "/"}related/documents`);
   };
 
@@ -80,9 +83,11 @@
       <div class={cellStyleValue}>{publisherName}</div>
       <div class={cellStyleKey}>Publisher namespace</div>
       <div class={cellStyleValue}>
-        <a href={publisherNamespace} class="underline">
-          <i class="bx bx-link"></i>{publisherNamespace}
-        </a>
+        {#if publisherNamespace}
+          <Link href={publisherNamespace} class="underline">
+            <i class="bx bx-link"></i>{publisherNamespace}
+          </Link>
+        {/if}
       </div>
       {#if publisherContactDetails}
         <div class={cellStyleKey}>Publisher contact details</div>
@@ -114,10 +119,10 @@
         {#if appStore.state.webview.doc?.aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <a href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
+            <Link href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
               <i class="bx bx-link"></i>
               <span>{appStore.state.webview.doc?.aggregateSeverity.namespace}</span>
-            </a>
+            </Link>
           </div>
         {/if}
       {/if}

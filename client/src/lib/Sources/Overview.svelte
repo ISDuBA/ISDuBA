@@ -11,7 +11,7 @@
 <script lang="ts">
   import { Badge, Button, Spinner, TableBodyCell } from "flowbite-svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import { tdClass } from "$lib/Table/defaults";

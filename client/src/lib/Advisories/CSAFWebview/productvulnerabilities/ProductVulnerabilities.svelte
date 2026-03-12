@@ -22,6 +22,7 @@
     Button
   } from "flowbite-svelte";
   import { innerLinkStyle } from "./../helpers";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Props {
     basePath: string;
@@ -127,11 +128,11 @@
                   <div class={titleStyles[1]}>
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
-                        <a
+                        <Link
                           class={innerLinkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
-                          >{column.content}</a
+                          >{column.content}</Link
                         >
                       </div>
                     </div>
@@ -147,12 +148,12 @@
                   <div class={titleStyles[1]}>
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
-                        <a
+                        <Link
                           class={innerLinkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
                           >{column.content}
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -168,14 +169,14 @@
                 {#if column.name === "Product"}
                   <TableBodyCell class={tdClass + " sticky left-0 bg-inherit"}>
                     <div class="max-w-1/2 min-w-56 text-wrap break-all whitespace-normal">
-                      <a
+                      <Link
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
                         class={innerLinkStyle}
                         >{appStore.state.webview.doc?.productsByID[column.content]}
                         ({column.content.length > 20
                           ? column.content.substring(0, 20) + "..."
-                          : column.content})</a
+                          : column.content})</Link
                       >
                     </div>
                   </TableBodyCell>

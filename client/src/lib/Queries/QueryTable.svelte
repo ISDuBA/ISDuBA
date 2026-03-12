@@ -16,7 +16,7 @@
   import { getContext } from "svelte";
   import { setIgnored, updateStoredQuery } from "./query";
   import type { Order, Query } from "./query";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Sortable from "sortablejs";
