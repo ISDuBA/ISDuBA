@@ -369,12 +369,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
-	// Return search results
-	returnSearchResults, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("results", "false"))
-	if !ok {
-		return
-	}
-
 	mode := query.DocumentMode
 	if advisory {
 		mode = query.AdvisoryMode
@@ -416,13 +410,11 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		fields = append(fields, "id")
 	}
 
-	builder, err := query.NewAdvancedBuilder(
+	builder, err := query.NewAdvancedSQLBuilder(
 		query.AdvancedSQLBuilderExpr(expr),
 		query.AdvancedSQLBuilderOrderFields(orderFields),
 		query.AdvancedSQLBuilderFields(fields),
-		query.AdvancedSQLBuilderMode(mode),
-		query.AdvancedSQLBuilderReturnSearchResults(returnSearchResults),
-		query.AdvancedSQLBuilderUsedSources(parser.UsedSources))
+		query.AdvancedSQLBuilderParser(&parser))
 
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
