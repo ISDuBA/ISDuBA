@@ -180,12 +180,12 @@
           {#if placeholderFeed}
             <TableBodyCell class={tdClass}>{feed.label}</TableBodyCell>
             <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
-              <a
-                href={"javascript:void(0);"}
+              <button
+                class="cursor-pointer"
                 onclick={async () => await clickFeed(feed)}
                 aria-label="View feed archive"
               >
-                <i class="bx bx-archive"> </i></a
+                <i class="bx bx-archive"> </i></button
               >
             </TableBodyCell>
           {:else}
@@ -215,10 +215,10 @@
               class={`${tdClass} break-all whitespace-normal`}
             >
               {#if edit && feed.enable}
-                <a
-                  href={"javascript:void(0);"}
+                <button
+                  class="cursor-pointer"
                   onclick={async () => await clickFeed(feed)}
-                  aria-label="View feed details">{feed.url}</a
+                  aria-label="View feed details">{feed.url}</button
                 >
               {:else}
                 <span class="text-amber-600">
@@ -250,12 +250,12 @@
               >
               {#if feed.enable}
                 <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
-                  <a
-                    href={"javascript:void(0);"}
+                  <button
+                    class="cursor-pointer"
                     onclick={async () => await clickFeed(feed)}
                     aria-label="View feed archive"
                   >
-                    <i class="bx bx-archive"> </i></a
+                    <i class="bx bx-archive"> </i></button
                   >
                 </TableBodyCell>
               {/if}
