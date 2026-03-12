@@ -211,6 +211,7 @@
 
   // Similar structure to loadComments()
   const loadSSVCHistory = async () => {
+    if (!encodedPublisherNamespace || !encodedTrackingID) return;
     const response = await request(
       `/api/ssvc/history/${encodedPublisherNamespace}/${encodedTrackingID}`,
       "GET"
@@ -241,7 +242,7 @@
     }
     const ssvcData = await loadSSVCHistory();
 
-    const ssvcChanges = ssvcData.ssvcChanges || [];
+    const ssvcChanges = ssvcData?.ssvcChanges || [];
 
     const commentsByTime = comments.reduce((o: any, n: any) => {
       o[`${n.time}:${n.commentator}`] = {
