@@ -24,7 +24,8 @@
   import TypeToggle from "$lib/Search/TypeToggle.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import type { SearchParameters } from "./search";
+  import type { SearchParameters } from "./search.svelte";
+  import { defaultQuery as defaultQ, queryState } from "./search.svelte";
   import { page } from "$app/state";
   import { untrack } from "svelte";
 
@@ -32,8 +33,6 @@
   const INITIAL_ORDER = ["-critical"];
 
   let loading = $state(false);
-  let queries: any[] | null = $state(null);
-  let defaultQuery: any = $state(null);
   let openRow: number | null = $state(null);
   let count = $state(0);
   let searchTermInputValue = $state("");
@@ -42,6 +41,9 @@
   let requestOngoing = false;
   let documents: any = $state(null);
   // let searchqueryTimer: any = null;
+
+  let queries = $derived(queryState.queries);
+  let defaultQuery = $derived(defaultQ());
 
   // Variables derived from URL parameters
   let queryString: any = $derived($qs ? parse($qs) : undefined);
@@ -60,8 +62,10 @@
     queryString?.queryID ? Number(queryString.queryID) : undefined
   );
   let selectedQuery: Query | null = $derived.by(() => {
-    if (!queryID || queries === null) return null;
-    return $state.snapshot(queries).find((q) => q.id === queryID) ?? null;
+    if (queries === null) return null;
+    const queryByID = $state.snapshot(queries).find((q) => q.id === queryID);
+    if (queryByID) return queryByID;
+    return defaultQuery ?? null;
   });
 
   let numberOfPages = $derived(Math.ceil(count / limit));
@@ -91,7 +95,7 @@
         queryType: defaultQuery.kind,
         query: defaultQuery.query,
         queryReset: "",
-        orders: defaultQuery.orders
+        orders: defaultQuery.orders ?? []
       };
     } else {
       return {
@@ -259,7 +263,7 @@
     if (queryQuery) {
       queryParam = `query=${queryQuery}`;
     }
-    const orderByParam = selectedQuery ? (query.orders ?? []) : orderBy;
+    const orderByParam = selectedQuery ? (query?.orders ?? []) : orderBy;
     let fetchColumns = [...$state.snapshot(columns)];
     let requiredColumns = ["id", "tracking_id", "publisher"];
     for (let c of requiredColumns) {
@@ -350,15 +354,12 @@
       const newParameters: SearchParameters = {
         currentPage: 1,
         limit: INITIAL_LIMIT,
-        queryID: id,
+        queryID: id === defaultQuery?.id ? undefined : id,
         searchTerm: "",
         type: undefined
       };
       setSearchParameters(newParameters);
     }}
-    selectedQueryID={queryID}
-    bind:defaultQuery
-    bind:queries
   ></Queries>
   {#if !selectedQuery}
     <TypeToggle
@@ -370,13 +371,15 @@
       onSelect={(newType: SEARCHTYPES) => {
         appStore.setSearchType(newType);
         appStore.setSearchParametersForType(type, getCurrentSearchParameters());
-        query.queryType = newType;
-        const newParameters = $state.snapshot(appStore.getSearchParametersForType(newType));
-        if (newType === SEARCHTYPES.ADVISORY) {
-          query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
-        } else if (newType === SEARCHTYPES.DOCUMENT) {
-          query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
+        if (query) {
+          query.queryType = newType;
+          if (newType === SEARCHTYPES.ADVISORY) {
+            query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
+          } else if (newType === SEARCHTYPES.DOCUMENT) {
+            query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
+          }
         }
+        const newParameters = $state.snapshot(appStore.getSearchParametersForType(newType));
         searchTermInputValue = "";
         if (newParameters) {
           searchTermInputValue = "";
