@@ -13,8 +13,16 @@
   import { getReadableDateString } from "../../CSAFWebview/helpers";
   import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
 
+  type SsvcData = {
+    prev_ssvc?: string;
+    ssvc?: string;
+    actor: string;
+    documentVersion: number;
+    time: string;
+  };
+
   interface Props {
-    ssvcData: any;
+    ssvcData: SsvcData;
   }
   let { ssvcData }: Props = $props();
 
@@ -67,7 +75,9 @@
           <SSVCBadge vector={ssvcData.prev_ssvc} />
           &rarr;
         {/if}
-        <SSVCBadge vector={ssvcData.ssvc} />
+        {#if ssvcData.ssvc}
+          <SSVCBadge vector={ssvcData.ssvc} />
+        {/if}
       </div>
     </div>
   </div>
