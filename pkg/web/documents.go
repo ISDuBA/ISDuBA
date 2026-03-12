@@ -416,21 +416,18 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		fields = append(fields, "id")
 	}
 
-	builder := query.AdvancedSQLBuilder{
-		OrderFields:         orderFields,
-		Fields:              fields,
-		Mode:                mode,
-		ReturnSearchResults: returnSearchResults,
-		UsedSources:         parser.UsedSources,
-	}
+	builder, err := query.NewAdvancedBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderOrderFields(orderFields),
+		query.AdvancedSQLBuilderFields(fields),
+		query.AdvancedSQLBuilderMode(mode),
+		query.AdvancedSQLBuilderReturnSearchResults(returnSearchResults),
+		query.AdvancedSQLBuilderUsedSources(parser.UsedSources))
 
-	if err := builder.Check(); err != nil {
+	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
-
-	builder.CreateOrder()
-	builder.CreateWhere(expr)
 
 	var (
 		calcCount           = ctx.Query("count") != ""
@@ -453,7 +450,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	if aggregate {
 		deliver = (*Controller).aggregatedResults
 	}
-	deliver(c, ctx, calcCount, limit, offset, &builder)
+	deliver(c, ctx, calcCount, limit, offset, builder)
 }
 
 func (c *Controller) flatResults(
@@ -487,7 +484,7 @@ func (c *Controller) flatResults(
 				}
 			}
 			// Skip fields if they are not requested.
-			if len(builder.Fields) == 0 {
+			if !builder.HasFields() {
 				return nil
 			}
 

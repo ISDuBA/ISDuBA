@@ -17,31 +17,103 @@ import (
 
 // AdvancedSQLBuilder helps to construct a SQL query.
 type AdvancedSQLBuilder struct {
-	OrderFields         []string
-	Fields              []string
-	WhereClause         string
-	Order               string
+	expr                *Expr
+	orderFields         []string
+	fields              []string
+	whereClause         string
+	order               string
 	Replacements        []any
 	replToIdx           map[string]int
 	Aliases             map[string]string
 	IgnoreFields        map[string]struct{}
-	Mode                ParserMode
-	ReturnSearchResults bool
-	UsedSources         columnSource
+	mode                ParserMode
+	returnSearchResults bool
+	usedSources         columnSource
 }
 
-// CreateWhere construct a WHERE clause for a given expression.
-func (sb *AdvancedSQLBuilder) CreateWhere(e *Expr) string {
+// AdvancedSQLBuilderOption is an option to create an advanced SQL builder.
+type AdvancedSQLBuilderOption func(*AdvancedSQLBuilder)
+
+// AdvancedSQLBuilderExpr creates an option to create an advanced SQL builder
+// with an expression.
+func AdvancedSQLBuilderExpr(e *Expr) AdvancedSQLBuilderOption {
+	return func(ab *AdvancedSQLBuilder) {
+		ab.expr = e
+	}
+}
+
+// AdvancedSQLBuilderOrderFields creates an option to create an advanced SQL builder
+// with a order fields.
+func AdvancedSQLBuilderOrderFields(orderFields []string) AdvancedSQLBuilderOption {
+	return func(ab *AdvancedSQLBuilder) {
+		ab.orderFields = orderFields
+	}
+}
+
+// AdvancedSQLBuilderFields creates an option to create an advanced SQL builder
+// with projection fields.
+func AdvancedSQLBuilderFields(fields []string) AdvancedSQLBuilderOption {
+	return func(ab *AdvancedSQLBuilder) {
+		ab.fields = fields
+	}
+}
+
+// AdvancedSQLBuilderMode creates an option to create an advanced SQL builder
+// with a given parser mode.
+func AdvancedSQLBuilderMode(mode ParserMode) AdvancedSQLBuilderOption {
+	return func(ab *AdvancedSQLBuilder) {
+		ab.mode = mode
+	}
+}
+
+// AdvancedSQLBuilderReturnSearchResults creates an option to create an advanced SQL builder
+// to include the search results.
+func AdvancedSQLBuilderReturnSearchResults(returnSearchResults bool) AdvancedSQLBuilderOption {
+	return func(ab *AdvancedSQLBuilder) {
+		ab.returnSearchResults = returnSearchResults
+	}
+}
+
+// AdvancedSQLBuilderUsedSources creates an option to create an advanced SQL builder
+// with used parser mode.
+func AdvancedSQLBuilderUsedSources(usedSources columnSource) AdvancedSQLBuilderOption {
+	return func(ab *AdvancedSQLBuilder) {
+		ab.usedSources = usedSources
+	}
+}
+
+// NewAdvancedBuilder creates a new advanced builder with a list of options.
+func NewAdvancedBuilder(options ...AdvancedSQLBuilderOption) (*AdvancedSQLBuilder, error) {
+	ab := new(AdvancedSQLBuilder)
+	for _, option := range options {
+		option(ab)
+	}
+	if err := ab.Check(); err != nil {
+		return nil, fmt.Errorf("creating advanced SQL builder failed: %w", err)
+	}
+	return ab, nil
+}
+
+// HasFields returns true if the builder has projection fields.
+func (sb *AdvancedSQLBuilder) HasFields() bool {
+	return len(sb.fields) > 0
+}
+
+// createWhere construct a WHERE clause for a given expression.
+func (sb *AdvancedSQLBuilder) createWhere() string {
+	if sb.whereClause != "" {
+		return sb.whereClause
+	}
 	var b strings.Builder
-	sb.whereRecurse(e, &b)
-	sb.WhereClause = b.String()
-	return sb.WhereClause
+	sb.whereRecurse(sb.expr, &b)
+	sb.whereClause = b.String()
+	return sb.whereClause
 }
 
 // RemoveIgnoredFields removes fields that should be ignored.
 func (sb *AdvancedSQLBuilder) RemoveIgnoredFields() []string {
-	filtered := make([]string, 0, len(sb.Fields))
-	for _, f := range sb.Fields {
+	filtered := make([]string, 0, len(sb.fields))
+	for _, f := range sb.fields {
 		if _, found := sb.IgnoreFields[f]; !found {
 			filtered = append(filtered, f)
 		}
@@ -50,13 +122,13 @@ func (sb *AdvancedSQLBuilder) RemoveIgnoredFields() []string {
 }
 
 func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
-	if sb.ReturnSearchResults {
+	if sb.returnSearchResults {
 		fmt.Fprintf(b, "txt ILIKE $%d",
 			sb.replacementIndex(LikeEscape(e.stringValue))+1)
 
 		// We need the text tables to be joined.
 		// TODO: Why does this code path exists?
-		sb.UsedSources.add(documentsTable | textTable)
+		sb.usedSources.add(documentsTable | textTable)
 
 		// Handle alias
 		if e.alias == "" {
@@ -67,12 +139,13 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 		}
 		sb.Aliases[e.alias] = `txt`
 	} else {
-		switch sb.Mode {
+		switch sb.mode {
 		case AdvisoryMode, DocumentMode:
 			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
 				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
 				"WHERE txt ILIKE $%d "+
-				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
+				"AND documents_texts.documents_id = documents.id)",
+				sb.replacementIndex(LikeEscape(e.stringValue))+1)
 		case EventMode:
 			// TODO clarify how to handle event search
 		}
@@ -90,7 +163,7 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 }
 
 func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
-	switch sb.Mode {
+	switch sb.mode {
 	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
 			"JOIN documents docs ON comments.documents_id = docs.id "+
@@ -109,7 +182,7 @@ func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 }
 
 func (sb *AdvancedSQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
-	switch sb.Mode {
+	switch sb.mode {
 	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
 			"ON events_log.documents_id = docs.id "+
@@ -213,7 +286,7 @@ func (sb *AdvancedSQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 	case "versions":
 		b.WriteString(versionsCount)
 	case "comments":
-		switch sb.Mode {
+		switch sb.mode {
 		case AdvisoryMode:
 			b.WriteString(column)
 		case DocumentMode:
@@ -291,6 +364,9 @@ func (sb *AdvancedSQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 }
 
 func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
+	if e == nil {
+		return
+	}
 	b.WriteByte('(')
 	switch e.exprType {
 	case access:
@@ -357,7 +433,7 @@ func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
 }
 
 func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
-	switch sb.Mode {
+	switch sb.mode {
 	case AdvisoryMode, DocumentMode:
 		b.WriteString(`documents ` +
 			`JOIN advisories ON ` +
@@ -375,7 +451,7 @@ func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
 		`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
 		`) AS ssvc_current ON TRUE`)
 
-	if sb.UsedSources.contains(textTable) {
+	if sb.usedSources.contains(textTable) {
 		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
@@ -389,15 +465,17 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 	b.WriteString("SELECT count(*) FROM ")
 	sb.createFrom(&b)
 	b.WriteString(" WHERE ")
-	b.WriteString(sb.WhereClause)
+	b.WriteString(sb.createWhere())
 	return b.String()
 }
 
-// CreateOrder returns a ORDER BY clause for given columns.
-func (sb *AdvancedSQLBuilder) CreateOrder() string {
-	// TODO: Add order fields to used tables.
+// createOrder returns a ORDER BY clause for given columns.
+func (sb *AdvancedSQLBuilder) createOrder() string {
+	if sb.order != "" {
+		return sb.order
+	}
 	var b strings.Builder
-	for _, field := range sb.OrderFields {
+	for _, field := range sb.orderFields {
 		desc := strings.HasPrefix(field, "-")
 		if desc {
 			field = field[1:]
@@ -429,8 +507,8 @@ func (sb *AdvancedSQLBuilder) CreateOrder() string {
 			b.WriteString(" ASC")
 		}
 	}
-	sb.Order = b.String()
-	return sb.Order
+	sb.order = b.String()
+	return sb.order
 }
 
 // CreateQuery creates an SQL statement to query the documents
@@ -442,15 +520,15 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 	var b strings.Builder
 
 	b.WriteString("SELECT ")
-	sb.projectionsWithCasts(&b, sb.Fields)
+	sb.projectionsWithCasts(&b, sb.fields)
 	b.WriteString(" FROM ")
 	sb.createFrom(&b)
 	b.WriteString(" WHERE ")
-	b.WriteString(sb.WhereClause)
+	b.WriteString(sb.createWhere())
 
-	if sb.Order != "" {
+	if order := sb.createOrder(); order != "" {
 		b.WriteString(" ORDER BY ")
-		b.WriteString(sb.Order)
+		b.WriteString(order)
 	}
 
 	if limit >= 0 {
@@ -506,7 +584,7 @@ func (sb *AdvancedSQLBuilder) projectionsWithCasts(b *strings.Builder, proj []st
 		case "ssvc":
 			b.WriteString("ssvc_current.ssvc AS ssvc")
 		case "comments":
-			switch sb.Mode {
+			switch sb.mode {
 			case AdvisoryMode:
 				b.WriteString(p)
 			case DocumentMode:
@@ -523,32 +601,32 @@ func (sb *AdvancedSQLBuilder) projectionsWithCasts(b *strings.Builder, proj []st
 // Check tests for the existence of used columns.
 func (sb *AdvancedSQLBuilder) Check() error {
 	// check projections.
-	for _, p := range sb.Fields {
+	for _, p := range sb.fields {
 		if _, found := sb.Aliases[p]; found {
 			continue
 		}
 		if _, found := sb.IgnoreFields[p]; found {
 			continue
 		}
-		col := findDocumentColumn(p, sb.Mode)
+		col := findDocumentColumn(p, sb.mode)
 		if col == nil {
 			return fmt.Errorf("column %q does not exists", p)
 		}
-		sb.UsedSources.add(col.sources)
+		sb.usedSources.add(col.sources)
 	}
 	// check order
-	for _, field := range sb.OrderFields {
+	for _, field := range sb.orderFields {
 		if desc := strings.HasPrefix(field, "-"); desc {
 			field = field[1:]
 		}
 		if _, found := sb.Aliases[field]; !found {
-			col := findDocumentColumn(field, sb.Mode)
+			col := findDocumentColumn(field, sb.mode)
 			if col == nil {
 				return fmt.Errorf("order field %q does not exists", field)
 			}
-			sb.UsedSources.add(col.sources)
+			sb.usedSources.add(col.sources)
 		}
 	}
-	slog.Debug("advanced sqlbuilder", "used sources", sb.UsedSources)
+	slog.Debug("advanced sqlbuilder", "used sources", sb.usedSources)
 	return nil
 }
