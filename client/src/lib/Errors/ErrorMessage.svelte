@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import type { ErrorDetails } from "$lib/Errors/error";
-  import { Alert, Button } from "flowbite-svelte";
+  import { Alert } from "flowbite-svelte";
   interface Props {
     error: ErrorDetails | null;
   }
@@ -25,13 +25,13 @@
     <Alert color="red" class="gap-3 p-4 text-sm dark:bg-[#302834]" dismissable>
       <span class="text-lg"> {error.message}</span>
       {#if error.details}
-        <Button onclick={() => (showDetails = !showDetails)}>
+        <button class="cursor-pointer" onclick={() => (showDetails = !showDetails)}>
           {#if showDetails}
             <i class="bx bx-chevron-up text-2xl"></i>
           {:else}
             <i class="bx bx-chevron-down text-2xl"></i>
           {/if}
-        </Button>
+        </button>
         {#if showDetails}
           <br />
           <span class="text-lg whitespace-pre-wrap">{error.details}</span>

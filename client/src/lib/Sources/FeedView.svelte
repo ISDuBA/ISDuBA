@@ -180,13 +180,13 @@
           {#if placeholderFeed}
             <TableBodyCell class={tdClass}>{feed.label}</TableBodyCell>
             <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
-              <Button
-                color="light"
+              <button
+                class="cursor-pointer"
                 onclick={async () => await clickFeed(feed)}
                 aria-label="View feed archive"
               >
-                <i class="bx bx-archive"> </i>
-              </Button>
+                <i class="bx bx-archive"> </i></button
+              >
             </TableBodyCell>
           {:else}
             <TableBodyCell class={tdClass}>
@@ -215,13 +215,11 @@
               class={`${tdClass} break-all whitespace-normal`}
             >
               {#if edit && feed.enable}
-                <Button
-                  class="cursor-pointer border-0"
-                  color="light"
+                <button
+                  class="cursor-pointer"
                   onclick={async () => await clickFeed(feed)}
-                  aria-label="View feed details"
-                  >{feed.url}
-                </Button>
+                  aria-label="View feed details">{feed.url}</button
+                >
               {:else}
                 <span class="text-amber-600">
                   {feed.url}
@@ -252,13 +250,13 @@
               >
               {#if feed.enable}
                 <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
-                  <Button
-                    color="light"
+                  <button
+                    class="cursor-pointer"
                     onclick={async () => await clickFeed(feed)}
                     aria-label="View feed archive"
                   >
-                    <i class="bx bx-archive"> </i>
-                  </Button>
+                    <i class="bx bx-archive"> </i></button
+                  >
                 </TableBodyCell>
               {/if}
             {/if}
