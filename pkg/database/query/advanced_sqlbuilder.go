@@ -25,8 +25,8 @@ type AdvancedSQLBuilder struct {
 	order        string
 	Replacements []any
 	replToIdx    map[string]int
-	Aliases      map[string]string
-	IgnoreFields map[string]struct{}
+	aliases      map[string]string
+	ignoreFields map[string]struct{}
 	usedSources  columnSource
 }
 
@@ -108,7 +108,7 @@ func (sb *AdvancedSQLBuilder) mode() ParserMode {
 func (sb *AdvancedSQLBuilder) RemoveIgnoredFields() []string {
 	filtered := make([]string, 0, len(sb.fields))
 	for _, f := range sb.fields {
-		if _, found := sb.IgnoreFields[f]; !found {
+		if _, found := sb.ignoreFields[f]; !found {
 			filtered = append(filtered, f)
 		}
 	}
@@ -133,10 +133,10 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	case EventMode:
 		// TODO clarify how to handle event search
 	}
-	if sb.IgnoreFields == nil {
-		sb.IgnoreFields = map[string]struct{}{}
+	if sb.ignoreFields == nil {
+		sb.ignoreFields = map[string]struct{}{}
 	}
-	sb.IgnoreFields[e.alias] = struct{}{}
+	sb.ignoreFields[e.alias] = struct{}{}
 }
 
 func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
@@ -523,13 +523,13 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 // projectionsWithCasts joins given projection adding casts if needed.
 func (sb *AdvancedSQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 	for i, p := range proj {
-		if _, found := sb.IgnoreFields[p]; found {
+		if _, found := sb.ignoreFields[p]; found {
 			continue
 		}
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		if alias, found := sb.Aliases[p]; found {
+		if alias, found := sb.aliases[p]; found {
 			b.WriteString(`CASE WHEN length(`)
 			b.WriteString(alias)
 			b.WriteString(`)<= 200 THEN `)
@@ -579,10 +579,10 @@ func (sb *AdvancedSQLBuilder) projectionsWithCasts(b *strings.Builder, proj []st
 func (sb *AdvancedSQLBuilder) check() error {
 	// check projections.
 	for _, p := range sb.fields {
-		if _, found := sb.Aliases[p]; found {
+		if _, found := sb.aliases[p]; found {
 			continue
 		}
-		if _, found := sb.IgnoreFields[p]; found {
+		if _, found := sb.ignoreFields[p]; found {
 			continue
 		}
 		col := findDocumentColumn(p, sb.mode())
@@ -596,7 +596,7 @@ func (sb *AdvancedSQLBuilder) check() error {
 		if desc := strings.HasPrefix(field, "-"); desc {
 			field = field[1:]
 		}
-		if _, found := sb.Aliases[field]; !found {
+		if _, found := sb.aliases[field]; !found {
 			col := findDocumentColumn(field, sb.mode())
 			if col == nil {
 				return fmt.Errorf("order field %q does not exists", field)
