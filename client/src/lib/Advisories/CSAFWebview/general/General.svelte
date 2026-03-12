@@ -13,7 +13,7 @@
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
   import { Button } from "flowbite-svelte";
-  import { push } from "$routes/router.svelte";
+  import { push } from "svelte-spa-router";
   import { getContext } from "svelte";
   import Link from "$lib/Components/Link.svelte";
 
@@ -44,6 +44,8 @@
   const cellStyleKey = "content-center w-40 py-0";
 
   const openRelatedDocuments = () => {
+    // Use push of external router since we want PrevNext to disappear when user navigates to related
+    // documents.
     push(`${basePath}${basePath.endsWith("/") ? "" : "/"}related/documents`);
   };
 
