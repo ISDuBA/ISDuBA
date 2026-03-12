@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import Link from "$lib/Components/Link.svelte";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
 
   interface Props {
@@ -29,7 +30,8 @@
             <TableBodyCell class={cellStyle}>{reference.category}</TableBodyCell>
             <TableBodyCell class={cellStyle}
               ><p class="mb-2">{reference.summary}</p>
-              <a class="underline" href={reference.url}><i class="bx bx-link"></i>{reference.url}</a
+              <Link class="underline" href={reference.url}
+                ><i class="bx bx-link"></i>{reference.url}</Link
               ></TableBodyCell
             >
             <TableBodyCell></TableBodyCell>

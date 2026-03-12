@@ -27,7 +27,8 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onMount, untrack } from "svelte";
-  import { push, querystring } from "svelte-spa-router";
+  import { querystring } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { parse } from "qs";
   import { appStore } from "$lib/store.svelte";
   import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";

@@ -9,28 +9,22 @@
 -->
 
 <script lang="ts">
-  import {
-    Drawer,
-    Sidebar,
-    SidebarWrapper,
-    SidebarGroup,
-    SidebarItem,
-    SidebarBrand
-  } from "flowbite-svelte";
+  import { Drawer, Sidebar, SidebarWrapper, SidebarGroup, SidebarBrand } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
   import { appStore } from "$lib/store.svelte";
   import { page } from "$app/state";
   import { truncate } from "$lib/utils";
+  import PrevNext from "./Search/PrevNext.svelte";
+  import CSidebarItem from "./Components/CSidebarItem.svelte";
+  import { setContext } from "svelte";
 
   let activeUrl = $derived("/" + page.url.hash);
-
-  let activeClass =
-    "flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-gray-950 dark:text-white hover:bg-primary-100 dark:hover:bg-black";
-  let nonActiveClass =
-    "flex items-center p-2 text-base font-normal text-white dark:text-white hover:bg-primary-100 dark:hover:bg-black hover:text-primary-900";
-  const sidebarItemClass = "px-0 py-0";
-  const sidebarItemLinkClass =
-    "px-6 py-4 rounded-none! hover:text-primary-700 dark:hover:text-white";
+  let searchLabel = $derived(
+    appStore.state.app.search.count !== null && appStore.state.app.search.count !== undefined
+      ? `Search (${appStore.state.app.search.count})`
+      : "Search"
+  );
+  let params = $derived(appStore.state.app.routerParams);
 
   let transitionParams = {
     x: -320,
@@ -47,6 +41,8 @@
   const toggleDrawer = () => {
     drawerOpen = !drawerOpen;
   };
+
+  setContext("activeURL", () => activeUrl);
 </script>
 
 <svelte:window bind:innerWidth={width} />
@@ -64,11 +60,8 @@
       <Sidebar
         class="bg-primary-700 sidebar relative w-full dark:bg-gray-900"
         classes={{
-          div: "max-w-60 relative h-screen bg-primary-700 dark:bg-gray-900 px-0",
-          nonactive: nonActiveClass,
-          active: activeClass
+          div: "max-w-60 relative h-screen bg-primary-700 dark:bg-gray-900 px-0"
         }}
-        {activeUrl}
       >
         <SidebarWrapper
           class="bg-primary-700 sidebar-wrapper w-full overflow-y-auto rounded bg-gray-50 px-0 py-4 dark:bg-gray-900"
@@ -83,71 +76,64 @@
           </SidebarGroup>
           <SidebarGroup class="bg-primary-700 w-full space-y-0 dark:bg-gray-900">
             <!-- Entries which are available after login should go here-->
-            <SidebarItem
-              class={sidebarItemClass}
-              aClass={sidebarItemLinkClass}
-              label="Dashboard"
-              href="/#/"
-            >
+            <CSidebarItem label="Dashboard" href="/#/">
               {#snippet icon()}
                 <i class="bx bxs-dashboard"></i>
               {/snippet}
-            </SidebarItem>
-            <SidebarItem
-              class={sidebarItemClass}
-              aClass={sidebarItemLinkClass}
-              label="Search"
-              href="/#/search"
-            >
-              {#snippet icon()}
-                <i class="bx bx-spreadsheet"></i>
-              {/snippet}
-            </SidebarItem>
-            {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager() || appStore.isImporter()}
-              <SidebarItem
-                class={sidebarItemClass}
-                aClass={sidebarItemLinkClass}
-                label="Sources"
-                href="/#/sources"
+            </CSidebarItem>
+            {#if appStore.state.app.search.searchURL}
+              <!--
+              For the case the user wants to return to the previous result list, for example from the advisory view.
+              Unfortunetly, it was not possible to use the second SidebarItem for Search because any parameters were
+              omitted when the href variable was created dynamically.
+              -->
+              <CSidebarItem
+                active={activeUrl.startsWith("/#/search")}
+                label={searchLabel}
+                href={"#" + appStore.state.app.search.searchURL}
               >
+                {#snippet icon()}
+                  <i class="bx bx-spreadsheet"></i>
+                {/snippet}
+              </CSidebarItem>
+            {:else}
+              <CSidebarItem label={searchLabel} href="/#/search">
+                {#snippet icon()}
+                  <i class="bx bx-spreadsheet"></i>
+                {/snippet}
+              </CSidebarItem>
+            {/if}
+            {#if params?.publisherNamespace && params?.trackingID && params?.id}
+              <PrevNext />
+            {/if}
+            {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager() || appStore.isImporter()}
+              <CSidebarItem label="Sources" href="/#/sources">
                 {#snippet icon()}
                   <i class="bx bx-git-repo-forked"></i>
                 {/snippet}
-              </SidebarItem>
+              </CSidebarItem>
             {/if}
             {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
-              <SidebarItem
-                class={sidebarItemClass}
-                aClass={sidebarItemLinkClass}
-                label="Aggregators"
-                href="/#/sources/aggregators"
-              >
+              <CSidebarItem label="Aggregators" href="/#/sources/aggregators">
                 {#snippet icon()}
                   <i class="bx bx-sitemap"></i>
                 {/snippet}
-              </SidebarItem>
+              </CSidebarItem>
             {/if}
-            <SidebarItem
-              class={sidebarItemClass}
-              aClass={sidebarItemLinkClass}
-              label="Statistics"
-              href="/#/statistics"
-            >
+            <CSidebarItem label="Statistics" href="/#/statistics">
               {#snippet icon()}
                 <i class="bx bx-bar-chart-square"></i>
               {/snippet}
-            </SidebarItem>
+            </CSidebarItem>
             {#if !appStore.state.app.sessionExpired}
-              <SidebarItem
-                class={sidebarItemClass}
-                aClass={sidebarItemLinkClass}
+              <CSidebarItem
                 label={truncate(appStore.state.app.tokenParsed?.preferred_username ?? "", 15)}
                 href="/#/login"
               >
                 {#snippet icon()}
                   <i class="bx bx-user"></i>
                 {/snippet}
-              </SidebarItem>
+              </CSidebarItem>
             {/if}
           </SidebarGroup>
         </SidebarWrapper>

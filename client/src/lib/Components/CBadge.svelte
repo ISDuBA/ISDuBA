@@ -24,7 +24,6 @@
     large?: boolean;
     dismissable?: boolean;
     border?: boolean;
-    href?: string;
     rounded?: boolean;
     transition?: TransitionFunc;
     params?: object;
@@ -38,7 +37,6 @@
     large = false,
     dismissable = false,
     border = false,
-    href = "",
     rounded = false,
     transition = fade,
     params = {},
@@ -105,7 +103,7 @@
       baseClass,
       large ? "text-sm" : "text-xs",
       border ? `border ${borderedColors[color]}` : colors[color],
-      href && hoverColors[color],
+      hoverColors[color],
       rounded ? "rounded-full" : "rounded",
       `${restProps.class}`
     )
@@ -114,13 +112,7 @@
 
 {#if badgeStatus}
   <div transition:transition={params} class={badgeClass}>
-    {#if href}
-      <a {href}>
-        {@render children()}
-      </a>
-    {:else}
-      {@render children()}
-    {/if}
+    {@render children()}
     {#if dismissable}
       {#if closeButtonSlot}
         {@render closeButtonSlot()}
