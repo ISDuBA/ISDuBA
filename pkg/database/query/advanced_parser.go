@@ -378,7 +378,7 @@ func (p *AdvancedParser) pushSearch(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
-	p.UsedSources.add(textTable)
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
@@ -414,7 +414,7 @@ func (p *AdvancedParser) pushILike(st *stack) {
 	haystack := st.pop()
 	needle.checkValueType(stringType)
 	haystack.checkValueType(stringType)
-	p.UsedSources.add(textTable)
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:  ilike,
 		valueType: boolType,
@@ -491,7 +491,7 @@ func (p *AdvancedParser) pushAs(st *stack) {
 	if _, already := p.aliases[alias.stringValue]; already {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
 	}
-	p.UsedSources.add(textTable)
+	p.UsedSources.add(documentsTable | textTable)
 	p.aliases[alias.stringValue] = struct{}{}
 	srch.alias = alias.stringValue
 }

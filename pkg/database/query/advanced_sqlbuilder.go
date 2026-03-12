@@ -56,7 +56,7 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 
 		// We need the text tables to be joined.
 		// TODO: Why does this code path exists?
-		sb.UsedSources.add(textTable)
+		sb.UsedSources.add(documentsTable | textTable)
 
 		// Handle alias
 		if e.alias == "" {
