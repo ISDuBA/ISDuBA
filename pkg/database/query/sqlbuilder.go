@@ -1,4 +1,4 @@
-// This file is Free Software under the Apache-2.0 License
+//// This file is Free Software under the Apache-2.0 License
 // without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -88,8 +88,13 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
 		case EventMode:
 			// TODO clarify how to handle event search
-		}
+			// Current implementation equals AdvisoryMode/DocumentMode to prevent error when searching for strings, but can't search e.g. in comments
+			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
+				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
+				"WHERE txt ILIKE $%d "+
+				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
 
+		}
 		// Ignore alias for now to avoid breaking change
 		if e.alias == "" {
 			return
