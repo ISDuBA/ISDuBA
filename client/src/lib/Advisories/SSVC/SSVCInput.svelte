@@ -119,7 +119,7 @@
 <div class="mb-3 flex w-full">
   <Label
     class="flex h-10 items-center rounded-s-md border border-r-0 border-gray-400 px-2 text-gray-500"
-    >{vectorStart}</Label
+    for="ssvc-input">{vectorStart}</Label
   >
   <div class="flex w-full flex-col gap-y-2">
     <Input
@@ -129,6 +129,7 @@
       {autofocus}
       {disabled}
       class={defaultInputClass}
+      id="ssvc-input"
       type="text"
     />
     <div class="flex flex-col gap-1 ps-2">
