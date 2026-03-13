@@ -49,7 +49,7 @@
     const parts = valueToValidate.split("/");
     const decisions = parts.filter((p) => p.length === 3 && p.charAt(1) === ":");
     minLengthReached = decisions.length >= 5;
-    endsWithSlash = valueToValidate.charAt(inputValue.length - 1) === "/";
+    endsWithSlash = valueToValidate.charAt(valueToValidate.length - 1) === "/";
     const lastPart = parts[parts.length - 1];
     const secondToLastPart = parts[parts.length - 2];
     containsValidDate =
