@@ -125,7 +125,7 @@
         <i class="bx bx-cog"></i>
       </Button>
     </ButtonGroup>
-    {#if sortedQueries.length === 0}
+    {#if sortedQueries().length === 0}
       <span class="text-xs text-gray-400">No queries defined yet</span>
     {/if}
   </div>
