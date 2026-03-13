@@ -29,7 +29,7 @@
   });
 </script>
 
-<div class="complex-decision flex flex-row gap-x-5">
+<div class="complex-decision flex flex-wrap gap-x-5 gap-y-3">
   {#if children && decisionPoints}
     {#each children as child}
       {@const childOptions = getDecision(decisionPoints, child.label)?.options}
