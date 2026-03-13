@@ -54,7 +54,6 @@
   let advanced: boolean = $derived(
     queryString?.advanced !== undefined ? (queryString.advanced === "true" ? true : false) : false
   );
-  let type = $derived(queryString?.type !== undefined ? queryString.type : SEARCHTYPES.ADVISORY);
   let currentPage: number = $derived(Number(queryString?.page ?? 1));
   let limit: number = $derived(Number(queryString?.limit ?? INITIAL_LIMIT));
   let offset: number = $derived(Number((currentPage - 1) * limit));
@@ -66,6 +65,22 @@
     const queryByID = $state.snapshot(queries).find((q) => q.id === queryID);
     if (queryByID) return $state.snapshot(queryByID);
     return $state.snapshot(defaultQuery) ?? null;
+  });
+
+  let type: SEARCHTYPES = $derived.by(() => {
+    if (queryString?.type !== undefined) {
+      return queryString.type;
+    } else if (selectedQuery) {
+      return selectedQuery.kind;
+    }
+    return SEARCHTYPES.ADVISORY;
+  });
+
+  let queryForFetch: Query | null = $derived.by(() => {
+    if (type === selectedQuery?.kind) {
+      return selectedQuery;
+    }
+    return null;
   });
 
   let numberOfPages = $derived(Math.ceil(count / limit));
@@ -110,24 +125,24 @@
 
   let queryQuery: string = $derived.by(() => {
     if (!advanced) {
-      if (!selectedQuery) {
+      if (!queryForFetch) {
         return searchTerm ? `"${searchTerm}" search ${searchColumnName} as` : "";
       } else {
-        return `${selectedQuery.query} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
+        return `${queryForFetch.query} ${searchTerm ? `"${searchTerm}" search ${searchColumnName} as and` : ""}`;
       }
     } else {
-      if (!selectedQuery) {
+      if (!queryForFetch) {
         return searchTerm || "";
       } else {
-        return `${selectedQuery.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
+        return `${queryForFetch.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
       }
     }
   });
 
   let columns = $derived.by(() => {
     let tmpColumns: string[];
-    if (selectedQuery) {
-      tmpColumns = selectedQuery.columns;
+    if (queryForFetch) {
+      tmpColumns = queryForFetch.columns;
     } else {
       if (type === SEARCHTYPES.ADVISORY) {
         tmpColumns = SEARCHPAGECOLUMNS.ADVISORY;
@@ -177,9 +192,9 @@
       newURL = newURL.concat(`&searchTerm=${encodeURIComponent(searchTerm)}`);
     }
 
-    if (searchParameters.type && searchParameters.type !== SEARCHTYPES.ADVISORY) {
+    if (searchParameters.type && searchParameters.type !== selectedQuery?.kind) {
       newURL = newURL.concat(`&type=${encodeURIComponent(searchParameters.type)}`);
-    } else if (!Object.keys(searchParameters).includes("type") && type !== SEARCHTYPES.ADVISORY) {
+    } else if (!Object.keys(searchParameters).includes("type") && type !== selectedQuery?.kind) {
       newURL = newURL.concat(`&type=${encodeURIComponent(type)}`);
     }
 
@@ -263,7 +278,7 @@
     if (queryQuery) {
       queryParam = `query=${queryQuery}`;
     }
-    const orderByParam = selectedQuery ? (query?.orders ?? []) : orderBy;
+    const orderByParam = queryForFetch ? (query?.orders ?? []) : orderBy;
     let fetchColumns = [...$state.snapshot(columns)];
     let requiredColumns = ["id", "tracking_id", "publisher"];
     for (let c of requiredColumns) {
@@ -275,7 +290,7 @@
     const columnsParam = `columns=${fetchColumns.join(" ")}${searchColumn}`;
     appStore.setSearchOffset(offset);
 
-    if ((selectedQuery && selectedQuery.kind === SEARCHTYPES.EVENT) || type === SEARCHTYPES.EVENT) {
+    if ((queryForFetch && queryForFetch.kind === SEARCHTYPES.EVENT) || type === SEARCHTYPES.EVENT) {
       URLWithoutOffsetAndLimit = encodeURI(
         `/api/events?${queryParam}&count=1&orders=${orderByParam.join(" ")}&${columnsParam}`
       );
@@ -300,7 +315,7 @@
     if (response.ok) {
       ({ count, documents } = response.content);
       if (
-        (selectedQuery && selectedQuery.kind === SEARCHTYPES.EVENT) ||
+        (queryForFetch && queryForFetch.kind === SEARCHTYPES.EVENT) ||
         type === SEARCHTYPES.EVENT
       ) {
         count = response.content.count;
@@ -322,7 +337,8 @@
     requestOngoing = false;
   }
 
-  const filterOrderCriteria = (orders: string[], possibleOrders: string[]) => {
+  const filterOrderCriteria = (orders: string[] | undefined, possibleOrders: string[]) => {
+    if (!orders) return [];
     return orders.filter((criterium) => {
       if (criterium.charAt(0) === "-") {
         criterium = criterium.slice(1);
@@ -350,6 +366,7 @@
 
 <div class="mb-8 flex flex-wrap justify-between gap-4">
   <Queries
+    selectedType={type}
     onQuerySelected={(id: number | undefined) => {
       const newParameters: SearchParameters = {
         currentPage: 1,
@@ -361,35 +378,33 @@
       setSearchParameters(newParameters);
     }}
   ></Queries>
-  {#if !selectedQuery}
-    <TypeToggle
-      selected={type}
-      eventButtonVisible={appStore.isEditor() ||
-        appStore.isReviewer() ||
-        appStore.isAdmin() ||
-        appStore.isAuditor()}
-      onSelect={(newType: SEARCHTYPES) => {
-        appStore.setSearchType(newType);
-        appStore.setSearchParametersForType(type, getCurrentSearchParameters());
-        if (query) {
-          query.queryType = newType;
-          if (newType === SEARCHTYPES.ADVISORY) {
-            query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
-          } else if (newType === SEARCHTYPES.DOCUMENT) {
-            query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
-          }
+  <TypeToggle
+    selected={type}
+    eventButtonVisible={appStore.isEditor() ||
+      appStore.isReviewer() ||
+      appStore.isAdmin() ||
+      appStore.isAuditor()}
+    onSelect={(newType: SEARCHTYPES) => {
+      appStore.setSearchType(newType);
+      appStore.setSearchParametersForType(type, getCurrentSearchParameters());
+      if (query) {
+        query.queryType = newType;
+        if (newType === SEARCHTYPES.ADVISORY) {
+          query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.ADVISORY);
+        } else if (newType === SEARCHTYPES.DOCUMENT) {
+          query.orders = filterOrderCriteria(query.orders, SEARCHPAGECOLUMNS.DOCUMENT);
         }
-        const newParameters = $state.snapshot(appStore.getSearchParametersForType(newType));
+      }
+      const newParameters = $state.snapshot(appStore.getSearchParametersForType(newType));
+      searchTermInputValue = "";
+      if (newParameters) {
         searchTermInputValue = "";
-        if (newParameters) {
-          searchTermInputValue = "";
-          setSearchParameters(newParameters);
-        } else {
-          setSearchParameters({ searchTerm: "", type: newType });
-        }
-      }}
-    ></TypeToggle>
-  {/if}
+        setSearchParameters(newParameters);
+      } else {
+        setSearchParameters({ searchTerm: "", type: newType });
+      }
+    }}
+  ></TypeToggle>
 </div>
 <div class="mb-3 flex flex-row flex-wrap items-center gap-4">
   <div class="flex items-center gap-1">
