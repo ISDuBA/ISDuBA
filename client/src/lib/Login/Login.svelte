@@ -10,12 +10,11 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
-  import { Button, Heading, Card } from "flowbite-svelte";
+  import { Button, DarkMode, Heading, Card } from "flowbite-svelte";
   import { A, P, Li, List } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import DarkMode from "flowbite-svelte/DarkMode.svelte";
 
   let viewError: ErrorDetails | null = $state(null);
   let versionError: ErrorDetails | null = $state(null);
