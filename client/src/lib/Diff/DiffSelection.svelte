@@ -23,7 +23,7 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { request } from "$lib/request";
   import { getPublisher } from "$lib/publisher";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";

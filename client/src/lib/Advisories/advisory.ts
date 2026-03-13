@@ -10,7 +10,7 @@ import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
 import { getAccessToken, request } from "$lib/request";
 import { appStore } from "$lib/store.svelte";
 import type { WorkflowState } from "$lib/workflow";
-import { push } from "svelte-spa-router";
+import { push } from "$routes/router.svelte";
 
 type StateChange = {
   publisher: string;
@@ -150,5 +150,9 @@ const fetchDocumentSSVC = async (
   return undefined;
 };
 
-export { updateMultipleStates, loadAdvisoryVersions, fetchDocumentSSVC };
+const getAdvisoryLink = (doc: any) =>
+  `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
+const getAdvisoryAnchorLink = (doc: any) => "#" + getAdvisoryLink(doc);
+
+export { updateMultipleStates, loadAdvisoryVersions, fetchDocumentSSVC, getAdvisoryAnchorLink };
 export type { AdvisoryVersion };

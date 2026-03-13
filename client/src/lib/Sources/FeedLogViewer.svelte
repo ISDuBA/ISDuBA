@@ -278,10 +278,18 @@
         {#each realLogLevels as level}
           <CCheckbox
             checked={selectedLogLevels.includes(level.value)}
-            onClicked={() => {
-              toggleLevel(level.value);
-            }}>{level.name}</CCheckbox
+            onClicked={(event) => {
+              // Prevent the default behavior because else if we uncheck the last box its state will be checked but it
+              // won't display this state.
+              event.preventDefault();
+              // The timeout is necessary because otherwise the tick of the checkbox will not be toggled.
+              setTimeout(() => {
+                toggleLevel(level.value);
+              }, 0);
+            }}
           >
+            {level.name}
+          </CCheckbox>
         {/each}
       </div>
     </div>

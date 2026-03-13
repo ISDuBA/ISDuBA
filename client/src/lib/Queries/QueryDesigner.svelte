@@ -27,7 +27,8 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onMount, untrack } from "svelte";
-  import { push, querystring } from "svelte-spa-router";
+  import { querystring } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { parse } from "qs";
   import { appStore } from "$lib/store.svelte";
   import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";
@@ -400,7 +401,7 @@
       </div>
       <div class="flex flex-row items-center gap-x-2">
         <span>Default:</span>
-        <CCheckbox bind:checked={defaultQuery}></CCheckbox>
+        <CCheckbox bind:checked={defaultQuery} disabled={!isAllowedToEdit}></CCheckbox>
       </div>
     </div>
     <div class="mb-6">

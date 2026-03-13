@@ -10,40 +10,45 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
+  import { querystring as qs } from "svelte-spa-router";
+  import { parse } from "qs";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { Button, ButtonGroup } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { push } from "svelte-spa-router";
-  import { type Query } from "$lib/Queries/query";
+  import { push } from "$routes/router.svelte";
   import { truncate } from "$lib/utils";
+  import {
+    defaultQuery as defaultQ,
+    queryState,
+    invisibleQueries,
+    sortedQueries
+  } from "./search.svelte";
+  import type { Query } from "$lib/Queries/query";
 
-  let queries: any[] = $state([]);
-  let sortedQueries = $derived(
-    queries.toSorted((a: any, b: any) => {
-      if (a.global && !b.global) {
-        return -1;
-      } else if (!a.global && b.global) {
-        return 1;
-      }
-      return 0;
-    })
-  );
-  let selectedIndex = $state(-2);
   interface Props {
-    selectedQuery?: boolean;
-    queryString: any;
-    defaultQuery: any;
-    onQuerySelected: (query: any) => void;
+    onQuerySelected: (id: number | undefined) => void;
   }
 
-  let {
-    selectedQuery = $bindable(false),
-    defaultQuery = $bindable(null),
-    queryString,
-    onQuerySelected
-  }: Props = $props();
-  let ignoredQueries: Query[] = $state([]);
+  let { onQuerySelected }: Props = $props();
+
+  let queryString: any = $derived($qs ? parse($qs) : undefined);
+
+  let defaultQuery = $derived(defaultQ());
+
+  let queryID: number | undefined = $derived(
+    queryString?.queryID ? Number(queryString.queryID) : undefined
+  );
+  let selectedQuery: Query | null = $derived.by(() => {
+    const state = $state.snapshot(queryState);
+    const queries = state.queries;
+    if (queries === null) return null;
+    const queryByID = $state.snapshot(queries).find((q) => q.id === queryID);
+    if (queryByID) return queryByID;
+    return defaultQuery ?? null;
+  });
+
+  let selectedInvisibleQuery = $derived(invisibleQueries().find((q) => q.id === queryID));
   let errorMessage: ErrorDetails | null = $state(null);
   let advancedQueryErrorMessage: ErrorDetails | null = null;
   const globalQueryButtonColor = "primary";
@@ -68,7 +73,7 @@
   const fetchIgnored = async () => {
     const response = await request(`/api/queries/ignore`, "GET");
     if (response.ok) {
-      ignoredQueries = response.content;
+      queryState.ignoredQueries = response.content;
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load queries.`, response);
     }
@@ -76,70 +81,36 @@
 
   onMount(async () => {
     fetchIgnored();
+    queryState.queries = [];
+    queryState.ignoredQueries = [];
     const response = await request("/api/queries", "GET");
     if (response.ok) {
-      queries = response.content.filter((q: Query) => !q.dashboard && !q.default_query);
-      let defaultQueries = response.content.filter((q: Query) => q.default_query);
-      if (defaultQueries?.length > 0) {
-        defaultQuery = defaultQueries[0];
-      }
+      queryState.queries = response.content;
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
-    if (queryString?.query) {
-      // Need to wait until sortedQueries is filled.
-      setTimeout(() => {
-        const index = sortedQueries.findIndex((q) => q.id === Number(queryString.query));
-
-        // Probably a dashboard query
-        if (index === -1) {
-          const query = response.content.filter((q: any) => `${q.id}` === queryString.query)?.[0];
-          selectedIndex = -2;
-          currentQueryTitle = query.name;
-          if (query) {
-            onQuerySelected(query);
-            selectedQuery = true;
-          }
-        } else {
-          selectQuery(index);
-        }
-      }, 100);
-    }
   });
 
-  let currentQueryTitle: string | undefined = $state();
-
-  const selectQuery = (index: number) => {
-    if (selectedIndex === index || index === -1) {
-      selectedIndex = -1;
-      currentQueryTitle = undefined;
-      selectedQuery = false;
-    } else {
-      selectedIndex = index;
-      onQuerySelected(sortedQueries[selectedIndex]);
-      currentQueryTitle = sortedQueries[selectedIndex].name;
-      selectedQuery = true;
-    }
+  const selectQuery = (id: number | undefined) => {
+    onQuerySelected(id);
   };
 </script>
 
 <div class="flex flex-col flex-wrap gap-4">
   <div class="flex items-center gap-x-4">
     <ButtonGroup class="h-7 flex-wrap">
-      {#each sortedQueries as query, index}
-        {#if !ignoredQueries.includes(query.id)}
-          <Button
-            color="light"
-            onclick={() => selectQuery(index)}
-            class={getClass(query.global, index === selectedIndex)}
-          >
-            <span title={query.description}>{truncate(query.name, 30)}</span>
-          </Button>
-        {/if}
+      {#each sortedQueries() as query}
+        <Button
+          color="light"
+          onclick={() => selectQuery(query.id === queryID ? undefined : query.id)}
+          class={getClass(query.global, query.id === selectedQuery?.id)}
+        >
+          <span title={query.description}>{truncate(query.name, 30)}</span>
+        </Button>
       {/each}
-      {#if currentQueryTitle && selectedIndex < 0}
-        <Button color="light" onclick={() => selectQuery(-1)} class={getClass(true, true)}>
-          <span>{truncate(currentQueryTitle, 30)}</span>
+      {#if selectedInvisibleQuery}
+        <Button color="light" onclick={() => selectQuery(undefined)} class={getClass(true, true)}>
+          <span>{truncate(selectedInvisibleQuery.name, 30)}</span>
         </Button>
       {/if}
       <Button

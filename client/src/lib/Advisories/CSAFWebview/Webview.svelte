@@ -19,7 +19,7 @@
   import References from "./references/References.svelte";
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
   import FakeButton from "./FakeButton.svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
 
   import { Tabs, TabItem } from "flowbite-svelte";
   import { onMount, tick } from "svelte";
