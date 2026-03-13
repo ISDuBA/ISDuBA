@@ -64,8 +64,8 @@
   let selectedQuery: Query | null = $derived.by(() => {
     if (queries === null) return null;
     const queryByID = $state.snapshot(queries).find((q) => q.id === queryID);
-    if (queryByID) return queryByID;
-    return defaultQuery ?? null;
+    if (queryByID) return $state.snapshot(queryByID);
+    return $state.snapshot(defaultQuery) ?? null;
   });
 
   let numberOfPages = $derived(Math.ceil(count / limit));
