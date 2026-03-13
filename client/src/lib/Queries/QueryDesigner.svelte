@@ -401,7 +401,7 @@
       </div>
       <div class="flex flex-row items-center gap-x-2">
         <span>Default:</span>
-        <CCheckbox bind:checked={defaultQuery}></CCheckbox>
+        <CCheckbox bind:checked={defaultQuery} disabled={!isAllowedToEdit}></CCheckbox>
       </div>
     </div>
     <div class="mb-6">
