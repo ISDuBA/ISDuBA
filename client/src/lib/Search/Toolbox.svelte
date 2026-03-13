@@ -17,7 +17,7 @@
   let docB = $derived(appStore.state.app.diff.docB);
 </script>
 
-<div class={`sticky bottom-0 left-0 flex translate-y-6 flex-col items-start justify-center`}>
+<div class="sticky bottom-0 left-0 flex translate-y-6 flex-col items-start justify-center">
   <div class="flex">
     <Button
       onclick={appStore.toggleToolbox}
