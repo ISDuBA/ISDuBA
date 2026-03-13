@@ -26,7 +26,7 @@
 </script>
 
 <button class={buttonClass} onclick={(event: any) => onClick(event)}>
-  <CBadge title={tooltip} class="flex w-fit gap-1" {color}>
+  <CBadge showHoverEffect={false} title={tooltip} class="flex w-fit gap-1" {color}>
     {@render icon()}
     <span>{label}</span>
   </CBadge>

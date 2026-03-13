@@ -24,6 +24,7 @@
     large?: boolean;
     dismissable?: boolean;
     border?: boolean;
+    showHoverEffect?: boolean;
     rounded?: boolean;
     transition?: TransitionFunc;
     params?: object;
@@ -37,6 +38,7 @@
     large = false,
     dismissable = false,
     border = false,
+    showHoverEffect = true,
     rounded = false,
     transition = fade,
     params = {},
@@ -103,7 +105,7 @@
       baseClass,
       large ? "text-sm" : "text-xs",
       border ? `border ${borderedColors[color]}` : colors[color],
-      hoverColors[color],
+      showHoverEffect ? hoverColors[color] : "",
       rounded ? "rounded-full" : "rounded",
       `${restProps.class}`
     )

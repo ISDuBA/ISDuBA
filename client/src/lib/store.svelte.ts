@@ -11,7 +11,7 @@ import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./wo
 import { MESSAGE } from "./Messages/messagetypes";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
-import type { SearchParameters } from "./Search/search";
+import type { SearchParameters } from "./Search/search.svelte";
 import { SEARCHTYPES } from "./Queries/query";
 
 type ErrorMessage = {
