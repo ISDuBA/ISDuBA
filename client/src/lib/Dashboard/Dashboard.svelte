@@ -20,6 +20,8 @@
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceEvents from "./SourceEvents.svelte";
 
+  const uid = $props.id();
+
   let filteredQueries: any[] = $state([]);
   let loadIgnoredError: ErrorDetails | null = $state(null);
   let loadQueryError: ErrorDetails | null = $state(null);
@@ -75,7 +77,7 @@
 
 {#if appStore.state.app.isUserLoggedIn}
   <div class="mt-8 mb-8 flex flex-row flex-wrap gap-10">
-    {#each filteredQueries as query}
+    {#each filteredQueries as query, i (`dashboard-${uid}-${i}`)}
       {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(query.kind)}
         <AdvisoryQuery storedQuery={query}></AdvisoryQuery>
       {:else}

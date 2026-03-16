@@ -286,7 +286,7 @@
         fetchColumns.push(c);
       }
     }
-    let URLWithoutOffsetAndLimit = "";
+    let URLWithoutOffsetAndLimit: string;
     const columnsParam = `columns=${fetchColumns.join(" ")}${searchColumn}`;
     appStore.setSearchOffset(offset);
 

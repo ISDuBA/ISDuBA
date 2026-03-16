@@ -33,6 +33,8 @@
 
   let { onQuerySelected, selectedType }: Props = $props();
 
+  const uid = $props.id();
+
   let queryString: any = $derived($qs ? parse($qs) : undefined);
 
   let defaultQuery = $derived(defaultQ());
@@ -100,7 +102,7 @@
 <div class="flex flex-col flex-wrap gap-4">
   <div class="flex items-center gap-x-4">
     <ButtonGroup class="h-7 flex-wrap">
-      {#each sortedQueries() as query}
+      {#each sortedQueries() as query, index (`queries-${uid}-${index}`)}
         <Button
           color="light"
           onclick={() => selectQuery(query.id === queryID ? undefined : query.id)}
