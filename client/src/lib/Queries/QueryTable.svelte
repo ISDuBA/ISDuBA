@@ -28,7 +28,7 @@
     title?: string;
     queries?: Query[] | undefined;
     newQueries?: Query[];
-    ignoredQueries?: number[] | null;
+    ignoredQueries?: number[] | undefined;
     isAllowedToEdit?: boolean;
     isAllowedToClone?: boolean;
     children?: Snippet;
@@ -39,7 +39,7 @@
     title = "",
     queries = [],
     newQueries = [],
-    ignoredQueries = null,
+    ignoredQueries = undefined,
     isAllowedToEdit = false,
     isAllowedToClone = true,
     children
@@ -108,7 +108,7 @@
     isLoading = true;
     if (ignoredQueries) {
       unsetErrors();
-      let newIgnored: number[] | null = null;
+      let newIgnored: number[] | undefined;
       ({ ignoredQueries: newIgnored, errorMessage: ignoreErrorMessage } = await setIgnored(
         id,
         isChecked
@@ -192,10 +192,10 @@
           <div>Dashboard</div>
         </TableHeadCell>
         <TableHeadCell class={tablePadding} onclick={() => {}}>
-          <div title={"Show on your personal dashboard"}>Hide</div>
+          <div title="Show on your personal dashboard">Hide</div>
         </TableHeadCell>
         <TableHeadCell padding={tablePadding} onclick={() => {}}>
-          <div title={"Use as default query"}>Default query</div>
+          <div title="Use as default query">Default query</div>
         </TableHeadCell>
         <TableHeadCell></TableHeadCell>
       </TableHead>
@@ -240,7 +240,7 @@
                     changeIgnored(query.id, !ignoredQueries?.includes(query.id));
                   }}
                   disabled={!ignoredQueries || isLoading}
-                  checked={ignoredQueries !== null && ignoredQueries.includes(query.id)}
+                  checked={ignoredQueries !== undefined && ignoredQueries.includes(query.id)}
                 ></CCheckbox>
               </TableBodyCell>
               <TableBodyCell class={tdClass}>

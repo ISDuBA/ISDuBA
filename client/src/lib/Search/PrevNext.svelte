@@ -16,6 +16,8 @@
   import { SEARCHTYPES } from "$lib/Queries/query";
   import { untrack } from "svelte";
 
+  const uid = $props.id();
+
   const indentedSidebarItemClass = `${sidebarItemLinkClass} !py-1 ps-10`;
 
   let loading = $state(false);
@@ -161,7 +163,7 @@
   {#if leading > 0}
     {@render leadingFollowingIndicator(`${loading ? "" : leading} ...`)}
   {/if}
-  {#each searchResults as result, i}
+  {#each searchResults as result, i (`prev-next-${uid}-${i}`)}
     {#if indices.includes(i)}
       {@const doc = result}
       {#if loading}

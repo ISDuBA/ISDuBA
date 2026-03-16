@@ -16,6 +16,9 @@
   }
 
   let { productNames }: Props = $props();
+
+  const uid = $props.id();
+
   productNames = productNames
     ? productNames.sort((p1: any, p2: any) => {
         if (p1.name < p2.name) return -1;
@@ -26,7 +29,7 @@
 </script>
 
 {#if productNames}
-  {#each productNames as product}
+  {#each productNames as product, i (`productnames-${uid}-${i}`)}
     <ProductName {product} />
   {/each}
 {/if}

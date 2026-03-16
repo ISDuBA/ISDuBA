@@ -24,13 +24,16 @@
     invisibleQueries,
     sortedQueries
   } from "./search.svelte";
-  import type { Query } from "$lib/Queries/query";
+  import type { Query, SEARCHTYPES } from "$lib/Queries/query";
 
   interface Props {
     onQuerySelected: (id: number | undefined) => void;
+    selectedType: SEARCHTYPES;
   }
 
-  let { onQuerySelected }: Props = $props();
+  let { onQuerySelected, selectedType }: Props = $props();
+
+  const uid = $props.id();
 
   let queryString: any = $derived($qs ? parse($qs) : undefined);
 
@@ -99,11 +102,14 @@
 <div class="flex flex-col flex-wrap gap-4">
   <div class="flex items-center gap-x-4">
     <ButtonGroup class="h-7 flex-wrap">
-      {#each sortedQueries() as query}
+      {#each sortedQueries() as query, index (`queries-${uid}-${index}`)}
         <Button
           color="light"
           onclick={() => selectQuery(query.id === queryID ? undefined : query.id)}
-          class={getClass(query.global, query.id === selectedQuery?.id)}
+          class={getClass(
+            query.global,
+            query.id === selectedQuery?.id && selectedType === query.kind
+          )}
         >
           <span title={query.description}>{truncate(query.name, 30)}</span>
         </Button>
@@ -125,7 +131,7 @@
         <i class="bx bx-cog"></i>
       </Button>
     </ButtonGroup>
-    {#if sortedQueries.length === 0}
+    {#if sortedQueries().length === 0}
       <span class="text-xs text-gray-400">No queries defined yet</span>
     {/if}
   </div>
