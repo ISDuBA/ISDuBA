@@ -21,7 +21,6 @@ type AdvancedSQLBuilder struct {
 	parser       *AdvancedParser
 	orderFields  []string
 	fields       []string
-	whereClause  string
 	order        string
 	Replacements []any
 	replToIdx    map[string]int
@@ -29,27 +28,23 @@ type AdvancedSQLBuilder struct {
 }
 
 type statementMode interface {
-	projection(b *strings.Builder, name string, mode ParserMode)
-	from(b *strings.Builder, sb *AdvancedSQLBuilder)
+	projection(sb *AdvancedSQLBuilder, b *strings.Builder, name string)
+	from(sb *AdvancedSQLBuilder, b *strings.Builder)
+	accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
+	searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 }
 
 type (
 	classicMode struct{}
-	cteMode     struct{}
+	cteMode     struct{ classicMode }
 )
 
-func (classicMode) projection(b *strings.Builder, name string, mode ParserMode) {
+func (classicMode) projectionCommon(
+	sb *AdvancedSQLBuilder, b *strings.Builder,
+	name string,
+	versionsCount, commentsCountDocuments string,
+) {
 	switch name {
-	case "tracking_id", "publisher":
-		b.WriteString("advisories.")
-		b.WriteString(name)
-		b.WriteString(` AS `)
-		b.WriteString(name)
-	case "id":
-		b.WriteString("documents.")
-		b.WriteString(name)
-		b.WriteString(` AS `)
-		b.WriteString(name)
 	case "state", "event", "tracking_status":
 		b.WriteString(name)
 		b.WriteString("::text")
@@ -60,7 +55,7 @@ func (classicMode) projection(b *strings.Builder, name string, mode ParserMode) 
 	case "ssvc":
 		b.WriteString("ssvc_current.ssvc AS ssvc")
 	case "comments":
-		switch mode {
+		switch sb.mode() {
 		case AdvisoryMode:
 			b.WriteString(name)
 		case DocumentMode:
@@ -73,7 +68,25 @@ func (classicMode) projection(b *strings.Builder, name string, mode ParserMode) 
 	}
 }
 
-func (cteMode) projection(b *strings.Builder, name string, mode ParserMode) {
+func (cm classicMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, name string) {
+	switch name {
+	case "tracking_id", "publisher":
+		b.WriteString("advisories.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "id":
+		b.WriteString("documents.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	default:
+		cm.projectionCommon(sb, b, name,
+			versionsCountClassic, commentsCountDocumentsClassic)
+	}
+}
+
+func (cm cteMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, name string) {
 	switch name {
 	case "tracking_id", "publisher":
 		b.WriteString("docads.")
@@ -86,11 +99,12 @@ func (cteMode) projection(b *strings.Builder, name string, mode ParserMode) {
 		b.WriteString(` AS `)
 		b.WriteString(name)
 	default:
-		classicMode{}.projection(b, name, mode)
+		cm.projectionCommon(sb, b, name,
+			versionsCountCTE, commentsCountDocumentsCTE)
 	}
 }
 
-func (classicMode) from(b *strings.Builder, sb *AdvancedSQLBuilder) {
+func (classicMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode, DocumentMode:
 		b.WriteString(`documents ` +
@@ -115,7 +129,7 @@ func (classicMode) from(b *strings.Builder, sb *AdvancedSQLBuilder) {
 	}
 }
 
-func (cteMode) from(b *strings.Builder, sb *AdvancedSQLBuilder) {
+func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode, DocumentMode:
 		b.WriteString(`docads`)
@@ -135,6 +149,85 @@ func (cteMode) from(b *strings.Builder, sb *AdvancedSQLBuilder) {
 	if sb.usedSources.contains(textTable) {
 		b.WriteString(` JOIN documents_texts ON docads.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
+	}
+}
+
+func (classicMode) accessWhereCommon(
+	sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder,
+	versionsCount, commentsCountDocuments string,
+) {
+	switch column := e.stringValue; column {
+	case "versions":
+		b.WriteString(versionsCount)
+	case "comments":
+		switch sb.mode() {
+		case AdvisoryMode:
+			b.WriteString(column)
+		case DocumentMode:
+			b.WriteString(commentsCountDocuments)
+		case EventMode:
+			b.WriteString(commentsCountEvents)
+		}
+	case "event_state":
+		b.WriteString("events_log.state")
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc")
+	default:
+		b.WriteString(column)
+	}
+}
+
+func (cm classicMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch column := e.stringValue; column {
+	case "id":
+		b.WriteString("documents.")
+		b.WriteString(column)
+	case "tracking_id", "publisher":
+		b.WriteString("advisories.")
+		b.WriteString(column)
+	default:
+		cm.accessWhereCommon(sb, e, b,
+			versionsCountClassic, commentsCountDocumentsClassic)
+	}
+}
+
+func (cm cteMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch column := e.stringValue; column {
+	case "id":
+		b.WriteString("docads.")
+		b.WriteString(column)
+	case "tracking_id", "publisher":
+		b.WriteString("docads.")
+		b.WriteString(column)
+	default:
+		cm.classicMode.accessWhereCommon(sb, e, b,
+			versionsCountCTE, commentsCountDocumentsCTE)
+	}
+}
+
+func (classicMode) searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode, DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
+			"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
+			"WHERE txt ILIKE $%d "+
+			"AND documents_texts.documents_id = documents.id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	case EventMode:
+		// TODO clarify how to handle event search
+	}
+}
+
+func (cteMode) searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode, DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
+			"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
+			"WHERE txt ILIKE $%d "+
+			"AND documents_texts.documents_id = docads.id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	case EventMode:
+		// TODO clarify how to handle event search
 	}
 }
 
@@ -207,14 +300,8 @@ func (sb *AdvancedSQLBuilder) alias(name string) *Expr {
 }
 
 // createWhere construct a WHERE clause for a given expression.
-func (sb *AdvancedSQLBuilder) createWhere() string {
-	if sb.whereClause != "" {
-		return sb.whereClause
-	}
-	var b strings.Builder
-	sb.whereRecurse(sb.expr, &b)
-	sb.whereClause = b.String()
-	return sb.whereClause
+func (sb *AdvancedSQLBuilder) createWhere(b *strings.Builder, sm statementMode) {
+	sb.whereRecurse(sb.expr, b, sm)
 }
 
 func (sb *AdvancedSQLBuilder) mode() ParserMode {
@@ -224,25 +311,7 @@ func (sb *AdvancedSQLBuilder) mode() ParserMode {
 	return DocumentMode
 }
 
-func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
-
-	// Handle alias
-	if e.alias == "" {
-		return
-	}
-	switch sb.mode() {
-	case AdvisoryMode, DocumentMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
-			"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
-			"WHERE txt ILIKE $%d "+
-			"AND documents_texts.documents_id = documents.id)",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-	case EventMode:
-		// TODO clarify how to handle event search
-	}
-}
-
-func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	switch sb.mode() {
 	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
@@ -261,7 +330,7 @@ func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *AdvancedSQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) involvedWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	switch sb.mode() {
 	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
@@ -276,9 +345,9 @@ func (sb *AdvancedSQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *AdvancedSQLBuilder) castWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) castWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString("CAST(")
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(" AS ")
 	switch e.valueType {
 	case stringType:
@@ -341,61 +410,33 @@ func (sb *AdvancedSQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *AdvancedSQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string) {
+func (sb *AdvancedSQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string, sm statementMode) {
 	b.WriteByte('(')
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(op)
-	sb.whereRecurse(e.children[1], b)
+	sb.whereRecurse(e.children[1], b, sm)
 	b.WriteByte(')')
 }
 
-func (sb *AdvancedSQLBuilder) notWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) notWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString("(NOT ")
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteByte(')')
 }
 
-func (sb *AdvancedSQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
-	switch column := e.stringValue; column {
-	case "id":
-		b.WriteString("documents.")
-		b.WriteString(column)
-	case "tracking_id", "publisher":
-		b.WriteString("advisories.")
-		b.WriteString(column)
-	case "versions":
-		b.WriteString(versionsCount)
-	case "comments":
-		switch sb.mode() {
-		case AdvisoryMode:
-			b.WriteString(column)
-		case DocumentMode:
-			b.WriteString(commentsCountDocuments)
-		case EventMode:
-			b.WriteString(commentsCountEvents)
-		}
-	case "event_state":
-		b.WriteString("events_log.state")
-	case "ssvc":
-		b.WriteString("ssvc_current.ssvc")
-	default:
-		b.WriteString(column)
-	}
-}
-
-func (sb *AdvancedSQLBuilder) nowWhere(_ *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) nowWhere(_ *Expr, b *strings.Builder, _ statementMode) {
 	b.WriteString("current_timestamp")
 }
 
-func (sb *AdvancedSQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) ilikeWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteByte('(')
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(` ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[1], b)
+	sb.whereRecurse(e.children[1], b, sm)
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (sb *AdvancedSQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_names AS (SELECT jsonb_path_query(` +
 		`document, '$.product_tree.**.product.name')::int num ` +
@@ -404,10 +445,11 @@ func (sb *AdvancedSQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
 		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
 		`WHERE dts.documents_id = documents.id AND ` +
 		`unique_texts.txt ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(ilikeSuffix + `)`)
 }
-func (sb *AdvancedSQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
+
+func (sb *AdvancedSQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_ids AS (SELECT jsonb_path_query(` +
 		`document, '$.product_tree.**.product.product_id')::int num ` +
@@ -416,7 +458,7 @@ func (sb *AdvancedSQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 		`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
 		`WHERE dts.documents_id = documents.id AND ` +
 		`unique_texts.txt ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(ilikeSuffix + `)`)
 	/*
 		b.WriteString(`EXISTS (` +
@@ -443,58 +485,58 @@ func (sb *AdvancedSQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
 	*/
 }
 
-func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
+func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm statementMode) {
 	if e == nil {
 		return
 	}
 	b.WriteByte('(')
 	switch e.exprType {
 	case access:
-		sb.accessWhere(e, b)
+		sm.accessWhere(sb, e, b)
 	case cnst:
 		sb.cnstWhere(e, b)
 	case cast:
-		sb.castWhere(e, b)
+		sb.castWhere(e, b, sm)
 	case eq:
-		sb.binaryWhere(e, b, "=")
+		sb.binaryWhere(e, b, "=", sm)
 	case ne:
-		sb.binaryWhere(e, b, "<>")
+		sb.binaryWhere(e, b, "<>", sm)
 	case lt:
-		sb.binaryWhere(e, b, "<")
+		sb.binaryWhere(e, b, "<", sm)
 	case gt:
-		sb.binaryWhere(e, b, ">")
+		sb.binaryWhere(e, b, ">", sm)
 	case le:
-		sb.binaryWhere(e, b, "<=")
+		sb.binaryWhere(e, b, "<=", sm)
 	case ge:
-		sb.binaryWhere(e, b, ">=")
+		sb.binaryWhere(e, b, ">=", sm)
 	case not:
-		sb.notWhere(e, b)
+		sb.notWhere(e, b, sm)
 	case and:
-		sb.binaryWhere(e, b, "AND")
+		sb.binaryWhere(e, b, "AND", sm)
 	case or:
-		sb.binaryWhere(e, b, "OR")
+		sb.binaryWhere(e, b, "OR", sm)
 	case search:
-		sb.searchWhere(e, b)
+		sm.searchWhere(sb, e, b)
 	case mentioned:
-		sb.mentionedWhere(e, b)
+		sb.mentionedWhere(e, b, sm)
 	case involved:
-		sb.involvedWhere(e, b)
+		sb.involvedWhere(e, b, sm)
 	case ilike:
-		sb.ilikeWhere(e, b)
+		sb.ilikeWhere(e, b, sm)
 	case ilikePName:
-		sb.ilikePNameWhere(e, b)
+		sb.ilikePNameWhere(e, b, sm)
 	case ilikePID:
-		sb.ilikePIDWhere(e, b)
+		sb.ilikePIDWhere(e, b, sm)
 	case now:
-		sb.nowWhere(e, b)
+		sb.nowWhere(e, b, sm)
 	case add:
-		sb.binaryWhere(e, b, "+")
+		sb.binaryWhere(e, b, "+", sm)
 	case sub:
-		sb.binaryWhere(e, b, "-")
+		sb.binaryWhere(e, b, "-", sm)
 	case mul:
-		sb.binaryWhere(e, b, "*")
+		sb.binaryWhere(e, b, "*", sm)
 	case div:
-		sb.binaryWhere(e, b, "/")
+		sb.binaryWhere(e, b, "/", sm)
 	}
 	b.WriteByte(')')
 }
@@ -512,10 +554,6 @@ func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
 	return idx
 }
 
-func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder, sm statementMode) {
-	sm.from(b, sb)
-}
-
 // CreateCountSQL returns an SQL count statement to count
 // the number of rows which are possible to fetch by the
 // given filter.
@@ -528,9 +566,9 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 		sb.prefixCTE(&b)
 	}
 	b.WriteString("SELECT count(*) FROM ")
-	sb.createFrom(&b, sm)
+	sm.from(sb, &b)
 	b.WriteString(" WHERE ")
-	b.WriteString(sb.createWhere())
+	sb.createWhere(&b, sm)
 	return b.String()
 }
 
@@ -569,9 +607,9 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 	b.WriteString("SELECT ")
 	sb.createProjectionsWithCasts(&b, sm)
 	b.WriteString(" FROM ")
-	sb.createFrom(&b, sm)
+	sm.from(sb, &b)
 	b.WriteString(" WHERE ")
-	b.WriteString(sb.createWhere())
+	sb.createWhere(&b, sm)
 
 	if order := sb.createOrder(); order != "" {
 		b.WriteString(" ORDER BY ")
@@ -640,7 +678,7 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 		}
 		if alias := sb.alias(name); alias != nil {
 			txt := fmt.Sprintf("txt ILIKE $%d",
-				sb.replacementIndex(alias.stringValue))
+				sb.replacementIndex(alias.stringValue)+1)
 			b.WriteString(`CASE WHEN length(`)
 			b.WriteString(txt)
 			b.WriteString(`)<= 200 THEN `)
@@ -651,7 +689,7 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 			b.WriteString(name)
 			continue
 		}
-		sm.projection(b, name, sb.mode())
+		sm.projection(sb, b, name)
 	}
 }
 
