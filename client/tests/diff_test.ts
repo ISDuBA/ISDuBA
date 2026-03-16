@@ -12,6 +12,12 @@ import { test } from "./fixtures";
 test("Diff toolbox is working", async ({ page }) => {
   await page.goto("/#/search");
   await page.getByRole("button", { name: "Diff" }).click();
+
+  // Delete old temporary documents which might exist from parallel tests
+  for (const button of await page.getByTitle("Delete temporary document").all()) {
+    await button.click();
+  }
+
   await expect(
     page.getByText("Select a document or upload local ones.", { exact: true }).first()
   ).toBeVisible();
