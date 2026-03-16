@@ -28,7 +28,7 @@
     "@sveltejs/adapter-auto": "^7.0.1",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.53.4",
-    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@types/eslint": "9.6.1",
     "@types/node": "^25.3.5",
     "@types/qs": "^6.15.0",
