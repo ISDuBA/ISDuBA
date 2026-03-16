@@ -21,7 +21,6 @@ type AdvancedSQLBuilder struct {
 	parser       *AdvancedParser
 	orderFields  []string
 	fields       []string
-	order        string
 	Replacements []any
 	replToIdx    map[string]int
 	usedSources  columnSource
@@ -36,6 +35,7 @@ type statementMode interface {
 	involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 	ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 	ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
+	order(sb *AdvancedSQLBuilder, b *strings.Builder, name string)
 }
 
 type (
@@ -359,6 +359,43 @@ func (cm cteMode) ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Buil
 	b.WriteString(ilikeSuffix + `)`)
 }
 
+func (classicMode) orderCommon(b *strings.Builder, name string) {
+	switch name {
+	case "cvss_v2_score", "cvss_v3_score", "critical":
+		b.WriteString("COALESCE(")
+		b.WriteString(name)
+		b.WriteString(",0)")
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc")
+	case "version":
+		// TODO: This is not optimal (SemVer).
+		b.WriteString(
+			`CASE WHEN version ~ '^[[:digit:]]+$' THEN version::int END`)
+	default:
+		b.WriteString(name)
+	}
+}
+
+func (cm classicMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name string) {
+	switch name {
+	case "tracking_id", "publisher", "id":
+		b.WriteString("advisories.")
+		b.WriteString(name)
+	default:
+		cm.orderCommon(b, name)
+	}
+}
+
+func (cm cteMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name string) {
+	switch name {
+	case "tracking_id", "publisher", "id":
+		b.WriteString("docads.")
+		b.WriteString(name)
+	default:
+		cm.orderCommon(b, name)
+	}
+}
+
 // AdvancedSQLBuilderOption is an option to create an advanced SQL builder.
 type AdvancedSQLBuilderOption func(*AdvancedSQLBuilder)
 
@@ -603,7 +640,6 @@ func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
 // the number of rows which are possible to fetch by the
 // given filter.
 func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
-	// TODO: Build a adequate query based on the needed tables.
 	var b strings.Builder
 	sm := statementMode(classicMode{})
 	if sb.usedSources.contains(documentsTable | advisoriesTable) {
@@ -618,12 +654,11 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 }
 
 func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
-	b.WriteString(`` +
-		` WITH docads AS (` +
-		`  SELECT `)
+	b.WriteString(`WITH docads AS (` +
+		`SELECT `)
 	for i, field := range sb.fields {
 		if i > 0 {
-			b.WriteString(",")
+			b.WriteByte(',')
 		}
 		if field == "id" {
 			b.WriteString("documents.id AS id")
@@ -632,8 +667,7 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 		}
 	}
 	b.WriteString(` FROM documents JOIN advisories` +
-		`  ON documents.advisories_id = advisories.id` +
-		` )`)
+		` ON documents.advisories_id = advisories.id)`)
 }
 
 // CreateQuery creates an SQL statement to query the documents
@@ -656,9 +690,9 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 	b.WriteString(" WHERE ")
 	sb.createWhere(&b, sm)
 
-	if order := sb.createOrder(); order != "" {
+	if len(sb.orderFields) > 0 {
 		b.WriteString(" ORDER BY ")
-		b.WriteString(order)
+		sb.createOrder(&b, sm)
 	}
 
 	if limit >= 0 {
@@ -674,11 +708,7 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 }
 
 // createOrder returns a ORDER BY clause for given columns.
-func (sb *AdvancedSQLBuilder) createOrder() string {
-	if sb.order != "" {
-		return sb.order
-	}
-	var b strings.Builder
+func (sb *AdvancedSQLBuilder) createOrder(b *strings.Builder, sm statementMode) {
 	for _, field := range sb.orderFields {
 		desc := strings.HasPrefix(field, "-")
 		if desc {
@@ -687,32 +717,13 @@ func (sb *AdvancedSQLBuilder) createOrder() string {
 		if b.Len() > 0 {
 			b.WriteByte(',')
 		}
-		switch field {
-		case "tracking_id", "publisher", "id":
-			b.WriteString("advisories.")
-			b.WriteString(field)
-		case "cvss_v2_score", "cvss_v3_score", "critical":
-			b.WriteString("COALESCE(")
-			b.WriteString(field)
-			b.WriteString(",0)")
-		case "ssvc":
-			b.WriteString("ssvc_current.ssvc")
-		case "version":
-			// TODO: This is not optimal (SemVer).
-			b.WriteString(
-				`CASE WHEN version ~ '^[[:digit:]]+$' THEN version::int END`)
-		default:
-			b.WriteString(field)
-		}
-
+		sm.order(sb, b, field)
 		if desc {
 			b.WriteString(" DESC")
 		} else {
 			b.WriteString(" ASC")
 		}
 	}
-	sb.order = b.String()
-	return sb.order
 }
 
 // createProjectionsWithCasts joins given projection adding casts if needed.
