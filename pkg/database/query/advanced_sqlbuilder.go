@@ -32,6 +32,7 @@ type statementMode interface {
 	from(sb *AdvancedSQLBuilder, b *strings.Builder)
 	accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 	searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
+	mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 }
 
 type (
@@ -231,6 +232,49 @@ func (cteMode) searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) 
 	}
 }
 
+func (classicMode) mentionedWhereCommon(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case EventMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
+			"AND comments.id = events_log.comments_id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	}
+}
+
+func (cm classicMode) mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
+			"JOIN documents docs ON comments.documents_id = docs.id "+
+			"WHERE message ILIKE $%d "+
+			"AND docs.advisories_id = documents.advisories_id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	case DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
+			"AND comments.documents_id = documents.id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	default:
+		cm.mentionedWhereCommon(sb, e, b)
+	}
+}
+
+func (cm cteMode) mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
+			"JOIN docads ON comments.documents_id = docads.id "+
+			"WHERE message ILIKE $%d "+
+			"AND docads.advisories_id = docads.advisories_id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	case DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
+			"AND comments.documents_id = docads.id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	default:
+		cm.mentionedWhereCommon(sb, e, b)
+	}
+}
+
 // AdvancedSQLBuilderOption is an option to create an advanced SQL builder.
 type AdvancedSQLBuilderOption func(*AdvancedSQLBuilder)
 
@@ -309,25 +353,6 @@ func (sb *AdvancedSQLBuilder) mode() ParserMode {
 		return sb.parser.Mode
 	}
 	return DocumentMode
-}
-
-func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder, sm statementMode) {
-	switch sb.mode() {
-	case AdvisoryMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
-			"JOIN documents docs ON comments.documents_id = docs.id "+
-			"WHERE message ILIKE $%d "+
-			"AND docs.advisories_id = documents.advisories_id)",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-	case DocumentMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
-			"AND comments.documents_id = documents.id)",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-	case EventMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
-			"AND comments.id = events_log.comments_id)",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-	}
 }
 
 func (sb *AdvancedSQLBuilder) involvedWhere(e *Expr, b *strings.Builder, sm statementMode) {
@@ -518,7 +543,7 @@ func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm state
 	case search:
 		sm.searchWhere(sb, e, b)
 	case mentioned:
-		sb.mentionedWhere(e, b, sm)
+		sm.mentionedWhere(sb, e, b)
 	case involved:
 		sb.involvedWhere(e, b, sm)
 	case ilike:
