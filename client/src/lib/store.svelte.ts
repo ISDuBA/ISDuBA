@@ -39,6 +39,7 @@ type AppStore = {
     sessionExpiredMessage: string | null;
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
+    redirect: string | null;
     errors: ErrorMessage[];
     documentsToDelete: any[] | null;
     selectedDocumentIDs: SvelteSet<number>;
@@ -116,6 +117,7 @@ const generateInitialState = (): AppStore => {
       isUserLoggedIn: false,
       tokenParsed: null,
       userManager: null,
+      redirect: null,
       errors: [],
       documentsToDelete: null,
       isDeleteModalOpen: false,
@@ -223,6 +225,10 @@ export const appStore = {
 
   setTokenParsed: (tokenParsed: ProfileWithRoles) => {
     state.app.tokenParsed = tokenParsed;
+  },
+
+  setRedirect: (redirect: string | null) => {
+    state.app.redirect = redirect;
   },
 
   toggleDocExpandAll: () => {
