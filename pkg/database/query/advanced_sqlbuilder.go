@@ -25,9 +25,117 @@ type AdvancedSQLBuilder struct {
 	order        string
 	Replacements []any
 	replToIdx    map[string]int
-	aliases      map[string]string
-	ignoreFields map[string]struct{}
 	usedSources  columnSource
+}
+
+type statementMode interface {
+	projection(b *strings.Builder, name string, mode ParserMode)
+	from(b *strings.Builder, sb *AdvancedSQLBuilder)
+}
+
+type (
+	classicMode struct{}
+	cteMode     struct{}
+)
+
+func (classicMode) projection(b *strings.Builder, name string, mode ParserMode) {
+	switch name {
+	case "tracking_id", "publisher":
+		b.WriteString("advisories.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "id":
+		b.WriteString("documents.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "state", "event", "tracking_status":
+		b.WriteString(name)
+		b.WriteString("::text")
+	case "event_state":
+		b.WriteString("events_log.state::text AS event_state")
+	case "versions":
+		b.WriteString(versionsCount + `AS versions`)
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc AS ssvc")
+	case "comments":
+		switch mode {
+		case AdvisoryMode:
+			b.WriteString(name)
+		case DocumentMode:
+			b.WriteString(commentsCountDocuments + `AS comments`)
+		case EventMode:
+			b.WriteString(commentsCountEvents + `AS comments`)
+		}
+	default:
+		b.WriteString(name)
+	}
+}
+
+func (cteMode) projection(b *strings.Builder, name string, mode ParserMode) {
+	switch name {
+	case "tracking_id", "publisher":
+		b.WriteString("docads.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "id":
+		b.WriteString("docads.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	default:
+		classicMode{}.projection(b, name, mode)
+	}
+}
+
+func (classicMode) from(b *strings.Builder, sb *AdvancedSQLBuilder) {
+	switch sb.mode() {
+	case AdvisoryMode, DocumentMode:
+		b.WriteString(`documents ` +
+			`JOIN advisories ON ` +
+			`advisories.id = documents.advisories_id`)
+	case EventMode:
+		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
+			`JOIN advisories ON advisories.id = documents.advisories_id ` +
+			`LEFT JOIN (SELECT message, id FROM comments) AS comment ON events_log.comments_id = comment.id`)
+	}
+	// Add SSVC if exists
+	if sb.usedSources.contains(ssvcHistoryTable) {
+		b.WriteString(` LEFT JOIN LATERAL ( ` +
+			`SELECT ssvc FROM ssvc_history ` +
+			`WHERE documents_id = documents.id ` +
+			`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
+			`) AS ssvc_current ON TRUE`)
+	}
+	if sb.usedSources.contains(textTable) {
+		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
+			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
+	}
+}
+
+func (cteMode) from(b *strings.Builder, sb *AdvancedSQLBuilder) {
+	switch sb.mode() {
+	case AdvisoryMode, DocumentMode:
+		b.WriteString(`docads`)
+	case EventMode:
+		b.WriteString(`events_log JOIN docads ON events_log.documents_id = docads.id ` +
+			`LEFT JOIN (SELECT message, id FROM comments) AS comment ` +
+			`ON events_log.comments_id = comment.id`)
+	}
+	// Add SSVC if exists
+	if sb.usedSources.contains(ssvcHistoryTable) {
+		b.WriteString(` LEFT JOIN LATERAL ( ` +
+			`SELECT ssvc FROM ssvc_history ` +
+			`WHERE documents_id = docads.id ` +
+			`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
+			`) AS ssvc_current ON TRUE`)
+	}
+	if sb.usedSources.contains(textTable) {
+		b.WriteString(` JOIN documents_texts ON docads.id = documents_texts.documents_id ` +
+			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
+	}
 }
 
 // AdvancedSQLBuilderOption is an option to create an advanced SQL builder.
@@ -86,6 +194,18 @@ func (sb *AdvancedSQLBuilder) HasFields() bool {
 	return len(sb.fields) > 0
 }
 
+// Fields returns the projection fields of the query.
+func (sb *AdvancedSQLBuilder) Fields() []string {
+	return sb.fields
+}
+
+func (sb *AdvancedSQLBuilder) alias(name string) *Expr {
+	if sb.parser == nil {
+		return nil
+	}
+	return sb.parser.aliases[name]
+}
+
 // createWhere construct a WHERE clause for a given expression.
 func (sb *AdvancedSQLBuilder) createWhere() string {
 	if sb.whereClause != "" {
@@ -104,20 +224,7 @@ func (sb *AdvancedSQLBuilder) mode() ParserMode {
 	return DocumentMode
 }
 
-// RemoveIgnoredFields removes fields that should be ignored.
-func (sb *AdvancedSQLBuilder) RemoveIgnoredFields() []string {
-	filtered := make([]string, 0, len(sb.fields))
-	for _, f := range sb.fields {
-		if _, found := sb.ignoreFields[f]; !found {
-			filtered = append(filtered, f)
-		}
-	}
-	return filtered
-}
-
 func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
-	fmt.Fprintf(b, "txt ILIKE $%d",
-		sb.replacementIndex(LikeEscape(e.stringValue))+1)
 
 	// Handle alias
 	if e.alias == "" {
@@ -133,10 +240,6 @@ func (sb *AdvancedSQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 	case EventMode:
 		// TODO clarify how to handle event search
 	}
-	if sb.ignoreFields == nil {
-		sb.ignoreFields = map[string]struct{}{}
-	}
-	sb.ignoreFields[e.alias] = struct{}{}
 }
 
 func (sb *AdvancedSQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
@@ -409,29 +512,8 @@ func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
 	return idx
 }
 
-func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
-	switch sb.mode() {
-	case AdvisoryMode, DocumentMode:
-		b.WriteString(`documents ` +
-			`JOIN advisories ON ` +
-			`advisories.id = documents.advisories_id`)
-	case EventMode:
-		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
-			`JOIN advisories ON advisories.id = documents.advisories_id ` +
-			`LEFT JOIN (SELECT message, id FROM comments) AS comment ON events_log.comments_id = comment.id`)
-	}
-
-	// Add SSVC if exists
-	b.WriteString(` LEFT JOIN LATERAL ( ` +
-		`SELECT ssvc FROM ssvc_history ` +
-		`WHERE documents_id = documents.id ` +
-		`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
-		`) AS ssvc_current ON TRUE`)
-
-	if sb.usedSources.contains(textTable) {
-		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
-			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
-	}
+func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder, sm statementMode) {
+	sm.from(b, sb)
 }
 
 // CreateCountSQL returns an SQL count statement to count
@@ -440,11 +522,35 @@ func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
 func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 	// TODO: Build a adequate query based on the needed tables.
 	var b strings.Builder
+	sm := statementMode(classicMode{})
+	if sb.usedSources.contains(documentsTable | advisoriesTable) {
+		sm = cteMode{}
+		sb.prefixCTE(&b)
+	}
 	b.WriteString("SELECT count(*) FROM ")
-	sb.createFrom(&b)
+	sb.createFrom(&b, sm)
 	b.WriteString(" WHERE ")
 	b.WriteString(sb.createWhere())
 	return b.String()
+}
+
+func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
+	b.WriteString(`` +
+		` WITH docads AS (` +
+		`  SELECT `)
+	for i, field := range sb.fields {
+		if i > 0 {
+			b.WriteString(",")
+			if field == "id" {
+				b.WriteString("documents.id AS id")
+			} else {
+				b.WriteString(field)
+			}
+		}
+	}
+	b.WriteString(` FROM documents JOIN advisories` +
+		`  ON documents.advisories_id = advisories.id` +
+		` )`)
 }
 
 // CreateQuery creates an SQL statement to query the documents
@@ -453,13 +559,17 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 func (sb *AdvancedSQLBuilder) CreateQuery(
 	limit, offset int64,
 ) string {
-	// TODO: Build a adequate query based on the needed tables.
 	var b strings.Builder
+	sm := statementMode(classicMode{})
+	if sb.usedSources.contains(documentsTable | advisoriesTable) {
+		sm = cteMode{}
+		sb.prefixCTE(&b)
+	}
 
 	b.WriteString("SELECT ")
-	sb.projectionsWithCasts(&b, sb.fields)
+	sb.createProjectionsWithCasts(&b, sm)
 	b.WriteString(" FROM ")
-	sb.createFrom(&b)
+	sb.createFrom(&b, sm)
 	b.WriteString(" WHERE ")
 	b.WriteString(sb.createWhere())
 
@@ -522,88 +632,55 @@ func (sb *AdvancedSQLBuilder) createOrder() string {
 	return sb.order
 }
 
-// projectionsWithCasts joins given projection adding casts if needed.
-func (sb *AdvancedSQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
-	for i, p := range proj {
-		if _, found := sb.ignoreFields[p]; found {
-			continue
-		}
+// createProjectionsWithCasts joins given projection adding casts if needed.
+func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm statementMode) {
+	for i, name := range sb.fields {
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		if alias, found := sb.aliases[p]; found {
+		if alias := sb.alias(name); alias != nil {
+			txt := fmt.Sprintf("txt ILIKE $%d",
+				sb.replacementIndex(alias.stringValue))
 			b.WriteString(`CASE WHEN length(`)
-			b.WriteString(alias)
+			b.WriteString(txt)
 			b.WriteString(`)<= 200 THEN `)
-			b.WriteString(alias)
+			b.WriteString(txt)
 			b.WriteString(` ELSE substring(`)
-			b.WriteString(alias)
+			b.WriteString(txt)
 			b.WriteString(`, 0, 197)END||'...'AS `)
-			b.WriteString(p)
+			b.WriteString(name)
 			continue
 		}
-		switch p {
-		case "tracking_id", "publisher":
-			b.WriteString("advisories.")
-			b.WriteString(p)
-			b.WriteString(` AS `)
-			b.WriteString(p)
-		case "id":
-			b.WriteString("documents.")
-			b.WriteString(p)
-			b.WriteString(` AS `)
-			b.WriteString(p)
-		case "state", "event", "tracking_status":
-			b.WriteString(p)
-			b.WriteString("::text")
-		case "event_state":
-			b.WriteString("events_log.state::text AS event_state")
-		case "versions":
-			b.WriteString(versionsCount + `AS versions`)
-		case "ssvc":
-			b.WriteString("ssvc_current.ssvc AS ssvc")
-		case "comments":
-			switch sb.mode() {
-			case AdvisoryMode:
-				b.WriteString(p)
-			case DocumentMode:
-				b.WriteString(commentsCountDocuments + `AS comments`)
-			case EventMode:
-				b.WriteString(commentsCountEvents + `AS comments`)
-			}
-		default:
-			b.WriteString(p)
-		}
+		sm.projection(b, name, sb.mode())
 	}
 }
 
 // check tests for the existence of used columns.
 func (sb *AdvancedSQLBuilder) check() error {
+	// A field is valid if there is a named column or
+	// there exists an alias for it.
+	checkField := func(field string) bool {
+		col := findDocumentColumn(field, sb.mode())
+		if col != nil {
+			sb.usedSources.add(col.sources)
+			return true
+		}
+		if sb.alias(field) != nil {
+			sb.usedSources.add(documentsTable | textTable)
+			return true
+		}
+		return false
+	}
 	// check projections.
-	for _, p := range sb.fields {
-		if _, found := sb.aliases[p]; found {
-			continue
+	for _, f := range sb.fields {
+		if !checkField(f) {
+			return fmt.Errorf("column %q does not exists", f)
 		}
-		if _, found := sb.ignoreFields[p]; found {
-			continue
-		}
-		col := findDocumentColumn(p, sb.mode())
-		if col == nil {
-			return fmt.Errorf("column %q does not exists", p)
-		}
-		sb.usedSources.add(col.sources)
 	}
 	// check order
-	for _, field := range sb.orderFields {
-		if desc := strings.HasPrefix(field, "-"); desc {
-			field = field[1:]
-		}
-		if _, found := sb.aliases[field]; !found {
-			col := findDocumentColumn(field, sb.mode())
-			if col == nil {
-				return fmt.Errorf("order field %q does not exists", field)
-			}
-			sb.usedSources.add(col.sources)
+	for _, f := range sb.orderFields {
+		if f := strings.TrimPrefix(f, "-"); !checkField(f) {
+			return fmt.Errorf("order field %q does not exists", f)
 		}
 	}
 	slog.Debug("advanced sqlbuilder", "used sources", sb.usedSources)

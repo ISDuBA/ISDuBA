@@ -42,10 +42,9 @@ func (c *Controller) aggregatedResults(
 	builder *query.AdvancedSQLBuilder,
 ) {
 	var (
-		ads      aggregatedDocuments
-		sql      = builder.CreateQuery(-1, -1)
-		rctx     = ctx.Request.Context()
-		filtered = builder.RemoveIgnoredFields()
+		ads  aggregatedDocuments
+		sql  = builder.CreateQuery(-1, -1)
+		rctx = ctx.Request.Context()
 	)
 
 	if slog.Default().Enabled(rctx, slog.LevelDebug) {
@@ -59,7 +58,7 @@ func (c *Controller) aggregatedResults(
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if ads, err = scanAggregatedDocuments(rows, filtered); err != nil {
+			if ads, err = scanAggregatedDocuments(rows, builder.Fields()); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil

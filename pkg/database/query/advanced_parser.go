@@ -28,7 +28,7 @@ type AdvancedParser struct {
 	UsedSources columnSource
 
 	// aliases defined by 'as'.
-	aliases map[string]struct{}
+	aliases map[string]*Expr
 }
 
 // columnSource is a type to accumulate the tables needed to build an SQL query.
@@ -486,13 +486,13 @@ func (p *AdvancedParser) pushAs(st *stack) {
 	srch.checkExprType(search) // TODO: Add csearch?
 	validAlias(alias.stringValue)
 	if p.aliases == nil {
-		p.aliases = map[string]struct{}{}
+		p.aliases = map[string]*Expr{}
 	}
-	if _, already := p.aliases[alias.stringValue]; already {
+	if p.aliases[alias.stringValue] != nil {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
 	}
 	p.UsedSources.add(documentsTable | textTable)
-	p.aliases[alias.stringValue] = struct{}{}
+	p.aliases[alias.stringValue] = alias
 	srch.alias = alias.stringValue
 }
 

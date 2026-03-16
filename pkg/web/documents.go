@@ -490,8 +490,7 @@ func (c *Controller) flatResults(
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			filtered := builder.RemoveIgnoredFields()
-			if results, err = scanRows(rows, filtered); err != nil {
+			if results, err = scanRows(rows, builder.Fields()); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
