@@ -12,6 +12,7 @@ import { vectorStart } from "$lib/Advisories/SSVC/SSVCCalculator";
 
 test("Advisory view is working", async ({ page }) => {
   await page.goto("/#/search");
+  await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await page.getByText("Avendor-advisory-0004").first().click({ force: true });
@@ -55,8 +56,8 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   const newSsvcBadge = page.getByText("Attend").first();
   await expect(newSsvcBadge).toBeVisible();
-  const toText = page.getByText(`TO: ${vectorStart}${secondSSVC}`);
+  const toText = page.getByText(`TO: ${vectorStart}${secondSSVC}`).first();
   await expect(toText).toBeVisible();
-  const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`);
+  const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`).first();
   await expect(fromText).toBeVisible();
 });
