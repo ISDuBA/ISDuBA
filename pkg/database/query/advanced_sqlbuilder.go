@@ -438,11 +438,45 @@ func (sb *AdvancedSQLBuilder) createFrom(b *strings.Builder) {
 // the number of rows which are possible to fetch by the
 // given filter.
 func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
+	// TODO: Build a adequate query based on the needed tables.
 	var b strings.Builder
 	b.WriteString("SELECT count(*) FROM ")
 	sb.createFrom(&b)
 	b.WriteString(" WHERE ")
 	b.WriteString(sb.createWhere())
+	return b.String()
+}
+
+// CreateQuery creates an SQL statement to query the documents
+// table and the associated texts if needed.
+// WARN: Make sure that the input is vetted against injections.
+func (sb *AdvancedSQLBuilder) CreateQuery(
+	limit, offset int64,
+) string {
+	// TODO: Build a adequate query based on the needed tables.
+	var b strings.Builder
+
+	b.WriteString("SELECT ")
+	sb.projectionsWithCasts(&b, sb.fields)
+	b.WriteString(" FROM ")
+	sb.createFrom(&b)
+	b.WriteString(" WHERE ")
+	b.WriteString(sb.createWhere())
+
+	if order := sb.createOrder(); order != "" {
+		b.WriteString(" ORDER BY ")
+		b.WriteString(order)
+	}
+
+	if limit >= 0 {
+		b.WriteString(" LIMIT ")
+		b.WriteString(strconv.FormatInt(limit, 10))
+	}
+	if offset > 0 {
+		b.WriteString(" OFFSET ")
+		b.WriteString(strconv.FormatInt(offset, 10))
+	}
+
 	return b.String()
 }
 
@@ -486,38 +520,6 @@ func (sb *AdvancedSQLBuilder) createOrder() string {
 	}
 	sb.order = b.String()
 	return sb.order
-}
-
-// CreateQuery creates an SQL statement to query the documents
-// table and the associated texts if needed.
-// WARN: Make sure that the input is vetted against injections.
-func (sb *AdvancedSQLBuilder) CreateQuery(
-	limit, offset int64,
-) string {
-	var b strings.Builder
-
-	b.WriteString("SELECT ")
-	sb.projectionsWithCasts(&b, sb.fields)
-	b.WriteString(" FROM ")
-	sb.createFrom(&b)
-	b.WriteString(" WHERE ")
-	b.WriteString(sb.createWhere())
-
-	if order := sb.createOrder(); order != "" {
-		b.WriteString(" ORDER BY ")
-		b.WriteString(order)
-	}
-
-	if limit >= 0 {
-		b.WriteString(" LIMIT ")
-		b.WriteString(strconv.FormatInt(limit, 10))
-	}
-	if offset > 0 {
-		b.WriteString(" OFFSET ")
-		b.WriteString(strconv.FormatInt(offset, 10))
-	}
-
-	return b.String()
 }
 
 // projectionsWithCasts joins given projection adding casts if needed.
