@@ -555,7 +555,7 @@ func (sb *AdvancedSQLBuilder) notWhere(e *Expr, b *strings.Builder, sm statement
 	b.WriteByte(')')
 }
 
-func (sb *AdvancedSQLBuilder) nowWhere(_ *Expr, b *strings.Builder, _ statementMode) {
+func (sb *AdvancedSQLBuilder) nowWhere(b *strings.Builder) {
 	b.WriteString("current_timestamp")
 }
 
@@ -610,7 +610,7 @@ func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm state
 	case ilikePID:
 		sm.ilikePIDWhere(sb, e, b)
 	case now:
-		sb.nowWhere(e, b, sm)
+		sb.nowWhere(b)
 	case add:
 		sb.binaryWhere(e, b, "+", sm)
 	case sub:
