@@ -33,6 +33,9 @@ type statementMode interface {
 	accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 	searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 	mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
+	involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
+	ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
+	ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
 }
 
 type (
@@ -275,6 +278,87 @@ func (cm cteMode) mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Bui
 	}
 }
 
+func (classicMode) involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode, EventMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
+			"ON events_log.documents_id = docs.id "+
+			"WHERE actor = $%d "+
+			"AND docs.advisories_id = documents.advisories_id)",
+			sb.replacementIndex(e.stringValue)+1)
+	case DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
+			"AND events_log.documents_id = documents.id)",
+			sb.replacementIndex(e.stringValue)+1)
+	}
+}
+
+func (cteMode) involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode, EventMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docads "+
+			"ON events_log.documents_id = docads.id "+
+			"WHERE actor = $%d)",
+			sb.replacementIndex(e.stringValue)+1)
+	case DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
+			"AND events_log.documents_id = docads.id)",
+			sb.replacementIndex(e.stringValue)+1)
+	}
+}
+
+func (cm classicMode) ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_names AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.name')::int num ` +
+		`FROM documents ds WHERE ds.id = documents.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_names ` +
+		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = documents.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
+func (cm cteMode) ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_names AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.name')::int num ` +
+		`FROM docads ds WHERE ds.id = docads.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_names ` +
+		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = docads.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
+func (cm classicMode) ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_ids AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.product_id')::int num ` +
+		`FROM documents ds WHERE ds.id = documents.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_ids ` +
+		`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = documents.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
+func (cm cteMode) ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_ids AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.product_id')::int num ` +
+		`FROM docads ds WHERE ds.id = docads.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_ids ` +
+		`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = docads.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
 // AdvancedSQLBuilderOption is an option to create an advanced SQL builder.
 type AdvancedSQLBuilderOption func(*AdvancedSQLBuilder)
 
@@ -353,21 +437,6 @@ func (sb *AdvancedSQLBuilder) mode() ParserMode {
 		return sb.parser.Mode
 	}
 	return DocumentMode
-}
-
-func (sb *AdvancedSQLBuilder) involvedWhere(e *Expr, b *strings.Builder, sm statementMode) {
-	switch sb.mode() {
-	case AdvisoryMode, EventMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
-			"ON events_log.documents_id = docs.id "+
-			"WHERE actor = $%d "+
-			"AND docs.advisories_id = documents.advisories_id)",
-			sb.replacementIndex(e.stringValue)+1)
-	case DocumentMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
-			"AND events_log.documents_id = documents.id)",
-			sb.replacementIndex(e.stringValue)+1)
-	}
 }
 
 func (sb *AdvancedSQLBuilder) castWhere(e *Expr, b *strings.Builder, sm statementMode) {
@@ -461,55 +530,6 @@ func (sb *AdvancedSQLBuilder) ilikeWhere(e *Expr, b *strings.Builder, sm stateme
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (sb *AdvancedSQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder, sm statementMode) {
-	b.WriteString(`EXISTS (` +
-		`WITH product_names AS (SELECT jsonb_path_query(` +
-		`document, '$.product_tree.**.product.name')::int num ` +
-		`FROM documents ds WHERE ds.id = documents.id)` +
-		`SELECT * FROM documents_texts dts JOIN product_names ` +
-		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
-		`WHERE dts.documents_id = documents.id AND ` +
-		`unique_texts.txt ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[0], b, sm)
-	b.WriteString(ilikeSuffix + `)`)
-}
-
-func (sb *AdvancedSQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder, sm statementMode) {
-	b.WriteString(`EXISTS (` +
-		`WITH product_ids AS (SELECT jsonb_path_query(` +
-		`document, '$.product_tree.**.product.product_id')::int num ` +
-		`FROM documents ds WHERE ds.id = documents.id)` +
-		`SELECT * FROM documents_texts dts JOIN product_ids ` +
-		`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
-		`WHERE dts.documents_id = documents.id AND ` +
-		`unique_texts.txt ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[0], b, sm)
-	b.WriteString(ilikeSuffix + `)`)
-	/*
-		b.WriteString(`EXISTS (` +
-			`SELECT jsonb_path_query(` +
-			`document, '$.product_tree.**.product.product_id')::int ` +
-			`FROM documents ds WHERE ds.id = documents.id ` +
-			`INTERSECT ` +
-			`SELECT num FROM documents_texts ` +
-			`WHERE documents_id = documents.id AND ` +
-			`txt ILIKE `)
-		recurse(e.children[0])
-		b.WriteByte(')')
-	*/
-	/*
-		b.WriteString(`EXISTS (` +
-			`SELECT num FROM documents_texts ` +
-			`WHERE documents_id = documents.id AND ` +
-			`txt ILIKE `)
-		recurse(e.children[0])
-		b.WriteString(` INTERSECT ` +
-			`SELECT jsonb_path_query(` +
-			`document, '$.product_tree.**.product.product_id')::int ` +
-			`FROM documents ds WHERE ds.id = documents.id)`)
-	*/
-}
-
 func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm statementMode) {
 	if e == nil {
 		return
@@ -545,13 +565,13 @@ func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm state
 	case mentioned:
 		sm.mentionedWhere(sb, e, b)
 	case involved:
-		sb.involvedWhere(e, b, sm)
+		sm.involvedWhere(sb, e, b)
 	case ilike:
 		sb.ilikeWhere(e, b, sm)
 	case ilikePName:
-		sb.ilikePNameWhere(e, b, sm)
+		sm.ilikePNameWhere(sb, e, b)
 	case ilikePID:
-		sb.ilikePIDWhere(e, b, sm)
+		sm.ilikePIDWhere(sb, e, b)
 	case now:
 		sb.nowWhere(e, b, sm)
 	case add:
@@ -604,11 +624,11 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 	for i, field := range sb.fields {
 		if i > 0 {
 			b.WriteString(",")
-			if field == "id" {
-				b.WriteString("documents.id AS id")
-			} else {
-				b.WriteString(field)
-			}
+		}
+		if field == "id" {
+			b.WriteString("documents.id AS id")
+		} else {
+			b.WriteString(field)
 		}
 	}
 	b.WriteString(` FROM documents JOIN advisories` +
