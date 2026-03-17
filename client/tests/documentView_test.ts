@@ -8,6 +8,7 @@
 
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
+import { vectorStart } from "$lib/Advisories/SSVC/SSVCCalculator";
 
 test("Advisory view is working", async ({ page }) => {
   await page.goto("/#/search");
@@ -40,6 +41,22 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByLabel("Irreversible").click();
   await page.getByRole("button", { name: "Save" }).click();
   await page.getByRole("button", { name: "Save" }).click();
-  const ssvcBadge = page.getByTitle("SSVCv2/E:A/A:Y/T:T/P:E/B:I/M:H/D:C/2025-10-15T17:35:23Z/");
+  const autoCalculatedSSVC = "SSVCv2/E:A/A:Y/T:T/P:E/B:I/M:H/D:C/";
+  const ssvcBadge = page.getByTitle(autoCalculatedSSVC);
   expect(ssvcBadge).toBeDefined();
+
+  await page.getByTitle("Edit SSVC").click();
+  // Don't enter ":" and "/" for the decisions because they are added automatically by the client.
+  const secondSSVC = "E:A/A:Y/T:T/P:E/B:I/M:H/D:A/2025-10-15T17:35:23Z/";
+  const manualEnteredSSVC = "EAAYTTPEBIMHDA2025-10-15T17:35:23Z/";
+  await page.getByLabel(vectorStart).fill("");
+  // Need to call pressSequentially because the client listens to events like "keyup".
+  await page.getByLabel(vectorStart).pressSequentially(manualEnteredSSVC);
+  await page.getByRole("button", { name: "Save" }).click();
+  const newSsvcBadge = page.getByText("Attend").first();
+  await expect(newSsvcBadge).toBeVisible();
+  const toText = page.getByText(`TO: ${vectorStart}${secondSSVC}`);
+  await expect(toText).toBeVisible();
+  const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`);
+  await expect(fromText).toBeVisible();
 });
