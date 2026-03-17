@@ -57,8 +57,6 @@ func (classicMode) projectionCommon(
 		b.WriteString("events_log.state::text AS event_state")
 	case "versions":
 		b.WriteString(versionsCount + `AS versions`)
-	case "ssvc":
-		b.WriteString("ssvc_current.ssvc AS ssvc")
 	case "comments":
 		switch sb.mode() {
 		case AdvisoryMode:
@@ -85,6 +83,8 @@ func (cm classicMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, nam
 		b.WriteString(name)
 		b.WriteString(` AS `)
 		b.WriteString(name)
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc AS ssvc")
 	default:
 		cm.projectionCommon(sb, b, name,
 			versionsCountClassic, commentsCountDocumentsClassic)
