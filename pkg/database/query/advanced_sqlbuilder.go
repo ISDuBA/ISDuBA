@@ -660,7 +660,9 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 	for i, field := range enumerate(
 		unique(
 			slices.Values(sb.fields),
-			slices.Values(sb.orderFields),
+			apply(
+				slices.Values(sb.orderFields),
+				func(s string) string { return strings.TrimPrefix(s, "-") }),
 			sb.expr.accessedColumns(),
 		)) {
 		if i > 0 {

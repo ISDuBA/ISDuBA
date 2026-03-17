@@ -40,3 +40,13 @@ func enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 		}
 	}
 }
+
+func apply[S, T any](seq iter.Seq[S], fn func(S) T) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for s := range seq {
+			if !yield(fn(s)) {
+				return
+			}
+		}
+	}
+}
