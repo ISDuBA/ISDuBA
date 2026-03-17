@@ -11,6 +11,7 @@ package query
 import (
 	"fmt"
 	"log/slog"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -656,13 +657,26 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 	b.WriteString(`WITH docads AS (` +
 		`SELECT `)
-	for i, field := range sb.fields {
+	for i, field := range enumerate(
+		unique(
+			slices.Values(sb.fields),
+			slices.Values(sb.orderFields),
+			sb.expr.accessedColumns(),
+		)) {
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		if field == "id" {
+		switch field {
+		case "id":
 			b.WriteString("documents.id AS id")
-		} else {
+		case "versions":
+			b.WriteString(versionsCountClassic + ` AS versions`)
+		case "ssvc":
+			b.WriteString(`(` +
+				`SELECT ssvc FROM ssvc_history ` +
+				`WHERE documents_id = documents.id ` +
+				`ORDER BY changedate DESC, change_number DESC LIMIT 1)`)
+		default:
 			b.WriteString(field)
 		}
 	}
@@ -703,6 +717,8 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 		b.WriteString(" OFFSET ")
 		b.WriteString(strconv.FormatInt(offset, 10))
 	}
+
+	slog.Debug("sql builder", "query", b.String())
 
 	return b.String()
 }

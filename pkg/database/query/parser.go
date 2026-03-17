@@ -11,6 +11,7 @@ package query
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"maps"
 	"regexp"
 	"slices"
@@ -396,6 +397,29 @@ func (e *Expr) And(o *Expr) *Expr {
 		exprType:  and,
 		valueType: boolType,
 		children:  []*Expr{e, o},
+	}
+}
+
+func (e *Expr) accessedColumns() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		var recursive func(*Expr) bool
+		recursive = func(curr *Expr) bool {
+			if curr == nil {
+				return true
+			}
+			if curr.exprType == access && curr.stringValue != "" {
+				if !yield(curr.stringValue) {
+					return false
+				}
+			}
+			for _, child := range curr.children {
+				if !recursive(child) {
+					return false
+				}
+			}
+			return true
+		}
+		recursive(e)
 	}
 }
 
