@@ -13,16 +13,15 @@ import (
 )
 
 func unique[T comparable](seqs ...iter.Seq[T]) iter.Seq[T] {
-	have := make(map[T]struct{})
 	return func(yield func(T) bool) {
+		seen := make(map[T]struct{})
 		for _, seq := range seqs {
 			for t := range seq {
-				if _, ok := have[t]; ok {
-					continue
-				}
-				have[t] = struct{}{}
-				if !yield(t) {
-					return
+				if _, found := seen[t]; !found {
+					if !yield(t) {
+						return
+					}
+					seen[t] = struct{}{}
 				}
 			}
 		}
