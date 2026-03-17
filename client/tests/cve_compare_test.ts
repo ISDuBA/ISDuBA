@@ -11,6 +11,7 @@ import { test } from "./fixtures";
 
 test("cve comparison is working", async ({ page }) => {
   await page.goto("/#/search");
+  await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
 
