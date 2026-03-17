@@ -652,7 +652,9 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 		`SELECT `)
 	for i, field := range enumerate(
 		unique(
-			slices.Values(sb.fields),
+			filter(
+				slices.Values(sb.fields),
+				func(name string) bool { return sb.alias(name) == nil }),
 			apply(
 				slices.Values(sb.orderFields),
 				func(s string) string { return strings.TrimPrefix(s, "-") }),
@@ -744,15 +746,9 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 			b.WriteByte(',')
 		}
 		if alias := sb.alias(name); alias != nil {
-			txt := fmt.Sprintf("txt ILIKE $%d",
-				sb.replacementIndex(alias.stringValue)+1)
-			b.WriteString(`CASE WHEN length(`)
-			b.WriteString(txt)
-			b.WriteString(`)<= 200 THEN `)
-			b.WriteString(txt)
-			b.WriteString(` ELSE substring(`)
-			b.WriteString(txt)
-			b.WriteString(`, 0, 197)END||'...'AS `)
+			b.WriteString(`` +
+				`CASE WHEN length(txt)<= 200 THEN txt ` +
+				`ELSE substring(txt, 0, 197)END||'...'AS `)
 			b.WriteString(name)
 			continue
 		}

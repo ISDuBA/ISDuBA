@@ -49,3 +49,13 @@ func apply[S, T any](seq iter.Seq[S], fn func(S) T) iter.Seq[T] {
 		}
 	}
 }
+
+func filter[T any](seq iter.Seq[T], accept func(T) bool) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for t := range seq {
+			if accept(t) && !yield(t) {
+				return
+			}
+		}
+	}
+}
