@@ -143,14 +143,7 @@ func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 			`LEFT JOIN (SELECT message, id FROM comments) AS comment ` +
 			`ON events_log.comments_id = comment.id`)
 	}
-	// Add SSVC if exists
-	if sb.usedSources.contains(ssvcHistoryTable) {
-		b.WriteString(` LEFT JOIN LATERAL ( ` +
-			`SELECT ssvc FROM ssvc_history ` +
-			`WHERE documents_id = docads.id ` +
-			`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
-			`) AS ssvc_current ON TRUE`)
-	}
+	// SSVC is already in docads.
 	if sb.usedSources.contains(textTable) {
 		b.WriteString(` JOIN documents_texts ON docads.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
@@ -175,8 +168,6 @@ func (classicMode) accessWhereCommon(
 		}
 	case "event_state":
 		b.WriteString("events_log.state")
-	case "ssvc":
-		b.WriteString("ssvc_current.ssvc")
 	default:
 		b.WriteString(column)
 	}
@@ -190,6 +181,8 @@ func (cm classicMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Bu
 	case "tracking_id", "publisher":
 		b.WriteString("advisories.")
 		b.WriteString(column)
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc")
 	default:
 		cm.accessWhereCommon(sb, e, b,
 			versionsCountClassic, commentsCountDocumentsClassic)
@@ -366,8 +359,6 @@ func (classicMode) orderCommon(b *strings.Builder, name string) {
 		b.WriteString("COALESCE(")
 		b.WriteString(name)
 		b.WriteString(",0)")
-	case "ssvc":
-		b.WriteString("ssvc_current.ssvc")
 	case "version":
 		// TODO: This is not optimal (SemVer).
 		b.WriteString(
@@ -382,6 +373,8 @@ func (cm classicMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name stri
 	case "tracking_id", "publisher", "id":
 		b.WriteString("advisories.")
 		b.WriteString(name)
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc")
 	default:
 		cm.orderCommon(b, name)
 	}
