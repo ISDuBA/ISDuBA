@@ -720,19 +720,19 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 		b.WriteString(strconv.FormatInt(offset, 10))
 	}
 
-	slog.Debug("sql builder", "query", b.String())
-
-	return b.String()
+	query := b.String()
+	slog.Debug("sql builder", "query", query)
+	return query
 }
 
 // createOrder returns a ORDER BY clause for given columns.
 func (sb *AdvancedSQLBuilder) createOrder(b *strings.Builder, sm statementMode) {
-	for _, field := range sb.orderFields {
+	for i, field := range sb.orderFields {
 		desc := strings.HasPrefix(field, "-")
 		if desc {
 			field = field[1:]
 		}
-		if b.Len() > 0 {
+		if i > 0 {
 			b.WriteByte(',')
 		}
 		sm.order(sb, b, field)
