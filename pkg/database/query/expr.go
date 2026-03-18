@@ -11,6 +11,7 @@ package query
 import (
 	"fmt"
 	"iter"
+	"slices"
 	"time"
 )
 
@@ -70,6 +71,13 @@ type Expr struct {
 	alias         string
 
 	children []*Expr
+}
+
+type parseError string
+
+// Error implements [error].
+func (pe parseError) Error() string {
+	return string(pe)
 }
 
 // String implements [fmt.Stringer].
@@ -289,4 +297,19 @@ func True() *Expr {
 		valueType: boolType,
 		boolValue: true,
 	}
+}
+
+func (e *Expr) checkValueType(vt valueType) {
+	if e.valueType != vt {
+		panic(parseError(
+			fmt.Sprintf("value type mismatch: %q %q", e.valueType, vt)))
+	}
+}
+
+func (e *Expr) checkExprType(eTypes ...exprType) {
+	if slices.Contains(eTypes, e.exprType) {
+		return
+	}
+	panic(parseError(
+		fmt.Sprintf("expression type mismatch: %q %v", e.exprType, eTypes)))
 }

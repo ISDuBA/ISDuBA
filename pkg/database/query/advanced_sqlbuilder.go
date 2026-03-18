@@ -21,7 +21,7 @@ import (
 // AdvancedSQLBuilder helps to construct a SQL query.
 type AdvancedSQLBuilder struct {
 	expr         *Expr
-	parser       *AdvancedParser
+	parser       *Parser
 	orderFields  []string
 	fields       []string
 	Replacements []any
@@ -421,7 +421,7 @@ func AdvancedSQLBuilderFields(fields []string) AdvancedSQLBuilderOption {
 
 // AdvancedSQLBuilderParser creates an option to create an advanced SQL builder
 // with a given parser.
-func AdvancedSQLBuilderParser(parser *AdvancedParser) AdvancedSQLBuilderOption {
+func AdvancedSQLBuilderParser(parser *Parser) AdvancedSQLBuilderOption {
 	return func(ab *AdvancedSQLBuilder) {
 		ab.parser = parser
 	}

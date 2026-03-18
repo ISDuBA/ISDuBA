@@ -9,14 +9,33 @@
 package query
 
 import (
+	"errors"
 	"fmt"
 	"maps"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
+	"unicode"
+
+	"github.com/gocsaf/csaf/v3/csaf"
 )
 
-// AdvancedParser helps parsing database queries,
-type AdvancedParser struct {
+// ParserMode represents the operation mode of the parser.
+type ParserMode int
+
+const (
+	// DocumentMode operates on documents.
+	DocumentMode ParserMode = iota
+	// AdvisoryMode operates on advisories.
+	AdvisoryMode
+	// EventMode operates on events.
+	EventMode
+)
+
+// Parser helps parsing database queries,
+type Parser struct {
 	// Mode indicates that only advisories should be considered.
 	Mode ParserMode
 	// MinSearchLength enforces a minimal lengths of search phrases.
@@ -69,29 +88,13 @@ type documentColumn struct {
 	sources        columnSource
 }
 
-func (cs columnSource) contains(other columnSource) bool {
-	return cs&other == other
+type binaryCompat struct {
+	left     valueType
+	operator exprType
+	right    valueType
 }
 
-func (cs *columnSource) add(other columnSource) {
-	*cs |= other
-}
-
-// String implements [fmt.Stringer].
-func (cs columnSource) String() string {
-	var tables []string
-	for i := range len(columnSourceTables) - 1 {
-		mask := columnSource(1) << i
-		if cs.contains(mask) {
-			tables = append(tables, columnSourceTables[i+1])
-			cs &= ^mask
-		}
-	}
-	if cs != noTable {
-		tables = append(tables, fmt.Sprintf("unknown table(s): %b", cs))
-	}
-	return strings.Join(tables, "|")
-}
+type stack []*Expr
 
 // documentColumns are the documentColumns which can be accessed.
 var documentColumns = []documentColumn{
@@ -127,54 +130,184 @@ var documentColumns = []documentColumn{
 }
 
 var (
-	// advancedBaseAction are the action available in every parser.
-	advancedBaseAction = map[string]func(*AdvancedParser, *stack){
-		"true":       (*AdvancedParser).pushTrue,
-		"false":      (*AdvancedParser).pushFalse,
-		"not":        (*AdvancedParser).pushNot,
-		"and":        curry3((*AdvancedParser).pushBinary, and),
-		"or":         curry3((*AdvancedParser).pushBinary, or),
-		"float":      (*AdvancedParser).pushFloat,
-		"integer":    (*AdvancedParser).pushInteger,
-		"timestamp":  (*AdvancedParser).pushTimestamp,
-		"workflow":   advancedPushEnum(workflowType, parseWorkflow),
-		"events":     advancedPushEnum(eventsType, parseEvents),
-		"status":     advancedPushEnum(statusType, parseStatus),
-		"=":          curry3((*AdvancedParser).pushCmp, eq),
-		"!=":         curry3((*AdvancedParser).pushCmp, ne),
-		"<":          curry3((*AdvancedParser).pushCmp, lt),
-		"<=":         curry3((*AdvancedParser).pushCmp, le),
-		">":          curry3((*AdvancedParser).pushCmp, gt),
-		">=":         curry3((*AdvancedParser).pushCmp, ge),
-		"ilike":      (*AdvancedParser).pushILike,
-		"ilikepname": (*AdvancedParser).pushILikePName,
-		"ilikepid":   (*AdvancedParser).pushILikePID,
-		"now":        (*AdvancedParser).pushNow,
-		"duration":   (*AdvancedParser).pushDuration,
-		"+":          curry3((*AdvancedParser).pushBinary, add),
-		"-":          curry3((*AdvancedParser).pushBinary, sub),
-		"/":          curry3((*AdvancedParser).pushBinary, div),
-		"*":          curry3((*AdvancedParser).pushBinary, mul),
-		"me":         (*AdvancedParser).pushMe,
-		"mentioned":  (*AdvancedParser).pushMentioned,
-		"involved":   (*AdvancedParser).pushInvolved,
-		"search":     (*AdvancedParser).pushSearch,
-		"as":         (*AdvancedParser).pushAs,
+	// baseAction are the action available in every parser.
+	baseAction = map[string]func(*Parser, *stack){
+		"true":       (*Parser).pushTrue,
+		"false":      (*Parser).pushFalse,
+		"not":        (*Parser).pushNot,
+		"and":        curry3((*Parser).pushBinary, and),
+		"or":         curry3((*Parser).pushBinary, or),
+		"float":      (*Parser).pushFloat,
+		"integer":    (*Parser).pushInteger,
+		"timestamp":  (*Parser).pushTimestamp,
+		"workflow":   pushEnum(workflowType, parseWorkflow),
+		"events":     pushEnum(eventsType, parseEvents),
+		"status":     pushEnum(statusType, parseStatus),
+		"=":          curry3((*Parser).pushCmp, eq),
+		"!=":         curry3((*Parser).pushCmp, ne),
+		"<":          curry3((*Parser).pushCmp, lt),
+		"<=":         curry3((*Parser).pushCmp, le),
+		">":          curry3((*Parser).pushCmp, gt),
+		">=":         curry3((*Parser).pushCmp, ge),
+		"ilike":      (*Parser).pushILike,
+		"ilikepname": (*Parser).pushILikePName,
+		"ilikepid":   (*Parser).pushILikePID,
+		"now":        (*Parser).pushNow,
+		"duration":   (*Parser).pushDuration,
+		"+":          curry3((*Parser).pushBinary, add),
+		"-":          curry3((*Parser).pushBinary, sub),
+		"/":          curry3((*Parser).pushBinary, div),
+		"*":          curry3((*Parser).pushBinary, mul),
+		"me":         (*Parser).pushMe,
+		"mentioned":  (*Parser).pushMentioned,
+		"involved":   (*Parser).pushInvolved,
+		"search":     (*Parser).pushSearch,
+		"as":         (*Parser).pushAs,
 	}
-	// advancedAction is for fast looking up actions along the parser mode.
-	advancedAction = map[ParserMode]map[string]func(*AdvancedParser, *stack){
-		DocumentMode: advancedBuildActions(DocumentMode),
-		AdvisoryMode: advancedBuildActions(AdvisoryMode),
-		EventMode:    advancedBuildActions(EventMode),
+	// action is for fast looking up actions along the parser mode.
+	action = map[ParserMode]map[string]func(*Parser, *stack){
+		DocumentMode: buildActions(DocumentMode),
+		AdvisoryMode: buildActions(AdvisoryMode),
+		EventMode:    buildActions(EventMode),
 	}
 )
 
-func advancedBuildActions(mode ParserMode) map[string]func(*AdvancedParser, *stack) {
-	actions := maps.Clone(advancedBaseAction)
+var binaryCompatMatrix = map[binaryCompat]valueType{
+	{boolType, and, boolType}:         boolType,
+	{boolType, or, boolType}:          boolType,
+	{intType, add, intType}:           intType,
+	{intType, sub, intType}:           intType,
+	{intType, mul, intType}:           intType,
+	{intType, div, intType}:           intType,
+	{intType, add, floatType}:         floatType,
+	{intType, sub, floatType}:         floatType,
+	{intType, mul, floatType}:         floatType,
+	{intType, div, floatType}:         floatType,
+	{floatType, add, intType}:         floatType,
+	{floatType, sub, intType}:         floatType,
+	{floatType, mul, intType}:         floatType,
+	{floatType, div, intType}:         floatType,
+	{timeType, add, durationType}:     timeType,
+	{timeType, sub, durationType}:     timeType,
+	{durationType, add, timeType}:     timeType,
+	{durationType, sub, timeType}:     timeType,
+	{durationType, add, durationType}: durationType,
+	{durationType, sub, durationType}: durationType,
+	{durationType, mul, intType}:      durationType,
+	{durationType, div, intType}:      durationType,
+	{intType, mul, durationType}:      durationType,
+	{durationType, mul, floatType}:    durationType,
+	{durationType, div, floatType}:    durationType,
+}
+
+var (
+	docAdvEvtModes = []ParserMode{DocumentMode, AdvisoryMode, EventMode}
+	advModes       = []ParserMode{AdvisoryMode}
+	evtsModes      = []ParserMode{EventMode}
+)
+
+func curry3[A, B, C any](fn func(A, B, C), c C) func(A, B) {
+	return func(a A, b B) { fn(a, b, c) }
+}
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (pm *ParserMode) UnmarshalText(text []byte) error {
+	switch s := string(text); s {
+	case "advisories":
+		*pm = AdvisoryMode
+	case "documents":
+		*pm = DocumentMode
+	case "events":
+		*pm = EventMode
+	default:
+		return fmt.Errorf("unknown parser mode %q", s)
+	}
+	return nil
+}
+
+// MarshalText implements [encoding.TextMarshaler].
+func (pm ParserMode) MarshalText() ([]byte, error) {
+	switch pm {
+	case AdvisoryMode:
+		return []byte("advisories"), nil
+	case DocumentMode:
+		return []byte("documents"), nil
+	case EventMode:
+		return []byte("events"), nil
+	default:
+		return nil, fmt.Errorf("unknown parser mode %d", pm)
+	}
+}
+
+// String implements [fmt.Stringer].
+func (pm ParserMode) String() string {
+	switch pm {
+	case DocumentMode:
+		return "documents"
+	case AdvisoryMode:
+		return "advisories"
+	case EventMode:
+		return "events"
+	default:
+		return fmt.Sprintf("Unknown parser mode: %d", pm)
+	}
+}
+
+// Scan implements [sql.Scanner].
+func (pm *ParserMode) Scan(src any) error {
+	if s, ok := src.(string); ok {
+		return pm.UnmarshalText([]byte(s))
+	}
+	return errors.New("unsupported type")
+}
+
+func (cs columnSource) contains(other columnSource) bool {
+	return cs&other == other
+}
+
+func (cs *columnSource) add(other columnSource) {
+	*cs |= other
+}
+
+// String implements [fmt.Stringer].
+func (cs columnSource) String() string {
+	var tables []string
+	for i := range len(columnSourceTables) - 1 {
+		mask := columnSource(1) << i
+		if cs.contains(mask) {
+			tables = append(tables, columnSourceTables[i+1])
+			cs &= ^mask
+		}
+	}
+	if cs != noTable {
+		tables = append(tables, fmt.Sprintf("unknown table(s): %b", cs))
+	}
+	return strings.Join(tables, "|")
+}
+
+func existsDocumentColumn(name string, mode ParserMode) bool {
+	return findDocumentColumn(name, mode) != nil
+}
+
+// findDocumentColumn returns a column if it exists.
+func findDocumentColumn(name string, mode ParserMode) *documentColumn {
+	for i := range documentColumns {
+		if col := &documentColumns[i]; col.name == name {
+			if !slices.Contains(col.modes, mode) {
+				return nil
+			}
+			return col
+		}
+	}
+	return nil
+}
+
+func buildActions(mode ParserMode) map[string]func(*Parser, *stack) {
+	actions := maps.Clone(baseAction)
 	for i := range documentColumns {
 		col := &documentColumns[i]
 		if !col.projectionOnly && slices.Contains(col.modes, mode) {
-			actions["$"+col.name] = func(p *AdvancedParser, st *stack) {
+			actions["$"+col.name] = func(p *Parser, st *stack) {
 				p.pushAccess(st, col)
 			}
 		}
@@ -182,10 +315,10 @@ func advancedBuildActions(mode ParserMode) map[string]func(*AdvancedParser, *sta
 	return actions
 }
 
-func (*AdvancedParser) pushTrue(st *stack)  { st.push(True()) }
-func (*AdvancedParser) pushFalse(st *stack) { st.push(False()) }
+func (*Parser) pushTrue(st *stack)  { st.push(True()) }
+func (*Parser) pushFalse(st *stack) { st.push(False()) }
 
-func (*AdvancedParser) pushNot(st *stack) {
+func (*Parser) pushNot(st *stack) {
 	e := st.pop()
 	e.checkValueType(boolType)
 	st.push(&Expr{
@@ -195,7 +328,7 @@ func (*AdvancedParser) pushNot(st *stack) {
 	})
 }
 
-func (*AdvancedParser) pushBinary(st *stack, et exprType) {
+func (*Parser) pushBinary(st *stack, et exprType) {
 	right := st.pop()
 	left := st.pop()
 	resultValueType, ok := binaryCompatMatrix[binaryCompat{
@@ -215,7 +348,7 @@ func (*AdvancedParser) pushBinary(st *stack, et exprType) {
 	})
 }
 
-func (p *AdvancedParser) pushAccess(st *stack, column *documentColumn) {
+func (p *Parser) pushAccess(st *stack, column *documentColumn) {
 	p.UsedSources.add(column.sources)
 	st.push(&Expr{
 		exprType:    access,
@@ -224,7 +357,7 @@ func (p *AdvancedParser) pushAccess(st *stack, column *documentColumn) {
 	})
 }
 
-func (*AdvancedParser) pushFloat(st *stack) {
+func (*Parser) pushFloat(st *stack) {
 	if st.top().valueType == floatType {
 		return
 	}
@@ -258,7 +391,7 @@ func (*AdvancedParser) pushFloat(st *stack) {
 	}
 }
 
-func (*AdvancedParser) pushInteger(st *stack) {
+func (*Parser) pushInteger(st *stack) {
 	if st.top().valueType == intType {
 		return
 	}
@@ -292,7 +425,7 @@ func (*AdvancedParser) pushInteger(st *stack) {
 	}
 }
 
-func (*AdvancedParser) pushTimestamp(st *stack) {
+func (*Parser) pushTimestamp(st *stack) {
 	if st.top().valueType == timeType {
 		return
 	}
@@ -320,7 +453,7 @@ func (*AdvancedParser) pushTimestamp(st *stack) {
 	}
 }
 
-func (*AdvancedParser) pushCmp(st *stack, et exprType) {
+func (*Parser) pushCmp(st *stack, et exprType) {
 	right := st.pop()
 	left := st.pop()
 	if right.valueType != left.valueType {
@@ -335,8 +468,8 @@ func (*AdvancedParser) pushCmp(st *stack, et exprType) {
 	})
 }
 
-func advancedPushEnum(vtype valueType, parse func(string) string) func(*AdvancedParser, *stack) {
-	return func(_ *AdvancedParser, st *stack) {
+func pushEnum(vtype valueType, parse func(string) string) func(*Parser, *stack) {
+	return func(_ *Parser, st *stack) {
 		if st.top().valueType == vtype {
 			return
 		}
@@ -366,7 +499,7 @@ func advancedPushEnum(vtype valueType, parse func(string) string) func(*Advanced
 	}
 }
 
-func (p *AdvancedParser) checkSearchLength(term string) {
+func (p *Parser) checkSearchLength(term string) {
 	if p.MinSearchLength > 0 && len(term) < p.MinSearchLength {
 		panic(parseError(
 			fmt.Sprintf("search term too short (must be at least %d chars long)",
@@ -374,7 +507,7 @@ func (p *AdvancedParser) checkSearchLength(term string) {
 	}
 }
 
-func (p *AdvancedParser) pushSearch(st *stack) {
+func (p *Parser) pushSearch(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
@@ -386,7 +519,7 @@ func (p *AdvancedParser) pushSearch(st *stack) {
 	})
 }
 
-func (p *AdvancedParser) pushMentioned(st *stack) {
+func (p *Parser) pushMentioned(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
@@ -398,7 +531,7 @@ func (p *AdvancedParser) pushMentioned(st *stack) {
 	})
 }
 
-func (p *AdvancedParser) pushInvolved(st *stack) {
+func (p *Parser) pushInvolved(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.UsedSources.add(eventsLogTable)
@@ -409,7 +542,7 @@ func (p *AdvancedParser) pushInvolved(st *stack) {
 	})
 }
 
-func (p *AdvancedParser) pushILike(st *stack) {
+func (p *Parser) pushILike(st *stack) {
 	needle := st.pop()
 	haystack := st.pop()
 	needle.checkValueType(stringType)
@@ -422,7 +555,7 @@ func (p *AdvancedParser) pushILike(st *stack) {
 	})
 }
 
-func (p *AdvancedParser) pushILikePName(st *stack) {
+func (p *Parser) pushILikePName(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
 	p.UsedSources.add(documentsTable | textTable)
@@ -433,7 +566,7 @@ func (p *AdvancedParser) pushILikePName(st *stack) {
 	})
 }
 
-func (p *AdvancedParser) pushILikePID(st *stack) {
+func (p *Parser) pushILikePID(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
 	p.UsedSources.add(documentsTable | textTable)
@@ -444,18 +577,18 @@ func (p *AdvancedParser) pushILikePID(st *stack) {
 	})
 }
 
-func (*AdvancedParser) pushNow(st *stack) {
+func (*Parser) pushNow(st *stack) {
 	st.push(&Expr{
 		exprType:  now,
 		valueType: timeType,
 	})
 }
 
-func (p *AdvancedParser) pushMe(st *stack) {
+func (p *Parser) pushMe(st *stack) {
 	st.pushString(p.Me)
 }
 
-func (*AdvancedParser) pushDuration(st *stack) {
+func (*Parser) pushDuration(st *stack) {
 	if st.top().valueType == durationType {
 		return
 	}
@@ -479,7 +612,7 @@ func (*AdvancedParser) pushDuration(st *stack) {
 	}
 }
 
-func (p *AdvancedParser) pushAs(st *stack) {
+func (p *Parser) pushAs(st *stack) {
 	alias := st.pop()
 	srch := st.top()
 	alias.checkValueType(stringType)
@@ -496,11 +629,11 @@ func (p *AdvancedParser) pushAs(st *stack) {
 	srch.alias = alias.stringValue
 }
 
-func (p *AdvancedParser) parse(input string) (*Expr, error) {
+func (p *Parser) parse(input string) (*Expr, error) {
 	p.aliases = nil
 
 	st := stack{}
-	acts := advancedAction[p.Mode]
+	acts := action[p.Mode]
 
 	split(input, func(field string, isString bool) {
 		if !isString {
@@ -526,7 +659,7 @@ func (p *AdvancedParser) parse(input string) (*Expr, error) {
 }
 
 // Parse returns an expression.
-func (p *AdvancedParser) Parse(input string) (expr *Expr, err error) {
+func (p *Parser) Parse(input string) (expr *Expr, err error) {
 	defer func() {
 		if x := recover(); x != nil {
 			if pe, ok := x.(parseError); ok {
@@ -537,4 +670,183 @@ func (p *AdvancedParser) Parse(input string) (expr *Expr, err error) {
 		}
 	}()
 	return p.parse(input)
+}
+
+func (st *stack) push(v *Expr) {
+	*st = append(*st, v)
+}
+
+func (st *stack) pop() *Expr {
+	if l := len(*st); l > 0 {
+		x := (*st)[l-1]
+		(*st)[l-1] = nil
+		*st = (*st)[:l-1]
+		return x
+	}
+	panic(parseError("stack empty"))
+}
+
+func (st stack) top() *Expr { return st.topN(0) }
+
+func (st stack) topN(n int) *Expr {
+	if l := len(st); l > n {
+		return st[l-n-1]
+	}
+	panic(parseError("stack empty"))
+}
+
+func (st *stack) pushString(s string) {
+	st.push(&Expr{
+		exprType:    cnst,
+		valueType:   stringType,
+		stringValue: s,
+	})
+}
+
+func (st *stack) andReduce() {
+	for len(*st) > 1 {
+		a, b := st.topN(0), st.topN(1)
+		if a.valueType != boolType || b.valueType != boolType {
+			return
+		}
+		st.pop()
+		st.pop()
+		st.push(a.And(b))
+	}
+}
+
+func parseFloat(s string) float64 {
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic(parseError(fmt.Sprintf("%q is not a float: %v", s, err)))
+	}
+	return v
+}
+
+func parseInt(s string) int64 {
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		panic(parseError(fmt.Sprintf("%q is not an int: %v", s, err)))
+	}
+	return v
+}
+
+func parseDuration(s string) time.Duration {
+	duration, err := time.ParseDuration(s)
+	if err != nil {
+		panic(parseError(fmt.Sprintf("cannot parse %q as duration", s)))
+	}
+	return duration
+}
+
+func parseTime(s string) time.Time {
+	for _, format := range []string{
+		time.RFC3339,
+		"2006-01-02",
+		"2006-01-02T15:04:05-0700",
+		"2006-01-02 15:04:05-0700",
+	} {
+		t, err := time.Parse(format, s)
+		if err == nil {
+			return t
+		}
+	}
+	panic(parseError(fmt.Sprintf("cannot parse %q as time", s)))
+}
+
+var validWorkflows = []string{
+	"new", "read", "assessing",
+	"review", "archived", "delete",
+}
+
+func parseWorkflow(s string) string {
+	if !slices.Contains(validWorkflows, s) {
+		panic(parseError(fmt.Sprintf("%q is not a valid workflow", s)))
+	}
+	return s
+}
+
+var validEvents = []string{
+	"import_document", "delete_document",
+	"state_change",
+	"add_sscv", "change_sscv", "delete_sscv",
+	"add_comment", "change_comment", "delete_comment",
+}
+
+func parseEvents(s string) string {
+	if !slices.Contains(validEvents, s) {
+		panic(parseError(fmt.Sprintf("%q is not a valid event", s)))
+	}
+	return s
+}
+
+func parseStatus(s string) string {
+	switch st := csaf.TrackingStatus(s); st {
+	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
+		return s
+	default:
+		panic(parseError(fmt.Sprintf("%q is not a valid status", s)))
+	}
+}
+
+var aliasRe = regexp.MustCompile(`[a-zA-Z_0-9]+`)
+
+func validAlias(s string) {
+	if !aliasRe.MatchString(s) {
+		panic(parseError(fmt.Sprintf("invalid alias %q", s)))
+	}
+}
+
+func split(input string, fn func(string, bool)) {
+	var b strings.Builder
+	state := 0
+	for _, r := range input {
+		switch state {
+		case 0: // white space
+			switch r {
+			case '"':
+				state = 1
+			case '\\':
+				state = 2
+			default:
+				if !unicode.IsSpace(r) {
+					b.WriteRune(r)
+					state = 3
+				}
+			}
+		case 1: // quoted string
+			switch r {
+			case '\\':
+				state = 5
+			case '"':
+				fn(b.String(), true)
+				b.Reset()
+				state = 0
+			default:
+				b.WriteRune(r)
+			}
+		case 2: // \ in white space
+			b.WriteRune(r)
+			state = 3
+		case 3: // unquoted string
+			if r == '\\' {
+				state = 4
+			} else if unicode.IsSpace(r) {
+				fn(b.String(), false)
+				b.Reset()
+				state = 0
+			} else {
+				b.WriteRune(r)
+			}
+		case 4: // \ in unquoted string
+			b.WriteRune(r)
+			state = 3
+		case 5: // \ in quoted string
+			b.WriteRune(r)
+			state = 1
+		}
+	}
+	if state != 0 {
+		fn(b.String(), state == 1 || state == 5)
+	}
 }

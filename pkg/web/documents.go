@@ -374,7 +374,7 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		mode = query.AdvisoryMode
 	}
 
-	parser := query.AdvancedParser{
+	parser := query.Parser{
 		Mode:            mode,
 		MinSearchLength: MinSearchLength,
 		Me:              ctx.GetString("uid"),
