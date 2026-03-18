@@ -69,6 +69,11 @@ func Apply[S, T any](seq iter.Seq[S], fn func(S) T) iter.Seq[T] {
 	}
 }
 
+// Not is a convenience function to negate a [Filter] accept function.
+func Not[T any](accept func(T) bool) func(T) bool {
+	return func(t T) bool { return !accept(t) }
+}
+
 // Filter returns a sequence that only contains values that
 // are accepted by the given function.
 func Filter[T any](seq iter.Seq[T], accept func(T) bool) iter.Seq[T] {

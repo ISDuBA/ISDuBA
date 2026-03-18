@@ -460,6 +460,10 @@ func (sb *AdvancedSQLBuilder) alias(name string) *Expr {
 	return sb.parser.aliases[name]
 }
 
+func (sb *AdvancedSQLBuilder) hasAlias(name string) bool {
+	return sb.alias(name) != nil
+}
+
 // createWhere construct a WHERE clause for a given expression.
 func (sb *AdvancedSQLBuilder) createWhere(b *strings.Builder, sm statementMode) {
 	sb.whereRecurse(sb.expr, b, sm)
@@ -656,11 +660,26 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 		itertools.Unique(itertools.Concat(
 			itertools.Filter(
 				slices.Values(sb.fields),
-				func(name string) bool { return sb.alias(name) == nil }),
-			itertools.Apply(
+				// Aliases are not real columns.
+				itertools.Not(sb.hasAlias)),
+			itertools.Filter(itertools.Apply(
 				slices.Values(sb.orderFields),
-				func(s string) string { return strings.TrimPrefix(s, "-") }),
-			sb.expr.accessedColumns(),
+				func(s string) string {
+					// Remove leading '-' from orderFields
+					return strings.TrimPrefix(s, "-")
+				}),
+				// Aliases are not real columns.
+				itertools.Not(sb.hasAlias)),
+			itertools.Apply(itertools.Filter(
+				sb.expr.all(),
+				func(e *Expr) bool {
+					// We only need the the database accesses.
+					return e.exprType == access && e.stringValue != ""
+				}),
+				func(e *Expr) string {
+					// The name of the particular column.
+					return e.stringValue
+				}),
 		))) {
 		if i > 0 {
 			b.WriteByte(',')
@@ -747,7 +766,7 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		if alias := sb.alias(name); alias != nil {
+		if sb.hasAlias(name) {
 			b.WriteString(`` +
 				`CASE WHEN length(txt)<= 200 THEN txt ` +
 				`ELSE substring(txt, 0, 197)END||'...'AS `)

@@ -400,17 +400,15 @@ func (e *Expr) And(o *Expr) *Expr {
 	}
 }
 
-func (e *Expr) accessedColumns() iter.Seq[string] {
-	return func(yield func(string) bool) {
+func (e *Expr) all() iter.Seq[*Expr] {
+	return func(yield func(*Expr) bool) {
 		var recursive func(*Expr) bool
 		recursive = func(curr *Expr) bool {
 			if curr == nil {
 				return true
 			}
-			if curr.exprType == access && curr.stringValue != "" {
-				if !yield(curr.stringValue) {
-					return false
-				}
+			if !yield(curr) {
+				return false
 			}
 			for _, child := range curr.children {
 				if !recursive(child) {
