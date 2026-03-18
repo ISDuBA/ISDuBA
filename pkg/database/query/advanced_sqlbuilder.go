@@ -105,6 +105,9 @@ func (cm cteMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, name st
 		b.WriteString(name)
 		b.WriteString(` AS `)
 		b.WriteString(name)
+	case "versions":
+		// ToDo: Evaluate removal from projectionCommon
+		b.WriteString("docads.versions AS versions")
 	default:
 		cm.projectionCommon(sb, b, name,
 			versionsCountCTE, commentsCountDocumentsCTE)
