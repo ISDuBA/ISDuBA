@@ -651,7 +651,7 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 	b.WriteString(`WITH docads AS (` +
 		`SELECT `)
 	for i, field := range enumerate(
-		unique(
+		unique(concat(
 			filter(
 				slices.Values(sb.fields),
 				func(name string) bool { return sb.alias(name) == nil }),
@@ -659,7 +659,7 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 				slices.Values(sb.orderFields),
 				func(s string) string { return strings.TrimPrefix(s, "-") }),
 			sb.expr.accessedColumns(),
-		)) {
+		))) {
 		if i > 0 {
 			b.WriteByte(',')
 		}

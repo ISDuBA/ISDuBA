@@ -12,17 +12,27 @@ import (
 	"iter"
 )
 
-func unique[T comparable](seqs ...iter.Seq[T]) iter.Seq[T] {
+func concat[T any](seqs ...iter.Seq[T]) iter.Seq[T] {
 	return func(yield func(T) bool) {
-		seen := make(map[T]struct{})
 		for _, seq := range seqs {
 			for t := range seq {
-				if _, found := seen[t]; !found {
-					if !yield(t) {
-						return
-					}
-					seen[t] = struct{}{}
+				if !yield(t) {
+					return
 				}
+			}
+		}
+	}
+}
+
+func unique[T comparable](seq iter.Seq[T]) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		seen := make(map[T]struct{})
+		for t := range seq {
+			if _, found := seen[t]; !found {
+				if !yield(t) {
+					return
+				}
+				seen[t] = struct{}{}
 			}
 		}
 	}
