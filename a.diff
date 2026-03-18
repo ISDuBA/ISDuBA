@@ -1,0 +1,20 @@
+diff --git a/pkg/database/query/sqlbuilder.go b/pkg/database/query/sqlbuilder.go
+index bbde0bfa..086722b9 100644
+--- a/pkg/database/query/sqlbuilder.go
++++ b/pkg/database/query/sqlbuilder.go
+@@ -226,11 +226,11 @@ func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
+ const (
+        versionsCountClassic = `(SELECT count(*) FROM documents WHERE ` +
+                `documents.advisories_id = advisories.id)`
+-       commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
+-               `comments.documents_id = docads.id)`
++        commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
++                `comments.documents_id = documents.id)`
+        versionsCountCTE          = `(SELECT count(*) FROM docads)`
+-       commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
+-               `comments.documents_id = documents.id)`
++        commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
++                `comments.documents_id = docads.id)`
+        commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
+                `comments.documents_id = documents_id)`
+ )

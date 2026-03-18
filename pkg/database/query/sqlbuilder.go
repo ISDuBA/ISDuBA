@@ -227,10 +227,10 @@ const (
 	versionsCountClassic = `(SELECT count(*) FROM documents WHERE ` +
 		`documents.advisories_id = advisories.id)`
 	commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = docads.id)`
+		`comments.documents_id = documents.id)`
 	versionsCountCTE          = `(SELECT count(*) FROM docads)`
 	commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = documents.id)`
+		`comments.documents_id = docads.id)`
 	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents_id)`
 )
