@@ -6,13 +6,16 @@
 // SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 
-package query
+// Package itertools is a set of functions
+// used commonly on sequences.
+package itertools
 
 import (
 	"iter"
 )
 
-func concat[T any](seqs ...iter.Seq[T]) iter.Seq[T] {
+// Concat concatenates a list of sequences into one one.
+func Concat[T any](seqs ...iter.Seq[T]) iter.Seq[T] {
 	return func(yield func(T) bool) {
 		for _, seq := range seqs {
 			for t := range seq {
@@ -24,7 +27,9 @@ func concat[T any](seqs ...iter.Seq[T]) iter.Seq[T] {
 	}
 }
 
-func unique[T comparable](seq iter.Seq[T]) iter.Seq[T] {
+// Unique removes duplicates from a given sequence and only
+// delivers unique ones on their first appearance.
+func Unique[T comparable](seq iter.Seq[T]) iter.Seq[T] {
 	return func(yield func(T) bool) {
 		seen := make(map[T]struct{})
 		for t := range seq {
@@ -38,7 +43,9 @@ func unique[T comparable](seq iter.Seq[T]) iter.Seq[T] {
 	}
 }
 
-func enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
+// Enumerate returns a [iter.Seq2] injecting i = 0...n
+// as the first value.
+func Enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 	return func(yield func(int, T) bool) {
 		i := 0
 		for t := range seq {
@@ -50,7 +57,9 @@ func enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 	}
 }
 
-func apply[S, T any](seq iter.Seq[S], fn func(S) T) iter.Seq[T] {
+// Apply applies a given function to the given sequence
+// and returns a sequence of the return values of the function.
+func Apply[S, T any](seq iter.Seq[S], fn func(S) T) iter.Seq[T] {
 	return func(yield func(T) bool) {
 		for s := range seq {
 			if !yield(fn(s)) {
@@ -60,7 +69,9 @@ func apply[S, T any](seq iter.Seq[S], fn func(S) T) iter.Seq[T] {
 	}
 }
 
-func filter[T any](seq iter.Seq[T], accept func(T) bool) iter.Seq[T] {
+// Filter returns a sequence that only contains values that
+// are accepted by the given function.
+func Filter[T any](seq iter.Seq[T], accept func(T) bool) iter.Seq[T] {
 	return func(yield func(T) bool) {
 		for t := range seq {
 			if accept(t) && !yield(t) {

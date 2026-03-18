@@ -14,6 +14,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 )
 
 // AdvancedSQLBuilder helps to construct a SQL query.
@@ -650,12 +652,12 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 	b.WriteString(`WITH docads AS (` +
 		`SELECT `)
-	for i, field := range enumerate(
-		unique(concat(
-			filter(
+	for i, field := range itertools.Enumerate(
+		itertools.Unique(itertools.Concat(
+			itertools.Filter(
 				slices.Values(sb.fields),
 				func(name string) bool { return sb.alias(name) == nil }),
-			apply(
+			itertools.Apply(
 				slices.Values(sb.orderFields),
 				func(s string) string { return strings.TrimPrefix(s, "-") }),
 			sb.expr.accessedColumns(),
