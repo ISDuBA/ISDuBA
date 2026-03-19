@@ -11,6 +11,7 @@ package query
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -148,10 +149,28 @@ func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 			`LEFT JOIN (SELECT message, id FROM comments) AS comment ` +
 			`ON events_log.comments_id = comment.id`)
 	}
-	// SSVC is already in docads.
+	// SSVC is already in docads
+	// TODO: The text tables only needs to be joined in case we have pure EXISTS checks.
+	// This should also be rewitten as CROSS JOIN LATERAL.
 	if sb.usedSources.contains(textTable) {
 		b.WriteString(` JOIN documents_texts ON docads.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
+	}
+	// For every alias we need a CROSS JOIN LITERAL.
+	if sb.parser != nil {
+		// Sort to make output deterministic.
+		names := slices.Sorted(maps.Keys(sb.parser.aliases))
+		for _, name := range names {
+			srch := sb.parser.aliases[name]
+			fmt.Fprintf(b,
+				` CROSS JOIN LATERAL(`+
+					`SELECT txt FROM documents_texts`+
+					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+					` documents_texts.documents_id = docads.id AND`+
+					` txt ILIKE $%d) _search_join_%d`,
+				sb.replacementIndex(LikeEscape(srch.stringValue))+1,
+				srch.intValue)
+		}
 	}
 }
 
@@ -221,17 +240,10 @@ func (classicMode) searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Build
 	}
 }
 
-func (cteMode) searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
-	switch sb.mode() {
-	case AdvisoryMode, DocumentMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
-			"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
-			"WHERE txt ILIKE $%d "+
-			"AND documents_texts.documents_id = docads.id)",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-	case EventMode:
-		// TODO clarify how to handle event search
-	}
+func (cteMode) searchWhere(_ *AdvancedSQLBuilder, _ *Expr, b *strings.Builder) {
+	// The Filtering is done by a CROSS JOIN LATERAL so we insert a true here
+	// to be optimzed away by the query planner.
+	b.WriteString("TRUE")
 }
 
 func (classicMode) mentionedWhereCommon(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
@@ -769,11 +781,11 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		if sb.hasAlias(name) {
-			b.WriteString(`` +
-				`CASE WHEN length(txt)<= 200 THEN txt ` +
-				`ELSE substring(txt, 0, 197)END||'...'AS `)
-			b.WriteString(name)
+		if srch := sb.alias(name); srch != nil {
+			fmt.Fprintf(b,
+				`CASE WHEN length(_search_join_%[1]d.txt)<= 200 THEN _search_join_%[1]d.txt `+
+					`ELSE substring(_search_join_%[1]d.txt, 0, 197)END||'...' AS "%[2]s"`,
+				srch.intValue, name)
 			continue
 		}
 		sm.projection(sb, b, name)
@@ -790,7 +802,7 @@ func (sb *AdvancedSQLBuilder) check() error {
 			sb.usedSources.add(col.sources)
 			return true
 		}
-		if sb.alias(field) != nil {
+		if sb.hasAlias(field) {
 			sb.usedSources.add(documentsTable | textTable)
 			return true
 		}

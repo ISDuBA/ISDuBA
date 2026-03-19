@@ -625,8 +625,9 @@ func (p *Parser) pushAs(st *stack) {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
 	}
 	p.UsedSources.add(documentsTable | textTable)
-	p.aliases[alias.stringValue] = alias
 	srch.alias = alias.stringValue
+	srch.intValue = int64(len(p.aliases))
+	p.aliases[alias.stringValue] = srch
 }
 
 func (p *Parser) parse(input string) (*Expr, error) {
