@@ -43,14 +43,4 @@ host    all             all             ::1/128                 scram-sha-256
 block_to_insert
 fi
 
-PG_CONF_PATH=$(psql -t -P format=unaligned -c 'SHOW config_file;')
-if ! grep -q -F "# ISDuBA configuration" $PG_CONF_PATH;
-then
-tee -a $PG_CONF_PATH <<block_to_insert > /dev/null
-# ISDuBA configuration
-random_page_cost = 1.0
-fi
-
-systemctl reload postgresql
-
 echo "Adjusted postgresql configuration"
