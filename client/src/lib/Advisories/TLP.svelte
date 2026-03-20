@@ -20,6 +20,7 @@
   {tlp}
 </Link>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
   .tlpwhite {
     font-size: small;

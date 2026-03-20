@@ -19,17 +19,19 @@
 
   const uid = $props.id();
 
-  productNames = productNames
-    ? productNames.sort((p1: any, p2: any) => {
-        if (p1.name < p2.name) return -1;
-        if (p1.name > p2.name) return 1;
-        return 0;
-      })
-    : [];
+  const sortedProductNames = $derived(
+    productNames
+      ? productNames.sort((p1: any, p2: any) => {
+          if (p1.name < p2.name) return -1;
+          if (p1.name > p2.name) return 1;
+          return 0;
+        })
+      : []
+  );
 </script>
 
 {#if productNames}
-  {#each productNames as product, i (`productnames-${uid}-${i}`)}
+  {#each sortedProductNames as product, i (`productnames-${uid}-${i}`)}
     <ProductName {product} />
   {/each}
 {/if}
