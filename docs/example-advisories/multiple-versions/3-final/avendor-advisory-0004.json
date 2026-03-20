@@ -13,6 +13,11 @@
         "category": "summary",
         "title": "Test document summary",
         "text": "Auto generated test CSAF document"
+      },
+      {
+        "category": "summary",
+        "title": "Test document summary",
+        "text": "Test document with two notes that share the same title. Don't use title as key for #each template because multiple notes can have the same title."
       }
     ],
     "publisher": {
