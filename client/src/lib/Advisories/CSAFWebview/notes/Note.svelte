@@ -17,12 +17,8 @@
   }
   let { note }: Props = $props();
 
-  let keys: string[] = [];
-  let values: string[] = [];
-  if (note.audience) {
-    keys.push("Audience");
-    values.push(note.audience);
-  }
+  let keys: string[] = $derived(note.audience ? ["Audience"] : []);
+  let values: string[] = $derived(note.audience ? [note.audience] : []);
 </script>
 
 <KeyValue {keys} {values} />

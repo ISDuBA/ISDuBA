@@ -8,14 +8,19 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
+  import { onMount } from "svelte";
+
   interface Props {
     // Avoid warning of unused prop
     params?: any;
   }
 
   let { params = null }: Props = $props();
-  // eslint-disable-next-line no-console
-  console.info("Got params: " + params);
+
+  onMount(() => {
+    // eslint-disable-next-line no-console
+    console.info("Got params: " + params);
+  });
 </script>
 
 <h1>Not Found</h1>

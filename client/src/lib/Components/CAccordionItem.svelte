@@ -99,8 +99,8 @@
     ...restProps
   }: Props = $props();
 
-  let activeCls = twMerge(activeClass, classActive);
-  let inactiveCls = twMerge(inactiveClass, classInactive);
+  let activeCls = $derived(twMerge(activeClass, classActive));
+  let inactiveCls = $derived(twMerge(inactiveClass, classInactive));
 
   // make a custom transition function that returns the desired transition
   const multiple = (node: HTMLElement, params: any) => {
@@ -116,7 +116,8 @@
     }
   };
 
-  const ctx: AccordionCtxType = getContext("ctx") ?? {};
+  const ctxClosure: () => AccordionCtxType = getContext("ctx") ?? {};
+  const ctx: AccordionCtxType = $derived(ctxClosure());
 
   // single selection
   const self = {};
