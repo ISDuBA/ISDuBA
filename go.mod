@@ -13,7 +13,7 @@ go 1.26.0
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/Masterminds/semver/v3 v3.4.0
-	github.com/ProtonMail/gopenpgp/v2 v2.9.0
+	github.com/ProtonMail/gopenpgp/v2 v2.10.0
 	github.com/gin-contrib/static v1.1.5
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocsaf/csaf/v3 v3.5.1
@@ -33,7 +33,7 @@ require (
 	github.com/Intevation/gval v1.3.0 // indirect
 	github.com/Intevation/jsonpath v0.2.1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/ProtonMail/go-crypto v1.3.0 // indirect
+	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/ProtonMail/go-mime v0.0.0-20230322103455-7d82a3887f2f // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
