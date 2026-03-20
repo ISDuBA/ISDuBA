@@ -15,7 +15,7 @@ test("Advisory view is working", async ({ page }) => {
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await page.getByText("Avendor-advisory-0004").first().click({ force: true });
+  await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
   // value helps to distinguish the comments.
@@ -62,7 +62,7 @@ test("Tabs with details about document are working", async ({ page }) => {
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await page.getByText("Avendor-advisory-0004").first().click({ force: true });
+  await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
 
   await page.getByRole("button", { name: "3 (final)" }).click();
 
@@ -73,4 +73,4 @@ test("Tabs with details about document are working", async ({ page }) => {
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
-})
+});
