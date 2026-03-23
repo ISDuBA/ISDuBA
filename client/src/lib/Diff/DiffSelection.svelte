@@ -422,7 +422,7 @@
                     }}
                     class:invisible={!appStore.state.app.isToolboxOpen}
                     disabled={docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons}
-                    title={`Add to comparison: ${doc.title} - ${doc.tracking.id}`}
+                    title={`Add temporary document to comparison: ${doc.title} - ${doc.tracking.id}`}
                   >
                     <Img
                       src="plus-minus.svg"
