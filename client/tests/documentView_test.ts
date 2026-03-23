@@ -15,7 +15,7 @@ test("Advisory view is working", async ({ page }) => {
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await page.getByText("Avendor-advisory-0004").first().click({ force: true });
+  await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
   // value helps to distinguish the comments.
@@ -25,11 +25,6 @@ test("Advisory view is working", async ({ page }) => {
   await expect(page.getByText(comment)).toBeVisible();
   await page.getByRole("button", { name: "History" }).click();
   await expect(page.getByText(comment)).toBeVisible();
-
-  await page.getByRole("tab", { name: "Vulnerabilities" }).click();
-  const scoresCollapsible = await page.getByText("Scores").first();
-  await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
-  await scoresCollapsible.click({ force: true });
 
   // Test SSVC calculator
   await page.getByTitle("Edit SSVC").click();
@@ -60,4 +55,22 @@ test("Advisory view is working", async ({ page }) => {
   await expect(toText).toBeVisible();
   const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`).first();
   await expect(fromText).toBeVisible();
+});
+
+test("Tabs with details about document are working", async ({ page }) => {
+  await page.goto("/#/search");
+  await expect(page.getByText("advisories in total")).toBeVisible();
+  await page.getByPlaceholder("Enter a search term").fill("avendor");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
+
+  await page.getByRole("button", { name: "3 (final)" }).click();
+
+  await page.getByRole("tab", { name: "Vulnerabilities" }).click();
+  const scoresCollapsible = await page.getByText("Scores").first();
+  await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
+  await scoresCollapsible.click({ force: true });
+
+  await page.getByRole("tab", { name: "Notes" }).click();
+  await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
 });
