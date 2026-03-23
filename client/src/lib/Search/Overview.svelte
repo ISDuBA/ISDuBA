@@ -48,9 +48,11 @@
   // Variables derived from URL parameters
   let queryString: any = $derived($qs ? parse($qs) : undefined);
   let searchTerm: string = $derived(queryString?.searchTerm ? queryString.searchTerm : "");
-  let orderBy: string[] = $derived(
-    queryString?.orderBy ? queryString.orderBy.split(" ") : INITIAL_ORDER
-  );
+  let orderBy: string[] = $derived.by(() => {
+    // Allow an empty string to overwrite the order of a selected query
+    if (queryString?.orderBy === "") return [];
+    return queryString?.orderBy ? queryString.orderBy.split(" ") : INITIAL_ORDER;
+  });
   let advanced: boolean = $derived(
     queryString?.advanced !== undefined ? (queryString.advanced === "true" ? true : false) : false
   );

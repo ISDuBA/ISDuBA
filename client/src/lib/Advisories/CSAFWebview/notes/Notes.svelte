@@ -19,11 +19,13 @@
   }
   let { notes, open = false }: Props = $props();
 
+  const uid = $props.id();
+
   let hasDescription = $derived(notes.some((note) => note.category === "description"));
 </script>
 
 {#if notes}
-  {#each notes as note (note.title)}
+  {#each notes as note, index (`notes-${uid}-${index}`)}
     <Collapsible
       header={note.title ? `${note.category}: ${note.title}` : note.category}
       level={4}
