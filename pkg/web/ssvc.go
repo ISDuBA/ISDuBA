@@ -326,6 +326,7 @@ func (c *Controller) viewSSVCHistory(ctx *gin.Context) {
 					&entry.DocumentsID,
 					&entry.DocumentsVersion,
 				)
+				entry.ChangeDate = entry.ChangeDate.UTC()
 				return entry, err
 			})
 			if err != nil {
