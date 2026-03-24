@@ -47,7 +47,7 @@ or ```DO NOT EDIT```
 
 #### Local
 
-Prerequisite: A running local instance of ISDuBA
+Prerequisite: A running local instance of ISDuBA, with a running configured Keycloak and Postgresql.
 
 To run the integration tests call `npm run test:integration`. At the latest
 when the tests fail the best way to debug them is to use the
