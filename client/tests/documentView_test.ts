@@ -62,6 +62,8 @@ test("Tabs with details about document are working", async ({ page }) => {
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByText("Avendor-advisory-0004", { exact: true })).toBeVisible();
+  await expect(page.getByText("Avendor-advisory-0005", { exact: true })).toBeVisible();
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
 
   await page.getByRole("button", { name: "3 (final)" }).click();
