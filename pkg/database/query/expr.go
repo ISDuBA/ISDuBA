@@ -13,6 +13,8 @@ import (
 	"iter"
 	"slices"
 	"time"
+
+	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 )
 
 type exprType int
@@ -191,6 +193,20 @@ func (et exprType) String() string {
 	default:
 		return fmt.Sprintf("unknown expression type %d", et)
 	}
+}
+
+// Aliases returns a sequence over all alias in the expression tree.
+func (e *Expr) Aliases() iter.Seq[string] {
+	return itertools.Apply(itertools.Filter(
+		e.all(),
+		func(e *Expr) bool {
+			// We only need the the database accesses.
+			return e.exprType == access && e.stringValue != ""
+		}),
+		func(e *Expr) string {
+			// The name of the particular column.
+			return e.stringValue
+		})
 }
 
 // And concats two expressions and-wise.

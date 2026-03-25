@@ -398,8 +398,11 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		ctx.DefaultQuery(
 			"orders",
 			"publisher tracking_id -current_release_date -rev_history_length"))
-	if aggregate && !slices.Contains(orderFields, "id") {
-		orderFields = append(orderFields, "id")
+	if aggregate {
+		if !slices.Contains(orderFields, "id") {
+			orderFields = append(orderFields, "id")
+		}
+		orderFields = slices.AppendSeq(orderFields, expr.Aliases())
 	}
 
 	fields := strings.Fields(

@@ -475,7 +475,8 @@ func (sb *AdvancedSQLBuilder) alias(name string) *Expr {
 	return sb.parser.aliases[name]
 }
 
-func (sb *AdvancedSQLBuilder) hasAlias(name string) bool {
+// HasAlias checks if there is an alias for a given name.
+func (sb *AdvancedSQLBuilder) HasAlias(name string) bool {
 	return sb.alias(name) != nil
 }
 
@@ -676,7 +677,7 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 			itertools.Filter(
 				slices.Values(sb.fields),
 				// Aliases are not real columns.
-				itertools.Not(sb.hasAlias)),
+				itertools.Not(sb.HasAlias)),
 			itertools.Filter(itertools.Apply(
 				slices.Values(sb.orderFields),
 				func(s string) string {
@@ -684,17 +685,8 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 					return strings.TrimPrefix(s, "-")
 				}),
 				// Aliases are not real columns.
-				itertools.Not(sb.hasAlias)),
-			itertools.Apply(itertools.Filter(
-				sb.expr.all(),
-				func(e *Expr) bool {
-					// We only need the the database accesses.
-					return e.exprType == access && e.stringValue != ""
-				}),
-				func(e *Expr) string {
-					// The name of the particular column.
-					return e.stringValue
-				}),
+				itertools.Not(sb.HasAlias)),
+			sb.expr.Aliases(),
 		))) {
 		if i > 0 {
 			b.WriteByte(',')
@@ -802,7 +794,7 @@ func (sb *AdvancedSQLBuilder) check() error {
 			sb.usedSources.add(col.sources)
 			return true
 		}
-		if sb.hasAlias(field) {
+		if sb.HasAlias(field) {
 			sb.usedSources.add(documentsTable | textTable)
 			return true
 		}
