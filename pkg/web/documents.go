@@ -417,7 +417,8 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		query.AdvancedSQLBuilderExpr(expr),
 		query.AdvancedSQLBuilderOrderFields(orderFields),
 		query.AdvancedSQLBuilderFields(fields),
-		query.AdvancedSQLBuilderParser(&parser))
+		query.AdvancedSQLBuilderParser(&parser),
+		query.AdvancedSQLBuilderAggregate(aggregate))
 
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)

@@ -28,6 +28,7 @@ type AdvancedSQLBuilder struct {
 	Replacements []any
 	replToIdx    map[string]int
 	usedSources  columnSource
+	aggregate    bool
 }
 
 type statementMode interface {
@@ -162,14 +163,26 @@ func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 		names := slices.Sorted(maps.Keys(sb.parser.aliases))
 		for _, name := range names {
 			srch := sb.parser.aliases[name]
-			fmt.Fprintf(b,
-				` CROSS JOIN LATERAL(`+
-					`SELECT txt FROM documents_texts`+
-					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
-					` documents_texts.documents_id = docads.id AND`+
-					` txt ILIKE $%d) _search_join_%d`,
-				sb.replacementIndex(LikeEscape(srch.stringValue))+1,
-				srch.intValue)
+			replacement := sb.replacementIndex(LikeEscape(srch.stringValue)) + 1
+			if sb.aggregate {
+				fmt.Fprintf(b,
+					` CROSS JOIN LATERAL(`+
+						`SELECT unique_texts.id AS id FROM documents_texts`+
+						` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+						` documents_texts.documents_id = docads.id AND`+
+						` txt ILIKE $%d) _search_join_%d`,
+					replacement,
+					srch.intValue)
+			} else {
+				fmt.Fprintf(b,
+					` CROSS JOIN LATERAL(`+
+						`SELECT txt FROM documents_texts`+
+						` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+						` documents_texts.documents_id = docads.id AND`+
+						` txt ILIKE $%d) _search_join_%d`,
+					replacement,
+					srch.intValue)
+			}
 		}
 	}
 }
@@ -409,6 +422,14 @@ func (cm cteMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name string) 
 
 // AdvancedSQLBuilderOption is an option to create an advanced SQL builder.
 type AdvancedSQLBuilderOption func(*AdvancedSQLBuilder)
+
+// AdvancedSQLBuilderAggregate creates an option to signal that the builder
+// is used in a aggregation context.
+func AdvancedSQLBuilderAggregate(aggregate bool) AdvancedSQLBuilderOption {
+	return func(ab *AdvancedSQLBuilder) {
+		ab.aggregate = aggregate
+	}
+}
 
 // AdvancedSQLBuilderExpr creates an option to create an advanced SQL builder
 // with an expression.
@@ -774,10 +795,14 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 			b.WriteByte(',')
 		}
 		if srch := sb.alias(name); srch != nil {
-			fmt.Fprintf(b,
-				`CASE WHEN length(_search_join_%[1]d.txt)<= 200 THEN _search_join_%[1]d.txt `+
-					`ELSE substring(_search_join_%[1]d.txt, 0, 197)END||'...' AS "%[2]s"`,
-				srch.intValue, name)
+			if sb.aggregate {
+				fmt.Fprintf(b, "_search_join_%d.id AS %s", srch.intValue, name)
+			} else {
+				fmt.Fprintf(b,
+					`CASE WHEN length(_search_join_%[1]d.txt)<= 200 THEN _search_join_%[1]d.txt `+
+						`ELSE substring(_search_join_%[1]d.txt, 0, 197)END||'...' AS "%[2]s"`,
+					srch.intValue, name)
+			}
 			continue
 		}
 		sm.projection(sb, b, name)
