@@ -800,7 +800,7 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 			} else {
 				fmt.Fprintf(b,
 					`CASE WHEN length(_search_join_%[1]d.txt)<= 200 THEN _search_join_%[1]d.txt `+
-						`ELSE substring(_search_join_%[1]d.txt, 0, 197)END||'...' AS "%[2]s"`,
+						`ELSE substring(_search_join_%[1]d.txt, 0, 197)||'...' END AS "%[2]s"`,
 					srch.intValue, name)
 			}
 			continue

@@ -104,7 +104,7 @@ func (c *Controller) aggregatedResults(
 			const uniqueSQL = `` +
 				`SELECT` +
 				` CASE WHEN length(txt)<= 200 THEN txt` +
-				` ELSE substring(txt, 0, 197)END||'...'` +
+				` ELSE substring(txt, 0, 197)||'...' END` +
 				` FROM unique_texts WHERE id = $1`
 			loadedTxts := encodedTexts[int64]{
 				fetch: func(id int64) (string, error) {
@@ -141,51 +141,55 @@ func (c *Controller) aggregatedResults(
 					firstDocument := true
 					enc := json.NewEncoder(w)
 
-					if err := ads.window(limit, offset, func(ad *aggregatedDocument) error {
-						if firstDocument {
-							firstDocument = false
-						} else {
-							fmt.Fprint(w, ",")
-						}
-						fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
-						for i, row := range ad.rows {
-							if i > 0 {
+					if err := ads.window(
+						limit, offset,
+						func(ad *aggregatedDocument) error {
+							if firstDocument {
+								firstDocument = false
+							} else {
 								fmt.Fprint(w, ",")
 							}
-							firstEntry := true
-							for k, v := range row {
-								if firstEntry {
-									firstEntry = false
-								} else {
-									fmt.Fprintf(w, ",")
+							fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
+							for i, row := range ad.rows {
+								if i > 0 {
+									fmt.Fprint(w, ",")
 								}
-								key, err := keys.resolve(k)
-								if err != nil {
-									return err
-								}
-								fmt.Fprintf(w, "%s:", key)
-								// If we have an alias we need to load the text from the database.
-								if builder.HasAlias(k) {
-									id, ok := asInt64(v)
-									if !ok {
-										return fmt.Errorf("alias %q has not an int value", k)
+								firstEntry := true
+								fmt.Fprintf(w, "{")
+								for k, v := range row {
+									if firstEntry {
+										firstEntry = false
+									} else {
+										fmt.Fprintf(w, ",")
 									}
-									txt, err := loadedTxts.resolve(id)
+									key, err := keys.resolve(k)
 									if err != nil {
 										return err
 									}
-									fmt.Fprint(w, txt)
-								} else {
-									// A none alias field
-									if err := enc.Encode(v); err != nil {
-										return err
+									fmt.Fprintf(w, "%s:", key)
+									// If we have an alias we need to load the text from the database.
+									if builder.HasAlias(k) {
+										id, ok := asInt64(v)
+										if !ok {
+											return fmt.Errorf("alias %q has not an int value", k)
+										}
+										txt, err := loadedTxts.resolve(id)
+										if err != nil {
+											return err
+										}
+										fmt.Fprint(w, txt)
+									} else {
+										// A none alias field
+										if err := enc.Encode(v); err != nil {
+											return err
+										}
 									}
 								}
+								fmt.Fprintf(w, "}")
 							}
-						}
-						_, err := fmt.Fprint(w, "]}")
-						return err
-					}); err != nil {
+							_, err := fmt.Fprint(w, "]}")
+							return err
+						}); err != nil {
 						return fmt.Errorf("writing window failed %w", err)
 					}
 					if _, err := fmt.Fprint(w, "]"); err != nil {
@@ -272,8 +276,10 @@ func scanAggregatedDocuments(
 					have[name] = v
 				}
 			}
-			last := &ads[len(ads)-1].rows
-			*last = append(*last, row)
+			if len(row) > 0 {
+				last := &ads[len(ads)-1].rows
+				*last = append(*last, row)
+			}
 		}
 	}
 	if err := rows.Err(); err != nil {
