@@ -707,7 +707,7 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 				}),
 				// Aliases are not real columns.
 				itertools.Not(sb.HasAlias)),
-			sb.expr.Aliases(),
+			sb.expr.Accesses(),
 		))) {
 		if i > 0 {
 			b.WriteByte(',')

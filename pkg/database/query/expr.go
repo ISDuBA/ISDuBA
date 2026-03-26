@@ -195,18 +195,29 @@ func (et exprType) String() string {
 	}
 }
 
-// Aliases returns a sequence over all alias in the expression tree.
-func (e *Expr) Aliases() iter.Seq[string] {
-	return itertools.Apply(itertools.Filter(
+func (e *Expr) getStringValue() string { return e.stringValue }
+func (e *Expr) getAlias() string       { return e.alias }
+
+// Accesses returns a sequence over all database accessed columns in the expression tree.
+func (e *Expr) Accesses() iter.Seq[string] {
+	return itertools.Unique(itertools.Apply(itertools.Filter(
 		e.all(),
 		func(e *Expr) bool {
-			// We only need the the database accesses.
 			return e.exprType == access && e.stringValue != ""
 		}),
-		func(e *Expr) string {
-			// The name of the particular column.
-			return e.stringValue
-		})
+		(*Expr).getStringValue,
+	))
+}
+
+// Aliases returns a sequence over all search aliases in the expression tree.
+func (e *Expr) Aliases() iter.Seq[string] {
+	return itertools.Unique(itertools.Apply(itertools.Filter(
+		e.all(),
+		func(e *Expr) bool {
+			return e.exprType == search && e.alias != ""
+		}),
+		(*Expr).getAlias,
+	))
 }
 
 // And concats two expressions and-wise.
