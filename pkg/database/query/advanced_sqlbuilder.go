@@ -153,10 +153,12 @@ func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 	// SSVC is already in docads
 	// TODO: The text tables only needs to be joined in case we have pure EXISTS checks.
 	// This should also be rewitten as CROSS JOIN LATERAL.
-	if sb.usedSources.contains(textTable) {
-		b.WriteString(` JOIN documents_texts ON docads.id = documents_texts.documents_id ` +
-			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
-	}
+	/*
+		if sb.usedSources.contains(textTable) {
+			b.WriteString(` JOIN documents_texts ON docads.id = documents_texts.documents_id ` +
+				`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
+		}
+	*/
 	// For every alias we need a CROSS JOIN LITERAL.
 	if sb.parser != nil {
 		// Sort to make output deterministic.
