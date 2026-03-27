@@ -198,6 +198,17 @@ func (et exprType) String() string {
 func (e *Expr) getStringValue() string { return e.stringValue }
 func (e *Expr) getAlias() string       { return e.alias }
 
+// UnaliasedSearches returns a sequence over the search texts that are not aliased.
+func (e *Expr) UnaliasedSearches() iter.Seq[string] {
+	return itertools.Unique(itertools.Apply(itertools.Filter(
+		e.all(),
+		func(e *Expr) bool {
+			return e.exprType == search && e.alias == ""
+		}),
+		(*Expr).getStringValue,
+	))
+}
+
 // Accesses returns a sequence over all database accessed columns in the expression tree.
 func (e *Expr) Accesses() iter.Seq[string] {
 	return itertools.Unique(itertools.Apply(itertools.Filter(

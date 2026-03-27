@@ -141,6 +141,62 @@ func (classicMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 	}
 }
 
+// createUnaliasedSearches creates a CROSS JOIN LATERAL to filter searches with no aliases.
+func (sb *AdvancedSQLBuilder) createUnaliasedSearches(b *strings.Builder) {
+	if sb.expr == nil {
+		return
+	}
+	texts := slices.Sorted(sb.expr.UnaliasedSearches())
+	if len(texts) == 0 {
+		return
+	}
+	b.WriteString(
+		` CROSS JOIN LATERAL(` +
+			`SELECT unique_texts.id AS id FROM documents_texts` +
+			` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND` +
+			` documents_texts.documents_id = docads.id AND (`)
+	for i, text := range texts {
+		if i > 0 {
+			b.WriteString(" OR ")
+		}
+		replacement := sb.replacementIndex(LikeEscape(text)) + 1
+		b.WriteString("txt ILIKE $")
+		b.WriteString(strconv.Itoa(replacement))
+	}
+	b.WriteString("))")
+}
+
+// createAliasedSearches creates a CROSS JOIN LATERAL for each search text that has an alias.
+func (sb *AdvancedSQLBuilder) createAliasedSearches(b *strings.Builder) {
+	if sb.parser == nil {
+		return
+	}
+	names := slices.Sorted(maps.Keys(sb.parser.aliases))
+	for _, name := range names {
+		srch := sb.parser.aliases[name]
+		replacement := sb.replacementIndex(LikeEscape(srch.stringValue)) + 1
+		if sb.aggregate {
+			fmt.Fprintf(b,
+				` CROSS JOIN LATERAL(`+
+					`SELECT unique_texts.id AS id FROM documents_texts`+
+					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+					` documents_texts.documents_id = docads.id AND`+
+					` txt ILIKE $%d) _search_join_%d`,
+				replacement,
+				srch.intValue)
+		} else {
+			fmt.Fprintf(b,
+				` CROSS JOIN LATERAL(`+
+					`SELECT txt FROM documents_texts`+
+					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+					` documents_texts.documents_id = docads.id AND`+
+					` txt ILIKE $%d) _search_join_%d`,
+				replacement,
+				srch.intValue)
+		}
+	}
+}
+
 func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode, DocumentMode:
@@ -150,43 +206,12 @@ func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 			`LEFT JOIN (SELECT message, id FROM comments) AS comment ` +
 			`ON events_log.comments_id = comment.id`)
 	}
+
 	// SSVC is already in docads
-	// TODO: The text tables only needs to be joined in case we have pure EXISTS checks.
-	// This should also be rewitten as CROSS JOIN LATERAL.
-	/*
-		if sb.usedSources.contains(textTable) {
-			b.WriteString(` JOIN documents_texts ON docads.id = documents_texts.documents_id ` +
-				`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
-		}
-	*/
-	// For every alias we need a CROSS JOIN LITERAL.
-	if sb.parser != nil {
-		// Sort to make output deterministic.
-		names := slices.Sorted(maps.Keys(sb.parser.aliases))
-		for _, name := range names {
-			srch := sb.parser.aliases[name]
-			replacement := sb.replacementIndex(LikeEscape(srch.stringValue)) + 1
-			if sb.aggregate {
-				fmt.Fprintf(b,
-					` CROSS JOIN LATERAL(`+
-						`SELECT unique_texts.id AS id FROM documents_texts`+
-						` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
-						` documents_texts.documents_id = docads.id AND`+
-						` txt ILIKE $%d) _search_join_%d`,
-					replacement,
-					srch.intValue)
-			} else {
-				fmt.Fprintf(b,
-					` CROSS JOIN LATERAL(`+
-						`SELECT txt FROM documents_texts`+
-						` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
-						` documents_texts.documents_id = docads.id AND`+
-						` txt ILIKE $%d) _search_join_%d`,
-					replacement,
-					srch.intValue)
-			}
-		}
-	}
+
+	// For every search we need a CROSS JOIN LITERAL.
+	sb.createUnaliasedSearches(b)
+	sb.createAliasedSearches(b)
 }
 
 func (classicMode) accessWhereCommon(
@@ -242,20 +267,7 @@ func (cm cteMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builde
 	}
 }
 
-func (classicMode) searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
-	switch sb.mode() {
-	case AdvisoryMode, DocumentMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
-			"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
-			"WHERE txt ILIKE $%d "+
-			"AND documents_texts.documents_id = documents.id)",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-	case EventMode:
-		// TODO clarify how to handle event search
-	}
-}
-
-func (cteMode) searchWhere(_ *AdvancedSQLBuilder, _ *Expr, b *strings.Builder) {
+func (classicMode) searchWhere(_ *AdvancedSQLBuilder, _ *Expr, b *strings.Builder) {
 	// The Filtering is done by a CROSS JOIN LATERAL so we insert a true here
 	// to be optimzed away by the query planner.
 	b.WriteString("TRUE")
