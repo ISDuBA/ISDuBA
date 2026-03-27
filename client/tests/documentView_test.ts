@@ -29,6 +29,13 @@ test("Advisory view is working", async ({ page }) => {
   // Test SSVC calculator
   await page.getByTitle("Edit SSVC").click();
   await page.getByRole("button", { name: "Evaluate" }).click();
+  // First test to go back and restart
+  await page.getByRole("button", { name: "poc" }).click();
+  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("button", { name: "none" }).click();
+  await page.getByRole("button", { name: "no" }).click();
+  await page.getByRole("button", { name: "Restart" }).click();
+  // Now make all decisions until the end
   await page.getByRole("button", { name: "active" }).click();
   await page.getByRole("button", { name: "yes" }).click();
   await page.getByRole("button", { name: "total" }).click();
