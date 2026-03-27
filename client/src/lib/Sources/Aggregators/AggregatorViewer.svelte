@@ -497,6 +497,7 @@
                       }}
                       class="!p-2"
                       color="light"
+                      title={`Remove aggregator ${aggregator.name}`}
                     >
                       <i class="bx bx-trash text-red-600"></i>
                     </Button>
