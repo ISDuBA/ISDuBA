@@ -22,50 +22,6 @@ import (
 	"github.com/gocsaf/csaf/v3/csaf"
 )
 
-type parseError string
-
-type exprType int
-
-const (
-	cnst exprType = iota
-	cast
-	and
-	or
-	not
-	eq
-	ne
-	gt
-	lt
-	ge
-	le
-	access
-	search
-	mentioned
-	involved
-	ilike
-	ilikePName
-	ilikePID
-	now
-	add
-	sub
-	mul
-	div
-)
-
-type valueType int
-
-const (
-	intType valueType = iota
-	floatType
-	boolType
-	stringType
-	timeType
-	workflowType
-	durationType
-	eventsType
-	statusType
-)
-
 // ParserMode represents the operation mode of the parser.
 type ParserMode int
 
@@ -78,43 +34,6 @@ const (
 	EventMode
 )
 
-// UnmarshalText implements [encoding.TextUnmarshaler].
-func (pm *ParserMode) UnmarshalText(text []byte) error {
-	switch s := string(text); s {
-	case "advisories":
-		*pm = AdvisoryMode
-	case "documents":
-		*pm = DocumentMode
-	case "events":
-		*pm = EventMode
-	default:
-		return fmt.Errorf("unknown parser mode %q", s)
-	}
-	return nil
-}
-
-// MarshalText implements [encoding.TextMarshaler].
-func (pm ParserMode) MarshalText() ([]byte, error) {
-	switch pm {
-	case AdvisoryMode:
-		return []byte("advisories"), nil
-	case DocumentMode:
-		return []byte("documents"), nil
-	case EventMode:
-		return []byte("events"), nil
-	default:
-		return nil, fmt.Errorf("unknown parser mode %d", pm)
-	}
-}
-
-// Scan implements [sql.Scanner].
-func (pm *ParserMode) Scan(src any) error {
-	if s, ok := src.(string); ok {
-		return pm.UnmarshalText([]byte(s))
-	}
-	return errors.New("unsupported type")
-}
-
 // Parser helps parsing database queries,
 type Parser struct {
 	// Mode indicates that only advisories should be considered.
@@ -124,24 +43,41 @@ type Parser struct {
 	// Me is a replacement text for the "me" keyword.
 	Me string
 
+	// UsedSources are the sources found during parsing.
+	UsedSources columnSource
+
 	// aliases defined by 'as'.
-	aliases map[string]struct{}
+	aliases map[string]*Expr
 }
 
-// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
-type Expr struct {
-	exprType  exprType
-	valueType valueType
+// columnSource is a type to accumulate the tables needed to build an SQL query.
+type columnSource int
 
-	stringValue   string
-	intValue      int64
-	floatValue    float64
-	timeValue     time.Time
-	boolValue     bool
-	durationValue time.Duration
-	alias         string
+const (
+	// noTable means that no table is needed.
+	noTable columnSource = 0
+	// documentsTable means that the documents table is needed.
+	documentsTable columnSource = 1 << iota
+	// advisoriesTable means that the advisories table is needed.
+	advisoriesTable
+	// textTable means that the tables for fulltext search are needed.
+	textTable
+	// ssvcHistoryTable means that the ssvc_history table is needed.
+	ssvcHistoryTable
+	// eventsLogTable means that the events_log table is needed.
+	eventsLogTable
+	// commentsTable means that the comments table is needed.
+	commentsTable
+)
 
-	children []*Expr
+var columnSourceTables = [...]string{
+	noTable:          "",
+	documentsTable:   "documents",
+	advisoriesTable:  "advisories",
+	textTable:        "text",
+	ssvcHistoryTable: "ssvc_history",
+	eventsLogTable:   "events_log",
+	commentsTable:    "comments",
 }
 
 type documentColumn struct {
@@ -149,6 +85,7 @@ type documentColumn struct {
 	valueType      valueType
 	modes          []ParserMode
 	projectionOnly bool
+	sources        columnSource
 }
 
 type binaryCompat struct {
@@ -157,206 +94,44 @@ type binaryCompat struct {
 	right    valueType
 }
 
-var binaryCompatMatrix = map[binaryCompat]valueType{
-	{boolType, and, boolType}:         boolType,
-	{boolType, or, boolType}:          boolType,
-	{intType, add, intType}:           intType,
-	{intType, sub, intType}:           intType,
-	{intType, mul, intType}:           intType,
-	{intType, div, intType}:           intType,
-	{intType, add, floatType}:         floatType,
-	{intType, sub, floatType}:         floatType,
-	{intType, mul, floatType}:         floatType,
-	{intType, div, floatType}:         floatType,
-	{floatType, add, intType}:         floatType,
-	{floatType, sub, intType}:         floatType,
-	{floatType, mul, intType}:         floatType,
-	{floatType, div, intType}:         floatType,
-	{timeType, add, durationType}:     timeType,
-	{timeType, sub, durationType}:     timeType,
-	{durationType, add, timeType}:     timeType,
-	{durationType, sub, timeType}:     timeType,
-	{durationType, add, durationType}: durationType,
-	{durationType, sub, durationType}: durationType,
-	{durationType, mul, intType}:      durationType,
-	{durationType, div, intType}:      durationType,
-	{intType, mul, durationType}:      durationType,
-	{durationType, mul, floatType}:    durationType,
-	{durationType, div, floatType}:    durationType,
-}
-
-// String implements [fmt.Stringer].
-func (vt valueType) String() string {
-	switch vt {
-	case intType:
-		return "integer"
-	case floatType:
-		return "float"
-	case boolType:
-		return "bool"
-	case stringType:
-		return "string"
-	case timeType:
-		return "timestamp"
-	case workflowType:
-		return "workflow"
-	case durationType:
-		return "duration"
-	case eventsType:
-		return "events"
-	case statusType:
-		return "status"
-	default:
-		return fmt.Sprintf("unknown value type %d", vt)
-	}
-}
-
-// String implements [fmt.Stringer].
-func (pm ParserMode) String() string {
-	switch pm {
-	case DocumentMode:
-		return "documents"
-	case AdvisoryMode:
-		return "advisories"
-	case EventMode:
-		return "events"
-	default:
-		return fmt.Sprintf("Unknown parser mode: %d", pm)
-	}
-}
-
-// FieldEqInt is a shortcut mainly for building expressions
-// accessing an integer column like 'id's.
-func FieldEqInt(field string, value int64) *Expr {
-	return &Expr{
-		valueType: boolType,
-		exprType:  eq,
-		children: []*Expr{
-			{valueType: intType, exprType: access, stringValue: field},
-			{valueType: intType, exprType: cnst, intValue: value},
-		},
-	}
-}
-
-// FieldEqString is a shortcut mainly for building expressions
-// accessing a string column.
-func FieldEqString(field, value string) *Expr {
-	return &Expr{
-		valueType: boolType,
-		exprType:  eq,
-		children: []*Expr{
-			{valueType: stringType, exprType: access, stringValue: field},
-			{valueType: stringType, exprType: cnst, stringValue: value},
-		},
-	}
-}
-
-// BoolField returns an access term that returns a bool value.
-func BoolField(field string) *Expr {
-	return &Expr{
-		valueType:   boolType,
-		exprType:    access,
-		stringValue: field,
-	}
-}
-
-// String implements [fmt.Stringer].
-func (et exprType) String() string {
-	switch et {
-	case cnst:
-		return "constant"
-	case cast:
-		return "cast"
-	case and:
-		return "and"
-	case or:
-		return "or"
-	case not:
-		return "not"
-	case eq:
-		return "eq"
-	case ne:
-		return "ne"
-	case gt:
-		return "gt"
-	case lt:
-		return "lt"
-	case ge:
-		return "ge"
-	case le:
-		return "le"
-	case access:
-		return "access"
-	case search:
-		return "search"
-	case mentioned:
-		return "mentioned"
-	case involved:
-		return "involved"
-	case ilike:
-		return "ilike"
-	case ilikePID:
-		return "ilikepid"
-	case now:
-		return "now"
-	case add:
-		return "+"
-	case sub:
-		return "-"
-	case mul:
-		return "*"
-	case div:
-		return "/"
-	default:
-		return fmt.Sprintf("unknown expression type %d", et)
-	}
-}
-
-func (pe parseError) Error() string {
-	return string(pe)
-}
-
-var (
-	docAdvEvtModes = []ParserMode{DocumentMode, AdvisoryMode, EventMode}
-	advModes       = []ParserMode{AdvisoryMode}
-	evtsModes      = []ParserMode{EventMode}
-)
+type stack []*Expr
 
 // documentColumns are the documentColumns which can be accessed.
 var documentColumns = []documentColumn{
-	{"id", intType, docAdvEvtModes, false},
-	{"latest", boolType, docAdvEvtModes, false},
-	{"tracking_id", stringType, docAdvEvtModes, false},
-	{"version", stringType, docAdvEvtModes, false},
-	{"publisher", stringType, docAdvEvtModes, false},
-	{"current_release_date", timeType, docAdvEvtModes, false},
-	{"initial_release_date", timeType, docAdvEvtModes, false},
-	{"rev_history_length", intType, docAdvEvtModes, false},
-	{"title", stringType, docAdvEvtModes, false},
-	{"tlp", stringType, docAdvEvtModes, false},
-	{"ssvc", stringType, docAdvEvtModes, false},
-	{"cvss_v2_score", floatType, docAdvEvtModes, false},
-	{"cvss_v3_score", floatType, docAdvEvtModes, false},
-	{"critical", floatType, docAdvEvtModes, false},
-	{"four_cves", stringType, docAdvEvtModes, true},
-	{"comments", intType, docAdvEvtModes, false},
-	{"tracking_status", statusType, docAdvEvtModes, false},
+	{"id", intType, docAdvEvtModes, false, documentsTable},
+	{"latest", boolType, docAdvEvtModes, false, documentsTable},
+	{"tracking_id", stringType, docAdvEvtModes, false, advisoriesTable},
+	{"version", stringType, docAdvEvtModes, false, documentsTable},
+	{"publisher", stringType, docAdvEvtModes, false, advisoriesTable},
+	{"current_release_date", timeType, docAdvEvtModes, false, documentsTable},
+	{"initial_release_date", timeType, docAdvEvtModes, false, documentsTable},
+	{"rev_history_length", intType, docAdvEvtModes, false, documentsTable},
+	{"title", stringType, docAdvEvtModes, false, documentsTable},
+	{"tlp", stringType, docAdvEvtModes, false, documentsTable},
+	{"ssvc", stringType, docAdvEvtModes, false, ssvcHistoryTable},
+	{"cvss_v2_score", floatType, docAdvEvtModes, false, documentsTable},
+	{"cvss_v3_score", floatType, docAdvEvtModes, false, documentsTable},
+	{"critical", floatType, docAdvEvtModes, false, documentsTable},
+	{"four_cves", stringType, docAdvEvtModes, true, documentsTable},
+	{"comments", intType, docAdvEvtModes, false, documentsTable},
+	{"tracking_status", statusType, docAdvEvtModes, false, documentsTable},
 	// Advisories only
-	{"state", workflowType, advModes, false},
-	{"recent", timeType, advModes, false},
-	{"versions", intType, advModes, false},
+	{"state", workflowType, advModes, false, advisoriesTable},
+	{"recent", timeType, advModes, false, advisoriesTable},
+	// ToDo: Column "versions" does not exist, but table versions does?
+	{"versions", intType, advModes, false, documentsTable | advisoriesTable},
 	// Events only
-	{"event", eventsType, evtsModes, false},
-	{"event_state", workflowType, evtsModes, false},
-	{"time", timeType, evtsModes, false},
-	{"actor", stringType, evtsModes, false},
-	{"comments_id", intType, evtsModes, false},
-	{"message", stringType, evtsModes, false},
+	{"event", eventsType, evtsModes, false, eventsLogTable},
+	{"event_state", workflowType, evtsModes, false, eventsLogTable},
+	{"time", timeType, evtsModes, false, eventsLogTable},
+	{"actor", stringType, evtsModes, false, eventsLogTable},
+	{"comments_id", intType, evtsModes, false, commentsTable},
+	{"message", stringType, evtsModes, false, commentsTable},
 }
 
 var (
-	// baseActions are the action available in every parser.
-	baseActions = map[string]func(*Parser, *stack){
+	// baseAction are the action available in every parser.
+	baseAction = map[string]func(*Parser, *stack){
 		"true":       (*Parser).pushTrue,
 		"false":      (*Parser).pushFalse,
 		"not":        (*Parser).pushNot,
@@ -389,19 +164,132 @@ var (
 		"search":     (*Parser).pushSearch,
 		"as":         (*Parser).pushAs,
 	}
-	// actions is for fast looking up actions along the parser mode.
-	actions = map[ParserMode]map[string]func(*Parser, *stack){
+	// action is for fast looking up actions along the parser mode.
+	action = map[ParserMode]map[string]func(*Parser, *stack){
 		DocumentMode: buildActions(DocumentMode),
 		AdvisoryMode: buildActions(AdvisoryMode),
 		EventMode:    buildActions(EventMode),
 	}
 )
 
-// existsDocumentColumn returns true if a column in document exists.
+var binaryCompatMatrix = map[binaryCompat]valueType{
+	{boolType, and, boolType}:         boolType,
+	{boolType, or, boolType}:          boolType,
+	{intType, add, intType}:           intType,
+	{intType, sub, intType}:           intType,
+	{intType, mul, intType}:           intType,
+	{intType, div, intType}:           intType,
+	{intType, add, floatType}:         floatType,
+	{intType, sub, floatType}:         floatType,
+	{intType, mul, floatType}:         floatType,
+	{intType, div, floatType}:         floatType,
+	{floatType, add, intType}:         floatType,
+	{floatType, sub, intType}:         floatType,
+	{floatType, mul, intType}:         floatType,
+	{floatType, div, intType}:         floatType,
+	{timeType, add, durationType}:     timeType,
+	{timeType, sub, durationType}:     timeType,
+	{durationType, add, timeType}:     timeType,
+	{durationType, sub, timeType}:     timeType,
+	{durationType, add, durationType}: durationType,
+	{durationType, sub, durationType}: durationType,
+	{durationType, mul, intType}:      durationType,
+	{durationType, div, intType}:      durationType,
+	{intType, mul, durationType}:      durationType,
+	{durationType, mul, floatType}:    durationType,
+	{durationType, div, floatType}:    durationType,
+}
+
+var (
+	docAdvEvtModes = []ParserMode{DocumentMode, AdvisoryMode, EventMode}
+	advModes       = []ParserMode{AdvisoryMode}
+	evtsModes      = []ParserMode{EventMode}
+)
+
+func curry3[A, B, C any](fn func(A, B, C), c C) func(A, B) {
+	return func(a A, b B) { fn(a, b, c) }
+}
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (pm *ParserMode) UnmarshalText(text []byte) error {
+	switch s := string(text); s {
+	case "advisories":
+		*pm = AdvisoryMode
+	case "documents":
+		*pm = DocumentMode
+	case "events":
+		*pm = EventMode
+	default:
+		return fmt.Errorf("unknown parser mode %q", s)
+	}
+	return nil
+}
+
+// MarshalText implements [encoding.TextMarshaler].
+func (pm ParserMode) MarshalText() ([]byte, error) {
+	switch pm {
+	case AdvisoryMode:
+		return []byte("advisories"), nil
+	case DocumentMode:
+		return []byte("documents"), nil
+	case EventMode:
+		return []byte("events"), nil
+	default:
+		return nil, fmt.Errorf("unknown parser mode %d", pm)
+	}
+}
+
+// String implements [fmt.Stringer].
+func (pm ParserMode) String() string {
+	switch pm {
+	case DocumentMode:
+		return "documents"
+	case AdvisoryMode:
+		return "advisories"
+	case EventMode:
+		return "events"
+	default:
+		return fmt.Sprintf("Unknown parser mode: %d", pm)
+	}
+}
+
+// Scan implements [sql.Scanner].
+func (pm *ParserMode) Scan(src any) error {
+	if s, ok := src.(string); ok {
+		return pm.UnmarshalText([]byte(s))
+	}
+	return errors.New("unsupported type")
+}
+
+func (cs columnSource) contains(other columnSource) bool {
+	return cs&other == other
+}
+
+func (cs *columnSource) add(other columnSource) {
+	*cs |= other
+}
+
+// String implements [fmt.Stringer].
+func (cs columnSource) String() string {
+	var tables []string
+	for i := range len(columnSourceTables) - 1 {
+		mask := columnSource(1) << i
+		if cs.contains(mask) {
+			tables = append(tables, columnSourceTables[i+1])
+			cs &= ^mask
+		}
+	}
+	if cs != noTable {
+		tables = append(tables, fmt.Sprintf("unknown table(s): %b", cs))
+	}
+	return strings.Join(tables, "|")
+}
+
 func existsDocumentColumn(name string, mode ParserMode) bool {
 	return findDocumentColumn(name, mode) != nil
 }
 
+// findDocumentColumn returns a column if it exists.
 func findDocumentColumn(name string, mode ParserMode) *documentColumn {
 	for i := range documentColumns {
 		if col := &documentColumns[i]; col.name == name {
@@ -414,140 +302,21 @@ func findDocumentColumn(name string, mode ParserMode) *documentColumn {
 	return nil
 }
 
-// And concats two expressions and-wise.
-func (e *Expr) And(o *Expr) *Expr {
-	if e.valueType != boolType || o.valueType != boolType {
-		return False()
-	}
-	if e.exprType == cnst {
-		if !e.boolValue {
-			return False()
+func buildActions(mode ParserMode) map[string]func(*Parser, *stack) {
+	actions := maps.Clone(baseAction)
+	for i := range documentColumns {
+		col := &documentColumns[i]
+		if !col.projectionOnly && slices.Contains(col.modes, mode) {
+			actions["$"+col.name] = func(p *Parser, st *stack) {
+				p.pushAccess(st, col)
+			}
 		}
-		return o
 	}
-	if o.exprType == cnst {
-		if !o.boolValue {
-			return False()
-		}
-		return e
-	}
-	return &Expr{
-		exprType:  and,
-		valueType: boolType,
-		children:  []*Expr{e, o},
-	}
-}
-
-// Or concats two expressions or-wise.
-func (e *Expr) Or(o *Expr) *Expr {
-	if e.valueType != boolType || o.valueType != boolType {
-		return False()
-	}
-	if e.exprType == cnst {
-		if e.boolValue {
-			return True()
-		}
-		return o
-	}
-	if o.exprType == cnst {
-		if o.boolValue {
-			return True()
-		}
-		return e
-	}
-	return &Expr{
-		exprType:  or,
-		valueType: boolType,
-		children:  []*Expr{e, o},
-	}
-}
-
-// Not negates an expresssion.
-func (e *Expr) Not() *Expr {
-	if e.valueType != boolType {
-		return False()
-	}
-	if e.exprType == cnst {
-		if e.boolValue {
-			return False()
-		}
-		return True()
-	}
-	return &Expr{
-		exprType:  not,
-		valueType: boolType,
-		children:  []*Expr{e},
-	}
-}
-
-type stack []*Expr
-
-func (st *stack) push(v *Expr) {
-	*st = append(*st, v)
-}
-
-func (st *stack) pop() *Expr {
-	if l := len(*st); l > 0 {
-		x := (*st)[l-1]
-		(*st)[l-1] = nil
-		*st = (*st)[:l-1]
-		return x
-	}
-	panic(parseError("stack empty"))
-}
-
-func (st stack) top() *Expr { return st.topN(0) }
-
-func (st stack) topN(n int) *Expr {
-	if l := len(st); l > n {
-		return st[l-n-1]
-	}
-	panic(parseError("stack empty"))
-}
-
-// False returns a false expression.
-func False() *Expr {
-	return &Expr{
-		exprType:  cnst,
-		valueType: boolType,
-		boolValue: false,
-	}
-}
-
-// True returns a true expression.
-func True() *Expr {
-	return &Expr{
-		exprType:  cnst,
-		valueType: boolType,
-		boolValue: true,
-	}
+	return actions
 }
 
 func (*Parser) pushTrue(st *stack)  { st.push(True()) }
 func (*Parser) pushFalse(st *stack) { st.push(False()) }
-
-func (st *stack) pushString(s string) {
-	st.push(&Expr{
-		exprType:    cnst,
-		valueType:   stringType,
-		stringValue: s,
-	})
-}
-
-func (e *Expr) checkValueType(vt valueType) {
-	if e.valueType != vt {
-		panic(parseError(
-			fmt.Sprintf("value type mismatch: %q %q", e.valueType, vt)))
-	}
-}
-
-func (e *Expr) checkExprType(eTypes ...exprType) {
-	if slices.Contains(eTypes, e.exprType) {
-		return
-	}
-	panic(parseError(
-		fmt.Sprintf("expression type mismatch: %q %v", e.exprType, eTypes)))
-}
 
 func (*Parser) pushNot(st *stack) {
 	e := st.pop()
@@ -579,36 +348,13 @@ func (*Parser) pushBinary(st *stack, et exprType) {
 	})
 }
 
-func (*Parser) pushAccess(st *stack, column *documentColumn) {
+func (p *Parser) pushAccess(st *stack, column *documentColumn) {
+	p.UsedSources.add(column.sources)
 	st.push(&Expr{
 		exprType:    access,
 		valueType:   column.valueType,
 		stringValue: column.name,
 	})
-}
-
-func parseFloat(s string) float64 {
-	v, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		panic(parseError(fmt.Sprintf("%q is not a float: %v", s, err)))
-	}
-	return v
-}
-
-func parseInt(s string) int64 {
-	v, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		panic(parseError(fmt.Sprintf("%q is not an int: %v", s, err)))
-	}
-	return v
-}
-
-func parseDuration(s string) time.Duration {
-	duration, err := time.ParseDuration(s)
-	if err != nil {
-		panic(parseError(fmt.Sprintf("cannot parse %q as duration", s)))
-	}
-	return duration
 }
 
 func (*Parser) pushFloat(st *stack) {
@@ -679,21 +425,6 @@ func (*Parser) pushInteger(st *stack) {
 	}
 }
 
-func parseTime(s string) time.Time {
-	for _, format := range []string{
-		time.RFC3339,
-		"2006-01-02",
-		"2006-01-02T15:04:05-0700",
-		"2006-01-02 15:04:05-0700",
-	} {
-		t, err := time.Parse(format, s)
-		if err == nil {
-			return t
-		}
-	}
-	panic(parseError(fmt.Sprintf("cannot parse %q as time", s)))
-}
-
 func (*Parser) pushTimestamp(st *stack) {
 	if st.top().valueType == timeType {
 		return
@@ -735,41 +466,6 @@ func (*Parser) pushCmp(st *stack, et exprType) {
 		valueType: boolType,
 		children:  []*Expr{left, right},
 	})
-}
-
-var validWorkflows = []string{
-	"new", "read", "assessing",
-	"review", "archived", "delete",
-}
-
-func parseWorkflow(s string) string {
-	if !slices.Contains(validWorkflows, s) {
-		panic(parseError(fmt.Sprintf("%q is not a valid workflow", s)))
-	}
-	return s
-}
-
-var validEvents = []string{
-	"import_document", "delete_document",
-	"state_change",
-	"add_sscv", "change_sscv", "delete_sscv",
-	"add_comment", "change_comment", "delete_comment",
-}
-
-func parseEvents(s string) string {
-	if !slices.Contains(validEvents, s) {
-		panic(parseError(fmt.Sprintf("%q is not a valid event", s)))
-	}
-	return s
-}
-
-func parseStatus(s string) string {
-	switch st := csaf.TrackingStatus(s); st {
-	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
-		return s
-	default:
-		panic(parseError(fmt.Sprintf("%q is not a valid status", s)))
-	}
 }
 
 func pushEnum(vtype valueType, parse func(string) string) func(*Parser, *stack) {
@@ -815,6 +511,7 @@ func (p *Parser) pushSearch(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:    search,
 		valueType:   boolType,
@@ -826,6 +523,7 @@ func (p *Parser) pushMentioned(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
 	p.checkSearchLength(term.stringValue)
+	p.UsedSources.add(eventsLogTable)
 	st.push(&Expr{
 		exprType:    mentioned,
 		valueType:   boolType,
@@ -833,9 +531,10 @@ func (p *Parser) pushMentioned(st *stack) {
 	})
 }
 
-func (*Parser) pushInvolved(st *stack) {
+func (p *Parser) pushInvolved(st *stack) {
 	term := st.pop()
 	term.checkValueType(stringType)
+	p.UsedSources.add(eventsLogTable)
 	st.push(&Expr{
 		exprType:    involved,
 		valueType:   boolType,
@@ -843,11 +542,12 @@ func (*Parser) pushInvolved(st *stack) {
 	})
 }
 
-func (*Parser) pushILike(st *stack) {
+func (p *Parser) pushILike(st *stack) {
 	needle := st.pop()
 	haystack := st.pop()
 	needle.checkValueType(stringType)
 	haystack.checkValueType(stringType)
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:  ilike,
 		valueType: boolType,
@@ -855,9 +555,10 @@ func (*Parser) pushILike(st *stack) {
 	})
 }
 
-func (*Parser) pushILikePName(st *stack) {
+func (p *Parser) pushILikePName(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:  ilikePName,
 		valueType: boolType,
@@ -865,9 +566,10 @@ func (*Parser) pushILikePName(st *stack) {
 	})
 }
 
-func (*Parser) pushILikePID(st *stack) {
+func (p *Parser) pushILikePID(st *stack) {
 	needle := st.pop()
 	needle.checkValueType(stringType)
+	p.UsedSources.add(documentsTable | textTable)
 	st.push(&Expr{
 		exprType:  ilikePID,
 		valueType: boolType,
@@ -910,14 +612,6 @@ func (*Parser) pushDuration(st *stack) {
 	}
 }
 
-var aliasRe = regexp.MustCompile(`[a-zA-Z_0-9]+`)
-
-func validAlias(s string) {
-	if !aliasRe.MatchString(s) {
-		panic(parseError(fmt.Sprintf("invalid alias %q", s)))
-	}
-}
-
 func (p *Parser) pushAs(st *stack) {
 	alias := st.pop()
 	srch := st.top()
@@ -925,13 +619,183 @@ func (p *Parser) pushAs(st *stack) {
 	srch.checkExprType(search) // TODO: Add csearch?
 	validAlias(alias.stringValue)
 	if p.aliases == nil {
-		p.aliases = map[string]struct{}{}
+		p.aliases = map[string]*Expr{}
 	}
-	if _, already := p.aliases[alias.stringValue]; already {
+	if p.aliases[alias.stringValue] != nil {
 		panic(parseError(fmt.Sprintf("duplicate alias %q", alias.stringValue)))
 	}
-	p.aliases[alias.stringValue] = struct{}{}
+	p.UsedSources.add(documentsTable | textTable)
 	srch.alias = alias.stringValue
+	srch.intValue = int64(len(p.aliases))
+	p.aliases[alias.stringValue] = srch
+}
+
+func (p *Parser) parse(input string) (*Expr, error) {
+	p.aliases = nil
+
+	st := stack{}
+	acts := action[p.Mode]
+
+	split(input, func(field string, isString bool) {
+		if !isString {
+			if act := acts[field]; act != nil {
+				act(p, &st)
+				return
+			}
+		}
+		st.pushString(field)
+	})
+
+	// If there are more than 2 open bool valued expressions on
+	// the stack automatically and them together.
+	st.andReduce()
+
+	if len(st) != 1 {
+		return nil, parseError(fmt.Sprintf(
+			"invalid number of expression roots: expected 1 have %d", len(st)))
+	}
+	e := st.top()
+	e.checkValueType(boolType)
+	return e, nil
+}
+
+// Parse returns an expression.
+func (p *Parser) Parse(input string) (expr *Expr, err error) {
+	defer func() {
+		if x := recover(); x != nil {
+			if pe, ok := x.(parseError); ok {
+				err = pe
+			} else {
+				panic(x)
+			}
+		}
+	}()
+	return p.parse(input)
+}
+
+func (st *stack) push(v *Expr) {
+	*st = append(*st, v)
+}
+
+func (st *stack) pop() *Expr {
+	if l := len(*st); l > 0 {
+		x := (*st)[l-1]
+		(*st)[l-1] = nil
+		*st = (*st)[:l-1]
+		return x
+	}
+	panic(parseError("stack empty"))
+}
+
+func (st stack) top() *Expr { return st.topN(0) }
+
+func (st stack) topN(n int) *Expr {
+	if l := len(st); l > n {
+		return st[l-n-1]
+	}
+	panic(parseError("stack empty"))
+}
+
+func (st *stack) pushString(s string) {
+	st.push(&Expr{
+		exprType:    cnst,
+		valueType:   stringType,
+		stringValue: s,
+	})
+}
+
+func (st *stack) andReduce() {
+	for len(*st) > 1 {
+		a, b := st.topN(0), st.topN(1)
+		if a.valueType != boolType || b.valueType != boolType {
+			return
+		}
+		st.pop()
+		st.pop()
+		st.push(a.And(b))
+	}
+}
+
+func parseFloat(s string) float64 {
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic(parseError(fmt.Sprintf("%q is not a float: %v", s, err)))
+	}
+	return v
+}
+
+func parseInt(s string) int64 {
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		panic(parseError(fmt.Sprintf("%q is not an int: %v", s, err)))
+	}
+	return v
+}
+
+func parseDuration(s string) time.Duration {
+	duration, err := time.ParseDuration(s)
+	if err != nil {
+		panic(parseError(fmt.Sprintf("cannot parse %q as duration", s)))
+	}
+	return duration
+}
+
+func parseTime(s string) time.Time {
+	for _, format := range []string{
+		time.RFC3339,
+		"2006-01-02",
+		"2006-01-02T15:04:05-0700",
+		"2006-01-02 15:04:05-0700",
+	} {
+		t, err := time.Parse(format, s)
+		if err == nil {
+			return t
+		}
+	}
+	panic(parseError(fmt.Sprintf("cannot parse %q as time", s)))
+}
+
+var validWorkflows = []string{
+	"new", "read", "assessing",
+	"review", "archived", "delete",
+}
+
+func parseWorkflow(s string) string {
+	if !slices.Contains(validWorkflows, s) {
+		panic(parseError(fmt.Sprintf("%q is not a valid workflow", s)))
+	}
+	return s
+}
+
+var validEvents = []string{
+	"import_document", "delete_document",
+	"state_change",
+	"add_sscv", "change_sscv", "delete_sscv",
+	"add_comment", "change_comment", "delete_comment",
+}
+
+func parseEvents(s string) string {
+	if !slices.Contains(validEvents, s) {
+		panic(parseError(fmt.Sprintf("%q is not a valid event", s)))
+	}
+	return s
+}
+
+func parseStatus(s string) string {
+	switch st := csaf.TrackingStatus(s); st {
+	case csaf.CSAFTrackingStatusDraft, csaf.CSAFTrackingStatusFinal, csaf.CSAFTrackingStatusInterim:
+		return s
+	default:
+		panic(parseError(fmt.Sprintf("%q is not a valid status", s)))
+	}
+}
+
+var aliasRe = regexp.MustCompile(`[a-zA-Z_0-9]+`)
+
+func validAlias(s string) {
+	if !aliasRe.MatchString(s) {
+		panic(parseError(fmt.Sprintf("invalid alias %q", s)))
+	}
 }
 
 func split(input string, fn func(string, bool)) {
@@ -986,74 +850,4 @@ func split(input string, fn func(string, bool)) {
 	if state != 0 {
 		fn(b.String(), state == 1 || state == 5)
 	}
-}
-
-func buildActions(mode ParserMode) map[string]func(*Parser, *stack) {
-	actions := maps.Clone(baseActions)
-	for i := range documentColumns {
-		col := &documentColumns[i]
-		if !col.projectionOnly && slices.Contains(col.modes, mode) {
-			actions["$"+col.name] = func(p *Parser, st *stack) { p.pushAccess(st, col) }
-		}
-	}
-	return actions
-}
-
-func curry3[A, B, C any](fn func(A, B, C), c C) func(A, B) {
-	return func(a A, b B) { fn(a, b, c) }
-}
-
-func (st *stack) andReduce() {
-	for len(*st) > 1 {
-		a, b := st.topN(0), st.topN(1)
-		if a.valueType != boolType || b.valueType != boolType {
-			return
-		}
-		st.pop()
-		st.pop()
-		st.push(a.And(b))
-	}
-}
-
-func (p *Parser) parse(input string) (*Expr, error) {
-	p.aliases = nil
-
-	st := stack{}
-	acts := actions[p.Mode]
-
-	split(input, func(field string, isString bool) {
-		if !isString {
-			if act := acts[field]; act != nil {
-				act(p, &st)
-				return
-			}
-		}
-		st.pushString(field)
-	})
-
-	// If there are more than 2 open bool valued expressions on
-	// the stack automatically and them together.
-	st.andReduce()
-
-	if len(st) != 1 {
-		return nil, parseError(fmt.Sprintf(
-			"invalid number of expression roots: expected 1 have %d", len(st)))
-	}
-	e := st.top()
-	e.checkValueType(boolType)
-	return e, nil
-}
-
-// Parse returns an expression.
-func (p *Parser) Parse(input string) (expr *Expr, err error) {
-	defer func() {
-		if x := recover(); x != nil {
-			if pe, ok := x.(parseError); ok {
-				err = pe
-			} else {
-				panic(x)
-			}
-		}
-	}()
-	return p.parse(input)
 }

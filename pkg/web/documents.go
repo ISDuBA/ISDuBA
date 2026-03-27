@@ -369,12 +369,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
-	// Return search results
-	returnSearchResults, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("results", "false"))
-	if !ok {
-		return
-	}
-
 	mode := query.DocumentMode
 	if advisory {
 		mode = query.AdvisoryMode
@@ -400,11 +394,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(query.BoolField("latest"))
 	}
 
-	builder := query.SQLBuilder{
-		Mode:                mode,
-		ReturnSearchResults: returnSearchResults,
+	orderFields := strings.Fields(
+		ctx.DefaultQuery(
+			"orders",
+			"publisher tracking_id -current_release_date -rev_history_length"))
+	if aggregate {
+		if !slices.Contains(orderFields, "id") {
+			orderFields = append(orderFields, "id")
+		}
+		orderFields = slices.AppendSeq(orderFields, expr.Aliases())
 	}
-	builder.CreateWhere(expr)
 
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
@@ -414,17 +413,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		fields = append(fields, "id")
 	}
 
-	if err := builder.CheckProjections(fields); err != nil {
-		models.SendError(ctx, http.StatusBadRequest, err)
-		return
-	}
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderOrderFields(orderFields),
+		query.AdvancedSQLBuilderFields(fields),
+		query.AdvancedSQLBuilderParser(&parser),
+		query.AdvancedSQLBuilderAggregate(aggregate))
 
-	orderFields := strings.Fields(
-		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
-	if aggregate && !slices.Contains(orderFields, "id") {
-		orderFields = append(orderFields, "id")
-	}
-	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
@@ -451,16 +446,14 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	if aggregate {
 		deliver = (*Controller).aggregatedResults
 	}
-	deliver(c, ctx, calcCount, limit, offset, fields, order, &builder)
+	deliver(c, ctx, calcCount, limit, offset, builder)
 }
 
 func (c *Controller) flatResults(
 	ctx *gin.Context,
 	calcCount bool,
 	limit, offset int64,
-	fields []string,
-	order string,
-	builder *query.SQLBuilder,
+	builder *query.AdvancedSQLBuilder,
 ) {
 	type documentResult struct {
 		Count     *int64           `json:"count,omitempty"`
@@ -487,11 +480,11 @@ func (c *Controller) flatResults(
 				}
 			}
 			// Skip fields if they are not requested.
-			if len(fields) == 0 {
+			if !builder.HasFields() {
 				return nil
 			}
 
-			sql := builder.CreateQuery(fields, order, limit, offset)
+			sql := builder.CreateQuery(limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
 				slog.Debug("documents", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
@@ -501,8 +494,7 @@ func (c *Controller) flatResults(
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			filtered := builder.RemoveIgnoredFields(fields)
-			if results, err = scanRows(rows, filtered); err != nil {
+			if results, err = scanRows(rows, builder.Fields()); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
