@@ -55,6 +55,11 @@ test("Advisory view is working", async ({ page }) => {
   await expect(toText).toBeVisible();
   const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`).first();
   await expect(fromText).toBeVisible();
+
+  // Test diff inside document view
+  await page.getByRole("button", { name: "Show changes" }).click();
+  await page.getByRole("button", { name: "Inline" }).click();
+  await page.getByRole("button", { name: "Hide changes" }).click();
 });
 
 test("Tabs with details about document are working", async ({ page }) => {
