@@ -25,6 +25,12 @@ test("Advisory view is working", async ({ page }) => {
   await expect(page.getByText(comment)).toBeVisible();
   await page.getByRole("button", { name: "History" }).click();
   await expect(page.getByText(comment)).toBeVisible();
+  // Edit comment
+  await page.getByLabel("Edit comment").first().click();
+  const editedComment = `Lorem ipsum ${Math.random()}`;
+  await page.getByRole("textbox", { name: "Edit comment" }).fill(editedComment);
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText(editedComment)).toBeVisible();
 
   // Test SSVC calculator
   await page.getByTitle("Edit SSVC").click();

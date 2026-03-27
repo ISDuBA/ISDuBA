@@ -17,6 +17,7 @@
   import type { ErrorDetails } from "$lib/Errors/error";
 
   interface Props {
+    ariaLabel?: string;
     value: string;
     buttonText: string;
     cancelable?: boolean;
@@ -33,6 +34,7 @@
   }
 
   let {
+    ariaLabel = undefined,
     value = $bindable(),
     buttonText,
     cancelable = false,
@@ -68,6 +70,7 @@
       onInput(event);
     }
   }}
+  aria-label={ariaLabel}
   class="mb-2"
   id="comment-textarea"
 >

@@ -106,6 +106,7 @@
       </div>
     {:else}
       <CommentTextArea
+        ariaLabel="Edit comment"
         cancel={toggleEditing}
         onInput={() => (updateCommentError = null)}
         saveComment={updateComment}
