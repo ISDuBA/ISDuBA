@@ -31,7 +31,9 @@
 
   async function login() {
     try {
-      await appStore.state.app.userManager?.signinRedirect();
+      await appStore.state.app.userManager?.signinRedirect({
+        redirect_uri: appStore.state.app.redirect ? `/#${appStore.state.app.redirect}?` : undefined
+      });
     } catch (e: any) {
       viewError = getErrorDetails(`Could not load login information: ` + e.message);
     }
