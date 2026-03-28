@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-FROM library/node:24.1-alpine AS client
+FROM library/node:24.14.1-alpine AS client
 RUN apk update && apk add --no-cache make
 
 WORKDIR /app
