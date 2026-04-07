@@ -27,7 +27,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onMount, untrack } from "svelte";
-  import { querystring } from "svelte-spa-router";
+  import { router } from "svelte-spa-router";
   import { push } from "$routes/router.svelte";
   import { parse } from "qs";
   import { appStore } from "$lib/store.svelte";
@@ -275,8 +275,8 @@
 
   onMount(async () => {
     let queryString;
-    if ($querystring) {
-      queryString = parse($querystring);
+    if (router.querystring) {
+      queryString = parse(router.querystring);
     }
     let id;
     if (queryString?.clone) {

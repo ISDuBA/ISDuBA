@@ -16,7 +16,7 @@
   import type { Query } from "$lib/Queries/query";
   import Queries from "./Queries.svelte";
   import { appStore } from "$lib/store.svelte";
-  import { querystring as qs } from "svelte-spa-router";
+  import { router } from "svelte-spa-router";
   import { push } from "$routes/router.svelte";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
@@ -47,7 +47,7 @@
   let defaultQuery = $derived(defaultQ());
 
   // Variables derived from URL parameters
-  let queryString: any = $derived($qs ? parse($qs) : undefined);
+  let queryString: any = $derived(router.querystring ? parse(router.querystring) : undefined);
   let searchTerm: string = $derived(queryString?.searchTerm ? queryString.searchTerm : "");
   let advanced: boolean = $derived(
     queryString?.advanced !== undefined ? (queryString.advanced === "true" ? true : false) : false
@@ -257,7 +257,7 @@
 
     // Don't extend the history if the new URL would not contain any new information. Otherwise
     // the user had to go back multiple times to get to a page with older search parameters.
-    if (newURL === "/search?" && $qs?.length && $qs.length > 0) {
+    if (newURL === "/search?" && router.querystring?.length && router.querystring.length > 0) {
       push(newURL.replace("?", ""));
       appStore.setSearchURL(undefined);
     } else if (newURL !== "/search?") {
@@ -278,7 +278,7 @@
     // This rune is also called when a different was opened. In this case the parameters are reset to their defaults
     // and the count and the results saved in the store are not the expected ones.
     const hash = untrack(() => page.url.hash);
-    if (queriesLoaded && $qs !== undefined && hash.startsWith("#/search")) {
+    if (queriesLoaded && router.querystring !== undefined && hash.startsWith("#/search")) {
       fetchData();
     }
   });

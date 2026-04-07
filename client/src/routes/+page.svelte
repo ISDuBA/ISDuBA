@@ -163,8 +163,8 @@
     return appStore.getIsUserLoggedIn();
   };
 
-  const routeLoaded = (event: any) => {
-    appStore.setRouterParams(event.detail.params);
+  const routeLoaded = (detail: any) => {
+    appStore.setRouterParams(detail.params);
     if (routerState.didPush === false) {
       appStore.setSearchResults(null);
       appStore.setSearchResultCount(null);
@@ -280,8 +280,8 @@
     "*": NotFound as any
   };
 
-  const conditionsFailed = (event: any) => {
-    if (event.detail.userData.loginRequired) {
+  const conditionsFailed = (detail: any) => {
+    if (detail.userData.loginRequired) {
       push("/login");
     }
   };
@@ -328,7 +328,7 @@
     class="flex max-h-screen w-full flex-col overflow-auto bg-white px-2 py-6 lg:px-6 dark:bg-gray-800"
   >
     {#if appStore.state.app.userManager}
-      <Router {routes} on:conditionsFailed={conditionsFailed} on:routeLoaded={routeLoaded} />
+      <Router {routes} onConditionsFailed={conditionsFailed} onRouteLoaded={routeLoaded} />
     {/if}
     <ErrorMessage error={loadConfigError}></ErrorMessage>
   </main>
