@@ -15,6 +15,8 @@
     textPath: string;
   }
   let { textPath = "", text }: Props = $props();
+  let uid = $props.id();
+  let elementID = $derived(`SearchableText-${uid}`);
 
   let hit: SearchHit | undefined = $derived.by(() => {
     if (advisorySearchState.hitIndex !== -1) {
@@ -32,17 +34,22 @@
       let [high, aft] = firstSplit[1].split("-}");
       return [bef, high, aft];
     }
-    return ["a", "b", "c"];
+    return ["", "", ""];
+  });
+
+  $effect(() => {
+    if (path != undefined && textPath == path && advisorySearchState.scroll) {
+      document.getElementById(elementID)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   });
 </script>
 
-<span>
+<span class="flex inline flex-nowrap">
   {#if path != undefined && textPath == path}
     <span>{before}</span>
-    <span class="bg-yellow-200 dark:bg-yellow-800">{highlighted}</span>
+    <span id={elementID} class="bg-yellow-200 dark:bg-yellow-800">{highlighted}</span>
     <span>{after}</span>
   {:else}
     {text}
   {/if}
 </span>
-

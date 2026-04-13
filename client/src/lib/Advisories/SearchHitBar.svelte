@@ -33,6 +33,7 @@
 <div class="flex items-center gap-2">
   <Button
     onclick={() => {
+      advisorySearchState.scroll = true;
       advisorySearchState.hitIndex--;
     }}
     disabled={index === 0}
@@ -45,6 +46,7 @@
   <small>{index + 1}/{hits?.length} hits</small>
   <Button
     onclick={() => {
+      advisorySearchState.scroll = true;
       advisorySearchState.hitIndex++;
     }}
     disabled={index === advisorySearchState.searchHits.length - 1}

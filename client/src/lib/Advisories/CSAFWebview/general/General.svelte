@@ -88,7 +88,8 @@
       <div class={cellStyleValue}>
         {#if publisherNamespace}
           <Link href={publisherNamespace} class="underline">
-            <i class="bx bx-link"></i>{publisherNamespace}
+            <i class="bx bx-link"></i>
+            <SearchableText text={publisherNamespace} textPath="/document/publisher/namespace" />
           </Link>
         {/if}
       </div>

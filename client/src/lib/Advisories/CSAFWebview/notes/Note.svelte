@@ -11,11 +11,13 @@
 <script lang="ts">
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import SearchableText from "../SearchableText.svelte";
 
   interface Props {
     note: Note;
+    path: string;
   }
-  let { note }: Props = $props();
+  let { note, path }: Props = $props();
 
   let keys: string[] = $derived(note.audience ? ["Audience"] : []);
   let values: string[] = $derived(note.audience ? [note.audience] : []);
@@ -28,7 +30,7 @@
 
 <div class="markdown-text">
   <div class="display-markdown max-w-2/3">
-    {note.text}
+    <SearchableText text={note.text} textPath={`${path}/text`}></SearchableText>
   </div>
 </div>
 

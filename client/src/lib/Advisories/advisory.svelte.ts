@@ -162,6 +162,10 @@ const fetchSearchHits = async (_id: number): Promise<SearchHit[]> => {
       text: "csaf_{-security-}_advisory"
     },
     {
+      path: "/document/publisher/namespace",
+      text: "https://example.org/{-security-}"
+    },
+    {
       path: "/document/category",
       text: "csaf_{-security-}_advisory"
     },
@@ -177,14 +181,26 @@ const fetchSearchHits = async (_id: number): Promise<SearchHit[]> => {
 };
 
 type AdvisorySearchState = {
+  scroll: boolean;
   searchHits: SearchHit[];
   hitIndex: number;
 };
 
 const advisorySearchState: AdvisorySearchState = $state({
+  scroll: false,
   searchHits: [],
   hitIndex: -1
 });
+
+const derivedHit = $derived(
+  advisorySearchState.hitIndex !== -1
+    ? advisorySearchState.searchHits[advisorySearchState.hitIndex]
+    : undefined
+);
+
+const getAdvisorySearchHit = () => {
+  return derivedHit;
+};
 
 const getAdvisoryLink = (doc: any) =>
   `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
@@ -196,6 +212,7 @@ export {
   loadAdvisoryVersions,
   fetchDocumentSSVC,
   fetchSearchHits,
-  getAdvisoryAnchorLink
+  getAdvisoryAnchorLink,
+  getAdvisorySearchHit
 };
 export type { AdvisoryVersion, SearchHit };

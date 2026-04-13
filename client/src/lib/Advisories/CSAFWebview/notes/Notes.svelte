@@ -31,7 +31,7 @@
       level={4}
       open={open || note.category === (hasDescription ? "description" : "summary")}
     >
-      <SingleNote {note} />
+      <SingleNote {note} path={`/document/notes/${index}`} />
     </Collapsible>
   {/each}
 {/if}
