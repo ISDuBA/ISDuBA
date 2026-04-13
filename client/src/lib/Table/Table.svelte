@@ -37,7 +37,7 @@
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { areArraysEqual } from "$lib/utils";
   import DeleteModal from "./DeleteModal.svelte";
-  import { getAdvisoryAnchorLink, updateMultipleStates } from "$lib/Advisories/advisory";
+  import { getAdvisoryAnchorLink, updateMultipleStates } from "$lib/Advisories/advisory.svelte";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
   import type { SearchParameters } from "$lib/Search/search.svelte";
   import HitList from "./HitList.svelte";

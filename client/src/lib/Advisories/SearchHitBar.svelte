@@ -11,10 +11,11 @@
   import { appStore } from "$lib/store.svelte";
   import { searchColumnName } from "$lib/Table/defaults";
   import { Button } from "flowbite-svelte";
+  import { advisorySearchState } from "./advisory.svelte";
 
   let routerParams = $derived(appStore.state.app.routerParams);
   let results = $derived(appStore.state.app.search.results);
-  let index = $derived(appStore.state.app.search.indexInsideDoc);
+  let index = $derived(advisorySearchState.hitIndex);
   let doc: any = $derived.by(() => {
     if (!routerParams) return;
     return results?.find((result) => {
@@ -27,15 +28,30 @@
     });
   });
   let hits = $derived(doc?.data.map((d: any) => d[searchColumnName]));
-  let hit = $derived(index !== -1 ? hits?.[index] : undefined);
 </script>
 
-<div class="flex gap-2 items-center">
-  <Button class="h-7 w-7 p-1" color="light" title="Previous">
+<div class="flex items-center gap-2">
+  <Button
+    onclick={() => {
+      advisorySearchState.hitIndex--;
+    }}
+    disabled={index === 0}
+    class="h-7 w-7 p-1"
+    color="light"
+    title="Previous"
+  >
     <i class="bx bx-chevron-left"></i>
   </Button>
   <small>{index + 1}/{hits?.length} hits</small>
-  <Button class="h-7 w-7 p-1" color="light" title="Next">
+  <Button
+    onclick={() => {
+      advisorySearchState.hitIndex++;
+    }}
+    disabled={index === advisorySearchState.searchHits.length - 1}
+    class="h-7 w-7 p-1"
+    color="light"
+    title="Next"
+  >
     <i class="bx bx-chevron-right"></i>
   </Button>
 </div>

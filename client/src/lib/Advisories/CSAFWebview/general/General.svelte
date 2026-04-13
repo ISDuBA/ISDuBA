@@ -16,6 +16,7 @@
   import { push } from "svelte-spa-router";
   import { getContext } from "svelte";
   import Link from "$lib/Components/Link.svelte";
+  import SearchableText from "../SearchableText.svelte";
 
   interface Props {
     basePath: string;
@@ -80,7 +81,9 @@
   <div class="flex w-full flex-row flex-wrap">
     <div class="grid w-full grid-cols-[auto_minmax(0,_1fr)] gap-1.5 text-sm">
       <div class={cellStyleKey}>Publisher name</div>
-      <div class={cellStyleValue}>{publisherName}</div>
+      <div class={cellStyleValue}>
+        <SearchableText text={publisherName} textPath="/document/publisher/name" />
+      </div>
       <div class={cellStyleKey}>Publisher namespace</div>
       <div class={cellStyleValue}>
         {#if publisherNamespace}
@@ -106,7 +109,9 @@
       <div class={cellStyleKey}>CSAF-Version</div>
       <div class={cellStyleValue}>{csafVersion}</div>
       <div class={cellStyleKey}>Category</div>
-      <div class={cellStyleValue}>{category}</div>
+      <div class={cellStyleValue}>
+        <SearchableText text={category} textPath="/document/category" />
+      </div>
       {#if distributionText}
         <div class={cellStyleKey}>Distribution</div>
         <div class={cellStyleValue}>{distributionText}</div>

@@ -12,9 +12,8 @@
   import DOMPurify from "dompurify";
   import { Button, TableBodyCell } from "flowbite-svelte";
   import { searchColumnName } from "./defaults";
-  import { getAdvisoryAnchorLink } from "$lib/Advisories/advisory";
+  import { advisorySearchState, getAdvisoryAnchorLink } from "$lib/Advisories/advisory.svelte";
   import Link from "$lib/Components/Link.svelte";
-  import { appStore } from "$lib/store.svelte";
 
   /* eslint-disable svelte/no-at-html-tags */
 
@@ -46,7 +45,7 @@
             : "block hover:bg-gray-200 dark:hover:bg-gray-600"}
           href={getAdvisoryAnchorLink(doc)}
           onclick={() => {
-            appStore.setIndexInsideDoc(i);
+            advisorySearchState.hitIndex = i;
           }}
         >
           <span class="block px-2 py-1">

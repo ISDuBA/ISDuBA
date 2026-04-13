@@ -16,7 +16,7 @@
   import { Button, Spinner, TableBodyCell, TableBodyRow, TableHeadCell } from "flowbite-svelte";
   import { onMount, tick } from "svelte";
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
-  import { fetchDocumentSSVC } from "./advisory";
+  import { fetchDocumentSSVC } from "$lib/Advisories/advisory.svelte";
   import SSVCBadge from "./SSVC/SSVCBadge.svelte";
   import { push } from "$routes/router.svelte";
   import { appStore } from "$lib/store.svelte";

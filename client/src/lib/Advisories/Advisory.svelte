@@ -30,10 +30,12 @@
   import {
     type AdvisoryVersion,
     fetchDocumentSSVC,
-    loadAdvisoryVersions
-  } from "$lib/Advisories/advisory";
+    fetchSearchHits,
+    loadAdvisoryVersions,
+    advisorySearchState
+  } from "$lib/Advisories/advisory.svelte";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
-    import SearchHitBar from "./SearchHitBar.svelte";
+  import SearchHitBar from "./SearchHitBar.svelte";
 
   let { params } = $props();
 
@@ -404,6 +406,12 @@
     advisoryState = "";
     historyEntries = [];
     ssvcVector = "";
+    advisorySearchState.searchHits = await fetchSearchHits(params.id);
+    if (advisorySearchState.searchHits.length > 0) {
+      advisorySearchState.hitIndex = 0;
+    } else {
+      advisorySearchState.hitIndex = -1;
+    }
     await loadDocument();
     await getAdvisoryVersions();
     if (couldNotLoadDocument || isInconsistent) return;
@@ -648,7 +656,7 @@
         class={"flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:pr-6" +
           (canSeeCommentArea ? " lg:overflow-auto" : "")}
       >
-        <div class="flex flex-col gap-2 mb-2">
+        <div class="mb-2 flex flex-col gap-2">
           {#if advisoryVersions?.length > 0}
             <Version
               publisherNamespace={document.publisher?.name}

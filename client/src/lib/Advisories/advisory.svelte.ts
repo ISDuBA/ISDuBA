@@ -150,9 +150,52 @@ const fetchDocumentSSVC = async (
   return undefined;
 };
 
+interface SearchHit {
+  path: string;
+  text: string;
+}
+
+const fetchSearchHits = async (_id: number): Promise<SearchHit[]> => {
+  return [
+    {
+      path: "/document/publisher/name",
+      text: "csaf_{-security-}_advisory"
+    },
+    {
+      path: "/document/category",
+      text: "csaf_{-security-}_advisory"
+    },
+    {
+      path: "/document/notes/1/text",
+      text: "The ICS-CERT reported a {-security-} vulnerability that affects"
+    },
+    {
+      path: "/product_tree/branches/0/branches/1/branches/0/product/name",
+      text: "Super {-security-} product"
+    }
+  ];
+};
+
+type AdvisorySearchState = {
+  searchHits: SearchHit[];
+  hitIndex: number;
+};
+
+const advisorySearchState: AdvisorySearchState = $state({
+  searchHits: [],
+  hitIndex: -1
+});
+
 const getAdvisoryLink = (doc: any) =>
   `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
 const getAdvisoryAnchorLink = (doc: any) => "#" + getAdvisoryLink(doc);
 
-export { updateMultipleStates, loadAdvisoryVersions, fetchDocumentSSVC, getAdvisoryAnchorLink };
-export type { AdvisoryVersion };
+export {
+  advisorySearchState,
+  updateMultipleStates,
+  loadAdvisoryVersions,
+  fetchDocumentSSVC,
+  fetchSearchHits,
+  getAdvisoryAnchorLink
+};
+export type { AdvisoryVersion, SearchHit };
