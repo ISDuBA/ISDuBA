@@ -594,7 +594,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 				&publisher,
 				&tlp,
 			); err != nil {
-				return fmt.Errorf("failed to ectract publisher and tlp: %w", err)
+				return fmt.Errorf("failed to extract publisher and tlp: %w", err)
 			}
 			if len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
 				forbidden = true
