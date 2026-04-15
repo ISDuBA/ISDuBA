@@ -550,10 +550,19 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		return
 	}
 
-	// FieldEqInt is a shortcut mainly for building expressions
-	// accessing an integer column like 'id's.
-	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
-	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
+	parser := query.Parser{
+		Mode:            query.DocumentMode,
+		MinSearchLength: MinSearchLength,
+	}
+
+	// The query to filter the documents.
+	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
+		return
+	}
+
+	// Filter the allowed
+	expr = c.andTLPExpr(ctx, expr).And(query.FieldEqInt("docs.id", docID))
 
 	const querySQL = `` +
 		`SELECT` +
