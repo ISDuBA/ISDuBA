@@ -542,3 +542,31 @@ func scanRows(
 	}
 	return results, nil
 }
+
+func (c *Controller) documentTexts(ctx *gin.Context) {
+	// Get an ID from context
+	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
+		return
+	}
+
+	// FieldEqInt is a shortcut mainly for building expressions
+	// accessing an integer column like 'id's.
+	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
+	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
+
+	const querySQL = `` +
+		`SELECT` +
+		` ut.id,` +
+		` ut.txt ` +
+		`FROM` +
+		` unique_texts ut JOIN` +
+		` documents_texts dt ON ut.id = dt.txt_id JOIN` +
+		` documents docs ON docs.id = dt.documents_id JOIN` +
+		` advisories ads ON docs.advisories_id = ads.id ` +
+		`WHERE %s`
+
+		// TODO: Implement me!
+	_ = expr
+	_ = querySQL
+}
