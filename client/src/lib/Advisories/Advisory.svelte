@@ -555,9 +555,14 @@
       <div
         class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
       >
-        <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
-          >{document.publisher ? document.publisher.name : ""}</Label
-        >
+        <div class="flex flex-col gap-2">
+          <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
+            >{document.publisher ? document.publisher.name : ""}</Label
+          >
+          {#if appStore.state.app.search.term}
+            <SearchHitBar />
+          {/if}
+        </div>
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
         </div>
@@ -670,9 +675,6 @@
               selectedDiffDocuments={() => (isDiffOpen = true)}
               onDisabledDiff={() => (isDiffOpen = false)}
             ></Version>
-          {/if}
-          {#if appStore.state.app.search.term}
-            <SearchHitBar />
           {/if}
         </div>
         <div class="flex flex-col">
