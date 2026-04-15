@@ -561,21 +561,61 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		return
 	}
 
-	// Filter the allowed
-	expr = c.andTLPExpr(ctx, expr).And(query.FieldEqInt("docs.id", docID))
+	tlps := c.tlps(ctx)
 
-	const querySQL = `` +
-		`SELECT` +
-		` ut.id,` +
-		` ut.txt ` +
-		`FROM` +
-		` unique_texts ut JOIN` +
-		` documents_texts dt ON ut.id = dt.txt_id JOIN` +
-		` documents docs ON docs.id = dt.documents_id JOIN` +
-		` advisories ads ON docs.advisories_id = ads.id ` +
-		`WHERE %s`
+	const (
+		publisherTLPSQL = `` +
+			`SELECT` +
+			` ads.publisher,` +
+			` docs.tlp ` +
+			`FROM` +
+			` documents docs JOIN` +
+			` advisories ads ON docs.advisories_id = ads.id ` +
+			`WHERE docs.id = $1`
+		extractSQL = `` +
+			`SELECT` +
+			` ut.id,` +
+			` ut.txt ` +
+			`FROM` +
+			` unique_texts ut JOIN` +
+			` documents_texts dt ON ut.id = dt.txt_id JOIN` +
+			` documents docs ON docs.id = dt.documents_id JOIN` +
+			` advisories ads ON docs.advisories_id = ads.id ` +
+			`WHERE` +
+			` docs.id = $1 AND %s`
+	)
+	var forbidden bool
+	switch err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			// Check permissions.
+			var publisher, tlp string
+			if err := conn.QueryRow(rctx, publisherTLPSQL, docID).Scan(
+				&publisher,
+				&tlp,
+			); err != nil {
+				return fmt.Errorf("failed to ectract publisher and tlp: %w", err)
+			}
+			if len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
+				forbidden = true
+				return nil
+			}
+			// TODO: Implement me!
 
-		// TODO: Implement me!
+			return nil
+		},
+		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
+	); {
+	case errors.Is(err, pgx.ErrNoRows):
+		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
+	case err != nil:
+		slog.Error("database error", "err", err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
+	case forbidden:
+		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
+	}
+
+	// TODO: Implement me!
 	_ = expr
-	_ = querySQL
+	_ = extractSQL
 }
