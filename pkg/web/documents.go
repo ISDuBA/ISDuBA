@@ -561,11 +561,11 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		return
 	}
 
-	searchTerm, replacements := query.CreateTextSearchWhereClause(
-		"ut.txt", expr)
+	searchTerm, replacements := query.
+		CreateTextSearchWhereClause("ut.txt", expr)
 	if len(replacements) == 0 {
 		// No search texts found in query -> no need to proceed.
-		ctx.JSON(http.StatusOK, []any{})
+		ctx.JSON(http.StatusOK, models.TextPaths{})
 		return
 	}
 	replacements = append(replacements, docID)
@@ -581,7 +581,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			` documents docs JOIN` +
 			` advisories ads ON docs.advisories_id = ads.id ` +
 			`WHERE docs.id = $1`
-		querySQL = `` +
+		uniqueTextsSQL = `` +
 			`SELECT` +
 			` ut.id,` +
 			` ut.txt ` +
@@ -592,6 +592,16 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			` advisories ads ON docs.advisories_id = ads.id ` +
 			`WHERE` +
 			` docs.id = $%d AND %s`
+		documentSQL = `` +
+			`SELECT document ` +
+			`FROM documents ` +
+			`WHERE id = $1`
+	)
+
+	//  Data to be loaded from the database.
+	var (
+		uniqueTexts  = make(map[int64]string)
+		documentData []byte
 	)
 
 	var forbidden bool
@@ -610,22 +620,62 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 				forbidden = true
 				return nil
 			}
-			// TODO: Implement me!
-			query := fmt.Sprintf(querySQL, len(replacements), searchTerm)
-			_ = query
-
+			// Load unique texts.
+			query := fmt.Sprintf(uniqueTextsSQL, len(replacements), searchTerm)
+			rows, err := conn.Query(rctx, query, replacements...)
+			if err != nil {
+				return fmt.Errorf("loading uniquw texts failed: %w", err)
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var (
+					textID int64
+					text   string
+				)
+				if err := rows.Scan(&textID, &text); err != nil {
+					return fmt.Errorf("scanning unique texts failed: %w", err)
+				}
+				uniqueTexts[textID] = text
+			}
+			if err := rows.Err(); err != nil {
+				return fmt.Errorf("scanning unique texts failed: %w", err)
+			}
+			if len(uniqueTexts) == 0 {
+				// No matches.
+				return nil
+			}
+			rows.Close()
+			// Load the document itself.
+			if err := conn.QueryRow(rctx, documentSQL, docID).Scan(&documentData); err != nil {
+				return fmt.Errorf("loading document failed: %w", err)
+			}
 			return nil
 		},
 		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
 	); {
 	case errors.Is(err, pgx.ErrNoRows):
 		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
+		return
 	case err != nil:
 		slog.Error("database error", "err", err)
 		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
 	case forbidden:
 		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
+		return
 	}
 
+	if len(uniqueTexts) == 0 {
+		ctx.JSON(http.StatusOK, models.TextPaths{})
+		return
+	}
+
+	var document any
+	if err := json.Unmarshal(documentData, &document); err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
 	// TODO: Implement me!
+
+	_ = documentData
 }
