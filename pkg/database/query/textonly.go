@@ -59,7 +59,7 @@ func CreateTextSearchWhereClause(column string, e *Expr) (string, []any) {
 		b.WriteByte('(')
 		b.WriteString(column)
 		b.WriteString(" ILIKE $")
-		b.WriteString(strconv.Itoa(textIndex(curr.stringValue)))
+		b.WriteString(strconv.Itoa(textIndex(curr.stringValue) + 1))
 		b.WriteByte(')')
 	}
 	// Flatten the tree.
