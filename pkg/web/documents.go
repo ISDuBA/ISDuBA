@@ -561,6 +561,15 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		return
 	}
 
+	searchTerm, replacements := query.CreateTextSearchWhereClause(
+		"ut.txt", expr)
+	if len(replacements) == 0 {
+		// No search texts found in query -> no need to proceed.
+		ctx.JSON(http.StatusOK, []any{})
+		return
+	}
+	replacements = append(replacements, docID)
+
 	tlps := c.tlps(ctx)
 
 	const (
@@ -572,7 +581,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			` documents docs JOIN` +
 			` advisories ads ON docs.advisories_id = ads.id ` +
 			`WHERE docs.id = $1`
-		extractSQL = `` +
+		querySQL = `` +
 			`SELECT` +
 			` ut.id,` +
 			` ut.txt ` +
@@ -582,8 +591,9 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			` documents docs ON docs.id = dt.documents_id JOIN` +
 			` advisories ads ON docs.advisories_id = ads.id ` +
 			`WHERE` +
-			` docs.id = $1 AND %s`
+			` docs.id = $%d AND %s`
 	)
+
 	var forbidden bool
 	switch err := c.db.Run(
 		ctx.Request.Context(),
@@ -601,6 +611,8 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 				return nil
 			}
 			// TODO: Implement me!
+			query := fmt.Sprintf(querySQL, len(replacements), searchTerm)
+			_ = query
 
 			return nil
 		},
@@ -616,6 +628,4 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 	}
 
 	// TODO: Implement me!
-	_ = expr
-	_ = extractSQL
 }
