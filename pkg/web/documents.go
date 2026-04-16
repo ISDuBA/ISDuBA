@@ -689,7 +689,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 
 // There are integers in CSAF documents which are not text ids.
 var knownNoneTexts = map[string]struct{}{
-	"document/tracking/version": struct{}{},
+	"document/tracking/version": {},
 	// TODO: Fill me!
 }
 
