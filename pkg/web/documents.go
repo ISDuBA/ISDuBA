@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"slices"
 	"strconv"
@@ -671,11 +672,65 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 	}
 
 	var document any
-	if err := json.Unmarshal(documentData, &document); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(documentData))
+	// We use Numbers here to make it easier to
+	// filter out strings that apparently are not IDs like 3.1415
+	// which would be otherwise parse as float64s. 3.000 would
+	// also be parsed into float64s as would 3. Not using Numbers
+	// would make hard to tell the apart.
+	dec.UseNumber()
+	if err := dec.Decode(&document); err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	// TODO: Implement me!
+	paths := buildTextPaths(document, uniqueTexts)
+	ctx.JSON(http.StatusOK, paths)
+}
 
-	_ = documentData
+// There are integers in CSAF documents which are not text ids.
+var knownNoneTexts = map[string]struct{}{
+	"document/tracking/version": struct{}{},
+	// TODO: Fill me!
+}
+
+// buildTextPaths traverses the document tree and attemps to resolve
+// the unique texts producing a list of matches.
+func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths {
+	paths := models.TextPaths{}
+	var recurse func(any, []string)
+	recurse = func(curr any, path []string) {
+		switch x := curr.(type) {
+		case map[string]any:
+			// Sort to make output deterministic.
+			keys := slices.Sorted(maps.Keys(x))
+			for _, key := range keys {
+				path = append(path, key)
+				recurse(x[key], path)
+				path = path[:len(path)-1]
+			}
+		case []any:
+			for i, y := range x {
+				path = append(path, strconv.Itoa(i))
+				recurse(y, path)
+				path = path[:len(path)-1]
+			}
+		case json.Number:
+			id, err := x.Int64()
+			if err != nil {
+				return
+			}
+			p := strings.Join(path, "/")
+			if _, ok := knownNoneTexts[p]; ok {
+				return
+			}
+			if text, ok := uniqueTexts[id]; ok {
+				paths = append(paths, models.TextPath{
+					Path: "/" + p,
+					Text: text,
+				})
+			}
+		}
+	}
+	recurse(document, nil)
+	return paths
 }
