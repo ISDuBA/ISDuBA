@@ -11,6 +11,7 @@
 <script lang="ts">
   import Link from "$lib/Components/Link.svelte";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
+  import SearchableText from "../SearchableText.svelte";
 
   interface Props {
     references: any;
@@ -31,10 +32,17 @@
           <TableBodyRow>
             <TableBodyCell class={cellStyle}>{reference.category}</TableBodyCell>
             <TableBodyCell class={cellStyle}
-              ><p class="mb-2">{reference.summary}</p>
+              ><p class="mb-2">
+                <SearchableText
+                  textPath={`/document/references/[${i}]/summary`}
+                  text={reference.summary}
+                ></SearchableText>
+              </p>
               <Link class="underline" href={reference.url}
-                ><i class="bx bx-link"></i>{reference.url}</Link
-              ></TableBodyCell
+                ><i class="bx bx-link"></i>
+                <SearchableText textPath={`/document/references/[${i}]/url`} text={reference.url}
+                ></SearchableText>
+              </Link></TableBodyCell
             >
             <TableBodyCell></TableBodyCell>
           </TableBodyRow>

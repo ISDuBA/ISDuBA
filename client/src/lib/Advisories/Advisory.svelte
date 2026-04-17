@@ -54,6 +54,7 @@
   let loadForwardTargetsError: ErrorDetails | null = $state(null);
   let stateError: ErrorDetails | null = $state(null);
   let loadRelatedError: ErrorDetails | null = $state(null);
+  let loadSearchHitsError: ErrorDetails | null = $state(null);
   let advisoryVersions: AdvisoryVersion[] = $state([]);
   let advisoryVersionByDocumentID: any = $state(undefined);
   let advisoryState: string = $state("");
@@ -406,7 +407,12 @@
     advisoryState = "";
     historyEntries = [];
     ssvcVector = "";
-    advisorySearchState.searchHits = await fetchSearchHits(params.id);
+    const hitsResult = await fetchSearchHits(params.id);
+    if (Array.isArray(hitsResult)) {
+      advisorySearchState.searchHits = hitsResult;
+    } else {
+      loadSearchHitsError = hitsResult;
+    }
     if (advisorySearchState.searchHits.length > 0) {
       advisorySearchState.hitIndex = 0;
     } else {
@@ -576,6 +582,7 @@
   <ErrorMessage bind:error={loadDocumentError}></ErrorMessage>
   <ErrorMessage bind:error={loadFourCVEsError}></ErrorMessage>
   <ErrorMessage bind:error={loadRelatedError}></ErrorMessage>
+  <ErrorMessage bind:error={loadSearchHitsError}></ErrorMessage>
   {#if !couldNotLoadDocument && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}

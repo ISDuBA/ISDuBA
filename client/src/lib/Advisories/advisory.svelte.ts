@@ -155,37 +155,16 @@ interface SearchHit {
   text: string;
 }
 
-const fetchSearchHits = async (_id: number): Promise<SearchHit[]> => {
-  return [
-    {
-      path: "/document/publisher/name",
-      text: "csaf_{-security-}_advisory"
-    },
-    {
-      path: "/document/publisher/namespace",
-      text: "https://example.org/{-security-}"
-    },
-    {
-      path: "/document/category",
-      text: "csaf_{-security-}_advisory"
-    },
-    {
-      path: "/document/notes/1/text",
-      text: "The ICS-CERT reported a {-security-} vulnerability that affects"
-    },
-    {
-      path: "/product_tree/branches/0/branches/0/product/name",
-      text: "Super {-security-} product"
-    },
-    {
-      path: "/product_tree/branches/0/branches/0/branches/0/product/name",
-      text: "Super {-security-} product"
-    },
-    {
-      path: "/vulnerabilities/0/remediations/0/category",
-      text: "Super {-security-} product"
-    }
-  ];
+const fetchSearchHits = async (id: number): Promise<SearchHit[] | ErrorDetails> => {
+  const query = appStore.state.app.search.query;
+  const response = await request(
+    `/api/documents/texts/${id}?query=${encodeURIComponent(query ?? "")}`,
+    "GET"
+  );
+  if (!response.ok) {
+    return getErrorDetails("Could not load search matches.", response);
+  }
+  return response.content;
 };
 
 type AdvisorySearchState = {

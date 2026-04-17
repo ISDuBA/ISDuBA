@@ -36,7 +36,7 @@
     {/snippet}
     {#if branch.branches}
       {#each branch.branches as b, i (`branch-${uid}-${i}`)}
-        <Self branch={b} {open} {openSubBranches} path={`${path}/branches/${i}`} />
+        <Self branch={b} {open} {openSubBranches} path={`${path}/branches/[${i}]`} />
       {/each}
     {/if}
     {#if branch.product}

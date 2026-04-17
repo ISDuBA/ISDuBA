@@ -53,6 +53,7 @@ type AppStore = {
     isDarkMode: boolean;
     search: {
       count: number | null;
+      query: string | null;
       offset: number | null;
       requestURL: string | null;
       results: any[] | null;
@@ -125,6 +126,7 @@ const generateInitialState = (): AppStore => {
       isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false,
       search: {
         count: null,
+        query: null,
         offset: null,
         requestURL: null,
         results: null,
@@ -353,6 +355,10 @@ export const appStore = {
 
   setSearchOffset: (newOffset: number | null) => {
     state.app.search.offset = newOffset;
+  },
+
+  setSearchQuery: (newQuery: string | null) => {
+    state.app.search.query = newQuery;
   },
 
   // Pass the URL to load documents/events without the offset parameter so we can attach the offset of the store.

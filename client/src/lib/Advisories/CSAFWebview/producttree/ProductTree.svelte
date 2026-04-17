@@ -59,7 +59,12 @@
     path="/product_tree"
   >
     {#each appStore.state.webview.doc?.productTree.branches as branch, i (`producttree-${uid}-${i}`)}
-      <Branch {branch} {openSubBranches} open={openBranches} path={`/product_tree/branches/${i}`} />
+      <Branch
+        {branch}
+        {openSubBranches}
+        open={openBranches}
+        path={`/product_tree/branches/[${i}]`}
+      />
     {/each}
   </Collapsible>
 {/if}

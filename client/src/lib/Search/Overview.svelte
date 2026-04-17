@@ -288,6 +288,7 @@
     const searchColumn = !advanced && searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";
     if (queryQuery) {
+      appStore.setSearchQuery(queryQuery);
       queryParam = `query=${queryQuery}`;
     }
     let fetchColumns = [...$state.snapshot(columns)];

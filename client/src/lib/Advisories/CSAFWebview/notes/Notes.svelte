@@ -39,9 +39,9 @@
       header={note.title ? `${note.category}: ${note.title}` : note.category}
       level={4}
       open={openNote[index]}
-      path={`/document/notes/${index}`}
+      path={`/document/notes/[${index}]`}
     >
-      <SingleNote {note} path={`/document/notes/${index}`} />
+      <SingleNote {note} path={`/document/notes/[${index}]`} />
     </Collapsible>
   {/each}
 {/if}
