@@ -12,12 +12,14 @@
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import CVSS from "./general/CVSS.svelte";
   import Link from "$lib/Components/Link.svelte";
+  import SearchableText from "./SearchableText.svelte";
 
   interface Props {
     keys: Array<string>;
+    paths?: Array<string>;
     values: any;
   }
-  let { keys, values }: Props = $props();
+  let { keys, values, paths }: Props = $props();
 
   const uid = $props.id();
 
@@ -59,7 +61,7 @@
                   <i class="bx bx-link"></i>{values[index]}
                 </Link>
               {:else}
-                {values[index]}
+                <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
               {/if}
             </TableBodyCell>
           </TableBodyRow>

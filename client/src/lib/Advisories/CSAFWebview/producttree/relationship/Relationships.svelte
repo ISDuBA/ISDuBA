@@ -22,5 +22,5 @@
 </script>
 
 {#each relationships as relation, i (`relationships-${uid}-${i}`)}
-  <Relation {basePath} {relation} />
+  <Relation {basePath} {relation} path={`/product_tree/relationships/${i}`} />
 {/each}

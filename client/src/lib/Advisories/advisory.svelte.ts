@@ -174,7 +174,15 @@ const fetchSearchHits = async (_id: number): Promise<SearchHit[]> => {
       text: "The ICS-CERT reported a {-security-} vulnerability that affects"
     },
     {
-      path: "/product_tree/branches/0/branches/1/branches/0/product/name",
+      path: "/product_tree/branches/0/branches/0/product/name",
+      text: "Super {-security-} product"
+    },
+    {
+      path: "/product_tree/branches/0/branches/0/branches/0/product/name",
+      text: "Super {-security-} product"
+    },
+    {
+      path: "/vulnerabilities/0/remediations/0/category",
       text: "Super {-security-} product"
     }
   ];

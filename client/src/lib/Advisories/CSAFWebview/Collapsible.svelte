@@ -10,6 +10,7 @@
 
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { advisorySearchState } from "../advisory.svelte";
 
   interface Props {
     header: string;
@@ -18,6 +19,9 @@
     showBorder?: boolean;
     level?: number;
     highlight?: boolean;
+    // path used inside advisory view when this component should open
+    // automatically if it contains the current search hit.
+    path?: string;
     onOpen?: () => any;
     onClose?: () => any;
     children: Snippet;
@@ -27,10 +31,11 @@
   let {
     header,
     title = undefined,
-    open = false,
+    open = $bindable(false),
     showBorder = true,
     level = 2,
     highlight = false,
+    path = undefined,
     onOpen = () => {
       //default: Do nothing
     },
@@ -59,11 +64,12 @@
       if (onClose) {
         onClose();
       }
-      visibility = "none";
+      open = false;
     } else {
       if (onOpen) {
         onOpen();
       }
+      open = true;
       setTimeout(() => {
         const element = document.getElementById(`${uuid}`);
         if (element) {
@@ -71,7 +77,6 @@
           window.scrollTo({ top: y, behavior: "smooth" });
         }
       }, 200);
-      visibility = "block";
     }
   };
   let icon = $derived.by(() => {
@@ -96,6 +101,16 @@
         return "";
     }
   };
+
+  $effect(() => {
+    if (path) {
+      if (advisorySearchState.hitIndex !== -1) {
+        const hitPath = advisorySearchState.searchHits[advisorySearchState.hitIndex].path;
+        const shouldOpen = hitPath.startsWith(path);
+        if (shouldOpen) open = true;
+      }
+    }
+  });
 </script>
 
 <div class:collapsible={true} class:highlight-section={highlight}>

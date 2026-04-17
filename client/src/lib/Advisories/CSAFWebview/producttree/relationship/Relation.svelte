@@ -16,12 +16,14 @@
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
   import type { Relationship } from "$lib/pmdTypes";
   import { A } from "flowbite-svelte";
+  import SearchableText from "../../SearchableText.svelte";
 
   interface Props {
     basePath: string;
+    path: string;
     relation: Relationship;
   }
-  let { basePath, relation }: Props = $props();
+  let { basePath, path, relation }: Props = $props();
 
   let blink = $state(false);
   async function updateUI() {
@@ -55,6 +57,7 @@
       appStore.resetSelectedProduct();
     }
   }}
+  {path}
 >
   <div id={relation.full_product_name.product_id} class={blink ? "blink" : ""}>
     <KeyValue
@@ -63,6 +66,11 @@
         relation.category,
         relation.full_product_name.name,
         relation.full_product_name.product_id
+      ]}
+      paths={[
+        `${path}/category`,
+        `${path}/full_product_name/name`,
+        `${path}/full_product_name/product_id`
       ]}
     />
     {#if relation.full_product_name.product_identification_helper}
@@ -79,9 +87,13 @@
               class="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.product_reference)}`}
-              >{relation.product_reference}</A
-            ></td
-          >
+            >
+              <SearchableText
+                textPath={`${path}/product_reference`}
+                text={relation.product_reference}
+              />
+            </A>
+          </td>
         </tr>
         <tr>
           <td>Relates to</td>
@@ -90,9 +102,13 @@
               class="text-primary-700 dark:text-primary-400"
               id={crypto.randomUUID()}
               href={`${basePath}product-${encodeURIComponent(relation.relates_to_product_reference)}`}
-              >{relation.relates_to_product_reference}</A
-            ></td
-          >
+            >
+              <SearchableText
+                textPath={`${path}/relates_to_product_reference`}
+                text={relation.relates_to_product_reference}
+              />
+            </A>
+          </td>
         </tr>
       </tbody>
     </table>

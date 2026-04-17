@@ -9,19 +9,28 @@
 -->
 
 <script lang="ts">
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import SingleNote from "$lib/Advisories/CSAFWebview/notes/Note.svelte";
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import { onMount } from "svelte";
+  import Collapsible from "../Collapsible.svelte";
 
   interface Props {
     notes: Note[];
-    open?: boolean;
+    initOpen?: boolean;
   }
-  let { notes, open = false }: Props = $props();
+  let { notes, initOpen = false }: Props = $props();
 
   const uid = $props.id();
 
   let hasDescription = $derived(notes.some((note) => note.category === "description"));
+
+  let openNote: boolean[] = $state([]);
+
+  onMount(() => {
+    openNote = notes.map((note) => {
+      return initOpen || note.category === (hasDescription ? "description" : "summary");
+    });
+  });
 </script>
 
 {#if notes}
@@ -29,7 +38,8 @@
     <Collapsible
       header={note.title ? `${note.category}: ${note.title}` : note.category}
       level={4}
-      open={open || note.category === (hasDescription ? "description" : "summary")}
+      open={openNote[index]}
+      path={`/document/notes/${index}`}
     >
       <SingleNote {note} path={`/document/notes/${index}`} />
     </Collapsible>

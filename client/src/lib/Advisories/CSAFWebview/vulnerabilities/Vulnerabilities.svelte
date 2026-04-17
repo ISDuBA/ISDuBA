@@ -23,6 +23,11 @@
 
 <div>
   {#each vulnerabilities as vulnerability, index (`vulnerabilities-${uid}-${index}`)}
-    <Vulnerability {vulnerability} index={index + 1} {basePath} />
+    <Vulnerability
+      {vulnerability}
+      index={index + 1}
+      {basePath}
+      path={`/vulnerabilities/${index}`}
+    />
   {/each}
 </div>

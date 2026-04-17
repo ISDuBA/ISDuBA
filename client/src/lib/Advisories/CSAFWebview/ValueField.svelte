@@ -9,14 +9,19 @@
 -->
 
 <script lang="ts">
+  import SearchableText from "./SearchableText.svelte";
+
   interface Props {
     label?: string;
     value?: string;
+    path: string;
   }
-  let { label = "", value = "" }: Props = $props();
+  let { label = "", value = "", path }: Props = $props();
 </script>
 
 <div>
   <h6>{label}</h6>
-  <p class="ml-3">{value}</p>
+  <p class="ml-3">
+    <SearchableText textPath={path} text={value} />
+  </p>
 </div>

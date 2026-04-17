@@ -15,13 +15,14 @@
 
   interface Props {
     productGroup: ProductGroup;
+    path: string;
   }
-  let { productGroup }: Props = $props();
+  let { productGroup, path }: Props = $props();
 </script>
 
 <ValueList label="Group IDs" values={productGroup.group_ids} />
 <ValueList label="Product IDs" values={productGroup.product_ids} />
 
 {#if productGroup.summary}
-  <ValueField label="Summary" value={productGroup.summary} />
+  <ValueField label="Summary" value={productGroup.summary} path={`${path}/summary`} />
 {/if}
