@@ -710,7 +710,7 @@ func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths
 			}
 		case []any:
 			for i, y := range x {
-				path = append(path, strconv.Itoa(i))
+				path = append(path, "["+strconv.Itoa(i)+"]")
 				recurse(y, path)
 				path = path[:len(path)-1]
 			}
