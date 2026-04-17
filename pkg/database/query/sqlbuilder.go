@@ -224,10 +224,13 @@ func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
 }
 
 const (
-	versionsCount = `(SELECT count(*) FROM documents WHERE ` +
+	versionsCountClassic = `(SELECT count(*) FROM documents WHERE ` +
 		`documents.advisories_id = advisories.id)`
-	commentsCountDocuments = `(SELECT count(*) FROM comments WHERE ` +
+	commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents.id)`
+	versionsCountCTE          = `(SELECT count(*) FROM docads)`
+	commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = docads.id)`
 	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents_id)`
 )
@@ -241,13 +244,13 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 		b.WriteString("advisories.")
 		b.WriteString(column)
 	case "versions":
-		b.WriteString(versionsCount)
+		b.WriteString(versionsCountClassic)
 	case "comments":
 		switch sb.Mode {
 		case AdvisoryMode:
 			b.WriteString(column)
 		case DocumentMode:
-			b.WriteString(commentsCountDocuments)
+			b.WriteString(commentsCountDocumentsClassic)
 		case EventMode:
 			b.WriteString(commentsCountEvents)
 		}
@@ -540,7 +543,7 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 		case "event_state":
 			b.WriteString("events_log.state::text AS event_state")
 		case "versions":
-			b.WriteString(versionsCount + `AS versions`)
+			b.WriteString(versionsCountClassic + `AS versions`)
 		case "ssvc":
 			b.WriteString("ssvc_current.ssvc AS ssvc")
 		case "comments":
@@ -548,7 +551,7 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			case AdvisoryMode:
 				b.WriteString(p)
 			case DocumentMode:
-				b.WriteString(commentsCountDocuments + `AS comments`)
+				b.WriteString(commentsCountDocumentsClassic + `AS comments`)
 			case EventMode:
 				b.WriteString(commentsCountEvents + `AS comments`)
 			}

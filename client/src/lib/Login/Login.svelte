@@ -184,22 +184,3 @@
     <ErrorMessage error={versionError}></ErrorMessage>
   </div>
 </div>
-
-<style>
-  .tlpwhite {
-    background: #000;
-    color: #fff;
-  }
-  .tlpred {
-    background: #000;
-    color: #ff2b2b;
-  }
-  .tlpamber {
-    background: #000;
-    color: #ffc000;
-  }
-  .tlpgreen {
-    background: #000;
-    color: #33ff00;
-  }
-</style>

@@ -40,3 +40,25 @@ are marked with comments like
 ```
 or ```DO NOT EDIT```
 .
+
+## Testing
+
+### Client
+
+#### Local
+
+Prerequisite: A running local instance of ISDuBA, with a running configured Keycloak and Postgresql.
+
+To run the integration tests call `npm run test:integration`. At the latest
+when the tests fail the best way to debug them is to use the
+[UI mode](https://playwright.dev/docs/test-ui-mode) of
+Playwright. To start it call `npm run test:integration -- --ui`.
+
+#### Github Action
+
+There is also a Github Action which runs the Playwright tests. If they fail
+the action contains artifacts that can be opened in a browser. Then you can
+take a look at the summary to check which tests failed exactly. The artifacts
+also contain the [trace](https://playwright.dev/docs/trace-viewer#trace-viewer-features)
+that can be used to inspect the screen that was recorded
+during the test, the network requests and so on.

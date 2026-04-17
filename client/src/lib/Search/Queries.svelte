@@ -27,11 +27,12 @@
   import type { Query, SEARCHTYPES } from "$lib/Queries/query";
 
   interface Props {
+    onLoadedQueries: () => void;
     onQuerySelected: (id: number | undefined) => void;
     selectedType: SEARCHTYPES;
   }
 
-  let { onQuerySelected, selectedType }: Props = $props();
+  let { onLoadedQueries, onQuerySelected, selectedType }: Props = $props();
 
   const uid = $props.id();
 
@@ -83,7 +84,7 @@
   };
 
   onMount(async () => {
-    fetchIgnored();
+    await fetchIgnored();
     queryState.queries = [];
     queryState.ignoredQueries = [];
     const response = await request("/api/queries", "GET");
@@ -92,6 +93,7 @@
     } else if (response.error) {
       errorMessage = getErrorDetails(`Could not load user defined queries.`, response);
     }
+    onLoadedQueries();
   });
 
   const selectQuery = (id: number | undefined) => {

@@ -747,7 +747,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/web.overviewDocuments.documentResult"
+                            "$ref": "#/definitions/web.flatResults.documentResult"
                         }
                     },
                     "400": {
@@ -4330,6 +4330,21 @@ const docTemplate = `{
                 }
             }
         },
+        "web.flatResults.documentResult": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "documents": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    }
+                }
+            }
+        },
         "web.insertDefaultQueryExclusion.createResult": {
             "type": "object",
             "properties": {
@@ -4346,21 +4361,6 @@ const docTemplate = `{
             "properties": {
                 "keep_feed_time": {
                     "type": "integer"
-                }
-            }
-        },
-        "web.overviewDocuments.documentResult": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "documents": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": {}
-                    }
                 }
             }
         },

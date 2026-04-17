@@ -9,12 +9,11 @@
 -->
 
 <script lang="ts">
-  import type { ColorVariant } from "./types";
   import type { HTMLButtonAttributes } from "svelte/elements";
 
   type Props = {
     ariaLabel?: string;
-    color?: ColorVariant;
+    color?: "dark" | "red" | "yellow" | "green" | "indigo" | "purple" | "pink" | "blue" | "primary";
     icon?: string;
     disabled?: boolean;
     title?: string;

@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-FROM library/node:24.1-alpine AS client
+FROM library/node:24.14.1-alpine AS client
 RUN apk update && apk add --no-cache make
 
 WORKDIR /app
@@ -20,7 +20,7 @@ COPY Makefile Makefile
 RUN make build_client
 
 
-FROM library/golang:1.26.0-alpine AS server
+FROM library/golang:1.26.1-alpine AS server
 RUN apk update && apk add --no-cache make
 # This required to download from https locations, like CSAF trusted provider or CSAF aggregator
 RUN apk add -U --no-cache ca-certificates && update-ca-certificates

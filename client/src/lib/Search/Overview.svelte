@@ -32,6 +32,7 @@
   const INITIAL_LIMIT = 10;
   const INITIAL_ORDER = ["-critical"];
 
+  let queriesLoaded = $state(false);
   let loading = $state(false);
   let openRow: number | null = $state(null);
   let count = $state(0);
@@ -48,9 +49,6 @@
   // Variables derived from URL parameters
   let queryString: any = $derived($qs ? parse($qs) : undefined);
   let searchTerm: string = $derived(queryString?.searchTerm ? queryString.searchTerm : "");
-  let orderBy: string[] = $derived(
-    queryString?.orderBy ? queryString.orderBy.split(" ") : INITIAL_ORDER
-  );
   let advanced: boolean = $derived(
     queryString?.advanced !== undefined ? (queryString.advanced === "true" ? true : false) : false
   );
@@ -65,6 +63,19 @@
     const queryByID = $state.snapshot(queries).find((q) => q.id === queryID);
     if (queryByID) return $state.snapshot(queryByID);
     return $state.snapshot(defaultQuery) ?? null;
+  });
+  let orderBy: string[] = $derived.by(() => {
+    if (selectedQuery?.orders && queryString?.orderBy == null) {
+      return selectedQuery.orders;
+    }
+    if (queryString?.orderBy == null) {
+      return INITIAL_ORDER;
+    }
+    // Allow an empty string to overwrite the order of a selected query
+    if (queryString.orderBy === "") {
+      return [];
+    }
+    return queryString.orderBy.split(" ");
   });
 
   let type: SEARCHTYPES = $derived.by(() => {
@@ -98,7 +109,6 @@
     queryType: SEARCHTYPES;
     orders: string[];
     query: string;
-    queryReset: string;
   }
 
   let query: SearchQuery = $derived.by(() => {
@@ -109,7 +119,6 @@
         columns: defaultQuery.columns,
         queryType: defaultQuery.kind,
         query: defaultQuery.query,
-        queryReset: "",
         orders: defaultQuery.orders ?? []
       };
     } else {
@@ -117,8 +126,7 @@
         columns: [...SEARCHPAGECOLUMNS.ADVISORY],
         queryType: SEARCHTYPES.ADVISORY,
         orders: INITIAL_ORDER,
-        query: "",
-        queryReset: ""
+        query: ""
       };
     }
   });
@@ -134,7 +142,7 @@
       if (!queryForFetch) {
         return searchTerm || "";
       } else {
-        return `${queryForFetch.queryReset} ${searchTerm ? searchTerm + " and" : ""}`;
+        return `${queryForFetch.query ?? ""} ${searchTerm ? searchTerm + " and" : ""}`;
       }
     }
   });
@@ -202,12 +210,22 @@
       searchParameters.orderBy &&
       JSON.stringify(searchParameters.orderBy) !== JSON.stringify(INITIAL_ORDER)
     ) {
+      // Order manually
       newURL = newURL.concat(`&orderBy=${encodeURIComponent(searchParameters.orderBy.join(" "))}`);
+    } else if (searchParameters.orderBy == undefined) {
+      // Switch page or unset order manually
+      if (orderBy != undefined && !Object.keys(searchParameters).includes("queryID")) {
+        // Keep previous sort order
+        newURL = newURL.concat(`&orderBy=${encodeURIComponent(orderBy.join(" "))}`);
+      }
     } else if (
-      !searchParameters.orderBy &&
-      JSON.stringify(orderBy) !== JSON.stringify(INITIAL_ORDER)
+      searchParameters.orderBy != undefined &&
+      queryID != undefined &&
+      JSON.stringify(searchParameters.orderBy) == JSON.stringify(INITIAL_ORDER)
     ) {
-      newURL = newURL.concat(`&orderBy=${encodeURIComponent(orderBy.join(" "))}`);
+      // If a query is selected it is okay to set the initial order in the URL because otherwise it is
+      // not possible to sort by that order.
+      newURL = newURL.concat(`&orderBy=${encodeURIComponent(searchParameters.orderBy.join(" "))}`);
     }
 
     if (searchParameters.currentPage !== undefined && searchParameters.currentPage !== 1) {
@@ -254,16 +272,10 @@
   };
 
   $effect(() => {
-    // If queryID is defined we expect the data for that query to be fetched but initially the queries are not
-    // loaded so we have to wait until they are. Then we can read the necessary information from selectedQuery
-    // and do the request.
-    const qID = untrack(() => queryID);
-    if (qID !== undefined && queries === null) return;
-
     // This rune is also called when a different was opened. In this case the parameters are reset to their defaults
     // and the count and the results saved in the store are not the expected ones.
     const hash = untrack(() => page.url.hash);
-    if ($qs !== undefined && hash.startsWith("#/search")) {
+    if (queriesLoaded && $qs !== undefined && hash.startsWith("#/search")) {
       fetchData();
     }
   });
@@ -273,12 +285,11 @@
     appStore.clearSelectedDocumentIDs();
     openRow = null;
 
-    const searchColumn = searchTerm ? ` ${searchColumnName}` : "";
+    const searchColumn = !advanced && searchTerm ? ` ${searchColumnName}` : "";
     let queryParam = "";
     if (queryQuery) {
       queryParam = `query=${queryQuery}`;
     }
-    const orderByParam = queryForFetch ? (query?.orders ?? []) : orderBy;
     let fetchColumns = [...$state.snapshot(columns)];
     let requiredColumns = ["id", "tracking_id", "publisher"];
     for (let c of requiredColumns) {
@@ -293,12 +304,12 @@
 
     if ((queryForFetch && queryForFetch.kind === SEARCHTYPES.EVENT) || type === SEARCHTYPES.EVENT) {
       URLWithoutOffsetAndLimit = encodeURI(
-        `/api/events?${queryParam}&count=1&orders=${orderByParam.join(" ")}&${columnsParam}`
+        `/api/events?${queryParam}&count=1&orders=${orderBy.join(" ")}&${columnsParam}`
       );
     } else {
       const loadAdvisories = type === SEARCHTYPES.ADVISORY;
       URLWithoutOffsetAndLimit = encodeURI(
-        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderByParam.join(" ")}&results=true&${columnsParam}`
+        `/api/documents?${queryParam}&advisories=${loadAdvisories}&aggregate=true&count=1&orders=${orderBy.join(" ")}&results=true&${columnsParam}`
       );
     }
     appStore.setSearchRequestURL(URLWithoutOffsetAndLimit);
@@ -368,10 +379,14 @@
 <div class="mb-8 flex flex-wrap justify-between gap-4">
   <Queries
     selectedType={type}
+    onLoadedQueries={() => {
+      queriesLoaded = true;
+    }}
     onQuerySelected={(id: number | undefined) => {
       const newParameters: SearchParameters = {
         currentPage: 1,
         limit: INITIAL_LIMIT,
+        orderBy: undefined,
         queryID: id === defaultQuery?.id ? undefined : id,
         searchTerm: "",
         type: undefined

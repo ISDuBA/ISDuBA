@@ -19,31 +19,3 @@
 <Link href="https://www.first.org/tlp/" class={tlp ? `tlp${tlp.toLocaleLowerCase()}` : ""}>
   {tlp}
 </Link>
-
-<!-- svelte-ignore css_unused_selector -->
-<style>
-  .tlpwhite {
-    font-size: small;
-    padding: 0.25em;
-    background: #000;
-    color: #fff;
-  }
-  .tlpred {
-    font-size: small;
-    padding: 0.25em;
-    background: #000;
-    color: #ff2b2b;
-  }
-  .tlpamber {
-    font-size: small;
-    padding: 0.25em;
-    background: #000;
-    color: #ffc000;
-  }
-  .tlpgreen {
-    font-size: small;
-    padding: 0.25em;
-    background: #000;
-    color: #33ff00;
-  }
-</style>

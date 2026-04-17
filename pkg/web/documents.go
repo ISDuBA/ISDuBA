@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"slices"
 	"strconv"
@@ -369,12 +370,6 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		return
 	}
 
-	// Return search results
-	returnSearchResults, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("results", "false"))
-	if !ok {
-		return
-	}
-
 	mode := query.DocumentMode
 	if advisory {
 		mode = query.AdvisoryMode
@@ -400,11 +395,16 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		expr = expr.And(query.BoolField("latest"))
 	}
 
-	builder := query.SQLBuilder{
-		Mode:                mode,
-		ReturnSearchResults: returnSearchResults,
+	orderFields := strings.Fields(
+		ctx.DefaultQuery(
+			"orders",
+			"publisher tracking_id -current_release_date -rev_history_length"))
+	if aggregate {
+		if !slices.Contains(orderFields, "id") {
+			orderFields = append(orderFields, "id")
+		}
+		orderFields = slices.AppendSeq(orderFields, expr.Aliases())
 	}
-	builder.CreateWhere(expr)
 
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "id title tracking_id version publisher"))
@@ -414,17 +414,13 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		fields = append(fields, "id")
 	}
 
-	if err := builder.CheckProjections(fields); err != nil {
-		models.SendError(ctx, http.StatusBadRequest, err)
-		return
-	}
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderOrderFields(orderFields),
+		query.AdvancedSQLBuilderFields(fields),
+		query.AdvancedSQLBuilderParser(&parser),
+		query.AdvancedSQLBuilderAggregate(aggregate))
 
-	orderFields := strings.Fields(
-		ctx.DefaultQuery("orders", "publisher tracking_id -current_release_date -rev_history_length"))
-	if aggregate && !slices.Contains(orderFields, "id") {
-		orderFields = append(orderFields, "id")
-	}
-	order, err := builder.CreateOrder(orderFields)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
@@ -451,16 +447,14 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 	if aggregate {
 		deliver = (*Controller).aggregatedResults
 	}
-	deliver(c, ctx, calcCount, limit, offset, fields, order, &builder)
+	deliver(c, ctx, calcCount, limit, offset, builder)
 }
 
 func (c *Controller) flatResults(
 	ctx *gin.Context,
 	calcCount bool,
 	limit, offset int64,
-	fields []string,
-	order string,
-	builder *query.SQLBuilder,
+	builder *query.AdvancedSQLBuilder,
 ) {
 	type documentResult struct {
 		Count     *int64           `json:"count,omitempty"`
@@ -487,11 +481,11 @@ func (c *Controller) flatResults(
 				}
 			}
 			// Skip fields if they are not requested.
-			if len(fields) == 0 {
+			if !builder.HasFields() {
 				return nil
 			}
 
-			sql := builder.CreateQuery(fields, order, limit, offset)
+			sql := builder.CreateQuery(limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
 				slog.Debug("documents", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
@@ -501,8 +495,7 @@ func (c *Controller) flatResults(
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			filtered := builder.RemoveIgnoredFields(fields)
-			if results, err = scanRows(rows, filtered); err != nil {
+			if results, err = scanRows(rows, builder.Fields()); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -549,4 +542,195 @@ func scanRows(
 		return nil, fmt.Errorf("scanning failed: %w", err)
 	}
 	return results, nil
+}
+
+func (c *Controller) documentTexts(ctx *gin.Context) {
+	// Get an ID from context
+	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
+	if !ok {
+		return
+	}
+
+	parser := query.Parser{
+		Mode:            query.DocumentMode,
+		MinSearchLength: MinSearchLength,
+	}
+
+	// The query to filter the documents.
+	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
+		return
+	}
+
+	searchTerm, replacements := query.
+		CreateTextSearchWhereClause("ut.txt", expr)
+	if len(replacements) == 0 {
+		// No search texts found in query -> no need to proceed.
+		ctx.JSON(http.StatusOK, models.TextPaths{})
+		return
+	}
+	replacements = append(replacements, docID)
+
+	tlps := c.tlps(ctx)
+
+	const (
+		publisherTLPSQL = `` +
+			`SELECT` +
+			` ads.publisher,` +
+			` docs.tlp ` +
+			`FROM` +
+			` documents docs JOIN` +
+			` advisories ads ON docs.advisories_id = ads.id ` +
+			`WHERE docs.id = $1`
+		uniqueTextsSQL = `` +
+			`SELECT` +
+			` ut.id,` +
+			` ut.txt ` +
+			`FROM` +
+			` unique_texts ut JOIN` +
+			` documents_texts dt ON ut.id = dt.txt_id JOIN` +
+			` documents docs ON docs.id = dt.documents_id JOIN` +
+			` advisories ads ON docs.advisories_id = ads.id ` +
+			`WHERE` +
+			` docs.id = $%d AND %s`
+		documentSQL = `` +
+			`SELECT document ` +
+			`FROM documents ` +
+			`WHERE id = $1`
+	)
+
+	//  Data to be loaded from the database.
+	var (
+		uniqueTexts  = make(map[int64]string)
+		documentData []byte
+	)
+
+	var forbidden bool
+	switch err := c.db.Run(
+		ctx.Request.Context(),
+		func(rctx context.Context, conn *pgxpool.Conn) error {
+			// Check permissions.
+			var publisher, tlp string
+			if err := conn.QueryRow(rctx, publisherTLPSQL, docID).Scan(
+				&publisher,
+				&tlp,
+			); err != nil {
+				return fmt.Errorf("failed to extract publisher and tlp: %w", err)
+			}
+			if len(tlps) > 0 && !tlps.Allowed(publisher, models.TLP(tlp)) {
+				forbidden = true
+				return nil
+			}
+			// Load unique texts.
+			query := fmt.Sprintf(uniqueTextsSQL, len(replacements), searchTerm)
+			rows, err := conn.Query(rctx, query, replacements...)
+			if err != nil {
+				return fmt.Errorf("loading uniquw texts failed: %w", err)
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var (
+					textID int64
+					text   string
+				)
+				if err := rows.Scan(&textID, &text); err != nil {
+					return fmt.Errorf("scanning unique texts failed: %w", err)
+				}
+				uniqueTexts[textID] = text
+			}
+			if err := rows.Err(); err != nil {
+				return fmt.Errorf("scanning unique texts failed: %w", err)
+			}
+			if len(uniqueTexts) == 0 {
+				// No matches.
+				return nil
+			}
+			rows.Close()
+			// Load the document itself.
+			if err := conn.QueryRow(rctx, documentSQL, docID).Scan(&documentData); err != nil {
+				return fmt.Errorf("loading document failed: %w", err)
+			}
+			return nil
+		},
+		c.cfg.Database.MaxQueryDuration, // In case the user provided a very expensive query.
+	); {
+	case errors.Is(err, pgx.ErrNoRows):
+		models.SendErrorMessage(ctx, http.StatusNotFound, "document not found")
+		return
+	case err != nil:
+		slog.Error("database error", "err", err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	case forbidden:
+		models.SendErrorMessage(ctx, http.StatusForbidden, "access denied")
+		return
+	}
+
+	if len(uniqueTexts) == 0 {
+		ctx.JSON(http.StatusOK, models.TextPaths{})
+		return
+	}
+
+	var document any
+	dec := json.NewDecoder(bytes.NewReader(documentData))
+	// We use Numbers here to make it easier to
+	// filter out strings that apparently are not IDs like 3.1415
+	// which would be otherwise parse as float64s. 3.000 would
+	// also be parsed into float64s as would 3. Not using Numbers
+	// would make hard to tell the apart.
+	dec.UseNumber()
+	if err := dec.Decode(&document); err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	paths := buildTextPaths(document, uniqueTexts)
+	ctx.JSON(http.StatusOK, paths)
+}
+
+// There are integers in CSAF documents which are not text ids.
+var knownNoneTexts = map[string]struct{}{
+	"document/tracking/version": {},
+	// TODO: Fill me!
+}
+
+// buildTextPaths traverses the document tree and attemps to resolve
+// the unique texts producing a list of matches.
+func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths {
+	paths := models.TextPaths{}
+	var recurse func(any, []string)
+	recurse = func(curr any, path []string) {
+		switch x := curr.(type) {
+		case map[string]any:
+			// Sort to make output deterministic.
+			keys := slices.Sorted(maps.Keys(x))
+			for _, key := range keys {
+				path = append(path, key)
+				recurse(x[key], path)
+				path = path[:len(path)-1]
+			}
+		case []any:
+			for i, y := range x {
+				path = append(path, "["+strconv.Itoa(i)+"]")
+				recurse(y, path)
+				path = path[:len(path)-1]
+			}
+		case json.Number:
+			id, err := x.Int64()
+			if err != nil {
+				return
+			}
+			p := strings.Join(path, "/")
+			if _, ok := knownNoneTexts[p]; ok {
+				return
+			}
+			if text, ok := uniqueTexts[id]; ok {
+				paths = append(paths, models.TextPath{
+					Path: "/" + p,
+					Text: text,
+				})
+			}
+		}
+	}
+	recurse(document, nil)
+	return paths
 }
