@@ -12,8 +12,9 @@ type (
 	// TextPath is JSON path into a document and
 	// the text which is found there.
 	TextPath struct {
-		Path string `json:"path"`
-		Text string `json:"text"`
+		Path      string   `json:"path"`
+		Text      string   `json:"text"`
+		Positions [][2]int `json:"positions"`
 	}
 	// TextPaths is a list of matches into a document.
 	TextPaths []TextPath

@@ -13,6 +13,7 @@ import (
 	"unicode"
 )
 
+// ILikeExpr is an compiled ILIKE expression.
 type ILikeExpr []token
 
 // CompileILike compiles an ILIKE search pattern.
@@ -64,29 +65,19 @@ func CompileILike(needle string) ILikeExpr {
 // Returns a list of matching positions.
 func (expr ILikeExpr) Search(haystack string) [][2]int {
 	if len(haystack) == 0 || len(expr) == 0 {
+		//fmt.Println("nothing to match")
 		return nil
 	}
-
-	hr := []rune(haystack)
-	runePositions := make([]int, len(hr)+1)
-	i := 0
-	for bi := range haystack {
-		if i <= len(hr) {
-			runePositions[i] = bi
-			i++
-		}
-	}
-	runePositions[len(hr)] = len(haystack)
-
-	var positions [][2]int
-
-	for start := range len(hr) + 1 {
-		if end := expr.matchMinEnd(hr, start); end > start {
-			sb := runePositions[start]
-			eb := runePositions[end]
+	var (
+		runes     = []rune(haystack)
+		positions [][2]int
+	)
+	for start := range runes {
+		//fmt.Println(start)
+		if end := expr.matchMinEnd(runes, start); end > start {
 			positions = append(positions, [2]int{
-				sb,
-				eb - sb,
+				start,
+				end - start,
 			})
 		}
 	}

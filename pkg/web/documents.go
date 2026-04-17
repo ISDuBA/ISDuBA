@@ -29,6 +29,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
@@ -562,13 +563,15 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		return
 	}
 
-	searchTerm, replacements := query.
-		CreateTextSearchWhereClause("ut.txt", expr)
-	if len(replacements) == 0 {
+	searches := compileILikes(expr)
+	if len(searches) == 0 {
 		// No search texts found in query -> no need to proceed.
 		ctx.JSON(http.StatusOK, models.TextPaths{})
 		return
 	}
+
+	searchTerm, replacements := query.
+		CreateTextSearchWhereClause("ut.txt", expr)
 	replacements = append(replacements, docID)
 
 	tlps := c.tlps(ctx)
@@ -683,8 +686,34 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	paths := buildTextPaths(document, uniqueTexts)
+	paths := buildTextPaths(document, uniqueTexts, searches)
 	ctx.JSON(http.StatusOK, paths)
+}
+
+type ilikes []query.ILikeExpr
+
+func compileILikes(expr *query.Expr) ilikes {
+	return slices.Collect(itertools.Apply(
+		expr.Searches(),
+		func(search string) query.ILikeExpr {
+			escaped := query.LikeEscape(search)
+			return query.CompileILike(escaped)
+		},
+	))
+}
+
+func (ils ilikes) positions(haystack string) [][2]int {
+	ps := [][2]int{}
+	for _, il := range ils {
+		//fmt.Println("I was here")
+		for _, p := range il.Search(haystack) {
+			//fmt.Printf("%+v\n", p)
+			if !slices.Contains(ps, p) {
+				ps = append(ps, p)
+			}
+		}
+	}
+	return ps
 }
 
 // There are integers in CSAF documents which are not text ids.
@@ -695,7 +724,11 @@ var knownNoneTexts = map[string]struct{}{
 
 // buildTextPaths traverses the document tree and attemps to resolve
 // the unique texts producing a list of matches.
-func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths {
+func buildTextPaths(
+	document any,
+	uniqueTexts map[int64]string,
+	searches ilikes,
+) models.TextPaths {
 	paths := models.TextPaths{}
 	var recurse func(any, []string)
 	recurse = func(curr any, path []string) {
@@ -725,8 +758,9 @@ func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths
 			}
 			if text, ok := uniqueTexts[id]; ok {
 				paths = append(paths, models.TextPath{
-					Path: "/" + p,
-					Text: text,
+					Path:      "/" + p,
+					Text:      text,
+					Positions: searches.positions(text),
 				})
 			}
 		}
