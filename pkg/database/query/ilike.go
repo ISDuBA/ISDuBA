@@ -9,9 +9,23 @@
 package query
 
 import (
+	"fmt"
 	"slices"
 	"unicode"
 )
+
+type tokenKind int
+
+const (
+	litToken     = iota
+	anyOneToken  // _
+	anyManyToken // %
+)
+
+type token struct {
+	kind tokenKind
+	lit  []rune
+}
 
 // ILikeExpr is an compiled ILIKE expression.
 type ILikeExpr []token
@@ -43,10 +57,10 @@ func CompileILike(needle string) ILikeExpr {
 			escape = true
 		case '%':
 			flushLiteral()
-			if len(tokens) == 0 ||
-				tokens[len(tokens)-1].kind == anyManyToken {
-				tokens = append(tokens, token{kind: anyManyToken})
+			if lt := len(tokens); lt > 0 && tokens[lt-1].kind == anyManyToken {
+				continue
 			}
+			tokens = append(tokens, token{kind: anyManyToken})
 		case '_':
 			flushLiteral()
 			tokens = append(tokens, token{kind: anyOneToken})
@@ -84,17 +98,24 @@ func (expr ILikeExpr) Search(haystack string) [][2]int {
 	return positions
 }
 
-type tokenKind int
+func (tk tokenKind) String() string {
+	switch tk {
+	case litToken:
+		return "literal"
+	case anyOneToken:
+		return "_"
+	case anyManyToken:
+		return "%"
+	default:
+		return fmt.Sprintf("unknown token: %d", tk)
+	}
+}
 
-const (
-	litToken     = iota
-	anyOneToken  // _
-	anyManyToken // %
-)
-
-type token struct {
-	kind tokenKind
-	lit  []rune
+func (t token) String() string {
+	if t.kind == litToken {
+		return fmt.Sprintf("%q", string(t.lit))
+	}
+	return t.kind.String()
 }
 
 func (expr ILikeExpr) matchMinEnd(hr []rune, start int) int {
@@ -131,8 +152,7 @@ nextStack:
 			continue
 		}
 
-		t := expr[j]
-		switch t.kind {
+		switch t := expr[j]; t.kind {
 		case litToken:
 			if i+len(t.lit) > len(hr) {
 				continue
