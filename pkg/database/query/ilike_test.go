@@ -14,16 +14,23 @@ import (
 )
 
 func TestCompileILike(t *testing.T) {
-	have := CompileILike(`%Hal_\o%%\`)
-	expected := ILikeExpr{
-		{kind: anyManyToken},
-		{kind: litToken, lit: []rune("Hal")},
-		{kind: anyOneToken},
-		{kind: litToken, lit: []rune("o")},
-		{kind: anyManyToken},
-		{kind: litToken, lit: []rune{'\\'}},
+	expr := MustCompileILike(`%Hal_\o%%\`)
+
+	have := expr.String()
+
+	const expected = `(?i:(?:.*(Hal).(o).*(\\)))`
+
+	if have != expected {
+		t.Errorf("have: %v expected: %v", have, expected)
 	}
-	if !reflect.DeepEqual(have, expected) {
-		t.Errorf("have: %+v expected: %+v", have, expected)
+
+	havePairs := expr.Search(`xxxhallo\`)
+	expectedPairs := [][2]int{
+		{3, 3},
+		{7, 1},
+		{8, 1},
+	}
+	if !reflect.DeepEqual(havePairs, expectedPairs) {
+		t.Errorf("pairs: have: %v expected: %v", havePairs, expectedPairs)
 	}
 }

@@ -563,10 +563,21 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		return
 	}
 
-	searches := compileILikes(expr)
+	searches := slices.Collect(itertools.Apply(
+		expr.Searches(),
+		func(search string) string {
+			return query.LikeEscape(search)
+		},
+	))
 	if len(searches) == 0 {
 		// No search texts found in query -> no need to proceed.
 		ctx.JSON(http.StatusOK, models.TextPaths{})
+		return
+	}
+	ilikes, err := query.CompileILike(searches...)
+	if err != nil {
+		slog.Error("compiling ilikes failed", "err", err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -686,36 +697,8 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	paths := buildTextPaths(document, uniqueTexts, searches)
+	paths := buildTextPaths(document, uniqueTexts, ilikes)
 	ctx.JSON(http.StatusOK, paths)
-}
-
-type ilikes []query.ILikeExpr
-
-func compileILikes(expr *query.Expr) ilikes {
-	return slices.Collect(itertools.Apply(
-		expr.Searches(),
-		func(search string) query.ILikeExpr {
-			escaped := query.LikeEscape(search)
-			return query.CompileILike(escaped)
-		},
-	))
-}
-
-func (ils ilikes) positions(haystack string) [][2]int {
-	marked := [][2]int{}
-	for _, il := range ils {
-		//fmt.Println("I was here")
-		for _, ps := range il.Search(haystack) {
-			for _, p := range ps {
-				//fmt.Printf("%+v\n", p)
-				if !slices.Contains(marked, p) {
-					ps = append(ps, p)
-				}
-			}
-		}
-	}
-	return marked
 }
 
 // There are integers in CSAF documents which are not text ids.
@@ -729,7 +712,7 @@ var knownNoneTexts = map[string]struct{}{
 func buildTextPaths(
 	document any,
 	uniqueTexts map[int64]string,
-	searches ilikes,
+	ilikes query.ILikeExpr,
 ) models.TextPaths {
 	paths := models.TextPaths{}
 	var recurse func(any, []string)
@@ -762,7 +745,7 @@ func buildTextPaths(
 				paths = append(paths, models.TextPath{
 					Path:      "/" + p,
 					Text:      text,
-					Positions: searches.positions(text),
+					Positions: ilikes.Search(text),
 				})
 			}
 		}

@@ -10,188 +10,97 @@ package query
 
 import (
 	"fmt"
+	"regexp"
 	"slices"
+	"strings"
 )
-
-type tokenKind int
-
-const (
-	litToken     = iota
-	anyOneToken  // _
-	anyManyToken // %
-)
-
-type token struct {
-	kind tokenKind
-	lit  []rune
-}
 
 // ILikeExpr is an compiled ILIKE expression.
-type ILikeExpr []token
+type ILikeExpr struct{ *regexp.Regexp }
+
+// MustCompileILike calls CompileILike and panics if the
+// compiling failed.
+func MustCompileILike(needles ...string) ILikeExpr {
+	expr, err := CompileILike(needles...)
+	if err != nil {
+		panic(fmt.Sprintf("compiling ilike %v failed: %v", needles, err))
+	}
+	return expr
+}
 
 // CompileILike compiles an ILIKE search pattern.
-func CompileILike(needle string) ILikeExpr {
-	var (
-		tokens ILikeExpr
-		buf    []rune
-	)
+func CompileILike(needles ...string) (ILikeExpr, error) {
+
+	var pattern, buf strings.Builder
+
 	flushLiteral := func() {
-		if len(buf) > 0 {
-			tokens = append(tokens, token{
-				kind: litToken,
-				lit:  slices.Clone(buf),
-			})
-			buf = buf[:0]
+		if buf.Len() > 0 {
+			pattern.WriteByte('(')
+			pattern.WriteString(regexp.QuoteMeta(buf.String()))
+			pattern.WriteByte(')')
+			buf.Reset()
 		}
 	}
-	escape := false
-	for _, r := range needle {
-		if escape {
-			escape = false
-			buf = append(buf, r)
-			continue
+	pattern.WriteString(`(?i:`)
+	for i, needle := range needles {
+		if i > 0 {
+			pattern.WriteByte('|')
 		}
-		switch r {
-		case '\\':
-			escape = true
-		case '%':
-			flushLiteral()
-			if lt := len(tokens); lt > 0 && tokens[lt-1].kind == anyManyToken {
+		pattern.WriteString(`(?:`)
+		escape, many := false, false
+		for _, r := range needle {
+			if escape {
+				escape = false
+				buf.WriteRune(r)
 				continue
 			}
-			tokens = append(tokens, token{kind: anyManyToken})
-		case '_':
-			flushLiteral()
-			tokens = append(tokens, token{kind: anyOneToken})
-		default:
-			buf = append(buf, r)
+			switch r {
+			case '\\':
+				escape, many = true, false
+			case '%':
+				if !many {
+					many = true
+					flushLiteral()
+					pattern.WriteString(".*")
+				}
+			case '_':
+				many = false
+				flushLiteral()
+				pattern.WriteString(".")
+			default:
+				many = false
+				buf.WriteRune(r)
+			}
 		}
+		if escape {
+			buf.WriteByte('\\')
+		}
+		flushLiteral()
+		pattern.WriteByte(')')
 	}
-	if escape {
-		buf = append(buf, '\\')
-	}
-	flushLiteral()
-	return tokens
+	pattern.WriteByte(')')
+	expr, err := regexp.Compile(pattern.String())
+	return ILikeExpr{expr}, err
 }
 
 // Search searches ilike patterns in a haystack.
 // Returns a list of matching positions.
-func (expr ILikeExpr) Search(haystack string) [][][2]int {
-	if len(haystack) == 0 || len(expr) == 0 {
-		//fmt.Println("nothing to match")
+func (expr ILikeExpr) Search(haystack string) [][2]int {
+	all := expr.FindAllStringSubmatchIndex(haystack, -1)
+	if len(all) == 0 {
 		return nil
 	}
-	var positions [][][2]int
-	/*
-		var (
-			runes     = []rune(haystack)
-		)
-		for start := range runes {
-			//fmt.Println(start)
-			if end := expr.matchMinEnd(runes, start); end > start {
-				positions = append(positions, [2]int{
-					start,
-					end - start,
-				})
-			}
-		}
-	*/
-	return positions
-}
-
-func (tk tokenKind) String() string {
-	switch tk {
-	case litToken:
-		return "literal"
-	case anyOneToken:
-		return "_"
-	case anyManyToken:
-		return "%"
-	default:
-		return fmt.Sprintf("unknown token: %d", tk)
-	}
-}
-
-func (t token) String() string {
-	if t.kind == litToken {
-		return fmt.Sprintf("%q", string(t.lit))
-	}
-	return t.kind.String()
-}
-
-/* Broken
-func (expr ILikeExpr) matchMinEnd(hr []rune, start int) int {
-
-	type state struct{ i, j int } // i in haystack runes, j in tokens
-
-	seen := make(map[state]bool, 128)
-	bestEnd := -1
-
-	stack := make([]state, 1, 64)
-	stack[0] = state{start, 0}
-
-nextStack:
-	for len(stack) > 0 {
-		// pop
-		cur := stack[len(stack)-1]
-		stack = stack[:len(stack)-1]
-
-		if seen[cur] {
+	var pairs [][2]int
+	for _, indices := range all {
+		if len(indices) == 0 {
 			continue
 		}
-		seen[cur] = true
-
-		i, j := cur.i, cur.j
-
-		if j == len(expr) {
-			if bestEnd == -1 || i < bestEnd {
-				bestEnd = i
-			}
-			continue
-		}
-
-		if bestEnd != -1 && i >= bestEnd {
-			continue
-		}
-
-		switch t := expr[j]; t.kind {
-		case litToken:
-			if i+len(t.lit) > len(hr) {
-				continue
-			}
-			for k := 0; k < len(t.lit); k++ {
-				if !runeEqualFold(hr[i+k], t.lit[k]) {
-					continue nextStack
-				}
-			}
-			stack = append(stack, state{i + len(t.lit), j + 1})
-		case anyOneToken:
-			if i >= len(hr) {
-				continue
-			}
-			stack = append(stack, state{i + 1, j + 1})
-		case anyManyToken:
-			// % matches empty
-			stack = append(stack, state{i, j + 1})
-			// % matches one rune
-			if i < len(hr) {
-				stack = append(stack, state{i + 1, j})
+		for indices = indices[2:]; len(indices) > 0; indices = indices[2:] {
+			pair := [2]int{indices[0], indices[1] - indices[0]}
+			if !slices.Contains(pairs, pair) {
+				pairs = append(pairs, pair)
 			}
 		}
 	}
-	return bestEnd
+	return pairs
 }
-
-func runeEqualFold(a, b rune) bool {
-	if a == b {
-		return true
-	}
-	for r := unicode.SimpleFold(a); r != a; r = unicode.SimpleFold(r) {
-		if r == b {
-			return true
-		}
-	}
-	return false
-}
-
-*/
