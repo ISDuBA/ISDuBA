@@ -20,6 +20,7 @@
   } from "flowbite-svelte";
   import { tablePadding } from "$lib/Table/defaults";
   import { getReadableDateString } from "../helpers";
+  import SearchableText from "../SearchableText.svelte";
   const baseCellStyle = "py-0 px-2";
   const cellStyle = "whitespace-nowrap " + baseCellStyle;
 </script>
@@ -34,13 +35,23 @@
         <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each appStore.state.webview.doc?.revisionHistory as entry (`ref-history${entry.number}`)}
+        {#each appStore.state.webview.doc?.revisionHistory as entry, index (`ref-history${entry.number}`)}
           <TableBodyRow>
             <TableBodyCell class={cellStyle}>{entry.number}</TableBodyCell>
             <TableBodyCell class={cellStyle}>{getReadableDateString(entry.date)}</TableBodyCell>
-            <TableBodyCell class={baseCellStyle + " min-w-52"}>{entry.summary}</TableBodyCell>
+            <TableBodyCell class={baseCellStyle + " min-w-52"}>
+              <SearchableText
+                text={entry.summary}
+                textPath={`/document/tracking/revision_history/[${index}]/summary`}
+              />
+            </TableBodyCell>
             <TableBodyCell
-              >{#if entry.legacy_version}{entry.legacy_version}{/if}</TableBodyCell
+              >{#if entry.legacy_version}
+                <SearchableText
+                  text={entry.legacy_version}
+                  textPath={`/document/tracking/revision_history/[${index}]/legacy_version`}
+                />
+              {/if}</TableBodyCell
             >
           </TableBodyRow>
         {/each}

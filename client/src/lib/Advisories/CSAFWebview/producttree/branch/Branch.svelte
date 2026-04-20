@@ -14,6 +14,7 @@
   import type { Branch } from "$lib/pmdTypes";
   import CBadge from "$lib/Components/CBadge.svelte";
   import Self from "./Branch.svelte";
+  import SearchableText from "../../SearchableText.svelte";
 
   interface Props {
     branch: Branch;
@@ -31,7 +32,7 @@
     {#snippet headerSlot()}
       <div class="py-2">
         <CBadge class="rounded-full" large color="dark">{branch.category}</CBadge>
-        {branch.name}
+        <SearchableText text={branch.name} textPath={`${path}/category`} />
       </div>
     {/snippet}
     {#if branch.branches}
