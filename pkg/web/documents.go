@@ -691,7 +691,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 	// filter out strings that apparently are not IDs like 3.1415
 	// which would be otherwise parse as float64s. 3.000 would
 	// also be parsed into float64s as would 3. Not using Numbers
-	// would make hard to tell the apart.
+	// would make hard to tell them apart.
 	dec.UseNumber()
 	if err := dec.Decode(&document); err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
@@ -714,7 +714,7 @@ func buildTextPaths(
 	uniqueTexts map[int64]string,
 	ilikes query.ILikeExpr,
 ) models.TextPaths {
-	paths := models.TextPaths{}
+	paths := make(models.TextPaths, 0, len(uniqueTexts))
 
 	store := func(path []string, id int64) {
 		p := strings.Join(path, "")
