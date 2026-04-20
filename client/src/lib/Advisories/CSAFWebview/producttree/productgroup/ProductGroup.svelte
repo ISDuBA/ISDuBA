@@ -20,8 +20,8 @@
   let { productGroup, path }: Props = $props();
 </script>
 
-<ValueList label="Group IDs" values={productGroup.group_ids} />
-<ValueList label="Product IDs" values={productGroup.product_ids} />
+<ValueList label="Group IDs" values={productGroup.group_ids} path={`${path}/group_id`} />
+<ValueList label="Product IDs" values={productGroup.product_ids} path={`${path}/product_ids`} />
 
 {#if productGroup.summary}
   <ValueField label="Summary" value={productGroup.summary} path={`${path}/summary`} />

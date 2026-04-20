@@ -95,50 +95,76 @@
       </div>
       {#if publisherContactDetails}
         <div class={cellStyleKey}>Publisher contact details</div>
-        <div class={cellStyleValue}>{publisherContactDetails}</div>
+        <div class={cellStyleValue}>
+          <SearchableText
+            text={publisherContactDetails}
+            textPath="/document/publisher/contact_details"
+          />
+        </div>
       {/if}
       {#if publisherIssuingAuthority}
         <div class={cellStyleKey}>Publisher issuing authority</div>
-        <div class={cellStyleValue}>{publisherIssuingAuthority}</div>
+        <div class={cellStyleValue}>
+          <SearchableText
+            text={publisherIssuingAuthority}
+            textPath="/document/publisher/issuing_authority"
+          />
+        </div>
       {/if}
       <div class={cellStyleKey}>Publisher category</div>
-      <div class={cellStyleValue}>{publisherCategory}</div>
+      <div class={cellStyleValue}>
+        <SearchableText text={publisherCategory} textPath="/document/publisher/category" />
+      </div>
       <div class={cellStyleKey}>Published</div>
       <div class={cellStyleValue}>{getReadableDateString(published)}</div>
       <div class={cellStyleKey}>Last update</div>
       <div class={cellStyleValue}>{getReadableDateString(lastUpdate)}</div>
       <div class={cellStyleKey}>CSAF-Version</div>
-      <div class={cellStyleValue}>{csafVersion}</div>
+      <div class={cellStyleValue}>
+        <SearchableText text={csafVersion} textPath="/document/csaf_version" />
+      </div>
       <div class={cellStyleKey}>Category</div>
       <div class={cellStyleValue}>
         <SearchableText text={category} textPath="/document/category" />
       </div>
       {#if distributionText}
         <div class={cellStyleKey}>Distribution</div>
-        <div class={cellStyleValue}>{distributionText}</div>
+        <div class={cellStyleValue}>
+          <SearchableText text={distributionText} textPath="/document/distribution/text" />
+        </div>
       {/if}
       {#if appStore.state.webview.doc?.aggregateSeverity}
         <div class={cellStyleKey}>Aggregate severity text</div>
         <div class={cellStyleValue}>
-          <span>{appStore.state.webview.doc?.aggregateSeverity.text}</span>
+          <SearchableText
+            text={appStore.state.webview.doc.aggregateSeverity.text}
+            textPath="/document/aggregate_severity/text"
+          />
         </div>
         {#if appStore.state.webview.doc?.aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
             <Link href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
               <i class="bx bx-link"></i>
-              <span>{appStore.state.webview.doc?.aggregateSeverity.namespace}</span>
+              <SearchableText
+                text={appStore.state.webview.doc.aggregateSeverity.namespace}
+                textPath="/document/aggregate_severity/namespace"
+              />
             </Link>
           </div>
         {/if}
       {/if}
       {#if lang}
         <div class={cellStyleKey}>Language</div>
-        <div class={cellStyleValue}>{lang}</div>
+        <div class={cellStyleValue}>
+          <SearchableText text={lang} textPath="/document/lang" />
+        </div>
       {/if}
       {#if sourceLang}
         <div class={cellStyleKey}>Source lang</div>
-        <div class={cellStyleValue}>{sourceLang}</div>
+        <div class={cellStyleValue}>
+          <SearchableText text={sourceLang} textPath="/document/source_lang" />
+        </div>
       {/if}
       <div class={cellStyleKey}>Tracking Version</div>
       <div class={cellStyleValue}>{trackingVersion}</div>
@@ -148,10 +174,16 @@
     <span class="text-sm text-gray-400">
       Generator:
       {#if generator}
-        {appStore.state.webview.doc?.generator?.engine.name}
+        <SearchableText
+          text={appStore.state.webview.doc?.generator?.engine.name}
+          textPath="/document/generator/engine/name"
+        />
       {/if}
       {#if generator?.engine?.version}
-        {appStore.state.webview.doc?.generator?.engine.version}
+        <SearchableText
+          text={appStore.state.webview.doc?.generator?.engine.version}
+          textPath="/document/generator/engine/version"
+        />
       {/if}
       {#if generator?.date}
         · {getReadableDateString(generator.date)}

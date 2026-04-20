@@ -76,6 +76,7 @@
     {#if relation.full_product_name.product_identification_helper}
       <ProductIdentificationHelper
         helper={relation.full_product_name.product_identification_helper}
+        path={`${path}/product_identification_helper`}
       />
     {/if}
     <table>

@@ -200,7 +200,7 @@
   {/if}
   {#if aliases}
     <div class="mb-4">
-      <ValueList label="Aliases" values={aliases} />
+      <ValueList label="Aliases" values={aliases} path="/document/tracking/aliases" />
     </div>
   {/if}
   {#if screenPhase < Object.keys(tabOpen).length}

@@ -11,12 +11,14 @@
 <script lang="ts">
   import { P } from "flowbite-svelte";
   import { List, Li } from "flowbite-svelte";
+  import SearchableText from "./SearchableText.svelte";
 
   interface Props {
     label?: string;
     values?: any;
+    path: string;
   }
-  let { label = "", values = [] }: Props = $props();
+  let { label = "", values = [], path }: Props = $props();
 
   const uid = $props.id();
 </script>
@@ -25,7 +27,9 @@
 {#if values}
   <List>
     {#each values as value, i (`valuelist-${uid}-${i}`)}
-      <Li>{value}</Li>
+      <Li>
+        <SearchableText text={value} textPath={`${path}/[${i}]`} />
+      </Li>
     {/each}
   </List>
 {/if}

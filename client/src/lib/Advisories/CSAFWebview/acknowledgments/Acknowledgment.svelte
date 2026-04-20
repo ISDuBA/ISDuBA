@@ -38,5 +38,5 @@
 
 <KeyValue {keys} {values} />
 {#if ack.urls}
-  <ValueList label="URLs" values={ack.urls} />
+  <ValueList label="URLs" values={ack.urls} path="/document/acknowledgments" />
 {/if}

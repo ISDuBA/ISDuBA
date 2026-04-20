@@ -59,6 +59,7 @@
         appStore.resetSelectedProduct();
       }
     }}
+    {path}
   >
     <KeyValue
       keys={["Product name", "Product ID"]}
