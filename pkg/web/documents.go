@@ -703,17 +703,19 @@ func compileILikes(expr *query.Expr) ilikes {
 }
 
 func (ils ilikes) positions(haystack string) [][2]int {
-	ps := [][2]int{}
+	marked := [][2]int{}
 	for _, il := range ils {
 		//fmt.Println("I was here")
-		for _, p := range il.Search(haystack) {
-			//fmt.Printf("%+v\n", p)
-			if !slices.Contains(ps, p) {
-				ps = append(ps, p)
+		for _, ps := range il.Search(haystack) {
+			for _, p := range ps {
+				//fmt.Printf("%+v\n", p)
+				if !slices.Contains(marked, p) {
+					ps = append(ps, p)
+				}
 			}
 		}
 	}
-	return ps
+	return marked
 }
 
 // There are integers in CSAF documents which are not text ids.

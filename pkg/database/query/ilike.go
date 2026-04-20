@@ -11,7 +11,6 @@ package query
 import (
 	"fmt"
 	"slices"
-	"unicode"
 )
 
 type tokenKind int
@@ -77,24 +76,26 @@ func CompileILike(needle string) ILikeExpr {
 
 // Search searches ilike patterns in a haystack.
 // Returns a list of matching positions.
-func (expr ILikeExpr) Search(haystack string) [][2]int {
+func (expr ILikeExpr) Search(haystack string) [][][2]int {
 	if len(haystack) == 0 || len(expr) == 0 {
 		//fmt.Println("nothing to match")
 		return nil
 	}
-	var (
-		runes     = []rune(haystack)
-		positions [][2]int
-	)
-	for start := range runes {
-		//fmt.Println(start)
-		if end := expr.matchMinEnd(runes, start); end > start {
-			positions = append(positions, [2]int{
-				start,
-				end - start,
-			})
+	var positions [][][2]int
+	/*
+		var (
+			runes     = []rune(haystack)
+		)
+		for start := range runes {
+			//fmt.Println(start)
+			if end := expr.matchMinEnd(runes, start); end > start {
+				positions = append(positions, [2]int{
+					start,
+					end - start,
+				})
+			}
 		}
-	}
+	*/
 	return positions
 }
 
@@ -118,6 +119,7 @@ func (t token) String() string {
 	return t.kind.String()
 }
 
+/* Broken
 func (expr ILikeExpr) matchMinEnd(hr []rune, start int) int {
 
 	type state struct{ i, j int } // i in haystack runes, j in tokens
@@ -191,3 +193,5 @@ func runeEqualFold(a, b rune) bool {
 	}
 	return false
 }
+
+*/
