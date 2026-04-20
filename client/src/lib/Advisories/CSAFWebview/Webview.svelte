@@ -135,6 +135,8 @@
         openTab("references", true, false);
       } else if (path.startsWith("/document/acknowledgments")) {
         openTab("Acknowledgments", true, false);
+      } else if (path.startsWith("/document/tracking/revision_history")) {
+        openTab("revisionHistory", true, false);
       }
     }
   });
