@@ -598,7 +598,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			`WHERE docs.id = $1`
 		uniqueTextsSQL = `` +
 			`SELECT` +
-			` ut.id,` +
+			` dt.num,` +
 			` ut.txt ` +
 			`FROM` +
 			` unique_texts ut JOIN` +
@@ -715,6 +715,21 @@ func buildTextPaths(
 	ilikes query.ILikeExpr,
 ) models.TextPaths {
 	paths := models.TextPaths{}
+
+	store := func(path []string, id int64) {
+		p := strings.Join(path, "/")
+		if _, ok := knownNoneTexts[p]; ok {
+			return
+		}
+		if text, ok := uniqueTexts[id]; ok {
+			paths = append(paths, models.TextPath{
+				Path:      "/" + p,
+				Text:      text,
+				Positions: ilikes.Search(text),
+			})
+		}
+	}
+
 	var recurse func(any, []string)
 	recurse = func(curr any, path []string) {
 		switch x := curr.(type) {
@@ -737,17 +752,15 @@ func buildTextPaths(
 			if err != nil {
 				return
 			}
-			p := strings.Join(path, "/")
-			if _, ok := knownNoneTexts[p]; ok {
+			store(path, id)
+		case string:
+			id, err := strconv.ParseInt(x, 10, 64)
+			if err != nil {
 				return
 			}
-			if text, ok := uniqueTexts[id]; ok {
-				paths = append(paths, models.TextPath{
-					Path:      "/" + p,
-					Text:      text,
-					Positions: ilikes.Search(text),
-				})
-			}
+			store(path, id)
+		default:
+			fmt.Printf("%v: %T\n", x, x)
 		}
 	}
 	recurse(document, nil)
