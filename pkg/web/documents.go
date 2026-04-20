@@ -703,7 +703,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 
 // There are integers in CSAF documents which are not text ids.
 var knownNoneTexts = map[string]struct{}{
-	"document/tracking/version": {},
+	"/document/tracking/version": {},
 	// TODO: Fill me!
 }
 
@@ -717,13 +717,13 @@ func buildTextPaths(
 	paths := models.TextPaths{}
 
 	store := func(path []string, id int64) {
-		p := strings.Join(path, "/")
+		p := strings.Join(path, "")
 		if _, ok := knownNoneTexts[p]; ok {
 			return
 		}
 		if text, ok := uniqueTexts[id]; ok {
 			paths = append(paths, models.TextPath{
-				Path:      "/" + p,
+				Path:      p,
 				Text:      text,
 				Positions: ilikes.Search(text),
 			})
@@ -737,9 +737,9 @@ func buildTextPaths(
 			// Sort to make output deterministic.
 			keys := slices.Sorted(maps.Keys(x))
 			for _, key := range keys {
-				path = append(path, key)
+				path = append(path, "/", key)
 				recurse(x[key], path)
-				path = path[:len(path)-1]
+				path = path[:len(path)-2]
 			}
 		case []any:
 			for i, y := range x {
