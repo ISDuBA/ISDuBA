@@ -759,8 +759,6 @@ func buildTextPaths(
 				return
 			}
 			store(path, id)
-		default:
-			fmt.Printf("%v: %T\n", x, x)
 		}
 	}
 	recurse(document, nil)
