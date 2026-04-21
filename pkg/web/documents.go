@@ -545,6 +545,18 @@ func scanRows(
 	return results, nil
 }
 
+// documentTexts is an end point to return JSON paths and highlighting positions.
+//
+//	@Summary		Returns List of JSON paths with highlighting positions.
+//	@Description	Returns List of JSON paths with highlighting positions inside text matches found by the search query.
+//	@Param			id		path	int	true	"Document ID"
+//	@Param			query	query	string	false	"Document query"
+//	@Produce		json
+//	@Success		200	{object}	models.TextPaths
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/texts/{id} [get]
 func (c *Controller) documentTexts(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -639,7 +651,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			query := fmt.Sprintf(uniqueTextsSQL, len(replacements), searchTerm)
 			rows, err := conn.Query(rctx, query, replacements...)
 			if err != nil {
-				return fmt.Errorf("loading uniquw texts failed: %w", err)
+				return fmt.Errorf("loading unique texts failed: %w", err)
 			}
 			defer rows.Close()
 			for rows.Next() {
