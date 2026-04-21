@@ -28,16 +28,18 @@
 </script>
 
 <div class="pl-3">
-  <Collapsible {open} header={branch.category + ": " + branch.name}>
+  <Collapsible {open} header={branch.category + ": " + branch.name} {path}>
     {#snippet headerSlot()}
       <div class="py-2">
-        <CBadge class="rounded-full" large color="dark">{branch.category}</CBadge>
-        <SearchableText text={branch.name} textPath={`${path}/category`} />
+        <CBadge class="rounded-full" large color="dark">
+          <SearchableText text={branch.category} textPath={`${path}/category`} />
+        </CBadge>
+        <SearchableText text={branch.name} textPath={`${path}/name`} />
       </div>
     {/snippet}
     {#if branch.branches}
       {#each branch.branches as b, i (`branch-${uid}-${i}`)}
-        <Self branch={b} {open} {openSubBranches} path={`${path}/branches/[${i}]`} />
+        <Self branch={b} {open} {openSubBranches} path={`${path}/branches[${i}]`} />
       {/each}
     {/if}
     {#if branch.product}

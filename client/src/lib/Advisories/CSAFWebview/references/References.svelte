@@ -34,13 +34,13 @@
             <TableBodyCell class={cellStyle}
               ><p class="mb-2">
                 <SearchableText
-                  textPath={`/document/references/[${i}]/summary`}
+                  textPath={`/document/references[${i}]/summary`}
                   text={reference.summary}
                 ></SearchableText>
               </p>
               <Link class="underline" href={reference.url}
                 ><i class="bx bx-link"></i>
-                <SearchableText textPath={`/document/references/[${i}]/url`} text={reference.url}
+                <SearchableText textPath={`/document/references[${i}]/url`} text={reference.url}
                 ></SearchableText>
               </Link></TableBodyCell
             >

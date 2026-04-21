@@ -35,21 +35,21 @@
         <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each appStore.state.webview.doc?.revisionHistory as entry, index (`ref-history${entry.number}`)}
+        {#each appStore.state.webview.doc?.revisionHistory as entry (`ref-history${entry.number}`)}
           <TableBodyRow>
             <TableBodyCell class={cellStyle}>{entry.number}</TableBodyCell>
             <TableBodyCell class={cellStyle}>{getReadableDateString(entry.date)}</TableBodyCell>
             <TableBodyCell class={baseCellStyle + " min-w-52"}>
               <SearchableText
                 text={entry.summary}
-                textPath={`/document/tracking/revision_history/[${index}]/summary`}
+                textPath={`/document/tracking/revision_history[${entry.number - 1}]/summary`}
               />
             </TableBodyCell>
             <TableBodyCell
               >{#if entry.legacy_version}
                 <SearchableText
                   text={entry.legacy_version}
-                  textPath={`/document/tracking/revision_history/[${index}]/legacy_version`}
+                  textPath={`/document/tracking/revision_history[${entry.number - 1}]/legacy_version`}
                 />
               {/if}</TableBodyCell
             >

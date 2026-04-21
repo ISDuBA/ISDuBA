@@ -27,7 +27,7 @@
       {vulnerability}
       index={index + 1}
       {basePath}
-      path={`/vulnerabilities/[${index}]`}
+      path={`/vulnerabilities[${index}]`}
     />
   {/each}
 </div>

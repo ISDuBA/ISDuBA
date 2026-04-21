@@ -17,8 +17,9 @@
   interface Props {
     notes: Note[];
     initOpen?: boolean;
+    path: string;
   }
-  let { notes, initOpen = false }: Props = $props();
+  let { notes, initOpen = false, path }: Props = $props();
 
   const uid = $props.id();
 
@@ -39,9 +40,9 @@
       header={note.title ? `${note.category}: ${note.title}` : note.category}
       level={4}
       open={openNote[index]}
-      path={`/document/notes/[${index}]`}
+      {path}
     >
-      <SingleNote {note} path={`/document/notes/[${index}]`} />
+      <SingleNote {note} path={`${path}/notes[${index}]`} />
     </Collapsible>
   {/each}
 {/if}

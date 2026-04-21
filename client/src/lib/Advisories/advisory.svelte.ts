@@ -152,7 +152,7 @@ const fetchDocumentSSVC = async (
 
 interface SearchHit {
   path: string;
-  text: string;
+  positions: number[][];
 }
 
 const fetchSearchHits = async (id: number): Promise<SearchHit[] | ErrorDetails> => {

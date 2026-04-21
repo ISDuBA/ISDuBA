@@ -21,16 +21,17 @@
 
   let keys: string[] = $derived(note.audience ? ["Audience"] : []);
   let values: string[] = $derived(note.audience ? [note.audience] : []);
+  let paths: string[] = $derived(note.audience ? [`${path}/audience`] : []);
 </script>
 
-<KeyValue {keys} {values} />
+<KeyValue {keys} {values} {paths} />
 <div class="ml-7">
   <h5>Text</h5>
 </div>
 
 <div class="markdown-text">
   <div class="display-markdown max-w-2/3">
-    <SearchableText text={note.text} textPath={`${path}/text`}></SearchableText>
+    <SearchableText text={note.text} textPath={`${path}/text`} />
   </div>
 </div>
 

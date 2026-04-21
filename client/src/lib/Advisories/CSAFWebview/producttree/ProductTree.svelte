@@ -63,7 +63,7 @@
         {branch}
         {openSubBranches}
         open={openBranches}
-        path={`/product_tree/branches/[${i}]`}
+        path={`/product_tree/branches[${i}]`}
       />
     {/each}
   </Collapsible>

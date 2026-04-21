@@ -58,8 +58,16 @@
             <TableBodyCell class={cellStyle}>
               {#if typeof values[index] === "string" && values[index].startsWith && values[index].startsWith("https://")}
                 <Link class="underline" href={values[index]}>
-                  <i class="bx bx-link"></i>{values[index]}
+                  <i class="bx bx-link"></i>
+                  <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
                 </Link>
+              {:else if Array.isArray(values[index])}
+                {#each values[index] as value, j (`keyvalue-2-${uid}-${j}`)}
+                  <SearchableText text={value} textPath={`${paths?.[index] ?? ""}[${j}]`} />
+                  {#if j < values.length - 1}
+                    ,
+                  {/if}
+                {/each}
               {:else}
                 <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
               {/if}

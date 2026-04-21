@@ -8,7 +8,6 @@
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
   import { advisorySearchState, type SearchHit } from "../advisory.svelte";
 
   interface Props {
@@ -26,13 +25,24 @@
     return undefined;
   });
 
-  let path: string | undefined = $derived(hit?.path);
-  let term = $derived(appStore.state.app.search.term);
+  let path: string | undefined = $derived.by(() => {
+    return hit?.path;
+  });
 
   let splitted: string[] | undefined = $derived.by(() => {
-    if (path != undefined && textPath == path && hit?.text && term) {
-      return hit.text.split(new RegExp(RegExp.escape(term), "ig"));
+    if (path != undefined && textPath == path && hit && text != undefined) {
+      let t = text;
+      const splits: string[] = [];
+      for (let i = 0; i < hit.positions.length; i++) {
+        const pos = hit.positions[i];
+        const term = text.substring(pos[0], pos[0] + pos[1] + 1);
+        const splittedText = t.split(term);
+        splits.push(splittedText[0], term);
+        t = splittedText[2];
+      }
+      return splits;
     }
+    return [];
   });
 
   $effect(() => {
@@ -45,9 +55,10 @@
 <span class="flex inline flex-nowrap">
   {#if path != undefined && textPath == path && splitted}
     {#each splitted as s, index (`SearchableText-${uid}-${index}`)}
-      <span>{s}</span>
-      {#if index < splitted.length - 1}
-        <span id={elementID} class="bg-yellow-200 dark:bg-yellow-800">{term}</span>
+      {#if (index + 1) % 2 === 0}
+        <span id={elementID} class="bg-yellow-200 dark:bg-yellow-800">{s}</span>
+      {:else}
+        <span>{s}</span>
       {/if}
     {/each}
   {:else}
