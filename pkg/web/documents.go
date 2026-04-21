@@ -717,14 +717,13 @@ func buildTextPaths(
 	paths := make(models.TextPaths, 0, len(uniqueTexts))
 
 	store := func(path []string, id int64) {
-		p := strings.Join(path, "")
-		if _, ok := knownNoneTexts[p]; ok {
+		joined := strings.Join(path, "")
+		if _, ok := knownNoneTexts[joined]; ok {
 			return
 		}
 		if text, ok := uniqueTexts[id]; ok {
 			paths = append(paths, models.TextPath{
-				Path:      p,
-				Text:      text,
+				Path:      joined,
 				Positions: ilikes.Search(text),
 			})
 		}
