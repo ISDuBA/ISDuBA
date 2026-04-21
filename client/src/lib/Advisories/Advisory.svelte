@@ -407,11 +407,13 @@
     advisoryState = "";
     historyEntries = [];
     ssvcVector = "";
-    const hitsResult = await fetchSearchHits(params.id);
-    if (Array.isArray(hitsResult)) {
-      advisorySearchState.searchHits = hitsResult;
-    } else {
-      loadSearchHitsError = hitsResult;
+    if (appStore.state.app.search.query) {
+      const hitsResult = await fetchSearchHits(params.id);
+      if (Array.isArray(hitsResult)) {
+        advisorySearchState.searchHits = hitsResult;
+      } else {
+        loadSearchHitsError = hitsResult;
+      }
     }
     if (advisorySearchState.searchHits.length > 0) {
       advisorySearchState.hitIndex = 0;
