@@ -231,6 +231,17 @@ func (e *Expr) Aliases() iter.Seq[string] {
 	))
 }
 
+// Searches returns a sequence over all search terms in the expression tree.
+func (e *Expr) Searches() iter.Seq[string] {
+	return itertools.Unique(itertools.Apply(itertools.Filter(
+		e.all(),
+		func(e *Expr) bool {
+			return e.exprType == search && e.stringValue != ""
+		}),
+		(*Expr).getStringValue,
+	))
+}
+
 // And concats two expressions and-wise.
 func (e *Expr) And(o *Expr) *Expr {
 	if e.valueType != boolType || o.valueType != boolType {

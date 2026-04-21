@@ -29,6 +29,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 )
 
@@ -544,6 +545,18 @@ func scanRows(
 	return results, nil
 }
 
+// documentTexts is an end point to return JSON paths and highlighting positions.
+//
+//	@Summary		Returns List of JSON paths with highlighting positions.
+//	@Description	Returns List of JSON paths with highlighting positions inside text matches found by the search query.
+//	@Param			id		path	int	true	"Document ID"
+//	@Param			query	query	string	false	"Document query"
+//	@Produce		json
+//	@Success		200	{object}	models.TextPaths
+//	@Failure		400	{object}	models.Error
+//	@Failure		401
+//	@Failure		500	{object}	models.Error
+//	@Router			/documents/texts/{id} [get]
 func (c *Controller) documentTexts(ctx *gin.Context) {
 	// Get an ID from context
 	docID, ok := parse(ctx, toInt64, ctx.Param("id"))
@@ -562,13 +575,26 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		return
 	}
 
-	searchTerm, replacements := query.
-		CreateTextSearchWhereClause("ut.txt", expr)
-	if len(replacements) == 0 {
+	searches := slices.Collect(itertools.Apply(
+		expr.Searches(),
+		func(search string) string {
+			return query.LikeEscape(search)
+		},
+	))
+	if len(searches) == 0 {
 		// No search texts found in query -> no need to proceed.
 		ctx.JSON(http.StatusOK, models.TextPaths{})
 		return
 	}
+	ilikes, err := query.CompileILike(searches...)
+	if err != nil {
+		slog.Error("compiling ilikes failed", "err", err)
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	searchTerm, replacements := query.
+		CreateTextSearchWhereClause("ut.txt", expr)
 	replacements = append(replacements, docID)
 
 	tlps := c.tlps(ctx)
@@ -584,7 +610,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			`WHERE docs.id = $1`
 		uniqueTextsSQL = `` +
 			`SELECT` +
-			` ut.id,` +
+			` dt.num,` +
 			` ut.txt ` +
 			`FROM` +
 			` unique_texts ut JOIN` +
@@ -625,7 +651,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			query := fmt.Sprintf(uniqueTextsSQL, len(replacements), searchTerm)
 			rows, err := conn.Query(rctx, query, replacements...)
 			if err != nil {
-				return fmt.Errorf("loading uniquw texts failed: %w", err)
+				return fmt.Errorf("loading unique texts failed: %w", err)
 			}
 			defer rows.Close()
 			for rows.Next() {
@@ -677,26 +703,44 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 	// filter out strings that apparently are not IDs like 3.1415
 	// which would be otherwise parse as float64s. 3.000 would
 	// also be parsed into float64s as would 3. Not using Numbers
-	// would make hard to tell the apart.
+	// would make hard to tell them apart.
 	dec.UseNumber()
 	if err := dec.Decode(&document); err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	paths := buildTextPaths(document, uniqueTexts)
+	paths := buildTextPaths(document, uniqueTexts, ilikes)
 	ctx.JSON(http.StatusOK, paths)
 }
 
 // There are integers in CSAF documents which are not text ids.
 var knownNoneTexts = map[string]struct{}{
-	"document/tracking/version": {},
+	"/document/tracking/version": {},
 	// TODO: Fill me!
 }
 
 // buildTextPaths traverses the document tree and attemps to resolve
 // the unique texts producing a list of matches.
-func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths {
-	paths := models.TextPaths{}
+func buildTextPaths(
+	document any,
+	uniqueTexts map[int64]string,
+	ilikes query.ILikeExpr,
+) models.TextPaths {
+	paths := make(models.TextPaths, 0, len(uniqueTexts))
+
+	store := func(path []string, id int64) {
+		joined := strings.Join(path, "")
+		if _, ok := knownNoneTexts[joined]; ok {
+			return
+		}
+		if text, ok := uniqueTexts[id]; ok {
+			paths = append(paths, models.TextPath{
+				Path:      joined,
+				Positions: ilikes.Search(text),
+			})
+		}
+	}
+
 	var recurse func(any, []string)
 	recurse = func(curr any, path []string) {
 		switch x := curr.(type) {
@@ -704,9 +748,9 @@ func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths
 			// Sort to make output deterministic.
 			keys := slices.Sorted(maps.Keys(x))
 			for _, key := range keys {
-				path = append(path, key)
+				path = append(path, "/", key)
 				recurse(x[key], path)
-				path = path[:len(path)-1]
+				path = path[:len(path)-2]
 			}
 		case []any:
 			for i, y := range x {
@@ -719,16 +763,13 @@ func buildTextPaths(document any, uniqueTexts map[int64]string) models.TextPaths
 			if err != nil {
 				return
 			}
-			p := strings.Join(path, "/")
-			if _, ok := knownNoneTexts[p]; ok {
+			store(path, id)
+		case string:
+			id, err := strconv.ParseInt(x, 10, 64)
+			if err != nil {
 				return
 			}
-			if text, ok := uniqueTexts[id]; ok {
-				paths = append(paths, models.TextPath{
-					Path: "/" + p,
-					Text: text,
-				})
-			}
+			store(path, id)
 		}
 	}
 	recurse(document, nil)
