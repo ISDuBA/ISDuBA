@@ -551,6 +551,7 @@ func scanRows(
 //	@Description	Returns List of JSON paths with highlighting positions inside text matches found by the search query.
 //	@Param			id		path	int	true	"Document ID"
 //	@Param			query	query	string	false	"Document query"
+//	@Param			include	query	bool	false	"Include the texts in the result"
 //	@Produce		json
 //	@Success		200	{object}	models.TextPaths
 //	@Failure		400	{object}	models.Error
@@ -571,6 +572,12 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 
 	// The query to filter the documents.
 	expr, ok := parse(ctx, parser.Parse, ctx.DefaultQuery("query", "true"))
+	if !ok {
+		return
+	}
+
+	// Should the texts be included in the result?
+	include, ok := parse(ctx, strconv.ParseBool, ctx.DefaultQuery("include", "false"))
 	if !ok {
 		return
 	}
@@ -709,7 +716,7 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	paths := buildTextPaths(document, uniqueTexts, ilikes)
+	paths := buildTextPaths(document, uniqueTexts, ilikes, include)
 	ctx.JSON(http.StatusOK, paths)
 }
 
@@ -725,6 +732,7 @@ func buildTextPaths(
 	document any,
 	uniqueTexts map[int64]string,
 	ilikes query.ILikeExpr,
+	include bool,
 ) models.TextPaths {
 	paths := make(models.TextPaths, 0, len(uniqueTexts))
 
@@ -734,8 +742,13 @@ func buildTextPaths(
 			return
 		}
 		if text, ok := uniqueTexts[id]; ok {
+			var t *string
+			if include {
+				t = &text
+			}
 			paths = append(paths, models.TextPath{
 				Path:      joined,
+				Text:      t,
 				Positions: ilikes.Search(text),
 			})
 		}

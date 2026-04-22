@@ -919,6 +919,12 @@ const docTemplate = `{
                         "description": "Document query",
                         "name": "query",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include the texts in the result",
+                        "name": "include",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4020,6 +4026,9 @@ const docTemplate = `{
                             "type": "integer"
                         }
                     }
+                },
+                "text": {
+                    "type": "string"
                 }
             }
         },

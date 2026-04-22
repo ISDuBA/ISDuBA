@@ -16,6 +16,7 @@ type (
 	// so it is not included here.
 	TextPath struct {
 		Path      string   `json:"path"`
+		Text      *string  `json:"text,omitempty"`
 		Positions [][2]int `json:"positions"`
 	}
 	// TextPaths is a list of matches into a document.
