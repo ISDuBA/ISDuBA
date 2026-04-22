@@ -174,7 +174,7 @@ type AdvisorySearchState = {
 };
 
 const advisorySearchState: AdvisorySearchState = $state({
-  scroll: false,
+  scroll: true,
   searchHits: [],
   hitIndex: -1
 });
