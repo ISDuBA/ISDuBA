@@ -39,7 +39,7 @@
     >
       <TableBodyCell {colspan} class="px-0 py-0 whitespace-nowrap">
         <Link
-          aria-label="View advisory details"
+          ariaLabel={`Navigate directly to the ${i + 1}. hit`}
           class={index % 2 == 1
             ? "block hover:bg-gray-200 dark:hover:bg-gray-600"
             : "block hover:bg-gray-200 dark:hover:bg-gray-600"}
@@ -60,7 +60,9 @@
               expanded = true;
             }}
             class="m-1 h-6 w-fit px-2 py-1"
-            color="light">More ({hits.slice(3).length})</Button
+            color="light"
+            title={`Show all hits for document ${visibleHits[0].tracking_id}`}
+            >More ({hits.slice(3).length})</Button
           >
         {/if}
       </TableBodyCell>

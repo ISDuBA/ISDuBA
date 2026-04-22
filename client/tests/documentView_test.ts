@@ -93,3 +93,10 @@ test("Tabs with details about document are working", async ({ page }) => {
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
 });
+
+test("Navigating through search hits is working", async ({ page }) => {
+  const trackingID = "Avendor-advisory-0004";
+  await page.getByTitle(`Show all hits for document ${trackingID}`).click();
+  await page.getByLabel("Navigate directly to the 4. hit").click();
+  await expect(page.getByText(/4\/\d\shits/)).toBeVisible();
+});

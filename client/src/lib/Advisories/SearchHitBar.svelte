@@ -24,7 +24,7 @@
     disabled={index === 0}
     class="h-7 w-7 p-1"
     color="light"
-    title="Previous"
+    title="Previous hit"
   >
     <i class="bx bx-chevron-left"></i>
   </Button>
@@ -37,7 +37,7 @@
     disabled={index === hits.length - 1}
     class="h-7 w-7 p-1"
     color="light"
-    title="Next"
+    title="Next hit"
   >
     <i class="bx bx-chevron-right"></i>
   </Button>
