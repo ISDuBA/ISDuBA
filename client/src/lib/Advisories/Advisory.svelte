@@ -411,14 +411,12 @@
       const hitsResult = await fetchSearchHits(params.id);
       if (Array.isArray(hitsResult)) {
         advisorySearchState.searchHits = hitsResult;
+        if (advisorySearchState.searchHits.length > 0 && advisorySearchState.hitIndex === -1) {
+          advisorySearchState.hitIndex = 0;
+        }
       } else {
         loadSearchHitsError = hitsResult;
       }
-    }
-    if (advisorySearchState.searchHits.length > 0) {
-      advisorySearchState.hitIndex = 0;
-    } else {
-      advisorySearchState.hitIndex = -1;
     }
     await loadDocument();
     await getAdvisoryVersions();
