@@ -483,6 +483,7 @@
     }
   };
   onDestroy(() => {
+    appStore.setDocument(null);
     advisorySearchState.hitIndex = -1;
     setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
