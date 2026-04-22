@@ -19,10 +19,11 @@
     aClass?: string;
     href: string;
     label: string;
+    onclick: () => void;
     icon: Snippet;
   };
 
-  let { active, aClass = sidebarItemLinkClass, label, href, icon }: Props = $props();
+  let { active, aClass = sidebarItemLinkClass, label, href, onclick, icon }: Props = $props();
 
   const activeURL: () => string = getContext("activeURL");
 
@@ -30,7 +31,7 @@
 </script>
 
 <li>
-  <Link {href} class={`${aClass} ${isActive ? activeClass : nonActiveClass}`}>
+  <Link {href} {onclick} class={`${aClass} ${isActive ? activeClass : nonActiveClass}`}>
     {@render icon()}
     <span>{label}</span>
   </Link>
