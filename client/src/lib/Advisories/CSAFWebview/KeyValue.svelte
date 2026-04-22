@@ -62,12 +62,14 @@
                   <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
                 </Link>
               {:else if Array.isArray(values[index])}
-                {#each values[index] as value, j (`keyvalue-2-${uid}-${j}`)}
-                  <SearchableText text={value} textPath={`${paths?.[index] ?? ""}[${j}]`} />
-                  {#if j < values.length - 1}
-                    ,
-                  {/if}
-                {/each}
+                <div class="flex flex-wrap gap-1">
+                  {#each values[index] as value, j (`keyvalue-2-${uid}-${j}`)}
+                    <SearchableText
+                      text={`${value}${j < values[index].length - 1 ? "," : ""}`}
+                      textPath={`${paths?.[index] ?? ""}[${j}]`}
+                    />
+                  {/each}
+                </div>
               {:else}
                 <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
               {/if}
