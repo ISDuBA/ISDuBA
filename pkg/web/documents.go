@@ -738,9 +738,12 @@ func buildTextPaths(
 
 	store := func(path []string, id int64) {
 		joined := strings.Join(path, "")
+		// Ignore the ids known to be regular texts.
 		if _, ok := knownNoneTexts[joined]; ok {
 			return
 		}
+		// Only include this text if we have text
+		// with this id.
 		if text, ok := uniqueTexts[id]; ok {
 			var t *string
 			if include {
@@ -754,6 +757,7 @@ func buildTextPaths(
 		}
 	}
 
+	// Recursively traverse the document and find the text ids.
 	var recurse func(any, []string)
 	recurse = func(curr any, path []string) {
 		switch x := curr.(type) {
