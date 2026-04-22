@@ -258,7 +258,7 @@
           title="Notes"
         >
           <div class={sideScroll}>
-            <Notes initOpen notes={appStore.state.webview.doc?.notes} />
+            <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
           </div>
         </TabItem>
       {/if}
@@ -342,7 +342,7 @@
     <FakeButton active>Notes</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
     <div class={sideScroll}>
-      <Notes initOpen notes={appStore.state.webview.doc?.notes} />
+      <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
     </div>
   </div>
 {/if}

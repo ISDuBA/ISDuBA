@@ -19,7 +19,7 @@
     aClass?: string;
     href: string;
     label: string;
-    onclick: () => void;
+    onclick?: () => void;
     icon: Snippet;
   };
 
