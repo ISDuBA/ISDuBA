@@ -35,11 +35,12 @@
       const splits: string[] = [];
       for (let i = 0; i < hit.positions.length; i++) {
         const pos = hit.positions[i];
-        const term = text.substring(pos[0], pos[0] + pos[1] + 1);
+        const term = text.substring(pos[0], pos[0] + pos[1]);
         const splittedText = t.split(term);
         splits.push(splittedText[0], term);
-        t = splittedText[2];
+        t = splittedText[1];
       }
+      if (t) splits.push(t);
       return splits;
     }
     return [];
