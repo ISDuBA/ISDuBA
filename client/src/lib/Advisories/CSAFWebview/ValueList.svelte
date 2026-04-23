@@ -28,7 +28,7 @@
   <List>
     {#each values as value, i (`valuelist-${uid}-${i}`)}
       <Li>
-        <SearchableText text={value} textPath={`${path}/[${i}]`} />
+        <SearchableText text={value} textPath={`${path}[${i}]`} />
       </Li>
     {/each}
   </List>
