@@ -33,7 +33,7 @@
     </TableBodyRow>
   </Table>
   {#if helper.cpe}
-    <KeyValue keys={["cpe"]} values={helper.cpe} paths={[`${extendedPath}/cpe`]} />
+    <KeyValue keys={["cpe"]} values={[helper.cpe]} paths={[`${extendedPath}/cpe`]} />
   {/if}
   {#if helper.hashes}
     {#each helper.hashes as hash, i (`pidh-${uid}-${i}`)}
@@ -44,7 +44,7 @@
     <ValueList label="Model numbers" values={helper.model_numbers} path={`${path}/model_numbers`} />
   {/if}
   {#if helper.purl}
-    <KeyValue keys={["purl"]} values={helper.purl} paths={[`${extendedPath}/purl`]} />
+    <KeyValue keys={["purl"]} values={[helper.purl]} paths={[`${extendedPath}/purl`]} />
   {/if}
   {#if helper.sbom_urls}
     <ValueList label="SBOM URLs" values={helper.sbom_urls} path={`${path}/sbom_urls`} />
