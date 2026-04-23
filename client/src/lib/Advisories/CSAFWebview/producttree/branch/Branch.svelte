@@ -29,7 +29,7 @@
   <Collapsible {open} header={branch.category + ": " + branch.name}>
     {#snippet headerSlot()}
       <div class="py-2">
-        <CBadge rounded large color="dark">{branch.category}</CBadge>
+        <CBadge class="rounded-full" large color="dark">{branch.category}</CBadge>
         {branch.name}
       </div>
     {/snippet}

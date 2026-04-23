@@ -11,7 +11,6 @@
 <script lang="ts">
   import { twMerge } from "tailwind-merge";
   import { CloseButton } from "flowbite-svelte";
-  import type { ColorVariant } from "./types";
   import type { CloseButtonProps } from "flowbite-svelte";
   import type { HTMLButtonAttributes } from "svelte/elements";
   import { fade, type TransitionConfig } from "svelte/transition";
@@ -20,12 +19,10 @@
   type TransitionFunc = (node: HTMLElement, params: any) => TransitionConfig;
 
   type Props = {
-    color?: ColorVariant;
+    color?: "dark" | "red" | "yellow" | "green" | "indigo" | "purple" | "pink" | "blue" | "primary";
     large?: boolean;
     dismissable?: boolean;
-    border?: boolean;
     showHoverEffect?: boolean;
-    rounded?: boolean;
     transition?: TransitionFunc;
     params?: object;
     onClose?: () => void;
@@ -37,9 +34,7 @@
     color = "primary",
     large = false,
     dismissable = false,
-    border = false,
-    showHoverEffect = true,
-    rounded = false,
+    showHoverEffect = false,
     transition = fade,
     params = {},
     onClose = undefined,
@@ -63,24 +58,6 @@
     none: ""
   };
 
-  const borderedColors = {
-    primary:
-      "bg-primary-100 text-primary-800 dark:bg-gray-700 dark:text-primary-400 border-primary-400 dark:border-primary-400",
-    dark: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400 border-gray-400 dark:border-gray-400",
-    blue: "bg-blue-100 text-blue-800 dark:bg-gray-700 dark:text-blue-400 border-blue-400 dark:border-blue-400",
-    red: "bg-red-100 text-red-800 dark:bg-gray-700 dark:text-red-400 border-red-400 dark:border-red-400",
-    green:
-      "bg-green-100 text-green-800 dark:bg-gray-700 dark:text-green-400 border-green-400 dark:border-green-400",
-    yellow:
-      "bg-yellow-100 text-yellow-800 dark:bg-gray-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-300",
-    indigo:
-      "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-indigo-400 border-indigo-400 dark:border-indigo-400",
-    purple:
-      "bg-purple-100 text-purple-800 dark:bg-gray-700 dark:text-purple-400 border-purple-400 dark:border-purple-400",
-    pink: "bg-pink-100 text-pink-800 dark:bg-gray-700 dark:text-pink-400 border-pink-400 dark:border-pink-400",
-    none: ""
-  };
-
   const hoverColors = {
     primary: "hover:bg-primary-200",
     dark: "hover:bg-gray-200",
@@ -98,15 +75,15 @@
     badgeStatus = false;
   };
 
-  const baseClass: string = "font-medium inline-flex items-center justify-center px-2.5 py-0.5";
+  const baseClass: string =
+    "font-medium inline-flex items-center justify-center px-2.5 py-0.5 rounded";
 
   let badgeClass: string = $derived(
     twMerge(
       baseClass,
       large ? "text-sm" : "text-xs",
-      border ? `border ${borderedColors[color]}` : colors[color],
+      colors[color],
       showHoverEffect ? hoverColors[color] : "",
-      rounded ? "rounded-full" : "rounded",
       `${restProps.class}`
     )
   );

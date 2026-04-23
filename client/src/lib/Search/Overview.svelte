@@ -109,7 +109,6 @@
     queryType: SEARCHTYPES;
     orders: string[];
     query: string;
-    queryReset: string;
   }
 
   let query: SearchQuery = $derived.by(() => {
@@ -120,7 +119,6 @@
         columns: defaultQuery.columns,
         queryType: defaultQuery.kind,
         query: defaultQuery.query,
-        queryReset: "",
         orders: defaultQuery.orders ?? []
       };
     } else {
@@ -128,8 +126,7 @@
         columns: [...SEARCHPAGECOLUMNS.ADVISORY],
         queryType: SEARCHTYPES.ADVISORY,
         orders: INITIAL_ORDER,
-        query: "",
-        queryReset: ""
+        query: ""
       };
     }
   });
