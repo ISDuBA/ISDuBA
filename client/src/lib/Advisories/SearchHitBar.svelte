@@ -13,32 +13,32 @@
 
   let index = $derived(advisorySearchState.hitIndex);
   let hits = $derived(advisorySearchState.searchHits);
+
+  const prev = () => {
+    advisorySearchState.scroll = true;
+    if (index <= 0) {
+      advisorySearchState.hitIndex = advisorySearchState.searchHits.length - 1;
+    } else {
+      advisorySearchState.hitIndex--;
+    }
+  };
+
+  const next = () => {
+    advisorySearchState.scroll = true;
+    if (index >= advisorySearchState.searchHits.length - 1) {
+      advisorySearchState.hitIndex = 0;
+    } else {
+      advisorySearchState.hitIndex++;
+    }
+  };
 </script>
 
 <div class="flex items-center gap-2">
-  <Button
-    onclick={() => {
-      advisorySearchState.scroll = true;
-      advisorySearchState.hitIndex--;
-    }}
-    disabled={index === 0}
-    class="h-7 w-7 p-1"
-    color="light"
-    title="Previous hit"
-  >
+  <Button onclick={prev} class="h-7 w-7 p-1" color="light" title="Previous hit">
     <i class="bx bx-chevron-left"></i>
   </Button>
   <small>{index + 1}/{hits?.length} hits</small>
-  <Button
-    onclick={() => {
-      advisorySearchState.scroll = true;
-      advisorySearchState.hitIndex++;
-    }}
-    disabled={index === hits.length - 1}
-    class="h-7 w-7 p-1"
-    color="light"
-    title="Next hit"
-  >
+  <Button onclick={next} class="h-7 w-7 p-1" color="light" title="Next hit">
     <i class="bx bx-chevron-right"></i>
   </Button>
 </div>
