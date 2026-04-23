@@ -406,7 +406,9 @@
   const loadData = async () => {
     advisoryState = "";
     historyEntries = [];
+    advisoryVersions = [];
     ssvcVector = "";
+    appStore.setDocument(null);
     if (appStore.state.app.search.query) {
       const hitsResult = await fetchSearchHits(params.id);
       if (Array.isArray(hitsResult)) {
@@ -567,7 +569,7 @@
           <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
             >{document.publisher ? document.publisher.name : ""}</Label
           >
-          {#if appStore.state.app.search.term}
+          {#if appStore.state.app.search.term && appStore.state.webview.doc}
             <SearchHitBar />
           {/if}
         </div>
