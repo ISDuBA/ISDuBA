@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"iter"
 	"log/slog"
 	"maps"
 	"net/http"
@@ -141,62 +142,58 @@ func (c *Controller) aggregatedResults(
 					firstDocument := true
 					enc := json.NewEncoder(w)
 
-					if err := ads.window(
-						limit, offset,
-						func(ad *aggregatedDocument) error {
-							if firstDocument {
-								firstDocument = false
-							} else {
+					for ad := range ads.window(limit, offset) {
+						if firstDocument {
+							firstDocument = false
+						} else {
+							fmt.Fprint(w, ",")
+						}
+						fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
+						for i, row := range ad.rows {
+							if i > 0 {
 								fmt.Fprint(w, ",")
 							}
-							fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
-							for i, row := range ad.rows {
-								if i > 0 {
-									fmt.Fprint(w, ",")
+							firstEntry := true
+							fmt.Fprintf(w, "{")
+							for k, v := range row {
+								if firstEntry {
+									firstEntry = false
+								} else {
+									fmt.Fprintf(w, ",")
 								}
-								firstEntry := true
-								fmt.Fprintf(w, "{")
-								for k, v := range row {
-									if firstEntry {
-										firstEntry = false
-									} else {
-										fmt.Fprintf(w, ",")
+								key, err := keys.resolve(k)
+								if err != nil {
+									return err
+								}
+								fmt.Fprintf(w, "%s:", key)
+								// If we have an alias we need to load the text from the database.
+								if builder.HasAlias(k) {
+									id, ok := asInt64(v)
+									if !ok {
+										return fmt.Errorf("alias %q has not an int value", k)
 									}
-									key, err := keys.resolve(k)
+									txt, err := loadedTxts.resolve(id)
 									if err != nil {
 										return err
 									}
-									fmt.Fprintf(w, "%s:", key)
-									// If we have an alias we need to load the text from the database.
-									if builder.HasAlias(k) {
-										id, ok := asInt64(v)
-										if !ok {
-											return fmt.Errorf("alias %q has not an int value", k)
-										}
-										txt, err := loadedTxts.resolve(id)
-										if err != nil {
-											return err
-										}
-										fmt.Fprint(w, txt)
-									} else {
-										// A none alias field
-										if err := enc.Encode(v); err != nil {
-											return err
-										}
+									fmt.Fprint(w, txt)
+								} else {
+									// A none alias field
+									if err := enc.Encode(v); err != nil {
+										return err
 									}
 								}
-								fmt.Fprintf(w, "}")
 							}
-							_, err := fmt.Fprint(w, "]}")
-							return err
-						}); err != nil {
-						return fmt.Errorf("writing window failed %w", err)
+							fmt.Fprintf(w, "}")
+						}
+						if _, err := fmt.Fprint(w, "]}"); err != nil {
+							return fmt.Errorf("writing window failed %w", err)
+						}
 					}
-					if _, err := fmt.Fprint(w, "]"); err != nil {
+					if _, err := fmt.Fprint(w, "]}"); err != nil {
 						return err
 					}
-					_, err := fmt.Fprint(w, "}")
-					return err
+					return nil
 				})))
 			return trackedErr
 		},
@@ -314,10 +311,7 @@ func asInt64(x any) (int64, bool) {
 	return 0, false
 }
 
-func (ads aggregatedDocuments) window(
-	limit, offset int64,
-	write func(*aggregatedDocument) error,
-) error {
+func (ads aggregatedDocuments) window(limit, offset int64) iter.Seq[*aggregatedDocument] {
 	var start, end int
 	if offset < 0 {
 		start = 0
@@ -329,10 +323,11 @@ func (ads aggregatedDocuments) window(
 	} else {
 		end = min(int(offset+limit), len(ads))
 	}
-	for i := start; i < end; i++ {
-		if err := write(&ads[i]); err != nil {
-			return err
+	return func(yield func(*aggregatedDocument) bool) {
+		for i := range ads[start:end] {
+			if !yield(&ads[i]) {
+				return
+			}
 		}
 	}
-	return nil
 }
