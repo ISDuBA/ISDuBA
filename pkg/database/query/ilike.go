@@ -9,7 +9,9 @@
 package query
 
 import (
+	"cmp"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -107,6 +109,10 @@ func (expr ILikeExpr) Search(haystack string) TextSections {
 			}
 		}
 	}
+	// Ensure that the sections are ascending.
+	slices.SortFunc(sections, func(a, b [2]int) int {
+		return cmp.Compare(a[0], b[0])
+	})
 	return sections
 }
 
@@ -115,9 +121,32 @@ func (expr ILikeExpr) Search(haystack string) TextSections {
 // to give reading context. fill is a string to be used as filler for gaps
 // (think "..."). delims is a pair for delimeters to mark the sections.
 func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]string) string {
-	// TODO: Implement me!
-	_ = buffer
+	// (over) estimate number of used runes.
+	n := 0
+	for _, s := range ts {
+		n += 2*buffer + s[1]
+	}
+	used := make(map[int]struct{}, n)
+	sX := []rune(s)
+	for _, s := range ts {
+		start, end := s[0]-buffer, s[0]+s[1]+buffer
+		for idx := start; idx < end; idx++ {
+			if idx >= 0 && idx < len(sX) {
+				used[idx] = struct{}{}
+			}
+		}
+	}
+	indices := slices.Sorted(maps.Keys(used))
+	if len(indices) == 0 {
+		return ""
+	}
+	// TODO: Add delims and fills.
 	_ = fill
 	_ = delims
-	return s
+
+	out := make([]rune, 0, len(indices))
+	for _, idx := range indices {
+		out = append(out, sX[idx])
+	}
+	return string(out)
 }

@@ -91,7 +91,7 @@ func (c *Controller) aggregatedResults(
 	}
 
 	const (
-		buffer = 5     // Reading context
+		buffer = 10    // Reading context
 		fill   = "..." // Gap filler
 	)
 	delims := [2]string{`[!<`, `>!]`} // Used to mark the sections.
@@ -173,7 +173,7 @@ func (c *Controller) aggregatedResults(
 								encoded[k] = txt
 							}
 							if err := enc.Encode(encoded); err != nil {
-								return err
+								return fmt.Errorf("serializing row failed: %w err", err)
 							}
 						}
 						if _, err := fmt.Fprint(w, "]}"); err != nil {
