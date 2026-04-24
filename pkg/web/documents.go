@@ -620,12 +620,10 @@ func (c *Controller) documentTexts(ctx *gin.Context) {
 			` dt.num,` +
 			` ut.txt ` +
 			`FROM` +
-			` unique_texts ut JOIN` +
-			` documents_texts dt ON ut.id = dt.txt_id JOIN` +
-			` documents docs ON docs.id = dt.documents_id JOIN` +
-			` advisories ads ON docs.advisories_id = ads.id ` +
+			` documents_texts dt JOIN` +
+			` unique_texts ut ON ut.id = dt.txt_id ` +
 			`WHERE` +
-			` docs.id = $%d AND %s`
+			` dt.documents_id = $%d AND %s`
 		documentSQL = `` +
 			`SELECT document ` +
 			`FROM documents ` +

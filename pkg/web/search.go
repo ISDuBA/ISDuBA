@@ -21,6 +21,7 @@ import (
 	"slices"
 
 	"github.com/ISDuBA/ISDuBA/pkg/database/query"
+	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
@@ -35,31 +36,6 @@ type (
 	}
 	aggregatedDocuments []aggregatedDocument
 )
-
-type encodedTexts[T comparable] struct {
-	txts  map[T]string
-	fetch func(T) (string, error)
-}
-
-func (et *encodedTexts[T]) resolve(t T) (string, error) {
-	if m, ok := et.txts[t]; ok {
-		return m, nil
-	}
-	v, err := et.fetch(t)
-	if err != nil {
-		return "", err
-	}
-	m, err := json.Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	if et.txts == nil {
-		et.txts = make(map[T]string)
-	}
-	x := string(m)
-	et.txts[t] = x
-	return x, nil
-}
 
 func (c *Controller) aggregatedResults(
 	ctx *gin.Context,
@@ -84,7 +60,7 @@ func (c *Controller) aggregatedResults(
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			if ads, err = scanAggregatedDocuments(rows, builder.Fields()); err != nil {
+			if ads, err = scanAggregatedDocuments(rows, builder); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -96,30 +72,53 @@ func (c *Controller) aggregatedResults(
 		return
 	}
 
+	var ilikes query.ILikeExpr
+	if expr := builder.Expr(); expr != nil {
+		if searches := slices.Collect(itertools.Apply(
+			expr.Searches(),
+			func(search string) string {
+				return query.LikeEscape(search)
+			},
+		)); len(searches) > 0 {
+			var err error
+			ilikes, err = query.CompileILike(searches...)
+			if err != nil {
+				slog.Error("compiling ilikes failed", "err", err)
+				models.SendError(ctx, http.StatusInternalServerError, err)
+				return
+			}
+		}
+	}
+
+	const (
+		buffer = 5     // Reading context
+		fill   = "..." // Gap filler
+	)
+	delims := [2]string{`[!<`, `>!]`} // Used to mark the sections.
+
 	// We load texts from the database lazily so we render in another connection.
 	// XXX: Think about moving it to the DB stuff above.
 	if err := c.db.Run(
 		rctx,
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			// Load a text only if we don't already have it.
-			const uniqueSQL = `` +
-				`SELECT` +
-				` CASE WHEN length(txt)<= 200 THEN txt` +
-				` ELSE substring(txt, 0, 197)||'...' END` +
-				` FROM unique_texts WHERE id = $1`
-			loadedTxts := encodedTexts[int64]{
-				fetch: func(id int64) (string, error) {
-					var txt string
-					if err := conn.QueryRow(rctx, uniqueSQL, id).Scan(&txt); err != nil {
-						return "", fmt.Errorf("fetching unique text failed: %w", err)
-					}
+			const uniqueSQL = `SELECT txt FROM unique_texts WHERE id = $1`
+			// Cache the shortend texts.
+			txts := map[int64]string{}
+			fetchText := func(txtID int64) (string, error) {
+				txt, ok := txts[txtID]
+				if ok {
 					return txt, nil
-				},
-			}
-			// JSON encoding keys will always results in the same values
-			// so we cache them, too.
-			keys := encodedTexts[string]{
-				fetch: func(x string) (string, error) { return x, nil },
+				}
+				if err := conn.QueryRow(rctx, uniqueSQL, txtID).Scan(&txt); err != nil {
+					return "", fmt.Errorf("fetching unique text failed: %w", err)
+				}
+				if ilikes.Regexp != nil {
+					sections := ilikes.Search(txt)
+					txt = sections.Shorten(txt, buffer, fill, delims)
+				}
+				txts[txtID] = txt
+				return txt, nil
 			}
 			// Catch errors occuring while rendering to logged outside.
 			var trackedErr error
@@ -142,6 +141,8 @@ func (c *Controller) aggregatedResults(
 					firstDocument := true
 					enc := json.NewEncoder(w)
 
+					encoded := make(map[string]any)
+
 					for ad := range ads.window(limit, offset) {
 						if firstDocument {
 							firstDocument = false
@@ -149,42 +150,31 @@ func (c *Controller) aggregatedResults(
 							fmt.Fprint(w, ",")
 						}
 						fmt.Fprintf(w, `{"id":%d,"data":[`, ad.id)
+
 						for i, row := range ad.rows {
 							if i > 0 {
 								fmt.Fprint(w, ",")
 							}
-							firstEntry := true
-							fmt.Fprintf(w, "{")
+							clear(encoded)
 							for k, v := range row {
-								if firstEntry {
-									firstEntry = false
-								} else {
-									fmt.Fprintf(w, ",")
+								if !builder.HasAlias(k) {
+									encoded[k] = v
+									continue
 								}
-								key, err := keys.resolve(k)
+								// If we have an alias we need to load the text from the database.
+								id, ok := asInt64(v)
+								if !ok {
+									return fmt.Errorf("alias %q has not an int value", k)
+								}
+								txt, err := fetchText(id)
 								if err != nil {
 									return err
 								}
-								fmt.Fprintf(w, "%s:", key)
-								// If we have an alias we need to load the text from the database.
-								if builder.HasAlias(k) {
-									id, ok := asInt64(v)
-									if !ok {
-										return fmt.Errorf("alias %q has not an int value", k)
-									}
-									txt, err := loadedTxts.resolve(id)
-									if err != nil {
-										return err
-									}
-									fmt.Fprint(w, txt)
-								} else {
-									// A none alias field
-									if err := enc.Encode(v); err != nil {
-										return err
-									}
-								}
+								encoded[k] = txt
 							}
-							fmt.Fprintf(w, "}")
+							if err := enc.Encode(encoded); err != nil {
+								return err
+							}
 						}
 						if _, err := fmt.Fprint(w, "]}"); err != nil {
 							return fmt.Errorf("writing window failed %w", err)
@@ -225,8 +215,9 @@ func trackError(
 // scanAggregatedDocuments returns a result set into a slice of aggregated documents.
 func scanAggregatedDocuments(
 	rows pgx.Rows,
-	fields []string,
+	builder *query.AdvancedSQLBuilder,
 ) (aggregatedDocuments, error) {
+	fields := builder.Fields()
 	idIdx := slices.Index(fields, "id")
 	if idIdx == -1 {
 		return nil, errors.New("missing id column to aggregate")
@@ -268,7 +259,8 @@ func scanAggregatedDocuments(
 				if name == "id" {
 					continue
 				}
-				if x, ok := have[name]; !ok || !reflect.DeepEqual(x, v) {
+				if x, ok := have[name]; !ok ||
+					builder.HasAlias(name) || !reflect.DeepEqual(x, v) {
 					row[name] = v
 					have[name] = v
 				}

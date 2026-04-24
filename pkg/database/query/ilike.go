@@ -15,6 +15,11 @@ import (
 	"strings"
 )
 
+// TextSections is a list of positions in string.
+// The [2]ints are to be read as [0] being the start position (zero based)
+// and [1] the length of the covered section.
+type TextSections [][2]int
+
 // ILikeExpr is an compiled ILIKE expression.
 type ILikeExpr struct{ *regexp.Regexp }
 
@@ -85,22 +90,34 @@ func CompileILike(needles ...string) (ILikeExpr, error) {
 
 // Search searches ilike patterns in a haystack.
 // Returns a list of matching positions.
-func (expr ILikeExpr) Search(haystack string) [][2]int {
+func (expr ILikeExpr) Search(haystack string) TextSections {
 	all := expr.FindAllStringSubmatchIndex(haystack, -1)
 	if len(all) == 0 {
 		return nil
 	}
-	var pairs [][2]int
+	var sections TextSections
 	for _, indices := range all {
 		if len(indices) == 0 {
 			continue
 		}
 		for indices = indices[2:]; len(indices) > 0; indices = indices[2:] {
 			pair := [2]int{indices[0], indices[1] - indices[0]}
-			if !slices.Contains(pairs, pair) {
-				pairs = append(pairs, pair)
+			if !slices.Contains(sections, pair) {
+				sections = append(sections, pair)
 			}
 		}
 	}
-	return pairs
+	return sections
+}
+
+// Shorten returns a shorten version of the given string.
+// buffer is a buffer in number of runes around around the sections
+// to give reading context. fill is a string to be used as filler for gaps
+// (think "..."). delims is a pair for delimeters to mark the sections.
+func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]string) string {
+	// TODO: Implement me!
+	_ = buffer
+	_ = fill
+	_ = delims
+	return s
 }
