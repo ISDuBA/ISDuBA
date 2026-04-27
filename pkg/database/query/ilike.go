@@ -11,7 +11,6 @@ package query
 import (
 	"cmp"
 	"fmt"
-	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -121,32 +120,77 @@ func (expr ILikeExpr) Search(haystack string) TextSections {
 // to give reading context. fill is a string to be used as filler for gaps
 // (think "..."). delims is a pair for delimeters to mark the sections.
 func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]string) string {
-	// (over) estimate number of used runes.
-	n := 0
-	for _, s := range ts {
-		n += 2*buffer + s[1]
-	}
-	used := make(map[int]struct{}, n)
-	sX := []rune(s)
-	for _, s := range ts {
-		start, end := s[0]-buffer, s[0]+s[1]+buffer
-		for idx := start; idx < end; idx++ {
-			if idx >= 0 && idx < len(sX) {
-				used[idx] = struct{}{}
-			}
+
+	var (
+		instrs []func()
+		out    []rune
+	)
+
+	xfer := func(in []rune, start, end int) func() {
+		start, end = max(0, start), min(len(in), end)
+		return func() {
+			out = append(out, in[start:end]...)
 		}
 	}
-	indices := slices.Sorted(maps.Keys(used))
-	if len(indices) == 0 {
-		return ""
-	}
-	// TODO: Add delims and fills.
-	_ = fill
-	_ = delims
+	delim0 := func() { out = append(out, []rune(delims[0])...) }
+	delim1 := func() { out = append(out, []rune(delims[1])...) }
+	filler := func() { out = append(out, []rune(fill)...) }
 
-	out := make([]rune, 0, len(indices))
-	for _, idx := range indices {
-		out = append(out, sX[idx])
+	add := func(inst func()) { instrs = append(instrs, inst) }
+
+	sX := []rune(s)
+
+	for i, section := range ts {
+		if i > 0 {
+			last := ts[i-1]
+			endLast := last[0] + last[1]
+			gap := section[0] - endLast
+			if gap > 2*buffer {
+				add(filler)
+				// TODO: Implement me!
+
+			}
+		}
+		add(delim0)
+		add(xfer(sX, section[0], section[0]+section[1]))
+		add(delim1)
 	}
+
+	for _, instr := range instrs {
+		instr()
+	}
+
 	return string(out)
+
+	/*
+
+		// (over) estimate number of used runes.
+		n := 0
+		for _, s := range ts {
+			n += 2*buffer + s[1]
+		}
+		used := make(map[int]struct{}, n)
+		sX := []rune(s)
+		for _, s := range ts {
+			start, end := s[0]-buffer, s[0]+s[1]+buffer
+			for idx := start; idx < end; idx++ {
+				if idx >= 0 && idx < len(sX) {
+					used[idx] = struct{}{}
+				}
+			}
+		}
+		indices := slices.Sorted(maps.Keys(used))
+		if len(indices) == 0 {
+			return ""
+		}
+		// TODO: Add delims and fills.
+		_ = fill
+		_ = delims
+
+		out := make([]rune, 0, len(indices))
+		for _, idx := range indices {
+			out = append(out, sX[idx])
+		}
+		return string(out)
+	*/
 }
