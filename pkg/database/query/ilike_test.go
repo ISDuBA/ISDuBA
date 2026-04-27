@@ -25,7 +25,7 @@ func TestCompileILike(t *testing.T) {
 	}
 
 	havePairs := expr.Search(`xxxhallo\`)
-	expectedPairs := [][2]int{
+	expectedPairs := TextSections{
 		{3, 3},
 		{7, 1},
 		{8, 1},
