@@ -35,10 +35,10 @@
 
 <div class="flex items-center gap-2">
   <Button onclick={prev} class="h-7 w-7 p-1" color="light" title="Previous hit">
-    <i class="bx bx-chevron-left"></i>
+    <i class="bx bx-chevron-up"></i>
   </Button>
   <small>{index + 1}/{hits?.length} hits</small>
   <Button onclick={next} class="h-7 w-7 p-1" color="light" title="Next hit">
-    <i class="bx bx-chevron-right"></i>
+    <i class="bx bx-chevron-down"></i>
   </Button>
 </div>
