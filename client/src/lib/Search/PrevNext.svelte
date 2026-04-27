@@ -178,7 +178,7 @@
           aClass={`${indentedSidebarItemClass} ${i === index ? `${activeClass} px-0 py-0` : sidebarItemClass} ${i === index ? "!text-primary-900 dark:!text-white" : ""}`}
           label={doc.data[0].tracking_id}
           onclick={() => {
-            if (i !== index) advisorySearchState.hitIndex = -1;
+            if (i !== index) advisorySearchState.matchIndex = -1;
           }}
           href={`#/advisories/${doc.data[0].publisher}/${doc.data[0].tracking_id}/documents/${doc.id}`}
         >

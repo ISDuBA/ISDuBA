@@ -169,19 +169,19 @@ const fetchSearchHits = async (id: number): Promise<SearchHit[] | ErrorDetails> 
 
 type AdvisorySearchState = {
   scroll: boolean;
-  searchHits: SearchHit[];
-  hitIndex: number;
+  searchMatches: SearchHit[];
+  matchIndex: number;
 };
 
 const advisorySearchState: AdvisorySearchState = $state({
   scroll: true,
-  searchHits: [],
-  hitIndex: -1
+  searchMatches: [],
+  matchIndex: -1
 });
 
 const derivedHit = $derived(
-  advisorySearchState.hitIndex !== -1
-    ? advisorySearchState.searchHits[advisorySearchState.hitIndex]
+  advisorySearchState.matchIndex !== -1
+    ? advisorySearchState.searchMatches[advisorySearchState.matchIndex]
     : undefined
 );
 

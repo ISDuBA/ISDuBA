@@ -104,8 +104,8 @@
 
   $effect(() => {
     if (path) {
-      if (advisorySearchState.hitIndex !== -1) {
-        const hitPath = advisorySearchState.searchHits[advisorySearchState.hitIndex].path;
+      if (advisorySearchState.matchIndex !== -1) {
+        const hitPath = advisorySearchState.searchMatches[advisorySearchState.matchIndex].path;
         const shouldOpen = hitPath.startsWith(path);
         if (shouldOpen) open = true;
       }

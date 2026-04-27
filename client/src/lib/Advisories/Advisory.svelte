@@ -416,9 +416,9 @@
     if (appStore.state.app.search.query) {
       const hitsResult = await fetchSearchHits(params.id);
       if (Array.isArray(hitsResult)) {
-        advisorySearchState.searchHits = hitsResult;
-        if (advisorySearchState.searchHits.length > 0 && advisorySearchState.hitIndex === -1) {
-          advisorySearchState.hitIndex = 0;
+        advisorySearchState.searchMatches = hitsResult;
+        if (advisorySearchState.searchMatches.length > 0 && advisorySearchState.matchIndex === -1) {
+          advisorySearchState.matchIndex = 0;
         }
       } else {
         loadSearchHitsError = hitsResult;
@@ -490,7 +490,7 @@
   };
   onDestroy(() => {
     appStore.setDocument(null);
-    advisorySearchState.hitIndex = -1;
+    advisorySearchState.matchIndex = -1;
     setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
     });

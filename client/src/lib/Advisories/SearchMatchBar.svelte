@@ -12,24 +12,24 @@
   import { advisorySearchState } from "./advisory.svelte";
   import { appStore } from "$lib/store.svelte";
 
-  let index = $derived(advisorySearchState.hitIndex);
-  let hits = $derived(advisorySearchState.searchHits);
+  let index = $derived(advisorySearchState.matchIndex);
+  let matches = $derived(advisorySearchState.searchMatches);
 
   const prev = () => {
     advisorySearchState.scroll = true;
     if (index <= 0) {
-      advisorySearchState.hitIndex = advisorySearchState.searchHits.length - 1;
+      advisorySearchState.matchIndex = advisorySearchState.searchMatches.length - 1;
     } else {
-      advisorySearchState.hitIndex--;
+      advisorySearchState.matchIndex--;
     }
   };
 
   const next = () => {
     advisorySearchState.scroll = true;
-    if (index >= advisorySearchState.searchHits.length - 1) {
-      advisorySearchState.hitIndex = 0;
+    if (index >= advisorySearchState.searchMatches.length - 1) {
+      advisorySearchState.matchIndex = 0;
     } else {
-      advisorySearchState.hitIndex++;
+      advisorySearchState.matchIndex++;
     }
   };
 </script>
@@ -41,5 +41,5 @@
   <Button onclick={next} class="h-7 w-7 p-1" color="light" title="Next hit">
     <i class="bx bx-chevron-down"></i>
   </Button>
-  <small>{index + 1}/{hits?.length} hits for "{appStore.state.app.search.term}"</small>
+  <small>{index + 1}/{matches?.length} matches for "{appStore.state.app.search.term}"</small>
 </div>

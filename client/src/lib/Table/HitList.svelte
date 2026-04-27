@@ -45,7 +45,7 @@
             : "block hover:bg-gray-200 dark:hover:bg-gray-600"}
           href={getAdvisoryAnchorLink(doc)}
           onclick={() => {
-            advisorySearchState.hitIndex = i;
+            advisorySearchState.matchIndex = i;
           }}
         >
           <span class="block px-2 py-1">

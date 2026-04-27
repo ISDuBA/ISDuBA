@@ -19,8 +19,8 @@
   let elementID = $derived(`SearchableText-${uid}`);
 
   let hit: SearchHit | undefined = $derived.by(() => {
-    if (advisorySearchState.hitIndex !== -1) {
-      return advisorySearchState.searchHits[advisorySearchState.hitIndex];
+    if (advisorySearchState.matchIndex !== -1) {
+      return advisorySearchState.searchMatches[advisorySearchState.matchIndex];
     }
     return undefined;
   });
