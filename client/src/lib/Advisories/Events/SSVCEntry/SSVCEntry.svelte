@@ -61,13 +61,12 @@
       </div>
     </div>
     <div class="flex flex-row items-baseline justify-between">
-      <small class="text-right text-[10px] text-gray-400">
+      <small class="flex flex-col items-end text-[10px] text-gray-400">
+        <div>
+          {`${ssvcData.prev_ssvc ? "TO: " : ""}${ssvcData.ssvc}`}
+        </div>
         {#if ssvcData.prev_ssvc}
-          TO:
-        {/if}
-        {ssvcData.ssvc}
-        {#if ssvcData.prev_ssvc}
-          <br /> FROM: {ssvcData.prev_ssvc}
+          <div>FROM: {ssvcData.prev_ssvc}</div>
         {/if}
       </small>
       <div>

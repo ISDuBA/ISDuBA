@@ -87,139 +87,140 @@
 
 <div>
   <SectionHeader title="Sources"></SectionHeader>
-  <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-8" title=""
-  ></ImportStats>
-  {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
-    <CustomTable
-      title="CSAF Provider"
-      headers={[
-        {
-          label: "",
-          attribute: "icon"
-        },
-        {
-          label: "Name",
-          attribute: "name"
-        },
-        {
-          label: "Domain/PMD",
-          attribute: "url"
-        },
-        {
-          label: "Active",
-          attribute: "active"
-        },
-        {
-          label: "Loading/Queued",
-          attribute: "stats"
-        },
-        {
-          label: "Healthy",
-          attribute: "healthy"
-        },
-        {
-          label: "Imported (last 24h)",
-          attribute: "statsHistory",
-          progressDuration: shortLoadInterval * longLoadMultiplier
-        }
-      ]}
-    >
-      {#snippet mainSlot()}
-        {#each sources as source, index (index)}
-          <tr
-            onclick={() => {
-              if (appStore.isSourceManager()) {
-                push(`/sources/${source.id}`);
-              }
-            }}
-            onblur={() => {}}
-            onfocus={() => {}}
-            class={appStore.isSourceManager() ? "cursor-pointer" : ""}
-          >
-            <TableBodyCell class="w-fit max-w-10">
-              <i class="bx bx-git-repo-forked"></i>
-            </TableBodyCell>
-            <TableBodyCell class={`${tdClass} break-words hyphens-auto`}>
-              <div class="whitespace-break-spaces">
-                <span>{source.name}</span>
-                {#if source.attention}
-                  <Badge class="min-w-fit">Source changed</Badge>
-                {/if}
-              </div>
-            </TableBodyCell>
-            {#if source.id !== 0}
-              <TableBodyCell class={`${tdClass} break-all whitespace-normal`}
-                >{source.url}</TableBodyCell
-              >
-              <TableBodyCell class={tdClass}
-                ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}></i></TableBodyCell
-              >
-              <TableBodyCell class={tdClass}
-                >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
-              >
-              <TableBodyCell class={tdClass}
-                ><i class={"bx " + (source.healthy ? "bxs-circle" : "bx-circle")}
-                ></i></TableBodyCell
-              >
-            {:else}
-              <TableBodyCell class={tdClass}></TableBodyCell>
-              <TableBodyCell class={tdClass}></TableBodyCell>
-              <TableBodyCell class={tdClass}></TableBodyCell>
-              <TableBodyCell class={tdClass}></TableBodyCell>
-            {/if}
-            <TableBodyCell class={tdClass}>
-              {#if source.id !== undefined}
-                {@const yesterday = Date.now() - DAY_MS}
-                <SourceBasicStats
-                  bind:this={statsComponents[`${source.id}full`]}
-                  sourceID={source.id}
-                ></SourceBasicStats>
-                (<SourceBasicStats
-                  bind:this={statsComponents[`${source.id}last`]}
-                  from={new Date(yesterday)}
-                  sourceID={source.id}
-                ></SourceBasicStats>)
-              {/if}
-            </TableBodyCell>
-          </tr>
-        {/each}
-      {/snippet}
-      {#snippet bottomSlot()}
-        <div>
-          <div
-            class:invisible={!loadingSources}
-            class={loadingSources ? "loadingFadeIn" : ""}
-            class:mb-4={true}
-          >
-            Loading ...
-            <Spinner color="gray" size="4"></Spinner>
-          </div>
-          {#if appStore.isSourceManager()}
-            <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-              <i class="bx bx-plus"></i>
-              <span>Add source</span>
-            </Button>
-          {/if}
-          <ErrorMessage error={sourcesError}></ErrorMessage>
-        </div>
-      {/snippet}
-    </CustomTable>
-  {/if}
-  {#await getMessage() then resp}
-    {#if resp.message}
-      {#if !appStore.isSourceManager() && !appStore.isImporter()}
-        {resp.message}
-      {/if}
+  <div class="flex flex-col gap-4">
+    <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-4" title=""
+    ></ImportStats>
+    {#if appStore.isImporter()}
+      <Button href="/#/sources/upload" class="my-2 w-fit" color="primary" size="xs">
+        <i class="bx bx-upload"></i>
+        <span class="ml-1">Upload documents</span>
+      </Button>
     {/if}
-  {/await}
-  <ErrorMessage error={sourcesError}></ErrorMessage>
-  <ErrorMessage error={messageError}></ErrorMessage>
-
-  <br />
-  {#if appStore.isImporter()}
-    <Button href="/#/sources/upload" class="my-2" color="primary" size="xs">
-      <i class="bx bx-upload"></i>
-      <span class="ml-1">Upload documents</span>
-    </Button>
-  {/if}
+    {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
+      <CustomTable
+        title="CSAF Provider"
+        headers={[
+          {
+            label: "",
+            attribute: "icon"
+          },
+          {
+            label: "Name",
+            attribute: "name"
+          },
+          {
+            label: "Domain/PMD",
+            attribute: "url"
+          },
+          {
+            label: "Active",
+            attribute: "active"
+          },
+          {
+            label: "Loading/Queued",
+            attribute: "stats"
+          },
+          {
+            label: "Healthy",
+            attribute: "healthy"
+          },
+          {
+            label: "Imported (last 24h)",
+            attribute: "statsHistory",
+            progressDuration: shortLoadInterval * longLoadMultiplier
+          }
+        ]}
+      >
+        {#snippet mainSlot()}
+          {#each sources as source, index (index)}
+            <tr
+              onclick={() => {
+                if (appStore.isSourceManager()) {
+                  push(`/sources/${source.id}`);
+                }
+              }}
+              onblur={() => {}}
+              onfocus={() => {}}
+              class={appStore.isSourceManager() ? "cursor-pointer" : ""}
+            >
+              <TableBodyCell class="w-fit max-w-10">
+                <i class="bx bx-git-repo-forked"></i>
+              </TableBodyCell>
+              <TableBodyCell class={`${tdClass} break-words hyphens-auto`}>
+                <div class="whitespace-break-spaces">
+                  <span>{source.name}</span>
+                  {#if source.attention}
+                    <Badge class="min-w-fit">Source changed</Badge>
+                  {/if}
+                </div>
+              </TableBodyCell>
+              {#if source.id !== 0}
+                <TableBodyCell class={`${tdClass} break-all whitespace-normal`}
+                  >{source.url}</TableBodyCell
+                >
+                <TableBodyCell class={tdClass}
+                  ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}
+                  ></i></TableBodyCell
+                >
+                <TableBodyCell class={tdClass}
+                  >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
+                >
+                <TableBodyCell class={tdClass}
+                  ><i class={"bx " + (source.healthy ? "bxs-circle" : "bx-circle")}
+                  ></i></TableBodyCell
+                >
+              {:else}
+                <TableBodyCell class={tdClass}></TableBodyCell>
+                <TableBodyCell class={tdClass}></TableBodyCell>
+                <TableBodyCell class={tdClass}></TableBodyCell>
+                <TableBodyCell class={tdClass}></TableBodyCell>
+              {/if}
+              <TableBodyCell class={tdClass}>
+                {#if source.id !== undefined}
+                  {@const yesterday = Date.now() - DAY_MS}
+                  <SourceBasicStats
+                    bind:this={statsComponents[`${source.id}full`]}
+                    sourceID={source.id}
+                  ></SourceBasicStats>
+                  (<SourceBasicStats
+                    bind:this={statsComponents[`${source.id}last`]}
+                    from={new Date(yesterday)}
+                    sourceID={source.id}
+                  ></SourceBasicStats>)
+                {/if}
+              </TableBodyCell>
+            </tr>
+          {/each}
+        {/snippet}
+        {#snippet bottomSlot()}
+          <div>
+            <div
+              class:invisible={!loadingSources}
+              class={loadingSources ? "loadingFadeIn" : ""}
+              class:mb-4={true}
+            >
+              Loading ...
+              <Spinner color="gray" size="4"></Spinner>
+            </div>
+            {#if appStore.isSourceManager()}
+              <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
+                <i class="bx bx-plus"></i>
+                <span>Add source</span>
+              </Button>
+            {/if}
+            <ErrorMessage error={sourcesError}></ErrorMessage>
+          </div>
+        {/snippet}
+      </CustomTable>
+    {/if}
+    {#await getMessage() then resp}
+      {#if resp.message}
+        {#if !appStore.isSourceManager() && !appStore.isImporter()}
+          {resp.message}
+        {/if}
+      {/if}
+    {/await}
+    <ErrorMessage error={sourcesError}></ErrorMessage>
+    <ErrorMessage error={messageError}></ErrorMessage>
+  </div>
 </div>
