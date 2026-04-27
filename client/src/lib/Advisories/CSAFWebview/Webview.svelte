@@ -284,7 +284,7 @@
           title="References"
         >
           <div class={sideScroll}>
-            <References references={appStore.state.webview.doc?.references} />
+            <References path="/document" references={appStore.state.webview.doc?.references} />
           </div>
         </TabItem>
       {/if}
@@ -362,7 +362,7 @@
     <FakeButton active>References</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
     <div class={sideScroll}>
-      <References references={appStore.state.webview.doc?.references} />
+      <References path="/document" references={appStore.state.webview.doc?.references} />
     </div>
   </div>
 {/if}

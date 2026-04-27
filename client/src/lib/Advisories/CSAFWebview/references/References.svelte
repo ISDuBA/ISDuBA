@@ -14,9 +14,10 @@
   import SearchableText from "../SearchableText.svelte";
 
   interface Props {
+    path: string;
     references: any;
   }
-  let { references }: Props = $props();
+  let { path, references }: Props = $props();
 
   const uid = $props.id();
 
@@ -30,17 +31,22 @@
       <TableBody>
         {#each references as reference, i (`references-${uid}-${i}`)}
           <TableBodyRow>
-            <TableBodyCell class={cellStyle}>{reference.category}</TableBodyCell>
+            <TableBodyCell class={cellStyle}>
+              <SearchableText
+                textPath={`${path}/references[${i}]/category`}
+                text={reference.category}
+              />
+            </TableBodyCell>
             <TableBodyCell class={cellStyle}
               ><p class="mb-2">
                 <SearchableText
-                  textPath={`/document/references[${i}]/summary`}
+                  textPath={`${path}/references[${i}]/summary`}
                   text={reference.summary}
                 ></SearchableText>
               </p>
               <Link class="underline" href={reference.url}
                 ><i class="bx bx-link"></i>
-                <SearchableText textPath={`/document/references[${i}]/url`} text={reference.url}
+                <SearchableText textPath={`${path}/references[${i}]/url`} text={reference.url}
                 ></SearchableText>
               </Link></TableBodyCell
             >
