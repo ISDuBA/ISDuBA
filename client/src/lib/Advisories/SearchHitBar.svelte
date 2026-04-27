@@ -10,6 +10,7 @@
 <script lang="ts">
   import { Button } from "flowbite-svelte";
   import { advisorySearchState } from "./advisory.svelte";
+  import { appStore } from "$lib/store.svelte";
 
   let index = $derived(advisorySearchState.hitIndex);
   let hits = $derived(advisorySearchState.searchHits);
@@ -33,12 +34,12 @@
   };
 </script>
 
-<div class="flex items-center gap-2">
+<div class="flex items-center gap-1">
   <Button onclick={prev} class="h-7 w-7 p-1" color="light" title="Previous hit">
     <i class="bx bx-chevron-up"></i>
   </Button>
-  <small>{index + 1}/{hits?.length} hits</small>
   <Button onclick={next} class="h-7 w-7 p-1" color="light" title="Next hit">
     <i class="bx bx-chevron-down"></i>
   </Button>
+  <small>{index + 1}/{hits?.length} hits for "{appStore.state.app.search.term}"</small>
 </div>
