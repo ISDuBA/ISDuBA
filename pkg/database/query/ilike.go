@@ -121,12 +121,19 @@ func (expr ILikeExpr) Search(haystack string) TextSections {
 // (think "..."). delims is a pair for delimeters to mark the sections.
 func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]string) string {
 
+	if len(s) == 0 || len(ts) == 0 {
+		return s
+	}
+
 	var (
 		instrs []func()
 		out    []rune
 	)
 
 	xfer := func(in []rune, start, end int) func() {
+		if start >= len(in) {
+			return func() {}
+		}
 		start, end = max(0, start), min(len(in), end)
 		return func() {
 			out = append(out, in[start:end]...)
@@ -142,18 +149,22 @@ func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]stri
 
 	for i, section := range ts {
 		if i > 0 {
-			last := ts[i-1]
-			endLast := last[0] + last[1]
-			gap := section[0] - endLast
-			if gap > 2*buffer {
+			prev := ts[i-1]
+			if gap := section[0] - (prev[0] + prev[1]); gap > 2*buffer {
 				add(filler)
-				// TODO: Implement me!
-
 			}
+		} else if section[0] > 0 {
+			add(filler)
 		}
+		add(xfer(sX, section[0]-buffer, section[0]))
 		add(delim0)
 		add(xfer(sX, section[0], section[0]+section[1]))
 		add(delim1)
+		add(xfer(sX, section[0]+section[1], section[0]+section[1]+buffer))
+	}
+
+	if last := ts[len(ts)-1]; last[0]+last[1] < len(sX) {
+		add(filler)
 	}
 
 	for _, instr := range instrs {
@@ -161,36 +172,4 @@ func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]stri
 	}
 
 	return string(out)
-
-	/*
-
-		// (over) estimate number of used runes.
-		n := 0
-		for _, s := range ts {
-			n += 2*buffer + s[1]
-		}
-		used := make(map[int]struct{}, n)
-		sX := []rune(s)
-		for _, s := range ts {
-			start, end := s[0]-buffer, s[0]+s[1]+buffer
-			for idx := start; idx < end; idx++ {
-				if idx >= 0 && idx < len(sX) {
-					used[idx] = struct{}{}
-				}
-			}
-		}
-		indices := slices.Sorted(maps.Keys(used))
-		if len(indices) == 0 {
-			return ""
-		}
-		// TODO: Add delims and fills.
-		_ = fill
-		_ = delims
-
-		out := make([]rune, 0, len(indices))
-		for _, idx := range indices {
-			out = append(out, sX[idx])
-		}
-		return string(out)
-	*/
 }
