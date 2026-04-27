@@ -35,7 +35,7 @@
     advisorySearchState
   } from "$lib/Advisories/advisory.svelte";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
-  import SearchHitBar from "./SearchHitBar.svelte";
+  import SearchMatchBar from "./SearchMatchBar.svelte";
 
   let { params } = $props();
 
@@ -574,7 +574,7 @@
             >{document.publisher ? document.publisher.name : ""}</Label
           >
           {#if appStore.state.app.search.term && appStore.state.webview.doc}
-            <SearchHitBar />
+            <SearchMatchBar />
           {/if}
         </div>
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
