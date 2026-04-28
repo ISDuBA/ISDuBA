@@ -20,18 +20,18 @@
   interface Props {
     colspan: number;
     doc: any;
-    hits?: any[];
+    matches?: any[];
     index: number;
   }
 
-  let { colspan, doc, hits = [], index }: Props = $props();
+  let { colspan, doc, matches = [], index }: Props = $props();
 
   let expanded = $state(false);
-  let visibleHits = $derived(expanded ? hits : hits.slice(0, 3));
+  let visibleHits = $derived(expanded ? matches : matches.slice(0, 3));
 </script>
 
-{#each visibleHits as hit, i (`hitlist-${i}`)}
-  {#if hit[searchColumnName]}
+{#each visibleHits as match, i (`hitlist-${i}`)}
+  {#if match[searchColumnName]}
     <tr
       class={index % 2 == 1
         ? "border-t border-t-gray-200 bg-white dark:border-t-gray-700 dark:bg-gray-800"
@@ -39,7 +39,7 @@
     >
       <TableBodyCell {colspan} class="px-0 py-0 whitespace-nowrap">
         <Link
-          ariaLabel={`Navigate directly to the ${i + 1}. hit`}
+          ariaLabel={`Navigate directly to the ${i + 1}. match`}
           class={index % 2 == 1
             ? "block hover:bg-gray-200 dark:hover:bg-gray-600"
             : "block hover:bg-gray-200 dark:hover:bg-gray-600"}
@@ -49,20 +49,20 @@
           }}
         >
           <span class="block px-2 py-1">
-            {@html DOMPurify.sanitize(hit[searchColumnName], {
+            {i + 1}. {@html DOMPurify.sanitize(match[searchColumnName], {
               USE_PROFILES: { html: true }
             })}
           </span>
         </Link>
-        {#if !expanded && visibleHits.length < hits.length && i === visibleHits.length - 1}
+        {#if !expanded && visibleHits.length < matches.length && i === visibleHits.length - 1}
           <Button
             onclick={() => {
               expanded = true;
             }}
             class="m-1 h-6 w-fit px-2 py-1"
             color="light"
-            title={`Show all hits for document ${visibleHits[0].tracking_id}`}
-            >More ({hits.slice(3).length})</Button
+            title={`Show all matches for document ${visibleHits[0].tracking_id}`}
+            >More ({matches.slice(3).length})</Button
           >
         {/if}
       </TableBodyCell>

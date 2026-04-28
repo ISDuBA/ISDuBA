@@ -20,7 +20,7 @@
     level?: number;
     highlight?: boolean;
     // path used inside advisory view when this component should open
-    // automatically if it contains the current search hit.
+    // automatically if it contains the current search match.
     path?: string;
     onOpen?: () => any;
     onClose?: () => any;

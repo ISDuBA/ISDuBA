@@ -548,7 +548,10 @@
   {/if}
 </Modal>
 
-<div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
+<div
+  class="relative grid h-fit w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2 lg:h-full"
+  id="top"
+>
   {#if documentNotFound}
     <div class="mb-2 font-bold">
       <i class="bx bx-error-circle" aria-hidden="true"></i>
@@ -557,14 +560,17 @@
   {:else if isInconsistent}
     <InconsistencyMessage {document} {params}></InconsistencyMessage>
   {:else if !couldNotLoadDocument && !isInconsistent}
-    <div class="flex w-full flex-none flex-col">
-      <div class="flex gap-2">
+    <div class="sticky -top-6 z-100 flex w-full flex-none flex-col bg-white pt-6 lg:static lg:pt-0">
+      <div class="flex gap-6">
         <Label class="text-lg">
           <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
           {#if appStore.state.webview.doc?.tlp.label}
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
         </Label>
+        {#if appStore.state.app.search.term && appStore.state.webview.doc}
+          <SearchMatchBar />
+        {/if}
       </div>
       <div
         class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
@@ -573,9 +579,6 @@
           <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
             >{document.publisher ? document.publisher.name : ""}</Label
           >
-          {#if appStore.state.app.search.term && appStore.state.webview.doc}
-            <SearchMatchBar />
-          {/if}
         </div>
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>

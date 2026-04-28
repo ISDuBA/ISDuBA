@@ -150,12 +150,12 @@ const fetchDocumentSSVC = async (
   return undefined;
 };
 
-interface SearchHit {
+interface SearchMatch {
   path: string;
   positions: number[][];
 }
 
-const fetchSearchHits = async (id: number): Promise<SearchHit[] | ErrorDetails> => {
+const fetchSearchHits = async (id: number): Promise<SearchMatch[] | ErrorDetails> => {
   const query = appStore.state.app.search.query;
   const response = await request(
     `/api/documents/texts/${id}?query=${encodeURIComponent(query ?? "")}`,
@@ -169,7 +169,7 @@ const fetchSearchHits = async (id: number): Promise<SearchHit[] | ErrorDetails> 
 
 type AdvisorySearchState = {
   scroll: boolean;
-  searchMatches: SearchHit[];
+  searchMatches: SearchMatch[];
   matchIndex: number;
 };
 
@@ -202,4 +202,4 @@ export {
   getAdvisoryAnchorLink,
   getAdvisorySearchHit
 };
-export type { AdvisoryVersion, SearchHit };
+export type { AdvisoryVersion, SearchMatch };

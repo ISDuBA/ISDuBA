@@ -34,11 +34,11 @@
   };
 </script>
 
-<div class="flex items-center gap-1">
-  <Button onclick={prev} class="h-7 w-7 p-1" color="light" title="Previous hit">
+<div class="sticky z-100 flex items-center gap-1 bg-white md:static xl:w-fit dark:bg-gray-900">
+  <Button onclick={prev} class="h-7 w-7 p-1" color="light" title="Previous match">
     <i class="bx bx-chevron-up"></i>
   </Button>
-  <Button onclick={next} class="h-7 w-7 p-1" color="light" title="Next hit">
+  <Button onclick={next} class="h-7 w-7 p-1" color="light" title="Next match">
     <i class="bx bx-chevron-down"></i>
   </Button>
   <small>{index + 1}/{matches?.length} matches for "{appStore.state.app.search.term}"</small>

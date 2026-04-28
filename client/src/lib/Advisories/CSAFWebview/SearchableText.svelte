@@ -8,7 +8,7 @@
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { advisorySearchState, type SearchHit } from "../advisory.svelte";
+  import { advisorySearchState, type SearchMatch } from "../advisory.svelte";
 
   interface Props {
     text: string | undefined;
@@ -18,7 +18,7 @@
   let uid = $props.id();
   let elementID = $derived(`SearchableText-${uid}`);
 
-  let hit: SearchHit | undefined = $derived.by(() => {
+  let match: SearchMatch | undefined = $derived.by(() => {
     if (advisorySearchState.matchIndex !== -1) {
       return advisorySearchState.searchMatches[advisorySearchState.matchIndex];
     }
@@ -26,15 +26,15 @@
   });
 
   let path: string | undefined = $derived.by(() => {
-    return hit?.path;
+    return match?.path;
   });
 
   let splitted: string[] | undefined = $derived.by(() => {
-    if (path != undefined && textPath == path && hit && text != undefined) {
+    if (path != undefined && textPath == path && match && text != undefined) {
       let t = text;
       const splits: string[] = [];
-      for (let i = 0; i < hit.positions.length; i++) {
-        const pos = hit.positions[i];
+      for (let i = 0; i < match.positions.length; i++) {
+        const pos = match.positions[i];
         const term = text.substring(pos[0], pos[0] + pos[1]);
         const splittedText = t.split(term);
         splits.push(splittedText[0], term);
