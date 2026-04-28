@@ -92,8 +92,6 @@ test("Tabs with details about document are working", async ({ page }) => {
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
-
-  await page.getByText("AVendor product_1 1.1").click();
   await page.getByText("pkg:npm/acme/CSAFPID_0001").scrollIntoViewIfNeeded({ timeout: 2000 });
 });
 
