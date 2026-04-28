@@ -91,7 +91,7 @@ func (c *Controller) aggregatedResults(
 	}
 
 	const (
-		buffer = 10    // Reading context
+		buffer = 20    // Reading context
 		fill   = "..." // Gap filler
 	)
 	delims := [2]string{`[!<`, `>!]`} // Used to mark the sections.
