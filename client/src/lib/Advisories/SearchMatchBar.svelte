@@ -34,7 +34,7 @@
   };
 </script>
 
-<div class="flex items-center gap-1">
+<div class="sticky z-100 flex items-center gap-1 bg-white md:static xl:w-fit dark:bg-gray-900">
   <Button onclick={prev} class="h-7 w-7 p-1" color="light" title="Previous hit">
     <i class="bx bx-chevron-up"></i>
   </Button>
