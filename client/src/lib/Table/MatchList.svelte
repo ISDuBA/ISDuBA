@@ -49,7 +49,7 @@
           }}
         >
           <span class="block px-2 py-1">
-            {@html DOMPurify.sanitize(match[searchColumnName], {
+            {i + 1}. {@html DOMPurify.sanitize(match[searchColumnName], {
               USE_PROFILES: { html: true }
             })}
           </span>
