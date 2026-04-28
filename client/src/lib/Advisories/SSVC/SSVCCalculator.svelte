@@ -298,8 +298,8 @@
         disabled={disabled || !isEditing}
         onKeyup={(e) => {
           resetError();
-          if (e.detail.key === "Enter") saveSSVC(vectorInput);
-          if (e.detail.key === "Escape") toggleEditing();
+          if (e.detail?.key === "Enter") saveSSVC(vectorInput);
+          if (e.detail?.key === "Escape") toggleEditing();
         }}
         bind:value={vectorInput}
         bind:isValid={isVectorInputValid}

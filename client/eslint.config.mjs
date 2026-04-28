@@ -44,7 +44,7 @@ export default [
       }
     },
     rules: {
-      "no-console": "error",
+      "no-console": ["error", { allow: ["warn", "error"] }],
       "no-control-regex": 0,
       "no-undef": "off",
       "@typescript-eslint/no-explicit-any": "off",

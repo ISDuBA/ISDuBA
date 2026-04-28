@@ -26,6 +26,15 @@
   }
   let { ssvcData }: Props = $props();
 
+  type TooltipState = undefined | "success" | "failure";
+  let tooltipStates: {
+    prev: TooltipState;
+    current: TooltipState;
+  } = $state({
+    prev: undefined,
+    current: undefined
+  });
+
   const getLabel = () => {
     let label = "SSVC ";
     if (!ssvcData.prev_ssvc) {
@@ -43,7 +52,48 @@
   });
 
   const tdClass = "py-2 px-2";
+
+  const copySSVC = async (state: "prev" | "current", vector: string) => {
+    try {
+      await navigator.clipboard.writeText(vector);
+      tooltipStates[state] = "success";
+      setTimeout(() => {
+        tooltipStates[state] = undefined;
+      }, 2000);
+    } catch (error) {
+      console.error(error);
+      tooltipStates[state] = "failure";
+    }
+  };
 </script>
+
+{#snippet copyButton(state: "prev" | "current", vector: string)}
+  <div class="relative">
+    <button
+      onclick={() => {
+        copySSVC(state, vector);
+      }}
+      aria-label={`Copy vector ${ssvcData.prev_ssvc}`}
+      class="cursor-pointer"
+    >
+      <i class="bx bx-copy"></i>
+    </button>
+    {#if tooltipStates[state]}
+      <div
+        class="ssvc-tooltip absolute -top-[80%] left-[calc(100%+4px)] z-10 mt-1 rounded border-1 border-gray-400 bg-white p-1 text-xs text-gray-800 dark:text-gray-200"
+      >
+        {#if tooltipStates[state] === "success"}
+          <div class="flex items-center gap-1">
+            <i class="bx bx-check text-lg"></i>
+            <span>Copied</span>
+          </div>
+        {:else}
+          Error: Couldn't copy the vector.
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/snippet}
 
 <TableBodyCell class={tdClass}>
   <div class="flex flex-col">
@@ -62,11 +112,17 @@
     </div>
     <div class="flex flex-row items-baseline justify-between">
       <small class="flex flex-col items-end text-[10px] text-gray-400">
-        <div>
+        <div class="flex gap-1">
           {`${ssvcData.prev_ssvc ? "TO: " : ""}${ssvcData.ssvc}`}
+          {#if ssvcData.ssvc}
+            {@render copyButton("current", ssvcData.ssvc)}
+          {/if}
         </div>
         {#if ssvcData.prev_ssvc}
-          <div>FROM: {ssvcData.prev_ssvc}</div>
+          <div class="flex gap-1">
+            <span>FROM: {ssvcData.prev_ssvc}</span>
+            {@render copyButton("prev", ssvcData.prev_ssvc)}
+          </div>
         {/if}
       </small>
       <div>

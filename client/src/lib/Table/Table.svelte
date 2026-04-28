@@ -32,7 +32,7 @@
   import { appStore } from "$lib/store.svelte";
   import { getPublisher } from "$lib/publisher";
   import CIconButton from "$lib/Components/CIconButton.svelte";
-  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import { SEARCHTYPES } from "$lib/Queries/query";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { areArraysEqual } from "$lib/utils";
@@ -550,7 +550,7 @@
                       {@render advisoryLink(item)}
                       <div class="m-2 table w-16 text-wrap">
                         {#if item[column]}
-                          <SsvcBadge vector={item[column]}></SsvcBadge>
+                          <SSVCBadge vector={item[column]}></SSVCBadge>
                         {/if}
                       </div></TableBodyCell
                     >

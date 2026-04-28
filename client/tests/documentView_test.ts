@@ -64,9 +64,10 @@ test("Advisory view is working", async ({ page }) => {
   // Don't enter ":" and "/" for the decisions because they are added automatically by the client.
   const secondSSVC = "E:A/A:Y/T:T/P:E/B:I/M:H/D:A/2025-10-15T17:35:23Z/";
   const manualEnteredSSVC = "EAAYTTPEBIMHDA2025-10-15T17:35:23Z/";
-  await page.getByLabel(vectorStart).fill("");
+  const ssvcInput = page.getByRole("textbox", { name: vectorStart });
+  await ssvcInput.fill("");
   // Need to call pressSequentially because the client listens to events like "keyup".
-  await page.getByLabel(vectorStart).pressSequentially(manualEnteredSSVC);
+  await ssvcInput.pressSequentially(manualEnteredSSVC);
   await page.getByRole("button", { name: "Save" }).click();
   const newSsvcBadge = page.getByText("Attend").first();
   await expect(newSsvcBadge).toBeVisible();
