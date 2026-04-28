@@ -40,7 +40,7 @@
   import { getAdvisoryAnchorLink, updateMultipleStates } from "$lib/Advisories/advisory.svelte";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
   import type { SearchParameters } from "$lib/Search/search.svelte";
-  import HitList from "./HitList.svelte";
+  import MatchList from "./MatchList.svelte";
   import { routerState } from "$routes/router.svelte";
   import Link from "$lib/Components/Link.svelte";
 
@@ -677,7 +677,7 @@
             </tr>
             {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)}
               {#if doc.data}
-                <HitList colspan={columns.length} doc={item} hits={doc.data} index={i} />
+                <MatchList colspan={columns.length} doc={item} matches={doc.data} index={i} />
               {/if}
             {/if}
           {/each}
