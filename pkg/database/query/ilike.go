@@ -131,7 +131,7 @@ func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]stri
 	)
 
 	xfer := func(in []rune, start, end int) func() {
-		if start >= len(in) {
+		if start >= len(in) || end <= 0 {
 			return func() {}
 		}
 		start, end = max(0, start), min(len(in), end)
