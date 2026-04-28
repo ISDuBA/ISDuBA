@@ -8,6 +8,7 @@
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
+  import { splitMatches } from "$lib/utils";
   import { advisorySearchState, type SearchMatch } from "../advisory.svelte";
 
   interface Props {
@@ -31,17 +32,7 @@
 
   let splitted: string[] | undefined = $derived.by(() => {
     if (path != undefined && textPath == path && match && text != undefined) {
-      let t = text;
-      const splits: string[] = [];
-      for (let i = 0; i < match.positions.length; i++) {
-        const pos = match.positions[i];
-        const term = text.substring(pos[0], pos[0] + pos[1]);
-        const splittedText = t.split(term);
-        splits.push(splittedText[0], term);
-        t = splittedText[1];
-      }
-      if (t) splits.push(t);
-      return splits;
+      return splitMatches(text, match?.positions);
     }
     return [];
   });

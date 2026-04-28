@@ -9,13 +9,11 @@
 -->
 
 <script lang="ts">
-  import DOMPurify from "dompurify";
   import { Button, TableBodyCell } from "flowbite-svelte";
   import { searchColumnName } from "./defaults";
   import { advisorySearchState, getAdvisoryAnchorLink } from "$lib/Advisories/advisory.svelte";
   import Link from "$lib/Components/Link.svelte";
-
-  /* eslint-disable svelte/no-at-html-tags */
+  import { splitMatches } from "$lib/utils";
 
   interface Props {
     colspan: number;
@@ -25,13 +23,27 @@
   }
 
   let { colspan, doc, matches = [], index }: Props = $props();
+  let uid = $props.id();
 
   let expanded = $state(false);
   let visibleHits = $derived(expanded ? matches : matches.slice(0, 3));
+
+  const delims = ["[!<", ">!]"];
+
+  const getSplits = (text: string): string[] => {
+    const matchRegex = /\[!<.*?>!\]/g;
+    let regexMatches;
+    const positions = [];
+    while ((regexMatches = matchRegex.exec(text)) !== null) {
+      positions.push([regexMatches.index, regexMatches["0"].length]);
+    }
+    return splitMatches(text, positions);
+  };
 </script>
 
 {#each visibleHits as match, i (`hitlist-${i}`)}
   {#if match[searchColumnName]}
+    {@const splits = getSplits(match[searchColumnName])}
     <tr
       class={index % 2 == 1
         ? "border-t border-t-gray-200 bg-white dark:border-t-gray-700 dark:bg-gray-800"
@@ -49,9 +61,15 @@
           }}
         >
           <span class="block px-2 py-1">
-            {i + 1}. {@html DOMPurify.sanitize(match[searchColumnName], {
-              USE_PROFILES: { html: true }
-            })}
+            {i + 1}.
+            {#each splits as s, index (`MatchList-${uid}-${index}`)}
+              {#if (index + 1) % 2 === 0}
+                {@const sanitized = s.replace(delims[0], "").replace(delims[1], "")}
+                <span class="bg-yellow-200 dark:bg-yellow-800">{sanitized}</span>
+              {:else}
+                <span>{s}</span>
+              {/if}
+            {/each}
           </span>
         </Link>
         {#if !expanded && visibleHits.length < matches.length && i === visibleHits.length - 1}
