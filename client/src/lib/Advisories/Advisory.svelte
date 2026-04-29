@@ -568,7 +568,7 @@
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
         </Label>
-        {#if appStore.state.app.search.term && appStore.state.webview.doc}
+        {#if appStore.state.app.search.term && appStore.state.webview.doc && !appStore.state.app.search.advanced}
           <SearchMatchBar />
         {/if}
       </div>

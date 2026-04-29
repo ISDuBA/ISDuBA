@@ -52,6 +52,7 @@ type AppStore = {
     };
     isDarkMode: boolean;
     search: {
+      advanced: boolean;
       count: number | null;
       query: string | null;
       offset: number | null;
@@ -125,6 +126,7 @@ const generateInitialState = (): AppStore => {
       isToolboxOpen: false,
       isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false,
       search: {
+        advanced: false,
         count: null,
         query: null,
         offset: null,
@@ -372,6 +374,10 @@ export const appStore = {
 
   setSearchType: (newType: SEARCHTYPES) => {
     state.app.search.type = newType;
+  },
+
+  setSearchAdvanced: (isAdvanced: boolean) => {
+    state.app.search.advanced = isAdvanced;
   },
 
   setDocumentsToDelete: (documents: any[]) => {
