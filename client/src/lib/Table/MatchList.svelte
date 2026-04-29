@@ -28,6 +28,7 @@
   let expanded = $state(false);
   let visibleHits = $derived(expanded ? matches : matches.slice(0, 3));
 
+  // These have to be the same as defined in the backend code.
   const delims = ["[!<", ">!]"];
 
   const getSplits = (text: string): string[] => {
