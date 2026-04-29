@@ -180,10 +180,8 @@ func (c *Controller) aggregatedResults(
 							return fmt.Errorf("writing window failed %w", err)
 						}
 					}
-					if _, err := fmt.Fprint(w, "]}"); err != nil {
-						return err
-					}
-					return nil
+					_, err := fmt.Fprint(w, "]}")
+					return err
 				})))
 			return trackedErr
 		},
