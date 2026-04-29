@@ -14,9 +14,10 @@
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
   import XGenericUri from "./XGenericURI.svelte";
   import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
+  import type { HelperToIdentifyTheProduct } from "$lib/pmdTypes";
 
   interface Props {
-    helper: any;
+    helper: HelperToIdentifyTheProduct;
     path: string;
   }
   let { helper, path }: Props = $props();
@@ -37,27 +38,36 @@
   {/if}
   {#if helper.hashes}
     {#each helper.hashes as hash, i (`pidh-${uid}-${i}`)}
-      <FileHash {hash} path={`${path}/hashes`} />
+      <KeyValue
+        keys={["Filename"]}
+        values={[hash.filename]}
+        paths={[`${extendedPath}/hashes[${i}]/filename`]}
+      />
+      <FileHash hash={hash.file_hashes} path={`${extendedPath}/hashes[${i}]`} />
     {/each}
   {/if}
   {#if helper.model_numbers}
-    <ValueList label="Model numbers" values={helper.model_numbers} path={`${path}/model_numbers`} />
+    <ValueList
+      label="Model numbers"
+      values={helper.model_numbers}
+      path={`${extendedPath}/model_numbers`}
+    />
   {/if}
   {#if helper.purl}
     <KeyValue keys={["purl"]} values={[helper.purl]} paths={[`${extendedPath}/purl`]} />
   {/if}
   {#if helper.sbom_urls}
-    <ValueList label="SBOM URLs" values={helper.sbom_urls} path={`${path}/sbom_urls`} />
+    <ValueList label="SBOM URLs" values={helper.sbom_urls} path={`${extendedPath}/sbom_urls`} />
   {/if}
   {#if helper.serial_numbers}
     <ValueList
       label="Serial numbers"
       values={helper.serial_numbers}
-      path={`${path}/serial_numbers`}
+      path={`${extendedPath}/serial_numbers`}
     />
   {/if}
   {#if helper.skus}
-    <ValueList label="SKUs" values={helper.skus} path={`${path}/skus`} />
+    <ValueList label="SKUs" values={helper.skus} path={`${extendedPath}/skus`} />
   {/if}
   {#if helper.x_generic_uris}
     <XGenericUri x_generic_uris={helper.x_generic_uris} path={`${extendedPath}/x_generic_uris`} />
