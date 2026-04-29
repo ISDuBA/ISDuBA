@@ -38,7 +38,7 @@
     while ((regexMatches = matchRegex.exec(text)) !== null) {
       positions.push([regexMatches.index, regexMatches["0"].length]);
     }
-    return splitMatches(text, positions);
+    return splitMatches(`${text}`, positions);
   };
 </script>
 

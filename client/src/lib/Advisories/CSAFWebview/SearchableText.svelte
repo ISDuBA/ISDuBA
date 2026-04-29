@@ -12,7 +12,7 @@
   import { advisorySearchState, type SearchMatch } from "../advisory.svelte";
 
   interface Props {
-    text: string | undefined;
+    text: number | string | undefined;
     textPath: string;
   }
   let { textPath = "", text }: Props = $props();
@@ -32,7 +32,7 @@
 
   let splitted: string[] | undefined = $derived.by(() => {
     if (path != undefined && textPath == path && match && text != undefined) {
-      return splitMatches(text, match?.positions);
+      return splitMatches(`${text}`, match?.positions);
     }
     return [];
   });
