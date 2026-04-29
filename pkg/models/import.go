@@ -18,6 +18,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/jackc/pgx/v5"
@@ -53,6 +54,15 @@ func chainReplacers(replacers ...replacer) replacer {
 type indexer[T comparable] struct {
 	elements        []T
 	indexToElements map[T]int
+}
+
+func badStrings(bad *[]string) replacer {
+	return func(_ []string, v string) (any, bool) {
+		if strings.ContainsRune(v, unicode.ReplacementChar) {
+			*bad = append(*bad, v)
+		}
+		return v, false
+	}
 }
 
 func newIndexer[T comparable]() *indexer[T] {
@@ -313,10 +323,12 @@ func ImportDocumentData(
 
 	idxer := newIndexer[string]()
 
+	var bad []string
 	var reps []replacer
 
 	transformJSON(document, chainReplacers(
 		append(reps,
+			badStrings(&bad),
 			storer(&tlp, &tlpOk, "document", "distribution", "tlp", "label"),
 			storer(&publisher, &publisherOK, "document", "publisher", "name"),
 			storer(&trackingID, &trackingIDOK, "document", "tracking", "id"),
@@ -327,6 +339,10 @@ func ImportDocumentData(
 			keepByValues(excludeValues),
 			replaceByIndex(idxer.index),
 		)...))
+
+	if len(bad) > 0 {
+		return 0, fmt.Errorf("invalid strings found: %+v", bad)
+	}
 
 	if !publisherOK {
 		return 0, errors.New("missing /document/publisher/name")
