@@ -42,7 +42,7 @@ const splitMatches = (text: string, positions: number[][]): string[] => {
   for (let i = 0; i < positions.length; i++) {
     const pos = positions[i];
     const term = text.substring(pos[0], pos[0] + pos[1]);
-    const splittedText = t.split(term);
+    const splittedText = [t.slice(0, pos[0]), t.slice(pos[0] + pos[1])];
     splits.push(splittedText[0], term);
     t = splittedText[1];
   }
