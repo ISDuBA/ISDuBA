@@ -124,11 +124,22 @@
     push("/diff");
   };
 
+  // Get document as an object that can be compared with the other documents.
+  const getComparableDocument = () => {
+    return {
+      publisher: document.publisher.name,
+      tracking_id: document.tracking.id,
+      tracking_version: document.tracking.version,
+      tracking_status: document.tracking.status
+    };
+  };
+
   // Find out if there is a document of the same advisory with same version number but different tracking status because we show
   // tracking status only if there are at least two documents with same version number.
   const hasDocWithSameVersion = (doc: any) => {
+    const docs = [...Object.values(documents), getComparableDocument()];
     return (
-      Object.values(documents).find(
+      docs.find(
         (d: any) =>
           d.publisher === doc.publisher &&
           d.tracking_id === doc.tracking_id &&
@@ -188,8 +199,8 @@
               advisoryState,
               document?.tracking.version,
               ssvc,
-              undefined,
-              false
+              document?.tracking.status,
+              hasDocWithSameVersion(getComparableDocument())
             )}
           </div>
         </TableHeadCell>
