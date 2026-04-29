@@ -93,7 +93,11 @@
 
   const handleInput = async (event: any) => {
     await tick();
-    const newInput = event.target.value;
+    let newInput: string = event.target.value.trim();
+    if (newInput.startsWith("SSVCv2/")) {
+      newInput = newInput.replace("SSVCv2/", "");
+    }
+    inputValue = newInput;
     value = `${vectorStart}${inputValue}`;
     isValid = isVectorValid(newInput);
     if (onKeyup) {

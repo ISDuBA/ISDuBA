@@ -25,7 +25,7 @@
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./Events/Events.svelte";
   import Tlp from "./TLP.svelte";
-  import SsvcBadge from "./SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
   import {
     type AdvisoryVersion,
@@ -576,7 +576,7 @@
             <div class="flex flex-row items-center">
               {#if ssvcVector}
                 {#if !isSSVCediting}
-                  <SsvcBadge vector={ssvcVector}></SsvcBadge>
+                  <SSVCBadge vector={ssvcVector}></SSVCBadge>
                 {/if}
               {/if}
               {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
