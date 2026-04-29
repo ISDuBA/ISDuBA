@@ -561,7 +561,7 @@
     <InconsistencyMessage {document} {params}></InconsistencyMessage>
   {:else if !couldNotLoadDocument && !isInconsistent}
     <div class="sticky -top-6 z-100 flex w-full flex-none flex-col bg-white pt-6 lg:static lg:pt-0">
-      <div class="flex gap-6">
+      <div class="flex flex-wrap gap-x-6 gap-y-1">
         <Label class="text-lg">
           <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
           {#if appStore.state.webview.doc?.tlp.label}
