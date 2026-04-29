@@ -413,6 +413,8 @@
     advisoryVersions = [];
     ssvcVector = "";
     appStore.setDocument(null);
+    await loadDocument();
+    await getAdvisoryVersions();
     if (appStore.state.app.search.query) {
       const hitsResult = await fetchSearchHits(params.id);
       if (Array.isArray(hitsResult)) {
@@ -424,8 +426,6 @@
         loadSearchHitsError = hitsResult;
       }
     }
-    await loadDocument();
-    await getAdvisoryVersions();
     if (couldNotLoadDocument || isInconsistent) return;
     if (document) {
       await loadFourCVEs();

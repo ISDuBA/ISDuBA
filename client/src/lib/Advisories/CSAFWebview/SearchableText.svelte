@@ -40,9 +40,11 @@
   $effect(() => {
     // Scroll to a match when the advisory view was just opened and when the user switches to the previous/next match.
     if (path != undefined && textPath == path && advisorySearchState.scroll) {
-      document
-        .getElementById(elementID)
-        ?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+      setTimeout(() => {
+        document
+          .getElementById(elementID)
+          ?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+      }, 200);
     }
   });
 </script>
