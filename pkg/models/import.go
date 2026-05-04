@@ -56,6 +56,11 @@ type indexer[T comparable] struct {
 	indexToElements map[T]int
 }
 
+// badStrings acts as a detector for decoding errors from UTF-8.
+// https://pkg.go.dev/encoding/json#Unmarshal states:
+// [...] When unmarshaling quoted strings, invalid UTF-8
+// or invalid UTF-16 surrogate pairs are not treated as an error.
+// Instead, they are replaced by the Unicode replacement character U+FFFD. [...]
 func badStrings(bad *[]string) replacer {
 	return func(_ []string, v string) (any, bool) {
 		if strings.ContainsRune(v, unicode.ReplacementChar) {
@@ -340,6 +345,7 @@ func ImportDocumentData(
 			replaceByIndex(idxer.index),
 		)...))
 
+	// Check if there where some string decoding errors.
 	if len(bad) > 0 {
 		return 0, fmt.Errorf("invalid strings found: %+v", bad)
 	}
