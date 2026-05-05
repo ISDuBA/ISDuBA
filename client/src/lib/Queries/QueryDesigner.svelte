@@ -377,32 +377,28 @@
     <div class="mb-4 flex gap-4">
       {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
         <div class="flex flex-row items-center gap-x-2">
-          <span>Global:</span>
           <CCheckbox
             checked={currentSearch.global}
             onChanged={() => {
               currentSearch.global = !currentSearch.global;
-            }}
-          ></CCheckbox>
+            }}>Global</CCheckbox
+          >
         </div>
       {/if}
       <div class="flex flex-row items-center gap-x-2">
-        <span>Dashboard:</span>
         <CCheckbox
           checked={currentSearch.dashboard}
           disabled={!isAllowedToEdit}
           onChanged={() => {
             currentSearch.dashboard = !currentSearch.dashboard;
-          }}
-        ></CCheckbox>
+          }}>Dashboard</CCheckbox
+        >
       </div>
       <div class="flex flex-row items-center gap-x-2">
-        <span>Hide:</span>
-        <CCheckbox bind:checked={hide}></CCheckbox>
+        <CCheckbox bind:checked={hide}>Hide</CCheckbox>
       </div>
       <div class="flex flex-row items-center gap-x-2">
-        <span>Default:</span>
-        <CCheckbox bind:checked={defaultQuery} disabled={!isAllowedToEdit}></CCheckbox>
+        <CCheckbox bind:checked={defaultQuery} disabled={!isAllowedToEdit}>Default</CCheckbox>
       </div>
     </div>
     <div class="mb-6">
