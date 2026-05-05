@@ -116,7 +116,11 @@
             appStore.setIsUserLoggedIn(true);
             appStore.setSessionExpired(false);
             appStore.setTokenParsed(jwtDecode(user.access_token));
-            push("/");
+            if (appStore.state.app.redirect) {
+              push(appStore.state.app.redirect);
+            } else {
+              push("/");
+            }
             const hasAnyRole = checkUserForRoles();
             if (!hasAnyRole) {
               appStore.setSessionExpired(true);
@@ -282,6 +286,10 @@
 
   const conditionsFailed = (event: any) => {
     if (event.detail.userData.loginRequired) {
+      const location = event.detail.location;
+      if (location) {
+        appStore.setRedirect(location.includes("&") ? location.split("&")[0] : location);
+      }
       push("/login");
     }
   };
