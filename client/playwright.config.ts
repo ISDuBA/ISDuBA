@@ -36,7 +36,7 @@ export default defineConfig({
         // Use prepared auth state.
         storageState: "playwright/.auth/user.json",
         screenshot: "only-on-failure",
-        trace: "retain-on-failure"
+        trace: "on"
       },
       dependencies: ["setup"],
       outputDir: "./playwright/output"
@@ -49,7 +49,7 @@ export default defineConfig({
         // Use prepared auth state.
         storageState: "playwright/.auth/user.json",
         screenshot: "only-on-failure",
-        trace: "retain-on-failure"
+        trace: "on"
       },
       dependencies: ["setup"],
       outputDir: "./playwright/output"
