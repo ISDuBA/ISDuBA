@@ -21,7 +21,8 @@ test("Sources are working", async ({ page }) => {
   await page.getByLabel("Domain/PMD").fill("intevation.de");
   await checkUrlButton.click();
   const sourceName = `Source ${Math.random()}`;
-  await page.getByLabel("Name").fill(sourceName);
+  // The input element listens to input events so we have to use pressSequentially instead of fill
+  await page.getByLabel("Name").pressSequentially(sourceName);
   await page.getByText("Advanced options").click();
   await page.getByLabel("Strict mode").check();
   const unsubscribeButton = await page.getByRole("button", {
@@ -32,6 +33,15 @@ test("Sources are working", async ({ page }) => {
   expect(unsubscribeButton).toBeDisabled();
   await page.getByLabel("Enable feed with label", { exact: false }).first().click();
   await page.getByRole("button", { name: "Save source", exact: false }).click();
+
+  // Ensure that we left the form to create the source
+  await expect(page.getByText("Delete source")).toBeVisible();
+  // Ensure the content of the next page is loaded
+  await expect(page.getByText("Canonical URL")).toBeVisible();
+  await page.getByRole("button", { name: "Credentials" }).click();
+  await expect(page.getByText("Client cert passphrase")).toBeVisible();
+  // Check that the name was saved correctly
+  await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(sourceName);
 
   // Test if input fields for time range fire requests to /api/sources/feed.
   await page.getByLabel("View feed details").click();
