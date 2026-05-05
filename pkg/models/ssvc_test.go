@@ -15,7 +15,10 @@ func TestSSVC(t *testing.T) {
 		vector string
 		pass   bool
 	}{
+		{"SSVCv2/E:N/A:N/T:P/P:M/B:M/M:L/D:T/2024-03-13T10:33:45Z", false},
 		{"SSVCv2/E:N/A:N/T:P/P:M/B:M/M:L/D:T/2024-03-13T10:33:45Z/", true},
+		{"SSVCv2/E:N/E:N/T:P/P:M/B:M/M:L/D:T/2024-03-13T10:33:45Z/", false},
+		{"SSVCv2/A:N/E:N/T:P/P:M/B:M/M:L/D:T/2024-03-13T10:33:45Z/", false},
 		{"SSVCv2/E:N/A:N/T:P/M:L/D:T/2024-03-13T10:34:39Z/", true},
 		{"SSVCv2/E:N/A:N/T:P/M:L/D:T/2024-03-13T10:34:39Z", false},
 		{"XXX/E:N/A:N/T:P/M:L/D:T/2024-03-13T10:34:39Z/", false},

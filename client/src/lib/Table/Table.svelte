@@ -107,13 +107,17 @@
     ) ?? []
   );
   let allowedWorkflowStateChanges = $derived(
-    getAllowedWorkflowChanges(selectedDocuments?.map((d: any) => d.state) ?? [])
+    getAllowedWorkflowChanges(
+      selectedDocuments?.map((d: any) => {
+        return d.data[0].state;
+      }) ?? []
+    )
   );
-  let workflowOptions = $derived(
-    allowedWorkflowStateChanges.map((c) => {
+  let workflowOptions = $derived.by(() => {
+    return allowedWorkflowStateChanges.map((c) => {
       return { name: c.to, value: c.to };
-    })
-  );
+    });
+  });
   let isMultiSelectionAllowed = $derived(
     isRoleIncluded(appStore.getRoles(), [EDITOR, IMPORTER, ADMIN, REVIEWER]) &&
       ((tableType !== SEARCHTYPES.EVENT && appStore.isAdmin()) ||
@@ -134,8 +138,8 @@
     selectedDocuments?.forEach((doc: any) => {
       changes.push({
         state: selectedState,
-        publisher: doc.publisher,
-        tracking_id: doc.tracking_id
+        publisher: doc.data[0].publisher,
+        tracking_id: doc.data[0].tracking_id
       });
     });
     changeWorkflowStateError = null;
@@ -355,8 +359,8 @@
           <div class="flex items-center">
             <input
               class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-800`}
-              onchange={() => {
-                let tmpCurrentPage = currentPage;
+              onchange={(event: any) => {
+                let tmpCurrentPage = event.target.value;
                 if (!parseInt("" + tmpCurrentPage)) tmpCurrentPage = 1;
                 tmpCurrentPage = Math.floor(tmpCurrentPage);
                 if (tmpCurrentPage < 1) tmpCurrentPage = 1;
