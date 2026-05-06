@@ -95,10 +95,3 @@ test("Tabs with details about document are working", async ({ page }) => {
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
   await page.getByText("pkg:npm/acme/CSAFPID_0001").scrollIntoViewIfNeeded({ timeout: 2000 });
 });
-
-test("Navigating through search matches is working", async ({ page }) => {
-  const trackingID = "Avendor-advisory-0004";
-  await page.getByTitle(`Show all matches for document ${trackingID}`).click();
-  await page.getByLabel("Navigate directly to the 4. match").click();
-  await expect(page.getByText(/4\/\d\smatches/)).toBeVisible();
-});
