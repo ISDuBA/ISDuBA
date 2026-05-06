@@ -13,6 +13,7 @@
   import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { onMount } from "svelte";
   import Collapsible from "../Collapsible.svelte";
+  import { advisorySearchState } from "$lib/Advisories/advisory.svelte";
 
   interface Props {
     notes: Note[];
@@ -31,6 +32,22 @@
     openNote = notes.map((note) => {
       return initOpen || note.category === (hasDescription ? "description" : "summary");
     });
+  });
+
+  $effect(() => {
+    if (path) {
+      if (advisorySearchState.matchIndex !== -1) {
+        const hitPath = advisorySearchState.searchMatches[advisorySearchState.matchIndex]?.path;
+        const shouldOpen = hitPath !== undefined && hitPath.startsWith(path);
+        if (shouldOpen) {
+          for (let i = 0; i < openNote.length; i++) {
+            if (hitPath.startsWith(`${path}/notes[${i}]`)) {
+              openNote[i] = true;
+            }
+          }
+        }
+      }
+    }
   });
 </script>
 
