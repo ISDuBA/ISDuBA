@@ -170,10 +170,12 @@
       }
       if (!response.ok && response.error) {
         saveErrorMessage = getErrorDetails(`Failed to save query.`, response);
-        if (response.error === "409")
+        if (response.error === "409") {
           saveErrorMessage = getErrorDetails(
             `A query with the name "${currentSearch.name}" already exists.`
           );
+        }
+        return;
       }
     }
     // Save hide/ignore
@@ -184,7 +186,7 @@
     ) {
       const ignore = !ignoredQueries.includes(Number(id)) && hide === true;
       ({ ignoredQueries, errorMessage: saveErrorMessage } = await setIgnored(Number(id), ignore));
-      if (errorMessage === null) {
+      if (saveErrorMessage === null) {
         push(`/queries/`);
       }
     } else if (response?.ok !== false) {
@@ -377,32 +379,28 @@
     <div class="mb-4 flex gap-4">
       {#if isRoleIncluded(appStore.getRoles(), [ADMIN])}
         <div class="flex flex-row items-center gap-x-2">
-          <span>Global:</span>
           <CCheckbox
             checked={currentSearch.global}
             onChanged={() => {
               currentSearch.global = !currentSearch.global;
-            }}
-          ></CCheckbox>
+            }}>Global</CCheckbox
+          >
         </div>
       {/if}
       <div class="flex flex-row items-center gap-x-2">
-        <span>Dashboard:</span>
         <CCheckbox
           checked={currentSearch.dashboard}
           disabled={!isAllowedToEdit}
           onChanged={() => {
             currentSearch.dashboard = !currentSearch.dashboard;
-          }}
-        ></CCheckbox>
+          }}>Dashboard</CCheckbox
+        >
       </div>
       <div class="flex flex-row items-center gap-x-2">
-        <span>Hide:</span>
-        <CCheckbox bind:checked={hide}></CCheckbox>
+        <CCheckbox bind:checked={hide}>Hide</CCheckbox>
       </div>
       <div class="flex flex-row items-center gap-x-2">
-        <span>Default:</span>
-        <CCheckbox bind:checked={defaultQuery} disabled={!isAllowedToEdit}></CCheckbox>
+        <CCheckbox bind:checked={defaultQuery} disabled={!isAllowedToEdit}>Default</CCheckbox>
       </div>
     </div>
     <div class="mb-6">

@@ -73,7 +73,7 @@
     }
   }}
 >
-  <span class="ps-2">
+  <span class="p1-2">
     {@render children?.()}
   </span>
 </Checkbox>
