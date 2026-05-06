@@ -317,8 +317,9 @@ func (ads aggregatedDocuments) window(limit, offset int64) iter.Seq[*aggregatedD
 		end = min(int(offset+limit), len(ads))
 	}
 	return func(yield func(*aggregatedDocument) bool) {
-		for i := range ads[start:end] {
-			if !yield(&ads[i]) {
+		window := ads[start:end]
+		for i := range window {
+			if !yield(&window[i]) {
 				return
 			}
 		}
