@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, TableBodyCell } from "flowbite-svelte";
+  import { TableBodyCell } from "flowbite-svelte";
   import { searchColumnName } from "./defaults";
   import { advisorySearchState, getAdvisoryAnchorLink } from "$lib/Advisories/advisory.svelte";
   import Link from "$lib/Components/Link.svelte";
@@ -18,11 +18,12 @@
   interface Props {
     colspan: number;
     doc: any;
+    externalIndex: number;
     matches?: any[];
     index: number;
   }
 
-  let { colspan, doc, matches = [], index }: Props = $props();
+  let { colspan, doc, externalIndex, matches = [], index }: Props = $props();
   let uid = $props.id();
 
   let expanded = $state(false);
@@ -40,29 +41,35 @@
     }
     return splitMatches(`${text}`, positions);
   };
+
+  const getTableRowClass = (index: number) => {
+    let tableRowClass = "";
+    if (index === 0) {
+      tableRowClass = tableRowClass + "border-t border-t-gray-300 dark:border-t-gray-600 ";
+    }
+    if (externalIndex % 2 == 1) {
+      tableRowClass = tableRowClass + "bg-white dark:bg-gray-800";
+    } else {
+      tableRowClass = tableRowClass + "bg-gray-100 dark:bg-gray-700";
+    }
+    return tableRowClass;
+  };
 </script>
 
 {#each visibleHits as match, i (`hitlist-${i}`)}
   {#if match[searchColumnName]}
     {@const splits = getSplits(match[searchColumnName])}
-    <tr
-      class={index % 2 == 1
-        ? "border-t border-t-gray-200 bg-white dark:border-t-gray-700 dark:bg-gray-800"
-        : "border-t border-t-gray-300 bg-gray-100 dark:border-t-gray-600 dark:bg-gray-700"}
-    >
+    <tr class={getTableRowClass(i)}>
       <TableBodyCell {colspan} class="px-0 py-0 whitespace-nowrap">
         <Link
           ariaLabel={`Navigate directly to the ${i + 1}. match`}
-          class={index % 2 == 1
-            ? "block hover:bg-gray-200 dark:hover:bg-gray-600"
-            : "block hover:bg-gray-200 dark:hover:bg-gray-600"}
+          class={index % 2 == 1 ? "block" : "block"}
           href={getAdvisoryAnchorLink(doc)}
           onclick={() => {
-            advisorySearchState.matchIndex = i;
+            advisorySearchState.matchIndex = 0;
           }}
         >
           <span class="block px-2 py-1">
-            {i + 1}.
             {#each splits as s, index (`MatchList-${uid}-${index}`)}
               {#if (index + 1) % 2 === 0}
                 {@const sanitized = s.replace(delims[0], "").replace(delims[1], "")}
@@ -73,17 +80,6 @@
             {/each}
           </span>
         </Link>
-        {#if !expanded && visibleHits.length < matches.length && i === visibleHits.length - 1}
-          <Button
-            onclick={() => {
-              expanded = true;
-            }}
-            class="m-1 h-6 w-fit px-2 py-1"
-            color="light"
-            title={`Show all matches for document ${visibleHits[0].tracking_id}`}
-            >More ({matches.slice(3).length})</Button
-          >
-        {/if}
       </TableBodyCell>
     </tr>
   {/if}

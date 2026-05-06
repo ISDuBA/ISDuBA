@@ -458,8 +458,8 @@
                 : doc}
             <tr
               class={i % 2 == 1
-                ? "bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"}
+                ? "cursor-pointer bg-white dark:bg-gray-800"
+                : "cursor-pointer bg-gray-100 dark:bg-gray-700"}
             >
               {#if isMultiSelectionAllowed}
                 <TableBodyCell class="px-1">
@@ -681,7 +681,13 @@
             </tr>
             {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)}
               {#if doc.data}
-                <MatchList colspan={columns.length} doc={item} matches={doc.data} index={i} />
+                <MatchList
+                  colspan={columns.length}
+                  doc={item}
+                  externalIndex={i}
+                  matches={doc.data}
+                  index={i}
+                />
               {/if}
             {/if}
           {/each}
