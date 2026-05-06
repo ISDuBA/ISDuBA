@@ -574,14 +574,11 @@ func buildTextPaths(
 				path = path[:len(path)-1]
 			}
 		case json.Number:
-			id, err := x.Int64()
-			if err != nil {
-				return
+			if id, err := x.Int64(); err == nil { // Only if its an integer.
+				store(path, id)
 			}
-			store(path, id)
 		case string:
-			id, err := strconv.ParseInt(x, 10, 64)
-			if err == nil {
+			if id, err := strconv.ParseInt(x, 10, 64); err == nil {
 				store(path, id)
 			} else if positions := ilikes.Search(x); len(positions) != 0 {
 				// Its not indexed but matches the search.
@@ -591,7 +588,6 @@ func buildTextPaths(
 					Text:      &x,
 					Positions: positions,
 				})
-				return
 			}
 		}
 	}
