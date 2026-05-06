@@ -197,9 +197,9 @@ CREATE TABLE unique_texts (
 
 CREATE INDEX ON unique_texts USING gin(txt gin_trgm_ops);
 
--- num is relative per document_id, starts counting at 0
---    and for many strings, it is this integer value that is placed
---    inside the jsonb of documents.document.
+-- num identifies a string for a specific document_id. It starts with index 0
+--    and for many strings, the num integer value replaces the string
+--    inside the jsonb of the documents.document.
 CREATE TABLE documents_texts (
     documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     num          int NOT NULL,
