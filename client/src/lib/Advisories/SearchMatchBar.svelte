@@ -34,7 +34,7 @@
   };
 </script>
 
-<div class="sticky z-100 flex items-center gap-1 bg-white md:static xl:w-fit dark:bg-gray-900">
+<div class="sticky z-100 flex items-center gap-1 md:static xl:w-fit">
   <Button
     onclick={prev}
     disabled={matches.length < 2}

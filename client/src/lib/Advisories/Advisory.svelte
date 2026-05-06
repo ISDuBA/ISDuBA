@@ -560,7 +560,9 @@
   {:else if isInconsistent}
     <InconsistencyMessage {document} {params}></InconsistencyMessage>
   {:else if !couldNotLoadDocument && !isInconsistent}
-    <div class="sticky -top-6 z-100 flex w-full flex-none flex-col bg-white pt-6 lg:static lg:pt-0">
+    <div
+      class="sticky -top-6 z-100 flex w-full flex-none flex-col bg-white pt-6 lg:static lg:pt-0 dark:bg-gray-800"
+    >
       <div class="flex flex-wrap gap-x-6 gap-y-1">
         <Label class="text-lg">
           <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
