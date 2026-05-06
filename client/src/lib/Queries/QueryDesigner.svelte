@@ -170,10 +170,12 @@
       }
       if (!response.ok && response.error) {
         saveErrorMessage = getErrorDetails(`Failed to save query.`, response);
-        if (response.error === "409")
+        if (response.error === "409") {
           saveErrorMessage = getErrorDetails(
             `A query with the name "${currentSearch.name}" already exists.`
           );
+        }
+        return;
       }
     }
     // Save hide/ignore
@@ -184,7 +186,7 @@
     ) {
       const ignore = !ignoredQueries.includes(Number(id)) && hide === true;
       ({ ignoredQueries, errorMessage: saveErrorMessage } = await setIgnored(Number(id), ignore));
-      if (errorMessage === null) {
+      if (saveErrorMessage === null) {
         push(`/queries/`);
       }
     } else if (response?.ok !== false) {
