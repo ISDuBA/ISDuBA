@@ -25,7 +25,7 @@
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./Events/Events.svelte";
   import Tlp from "./TLP.svelte";
-  import SsvcBadge from "./SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
   import {
     type AdvisoryVersion,
@@ -285,8 +285,12 @@
         }
       }
       if (e.event_type === "add_sscv" || e.event_type === "change_sscv") {
-        const ssvcMatch = ssvcByTime[`${e.time}:${e.actor}:${params.id}`];
-        if (ssvcMatch) {
+        const IDsOfAllVersions = $state.snapshot(advisoryVersions).map((v) => v.id);
+        const matchingVersion = IDsOfAllVersions.find((ver) => {
+          return ssvcByTime[`${e.time}:${e.actor}:${ver}`] !== undefined;
+        });
+        if (matchingVersion) {
+          const ssvcMatch = ssvcByTime[`${e.time}:${e.actor}:${matchingVersion}`];
           e["ssvc"] = ssvcMatch.ssvc;
           e["prev_ssvc"] = ssvcMatch.ssvc_prev;
           e["documentVersion"] = ssvcMatch.documents_version;
@@ -572,7 +576,7 @@
             <div class="flex flex-row items-center">
               {#if ssvcVector}
                 {#if !isSSVCediting}
-                  <SsvcBadge vector={ssvcVector}></SsvcBadge>
+                  <SSVCBadge vector={ssvcVector}></SSVCBadge>
                 {/if}
               {/if}
               {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
@@ -586,7 +590,7 @@
                 ></SsvcCalculator>
               {/if}
             </div>
-            {#if isCommentingAllowed && !isSSVCediting}
+            {#if isCommentingAllowed}
               <div class="mt-6">
                 <Label class="mb-2" for="comment-textarea"
                   >{advisoryState === ARCHIVED && appStore.isEditor()

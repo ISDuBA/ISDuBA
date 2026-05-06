@@ -41,11 +41,7 @@
   const tdClass = "py-2 px-2";
 
   let historyEntries = $derived(
-    fullHistory
-      ? entries
-      : entries.filter((e: any) => {
-          if (e.event_type === "add_comment") return e;
-        })
+    fullHistory ? entries : entries.filter((e: any) => e.event_type === "add_comment")
   );
 </script>
 

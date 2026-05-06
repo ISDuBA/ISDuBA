@@ -20,7 +20,7 @@
   import { getPublisher } from "$lib/publisher";
   import { Spinner } from "flowbite-svelte";
   import { getRelativeTime } from "$lib/time";
-  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
 
@@ -133,7 +133,7 @@
                     </div>
                   {/if}
                   {#if doc.ssvc}
-                    <SsvcBadge vector={doc.ssvc}></SsvcBadge>
+                    <SSVCBadge vector={doc.ssvc}></SSVCBadge>
                   {/if}
                 </div>
               {/snippet}

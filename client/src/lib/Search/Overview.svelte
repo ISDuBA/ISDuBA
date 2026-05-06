@@ -28,6 +28,8 @@
   import { defaultQuery as defaultQ, queryState } from "./search.svelte";
   import { page } from "$app/state";
   import { untrack } from "svelte";
+  import Link from "$lib/Components/Link.svelte";
+  import { slide } from "svelte/transition";
 
   const INITIAL_LIMIT = 10;
   const INITIAL_ORDER = ["-critical"];
@@ -421,30 +423,43 @@
     }}
   ></TypeToggle>
 </div>
-<div class="mb-3 flex flex-row flex-wrap items-center gap-4">
-  <div class="flex items-center gap-1">
-    <CSearch
-      buttonText={advanced ? "Apply" : "Search"}
-      placeholder={advanced ? "Enter a query" : "Enter a search term"}
-      search={(term) => {
-        setSearchParameters({
-          currentPage: 1,
-          searchTerm: term
-        });
-      }}
-      searchTerm={searchTermInputValue}
-    ></CSearch>
-    <div class="mt-1" title="Define finer grained search queries">
-      <Toggle
-        onclick={() => {
-          setSearchParameters({ advanced: !$state.snapshot(advanced) });
+<div class="flex flex-col gap-1">
+  <div class="flex flex-row flex-wrap items-center gap-4">
+    <div class="flex items-center gap-1">
+      <CSearch
+        buttonText={advanced ? "Apply" : "Search"}
+        placeholder={advanced ? "Enter a query" : "Enter a search term"}
+        search={(term) => {
+          setSearchParameters({
+            currentPage: 1,
+            searchTerm: term
+          });
         }}
-        checked={advanced}
-        class="ml-3">Advanced</Toggle
-      >
+        searchTerm={searchTermInputValue}
+      ></CSearch>
+      <div class="mt-1" title="Define finer grained search queries">
+        <Toggle
+          onclick={() => {
+            setSearchParameters({ advanced: !$state.snapshot(advanced) });
+          }}
+          checked={advanced}
+          class="ml-3">Advanced</Toggle
+        >
+      </div>
     </div>
+    <Button onclick={resetSearch} color="light" size="sm">Reset search</Button>
   </div>
-  <Button onclick={resetSearch} color="light" size="sm">Reset search</Button>
+  {#if advanced}
+    <div transition:slide>
+      <Link
+        href="https://github.com/ISDuBA/ISDuBA/blob/main/docs/search.md#filter-expressions"
+        class="text-sm underline"
+      >
+        <i class="bx bx-link"></i>
+        <span>Documentation: Filter expression</span>
+      </Link>
+    </div>
+  {/if}
 </div>
 {#if searchTerm !== undefined}
   <AdvisoryTable

@@ -20,7 +20,7 @@
   import { push } from "$routes/router.svelte";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { getRelativeTime } from "$lib/time";
-  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
   import CBadge from "$lib/Components/CBadge.svelte";
 
@@ -235,7 +235,7 @@
                       </div>
                     {/if}
                     {#if activity.ssvc}
-                      <SsvcBadge vector={activity.ssvc}></SsvcBadge>
+                      <SSVCBadge vector={activity.ssvc}></SSVCBadge>
                     {/if}
                   </div>
                   {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}

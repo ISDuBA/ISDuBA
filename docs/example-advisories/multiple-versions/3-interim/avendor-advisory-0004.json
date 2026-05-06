@@ -68,7 +68,10 @@
                 "name": "1.1",
                 "product": {
                   "name": "AVendor product_1 1.1",
-                  "product_id": "CSAFPID_0001"
+                  "product_id": "CSAFPID_0001",
+                  "product_identification_helper": {
+                    "purl": "pkg:npm/acme/CSAFPID_0001"
+                  }
                 }
               },
               {
