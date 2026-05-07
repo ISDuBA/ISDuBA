@@ -37,18 +37,19 @@ const addSlashes = (str: string) => {
  * @returns Strings, alternating non-match and match (always starts with non-match)
  */
 const splitMatches = (text: string, positions: number[][]): string[] => {
-  let t = text;
+  let lastPos = 0;
   const splits: string[] = [];
   for (let i = 0; i < positions.length; i++) {
     const pos = positions[i];
     const term = text.substring(pos[0], pos[0] + pos[1]);
     // Don't use the term to split the text although it would be easier because the method could find
     // other occurrences that were not considered by the backend.
-    const splittedText = [t.slice(0, pos[0]), t.slice(pos[0] + pos[1])];
-    splits.push(splittedText[0], term);
-    t = splittedText[1];
+    splits.push(text.slice(lastPos, pos[0]), term);
+    lastPos = pos[0] + pos[1];
+    if (i === positions.length - 1) {
+      splits.push(text.slice(pos[0] + pos[1]));
+    }
   }
-  if (t) splits.push(t);
   return splits;
 };
 

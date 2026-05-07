@@ -13,7 +13,7 @@
   import { advisorySearchState } from "../advisory.svelte";
 
   interface Props {
-    header: string;
+    header?: string;
     title?: string;
     open?: boolean;
     showBorder?: boolean;
@@ -29,7 +29,7 @@
     headerRightSlot?: Snippet;
   }
   let {
-    header,
+    header = undefined,
     title = undefined,
     open = $bindable(false),
     showBorder = true,
@@ -122,7 +122,7 @@
       <div class={getClass(level)}>
         {#if headerSlot}
           {@render headerSlot()}
-        {:else}
+        {:else if header}
           <span class={getClass(level)}>{header}</span>
         {/if}
       </div>
