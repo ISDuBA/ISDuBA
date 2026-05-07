@@ -118,9 +118,19 @@
         <SearchableText text={publisherCategory} textPath="/document/publisher/category" />
       </div>
       <div class={cellStyleKey}>Published</div>
-      <div class={cellStyleValue}>{getReadableDateString(published)}</div>
+      <div class={cellStyleValue}>
+        <SearchableText
+          text={getReadableDateString(published)}
+          textPath="/document/tracking/initial_release_date"
+        />
+      </div>
       <div class={cellStyleKey}>Last update</div>
-      <div class={cellStyleValue}>{getReadableDateString(lastUpdate)}</div>
+      <div class={cellStyleValue}>
+        <SearchableText
+          text={getReadableDateString(lastUpdate)}
+          textPath="/document/tracking/current_release_date"
+        />
+      </div>
       <div class={cellStyleKey}>CSAF-Version</div>
       <div class={cellStyleValue}>
         <SearchableText text={csafVersion} textPath="/document/csaf_version" />
@@ -178,17 +188,20 @@
       {#if generator}
         <SearchableText
           text={appStore.state.webview.doc?.generator?.engine.name}
-          textPath="/document/generator/engine/name"
+          textPath="/document/tracking/generator/engine/name"
         />
       {/if}
       {#if generator?.engine?.version}
         <SearchableText
           text={appStore.state.webview.doc?.generator?.engine.version}
-          textPath="/document/generator/engine/version"
+          textPath="/document/tracking/generator/engine/version"
         />
       {/if}
       {#if generator?.date}
-        · {getReadableDateString(generator.date)}
+        · <SearchableText
+          text={getReadableDateString(generator.date)}
+          textPath="/document/tracking/generator/date"
+        />
       {/if}
     </span>
   </div>
