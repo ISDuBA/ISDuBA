@@ -30,4 +30,26 @@ const addSlashes = (str: string) => {
   return (str + "").replace(/[\\"']/g, "\\$&").replace(/\u0000/g, "\\0");
 };
 
-export { truncate, areArraysEqual, addSlashes };
+/**
+ * Splits a string so it can be easily rendered inside an each loop.
+ * @param text String including search matches
+ * @param positions Start index and length of a match inside the text. Coming from the backend.
+ * @returns Strings, alternating non-match and match (always starts with non-match)
+ */
+const splitMatches = (text: string, positions: number[][]): string[] => {
+  let t = text;
+  const splits: string[] = [];
+  for (let i = 0; i < positions.length; i++) {
+    const pos = positions[i];
+    const term = text.substring(pos[0], pos[0] + pos[1]);
+    // Don't use the term to split the text although it would be easier because the method could find
+    // other occurrences that were not considered by the backend.
+    const splittedText = [t.slice(0, pos[0]), t.slice(pos[0] + pos[1])];
+    splits.push(splittedText[0], term);
+    t = splittedText[1];
+  }
+  if (t) splits.push(t);
+  return splits;
+};
+
+export { truncate, areArraysEqual, addSlashes, splitMatches };

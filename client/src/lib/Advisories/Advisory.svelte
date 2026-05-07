@@ -30,9 +30,12 @@
   import {
     type AdvisoryVersion,
     fetchDocumentSSVC,
-    loadAdvisoryVersions
-  } from "$lib/Advisories/advisory";
+    fetchSearchHits,
+    loadAdvisoryVersions,
+    advisorySearchState
+  } from "$lib/Advisories/advisory.svelte";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
+  import SearchMatchBar from "./SearchMatchBar.svelte";
 
   let { params } = $props();
 
@@ -51,6 +54,7 @@
   let loadForwardTargetsError: ErrorDetails | null = $state(null);
   let stateError: ErrorDetails | null = $state(null);
   let loadRelatedError: ErrorDetails | null = $state(null);
+  let loadSearchHitsError: ErrorDetails | null = $state(null);
   let advisoryVersions: AdvisoryVersion[] = $state([]);
   let advisoryVersionByDocumentID: any = $state(undefined);
   let advisoryState: string = $state("");
@@ -64,6 +68,7 @@
   let documentNotFound = $state(false);
   let couldNotLoadDocument = $state(false);
   let relatedDocuments: any = $state(undefined);
+  let isLoadingSearchMatches = $state(false);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -406,9 +411,24 @@
   const loadData = async () => {
     advisoryState = "";
     historyEntries = [];
+    advisoryVersions = [];
     ssvcVector = "";
+    appStore.setDocument(null);
     await loadDocument();
     await getAdvisoryVersions();
+    if (appStore.state.app.search.query) {
+      isLoadingSearchMatches = true;
+      const hitsResult = await fetchSearchHits(params.id);
+      isLoadingSearchMatches = false;
+      if (Array.isArray(hitsResult)) {
+        advisorySearchState.searchMatches = hitsResult;
+        if (advisorySearchState.searchMatches.length > 0 && advisorySearchState.matchIndex === -1) {
+          advisorySearchState.matchIndex = 0;
+        }
+      } else {
+        loadSearchHitsError = hitsResult;
+      }
+    }
     if (couldNotLoadDocument || isInconsistent) return;
     if (document) {
       await loadFourCVEs();
@@ -472,6 +492,8 @@
     }
   };
   onDestroy(() => {
+    appStore.setDocument(null);
+    advisorySearchState.matchIndex = -1;
     setAsReadTimeout.forEach((id: number) => {
       clearTimeout(id);
     });
@@ -529,7 +551,10 @@
   {/if}
 </Modal>
 
-<div class="grid h-full w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2" id="top">
+<div
+  class="relative grid h-fit w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2 lg:h-full"
+  id="top"
+>
   {#if documentNotFound}
     <div class="mb-2 font-bold">
       <i class="bx bx-error-circle" aria-hidden="true"></i>
@@ -538,21 +563,30 @@
   {:else if isInconsistent}
     <InconsistencyMessage {document} {params}></InconsistencyMessage>
   {:else if !couldNotLoadDocument && !isInconsistent}
-    <div class="flex w-full flex-none flex-col">
-      <div class="flex gap-2">
+    <div
+      class="sticky -top-6 z-100 flex w-full flex-none flex-col bg-white pt-6 lg:static lg:pt-0 dark:bg-gray-800"
+    >
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
         <Label class="text-lg">
           <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
           {#if appStore.state.webview.doc?.tlp.label}
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
         </Label>
+        {#if isLoadingSearchMatches}
+          <Spinner color="gray" size="4"></Spinner>
+        {:else if appStore.state.app.search.term && appStore.state.webview.doc && !appStore.state.app.search.advanced}
+          <SearchMatchBar />
+        {/if}
       </div>
       <div
         class="grid grid-cols-1 justify-start gap-2 md:justify-between lg:grid-cols-[minmax(100px,_1fr)_500px]"
       >
-        <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
-          >{document.publisher ? document.publisher.name : ""}</Label
-        >
+        <div class="flex flex-col gap-2">
+          <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
+            >{document.publisher ? document.publisher.name : ""}</Label
+          >
+        </div>
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
           <WorkflowStates {advisoryState} updateStateFn={updateState}></WorkflowStates>
         </div>
@@ -566,6 +600,7 @@
   <ErrorMessage bind:error={loadDocumentError}></ErrorMessage>
   <ErrorMessage bind:error={loadFourCVEsError}></ErrorMessage>
   <ErrorMessage bind:error={loadRelatedError}></ErrorMessage>
+  <ErrorMessage bind:error={loadSearchHitsError}></ErrorMessage>
   {#if !couldNotLoadDocument && !isInconsistent}
     <div class={canSeeCommentArea ? "w-full lg:grid lg:grid-cols-[1fr_29rem]" : "w-full"}>
       {#if canSeeCommentArea}
@@ -651,7 +686,7 @@
         class={"flex h-auto flex-col lg:order-1 lg:max-h-full lg:flex-auto lg:pr-6" +
           (canSeeCommentArea ? " lg:overflow-auto" : "")}
       >
-        <div class="flex flex-row">
+        <div class="mb-2 flex flex-col gap-2">
           {#if advisoryVersions?.length > 0}
             <Version
               publisherNamespace={document.publisher?.name}

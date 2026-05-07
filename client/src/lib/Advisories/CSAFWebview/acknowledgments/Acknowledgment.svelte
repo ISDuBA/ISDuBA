@@ -14,29 +14,34 @@
   import type { Acknowledgment } from "../docmodel/docmodeltypes";
   interface Props {
     ack: Acknowledgment;
+    path: string;
   }
-  let { ack }: Props = $props();
+  let { ack, path }: Props = $props();
 
-  const { keys, values } = $derived.by(() => {
+  const { keys, values, paths } = $derived.by(() => {
     const keyArray: Array<string> = [],
-      valueArray: Array<string> = [];
+      valueArray: Array<string | Array<string>> = [],
+      pathArray: Array<string> = [];
     if (ack.names) {
       keyArray.push("Names");
-      valueArray.push(ack.names.join(", "));
+      valueArray.push(ack.names);
+      pathArray.push(`${path}/names`);
     }
     if (ack.organization) {
       keyArray.push("Organization");
       valueArray.push(ack.organization);
+      pathArray.push(`${path}/organization`);
     }
     if (ack.summary) {
       keyArray.push("Summary");
       valueArray.push(ack.summary);
+      pathArray.push(`${path}/summary`);
     }
-    return { keys: keyArray, values: valueArray };
+    return { keys: keyArray, values: valueArray, paths: pathArray };
   });
 </script>
 
-<KeyValue {keys} {values} />
+<KeyValue {keys} {values} {paths} />
 {#if ack.urls}
-  <ValueList label="URLs" values={ack.urls} />
+  <ValueList label="URLs" values={ack.urls} path={`${path}/urls`} />
 {/if}

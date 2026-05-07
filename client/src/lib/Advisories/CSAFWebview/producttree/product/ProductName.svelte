@@ -17,8 +17,9 @@
 
   interface Props {
     product: any;
+    path: string;
   }
-  let { product }: Props = $props();
+  let { product, path }: Props = $props();
   async function updateUI() {
     await tick();
     document.getElementById(`${product?.product_id}`)?.scrollIntoView({ behavior: "smooth" });
@@ -47,10 +48,18 @@
         appStore.resetSelectedProduct();
       }
     }}
+    {path}
   >
-    <KeyValue keys={["Name", "Product ID"]} values={[product.name, product.product_id]} />
+    <KeyValue
+      keys={["Name", "Product ID"]}
+      values={[product.name, product.product_id]}
+      paths={[`${path}/name`, `${path}/product_id`]}
+    />
     {#if product.product_identification_helper}
-      <ProductIdentificationHelper helper={product.product_identification_helper} />
+      <ProductIdentificationHelper
+        helper={product.product_identification_helper}
+        path={`${path}/product_identification_helper`}
+      />
     {/if}
   </Collapsible>
 </div>

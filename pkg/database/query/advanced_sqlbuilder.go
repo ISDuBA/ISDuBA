@@ -503,6 +503,11 @@ func NewAdvancedSQLBuilder(options ...AdvancedSQLBuilderOption) (*AdvancedSQLBui
 	return ab, nil
 }
 
+// Expr returns the expression used by the builder.
+func (sb *AdvancedSQLBuilder) Expr() *Expr {
+	return sb.expr
+}
+
 // HasFields returns true if the builder has projection fields.
 func (sb *AdvancedSQLBuilder) HasFields() bool {
 	return len(sb.fields) > 0

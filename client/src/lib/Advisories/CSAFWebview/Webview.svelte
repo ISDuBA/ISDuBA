@@ -23,6 +23,7 @@
 
   import { Tabs, TabItem } from "flowbite-svelte";
   import { onMount, tick } from "svelte";
+  import { advisorySearchState, getAdvisorySearchHit } from "../advisory.svelte";
 
   interface Props {
     position: string;
@@ -121,7 +122,29 @@
     Math.max(0, Math.floor((innerWidth - widthOffset) / 550 - 1 + missingTabs))
   );
 
-  const openTab = async (tab: string, openRoot = true) => {
+  $effect(() => {
+    const path = getAdvisorySearchHit()?.path;
+    if (path) {
+      if (path.startsWith("/document/notes")) {
+        openTab("notes", true, false);
+      } else if (path.startsWith("/product_tree")) {
+        openTab("productTree", true, false);
+      } else if (path.startsWith("/vulnerabilities")) {
+        openTab("vulnerabilities", true, false);
+      } else if (path.startsWith("/document/references")) {
+        openTab("references", true, false);
+      } else if (path.startsWith("/document/acknowledgments")) {
+        openTab("Acknowledgments", true, false);
+      } else if (path.startsWith("/document/tracking/revision_history")) {
+        openTab("revisionHistory", true, false);
+      }
+    }
+  });
+
+  const openTab = async (tab: SingleWebviewDataSection, openRoot = true, clickedTab = true) => {
+    if (clickedTab) {
+      advisorySearchState.scroll = false;
+    }
     if (openRoot && position && position != "") {
       push(basePath);
     }
@@ -177,7 +200,7 @@
   {/if}
   {#if aliases}
     <div class="mb-4">
-      <ValueList label="Aliases" values={aliases} />
+      <ValueList label="Aliases" values={aliases} path="/document/tracking/aliases" />
     </div>
   {/if}
   {#if screenPhase < Object.keys(tabOpen).length}
@@ -235,7 +258,7 @@
           title="Notes"
         >
           <div class={sideScroll}>
-            <Notes open notes={appStore.state.webview.doc?.notes} />
+            <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
           </div>
         </TabItem>
       {/if}
@@ -261,7 +284,7 @@
           title="References"
         >
           <div class={sideScroll}>
-            <References references={appStore.state.webview.doc?.references} />
+            <References path="/document" references={appStore.state.webview.doc?.references} />
           </div>
         </TabItem>
       {/if}
@@ -319,7 +342,7 @@
     <FakeButton active>Notes</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
     <div class={sideScroll}>
-      <Notes open notes={appStore.state.webview.doc?.notes} />
+      <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
     </div>
   </div>
 {/if}
@@ -339,7 +362,7 @@
     <FakeButton active>References</FakeButton>
     <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
     <div class={sideScroll}>
-      <References references={appStore.state.webview.doc?.references} />
+      <References path="/document" references={appStore.state.webview.doc?.references} />
     </div>
   </div>
 {/if}

@@ -15,11 +15,13 @@
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "./ProductIdentificationHelper.svelte";
   import type { FullProductName } from "$lib/pmdTypes";
+  import { getAdvisorySearchHit } from "$lib/Advisories/advisory.svelte";
 
   interface Props {
+    path: string;
     product: FullProductName;
   }
-  let { product }: Props = $props();
+  let { product, path }: Props = $props();
 
   let blink = $state(false);
   /**
@@ -50,16 +52,22 @@
     header={product.name}
     level={4}
     {highlight}
-    open={appStore.state.webview.ui.selectedProduct === product.product_id}
+    open={appStore.state.webview.ui.selectedProduct === product.product_id ||
+      getAdvisorySearchHit()?.path.startsWith(path)}
     onClose={() => {
       if (appStore.state.webview.ui.selectedProduct === product.product_id) {
         appStore.resetSelectedProduct();
       }
     }}
+    {path}
   >
-    <KeyValue keys={["Product ID"]} values={[product.name, product.product_id]} />
+    <KeyValue
+      keys={["Product name", "Product ID"]}
+      paths={[`${path}/name`, `${path}/product_id`]}
+      values={[product.name, product.product_id]}
+    />
     {#if product.product_identification_helper}
-      <ProductIdentificationHelper helper={product.product_identification_helper} />
+      <ProductIdentificationHelper helper={product.product_identification_helper} {path} />
     {/if}
   </Collapsible>
 </div>
