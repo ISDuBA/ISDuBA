@@ -68,6 +68,7 @@
   let documentNotFound = $state(false);
   let couldNotLoadDocument = $state(false);
   let relatedDocuments: any = $state(undefined);
+  let isLoadingSearchMatches = $state(false);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -416,7 +417,9 @@
     await loadDocument();
     await getAdvisoryVersions();
     if (appStore.state.app.search.query) {
+      isLoadingSearchMatches = true;
       const hitsResult = await fetchSearchHits(params.id);
+      isLoadingSearchMatches = false;
       if (Array.isArray(hitsResult)) {
         advisorySearchState.searchMatches = hitsResult;
         if (advisorySearchState.searchMatches.length > 0 && advisorySearchState.matchIndex === -1) {
@@ -563,14 +566,16 @@
     <div
       class="sticky -top-6 z-100 flex w-full flex-none flex-col bg-white pt-6 lg:static lg:pt-0 dark:bg-gray-800"
     >
-      <div class="flex flex-wrap gap-x-6 gap-y-1">
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
         <Label class="text-lg">
           <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
           {#if appStore.state.webview.doc?.tlp.label}
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
         </Label>
-        {#if appStore.state.app.search.term && appStore.state.webview.doc && !appStore.state.app.search.advanced}
+        {#if isLoadingSearchMatches}
+          <Spinner color="gray" size="4"></Spinner>
+        {:else if appStore.state.app.search.term && appStore.state.webview.doc && !appStore.state.app.search.advanced}
           <SearchMatchBar />
         {/if}
       </div>
