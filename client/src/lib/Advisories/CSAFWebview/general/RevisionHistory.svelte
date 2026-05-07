@@ -37,32 +37,34 @@
         <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each revisionHistory as entry, index (`ref-history${index}`)}
-          {@const reversedIndex = revisionHistory.length - 1 - index}
-          <TableBodyRow>
-            <TableBodyCell class={cellStyle}>{entry.number}</TableBodyCell>
-            <TableBodyCell class={cellStyle}>
-              <SearchableText
-                text={getReadableDateString(entry.date)}
-                textPath={`/document/tracking/revision_history[${reversedIndex}]/date`}
-              />
-            </TableBodyCell>
-            <TableBodyCell class={baseCellStyle + " min-w-52"}>
-              <SearchableText
-                text={entry.summary}
-                textPath={`/document/tracking/revision_history[${reversedIndex}]/summary`}
-              />
-            </TableBodyCell>
-            <TableBodyCell
-              >{#if entry.legacy_version}
+        {#if revisionHistory}
+          {#each revisionHistory as entry, index (`ref-history${index}`)}
+            {@const reversedIndex = revisionHistory.length - 1 - index}
+            <TableBodyRow>
+              <TableBodyCell class={cellStyle}>{entry.number}</TableBodyCell>
+              <TableBodyCell class={cellStyle}>
                 <SearchableText
-                  text={entry.legacy_version}
-                  textPath={`/document/tracking/revision_history[${reversedIndex}]/legacy_version`}
+                  text={getReadableDateString(entry.date)}
+                  textPath={`/document/tracking/revision_history[${reversedIndex}]/date`}
                 />
-              {/if}</TableBodyCell
-            >
-          </TableBodyRow>
-        {/each}
+              </TableBodyCell>
+              <TableBodyCell class={baseCellStyle + " min-w-52"}>
+                <SearchableText
+                  text={entry.summary}
+                  textPath={`/document/tracking/revision_history[${reversedIndex}]/summary`}
+                />
+              </TableBodyCell>
+              <TableBodyCell
+                >{#if entry.legacy_version}
+                  <SearchableText
+                    text={entry.legacy_version}
+                    textPath={`/document/tracking/revision_history[${reversedIndex}]/legacy_version`}
+                  />
+                {/if}</TableBodyCell
+              >
+            </TableBodyRow>
+          {/each}
+        {/if}
       </TableBody>
     </Table>
   </div>
