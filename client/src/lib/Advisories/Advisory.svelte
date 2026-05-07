@@ -36,6 +36,7 @@
   } from "$lib/Advisories/advisory.svelte";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
   import SearchMatchBar from "./SearchMatchBar.svelte";
+  import SearchableText from "./CSAFWebview/SearchableText.svelte";
 
   let { params } = $props();
 
@@ -568,7 +569,12 @@
     >
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
         <Label class="text-lg">
-          <span class="mr-2">{document.tracking ? document.tracking.id : ""}</span>
+          <span class="mr-2">
+            <SearchableText
+              text={document.tracking ? document.tracking.id : ""}
+              textPath="/document/tracking/id"
+            />
+          </span>
           {#if appStore.state.webview.doc?.tlp.label}
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
