@@ -22,6 +22,7 @@ test.beforeEach(async ({ page }) => {
 
 test("Advisory view is working", async ({ page }) => {
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
+  await expect(page.getByText("5.7 (MEDIUM)")).toBeVisible();
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
   // value helps to distinguish the comments.
