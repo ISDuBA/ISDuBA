@@ -16,14 +16,13 @@
   import { splitMatches } from "$lib/utils";
 
   interface Props {
-    colspan: number;
     doc: any;
     externalIndex: number;
     matches?: any[];
     index: number;
   }
 
-  let { colspan, doc, externalIndex, matches = [], index }: Props = $props();
+  let { doc, externalIndex, matches = [], index }: Props = $props();
   let uid = $props.id();
 
   let expanded = $state(false);
@@ -60,7 +59,7 @@
   {#if match[searchColumnName]}
     {@const splits = getSplits(match[searchColumnName])}
     <tr class={getTableRowClass(i)}>
-      <TableBodyCell {colspan} class="px-0 py-0 whitespace-nowrap">
+      <TableBodyCell colspan={100} class="px-0 py-0 whitespace-nowrap">
         <Link
           ariaLabel={`Navigate directly to the ${i + 1}. match`}
           class={index % 2 == 1 ? "block" : "block"}

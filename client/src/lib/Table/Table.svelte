@@ -681,13 +681,7 @@
             </tr>
             {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)}
               {#if doc.data}
-                <MatchList
-                  colspan={columns.length}
-                  doc={item}
-                  externalIndex={i}
-                  matches={doc.data}
-                  index={i}
-                />
+                <MatchList doc={item} externalIndex={i} matches={doc.data} index={i} />
               {/if}
             {/if}
           {/each}
