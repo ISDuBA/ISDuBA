@@ -189,7 +189,7 @@ const generateQueryString = (currentSearch: Search) => {
     currentSearch.searchType !== SEARCHTYPES.EVENT
       ? `advisories=${currentSearch.searchType === SEARCHTYPES.ADVISORY}`
       : "";
-  const queryURL = `/api/${currentSearch.searchType === SEARCHTYPES.EVENT ? "events" : "documents"}?count=1&${advisoriesParam}${columnsParam}${query}`;
+  const queryURL = `/api/${currentSearch.searchType === SEARCHTYPES.EVENT ? "events" : "documents"}?limit=1&${advisoriesParam}${columnsParam}${query}`;
   return encodeURI(queryURL);
 };
 
