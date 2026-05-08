@@ -56,7 +56,13 @@ export const request = async (
     if (contentType && isJson) {
       try {
         json = await response.json();
-      } catch (_) {
+      } catch (e) {
+        if (e instanceof DOMException && e.name == "AbortError") {
+          return {
+            error: e.name,
+            ok: false
+          };
+        }
         return {
           error: "783", // Used by Shopify to indicate that the request includes a JSON syntax error. See https://shopify.dev/docs/api/usage/response-codes
           content: `${json.error}`,

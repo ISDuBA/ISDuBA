@@ -14,15 +14,18 @@
   import { appStore } from "$lib/store.svelte";
   import { request } from "$lib/request";
   import { SEARCHTYPES } from "$lib/Queries/query";
-  import { untrack } from "svelte";
+  import { tick, untrack } from "svelte";
   import { advisorySearchState } from "$lib/Advisories/advisory.svelte";
+  import { Spinner } from "flowbite-svelte";
 
   const uid = $props.id();
 
   const indentedSidebarItemClass = `${sidebarItemLinkClass} !py-1 ps-10`;
 
-  let loading = $state(false);
+  let loading = $state(0);
+  let isLoading = $derived(loading > 0);
   let oldIndex: number | undefined = $state(undefined);
+  let abortController: AbortController | undefined = undefined;
 
   let searchResults = $derived(appStore.state.app.search.results);
   let index: number = $derived.by(() => {
@@ -106,13 +109,19 @@
   });
 
   const loadResults = async () => {
+    if (abortController) abortController.abort();
     let url = untrack(() => appStore.state.app.search.requestURL);
     const offset = untrack(() => appStore.state.app.search.offset);
-    if (!url || offset === null) return;
-    loading = true;
+    if (!url || offset === null) {
+      return;
+    }
+    await tick();
+    loading++;
     url = url?.concat(`&offset=${offset}&limit=10`);
-    const response = await request(url, "GET");
-    loading = false;
+    abortController = new AbortController();
+    const response = await request(url, "GET", undefined, abortController);
+    await tick();
+    loading--;
     if (response.ok) {
       let count, documents;
       if (appStore.state.app.search.type === SEARCHTYPES.EVENT) {
@@ -161,33 +170,32 @@
 {/snippet}
 
 {#if searchResults && openedDocument}
-  {#if leading > 0}
-    {@render leadingFollowingIndicator(`${loading ? "" : leading} ...`)}
-  {/if}
+  <div class="flex items-center gap-2">
+    {#if leading > 0}
+      {@render leadingFollowingIndicator(`${isLoading ? "" : leading} ...`)}
+    {/if}
+    {#if isLoading}
+      <div class={leading <= 0 ? "ps-12" : ""}>
+        <Spinner color="gray" size="4" />
+      </div>
+    {/if}
+  </div>
   {#each searchResults as result, i (`prev-next-${uid}-${i}`)}
     {#if indices.includes(i)}
       {@const doc = result}
-      {#if loading}
-        <div
-          class={`${indentedSidebarItemClass} ${i === index ? "bg-primary-200 dark:bg-gray-950" : ""} !text-gray-200 dark:!text-gray-400`}
-        >
-          <span>{doc.data[0].tracking_id}</span>
-        </div>
-      {:else}
-        <CSidebarItem
-          aClass={`${indentedSidebarItemClass} ${i === index ? `${activeClass} px-0 py-0` : sidebarItemClass} ${i === index ? "!text-primary-900 dark:!text-white" : ""}`}
-          label={doc.data[0].tracking_id}
-          onclick={() => {
-            if (i !== index) advisorySearchState.matchIndex = -1;
-          }}
-          href={`#/advisories/${doc.data[0].publisher}/${doc.data[0].tracking_id}/documents/${doc.id}`}
-        >
-          {#snippet icon()}{/snippet}
-        </CSidebarItem>
-      {/if}
+      <CSidebarItem
+        aClass={`${indentedSidebarItemClass} ${i === index ? `${activeClass} px-0 py-0` : sidebarItemClass} ${i === index ? "!text-primary-900 dark:!text-white" : ""}`}
+        label={doc.data[0].tracking_id}
+        onclick={() => {
+          if (i !== index) advisorySearchState.matchIndex = -1;
+        }}
+        href={`#/advisories/${doc.data[0].publisher}/${doc.data[0].tracking_id}/documents/${doc.id}`}
+      >
+        {#snippet icon()}{/snippet}
+      </CSidebarItem>
     {/if}
   {/each}
   {#if following > 0}
-    {@render leadingFollowingIndicator(`... ${loading ? "" : following}`)}
+    {@render leadingFollowingIndicator(`... ${isLoading ? "" : following}`)}
   {/if}
 {/if}
