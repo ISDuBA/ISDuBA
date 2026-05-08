@@ -131,13 +131,23 @@ const loadAdvisoryVersions = async (
 };
 
 const fetchDocumentSSVC = async (
-  documentId: string | number
+  documentId: string | number,
+  abortController?: AbortController
 ): Promise<string | ErrorDetails | undefined> => {
-  const response = await request(`/api/ssvc/documents/${documentId}`, "GET");
+  const response = await request(
+    `/api/ssvc/documents/${documentId}`,
+    "GET",
+    undefined,
+    abortController
+  );
 
   // Any error
   if (!response.ok) {
-    return getErrorDetails("Could not load SSVC.", response);
+    if (response.error !== "AbortError") {
+      return getErrorDetails("Could not load SSVC.", response);
+    } else {
+      return undefined;
+    }
   }
 
   const result = await response.content;
