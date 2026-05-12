@@ -25,7 +25,6 @@
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./Events/Events.svelte";
   import Tlp from "./TLP.svelte";
-  import SSVCBadge from "./SSVC/SSVCBadge.svelte";
   import { addSlashes } from "$lib/utils";
   import {
     type AdvisoryVersion,
@@ -614,18 +613,14 @@
           class="right-3 mr-3 flex w-full flex-col lg:order-2 lg:max-h-full lg:w-[29rem] lg:flex-none lg:overflow-auto"
         >
           <div class={isSSVCediting || commentFocus ? "w-full p-3 shadow-md" : "w-full p-3"}>
-            <div class="flex flex-row items-center">
-              {#if ssvcVector}
-                {#if !isSSVCediting}
-                  <SSVCBadge vector={ssvcVector}></SSVCBadge>
-                {/if}
-              {/if}
+            <div class="flex flex-col">
               {#if advisoryState !== ARCHIVED && advisoryState !== DELETE}
                 <SsvcCalculator
                   bind:isEditing={isSSVCediting}
                   vectorInput={ssvcVector}
                   disabled={!isCalculatingAllowed}
                   documentID={params.id}
+                  {ssvcVector}
                   updateSSVC={loadMetaData}
                   {allowEditing}
                 ></SsvcCalculator>
