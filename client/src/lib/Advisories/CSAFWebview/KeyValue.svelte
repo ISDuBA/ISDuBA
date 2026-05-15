@@ -12,12 +12,14 @@
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import CVSS from "./general/CVSS.svelte";
   import Link from "$lib/Components/Link.svelte";
+  import SearchableText from "./SearchableText.svelte";
 
   interface Props {
     keys: Array<string>;
+    paths?: Array<string>;
     values: any;
   }
-  let { keys, values }: Props = $props();
+  let { keys, values, paths }: Props = $props();
 
   const uid = $props.id();
 
@@ -56,10 +58,20 @@
             <TableBodyCell class={cellStyle}>
               {#if typeof values[index] === "string" && values[index].startsWith && values[index].startsWith("https://")}
                 <Link class="underline" href={values[index]}>
-                  <i class="bx bx-link"></i>{values[index]}
+                  <i class="bx bx-link"></i>
+                  <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
                 </Link>
+              {:else if Array.isArray(values[index])}
+                <div class="flex flex-wrap gap-1">
+                  {#each values[index] as value, j (`keyvalue-2-${uid}-${j}`)}
+                    <SearchableText
+                      text={`${value}${j < values[index].length - 1 ? "," : ""}`}
+                      textPath={`${paths?.[index] ?? ""}[${j}]`}
+                    />
+                  {/each}
+                </div>
               {:else}
-                {values[index]}
+                <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
               {/if}
             </TableBodyCell>
           </TableBodyRow>

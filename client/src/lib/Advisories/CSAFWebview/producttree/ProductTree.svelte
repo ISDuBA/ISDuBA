@@ -56,15 +56,25 @@
     header="Branches"
     open={!!selectedProduct ||
       appStore.state.webview.doc?.productTree.branches.length <= productTreeCutoffs.level1}
+    path="/product_tree"
   >
     {#each appStore.state.webview.doc?.productTree.branches as branch, i (`producttree-${uid}-${i}`)}
-      <Branch {branch} {openSubBranches} open={openBranches} />
+      <Branch
+        {branch}
+        {openSubBranches}
+        open={openBranches}
+        path={`/product_tree/branches[${i}]`}
+      />
     {/each}
   </Collapsible>
 {/if}
 
 {#if appStore.state.webview.doc?.productTree.relationships}
-  <Collapsible header="Relationships" open={!!selectedProduct || openRelationships}>
+  <Collapsible
+    header="Relationships"
+    open={!!selectedProduct || openRelationships}
+    path="/product_tree"
+  >
     <Relationships
       {basePath}
       relationships={appStore.state.webview.doc?.productTree.relationships}
@@ -73,7 +83,7 @@
 {/if}
 
 {#if appStore.state.webview.doc?.productTree.product_groups}
-  <Collapsible header="Product groups" open>
+  <Collapsible header="Product groups" open path="/product_tree">
     <ProductGroups
       productGroups={!selectedProduct && appStore.state.webview.doc?.productTree.product_groups}
     />
@@ -81,7 +91,7 @@
 {/if}
 
 {#if appStore.state.webview.doc?.productTree.full_product_names}
-  <Collapsible header="Full Product Names" open>
+  <Collapsible header="Full Product Names" open path="/product_tree">
     <ProductNames
       productNames={!selectedProduct && appStore.state.webview.doc?.productTree.full_product_names}
     />

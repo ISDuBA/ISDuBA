@@ -9,25 +9,56 @@
 -->
 <script lang="ts">
   import CBadge from "$lib/Components/CBadge.svelte";
-  import type { Snippet } from "svelte";
+  import { getAllowedWorkflowChanges } from "$lib/permissions";
+  import { getContext, type Snippet } from "svelte";
 
   interface Props {
-    color: any;
-    label: string;
+    state: string;
     tooltip: string;
     icon: Snippet;
-    onClick: (event: any) => void;
+    onClick?: (event: any) => void;
   }
-  let { color, label, tooltip, icon, onClick }: Props = $props();
+  let { state, tooltip, icon, onClick = undefined }: Props = $props();
 
-  const buttonClass = $derived.by(() => {
-    return `h-fit w-fit rounded-xs border-0 p-0 hover:bg-transparent ${color !== "none" && color !== "green" ? "cursor-pointer" : ""}`;
+  let currentState: () => string = getContext("currentState");
+  let updateStateFn: () => (newState: string) => void = getContext("updateStateFn");
+
+  let allowedTargetStates = $derived(
+    getAllowedWorkflowChanges([currentState()]).map((transition) => transition.to)
+  );
+
+  let disabled = $derived.by(() => {
+    return currentState() === undefined || !allowedTargetStates.includes(state);
   });
+
+  let badgeColor: any = $derived.by(() => {
+    if (state === currentState()) {
+      return "green";
+    } else if (!disabled) {
+      return "dark";
+    } else {
+      return "none";
+    }
+  });
+
+  const buttonClass =
+    "h-fit w-fit rounded-xs border-0 p-0 hover:bg-transparent cursor-pointer disabled:cursor-default";
 </script>
 
-<button class={buttonClass} onclick={(event: any) => onClick(event)}>
-  <CBadge showHoverEffect={false} title={tooltip} class="flex w-fit gap-1" {color}>
+<button
+  {disabled}
+  class={buttonClass}
+  onclick={(event: any) => {
+    if (onClick) {
+      onClick(event);
+    } else if (updateStateFn) {
+      const callback = updateStateFn();
+      callback(state);
+    }
+  }}
+>
+  <CBadge showHoverEffect={false} title={tooltip} class="flex w-fit gap-1" color={badgeColor}>
     {@render icon()}
-    <span>{label}</span>
+    <span>{state}</span>
   </CBadge>
 </button>

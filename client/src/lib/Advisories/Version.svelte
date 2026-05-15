@@ -13,7 +13,7 @@
   import { push } from "$routes/router.svelte";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   import { appStore } from "$lib/store.svelte";
-  import type { AdvisoryVersion } from "./advisory";
+  import type { AdvisoryVersion } from "./advisory.svelte";
 
   interface Props {
     advisoryVersions: AdvisoryVersion[];

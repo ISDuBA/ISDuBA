@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { A, Li, List, P } from "flowbite-svelte";
-  import { loadAdvisoryVersions, type AdvisoryVersion } from "$lib/Advisories/advisory";
+  import { loadAdvisoryVersions, type AdvisoryVersion } from "$lib/Advisories/advisory.svelte";
   import { onMount } from "svelte";
   import { addSlashes } from "$lib/utils";
   import type { ErrorDetails } from "$lib/Errors/error";

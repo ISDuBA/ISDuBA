@@ -100,7 +100,7 @@ CREATE TABLE documents (
     four_cves   jsonb
                 GENERATED ALWAYS AS (first_four_cves(document)) STORED,
     -- The data
-    document    jsonb COMPRESSION lz4 NOT NULL,
+    document    jsonb COMPRESSION lz4 NOT NULL,  -- see documents_texts comment
     original    bytea COMPRESSION lz4 NOT NULL,
     signature   bytea COMPRESSION lz4,
     filename    varchar,
@@ -197,6 +197,9 @@ CREATE TABLE unique_texts (
 
 CREATE INDEX ON unique_texts USING gin(txt gin_trgm_ops);
 
+-- num identifies a string for a specific document_id. It starts with index 0
+--    and for many strings, the num integer value replaces the string
+--    inside the jsonb of the documents.document.
 CREATE TABLE documents_texts (
     documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     num          int NOT NULL,

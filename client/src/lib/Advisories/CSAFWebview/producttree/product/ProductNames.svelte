@@ -32,6 +32,6 @@
 
 {#if productNames}
   {#each sortedProductNames as product, i (`productnames-${uid}-${i}`)}
-    <ProductName {product} />
+    <ProductName {product} path="/product_tree/full_product_names[${i}]" />
   {/each}
 {/if}

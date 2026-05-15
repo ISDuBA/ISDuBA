@@ -14,10 +14,15 @@
 
   interface Props {
     hash: hashEntry[];
+    path: string;
   }
-  let { hash }: Props = $props();
+  let { hash, path }: Props = $props();
 </script>
 
 {#each hash as hashEntry (hashEntry.value)}
-  <KeyValue keys={["algorithm", "value"]} values={[hashEntry.algorithm, hashEntry.value]} />
+  <KeyValue
+    keys={["algorithm", "value"]}
+    values={[hashEntry.algorithm, hashEntry.value]}
+    paths={[`${path}/algorithm`, `${path}/value`]}
+  />
 {/each}

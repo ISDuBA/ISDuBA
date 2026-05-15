@@ -52,12 +52,15 @@ type AppStore = {
     };
     isDarkMode: boolean;
     search: {
+      advanced: boolean;
       count: number | null;
+      query: string | null;
       offset: number | null;
       requestURL: string | null;
       results: any[] | null;
       type: SEARCHTYPES;
       searchURL: string | undefined;
+      term: string | undefined;
       parameters: {
         advisories: SearchParameters | undefined;
         documents: SearchParameters | undefined;
@@ -123,7 +126,9 @@ const generateInitialState = (): AppStore => {
       isToolboxOpen: false,
       isDarkMode: document.firstElementChild?.classList.contains("dark") ?? false,
       search: {
+        advanced: false,
         count: null,
+        query: null,
         offset: null,
         requestURL: null,
         results: null,
@@ -133,7 +138,8 @@ const generateInitialState = (): AppStore => {
           documents: undefined,
           events: undefined
         },
-        searchURL: undefined
+        searchURL: undefined,
+        term: undefined
       },
       routerParams: null
     },
@@ -353,6 +359,10 @@ export const appStore = {
     state.app.search.offset = newOffset;
   },
 
+  setSearchQuery: (newQuery: string | null) => {
+    state.app.search.query = newQuery;
+  },
+
   // Pass the URL to load documents/events without the offset parameter so we can attach the offset of the store.
   setSearchRequestURL: (newURL: string | null) => {
     state.app.search.requestURL = newURL;
@@ -364,6 +374,10 @@ export const appStore = {
 
   setSearchType: (newType: SEARCHTYPES) => {
     state.app.search.type = newType;
+  },
+
+  setSearchAdvanced: (isAdvanced: boolean) => {
+    state.app.search.advanced = isAdvanced;
   },
 
   setDocumentsToDelete: (documents: any[]) => {
@@ -422,6 +436,10 @@ export const appStore = {
 
   setSearchURL: (newSearchURL: string | undefined) => {
     state.app.search.searchURL = newSearchURL;
+  },
+
+  setSearchTerm: (newSearchTerm: string | undefined) => {
+    state.app.search.term = newSearchTerm;
   },
 
   setSearchParametersForType: (type: SEARCHTYPES, parameters: SearchParameters) => {

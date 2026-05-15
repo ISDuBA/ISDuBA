@@ -19,6 +19,6 @@
 
 {#if acknowledgments}
   {#each acknowledgments as ack, i (`ack-${i}`)}
-    <AcknowledgmentComponent {ack} />
+    <AcknowledgmentComponent {ack} path={`/document/acknowledgments[${i}]`} />
   {/each}
 {/if}
