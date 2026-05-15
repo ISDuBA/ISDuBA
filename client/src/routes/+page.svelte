@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import Router from "svelte-spa-router";
-  import "../app.pcss";
+  import "../app.css";
   import "boxicons/css/boxicons.min.css";
   import SideNav from "$lib/SideNav.svelte";
   import Dashboard from "$lib/Dashboard/Dashboard.svelte";
