@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { TableBodyCell, Spinner, Label, PaginationItem, Select } from "flowbite-svelte";
+  import { Button, TableBodyCell, Spinner, Label, PaginationItem, Select } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
@@ -27,7 +27,6 @@
   } from "./source";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import { DAY_MS } from "$lib/time";
-  import Button from "flowbite-svelte/Button.svelte";
   import CSearch from "$lib/Components/CSearch.svelte";
   import DateRange from "$lib/Components/DateRange.svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
