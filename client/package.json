@@ -41,7 +41,7 @@
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.15.0",
-    "flowbite": "^4.0.1",
+    "flowbite": "^4.0.2",
     "flowbite-svelte": "^1.28.1",
     "husky": "^9.1.7",
     "monocart-reporter": "^2.11.2",
