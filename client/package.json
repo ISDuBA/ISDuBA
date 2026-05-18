@@ -78,7 +78,7 @@
     "oidc-client-ts": "^3.5.0",
     "qs": "^6.15.1",
     "sortablejs": "^1.15.7",
-    "svelte-spa-router": "^4.0.1",
+    "svelte-spa-router": "^5.1.0",
     "validator": "^13.15.35"
   },
   "overrides": {

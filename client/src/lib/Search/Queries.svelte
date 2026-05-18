@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { querystring as qs } from "svelte-spa-router";
+  import { router } from "svelte-spa-router";
   import { parse } from "qs";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
@@ -36,7 +36,7 @@
 
   const uid = $props.id();
 
-  let queryString: any = $derived($qs ? parse($qs) : undefined);
+  let queryString: any = $derived(router.querystring ? parse(router.querystring) : undefined);
 
   let defaultQuery = $derived(defaultQ());
 
