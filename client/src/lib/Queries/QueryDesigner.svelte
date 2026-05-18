@@ -481,11 +481,7 @@
     <div class="mt-6 w-full">
       <Label for="query-criteria">Query criteria:</Label>
       <Input disabled={!isAllowedToEdit} id="query-criteria" bind:value={currentSearch.query} />
-      <Link
-        href="https://github.com/ISDuBA/ISDuBA/blob/main/docs/search.md#filter-expressions"
-        class="text-sm underline"
-      >
-        <i class="bx bx-link"></i>
+      <Link href="/#/filter_help" class="text-sm underline">
         <span>Documentation: Filter expression</span>
       </Link>
       {#if saveErrorMessage}

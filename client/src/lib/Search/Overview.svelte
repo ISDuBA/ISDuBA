@@ -454,11 +454,7 @@
   </div>
   {#if advanced}
     <div transition:slide>
-      <Link
-        href="https://github.com/ISDuBA/ISDuBA/blob/main/docs/search.md#filter-expressions"
-        class="text-sm underline"
-      >
-        <i class="bx bx-link"></i>
+      <Link href="/#/filter_help" class="text-sm underline">
         <span>Documentation: Filter expression</span>
       </Link>
     </div>
