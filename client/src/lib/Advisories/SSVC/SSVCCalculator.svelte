@@ -29,12 +29,15 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import ComplexDecision from "./ComplexDecision.svelte";
   import SsvcInput from "./SSVCInput.svelte";
+  import { slide } from "svelte/transition";
+  import SSVCBadge from "./SSVCBadge.svelte";
 
   interface Props {
     disabled: boolean;
     documentID: string;
     allowEditing: any;
     isEditing: boolean;
+    ssvcVector: string | undefined;
     vectorInput: string;
     updateSSVC?: () => void;
   }
@@ -44,6 +47,7 @@
     disabled = false,
     documentID,
     isEditing = $bindable(),
+    ssvcVector = undefined,
     vectorInput = "",
     updateSSVC = undefined
   }: Props = $props();
@@ -275,21 +279,27 @@
 <div id="ssvc-calc" class="flex w-full flex-col">
   {#if !isEditing}
     {#if !disabled}
-      <div class="flex flex-row">
+      <div class="flex flex-row" transition:slide>
         {#if !vectorInput}
-          <span class="h-6 text-lg">Please enter a SSVC</span>
+          <div transition:slide>
+            <span class="h-6 text-lg">Please enter a SSVC</span>
+          </div>
+        {/if}
+        {#if ssvcVector}
+          <SSVCBadge vector={ssvcVector}></SSVCBadge>
         {/if}
         <button
           aria-label="Edit SSVC"
           class="mr-auto h-6"
-          {disabled}
           title="Edit SSVC"
-          onclick={toggleEditing}><i class="bx bx-edit-alt ml-1"></i></button
+          onclick={toggleEditing}
         >
+          <i class="bx bx-edit-alt ml-1"></i>
+        </button>
       </div>
     {/if}
   {:else if !startedCalculation}
-    <div class="flex flex-col">
+    <div class="flex flex-col" transition:slide>
       <Label class="mb-4">
         <span>Enter a SSVC directly</span>
       </Label>
@@ -336,111 +346,118 @@
       </div>
     </div>
   {:else}
-    <div class="flex flex-row">
-      <Label class="mb-4">Evaluate a SSVC</Label>
-    </div>
-    <div class="w-full">
-      <span class="pt-[0.3rem] font-mono text-gray-400" color="gray"
-        >Step {currentStep + 1}/{steps.length}</span
-      >
-      <StepIndicator
-        glow={false}
-        completedCustom=""
-        currentCustom=""
-        color="primary"
-        class="h-1"
-        currentStep={currentStep + 1}
-        {steps}
-        hideLabel
-      />
-      {#if steps[currentStep]}
-        <div class="mt-2 mb-2">
-          <span class="text-xl text-nowrap">{steps[currentStep]}</span>
-        </div>
-      {/if}
-      {#if mainDecisions[currentStep]}
-        {#if currentStep < mainDecisions.length - 1}
-          {#if mainDecisions[currentStep].decision_type === "simple"}
-            <div class="flex flex-row items-baseline gap-3">
-              {#each mainDecisions[currentStep].options as option, i (`ssvccalculator-1-${uid}-${i}`)}
-                <Button
-                  outline
-                  size="xs"
-                  title={option.description}
-                  onclick={() => selectOption(option)}
-                  class="h-6"
-                  >{option.label}
-                </Button>
-              {/each}
-            </div>
-          {:else if mainDecisions[currentStep].decision_type === "complex"}
-            {#if !isComplex}
-              <div class="flex flex-row gap-x-3">
-                {#each mainDecisions[currentStep].options as option, j (`ssvccalculator-2-${uid}-${j}`)}
+    <div transition:slide>
+      <div class="flex flex-row">
+        <Label class="mb-4">Evaluate a SSVC</Label>
+      </div>
+      <div class="w-full">
+        <span class="pt-[0.3rem] font-mono text-gray-400" color="gray"
+          >Step {currentStep + 1}/{steps.length}</span
+        >
+        <StepIndicator
+          glow={false}
+          completedCustom=""
+          currentCustom=""
+          color="primary"
+          class="h-1"
+          currentStep={currentStep + 1}
+          {steps}
+          hideLabel
+        />
+        {#if steps[currentStep]}
+          <div class="mt-2 mb-2">
+            <span class="text-xl text-nowrap">{steps[currentStep]}</span>
+          </div>
+        {/if}
+        {#if mainDecisions[currentStep]}
+          {#if currentStep < mainDecisions.length - 1}
+            {#if mainDecisions[currentStep].decision_type === "simple"}
+              <div class="flex flex-row items-baseline gap-3">
+                {#each mainDecisions[currentStep].options as option, i (`ssvccalculator-1-${uid}-${i}`)}
+                  <Button
+                    outline
+                    size="xs"
+                    title={option.description}
+                    onclick={() => selectOption(option)}
+                    class="h-6"
+                    >{option.label}
+                  </Button>
+                {/each}
+              </div>
+            {:else if mainDecisions[currentStep].decision_type === "complex"}
+              {#if !isComplex}
+                <div class="flex flex-row gap-x-3">
+                  {#each mainDecisions[currentStep].options as option, j (`ssvccalculator-2-${uid}-${j}`)}
+                    <Button
+                      class="h-6"
+                      outline
+                      title={option.description}
+                      size="xs"
+                      onclick={() => selectOption(option)}>{option.label}</Button
+                    >
+                  {/each}
+                  or
                   <Button
                     class="h-6"
                     outline
-                    title={option.description}
                     size="xs"
-                    onclick={() => selectOption(option)}>{option.label}</Button
+                    onclick={() => {
+                      isComplex = true;
+                    }}>Custom</Button
                   >
-                {/each}
-                or
-                <Button
-                  class="h-6"
-                  outline
-                  size="xs"
-                  onclick={() => {
-                    isComplex = true;
-                  }}>Custom</Button
-                >
-              </div>
-            {:else}
-              <ComplexDecision children={mainDecisions[currentStep].children} {decisionPoints}
-              ></ComplexDecision>
+                </div>
+              {:else}
+                <ComplexDecision children={mainDecisions[currentStep].children} {decisionPoints}
+                ></ComplexDecision>
+              {/if}
             {/if}
+          {:else if result}
+            <Label
+              >Result:
+              <span style={resultStyle}>{result.label}</span>
+            </Label>
+            <Label class="text-xs text-gray-400">{vector}</Label>
           {/if}
-        {:else if result}
-          <Label
-            >Result:
-            <span style={resultStyle}>{result.label}</span>
-          </Label>
-          <Label class="text-xs text-gray-400">{vector}</Label>
         {/if}
-      {/if}
-      <div class="mt-4 flex flex-col">
-        <div class="ml-auto flex flex-row gap-x-3">
-          {#if currentStep > 0}
-            <Button color="light" size="xs" class="h-6 p-3" onclick={stepBack}>Back</Button>
-          {/if}
-          <Button size="xs" color="light" class="h-6 p-3 text-nowrap" onclick={resetUserDecisions}>
-            Restart
-          </Button>
-          {#if isComplex || result}
+        <div class="mt-4 flex flex-col">
+          <div class="ml-auto flex flex-row gap-x-3">
+            {#if currentStep > 0}
+              <Button color="light" size="xs" class="h-6 p-3" onclick={stepBack}>Back</Button>
+            {/if}
             <Button
-              color={currentStep === steps.length - 1 ? "green" : "primary"}
-              onclick={() => {
-                if (currentStep === steps.length - 1) {
-                  saveSSVC(vector);
-                } else {
-                  calculateComplexOption();
-                }
-              }}
-              class="h-6 p-3"
-              title="Calculate">Save</Button
+              size="xs"
+              color="light"
+              class="h-6 p-3 text-nowrap"
+              onclick={resetUserDecisions}
             >
-          {/if}
-          <Button
-            color="light"
-            size="xs"
-            class="h-6 p-3"
-            title="Cancel SSVC input"
-            onclick={() => {
-              resetUserDecisions();
-              startedCalculation = false;
-              isEditing = false;
-            }}>Cancel</Button
-          >
+              Restart
+            </Button>
+            {#if isComplex || result}
+              <Button
+                color={currentStep === steps.length - 1 ? "green" : "primary"}
+                onclick={() => {
+                  if (currentStep === steps.length - 1) {
+                    saveSSVC(vector);
+                  } else {
+                    calculateComplexOption();
+                  }
+                }}
+                class="h-6 p-3"
+                title="Calculate">Save</Button
+              >
+            {/if}
+            <Button
+              color="light"
+              size="xs"
+              class="h-6 p-3"
+              title="Cancel SSVC input"
+              onclick={() => {
+                resetUserDecisions();
+                startedCalculation = false;
+                isEditing = false;
+              }}>Cancel</Button
+            >
+          </div>
         </div>
       </div>
     </div>

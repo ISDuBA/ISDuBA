@@ -10,14 +10,18 @@
 
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { advisorySearchState } from "../advisory.svelte";
 
   interface Props {
-    header: string;
+    header?: string;
     title?: string;
     open?: boolean;
     showBorder?: boolean;
     level?: number;
     highlight?: boolean;
+    // path used inside advisory view when this component should open
+    // automatically if it contains the current search match.
+    path?: string;
     onOpen?: () => any;
     onClose?: () => any;
     children: Snippet;
@@ -25,12 +29,13 @@
     headerRightSlot?: Snippet;
   }
   let {
-    header,
+    header = undefined,
     title = undefined,
-    open = false,
+    open = $bindable(false),
     showBorder = true,
     level = 2,
     highlight = false,
+    path = undefined,
     onOpen = () => {
       //default: Do nothing
     },
@@ -59,11 +64,12 @@
       if (onClose) {
         onClose();
       }
-      visibility = "none";
+      open = false;
     } else {
       if (onOpen) {
         onOpen();
       }
+      open = true;
       setTimeout(() => {
         const element = document.getElementById(`${uuid}`);
         if (element) {
@@ -71,7 +77,6 @@
           window.scrollTo({ top: y, behavior: "smooth" });
         }
       }, 200);
-      visibility = "block";
     }
   };
   let icon = $derived.by(() => {
@@ -96,6 +101,16 @@
         return "";
     }
   };
+
+  $effect(() => {
+    if (path) {
+      if (advisorySearchState.matchIndex !== -1) {
+        const hitPath = advisorySearchState.searchMatches[advisorySearchState.matchIndex]?.path;
+        const shouldOpen = hitPath !== undefined && hitPath.startsWith(path);
+        if (shouldOpen) open = true;
+      }
+    }
+  });
 </script>
 
 <div class:collapsible={true} class:highlight-section={highlight}>
@@ -107,7 +122,7 @@
       <div class={getClass(level)}>
         {#if headerSlot}
           {@render headerSlot()}
-        {:else}
+        {:else if header}
           <span class={getClass(level)}>{header}</span>
         {/if}
       </div>

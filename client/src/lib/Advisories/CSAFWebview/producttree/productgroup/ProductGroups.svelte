@@ -21,6 +21,6 @@
 
 {#if productGroups}
   {#each productGroups as productGroup, i (`productgroups-${uid}-${i}`)}
-    <ProductGroup {productGroup} />
+    <ProductGroup {productGroup} path={`/product_tree/product_groups[${i}]`} />
   {/each}
 {/if}

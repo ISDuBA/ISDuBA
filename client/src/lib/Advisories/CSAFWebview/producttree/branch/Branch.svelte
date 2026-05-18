@@ -14,32 +14,36 @@
   import type { Branch } from "$lib/pmdTypes";
   import CBadge from "$lib/Components/CBadge.svelte";
   import Self from "./Branch.svelte";
+  import SearchableText from "../../SearchableText.svelte";
 
   interface Props {
     branch: Branch;
     open: boolean;
     openSubBranches: boolean;
+    path: string;
   }
-  let { branch, open, openSubBranches = false }: Props = $props();
+  let { branch, open, openSubBranches = false, path }: Props = $props();
 
   const uid = $props.id();
 </script>
 
 <div class="pl-3">
-  <Collapsible {open} header={branch.category + ": " + branch.name}>
+  <Collapsible {open} header={branch.category + ": " + branch.name} {path}>
     {#snippet headerSlot()}
       <div class="py-2">
-        <CBadge class="rounded-full" large color="dark">{branch.category}</CBadge>
-        {branch.name}
+        <CBadge class="rounded-full" large color="dark">
+          <SearchableText text={branch.category} textPath={`${path}/category`} />
+        </CBadge>
+        <SearchableText text={branch.name} textPath={`${path}/name`} />
       </div>
     {/snippet}
     {#if branch.branches}
       {#each branch.branches as b, i (`branch-${uid}-${i}`)}
-        <Self branch={b} open={openSubBranches} {openSubBranches} />
+        <Self branch={b} {open} {openSubBranches} path={`${path}/branches[${i}]`} />
       {/each}
     {/if}
     {#if branch.product}
-      <Product product={branch.product} />
+      <Product product={branch.product} path={`${path}/product`} />
     {/if}
   </Collapsible>
 </div>

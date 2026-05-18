@@ -135,11 +135,11 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 
 	type events struct {
 		Events []map[string]any `json:"events"`
-		Count  int64            `json:"count,omitempty"`
+		Count  *int64           `json:"count,omitempty"`
 	}
 	h := events{}
 	if calcCount {
-		h.Count = count
+		h.Count = &count
 	}
 	if len(results) > 0 {
 		h.Events = results

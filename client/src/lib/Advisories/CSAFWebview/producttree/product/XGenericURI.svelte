@@ -14,13 +14,18 @@
 
   interface Props {
     x_generic_uris: xGenericURI[];
+    path: string;
   }
-  let { x_generic_uris }: Props = $props();
+  let { x_generic_uris, path }: Props = $props();
 </script>
 
 <p>X Generic URIs</p>
 <div>
   {#each x_generic_uris as uri (uri.uri)}
-    <KeyValue keys={["Namespace", "URI"]} values={[uri.namespace, uri.uri]} />
+    <KeyValue
+      keys={["Namespace", "URI"]}
+      values={[uri.namespace, uri.uri]}
+      paths={[`${path}/x_generic_uris`]}
+    />
   {/each}
 </div>

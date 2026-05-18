@@ -150,9 +150,56 @@ const fetchDocumentSSVC = async (
   return undefined;
 };
 
+interface SearchMatch {
+  path: string;
+  positions: number[][];
+}
+
+const fetchSearchHits = async (id: number): Promise<SearchMatch[] | ErrorDetails> => {
+  const query = appStore.state.app.search.query;
+  const response = await request(
+    `/api/documents/texts/${id}?query=${encodeURIComponent(query ?? "")}`,
+    "GET"
+  );
+  if (!response.ok) {
+    return getErrorDetails("Could not load search matches.", response);
+  }
+  return response.content;
+};
+
+type AdvisorySearchState = {
+  scroll: boolean;
+  searchMatches: SearchMatch[];
+  matchIndex: number;
+};
+
+const advisorySearchState: AdvisorySearchState = $state({
+  scroll: true,
+  searchMatches: [],
+  matchIndex: -1
+});
+
+const derivedHit = $derived(
+  advisorySearchState.matchIndex !== -1
+    ? advisorySearchState.searchMatches[advisorySearchState.matchIndex]
+    : undefined
+);
+
+const getAdvisorySearchHit = () => {
+  return derivedHit;
+};
+
 const getAdvisoryLink = (doc: any) =>
   `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
 const getAdvisoryAnchorLink = (doc: any) => "#" + getAdvisoryLink(doc);
 
-export { updateMultipleStates, loadAdvisoryVersions, fetchDocumentSSVC, getAdvisoryAnchorLink };
-export type { AdvisoryVersion };
+export {
+  advisorySearchState,
+  updateMultipleStates,
+  loadAdvisoryVersions,
+  fetchDocumentSSVC,
+  fetchSearchHits,
+  getAdvisoryAnchorLink,
+  getAdvisorySearchHit
+};
+export type { AdvisoryVersion, SearchMatch };

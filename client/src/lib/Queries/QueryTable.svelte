@@ -230,6 +230,7 @@
                     changeDashboard(query.id, query.dashboard);
                   }}
                   bind:checked={query.dashboard}
+                  ariaLabel={`Show query ${query.name} on dashboard`}
                   class={isAllowedToEdit ? "" : "text-gray-300"}
                   disabled={!isAllowedToEdit || isLoading}
                 ></CCheckbox>
@@ -239,6 +240,7 @@
                   onClicked={() => {
                     changeIgnored(query.id, !ignoredQueries?.includes(query.id));
                   }}
+                  ariaLabel={`Hide query ${query.name} everywhere`}
                   disabled={!ignoredQueries || isLoading}
                   checked={ignoredQueries !== undefined && ignoredQueries.includes(query.id)}
                 ></CCheckbox>
@@ -249,6 +251,7 @@
                     changeDefaultQuery(query.id, query.default_query);
                   }}
                   bind:checked={query.default_query}
+                  ariaLabel={`Query ${query.name} is default query`}
                   class={isAllowedToEdit ? "" : "text-gray-300"}
                   disabled={!isAllowedToEdit || isLoading}
                 ></CCheckbox>

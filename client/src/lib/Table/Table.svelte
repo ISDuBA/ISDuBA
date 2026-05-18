@@ -37,10 +37,10 @@
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { areArraysEqual } from "$lib/utils";
   import DeleteModal from "./DeleteModal.svelte";
-  import { getAdvisoryAnchorLink, updateMultipleStates } from "$lib/Advisories/advisory";
+  import { getAdvisoryAnchorLink, updateMultipleStates } from "$lib/Advisories/advisory.svelte";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
   import type { SearchParameters } from "$lib/Search/search.svelte";
-  import HitList from "./HitList.svelte";
+  import MatchList from "./MatchList.svelte";
   import { routerState } from "$routes/router.svelte";
   import Link from "$lib/Components/Link.svelte";
 
@@ -458,8 +458,8 @@
                 : doc}
             <tr
               class={i % 2 == 1
-                ? "bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"}
+                ? "cursor-pointer bg-white dark:bg-gray-800"
+                : "cursor-pointer bg-gray-100 dark:bg-gray-700"}
             >
               {#if isMultiSelectionAllowed}
                 <TableBodyCell class="px-1">
@@ -681,7 +681,7 @@
             </tr>
             {#if [SEARCHTYPES.ADVISORY, SEARCHTYPES.DOCUMENT].includes(tableType)}
               {#if doc.data}
-                <HitList colspan={columns.length} doc={item} hits={doc.data} index={i} />
+                <MatchList doc={item} externalIndex={i} matches={doc.data} index={i} />
               {/if}
             {/if}
           {/each}

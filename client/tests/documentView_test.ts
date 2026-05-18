@@ -10,12 +10,19 @@ import { expect } from "@playwright/test";
 import { test } from "./fixtures";
 import { vectorStart } from "$lib/Advisories/SSVC/SSVCCalculator";
 
-test("Advisory view is working", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
+  // Go to Search and ensure that the client finished loading the results
   await page.goto("/#/search");
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByText("Avendor-advisory-0004", { exact: true })).toBeVisible();
+  await expect(page.getByText("Avendor-advisory-0005", { exact: true })).toBeVisible();
+});
+
+test("Advisory view is working", async ({ page }) => {
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
+  await expect(page.getByText("5.7 (MEDIUM)")).toBeVisible();
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
   // value helps to distinguish the comments.
@@ -77,14 +84,7 @@ test("Advisory view is working", async ({ page }) => {
 });
 
 test("Tabs with details about document are working", async ({ page }) => {
-  await page.goto("/#/search");
-  await expect(page.getByText("advisories in total")).toBeVisible();
-  await page.getByPlaceholder("Enter a search term").fill("avendor");
-  await page.getByRole("button", { name: "Search", exact: true }).click();
-  await expect(page.getByText("Avendor-advisory-0004", { exact: true })).toBeVisible();
-  await expect(page.getByText("Avendor-advisory-0005", { exact: true })).toBeVisible();
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
-
   await page.getByRole("button", { name: "3 (final)" }).click();
 
   await page.getByRole("tab", { name: "Vulnerabilities" }).click();
@@ -95,6 +95,6 @@ test("Tabs with details about document are working", async ({ page }) => {
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
 
-  await page.getByText("AVendor product_1 1.1").click();
+  await page.getByText("AVendor product_1 1.1").first().click();
   await page.getByText("pkg:npm/acme/CSAFPID_0001").scrollIntoViewIfNeeded({ timeout: 2000 });
 });
