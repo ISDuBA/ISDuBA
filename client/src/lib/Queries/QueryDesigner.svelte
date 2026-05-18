@@ -35,7 +35,7 @@
   import { isRoleIncluded } from "$lib/permissions";
   import Sortable from "sortablejs";
   import TypeToggle from "$lib/Search/TypeToggle.svelte";
-  import Link from "$lib/Components/Link.svelte";
+  import SearchDocLink from "$lib/Search/SearchDocLink.svelte";
 
   interface Props {
     params?: any;
@@ -481,13 +481,7 @@
     <div class="mt-6 w-full">
       <Label for="query-criteria">Query criteria:</Label>
       <Input disabled={!isAllowedToEdit} id="query-criteria" bind:value={currentSearch.query} />
-      <Link
-        href="https://github.com/ISDuBA/ISDuBA/blob/main/docs/search.md#filter-expressions"
-        class="text-sm underline"
-      >
-        <i class="bx bx-link"></i>
-        <span>Documentation: Filter expression</span>
-      </Link>
+      <SearchDocLink />
       {#if saveErrorMessage}
         <div class="mt-2 flex md:justify-end">
           <ErrorMessage error={saveErrorMessage}></ErrorMessage>

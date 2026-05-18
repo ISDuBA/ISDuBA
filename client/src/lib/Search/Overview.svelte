@@ -28,8 +28,8 @@
   import { defaultQuery as defaultQ, queryState } from "./search.svelte";
   import { page } from "$app/state";
   import { untrack } from "svelte";
-  import Link from "$lib/Components/Link.svelte";
   import { slide } from "svelte/transition";
+  import SearchDocLink from "./SearchDocLink.svelte";
 
   const INITIAL_LIMIT = 10;
   const INITIAL_ORDER = ["-critical"];
@@ -454,13 +454,7 @@
   </div>
   {#if advanced}
     <div transition:slide>
-      <Link
-        href="https://github.com/ISDuBA/ISDuBA/blob/main/docs/search.md#filter-expressions"
-        class="text-sm underline"
-      >
-        <i class="bx bx-link"></i>
-        <span>Documentation: Filter expression</span>
-      </Link>
+      <SearchDocLink />
     </div>
   {/if}
 </div>
