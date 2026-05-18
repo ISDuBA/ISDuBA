@@ -8,12 +8,17 @@
 
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
+import { docLinkRegex } from "./utils";
 
 const queryName = `Query ${Math.random()}`;
 
 test("Queries can be configured", async ({ page }) => {
   await page.goto("/#/queries");
   await page.getByRole("link", { name: "New query", exact: false }).first().click();
+
+  const docLinkHref = await page.getByRole("link", { name: "Documentation" }).getAttribute("href");
+  expect(docLinkHref).toBeDefined();
+  if (docLinkHref) expect(docLinkRegex.test(docLinkHref)).toBeTruthy();
   await page.getByLabel("Name:").fill(queryName);
   await page.getByLabel("Dashboard").check();
   await page.getByLabel("Hide").check();
