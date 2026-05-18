@@ -41,6 +41,7 @@
   import { onMount } from "svelte";
   import RelatedDocuments from "$lib/Advisories/RelatedDocuments.svelte";
   import { routerState } from "./router.svelte";
+  import FilterHelp from "$lib/Search/FilterHelp.svelte";
 
   let loadConfigError: ErrorDetails | null = $state(null);
 
@@ -274,6 +275,11 @@
 
     "/sources/:id": wrap({
       component: SourceEditor as any,
+      userData: loginRequired,
+      conditions: [loginCondition]
+    }),
+    "/filter_help": wrap({
+      component: FilterHelp as any,
       userData: loginRequired,
       conditions: [loginCondition]
     }),
