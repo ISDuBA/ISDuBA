@@ -28,8 +28,8 @@
   import { defaultQuery as defaultQ, queryState } from "./search.svelte";
   import { page } from "$app/state";
   import { untrack } from "svelte";
-  import Link from "$lib/Components/Link.svelte";
   import { slide } from "svelte/transition";
+  import FilterHelpLink from "./FilterHelpLink.svelte";
 
   const INITIAL_LIMIT = 10;
   const INITIAL_ORDER = ["-critical"];
@@ -454,9 +454,7 @@
   </div>
   {#if advanced}
     <div transition:slide>
-      <Link href="/#/filter_help" class="text-sm underline">
-        <span>Documentation: Filter expression</span>
-      </Link>
+      <FilterHelpLink />
     </div>
   {/if}
 </div>
