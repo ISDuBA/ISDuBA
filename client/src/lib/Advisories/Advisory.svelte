@@ -165,10 +165,13 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
+      if (response.error === "AbortError") {
+        return;
+      }
       couldNotLoadDocument = true;
       if (response.error === "404") {
         documentNotFound = true;
-      } else if (response.error !== "AbortError") {
+      } else {
         loadDocumentError = getErrorDetails(`Could not load document.`, response);
       }
     }
