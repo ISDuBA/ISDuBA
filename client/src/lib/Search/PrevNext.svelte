@@ -44,7 +44,9 @@
     });
     return i !== undefined ? i : -1;
   });
-  let openedDocument = $derived(index !== -1 && searchResults ? searchResults[index] : undefined);
+  let openedDocument = $derived.by(() => {
+    return index !== -1 && searchResults ? searchResults[index] : undefined;
+  });
 
   // Always show 5 slots (including the indicators for leading/following documents)
   let indices = $derived.by((): number[] => {
@@ -134,16 +136,27 @@
     }
   };
 
+  const setNewOffset = (offset: number, count: number) => {
+    // In PrevNext we always fetch only 10 results but the initial index might be higher than
+    // 9 because the user selected the 11. result in the Search table.
+    const newOffset = Math.max(offset, index - 5);
+    // Ensure there are results before the last one if the user reached the end
+    // and of course that the offset is not negative.
+    appStore.setSearchOffset(Math.min(Math.max(newOffset, 0), count - 5));
+  };
+
   const loadResultsIfNecessary = () => {
     const offset = appStore.state.app.search.offset;
     const results = appStore.state.app.search.results;
     const count = appStore.state.app.search.count;
     if (!results || offset === null || count === null) return;
     if (index > results.length - 3 && index + offset < count - 4) {
-      appStore.setSearchOffset(Math.min(Math.max(offset + 1, 0), count - 5));
+      const newOffset = offset + 1;
+      setNewOffset(newOffset, count);
       loadResults();
     } else if (index < 2 && offset > 0) {
-      appStore.setSearchOffset(Math.min(Math.max(offset - 1, 0), count - 5));
+      const newOffset = offset - 1;
+      setNewOffset(newOffset, count);
       loadResults();
     }
   };
