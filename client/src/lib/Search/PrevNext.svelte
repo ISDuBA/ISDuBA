@@ -14,7 +14,7 @@
   import { appStore } from "$lib/store.svelte";
   import { request } from "$lib/request";
   import { SEARCHTYPES } from "$lib/Queries/query";
-  import { tick, untrack } from "svelte";
+  import { tick } from "svelte";
   import { advisorySearchState } from "$lib/Advisories/advisory.svelte";
   import { Spinner } from "flowbite-svelte";
 
@@ -24,7 +24,6 @@
 
   let loading = $state(0);
   let isLoading = $derived(loading > 0);
-  let oldIndex: number | undefined = $state(undefined);
   let abortController: AbortController | undefined = undefined;
 
   let searchResults = $derived(appStore.state.app.search.results);
@@ -110,8 +109,8 @@
 
   const loadResults = async () => {
     if (abortController) abortController.abort();
-    let url = untrack(() => appStore.state.app.search.requestURL);
-    const offset = untrack(() => appStore.state.app.search.offset);
+    let url = appStore.state.app.search.requestURL;
+    const offset = appStore.state.app.search.offset;
     if (!url || offset === null) {
       return;
     }
@@ -135,28 +134,26 @@
     }
   };
 
-  $effect(() => {
-    const offset = untrack(() => appStore.state.app.search.offset);
-    const results = untrack(() => appStore.state.app.search.results);
-    const count = untrack(() => appStore.state.app.search.count);
+  const loadResultsIfNecessary = () => {
+    const offset = appStore.state.app.search.offset;
+    const results = appStore.state.app.search.results;
+    const count = appStore.state.app.search.count;
     if (!results || offset === null || count === null) return;
-    if (oldIndex === undefined || oldIndex === -1) {
-      oldIndex = index;
-      return;
-    } else if (
-      index !== -1 &&
-      oldIndex !== -1 &&
-      ((index !== oldIndex && Math.abs(index - oldIndex) < 2) ||
-        index === results.length - 1 ||
-        (index === 0 && offset > 0))
-    ) {
-      if (index > results.length - 3 && index + offset < count - 4) {
-        appStore.setSearchOffset(Math.min(Math.max(offset + 1, 0), count - 5));
-      } else if (index < 2 && offset > 0) {
-        appStore.setSearchOffset(Math.min(Math.max(offset - 1, 0), count - 5));
-      }
+    if (index > results.length - 3 && index + offset < count - 4) {
+      appStore.setSearchOffset(Math.min(Math.max(offset + 1, 0), count - 5));
       loadResults();
-      oldIndex = index;
+    } else if (index < 2 && offset > 0) {
+      appStore.setSearchOffset(Math.min(Math.max(offset - 1, 0), count - 5));
+      loadResults();
+    }
+  };
+
+  $effect(() => {
+    const params = $state.snapshot(appStore.state.app.routerParams);
+    if (params && params.id != undefined && params.publisherNamespace && params.trackingID) {
+      setTimeout(() => {
+        loadResultsIfNecessary();
+      }, 0);
     }
   });
 </script>
