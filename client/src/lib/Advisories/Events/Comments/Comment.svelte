@@ -22,7 +22,7 @@
     comment: any;
     fullHistory: boolean;
     workflowState: string;
-    onCommentUpdated: () => void;
+    onCommentUpdated: (newComment: string) => void;
   }
 
   let { comment, fullHistory, workflowState = "", onCommentUpdated }: Props = $props();
@@ -30,8 +30,8 @@
     dateStyle: "medium",
     timeStyle: "medium"
   });
-  let updatedComment = $state(comment.message);
-  let commentID = $state(comment.comment_id);
+  let updatedComment = $state("");
+  let commentID = $state();
   $effect(() => {
     untrack(() => commentID);
     if (commentID !== comment.comment_id) {
@@ -73,12 +73,11 @@
     formData.append("message", updatedComment);
     const response = await request(`/api/comments/post/${comment.comment_id}`, "PUT", formData);
     if (response.ok) {
-      comment.message = updatedComment;
       toggleEditing();
     } else if (response.error) {
       updateCommentError = getErrorDetails(`Could not update comment.`, response);
     }
-    onCommentUpdated();
+    onCommentUpdated(updatedComment);
   }
 </script>
 
