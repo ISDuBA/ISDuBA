@@ -151,11 +151,11 @@
     const count = appStore.state.app.search.count;
     if (!results || offset === null || count === null) return;
     if (index > results.length - 3 && index + offset < count - 4) {
-      const newOffset = offset + 1;
+      const newOffset = offset + 3;
       setNewOffset(newOffset, count);
       loadResults();
     } else if (index < 2 && offset > 0) {
-      const newOffset = offset - 1;
+      const newOffset = offset - 3;
       setNewOffset(newOffset, count);
       loadResults();
     }
