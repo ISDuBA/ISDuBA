@@ -28,10 +28,10 @@
 
   let searchResults = $derived(appStore.state.app.search.results);
   let index: number = $derived.by(() => {
+    const params = $state.snapshot(appStore.state.app.routerParams);
     const i = appStore.state.app.search.results?.findIndex((r) => {
       const result = $state.snapshot(r);
       const data = result.data;
-      const params = $state.snapshot(appStore.state.app.routerParams);
       if (
         params &&
         result.id === Number(params.id) &&
