@@ -178,7 +178,7 @@
   };
 
   const loadDocumentSSVC = async () => {
-    if (params.id) {
+    if (params?.id) {
       const abortController = createAbortController();
       const result = await fetchDocumentSSVC(params.id, abortController);
       if (typeof result === "string") {
@@ -422,7 +422,13 @@
 
   const loadRelatedDocuments = async () => {
     if (
-      !(appStore.isEditor() || appStore.isAdmin() || appStore.isAuditor() || appStore.isReviewer())
+      !(
+        appStore.isEditor() ||
+        appStore.isAdmin() ||
+        appStore.isAuditor() ||
+        appStore.isReviewer()
+      ) ||
+      !params
     ) {
       return;
     }
