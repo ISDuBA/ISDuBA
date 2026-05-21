@@ -317,7 +317,6 @@
       <div class="mb-2 ml-auto flex flex-row gap-x-3">
         <Button
           color="light"
-          outline
           size="xs"
           class="h-8"
           onclick={() => {
@@ -328,7 +327,6 @@
         </Button>
         <Button
           color="light"
-          outline
           size="xs"
           class="h-8"
           {disabled}
