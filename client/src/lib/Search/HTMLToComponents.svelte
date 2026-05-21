@@ -43,7 +43,9 @@
 {/snippet}
 
 {#if element}
-  {#if element.nodeType === Node.TEXT_NODE}
+  {#if tag === "i"}
+    <i class={(element as HTMLElement).classList.value}></i>
+  {:else if element.nodeType === Node.TEXT_NODE}
     {element.textContent}
   {:else if tag === "h1"}
     <SectionHeader title={element.textContent ?? ""}></SectionHeader>
