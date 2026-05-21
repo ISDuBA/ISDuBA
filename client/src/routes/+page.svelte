@@ -8,6 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
+  import type { PageProps } from "./$types";
   import Router from "svelte-spa-router";
   import "../app.css";
   import "boxicons/css/boxicons.min.css";
@@ -25,15 +26,10 @@
   import { push } from "svelte-spa-router";
   import Messages from "$lib/Messages/Messages.svelte";
   import Login from "$lib/Login/Login.svelte";
-  import { configuration } from "$lib/configuration";
-  import { type User, UserManager } from "oidc-client-ts";
-  import { jwtDecode } from "jwt-decode";
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
   import QueryOverview from "$lib/Queries/Overview.svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import SourceEditor from "$lib/Sources/SourceEditor.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import type { HttpResponse } from "$lib/types";
   import DocumentUpload from "$lib/Sources/DocumentUpload.svelte";
   import SourceCreator from "$lib/Sources/SourceCreator.svelte";
   import AggregatorViewer from "$lib/Sources/Aggregators/AggregatorViewer.svelte";
@@ -43,27 +39,7 @@
   import { routerState } from "./router.svelte";
   import FilterHelp from "$lib/Search/FilterHelp.svelte";
 
-  let loadConfigError: ErrorDetails | null = $state(null);
-
-  const loadConfig = () => {
-    return new Promise((resolve) => {
-      fetch("api/client-config").then((response: any) => {
-        if (response.ok) {
-          response.json().then((content: any) => {
-            appStore.setConfig(content);
-            resolve(response);
-          });
-        } else {
-          let errorRespose: HttpResponse = response;
-          errorRespose.error = response.status.toString();
-          loadConfigError = getErrorDetails(`Couldn't load Config.`, response);
-          resolve(response);
-        }
-      });
-    });
-  };
-
-  let onConfigLoad: any;
+  let { data }: PageProps = $props();
 
   let inactivityTime = () => {
     let time: ReturnType<typeof setTimeout>;
@@ -76,7 +52,6 @@
 
     document.onmousemove = resetTimer;
     document.onkeydown = resetTimer;
-    onConfigLoad = resetTimer;
 
     const logout = async () => {
       let lastActivity = localStorage.getItem("lastActivity");
@@ -95,76 +70,13 @@
 
   inactivityTime();
 
-  loadConfig().then(() => {
-    if (onConfigLoad) {
-      onConfigLoad();
-    }
-    let userManager = new UserManager(configuration.getConfiguration());
-    const sessionExpired = (e: any) => {
-      appStore.setIsUserLoggedIn(false);
-      if (e) appStore.setSessionExpiredMessage(e.message);
-      appStore.setSessionExpired(true);
-      userManager.removeUser();
-      push("/login");
-    };
-    userManager.events.addSilentRenewError(sessionExpired);
-    userManager.events.addAccessTokenExpired(sessionExpired);
-    userManager.getUser().then(async (user: User | null) => {
-      if (!user) {
-        userManager
-          .signinRedirectCallback()
-          .then(function (user: any) {
-            appStore.setIsUserLoggedIn(true);
-            appStore.setSessionExpired(false);
-            appStore.setTokenParsed(jwtDecode(user.access_token));
-            if (appStore.state.app.redirect) {
-              push(appStore.state.app.redirect);
-            } else {
-              push("/");
-            }
-            const hasAnyRole = checkUserForRoles();
-            if (!hasAnyRole) {
-              appStore.setSessionExpired(true);
-              appStore.setSessionExpiredMessage("User has no role");
-              push("/login");
-            }
-          })
-          .catch(function () {
-            push("/login");
-          });
-      } else {
-        appStore.setIsUserLoggedIn(true);
-        appStore.setSessionExpired(false);
-        appStore.setTokenParsed(jwtDecode(user.access_token));
-        const hasAnyRole = checkUserForRoles();
-        if (!hasAnyRole) {
-          appStore.setSessionExpired(true);
-          appStore.setSessionExpiredMessage("User has no role");
-          push("/login");
-        }
-      }
-      appStore.setUserManager(userManager);
-    });
-  });
-
-  const checkUserForRoles = () => {
-    let hasRole =
-      appStore.isAdmin() ||
-      appStore.isEditor() ||
-      appStore.isAuditor() ||
-      appStore.isReviewer() ||
-      appStore.isSourceManager() ||
-      appStore.isImporter();
-    return hasRole;
-  };
-
   const loginRequired = {
     loginRequired: true
   };
 
-  const loginCondition = () => {
+  const loginCondition = async () => {
     if (!appStore.getUserManager()) return false;
-    if (!checkUserForRoles()) return false;
+    if (!appStore.hasRole()) return false;
     return appStore.getIsUserLoggedIn();
   };
 
@@ -295,8 +207,9 @@
       const location = detail.location;
       let redirectParam: string | undefined;
       if (location) {
-        appStore.setRedirect(location.includes("&") ? location.split("&")[0] : location);
-        redirectParam = `?redirect=${location}`;
+        const redirectURL = `${window.location.origin}/#${location}`;
+        appStore.setRedirect(redirectURL);
+        redirectParam = `?redirect=${redirectURL}`;
       }
       push(`/login${redirectParam ?? ""}`);
     }
@@ -346,7 +259,7 @@
     {#if appStore.state.app.userManager}
       <Router {routes} onConditionsFailed={conditionsFailed} onRouteLoaded={routeLoaded} />
     {/if}
-    <ErrorMessage error={loadConfigError}></ErrorMessage>
+    <ErrorMessage error={data.loadConfigError ?? null}></ErrorMessage>
   </main>
   <Messages></Messages>
 </div>

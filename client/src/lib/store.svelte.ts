@@ -191,6 +191,16 @@ export const appStore = {
   isAdmin: () => roles.includes(ADMIN),
   isAuditor: () => roles.includes(AUDITOR),
   isSourceManager: () => roles.includes(SOURCE_MANAGER),
+  hasRole: () => {
+    return (
+      appStore.isAdmin() ||
+      appStore.isEditor() ||
+      appStore.isAuditor() ||
+      appStore.isReviewer() ||
+      appStore.isSourceManager() ||
+      appStore.isImporter()
+    );
+  },
 
   // User management
   getUserManager: () => state.app.userManager,
