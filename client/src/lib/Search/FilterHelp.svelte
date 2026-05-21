@@ -15,8 +15,9 @@
   import { Spinner } from "flowbite-svelte";
   import { onMount } from "svelte";
   import DOMPurify from "dompurify";
+  import HTMLToComponents from "./HTMLToComponents.svelte";
 
-  let html: string | null = $state(null);
+  let htmlDocument: HTMLDocument | null = $state(null);
   let isLoading = $state(false);
   let error: ErrorDetails | null = $state(null);
 
@@ -27,7 +28,8 @@
       let tmpHtml = DOMPurify.sanitize(response.content, { USE_PROFILES: { html: true } });
       tmpHtml = tmpHtml.replaceAll(":white_check_mark:", "<i class='bx bx-check'></i>");
       tmpHtml = tmpHtml.replaceAll(":x:", "<i class='bx bx-x'></i>");
-      html = tmpHtml;
+      const parser = new DOMParser();
+      htmlDocument = parser.parseFromString(tmpHtml, "text/html");
     } else {
       error = getErrorDetails("Could not load help", response);
     }
@@ -44,6 +46,11 @@
     <Spinner color="gray" size="10"></Spinner>
   </div>
 {/if}
-<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-{@html html}
+{#if htmlDocument?.body?.children?.[0]?.children}
+  <div>
+    {#each htmlDocument.body.children[0].children as child, index (`filter-help-${index}`)}
+      <HTMLToComponents element={child} />
+    {/each}
+  </div>
+{/if}
 <ErrorMessage {error} />
