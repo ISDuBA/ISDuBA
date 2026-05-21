@@ -293,10 +293,12 @@
   const conditionsFailed = (detail: any) => {
     if (detail.userData.loginRequired) {
       const location = detail.location;
+      let redirectParam: string | undefined;
       if (location) {
         appStore.setRedirect(location.includes("&") ? location.split("&")[0] : location);
+        redirectParam = `?redirect=${location}`;
       }
-      push("/login");
+      push(`/login${redirectParam ?? ""}`);
     }
   };
 
