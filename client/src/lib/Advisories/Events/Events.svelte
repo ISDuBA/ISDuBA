@@ -29,7 +29,7 @@
   interface Props {
     entries: any;
     workflowState: string;
-    onCommentUpdated: () => void;
+    onCommentUpdated: (newComment: any, index: number) => void;
     additionalButtons?: Snippet;
   }
 
@@ -84,8 +84,8 @@
           {#if event.event_type === "add_comment"}
             <Comment
               {workflowState}
-              onCommentUpdated={() => {
-                onCommentUpdated();
+              onCommentUpdated={(newComment: string) => {
+                onCommentUpdated(newComment, i);
               }}
               comment={event}
               {fullHistory}

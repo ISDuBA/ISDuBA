@@ -657,7 +657,20 @@
             <div class="mt-6 h-full">
               <History
                 workflowState={advisoryState}
-                onCommentUpdated={() => {
+                onCommentUpdated={(newComment: string, index: number) => {
+                  // First update the comment locally so the user can see that editing the comment did work
+                  const event = historyEntries[index];
+                  if (event.event_type === "add_comment") {
+                    event.message = newComment;
+                  } else {
+                    const originalEvent = historyEntries.find((e: any) => {
+                      return e.event_type === "add_comment" && event.comment_id === e.comment_id;
+                    });
+                    if (originalEvent) {
+                      originalEvent.message = newComment;
+                    }
+                  }
+                  // Then refresh the whole history
                   buildHistory();
                 }}
                 entries={historyEntries}
