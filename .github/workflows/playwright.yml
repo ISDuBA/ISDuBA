@@ -58,5 +58,5 @@ jobs:
           retention-days: 30
       - uses: actions/upload-artifact@v7
         with:
-          name: go-coverage-${{ github.event.repository.updated_at}}
+          name: go-coverage
           path: go-coverage
