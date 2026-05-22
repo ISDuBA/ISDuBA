@@ -37,7 +37,8 @@ jobs:
         run: |
           # Working on the following cov files:
           ls -l /tmp/cov
-          cdir=go-coverage-${{ github.event.repository.updated_at}}
+          echo "DATETIME=$(date '+%Y%m%d-%H%M%S')" >> "$GITHUB_ENV"
+          cdir=go-coverage-$DATETIME
           mkdir -p go-coverage/$cdir
           cd go-coverage/$cdir
           # need old style textfmt to be able to calculate total percentage
@@ -58,5 +59,5 @@ jobs:
           retention-days: 30
       - uses: actions/upload-artifact@v7
         with:
-          name: go-coverage
+          name: go-coverage-${{ env.DATETIME }}
           path: go-coverage
