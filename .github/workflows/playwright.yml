@@ -16,7 +16,6 @@ jobs:
     env:
       BUILD_COVER: "true"
       GOCOVERDIR: "/tmp/cov"
-      CDIR: go-coverage-${{ github.event.repository.updated_at}}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -39,8 +38,8 @@ jobs:
           # Working on the following cov files:
           ls -l /tmp/cov
           cdir=go-coverage-${{ github.event.repository.updated_at}}
-          mkdir $cdir
-          cd $cdir
+          mkdir go-coverage/$cdir
+          cd go-coverage/$cdir
           # need old style textfmt to be able to calculate total percentage
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
           go tool cover -func=coverage.out | tee cover_report.txt
@@ -59,5 +58,5 @@ jobs:
           retention-days: 30
       - uses: actions/upload-artifact@v7
         with:
-          name: go-coverage
-          path: ${{ env.CDIR }}
+          name: go-coverage-${{ github.event.repository.updated_at}}
+          path: go-coverage
