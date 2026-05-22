@@ -33,7 +33,7 @@ jobs:
           killall "-2" --wait isdubad
       - name: collect coverage of go code
         run: |
-          echo Working on the following cov files:
+          # Working on the following cov files:
           ls -l /tmp/cov
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
           go tool cover -func=coverage.out
@@ -50,3 +50,7 @@ jobs:
           name: playwright-output
           path: client/playwright/output/ ## Folder used in playwright.config.js `outputDir`
           retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: go-coverage.out
+          path: coverage.out
