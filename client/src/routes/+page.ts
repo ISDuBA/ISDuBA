@@ -56,11 +56,7 @@ export const load: PageLoad = async () => {
       appStore.setIsUserLoggedIn(true);
       appStore.setSessionExpired(false);
       appStore.setTokenParsed(jwtDecode(user.access_token));
-      if (appStore.state.app.redirect) {
-        push(appStore.state.app.redirect);
-      } else {
-        push("/");
-      }
+      push("/");
       if (!appStore.hasRole()) {
         appStore.setSessionExpired(true);
         appStore.setSessionExpiredMessage("User has no role");
