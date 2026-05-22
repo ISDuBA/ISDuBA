@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: lts/*
       - name: test installation scripts and playwright tests
+        shell: bash
         run: |
           mkdir /tmp/cov
           cd docs/scripts
@@ -32,12 +33,16 @@ jobs:
           cd ../
           killall "-2" --wait isdubad
       - name: collect coverage of go code
+        shell: bash
         run: |
           # Working on the following cov files:
           ls -l /tmp/cov
+          cdir=go-coverage-${{ github.event.repository.updated_at}}
+          mkdir $cdir
+          cd $cdir
+          # need old style textfmt to be able to calculate total percentage
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
-          go tool cover -func=coverage.out
-        shell: bash
+          go tool cover -func=coverage.out | tee cover_report.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:
