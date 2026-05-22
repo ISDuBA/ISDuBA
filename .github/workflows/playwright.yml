@@ -38,7 +38,7 @@ jobs:
           # Working on the following cov files:
           ls -l /tmp/cov
           cdir=go-coverage-${{ github.event.repository.updated_at}}
-          mkdir go-coverage/$cdir
+          mkdir -p go-coverage/$cdir
           cd go-coverage/$cdir
           # need old style textfmt to be able to calculate total percentage
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
