@@ -69,6 +69,7 @@
   let couldNotLoadDocument = $state(false);
   let relatedDocuments: any = $state(undefined);
   let isLoadingSearchMatches = $state(false);
+  let abortControllers: AbortController[] = $state([]);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -109,6 +110,18 @@
   let availableForwardSelection: any[] = $state([]);
   let selectedForwardTarget: number | undefined = $state();
 
+  const abortAllRequests = () => {
+    abortControllers.forEach((c) => {
+      c.abort();
+    });
+  };
+
+  const createAbortController = () => {
+    const abortController = new AbortController();
+    abortControllers.push(abortController);
+    return abortController;
+  };
+
   const getAdvisoryVersions = async () => {
     if (!encodedTrackingID || !encodedPublisherNamespace) return;
     const result = await loadAdvisoryVersions(encodedTrackingID, encodedPublisherNamespace);
@@ -131,7 +144,13 @@
     isInconsistent = false;
     documentNotFound = false;
     couldNotLoadDocument = false;
-    const response = await request(`/api/documents/${params.id}`, "GET");
+    const abortController = createAbortController();
+    const response = await request(
+      `/api/documents/${params.id}`,
+      "GET",
+      undefined,
+      abortController
+    );
     if (response.ok) {
       const result = await response.content;
       if (
@@ -146,6 +165,9 @@
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
+      if (response.error === "AbortError") {
+        return;
+      }
       couldNotLoadDocument = true;
       if (response.error === "404") {
         documentNotFound = true;
@@ -156,8 +178,9 @@
   };
 
   const loadDocumentSSVC = async () => {
-    if (params.id) {
-      const result = await fetchDocumentSSVC(params.id);
+    if (params?.id) {
+      const abortController = createAbortController();
+      const result = await fetchDocumentSSVC(params.id, abortController);
       if (typeof result === "string") {
         ssvcVector = result;
       } else if (result?.message) {
@@ -171,7 +194,7 @@
     if (loadEventsAbortController) {
       loadEventsAbortController.abort();
     }
-    loadEventsAbortController = new AbortController();
+    loadEventsAbortController = createAbortController();
     const response = await request(
       `/api/events/${encodedPublisherNamespace}/${encodedTrackingID}`,
       "GET",
@@ -193,7 +216,7 @@
     if (loadCommentsAbortController) {
       loadCommentsAbortController.abort();
     }
-    loadCommentsAbortController = new AbortController();
+    loadCommentsAbortController = createAbortController();
     const response = await request(
       `/api/comments/${encodedPublisherNamespace}/${encodedTrackingID}`,
       "GET",
@@ -217,9 +240,12 @@
   // Similar structure to loadComments()
   const loadSSVCHistory = async () => {
     if (!encodedPublisherNamespace || !encodedTrackingID) return;
+    const abortController = createAbortController();
     const response = await request(
       `/api/ssvc/history/${encodedPublisherNamespace}/${encodedTrackingID}`,
-      "GET"
+      "GET",
+      undefined,
+      abortController
     );
     if (response.ok) {
       return await response.content;
@@ -229,7 +255,9 @@
       return { ssvcChanges: [] };
     }
     if (response.error) {
-      loadDocumentSSVCError = getErrorDetails(`Could not load SSVC history`, response);
+      if (response.error !== "AbortError") {
+        loadDocumentSSVCError = getErrorDetails(`Could not load SSVC history`, response);
+      }
       return { ssvcChanges: [] };
     }
   };
@@ -359,40 +387,58 @@
   }
 
   const loadAdvisoryState = async () => {
+    const abortController = createAbortController();
     const response = await request(
       `/api/documents?advisories=true&columns=state&query=$tracking_id ${encodedTrackingID} = $publisher "${encodedPublisherNamespace}" = and`,
-      "GET"
+      "GET",
+      undefined,
+      abortController
     );
     if (response.ok) {
       const result = response.content;
       advisoryState = result.documents?.[0].state;
       return result.documents?.[0].state;
-    } else if (response.error) {
+    } else if (response.error && response.error !== "AbortError") {
       stateError = getErrorDetails(`Couldn't load state.`, response);
     }
   };
 
   const loadFourCVEs = async () => {
+    const abortController = createAbortController();
     const response = await request(
       `/api/documents?advisories=false&columns=four_cves&query=$id ${params.id} integer =`,
-      "GET"
+      "GET",
+      undefined,
+      abortController
     );
     if (response.ok) {
       const content = await response.content;
       let four_cves = content?.documents[0]?.four_cves;
       appStore.setFourCVEs(four_cves);
-    } else if (response.error) {
+    } else if (response.error && response.error !== "AbortError") {
       loadFourCVEsError = getErrorDetails(`Couldn't load CVEs.`, response);
     }
   };
 
   const loadRelatedDocuments = async () => {
     if (
-      !(appStore.isEditor() || appStore.isAdmin() || appStore.isAuditor() || appStore.isReviewer())
+      !(
+        appStore.isEditor() ||
+        appStore.isAdmin() ||
+        appStore.isAuditor() ||
+        appStore.isReviewer()
+      ) ||
+      !params
     ) {
       return;
     }
-    const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
+    const abortController = createAbortController();
+    const response = await request(
+      `/api/documents/${params.id}/cve_related`,
+      "GET",
+      undefined,
+      abortController
+    );
     if (response.ok) {
       relatedDocuments = {};
       response.content.forEach((doc: any) => {
@@ -403,7 +449,7 @@
           relatedDocuments[doc.document_id].cve.push(doc.cve);
         }
       });
-    } else if (response.error) {
+    } else if (response.error && response.error !== "AbortError") {
       loadRelatedError = getErrorDetails(`Could not load documents.`, response);
     }
   };
@@ -513,7 +559,10 @@
 
   $effect(() => {
     if (params) {
-      loadData();
+      setTimeout(() => {
+        abortAllRequests();
+        loadData();
+      }, 0);
       position = params.position;
       if (!params.position) {
         const topElement = window.document.getElementById("top");

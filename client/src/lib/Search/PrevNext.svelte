@@ -14,22 +14,24 @@
   import { appStore } from "$lib/store.svelte";
   import { request } from "$lib/request";
   import { SEARCHTYPES } from "$lib/Queries/query";
-  import { untrack } from "svelte";
+  import { tick } from "svelte";
   import { advisorySearchState } from "$lib/Advisories/advisory.svelte";
+  import { Spinner } from "flowbite-svelte";
 
   const uid = $props.id();
 
   const indentedSidebarItemClass = `${sidebarItemLinkClass} !py-1 ps-10`;
 
-  let loading = $state(false);
-  let oldIndex: number | undefined = $state(undefined);
+  let loading = $state(0);
+  let isLoading = $derived(loading > 0);
+  let abortController: AbortController | undefined = undefined;
 
   let searchResults = $derived(appStore.state.app.search.results);
   let index: number = $derived.by(() => {
+    const params = $state.snapshot(appStore.state.app.routerParams);
     const i = appStore.state.app.search.results?.findIndex((r) => {
       const result = $state.snapshot(r);
       const data = result.data;
-      const params = $state.snapshot(appStore.state.app.routerParams);
       if (
         params &&
         result.id === Number(params.id) &&
@@ -42,7 +44,9 @@
     });
     return i !== undefined ? i : -1;
   });
-  let openedDocument = $derived(index !== -1 && searchResults ? searchResults[index] : undefined);
+  let openedDocument = $derived.by(() => {
+    return index !== -1 && searchResults ? searchResults[index] : undefined;
+  });
 
   // Always show 5 slots (including the indicators for leading/following documents)
   let indices = $derived.by((): number[] => {
@@ -106,13 +110,19 @@
   });
 
   const loadResults = async () => {
-    let url = untrack(() => appStore.state.app.search.requestURL);
-    const offset = untrack(() => appStore.state.app.search.offset);
-    if (!url || offset === null) return;
-    loading = true;
+    if (abortController) abortController.abort();
+    let url = appStore.state.app.search.requestURL;
+    const offset = appStore.state.app.search.offset;
+    if (!url || offset === null) {
+      return;
+    }
+    await tick();
+    loading++;
     url = url?.concat(`&offset=${offset}&limit=10`);
-    const response = await request(url, "GET");
-    loading = false;
+    abortController = new AbortController();
+    const response = await request(url, "GET", undefined, abortController);
+    await tick();
+    loading--;
     if (response.ok) {
       let count, documents;
       if (appStore.state.app.search.type === SEARCHTYPES.EVENT) {
@@ -126,28 +136,37 @@
     }
   };
 
-  $effect(() => {
-    const offset = untrack(() => appStore.state.app.search.offset);
-    const results = untrack(() => appStore.state.app.search.results);
-    const count = untrack(() => appStore.state.app.search.count);
+  const setNewOffset = (offset: number, count: number) => {
+    // In PrevNext we always fetch only 10 results but the initial index might be higher than
+    // 9 because the user selected the 11. result in the Search table.
+    const newOffset = Math.max(offset, index - 5);
+    // Ensure there are results before the last one if the user reached the end
+    // and of course that the offset is not negative.
+    appStore.setSearchOffset(Math.min(Math.max(newOffset, 0), count - 5));
+  };
+
+  const loadResultsIfNecessary = () => {
+    const offset = appStore.state.app.search.offset;
+    const results = appStore.state.app.search.results;
+    const count = appStore.state.app.search.count;
     if (!results || offset === null || count === null) return;
-    if (oldIndex === undefined || oldIndex === -1) {
-      oldIndex = index;
-      return;
-    } else if (
-      index !== -1 &&
-      oldIndex !== -1 &&
-      ((index !== oldIndex && Math.abs(index - oldIndex) < 2) ||
-        index === results.length - 1 ||
-        (index === 0 && offset > 0))
-    ) {
-      if (index > results.length - 3 && index + offset < count - 4) {
-        appStore.setSearchOffset(Math.min(Math.max(offset + 1, 0), count - 5));
-      } else if (index < 2 && offset > 0) {
-        appStore.setSearchOffset(Math.min(Math.max(offset - 1, 0), count - 5));
-      }
+    if (index > results.length - 3 && index + offset < count - 4) {
+      const newOffset = offset + 3;
+      setNewOffset(newOffset, count);
       loadResults();
-      oldIndex = index;
+    } else if (index < 2 && offset > 0) {
+      const newOffset = offset - 3;
+      setNewOffset(newOffset, count);
+      loadResults();
+    }
+  };
+
+  $effect(() => {
+    const params = $state.snapshot(appStore.state.app.routerParams);
+    if (params && params.id != undefined && params.publisherNamespace && params.trackingID) {
+      setTimeout(() => {
+        loadResultsIfNecessary();
+      }, 0);
     }
   });
 </script>
@@ -161,33 +180,32 @@
 {/snippet}
 
 {#if searchResults && openedDocument}
-  {#if leading > 0}
-    {@render leadingFollowingIndicator(`${loading ? "" : leading} ...`)}
-  {/if}
+  <div class="flex items-center gap-2">
+    {#if leading > 0}
+      {@render leadingFollowingIndicator(`${isLoading ? "" : leading} ...`)}
+    {/if}
+    {#if isLoading}
+      <div class={leading <= 0 ? "ps-12" : ""}>
+        <Spinner color="gray" size="4" />
+      </div>
+    {/if}
+  </div>
   {#each searchResults as result, i (`prev-next-${uid}-${i}`)}
     {#if indices.includes(i)}
       {@const doc = result}
-      {#if loading}
-        <div
-          class={`${indentedSidebarItemClass} ${i === index ? "bg-primary-200 dark:bg-gray-950" : ""} !text-gray-200 dark:!text-gray-400`}
-        >
-          <span>{doc.data[0].tracking_id}</span>
-        </div>
-      {:else}
-        <CSidebarItem
-          aClass={`${indentedSidebarItemClass} ${i === index ? `${activeClass} px-0 py-0` : sidebarItemClass} ${i === index ? "!text-primary-900 dark:!text-white" : ""}`}
-          label={doc.data[0].tracking_id}
-          onclick={() => {
-            if (i !== index) advisorySearchState.matchIndex = -1;
-          }}
-          href={`#/advisories/${doc.data[0].publisher}/${doc.data[0].tracking_id}/documents/${doc.id}`}
-        >
-          {#snippet icon()}{/snippet}
-        </CSidebarItem>
-      {/if}
+      <CSidebarItem
+        aClass={`${indentedSidebarItemClass} ${i === index ? `${activeClass} px-0 py-0` : sidebarItemClass} ${i === index ? "!text-primary-900 dark:!text-white" : ""}`}
+        label={doc.data[0].tracking_id}
+        onclick={() => {
+          if (i !== index) advisorySearchState.matchIndex = -1;
+        }}
+        href={`#/advisories/${doc.data[0].publisher}/${doc.data[0].tracking_id}/documents/${doc.id}`}
+      >
+        {#snippet icon()}{/snippet}
+      </CSidebarItem>
     {/if}
   {/each}
   {#if following > 0}
-    {@render leadingFollowingIndicator(`... ${loading ? "" : following}`)}
+    {@render leadingFollowingIndicator(`... ${isLoading ? "" : following}`)}
   {/if}
 {/if}
