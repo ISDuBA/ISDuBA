@@ -23,7 +23,7 @@
   import Advisory from "$lib/Advisories/Advisory.svelte";
   import NotFound from "$lib/NotFound.svelte";
   import { appStore } from "$lib/store.svelte";
-  import { push } from "svelte-spa-router";
+  import { push, replace } from "svelte-spa-router";
   import Messages from "$lib/Messages/Messages.svelte";
   import Login from "$lib/Login/Login.svelte";
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
@@ -87,6 +87,27 @@
       appStore.setSearchResultCount(null);
     }
     routerState.didPush = false;
+  };
+
+  const onRouteLoading = (detail: any) => {
+    // Disable eslint warning which recommends to use SvelteURLSearchParams because we don't need reactivity in this place.
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const searchParams = new URLSearchParams(detail.querystring);
+    // If the URL contains the following params it is an URL created by Keycloak
+    if (
+      searchParams.get("state") &&
+      searchParams.get("session_state") &&
+      searchParams.get("iss") &&
+      searchParams.get("code")
+    ) {
+      // These params have nothing to do with our client itself and might confuse users so we remove them
+      searchParams.delete("state");
+      searchParams.delete("session_state");
+      searchParams.delete("iss");
+      searchParams.delete("code");
+      const sanitizedRoute = `${detail.location}${searchParams.toString()}`;
+      replace(sanitizedRoute);
+    }
   };
 
   const routes = {
@@ -257,7 +278,12 @@
     class="flex max-h-screen w-full flex-col overflow-auto bg-white px-2 py-6 lg:px-6 dark:bg-gray-800"
   >
     {#if appStore.state.app.userManager}
-      <Router {routes} onConditionsFailed={conditionsFailed} onRouteLoaded={routeLoaded} />
+      <Router
+        {routes}
+        onConditionsFailed={conditionsFailed}
+        onRouteLoaded={routeLoaded}
+        {onRouteLoading}
+      />
     {/if}
     <ErrorMessage error={data.loadConfigError ?? null}></ErrorMessage>
   </main>

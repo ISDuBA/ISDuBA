@@ -30,9 +30,13 @@
 
   async function login() {
     try {
-      await appStore.state.app.userManager?.signinRedirect({
-        redirect_uri: appStore.state.app.redirect ? `/#${appStore.state.app.redirect}?` : undefined
-      });
+      const options: any = {};
+      if (appStore.state.app.redirect) {
+        // Add a "?" so the client can recognize the params Keycloak add to the URL to which the client
+        // will be redirected
+        options.redirect_uri = appStore.state.app.redirect + "?";
+      }
+      await appStore.state.app.userManager?.signinRedirect(options);
     } catch (e: any) {
       viewError = getErrorDetails(`Could not load login information: ` + e.message);
     }
