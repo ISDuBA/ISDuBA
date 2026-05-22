@@ -32,7 +32,14 @@ const loadConfig = () => {
 
 export const load: PageLoad = async () => {
   const response: any = await loadConfig();
+  if (!response.ok) {
+    const errorResponse: HttpResponse = response;
+    errorResponse.error = response.status.toString();
+    const loadConfigError = getErrorDetails(`Couldn't load Config.`, response);
+    return { loadConfigError };
+  }
   const userManager = new UserManager(configuration.getConfiguration());
+  appStore.setUserManager(userManager);
   const sessionExpired = (e: any) => {
     appStore.setIsUserLoggedIn(false);
     if (e) appStore.setSessionExpiredMessage(e.message);
@@ -42,45 +49,36 @@ export const load: PageLoad = async () => {
   };
   userManager.events.addSilentRenewError(sessionExpired);
   userManager.events.addAccessTokenExpired(sessionExpired);
-  userManager.getUser().then(async (user: User | null) => {
-    if (!user) {
-      userManager
-        .signinRedirectCallback()
-        .then(function (user: any) {
-          appStore.setIsUserLoggedIn(true);
-          appStore.setSessionExpired(false);
-          appStore.setTokenParsed(jwtDecode(user.access_token));
-          if (appStore.state.app.redirect) {
-            push(appStore.state.app.redirect);
-          } else {
-            push("/");
-          }
-          if (!appStore.hasRole()) {
-            appStore.setSessionExpired(true);
-            appStore.setSessionExpiredMessage("User has no role");
-            push("/login");
-          }
-        })
-        .catch(function () {
-          push("/login");
-        });
-    } else {
+  const user: User | null = await userManager.getUser();
+  if (!user) {
+    try {
+      const user: any = await userManager.signinRedirectCallback();
       appStore.setIsUserLoggedIn(true);
       appStore.setSessionExpired(false);
       appStore.setTokenParsed(jwtDecode(user.access_token));
+      if (appStore.state.app.redirect) {
+            push(appStore.state.app.redirect);
+      } else {
+        push("/");
+      }
       if (!appStore.hasRole()) {
         appStore.setSessionExpired(true);
         appStore.setSessionExpiredMessage("User has no role");
         push("/login");
       }
+    } catch (e) {
+      console.error(e);
+      push("/login");
     }
-    appStore.setUserManager(userManager);
-  });
-  if (!response.ok) {
-    const errorResponse: HttpResponse = response;
-    errorResponse.error = response.status.toString();
-    const loadConfigError = getErrorDetails(`Couldn't load Config.`, response);
-    return { loadConfigError };
+  } else {
+    appStore.setIsUserLoggedIn(true);
+    appStore.setSessionExpired(false);
+    appStore.setTokenParsed(jwtDecode(user.access_token));
+    if (!appStore.hasRole()) {
+      appStore.setSessionExpired(true);
+      appStore.setSessionExpiredMessage("User has no role");
+      push("/login");
+    }
   }
   return;
 };
