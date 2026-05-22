@@ -481,7 +481,7 @@
                   {#if isAdmin && tableType !== SEARCHTYPES.EVENT}
                     <CIconButton
                       onClicked={() => {
-                        appStore.setDocumentsToDelete([item]);
+                        appStore.setDocumentsToDelete([doc]);
                         appStore.setIsDeleteModalOpen(true);
                       }}
                       title={`delete ${item.tracking_id}`}
