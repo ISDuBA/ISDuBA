@@ -57,7 +57,7 @@ export const load: PageLoad = async () => {
       appStore.setSessionExpired(false);
       appStore.setTokenParsed(jwtDecode(user.access_token));
       if (appStore.state.app.redirect) {
-            push(appStore.state.app.redirect);
+        push(appStore.state.app.redirect);
       } else {
         push("/");
       }
