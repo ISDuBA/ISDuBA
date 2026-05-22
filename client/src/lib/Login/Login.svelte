@@ -35,6 +35,8 @@
         // Add a "?" so the client can recognize the params Keycloak add to the URL to which the client
         // will be redirected
         options.redirect_uri = appStore.state.app.redirect + "?";
+      } else {
+        options.redirect_uri = window.location.origin + "/#/?";
       }
       await appStore.state.app.userManager?.signinRedirect(options);
     } catch (e: any) {
