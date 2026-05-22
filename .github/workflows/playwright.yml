@@ -38,7 +38,7 @@ jobs:
           # Working on the following cov files:
           ls -l /tmp/cov
           echo "DATETIME=$(date '+%Y%m%d-%H%M%S')" >> "$GITHUB_ENV"
-          cdir=go-coverage-$DATETIME
+          cdir=go-coverage-${{ env.DATETIME }}
           mkdir -p go-coverage/$cdir
           cd go-coverage/$cdir
           # need old style textfmt to be able to calculate total percentage
