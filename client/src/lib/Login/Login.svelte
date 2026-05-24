@@ -32,9 +32,13 @@
     try {
       const options: any = {};
       if (appStore.state.app.redirect) {
+        let redirect_uri = appStore.state.app.redirect;
         // Add a "?" so the client can recognize the params Keycloak add to the URL to which the client
         // will be redirected
-        options.redirect_uri = appStore.state.app.redirect + "?";
+        if (!redirect_uri.includes("?")) {
+          redirect_uri = redirect_uri + "?";
+        }
+        options.redirect_uri = redirect_uri;
       } else {
         options.redirect_uri = window.location.origin + "/#/?";
       }
