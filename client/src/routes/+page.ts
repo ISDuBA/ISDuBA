@@ -31,6 +31,7 @@ const loadConfig = () => {
 };
 
 export const load: PageLoad = async () => {
+  const loadPath: string = window.location.hash.replace("#", "");
   const response: any = await loadConfig();
   if (!response.ok) {
     const errorResponse: HttpResponse = response;
@@ -40,16 +41,20 @@ export const load: PageLoad = async () => {
   }
   const userManager = new UserManager(configuration.getConfiguration());
   appStore.setUserManager(userManager);
-  const sessionExpired = (e: any) => {
+  const sessionExpired = (e?: any) => {
     appStore.setIsUserLoggedIn(false);
     if (e) appStore.setSessionExpiredMessage(e.message);
     appStore.setSessionExpired(true);
     userManager.removeUser();
-    push("/login");
+    if (appStore.state.app.redirect && window.location.hash.includes("/login")) {
+      push(appStore.state.app.redirect);
+    } else {
+      push("/login");
+    }
   };
-  userManager.events.addSilentRenewError(sessionExpired);
-  userManager.events.addAccessTokenExpired(sessionExpired);
   const user: User | null = await userManager.getUser();
+  let isExpired = false;
+
   if (!user) {
     try {
       const user: any = await userManager.signinRedirectCallback();
@@ -74,7 +79,28 @@ export const load: PageLoad = async () => {
       appStore.setSessionExpired(true);
       appStore.setSessionExpiredMessage("User has no role");
       push("/login");
+    } else {
+      // We have to save the current URL at this place or we don't know where to redirect the user
+      // since if sessionExpired is called by the userManager the URL is already changed.
+      // It's also important that we only want to redirect the user if they if they initially opened
+      // a page and their session is already expired.
+      const token = jwtDecode(user.access_token);
+      if (token.exp) {
+        const expDate = new Date(token.exp * 1000);
+        if (expDate.getTime() < Date.now()) {
+          if (loadPath) {
+            appStore.setRedirect(loadPath);
+          }
+          sessionExpired();
+          isExpired = true;
+        }
+      }
     }
   }
+  if (!isExpired) {
+    userManager.events.addSilentRenewError(sessionExpired);
+    userManager.events.addAccessTokenExpired(sessionExpired);
+  }
+
   return;
 };
