@@ -47,7 +47,8 @@ jobs:
           # need old style textfmt to be able to calculate total percentage
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
           echo "## Go coverage" >> $GITHUB_STEP_SUMMARY
-          go tool cover -func=coverage.out | tee cover_report.txt >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=coverage.out | tee cover_report.txt
+          tail -n 1 cover_report.txt >> $GITHUB_STEP_SUMMARY
           cd ../
       - uses: actions/upload-artifact@v7
         if: always()
