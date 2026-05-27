@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
-name: Playwright Tests
+name: Playwright Tests and Coverage
 on:
   workflow_dispatch:
 jobs:
@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: lts/*
       - name: test installation scripts and playwright tests
+        shell: bash
         run: |
           mkdir /tmp/cov
           cd docs/scripts
@@ -31,9 +32,19 @@ jobs:
           npm run cover
           cd ../
           killall "-2" --wait isdubad
-          go tool covdata textfmt -i=/tmp/cov -o coverage.out
-          go tool cover -func=coverage.out
+      - name: collect coverage of go code
         shell: bash
+        run: |
+          # Working on the following cov files:
+          ls -l /tmp/cov
+          echo "DATETIME=$(date '+%Y%m%d-%H%M%S')" >> "$GITHUB_ENV"
+          cdir=go-coverage-${{ env.DATETIME }}
+          mkdir -p go-coverage/$cdir
+          cd go-coverage/$cdir
+          # need old style textfmt to be able to calculate total percentage
+          go tool covdata textfmt -i=/tmp/cov -o coverage.out
+          go tool cover -func=coverage.out | tee cover_report.txt
+          cd ../
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -46,3 +57,7 @@ jobs:
           name: playwright-output
           path: client/playwright/output/ ## Folder used in playwright.config.js `outputDir`
           retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: go-coverage-${{ env.DATETIME }}
+          path: go-coverage

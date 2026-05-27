@@ -1,4 +1,4 @@
-#  This file is Free Software under the Apache-2.0 License
+# This file is Free Software under the Apache-2.0 License
 # without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -27,7 +27,17 @@ GO_FLAGS=$(LDFLAGS)
 
 # Build for coverage profile generation
 ifeq ($(BUILD_COVER), true)
-GO_FLAGS += "-cover"
+GO_FLAGS += -cover
+
+# needed to use the new format for go test -cover output
+# see https://github.com/golang/go/issues/51430#issuecomment-1344711300
+# from 2022-12-09
+#  > At the moment -test.gocoverdir is an unexported test flag,
+# tested with go1.26.3.
+# can be removed when https://go-review.googlesource.com/c/go/+/456595
+# or similar is solved.
+# (thanks https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/)
+GO_TEST_ARGS = -args "-test.gocoverdir=$(GOCOVERDIR)"
 endif
 
 
@@ -44,7 +54,7 @@ build_client:
 	cd client && npm clean-install && npm run build
 
 test:
-	go test ./...
+	go test $(GO_FLAGS) ./... $(GO_TEST_ARGS)
 
 DISTNAME := isduba-$(SEMVER)
 DISTDIR := dist/$(DISTNAME)
