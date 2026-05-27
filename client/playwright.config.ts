@@ -89,7 +89,7 @@ export default defineConfig({
             }
           },
 
-          reports: ["v8", "console-details"]
+          reports: ["v8", "console-summary"]
         }
       }
     ]
