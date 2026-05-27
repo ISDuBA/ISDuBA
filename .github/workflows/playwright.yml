@@ -29,7 +29,7 @@ jobs:
           ./setup.sh --quick
           ./start_all.sh
           cd ../../client
-          npm run cover
+          npm run cover >> $GITHUB_STEP_SUMMARY
           cd ../
           killall "-2" --wait isdubad
       - name: collect coverage of go code
@@ -43,7 +43,7 @@ jobs:
           cd go-coverage/$cdir
           # need old style textfmt to be able to calculate total percentage
           go tool covdata textfmt -i=/tmp/cov -o coverage.out
-          go tool cover -func=coverage.out | tee cover_report.txt
+          go tool cover -func=coverage.out | tee cover_report.txt >> $GITHUB_STEP_SUMMARY
           cd ../
       - uses: actions/upload-artifact@v7
         if: always()
