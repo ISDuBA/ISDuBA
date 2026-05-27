@@ -13,7 +13,7 @@ via appending #/documents/{internal id} or #/advisories/{publisher}/{cve}/docume
 
 # Search
 On the search page, a full-text search of all current (meaning most recent version) documents can be performed.
-When the Detailed Search toggle is enabled, a preview is displayed for every occurrence of the search term across all searched documents.
+Within documents, search results that are within the same part of the document may be grouped when stepping through.
 
 # Filter expressions
 
