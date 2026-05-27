@@ -39,6 +39,7 @@ type AppStore = {
     sessionExpiredMessage: string | null;
     tokenParsed: ProfileWithRoles | null;
     userManager: UserManager | null;
+    redirect: string | null;
     errors: ErrorMessage[];
     documentsToDelete: any[] | null;
     selectedDocumentIDs: SvelteSet<number>;
@@ -119,6 +120,7 @@ const generateInitialState = (): AppStore => {
       isUserLoggedIn: false,
       tokenParsed: null,
       userManager: null,
+      redirect: null,
       errors: [],
       documentsToDelete: null,
       isDeleteModalOpen: false,
@@ -189,6 +191,16 @@ export const appStore = {
   isAdmin: () => roles.includes(ADMIN),
   isAuditor: () => roles.includes(AUDITOR),
   isSourceManager: () => roles.includes(SOURCE_MANAGER),
+  hasRole: () => {
+    return (
+      appStore.isAdmin() ||
+      appStore.isEditor() ||
+      appStore.isAuditor() ||
+      appStore.isReviewer() ||
+      appStore.isSourceManager() ||
+      appStore.isImporter()
+    );
+  },
 
   // User management
   getUserManager: () => state.app.userManager,
@@ -229,6 +241,10 @@ export const appStore = {
 
   setTokenParsed: (tokenParsed: ProfileWithRoles) => {
     state.app.tokenParsed = tokenParsed;
+  },
+
+  setRedirect: (redirect: string | null) => {
+    state.app.redirect = redirect;
   },
 
   toggleDocExpandAll: () => {

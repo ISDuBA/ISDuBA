@@ -36,7 +36,7 @@
 
   // Just to keep eslint silent. Could be fixed in the future.
   /* eslint-disable-next-line svelte/prefer-writable-derived */
-  let drawerOpen: boolean = $state(true);
+  let drawerOpen: boolean = $state(false);
   $effect(() => {
     drawerOpen = width >= breakPoint;
   });

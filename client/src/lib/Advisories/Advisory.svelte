@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { Button, Select, Label, Modal, Spinner } from "flowbite-svelte";
-  import { onDestroy, onMount, setContext } from "svelte";
+  import { onDestroy, onMount, setContext, untrack } from "svelte";
   import { appStore } from "$lib/store.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
@@ -39,6 +39,7 @@
 
   let { params } = $props();
 
+  let oldParams: any = $state(null);
   let document: any = $state({});
   let ssvcVector: string = $state("");
   let comment: string = $state("");
@@ -558,11 +559,15 @@
   });
 
   $effect(() => {
+    const old = untrack(() => oldParams);
     if (params) {
       setTimeout(() => {
-        abortAllRequests();
-        loadData();
+        if (!old || JSON.stringify(old) !== JSON.stringify(params)) {
+          abortAllRequests();
+          loadData();
+        }
       }, 0);
+      oldParams = params;
       position = params.position;
       if (!params.position) {
         const topElement = window.document.getElementById("top");
