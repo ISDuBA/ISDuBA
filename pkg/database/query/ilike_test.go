@@ -9,7 +9,9 @@
 package query
 
 import (
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -35,25 +37,47 @@ func TestCompileILike(t *testing.T) {
 	}
 }
 
+func indexUTF8(s string) func(int) int {
+	idx := 0
+	pos := make(map[int]int, len(s))
+	for i := range s {
+		pos[i] = idx
+		idx++
+	}
+	return func(idx int) int { return pos[idx] }
+}
+
 func TestCarriageReturn(t *testing.T) {
-	const txt = "PC contains a vulnerability that allows hpack table accounting errors could lead to " +
-		"unwanted disconnects between clients and servers in exceptional cases. Three vectors were found " +
-		"that allow the following DOS attacks: - Unbounded memory buffering in the HPACK parser - Unbounded " +
-		"CPU consumption in the HPACK parser The unbounded CPU consumption is down to a copy that occurred " +
-		"per-input-block in the parser, and because that could be unbounded due to the memory copy bug we " +
-		"end up with a parsing loop, with n selected by the client. The unbounded memory buffering bugs: - " +
-		"The header size limit check was behind the string reading code, so we needed to first buffer up to " +
-		"a 4 gigabyte string before rejecting it as longer than 8 or 16kb. - HPACK varints have an encoding " +
-		"quirk whereby an infinite number of 0’s can be added at the start of an integer. gRPC’s hpack " +
-		"parser needed to read all of them before concluding a parse. - gRPC’s metadata overflow check " +
-		"was performed per frame, so that the following sequence of frames could cause infinite buffering: " +
-		"HEADERS: containing a: 1 CONTINUATION: containing a: 2 CONTINUATION: containing a: 3 etc…\r+ " +
-		" - Unbounded memory buffering in the HPACK parser\r"
-	expr := MustCompileILike(`%HEADERS%`)
+
+	txtRaw, err := os.ReadFile("search_response.txt")
+	if err != nil {
+		t.Errorf("cannot load file: %v\n", err)
+	}
+
+	txt := string(txtRaw)
+	runes := []rune(txt)
+	index := indexUTF8(txt)
+
+	/*
+		fmt.Println(len(runes), len(txtRaw))
+		for _, r := range runes {
+			if r > 127 {
+				fmt.Printf("\trune: %c\n", r)
+			}
+		}
+	*/
+	expr := MustCompileILike(`%header%`)
 	havePairs := expr.Search(txt)
 	for _, pair := range havePairs {
-		if have := txt[pair[0] : pair[0]+pair[1]]; have != "HEADERS" {
-			t.Errorf("pair %+v results in %q not \"HEADERS\"", pair, have)
+		have := txt[pair[0] : pair[0]+pair[1]]
+		if strings.ToUpper(have) != "HEADER" {
+			t.Errorf("pair %+v results in %q not \"HEADER\"", pair, have)
+		}
+		start := index(pair[0])
+		end := index(pair[0] + pair[1])
+		runeSliced := string(runes[start:end])
+		if strings.ToUpper(runeSliced) != "HEADER" {
+			t.Errorf("rune slicinf %+v results in %q not \"HEADER\"", pair, runeSliced)
 		}
 	}
 }
