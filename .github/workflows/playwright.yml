@@ -9,6 +9,8 @@
 name: Playwright Tests and Coverage
 on:
   workflow_dispatch:
+  release:
+    types: [created]
 jobs:
   test:
     timeout-minutes: 60
