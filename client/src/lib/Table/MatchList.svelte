@@ -13,7 +13,6 @@
   import { searchColumnName } from "./defaults";
   import { advisorySearchState, getAdvisoryAnchorLink } from "$lib/Advisories/advisory.svelte";
   import Link from "$lib/Components/Link.svelte";
-  import { splitMatches } from "$lib/utils";
 
   interface Props {
     doc: any;
@@ -32,13 +31,61 @@
   const delims = ["[!<", ">!]"];
 
   const getSplits = (text: string): string[] => {
-    const matchRegex = /\[!<.*?>!\]/g;
+    const encoder = new TextEncoder();
+    const encodedText: Uint8Array = encoder.encode(text);
+
+    // Encode text and delimiters and join the arrays so we can search the delimiters via Regex
+    const joinedEncodedText: string = encodedText.join("");
+    const encodedDelim0 = encoder.encode(delims[0]);
+    const encodedDelim1 = encoder.encode(delims[1]);
+    const matchRegex = new RegExp(`${encodedDelim0.join("")}.*?${encodedDelim1.join("")}`, "g");
+    // Find out positions of delimiters
     let regexMatches;
     const positions = [];
-    while ((regexMatches = matchRegex.exec(text)) !== null) {
+    while ((regexMatches = matchRegex.exec(joinedEncodedText)) !== null) {
       positions.push([regexMatches.index, regexMatches["0"].length]);
     }
-    return splitMatches(`${text}`, positions);
+    // Split with the help of the positions
+    const encodedSplits: any[] = [];
+    let lastPos = 0;
+    for (let i = 0; i < positions.length; i++) {
+      const pos = positions[i];
+      const term = joinedEncodedText.slice(pos[0], pos[0] + pos[1]);
+      // Don't use the term to split the text although it would be easier because the method could find
+      // other occurrences that were not considered by the backend.
+      encodedSplits.push(joinedEncodedText.slice(lastPos, pos[0]), term);
+      lastPos = pos[0] + pos[1];
+      if (i === positions.length - 1) {
+        encodedSplits.push(joinedEncodedText.slice(pos[0] + pos[1]));
+      }
+    }
+
+    // Since the joined arrays don't have the information about the length of each number
+    // we take the original encoded text array go through it and check to which split each
+    // integer belongs.
+    let splitIndex = 0;
+    const decodedSplits: string[] = [];
+    let currentSplit = encodedSplits[0];
+    let decoded = "";
+    const decoder = new TextDecoder();
+    encodedText.forEach((t, index) => {
+      if (index === encodedText.length - 1) {
+        decoded = decoded + decoder.decode(new Uint8Array([t]));
+        decodedSplits.push(decoded);
+      } else {
+        if (!currentSplit.startsWith(`${t}`)) {
+          decodedSplits.push(decoded);
+          decoded = "";
+          splitIndex++;
+          if (encodedSplits[splitIndex]) {
+            currentSplit = encodedSplits[splitIndex];
+          }
+        }
+        decoded = decoded + decoder.decode(new Uint8Array([t]));
+        currentSplit = currentSplit.replace(`${t}`, "");
+      }
+    });
+    return decodedSplits;
   };
 
   const getTableRowClass = (index: number) => {
