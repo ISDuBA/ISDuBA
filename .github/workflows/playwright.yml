@@ -32,7 +32,11 @@ jobs:
           ./start_all.sh
           cd ../../client
           npm run cover
-          cat test-results/monocart-report/coverage/coverage-summary.md >> $GITHUB_STEP_SUMMARY
+          # remove colors, because they are too opinionated
+          # found three values to remove here
+          # https://github.com/cenfun/monocart-coverage-reports/blob/024a48e2c6fb10f36aeee08cb8d998f486298971/lib/utils/util.js#L592-L601
+          # (GNU sed processes mult-bytes in the proper multi-byte locale.)
+          sed 's/ [🔴🟡🟢] / /' test-results/monocart-report/coverage/coverage-summary.md >> $GITHUB_STEP_SUMMARY
           cd ../
           killall "-2" --wait isdubad
       - name: collect coverage of go code
