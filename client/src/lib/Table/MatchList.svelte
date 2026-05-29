@@ -30,61 +30,69 @@
   // These have to be the same as defined in the backend code.
   const delims = ["[!<", ">!]"];
 
+  const decodeText = (encoded: Uint8Array[]) => {
+    let decodedText = "";
+    const decoder = new TextDecoder();
+    encoded.forEach((e) => {
+      decodedText = decodedText + decoder.decode(e);
+    });
+    return decodedText;
+  };
+
+  const splitByDelimiterIndex = (index: number, encoded: Uint8Array[]) => {
+    return [encoded.slice(0, index), encoded.slice(index)];
+  };
+
+  const findIndexOfDelim = (delim: Uint8Array, encoded: Uint8Array[]) => {
+    const index = encoded.findIndex((t: Uint8Array) => {
+      return t[0] === delim[0];
+    });
+    if (
+      index !== -1 &&
+      index < encoded.length - 3 &&
+      encoded[index + 1][0] === delim[1] &&
+      encoded[index + 2][0] === delim[2]
+    ) {
+      return index;
+    }
+    return -1;
+  };
+
   const getSplits = (text: string): string[] => {
     const encoder = new TextEncoder();
-    const encodedText: Uint8Array = encoder.encode(text);
+    const encodedText: Uint8Array[] = [];
+    for (let i = 0; i < text.length; i++) {
+      encodedText.push(encoder.encode(text.charAt(i)));
+    }
 
-    // Encode text and delimiters and join the arrays so we can search the delimiters via Regex
-    const joinedEncodedText: string = encodedText.join("");
     const encodedDelim0 = encoder.encode(delims[0]);
     const encodedDelim1 = encoder.encode(delims[1]);
-    const matchRegex = new RegExp(`${encodedDelim0.join("")}.*?${encodedDelim1.join("")}`, "g");
-    // Find out positions of delimiters
-    let regexMatches;
-    const positions = [];
-    while ((regexMatches = matchRegex.exec(joinedEncodedText)) !== null) {
-      positions.push([regexMatches.index, regexMatches["0"].length]);
-    }
-    // Split with the help of the positions
-    const encodedSplits: any[] = [];
-    let lastPos = 0;
-    for (let i = 0; i < positions.length; i++) {
-      const pos = positions[i];
-      const term = joinedEncodedText.slice(pos[0], pos[0] + pos[1]);
-      // Don't use the term to split the text although it would be easier because the method could find
-      // other occurrences that were not considered by the backend.
-      encodedSplits.push(joinedEncodedText.slice(lastPos, pos[0]), term);
-      lastPos = pos[0] + pos[1];
-      if (i === positions.length - 1) {
-        encodedSplits.push(joinedEncodedText.slice(pos[0] + pos[1]));
+
+    const decodedSplits: string[] = [];
+    let index0;
+    let rest = encodedText;
+    let count = 0;
+    while (index0 !== -1 && count < 10) {
+      index0 = findIndexOfDelim(encodedDelim0, rest);
+      if (index0 !== -1) {
+        const splitted0: Uint8Array[][] = splitByDelimiterIndex(index0, rest);
+        const index1 = findIndexOfDelim(encodedDelim1, splitted0[1]);
+        if (index1 !== -1) {
+          const text0 = decodeText(splitted0[0]).replace(delims[0], "").replace(delims[1], "");
+          decodedSplits.push(text0);
+          const splitted1: Uint8Array[][] = splitByDelimiterIndex(index1, splitted0[1]);
+          const text1 = decodeText(splitted1[0]).replace(delims[0], "").replace(delims[1], "");
+          decodedSplits.push(text1);
+          rest = splitted1[1];
+        }
       }
+      count++;
+    }
+    if (rest.length > 0) {
+      const text2 = decodeText(rest).replace(delims[0], "").replace(delims[1], "");
+      decodedSplits.push(text2);
     }
 
-    // Since the joined arrays don't have the information about the length of each number
-    // we take the original encoded text array go through it and check to which split each
-    // integer belongs.
-    let splitIndex = 0;
-    const decodedSplits: string[] = [];
-    let currentSplit = encodedSplits[0];
-    let decoded = "";
-    const decoder = new TextDecoder();
-    encodedText.forEach((t, index) => {
-      if (index === encodedText.length - 1) {
-        decoded = decoded + decoder.decode(new Uint8Array([t]));
-        decodedSplits.push(decoded);
-      } else {
-        if (!currentSplit.startsWith(`${t}`)) {
-          decodedSplits.push(decoded);
-          decoded = "";
-          splitIndex++;
-          if (encodedSplits[splitIndex]) {
-            currentSplit = encodedSplits[splitIndex];
-          }
-        }
-        decoded = decoded + decoder.decode(new Uint8Array([t]));
-        currentSplit = currentSplit.replace(`${t}`, "");
-      }
-    });
     return decodedSplits;
   };
 
