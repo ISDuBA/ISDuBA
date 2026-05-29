@@ -130,13 +130,13 @@ func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]stri
 		out    []rune
 	)
 
-	xfer := func(in []rune, start, end int) func() {
-		if start >= len(in) || end <= 0 {
+	xfer := func(start, end int) func() {
+		if start >= len(s) || end <= 0 {
 			return func() {}
 		}
-		start, end = max(0, start), min(len(in), end)
+		start, end = max(0, start), min(len(s), end)
 		return func() {
-			out = append(out, in[start:end]...)
+			out = append(out, []rune(s[start:end])...)
 		}
 	}
 	delim0 := func() { out = append(out, []rune(delims[0])...) }
@@ -144,8 +144,6 @@ func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]stri
 	filler := func() { out = append(out, []rune(fill)...) }
 
 	add := func(inst func()) { instrs = append(instrs, inst) }
-
-	sX := []rune(s)
 
 	for i, section := range ts {
 		if i > 0 {
@@ -156,14 +154,14 @@ func (ts TextSections) Shorten(s string, buffer int, fill string, delims [2]stri
 		} else if section[0] > 0 {
 			add(filler)
 		}
-		add(xfer(sX, section[0]-buffer, section[0]))
+		add(xfer(section[0]-buffer, section[0]))
 		add(delim0)
-		add(xfer(sX, section[0], section[0]+section[1]))
+		add(xfer(section[0], section[0]+section[1]))
 		add(delim1)
-		add(xfer(sX, section[0]+section[1], section[0]+section[1]+buffer))
+		add(xfer(section[0]+section[1], section[0]+section[1]+buffer))
 	}
 
-	if last := ts[len(ts)-1]; last[0]+last[1] < len(sX) {
+	if last := ts[len(ts)-1]; last[0]+last[1] < len(s) {
 		add(filler)
 	}
 
