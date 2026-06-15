@@ -54,6 +54,7 @@
   import CAccordion from "$lib/Components/CAccordion.svelte";
   import { SvelteMap } from "svelte/reactivity";
   import CBadge from "$lib/Components/CBadge.svelte";
+  import { Check, ChevronDown, ChevronUp, Pencil, Plus, Trash, X } from "@boxicons/svelte";
 
   const uid = $props.id();
 
@@ -477,9 +478,9 @@
             <div class="flex flex-col items-start gap-2">
               <div class="flex flex-wrap items-center gap-2">
                 {#if list.length > 0}
-                  <i class="bx bx-chevron-up text-xl"></i>
+                  <ChevronUp class="text-xl" />
                 {:else}
-                  <i class="bx bx-chevron-down text-xl"></i>
+                  <ChevronDown class="text-xl" />
                 {/if}
                 <span>{aggregator.name}</span>
                 {#if aggregator.attention}
@@ -499,7 +500,7 @@
                       color="light"
                       title={`Remove aggregator ${aggregator.name}`}
                     >
-                      <i class="bx bx-trash text-red-600"></i>
+                      <Trash class="text-red-600" />
                     </Button>
                     {#if aggregator.id !== undefined && aggregator.id !== aggregatorToEdit}
                       <Button
@@ -515,7 +516,7 @@
                         class="!p-2"
                         color="light"
                       >
-                        <i class="bx bx-pencil"></i>
+                        <Pencil />
                       </Button>
                     {/if}
                   {/if}
@@ -598,8 +599,10 @@
                           toggleEditForm(aggregator.id);
                         }
                       }}
-                      color="light"><i class="bx bx-x"></i></Button
+                      color="light"
                     >
+                      <X />
+                    </Button>
                     <Button
                       onclick={() => {
                         editAggregator({
@@ -616,7 +619,7 @@
                         editedName === "" ||
                         editedUrl === ""}
                     >
-                      <i class="bx bx-check me-2"></i>
+                      <Check class="me-2" />
                       <span>Save</span>
                     </Button>
                   </div>
@@ -681,7 +684,7 @@
                       resetAttention(aggregator);
                     }}
                   >
-                    <i class="bx bx-check"></i>
+                    <Check />
                   </Button>
                 {/snippet}
               </CBadge>
@@ -747,7 +750,7 @@
                         color="light"
                         size="xs"
                       >
-                        <i class="bx bx-plus"></i>
+                        <Plus />
                         <span>Again as another source</span>
                       </Button>
                     {/if}
@@ -767,8 +770,8 @@
     {#if appStore.isSourceManager()}
       <div class="min-h-64">
         {#if !showCreateForm}
-          <Button class="mt-3 mb-2 w-fit" onclick={toggleCreateForm}
-            ><i class="bx bx-plus me-2"></i>New aggregator</Button
+          <Button class="mt-3 mb-2 w-fit" onclick={toggleCreateForm}>
+            <Plus class="me-2" />New aggregator</Button
           >
         {/if}
         {#if showCreateForm}
@@ -797,9 +800,9 @@
                 ></Input>
               </div>
               <div class="mt-2 mb-2 flex gap-2">
-                <Button class="w-fit" onclick={toggleCreateForm} color="light"
-                  ><i class="bx bx-x"></i></Button
-                >
+                <Button class="w-fit" onclick={toggleCreateForm} color="light">
+                  <X />
+                </Button>
                 <Button
                   type="submit"
                   class="w-fit"
@@ -809,7 +812,7 @@
                     aggregator.name === "" ||
                     aggregator.url === ""}
                 >
-                  <i class="bx bx-check me-2"></i>
+                  <Check class="me-2" />
                   <span>Save aggregator</span>
                 </Button>
               </div>

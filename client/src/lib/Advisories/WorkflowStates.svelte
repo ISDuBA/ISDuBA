@@ -24,16 +24,8 @@
   setContext("updateStateFn", () => updateStateFn);
 </script>
 
-<WorkflowButton state={NEW} tooltip="Mark as read">
-  {#snippet icon()}
-    <i class="bx bxs-certification"></i>
-  {/snippet}
-</WorkflowButton>
-<WorkflowButton state={READ} tooltip="Mark as read">
-  {#snippet icon()}
-    <i class="bx bx-show"></i>
-  {/snippet}
-</WorkflowButton>
+<WorkflowButton state={NEW} tooltip="Mark as read" />
+<WorkflowButton state={READ} tooltip="Mark as read" />
 {#if (isRoleIncluded( appStore.getRoles(), [EDITOR, REVIEWER] ) && advisoryState === REVIEW) || (isRoleIncluded( appStore.getRoles(), [EDITOR] ) && advisoryState === ARCHIVED)}
   <WorkflowButton
     onClick={() => {
@@ -41,17 +33,9 @@
     }}
     state={ASSESSING}
     tooltip="Mark as assesing"
-  >
-    {#snippet icon()}
-      <i class="bx bxs-analyse"></i>
-    {/snippet}
-  </WorkflowButton>
+  />
 {:else}
-  <WorkflowButton state={ASSESSING} tooltip="Mark as assesing">
-    {#snippet icon()}
-      <i class="bx bxs-analyse"></i>
-    {/snippet}
-  </WorkflowButton>
+  <WorkflowButton state={ASSESSING} tooltip="Mark as assesing" />
 {/if}
 {#if advisoryState === ARCHIVED && isRoleIncluded(appStore.getRoles(), [EDITOR])}
   <WorkflowButton
@@ -60,25 +44,9 @@
     }}
     state={REVIEW}
     tooltip="Release for review"
-  >
-    {#snippet icon()}
-      <i class="bx bx-book-open"></i>
-    {/snippet}
-  </WorkflowButton>
+  />
 {:else}
-  <WorkflowButton state={REVIEW} tooltip="Release for review">
-    {#snippet icon()}
-      <i class="bx bx-book-open"></i>
-    {/snippet}
-  </WorkflowButton>
+  <WorkflowButton state={REVIEW} tooltip="Release for review" />
 {/if}
-<WorkflowButton state={ARCHIVED} tooltip="Archive">
-  {#snippet icon()}
-    <i class="bx bx-archive"></i>
-  {/snippet}
-</WorkflowButton>
-<WorkflowButton state={DELETE} tooltip="Mark for deletion">
-  {#snippet icon()}
-    <i class="bx bx-trash"></i>
-  {/snippet}
-</WorkflowButton>
+<WorkflowButton state={ARCHIVED} tooltip="Archive" />
+<WorkflowButton state={DELETE} tooltip="Mark for deletion" />

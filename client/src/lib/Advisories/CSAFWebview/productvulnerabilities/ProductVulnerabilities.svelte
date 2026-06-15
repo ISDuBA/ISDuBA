@@ -23,6 +23,7 @@
   } from "flowbite-svelte";
   import { innerLinkStyle } from "./../helpers";
   import Link from "$lib/Components/Link.svelte";
+  import { AlertTriangle, Check, Heart, Minus, X } from "@boxicons/svelte";
 
   interface Props {
     basePath: string;
@@ -63,25 +64,43 @@
   let fourCVEs = $derived(appStore.state.webview.four_cves);
 </script>
 
+{#snippet symbol(symbol: string)}
+  {#if symbol === ProductStatusSymbol.KNOWN_AFFECTED}
+    <X />
+  {:else if symbol === ProductStatusSymbol.FIXED}
+    <Check />
+  {:else if symbol === ProductStatusSymbol.UNDER_INVESTIGATION}
+    <AlertTriangle />
+  {:else if symbol === ProductStatusSymbol.NOT_AFFECTED}
+    <Minus />
+  {:else if symbol === ProductStatusSymbol.RECOMMENDED}
+    <Heart />
+  {/if}
+{/snippet}
+
 <div class="crosstable-overview mt-3 mb-3 flex flex-col">
   {#if productLines.length > 0}
     <div class="mt-3 mb-3 flex flex-row">
       <div class="flex flex-wrap items-baseline gap-4 text-sm">
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-check"></i>
+          <Check />
           <span class="ml-1 text-nowrap">Fixed</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-error"></i><span class="ml-1 text-nowrap">Under investigation</span>
+          <AlertTriangle />
+          <span class="ml-1 text-nowrap">Under investigation</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-x"></i><span class="ml-1 text-nowrap">Known affected</span>
+          <X />
+          <span class="ml-1 text-nowrap">Known affected</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-minus"></i><span class="ml-1 text-nowrap">Not affected</span>
+          <Minus />
+          <span class="ml-1 text-nowrap">Not affected</span>
         </div>
         <div class="flex flex-row items-baseline">
-          <i class="bx bx-heart"></i><span class="ml-1 text-nowrap">Recommended</span>
+          <Heart />
+          <span class="ml-1 text-nowrap">Recommended</span>
         </div>
         {#if productLines[0].length > 6}
           <div class="ml-auto flex flex-row items-baseline">
@@ -187,36 +206,22 @@
                 {:else if !renderAllCVEs && (fourCVEs.includes(column.name) || column.name === "Total")}
                   <TableBodyCell class={tdClass}>
                     {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
-                      <i class="bx bx-heart"></i>
-                      <i class="bx b-minus"></i>
+                      <Heart />
+                      <Minus />
                     {:else}
                       <!-- May contain more than one status and thus more than one character -->
                       {#each column.content as char, k (`productvulnerabilities-4-${uid}-${k}`)}
-                        <i
-                          class:bx={true}
-                          class:bx-x={char === ProductStatusSymbol.KNOWN_AFFECTED}
-                          class:bx-check={char === ProductStatusSymbol.FIXED}
-                          class:bx-error={char === ProductStatusSymbol.UNDER_INVESTIGATION}
-                          class:bx-minus={char === ProductStatusSymbol.NOT_AFFECTED}
-                          class:bx-heart={char === ProductStatusSymbol.RECOMMENDED}
-                        ></i>
+                        {@render symbol(char)}
                       {/each}
                     {/if}
                   </TableBodyCell>
                 {:else if renderAllCVEs}
                   <TableBodyCell class={tdClass}>
                     {#if column.content === ProductStatusSymbol.NOT_AFFECTED + ProductStatusSymbol.RECOMMENDED}
-                      <i class="bx bx-heart"></i>
-                      <i class="bx b-minus"></i>
+                      <Heart />
+                      <Minus />
                     {:else}
-                      <i
-                        class:bx={true}
-                        class:bx-x={column.content === ProductStatusSymbol.KNOWN_AFFECTED}
-                        class:bx-check={column.content === ProductStatusSymbol.FIXED}
-                        class:bx-error={column.content === ProductStatusSymbol.UNDER_INVESTIGATION}
-                        class:bx-minus={column.content === ProductStatusSymbol.NOT_AFFECTED}
-                        class:bx-heart={column.content === ProductStatusSymbol.RECOMMENDED}
-                      ></i>
+                      {@render symbol(column.content)}
                     {/if}
                   </TableBodyCell>
                 {/if}

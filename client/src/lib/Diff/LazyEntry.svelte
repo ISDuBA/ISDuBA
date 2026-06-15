@@ -14,6 +14,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { Button } from "flowbite-svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { ChevronDown, ChevronUp } from "@boxicons/svelte";
 
   interface Props {
     operation: string;
@@ -46,9 +47,9 @@
     onclick={loadEntry}
   >
     {#if isOpen}
-      <i class="bx bx-chevron-up text-2xl"></i>
+      <ChevronUp class="text-2xl" />
     {:else}
-      <i class="bx bx-chevron-down text-2xl"></i>
+      <ChevronDown class="text-2xl" />
     {/if}
     <code class="text-md font-bold">
       {path}

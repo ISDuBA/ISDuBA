@@ -31,6 +31,14 @@
   import DateRange from "$lib/Components/DateRange.svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import debounce from "debounce";
+  import {
+    ArrowInDownSquareHalf,
+    ArrowToLeft,
+    ArrowToRight,
+    ChevronsLeft,
+    ChevronsRight,
+    X
+  } from "@boxicons/svelte";
 
   interface Props {
     params?: any;
@@ -245,9 +253,9 @@
           outline={isDownloadingLogs}
         >
           {#if isDownloadingLogs}
-            <i class="bx bx-x text-lg"></i>
+            <X />
           {:else}
-            <i class="bx bx-download text-lg"></i>
+            <ArrowInDownSquareHalf />
           {/if}
         </Button>
         {#if isDownloadingLogs}
@@ -322,13 +330,13 @@
             class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
             onclick={first}
           >
-            <i class="bx bx-arrow-to-left"></i>
+            <ArrowToLeft />
           </PaginationItem>
           <PaginationItem
             class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
             onclick={previous}
           >
-            <i class="bx bx-chevrons-left"></i>
+            <ChevronsLeft />
           </PaginationItem>
         </div>
 
@@ -355,7 +363,7 @@
               : paginationItemClass}
             onclick={next}
           >
-            <i class="bx bx-chevrons-right"></i>
+            <ChevronsRight />
           </PaginationItem>
           <PaginationItem
             class={currentPage === numberOfPages
@@ -363,7 +371,7 @@
               : paginationItemClass}
             onclick={last}
           >
-            <i class="bx bx-arrow-to-right"></i>
+            <ArrowToRight />
           </PaginationItem>
         </div>
       </div>

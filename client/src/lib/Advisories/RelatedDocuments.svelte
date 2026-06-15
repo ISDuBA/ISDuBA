@@ -22,6 +22,7 @@
   import { appStore } from "$lib/store.svelte";
   import { addSlashes } from "$lib/utils";
   import Link from "$lib/Components/Link.svelte";
+  import { Check } from "@boxicons/svelte";
 
   interface Related {
     [key: string]: string[];
@@ -239,9 +240,9 @@
             {#each Object.values(documents) as doc, k (`relateddocuments-1-${uid}-${k}`)}
               <TableBodyCell class={baseClass}>
                 {#if (doc as any).cve.includes(cve)}
-                  <i
-                    class={`${baseClass} bx bx-check text-2xl ${cve && cve === params.cve ? "!font-bold" : ""}`}
-                  ></i>
+                  <Check
+                    class={`${baseClass} text-2xl ${cve && cve === params.cve ? "!font-bold" : ""}`}
+                  />
                 {/if}
               </TableBodyCell>
             {/each}

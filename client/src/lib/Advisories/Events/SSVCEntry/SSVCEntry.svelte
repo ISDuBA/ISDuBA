@@ -12,6 +12,7 @@
   import { TableBodyCell } from "flowbite-svelte";
   import { getReadableDateString } from "../../CSAFWebview/helpers";
   import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import { Check, Copy } from "@boxicons/svelte";
 
   type SsvcData = {
     prev_ssvc?: string;
@@ -76,7 +77,7 @@
       aria-label={`Copy vector ${ssvcData.prev_ssvc}`}
       class="cursor-pointer"
     >
-      <i class="bx bx-copy"></i>
+      <Copy />
     </button>
     {#if tooltipStates[state]}
       <div
@@ -84,7 +85,7 @@
       >
         {#if tooltipStates[state] === "success"}
           <div class="flex items-center gap-1">
-            <i class="bx bx-check text-lg"></i>
+            <Check />
             <span>Copied</span>
           </div>
         {:else}

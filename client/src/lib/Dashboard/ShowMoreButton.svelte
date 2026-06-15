@@ -11,6 +11,7 @@
 <script lang="ts">
   import { Button } from "flowbite-svelte";
   import { push } from "$routes/router.svelte";
+  import { ListUlSquare } from "@boxicons/svelte";
 
   interface Props {
     id: string;
@@ -24,5 +25,5 @@
 </script>
 
 <Button onclick={showMore} color="light" class="h-fit w-fit rounded-md !px-2 !py-1">
-  <i class="bx bx-spreadsheet text-lg"></i>
+  <ListUlSquare />
 </Button>

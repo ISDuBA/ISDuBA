@@ -37,6 +37,7 @@
   import SourceBasicStats from "./SourceBasicStats.svelte";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import CBadge from "$lib/Components/CBadge.svelte";
+  import { Check, Save, Trash } from "@boxicons/svelte";
 
   interface Props {
     params: any;
@@ -430,7 +431,7 @@
         enableActive={true}
       ></SourceForm>
       <Button disabled={!sourceEdited} onclick={updateSource} color="green">
-        <i class="bx bxs-save me-2"></i>
+        <Save class="me-2" />
         <span>Save source</span>
       </Button>
       <Button
@@ -446,7 +447,7 @@
         title={`Delete source "${source.name}"`}
         color="light"
       >
-        <i class="bx bx-trash me-2 text-red-500"></i>
+        <Trash class="me-2 text-red-500" />
         <span>Delete source</span>
       </Button>
       <ErrorMessage error={saveSourceError}></ErrorMessage>
@@ -472,7 +473,7 @@
                 close();
               }}
             >
-              <i class="bx bx-check"></i>
+              <Check />
             </Button>
           {/snippet}
         </CBadge>

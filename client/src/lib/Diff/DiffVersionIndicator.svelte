@@ -9,6 +9,8 @@
 -->
 
 <script lang="ts">
+  import { Minus, Plus } from "@boxicons/svelte";
+
   interface Props {
     color: "red" | "green" | "gray";
     icon: "minus" | "plus";
@@ -21,9 +23,9 @@
   let containerClass = $derived(
     `h-4 flex items-center rounded-full border-solid border-${color}-700 dark:border-${color}-300 ${isDisabled ? "" : "group-hover:border"}`
   );
-  let basicIconClass = "bx flex h-4 items-center";
+  let basicIconClass = "flex h-4 items-center";
   let iconClass = $derived(
-    `${basicIconClass} bx-${icon} text-${color}-700 dark:text-${color}-300 ${!permanent ? "!hidden" : ""} ${isDisabled ? "" : "group-hover:!hidden"}`
+    `${basicIconClass} text-${color}-700 dark:text-${color}-300 ${!permanent ? "!hidden" : ""} ${isDisabled ? "" : "group-hover:!hidden"}`
   );
   let hoverClass = $derived(
     `${basicIconClass} bx-${hoverIcon ?? icon} text-${color}-700 dark:text-${color}-300 !hidden ${isDisabled ? "" : "group-hover:!inline"}`
@@ -31,6 +33,10 @@
 </script>
 
 <div class={containerClass}>
-  <i class={iconClass}></i>
+  {#if icon === "minus"}
+    <Minus class={iconClass} />
+  {:else}
+    <Plus class={iconClass} />
+  {/if}
   <i class={hoverClass}></i>
 </div>

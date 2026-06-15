@@ -31,6 +31,7 @@
   import { onDestroy, onMount, untrack } from "svelte";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import { getRelativeTime } from "$lib/time";
+  import { ArrowOutUpSquareHalf, Trash, X } from "@boxicons/svelte";
 
   const uid = $props.id();
 
@@ -292,7 +293,7 @@
               color="light"
               class="border-0 p-1"
             >
-              <i class="bx bx-x text-lg"></i>
+              <X />
             </Button>
           </div>
           <div class="lg:flex lg:flex-col">
@@ -337,7 +338,7 @@
               class="border-0 p-1"
               title="Remove from selection"
             >
-              <i class="bx bx-x text-lg"></i>
+              <X />
             </Button>
           </div>
           <div class="lg:flex lg:flex-col">
@@ -408,8 +409,9 @@
                     }}
                     color="red"
                     title={`Delete temporary document: ${doc.title} - ${doc.tracking.id}`}
-                    icon="trash"
-                  ></CIconButton>
+                  >
+                    <Trash />
+                  </CIconButton>
                   <button
                     onclick={(e) => {
                       e.stopPropagation();
@@ -461,7 +463,7 @@
         multiple
         class="ms-1 mb-2 h-16"
       >
-        <i class="bx bx-upload text-xl text-gray-500"></i>
+        <ArrowOutUpSquareHalf class="text-xl text-gray-500" />
         <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
           Upload temporary documents ({freeTempDocuments} free {freeTempDocuments > 1
             ? "slots"

@@ -23,6 +23,7 @@
   import { DAY_MS } from "$lib/time";
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import SourceBasicStats from "./SourceBasicStats.svelte";
+  import { ArrowOutUpSquareHalf, Circle, GitRepoForked, Plus } from "@boxicons/svelte";
 
   const shortLoadInterval = 5;
   const longLoadMultiplier = 6;
@@ -91,8 +92,8 @@
     <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-4" title=""
     ></ImportStats>
     {#if appStore.isImporter()}
-      <Button href="/#/sources/upload" class="my-2 w-fit" color="primary" size="xs">
-        <i class="bx bx-upload"></i>
+      <Button href="/#/sources/upload" class="my-2 w-fit" color="primary">
+        <ArrowOutUpSquareHalf />
         <span class="ml-1">Upload documents</span>
       </Button>
     {/if}
@@ -144,7 +145,7 @@
               class={appStore.isSourceManager() ? "cursor-pointer" : ""}
             >
               <TableBodyCell class="w-fit max-w-10">
-                <i class="bx bx-git-repo-forked"></i>
+                <GitRepoForked />
               </TableBodyCell>
               <TableBodyCell class={`${tdClass} break-words hyphens-auto`}>
                 <div class="whitespace-break-spaces">
@@ -158,17 +159,15 @@
                 <TableBodyCell class={`${tdClass} break-all whitespace-normal`}
                   >{source.url}</TableBodyCell
                 >
-                <TableBodyCell class={tdClass}
-                  ><i class={"bx " + (source.active ? "bxs-circle" : "bx-circle")}
-                  ></i></TableBodyCell
-                >
+                <TableBodyCell class={tdClass}>
+                  <Circle pack={source.healthy ? "filled" : "basic"} />
+                </TableBodyCell>
                 <TableBodyCell class={tdClass}
                   >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
                 >
-                <TableBodyCell class={tdClass}
-                  ><i class={"bx " + (source.healthy ? "bxs-circle" : "bx-circle")}
-                  ></i></TableBodyCell
-                >
+                <TableBodyCell class={tdClass}>
+                  <Circle pack={source.healthy ? "filled" : "basic"} />
+                </TableBodyCell>
               {:else}
                 <TableBodyCell class={tdClass}></TableBodyCell>
                 <TableBodyCell class={tdClass}></TableBodyCell>
@@ -203,8 +202,8 @@
               <Spinner color="gray" size="4"></Spinner>
             </div>
             {#if appStore.isSourceManager()}
-              <Button href="/#/sources/new" class="mb-2" color="primary" size="xs">
-                <i class="bx bx-plus"></i>
+              <Button href="/#/sources/new" class="mb-2" color="primary">
+                <Plus />
                 <span>Add source</span>
               </Button>
             {/if}

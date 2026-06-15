@@ -31,6 +31,7 @@
   import SsvcInput from "./SSVCInput.svelte";
   import { slide } from "svelte/transition";
   import SSVCBadge from "./SSVCBadge.svelte";
+  import { EditAlt } from "@boxicons/svelte";
 
   interface Props {
     disabled: boolean;
@@ -294,7 +295,7 @@
           title="Edit SSVC"
           onclick={toggleEditing}
         >
-          <i class="bx bx-edit-alt ml-1"></i>
+          <EditAlt class="ml-1" />
         </button>
       </div>
     {/if}

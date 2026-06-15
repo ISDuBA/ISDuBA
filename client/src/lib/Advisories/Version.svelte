@@ -14,6 +14,7 @@
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   import { appStore } from "$lib/store.svelte";
   import type { AdvisoryVersion } from "./advisory.svelte";
+  import { ArrowRightLeft } from "@boxicons/svelte";
 
   interface Props {
     advisoryVersions: AdvisoryVersion[];
@@ -229,7 +230,7 @@
         {/if}
         {#if (appStore.isEditor() || appStore.isReviewer()) && advisoryVersions.length > 1}
           <Button color="light" class="flex h-8 gap-x-2 px-3" onclick={toggleToolboxActivated}>
-            <i class="bx bx-transfer"></i>
+            <ArrowRightLeft />
             <span class="text-nowrap">{diffModeActivated ? "Hide" : "Show"} changes</span>
           </Button>
         {/if}
