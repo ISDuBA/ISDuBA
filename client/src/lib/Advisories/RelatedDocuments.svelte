@@ -14,14 +14,15 @@
   import { request } from "$lib/request";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import { Button, Spinner, TableBodyCell, TableBodyRow, TableHeadCell } from "flowbite-svelte";
-  import { onMount, tick } from "svelte";
+  import { tick } from "svelte";
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
-  import { fetchDocumentSSVC } from "$lib/Advisories/advisory.svelte";
+  import { fetchDocumentSSVC, isResultConsistent } from "$lib/Advisories/advisory.svelte";
   import SSVCBadge from "./SSVC/SSVCBadge.svelte";
   import { push } from "$routes/router.svelte";
   import { appStore } from "$lib/store.svelte";
   import { addSlashes } from "$lib/utils";
   import Link from "$lib/Components/Link.svelte";
+  import InconsistencyMessage from "./InconsistencyMessage.svelte";
 
   interface Related {
     [key: string]: string[];
@@ -42,6 +43,7 @@
   let isLoading: boolean = $state(false);
   let advisoryState: string | undefined = $state(undefined);
   let loadError: ErrorDetails | null = $state(null);
+  let isInconsistent = $state(false);
 
   let encodedTrackingID = $derived(
     document?.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
@@ -67,54 +69,69 @@
   };
 
   const loadDocument = async () => {
+    isInconsistent = false;
     const response = await request(`/api/documents/${params.id}`, "GET");
     if (response.ok) {
       const result = await response.content;
       ({ document } = result);
+      if (!isResultConsistent(params, document)) {
+        isInconsistent = true;
+      }
     } else if (response.error) {
       loadError = getErrorDetails(`Could not load document.`, response);
     }
   };
 
-  onMount(async () => {
-    isLoading = true;
-    try {
-      await loadDocument();
-      if (loadError) return;
-      await tick();
-      if (!encodedTrackingID || !encodedPublisherNamespace) return;
-      const result = await fetchDocumentSSVC(params.id);
-      if (typeof result === "string") {
-        ssvc = result;
-      } else if (result?.message) {
-        loadError = result;
-        return;
-      }
-      loadAdvisoryState();
-      if (loadError) return;
-      const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
-      if (response.ok) {
-        cves = {};
-        documents = {};
-        response.content.forEach((doc: any) => {
-          if (cves && !cves[doc.cve]) {
-            cves[doc.cve] = [doc];
-          } else if (cves) {
-            cves[doc.cve].push(doc);
+  $effect(() => {
+    if (params) {
+      setTimeout(async () => {
+        isLoading = true;
+        document = undefined;
+        documents = undefined;
+        cves = undefined;
+        loadError = null;
+        try {
+          await loadDocument();
+          if (loadError || isInconsistent) {
+            isLoading = false;
+            return;
           }
+          await tick();
+          if (!encodedTrackingID || !encodedPublisherNamespace) return;
+          const result = await fetchDocumentSSVC(params.id);
+          if (typeof result === "string") {
+            ssvc = result;
+          } else if (result?.message) {
+            loadError = result;
+            return;
+          }
+          loadAdvisoryState();
+          if (loadError) return;
+          const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
+          if (response.ok) {
+            cves = {};
+            documents = {};
+            response.content.forEach((doc: any) => {
+              if (cves && !cves[doc.cve]) {
+                cves[doc.cve] = [doc];
+              } else if (cves) {
+                cves[doc.cve].push(doc);
+              }
 
-          if (!documents[doc.document_id]) {
-            documents[doc.document_id] = doc;
-            documents[doc.document_id].cve = [doc.cve];
-          } else if (documents) {
-            documents[doc.document_id].cve.push(doc.cve);
+              if (!documents[doc.document_id]) {
+                documents[doc.document_id] = doc;
+                documents[doc.document_id].cve = [doc.cve];
+              } else if (documents) {
+                documents[doc.document_id].cve.push(doc.cve);
+              }
+            });
+          } else if (response.error) {
+            loadError = getErrorDetails(`Could not load documents.`, response);
           }
-        });
-      } else if (response.error) {
-        loadError = getErrorDetails(`Could not load documents.`, response);
-      }
-    } finally {
-      isLoading = false;
+        } finally {
+          isLoading = false;
+        }
+      }, 0);
     }
   });
 
@@ -182,6 +199,8 @@
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
     </div>
+  {:else if document && isInconsistent}
+    <InconsistencyMessage {document} {params} relatedDocuments />
   {:else if document && documents && cves}
     {#if Object.keys(cves).length === 0}
       <div class="mb-2 font-bold">

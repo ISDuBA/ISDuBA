@@ -18,14 +18,17 @@
   interface Props {
     params: any;
     document: any;
+    relatedDocuments?: boolean; // Show messages and URLs for related documents
   }
 
-  let { params = null, document = {} }: Props = $props();
+  let { params = null, document = {}, relatedDocuments = false }: Props = $props();
 
   const uid = $props.id();
 
   let loadAdvisoryVersionsError: ErrorDetails | null = $state(null);
   let advisoryVersions: AdvisoryVersion[] = $state([]);
+
+  let urlSuffix = $derived(relatedDocuments ? "/related/documents" : "");
 
   let suggestedPublisherNamespace = $derived(document.publisher.name);
   let suggestedTrackingID = $derived(document.tracking.id);
@@ -38,10 +41,10 @@
       : undefined
   );
   let suggestedLinkByID = $derived(
-    `/advisories/${suggestedPublisherNamespace}/${suggestedTrackingID}/documents/${params.id}`
+    `/advisories/${suggestedPublisherNamespace}/${suggestedTrackingID}/documents/${params.id}${urlSuffix}`
   );
   let encodedSuggestedLinkByID = $derived(
-    `/advisories/${encodedPublisherNamespace}/${encodedTrackingID}/documents/${params.id}`
+    `/advisories/${encodedPublisherNamespace}/${encodedTrackingID}/documents/${params.id}${urlSuffix}`
   );
 
   const getAdvisoryVersions = async () => {
@@ -70,7 +73,11 @@
     <span>The URL doesn't reference any document</span>
   </div>
   <P>
-    Do you want to open the document with ID {params.id}?
+    {#if relatedDocuments}
+      Do you want to open the related documents of the document with ID {params.id}?
+    {:else}
+      Do you want to open the document with ID {params.id}?
+    {/if}
     <br />
     <A href={`#${encodedSuggestedLinkByID}`}>{suggestedLinkByID}</A>
   </P>
