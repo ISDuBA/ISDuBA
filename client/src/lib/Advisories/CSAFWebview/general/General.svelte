@@ -71,7 +71,13 @@
       {#if relatedDocuments?.()}
         {@const len = Object.keys(relatedDocuments()).length}
         {#if len > 0}
-          <Button onclick={openRelatedDocuments} color="light" size="xs" class="h-7">
+          <Button
+            onclick={openRelatedDocuments}
+            color="light"
+            size="xs"
+            class="h-7"
+            title="Open related documents"
+          >
             <div class="flex items-center">
               <LinkIcon rotate={90} />
               {len}
