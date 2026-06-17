@@ -13,6 +13,9 @@
 Find some design considerations and history in `developer/`.
 Not everything was implemented as it was proposed in there.
 
+## Conventional Commits
+
+Commit messages should be based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary).
 
 ## Generated files
 
