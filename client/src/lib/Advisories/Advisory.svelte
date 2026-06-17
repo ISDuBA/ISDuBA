@@ -31,7 +31,8 @@
     fetchDocumentSSVC,
     fetchSearchHits,
     loadAdvisoryVersions,
-    advisorySearchState
+    advisorySearchState,
+    isResultConsistent
   } from "$lib/Advisories/advisory.svelte";
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
   import SearchMatchBar from "./SearchMatchBar.svelte";
@@ -155,12 +156,7 @@
     );
     if (response.ok) {
       const result = await response.content;
-      if (
-        params.trackingID &&
-        params.publisherNamespace &&
-        (result.document.tracking.id !== params.trackingID ||
-          result.document.publisher.name !== params.publisherNamespace)
-      ) {
+      if (!isResultConsistent(params, result.document)) {
         isInconsistent = true;
       }
       ({ document } = result);

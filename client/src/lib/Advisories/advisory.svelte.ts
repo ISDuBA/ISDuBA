@@ -177,6 +177,17 @@ const fetchSearchHits = async (id: number): Promise<SearchMatch[] | ErrorDetails
   return response.content;
 };
 
+// Check if the loaded document (which is loaded via the internal ID) complies
+// with the parameters in the URL.
+const isResultConsistent = (params: any, document: any) => {
+  return (
+    params.trackingID &&
+    params.publisherNamespace &&
+    document.tracking.id === params.trackingID &&
+    document.publisher.name === params.publisherNamespace
+  );
+};
+
 type AdvisorySearchState = {
   scroll: boolean;
   searchMatches: SearchMatch[];
@@ -210,6 +221,7 @@ export {
   fetchDocumentSSVC,
   fetchSearchHits,
   getAdvisoryAnchorLink,
-  getAdvisorySearchHit
+  getAdvisorySearchHit,
+  isResultConsistent
 };
 export type { AdvisoryVersion, SearchMatch };
