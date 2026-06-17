@@ -17,6 +17,7 @@ test("cve comparison is working", async ({ page }) => {
 
   await page.getByText("Avendor-advisory-0005").first().click({ force: true });
 
+  await page.waitForURL("**/#/advisories/**");
   await expect(page.getByText("Test CSAF document")).toBeVisible();
 
   await page.getByTitle("Open related documents").click();
