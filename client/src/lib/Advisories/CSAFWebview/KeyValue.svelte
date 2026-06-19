@@ -13,6 +13,7 @@
   import CVSS from "./general/CVSS.svelte";
   import Link from "$lib/Components/Link.svelte";
   import SearchableText from "./SearchableText.svelte";
+  import { Link as LinkIcon } from "@boxicons/svelte";
 
   interface Props {
     keys: Array<string>;
@@ -58,7 +59,7 @@
             <TableBodyCell class={cellStyle}>
               {#if typeof values[index] === "string" && values[index].startsWith && values[index].startsWith("https://")}
                 <Link class="underline" href={values[index]}>
-                  <i class="bx bx-link"></i>
+                  <LinkIcon />
                   <SearchableText text={values[index]} textPath={paths?.[index] ?? ""} />
                 </Link>
               {:else if Array.isArray(values[index])}

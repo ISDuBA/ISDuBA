@@ -26,8 +26,8 @@
     const response = await request("/api/documents/filter_help", "GET");
     if (response.ok) {
       let tmpHtml = DOMPurify.sanitize(response.content, { USE_PROFILES: { html: true } });
-      tmpHtml = tmpHtml.replaceAll(":white_check_mark:", "<i class='bx bx-check'></i>");
-      tmpHtml = tmpHtml.replaceAll(":x:", "<i class='bx bx-x'></i>");
+      tmpHtml = tmpHtml.replaceAll(":white_check_mark:", "<Check />");
+      tmpHtml = tmpHtml.replaceAll(":x:", "<X />");
       const parser = new DOMParser();
       htmlDocument = parser.parseFromString(tmpHtml, "text/html");
     } else {

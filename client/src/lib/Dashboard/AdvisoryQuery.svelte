@@ -20,9 +20,9 @@
   import { getPublisher } from "$lib/publisher";
   import { Spinner } from "flowbite-svelte";
   import { getRelativeTime } from "$lib/time";
-  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
+  import ActivityBottom from "./ActivityBottom.svelte";
 
   interface Props {
     storedQuery: any;
@@ -119,23 +119,7 @@
               <div class="text-black dark:text-white">{doc.title ?? "Title: undefined"}</div>
               <div class="text-sm text-gray-700 dark:text-gray-400">{doc.tracking_id}</div>
               {#snippet bottomLeftSlot()}
-                <div class="flex items-center gap-4 text-slate-400">
-                  {#if doc.comments !== undefined}
-                    <div class="flex items-center gap-1">
-                      <i class="bx bx-comment"></i>
-                      <span>{doc.comments}</span>
-                    </div>
-                  {/if}
-                  {#if doc.versions !== undefined}
-                    <div class="flex items-center gap-1">
-                      <i class="bx bx-collection"></i>
-                      <span>{doc.versions}</span>
-                    </div>
-                  {/if}
-                  {#if doc.ssvc}
-                    <SSVCBadge vector={doc.ssvc}></SSVCBadge>
-                  {/if}
-                </div>
+                <ActivityBottom comments={doc.comments} ssvc={doc.ssvc} versions={doc.versions} />
               {/snippet}
               {#snippet bottomRightSlot()}
                 <div class="text-slate-400">

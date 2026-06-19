@@ -9,12 +9,13 @@
 -->
 
 <script lang="ts">
+  import type { Snippet } from "svelte";
   import type { HTMLButtonAttributes } from "svelte/elements";
 
   type Props = {
     ariaLabel?: string;
     color?: "dark" | "red" | "yellow" | "green" | "indigo" | "purple" | "pink" | "blue" | "primary";
-    icon?: string;
+    children: Snippet;
     disabled?: boolean;
     title?: string;
     onClicked?: (event?: any) => void;
@@ -24,7 +25,7 @@
     ariaLabel = undefined,
     color = "dark",
     disabled = false,
-    icon = "",
+    children,
     title = "",
     onClicked = () => {},
     ...restProps
@@ -38,12 +39,14 @@
   }}
   {disabled}
   {title}
-  aria-label={ariaLabel || `Icon button ${icon}`}
+  aria-label={ariaLabel}
   id={restProps.id}
   class="p-1"
 >
-  <i
+  <div
     aria-hidden="true"
-    class={`bx bx-${icon} text-${color}-600 text-lg ${restProps.class} ${disabled ? "contrast-0 saturate-0" : ""}`}
-  ></i>
+    class={`text-${color}-600 text-lg ${restProps.class} ${disabled ? "contrast-0 saturate-0" : ""}`}
+  >
+    {@render children()}
+  </div>
 </button>

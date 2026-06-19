@@ -37,6 +37,7 @@
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
   import SearchMatchBar from "./SearchMatchBar.svelte";
   import SearchableText from "./CSAFWebview/SearchableText.svelte";
+  import { Check, AlertCircle, ArrowRightStroke } from "@boxicons/svelte";
 
   let { params } = $props();
 
@@ -591,10 +592,10 @@
       {#if processRunning}
         <Spinner></Spinner>
       {:else if lastSuccessfulForwardTarget === selectedForwardTarget}
-        <div class="inline-flex w-8 items-center"><i class="bx bx-check text-2xl"></i></div>
+        <div class="inline-flex w-8 items-center"><Check class="text-2xl" /></div>
       {:else}
         <div class="inline-flex w-8 items-center">
-          <i class="bx bx-right-arrow-alt text-2xl"></i>
+          <ArrowRightStroke class="text-2xl" />
         </div>
       {/if}
     </Button>
@@ -607,7 +608,7 @@
 >
   {#if documentNotFound}
     <div class="mb-2 font-bold">
-      <i class="bx bx-error-circle" aria-hidden="true"></i>
+      <AlertCircle aria-hidden="true" />
       <span>The URL doesn't reference any document</span>
     </div>
   {:else if isInconsistent}

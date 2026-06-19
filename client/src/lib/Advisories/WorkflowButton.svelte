@@ -10,15 +10,15 @@
 <script lang="ts">
   import CBadge from "$lib/Components/CBadge.svelte";
   import { getAllowedWorkflowChanges } from "$lib/permissions";
-  import { getContext, type Snippet } from "svelte";
+  import { getContext } from "svelte";
+  import WorkflowStateIcon from "./WorkflowStateIcon.svelte";
 
   interface Props {
     state: string;
     tooltip: string;
-    icon: Snippet;
     onClick?: (event: any) => void;
   }
-  let { state, tooltip, icon, onClick = undefined }: Props = $props();
+  let { state, tooltip, onClick = undefined }: Props = $props();
 
   let currentState: () => string = getContext("currentState");
   let updateStateFn: () => (newState: string) => void = getContext("updateStateFn");
@@ -58,7 +58,7 @@
   }}
 >
   <CBadge showHoverEffect={false} title={tooltip} class="flex w-fit gap-1" color={badgeColor}>
-    {@render icon()}
+    <WorkflowStateIcon advisoryState={state} />
     <span>{state}</span>
   </CBadge>
 </button>

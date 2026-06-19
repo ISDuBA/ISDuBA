@@ -43,6 +43,7 @@
   import DateRange from "$lib/Components/DateRange.svelte";
   import debounce from "debounce";
   import { SvelteDate } from "svelte/reactivity";
+  import { BarChart, Table as TableIcon } from "@boxicons/svelte";
 
   interface Props {
     chartType?: "bar" | "line" | "scatter";
@@ -628,12 +629,16 @@
         <ButtonGroup>
           <Button
             class={mode === "diagram" ? pressedButtonClass : buttonClass}
-            onclick={() => setMode("diagram")}><i class="bx bx-bar-chart"></i></Button
+            onclick={() => setMode("diagram")}
           >
+            <BarChart />
+          </Button>
           <Button
             class={mode === "table" ? pressedButtonClass : buttonClass}
-            onclick={() => setMode("table")}><i class="bx bx-table"></i></Button
+            onclick={() => setMode("table")}
           >
+            <TableIcon />
+          </Button>
         </ButtonGroup>
       {/if}
       {#if isLoading}

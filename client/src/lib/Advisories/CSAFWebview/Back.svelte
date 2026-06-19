@@ -11,6 +11,7 @@
 <script lang="ts">
   import Link from "$lib/Components/Link.svelte";
   import { appStore } from "$lib/store.svelte";
+  import { Undo } from "@boxicons/svelte";
   /**
    * updateUI waits until UI is settled and goes back to the last anchor.
    * @param id
@@ -35,7 +36,5 @@
 </script>
 
 {#if appStore.state.webview.ui.history.length > 0}
-  <Link class="backbutton" href="#top" onclick={backPressed}
-    >Last pos. <i class="bx bx-undo"></i></Link
-  >
+  <Link class="backbutton" href="#top" onclick={backPressed}>Last pos. <Undo /></Link>
 {/if}

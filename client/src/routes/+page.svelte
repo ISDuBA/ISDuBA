@@ -11,7 +11,6 @@
   import type { PageProps } from "./$types";
   import Router from "svelte-spa-router";
   import "../app.css";
-  import "boxicons/css/boxicons.min.css";
   import SideNav from "$lib/SideNav.svelte";
   import Dashboard from "$lib/Dashboard/Dashboard.svelte";
   import Statistics from "$lib/Statistics/Overview.svelte";

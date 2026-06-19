@@ -13,6 +13,7 @@
   import { Table, TableBody, TableHead, TableHeadCell } from "flowbite-svelte";
   import { tablePadding, type TableHeader } from "./defaults";
   import type { Snippet } from "svelte";
+  import { CaretDown, CaretUp } from "@boxicons/svelte";
   interface Props {
     title?: string;
     headers?: TableHeader[];
@@ -82,11 +83,11 @@
         {#each headers as header, i (`customtable-${uid}-${i}`)}
           <TableHeadCell class={header.class ?? tablePadding} onclick={() => {}}>
             <span>{header.label}</span>
-            <i
-              class:bx={true}
-              class:bx-caret-up={orderBy == header.attribute}
-              class:bx-caret-down={orderBy == `-${header.attribute}`}
-            ></i>
+            {#if orderBy == header.attribute}
+              <CaretUp />
+            {:else if orderBy == `-${header.attribute}`}
+              <CaretDown />
+            {/if}
             {#if header.progressDuration}
               <div class="mt-1 h-1 min-h-1">
                 <div class="progressmeter">

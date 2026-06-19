@@ -17,13 +17,10 @@ test("cve comparison is working", async ({ page }) => {
 
   await page.getByText("Avendor-advisory-0005").first().click({ force: true });
 
+  await page.waitForURL("**/#/advisories/**");
   await expect(page.getByText("Test CSAF document")).toBeVisible();
 
-  await page
-    .locator("button", {
-      has: page.locator(".bx.bx-link-alt.bx-rotate-90")
-    })
-    .click();
+  await page.getByTitle("Open related documents").click();
 
   // Test visibility of common components
   await expect(page.getByText("Documents having the same CVEs as")).toBeVisible();
@@ -31,7 +28,7 @@ test("cve comparison is working", async ({ page }) => {
   await expect(page.getByText("3 (interim)").first()).toBeVisible();
   await expect(page.getByText("3 (final)").first()).toBeVisible();
   await expect(page.getByText("CVE-2020-1234")).toBeVisible();
-  await expect(page.locator(".text-center.px-2.py-2.w-fit.min-w-0.bx").first()).toBeVisible();
+  await expect(page.locator(".text-center.px-2.py-2.w-fit.min-w-0").first()).toBeVisible();
 
   await page.getByText("Avendor-advisory-0004").nth(3).click();
   await expect(page.getByText("Test CSAF document")).toBeVisible();
@@ -41,11 +38,6 @@ test("cve comparison is working", async ({ page }) => {
   await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
   await scoresCollapsible.click({ force: true });
 
-  await page
-    .locator("button", {
-      has: page.locator(".bx.bx-link-alt.bx-rotate-90")
-    })
-    .nth(2)
-    .click();
+  await page.getByTitle("Open related documents").nth(2).click();
   await expect(page.getByText("Documents having the same CVEs as")).toBeVisible();
 });

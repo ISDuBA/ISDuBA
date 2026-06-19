@@ -19,6 +19,7 @@
   import { fetchIgnored, setIgnored, createStoredQuery, proposeName, type Query } from "./query";
   import QueryTable from "./QueryTable.svelte";
   import type { Order } from "./query";
+  import { Copy, Plus } from "@boxicons/svelte";
 
   let deleteModalOpen = $state(false);
 
@@ -260,9 +261,7 @@
       queries={userQueries}
       title="Personal"
     >
-      <Button class="mt-3 mb-2 w-fit" href="/#/queries/new"
-        ><i class="bx bx-plus me-2"></i>New query</Button
-      >
+      <Button class="mt-3 mb-2 w-fit" href="/#/queries/new"><Plus class="me-2" />New query</Button>
     </QueryTable>
 
     {#if !appStore.isAdmin()}
@@ -275,7 +274,7 @@
       >
         <ErrorMessage error={cloneErrorMessage}></ErrorMessage>
         <Button class="h-fit w-fit text-sm" onclick={cloneDashboardQueries} disabled={isCloning}>
-          <i class="bx bx-copy me-2"></i>
+          <Copy class="me-2" />
           <span class="me-2">Clone relevant queries and hide cloned queries</span>
           <div class:invisible={!isCloning} class={isCloning ? "loadingFadeIn text-white" : ""}>
             <Spinner color="gray" size="4"></Spinner>
@@ -301,8 +300,7 @@
         title="Global"
         isAllowedToEdit={appStore.isAdmin()}
       >
-        <Button class="mt-3 mb-2 w-fit" href="/#/queries/new"
-          ><i class="bx bx-plus me-2"></i>New query</Button
+        <Button class="mt-3 mb-2 w-fit" href="/#/queries/new"><Plus class="me-2" />New query</Button
         >
       </QueryTable>
     {/if}

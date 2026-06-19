@@ -43,6 +43,19 @@
   import MatchList from "./MatchList.svelte";
   import { routerState } from "$routes/router.svelte";
   import Link from "$lib/Components/Link.svelte";
+  import {
+    ArrowToLeft,
+    ArrowToRight,
+    CaretDown,
+    CaretUp,
+    ChevronsLeft,
+    ChevronsRight,
+    GitCommit,
+    Minus,
+    Plus,
+    Trash
+  } from "@boxicons/svelte";
+  import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
 
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
@@ -268,7 +281,7 @@
                 color="light"
                 disabled={!selectedDocuments || selectedDocuments.length === 0}
               >
-                <i class="bx bx-trash text-red-600"></i>
+                <Trash class="text-red-600" />
               </Button>
             {/if}
             {#if tableType === SEARCHTYPES.ADVISORY}
@@ -278,7 +291,7 @@
                 disabled={workflowOptions.length === 0}
                 id="state-icon"
               >
-                <i class="bx bx-git-commit text-black-700 dark:text-gray-300"></i>
+                <GitCommit class="text-black-700 dark:text-gray-300" />
               </Button>
               <Dropdown
                 bind:isOpen={dropdownOpen}
@@ -350,10 +363,10 @@
         <div class="mx-3 flex flex-row">
           <div class:invisible={currentPage === 1} class:flex={true} class:mr-3={true}>
             <PaginationItem onclick={first}>
-              <i class="bx bx-arrow-to-left"></i>
+              <ArrowToLeft />
             </PaginationItem>
             <PaginationItem onclick={previous}>
-              <i class="bx bx-chevrons-left"></i>
+              <ChevronsLeft />
             </PaginationItem>
           </div>
           <div class="flex items-center">
@@ -375,10 +388,10 @@
           </div>
           <div class:invisible={currentPage === numberOfPages} class:flex={true}>
             <PaginationItem onclick={next}>
-              <i class="bx bx-chevrons-right"></i>
+              <ChevronsRight />
             </PaginationItem>
             <PaginationItem onclick={last}>
-              <i class="bx bx-arrow-to-right"></i>
+              <ArrowToRight />
             </PaginationItem>
           </div>
         </div>
@@ -434,16 +447,20 @@
                 onclick={() => {
                   switchSort(column);
                 }}
-                >{getColumnDisplayName(column)}<i
-                  class:bx={true}
-                  class:bx-caret-up={orderBy.find((c) => {
+                >{getColumnDisplayName(column)}
+                <div class="flex gap-1">
+                  {#if orderBy.find((c) => {
                     return c === column;
                   }) !== undefined}
-                  class:bx-caret-down={orderBy.find((c) => {
+                    <CaretUp />
+                  {:else if orderBy.find((c) => {
                     return c === `-${column}`;
                   }) !== undefined}
-                ></i>{getColumnOrder(orderBy, column)}</TableHeadCell
-              >
+                    <CaretDown />
+                  {/if}
+                  {getColumnOrder(orderBy, column)}
+                </div>
+              </TableHeadCell>
             {/if}
           {/each}
         </TableHead>
@@ -485,9 +502,10 @@
                         appStore.setIsDeleteModalOpen(true);
                       }}
                       title={`delete ${item.tracking_id}`}
-                      icon="trash"
                       color="red"
-                    ></CIconButton>
+                    >
+                      <Trash />
+                    </CIconButton>
                   {/if}
                   <button
                     onclick={(e) => {
@@ -561,17 +579,8 @@
                   {:else if column === "state"}
                     <TableBodyCell class={tdClassRelative}>
                       {@render advisoryLink(item)}
-                      <div class="m-2 table w-full text-wrap">
-                        <i
-                          title={item[column]}
-                          class:bx={true}
-                          class:bxs-certification={item[column] === "new"}
-                          class:bx-show={item[column] === "read"}
-                          class:bxs-analyse={item[column] === "assessing"}
-                          class:bx-book-open={item[column] === "review"}
-                          class:bx-archive={item[column] === "archived"}
-                          class:bx-trash={item[column] === "delete"}
-                        ></i>
+                      <div class="m-2 table w-full text-wrap" title={item[column]}>
+                        <WorkflowStateIcon advisoryState={item[column]} />
                       </div></TableBodyCell
                     >
                   {:else if column === "initial_release_date"}
@@ -643,9 +652,9 @@
                                 </div>
                                 <span>
                                   {#if openRow === i}
-                                    <i class="bx bx-minus"></i>
+                                    <Minus />
                                   {:else}
-                                    <i class="bx bx-plus"></i>
+                                    <Plus />
                                   {/if}
                                 </span>
                               </div>
