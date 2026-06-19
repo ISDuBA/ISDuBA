@@ -53,24 +53,21 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 	// Filter the allowed
 	expr = c.andTLPExpr(ctx, expr)
 
-	builder := query.SQLBuilder{Mode: query.EventMode}
-	builder.CreateWhere(expr)
-
 	fields := strings.Fields(
 		ctx.DefaultQuery("columns", "event event_state time actor comments_id message id"))
 
-	if err := builder.CheckProjections(fields); err != nil {
-		models.SendError(ctx, http.StatusBadRequest, err)
-		return
-	}
-
 	orderFields := strings.Fields(ctx.DefaultQuery("orders", "-time"))
-	order, err := builder.CreateOrder(orderFields)
+
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderFields(fields),
+		query.AdvancedSQLBuilderOrderFields(orderFields),
+		query.AdvancedSQLBuilderParser(&parser),
+	)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
-
 	var (
 		calcCount     bool
 		count         int64
@@ -110,7 +107,7 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 				return nil
 			}
 
-			sql := builder.CreateQuery(fields, order, limit, offset)
+			sql := builder.CreateQuery(limit, offset)
 
 			if slog.Default().Enabled(rctx, slog.LevelDebug) {
 				slog.Debug("events", "SQL", query.InterpolateSQLqnd(sql, builder.Replacements))
@@ -120,8 +117,8 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 				return fmt.Errorf("cannot fetch results: %w", err)
 			}
 			defer rows.Close()
-			filtered := builder.RemoveIgnoredFields(fields)
-			if results, err = scanRows(rows, filtered); err != nil {
+			// fields are now filtered per default
+			if results, err = scanRows(rows, fields); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
 			return nil
@@ -176,8 +173,19 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		query.FieldEqString("tracking_id", key.TrackingID).And(
 			query.FieldEqString("publisher", key.Publisher)))
 
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
+	parser := query.Parser{
+		Mode: query.AdvisoryMode,
+	}
+
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderParser(&parser),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	whereClause := builder.CreateWhereSQL()
 
 	type event struct {
 		Event      models.Event    `json:"event_type"`
@@ -195,8 +203,9 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		ctx.Request.Context(),
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			existsSQL := `SELECT EXISTS(` +
-				`SELECT FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
-				`WHERE ` + builder.WhereClause + `)`
+				`SELECT FROM documents ` +
+				`JOIN advisories ON documents.advisories_id = advisories.id ` +
+				`WHERE ` + whereClause + `) `
 			if err := conn.QueryRow(
 				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
@@ -204,11 +213,15 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 			if !exists {
 				return nil
 			}
-			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id FROM events_log ` +
-				`WHERE documents_id in (` +
+
+			fetchSQL := `SELECT event, documents_id, time, actor, state, comments_id ` +
+				`FROM events_log ` +
+				`WHERE documents_id IN ( ` +
 				`SELECT documents.id ` +
-				`FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
-				`WHERE ` + builder.WhereClause + `) ORDER BY time DESC`
+				`FROM documents ` +
+				`JOIN advisories ON documents.advisories_id = advisories.id ` +
+				`WHERE ` + whereClause + `) ` +
+				`ORDER BY time DESC `
 			rows, _ := conn.Query(rctx, fetchSQL, builder.Replacements...)
 			var err error
 			events, err = pgx.CollectRows(

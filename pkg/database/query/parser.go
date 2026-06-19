@@ -115,6 +115,8 @@ var documentColumns = []documentColumn{
 	{"four_cves", stringType, docAdvEvtModes, true, documentsTable},
 	{"comments", intType, docAdvEvtModes, false, documentsTable},
 	{"tracking_status", statusType, docAdvEvtModes, false, documentsTable},
+	{"original", stringType, docAdvEvtModes, false, documentsTable},
+	{"filename", stringType, docAdvEvtModes, false, documentsTable},
 	// Advisories only
 	{"state", workflowType, advModes, false, advisoriesTable},
 	{"recent", timeType, advModes, false, advisoriesTable},
