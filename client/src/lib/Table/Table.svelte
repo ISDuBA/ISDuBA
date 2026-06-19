@@ -13,7 +13,6 @@
     Button,
     Dropdown,
     Label,
-    PaginationItem,
     Select,
     TableBody,
     TableBodyCell,
@@ -43,19 +42,9 @@
   import MatchList from "./MatchList.svelte";
   import { routerState } from "$routes/router.svelte";
   import Link from "$lib/Components/Link.svelte";
-  import {
-    ArrowToLeft,
-    ArrowToRight,
-    CaretDown,
-    CaretUp,
-    ChevronsLeft,
-    ChevronsRight,
-    GitCommit,
-    Minus,
-    Plus,
-    Trash
-  } from "@boxicons/svelte";
+  import { CaretDown, CaretUp, GitCommit, Minus, Plus, Trash } from "@boxicons/svelte";
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
+  import CPagination from "$lib/Components/CPagination.svelte";
 
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
@@ -191,14 +180,14 @@
 
   let isAdmin = $derived(isRoleIncluded(appStore.getRoles(), [ADMIN]));
 
-  const previous = async () => {
+  const onPrevious = async () => {
     if (offset - limit >= 0) {
       setSearchParameters({
         currentPage: currentPage - 1
       });
     }
   };
-  const next = async () => {
+  const onNext = async () => {
     if (offset + limit <= count) {
       setSearchParameters({
         currentPage: currentPage + 1
@@ -206,7 +195,7 @@
     }
   };
 
-  const first = async () => {
+  const onFirst = async () => {
     setSearchParameters({
       currentPage: 1
     });
@@ -360,41 +349,24 @@
         </div>
       </div>
       <div>
-        <div class="mx-3 flex flex-row">
-          <div class:invisible={currentPage === 1} class:flex={true} class:mr-3={true}>
-            <PaginationItem onclick={first}>
-              <ArrowToLeft />
-            </PaginationItem>
-            <PaginationItem onclick={previous}>
-              <ChevronsLeft />
-            </PaginationItem>
-          </div>
-          <div class="flex items-center">
-            <input
-              class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-800`}
-              onchange={(event: any) => {
-                let tmpCurrentPage = event.target.value;
-                if (!parseInt("" + tmpCurrentPage)) tmpCurrentPage = 1;
-                tmpCurrentPage = Math.floor(tmpCurrentPage);
-                if (tmpCurrentPage < 1) tmpCurrentPage = 1;
-                if (tmpCurrentPage > numberOfPages) tmpCurrentPage = numberOfPages;
-                setSearchParameters({
-                  currentPage: tmpCurrentPage
-                });
-              }}
-              value={currentPage}
-            />
-            <span class="mr-3 ml-2 text-nowrap">of {numberOfPages} pages</span>
-          </div>
-          <div class:invisible={currentPage === numberOfPages} class:flex={true}>
-            <PaginationItem onclick={next}>
-              <ChevronsRight />
-            </PaginationItem>
-            <PaginationItem onclick={last}>
-              <ArrowToRight />
-            </PaginationItem>
-          </div>
-        </div>
+        <CPagination
+          onChange={(event: any) => {
+            let tmpCurrentPage = event.target.value;
+            if (!parseInt("" + tmpCurrentPage)) tmpCurrentPage = 1;
+            tmpCurrentPage = Math.floor(tmpCurrentPage);
+            if (tmpCurrentPage < 1) tmpCurrentPage = 1;
+            if (tmpCurrentPage > numberOfPages) tmpCurrentPage = numberOfPages;
+            setSearchParameters({
+              currentPage: tmpCurrentPage
+            });
+          }}
+          {onFirst}
+          {onPrevious}
+          {onNext}
+          onLast={last}
+          {currentPage}
+          {numberOfPages}
+        />
       </div>
       <div class="mr-3 text-nowrap">
         {#if query}
