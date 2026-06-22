@@ -19,7 +19,7 @@ require (
 	github.com/gocsaf/csaf/v3 v3.5.1
 	github.com/gomarkdown/markdown v0.0.0-20260417124207-7d523f7318df
 	github.com/jackc/pgx/v5 v5.9.1
-	github.com/samber/slog-gin v1.21.0
+	github.com/samber/slog-gin v1.21.1
 	github.com/sergi/go-diff v1.4.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
