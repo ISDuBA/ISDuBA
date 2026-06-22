@@ -82,11 +82,23 @@ func (c *Controller) cveRelatedDocuments(ctx *gin.Context) {
 		return
 	}
 
-	var (
-		sb         = query.SQLBuilder{}
-		allowedDoc = c.tlps(ctx).AsExprPublisher("ads.publisher")
-		tlpCheck   = sb.CreateWhere(allowedDoc)
+	var allowedDoc = c.tlps(ctx).AsExprPublisher("ads.publisher")
+
+	parser := query.Parser{
+		Mode: query.DocumentMode,
+	}
+
+	sb, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(allowedDoc),
+		query.AdvancedSQLBuilderParser(&parser),
 	)
+
+	if err != nil {
+		models.SendError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	tlpCheck := sb.CreateWhereSQL()
 
 	sb.Replacements = append(sb.Replacements, docID)
 	docIndex := len(sb.Replacements)

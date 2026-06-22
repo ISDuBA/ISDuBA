@@ -57,8 +57,17 @@ func TestAsConditions(t *testing.T) {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
 		expr := ptlps.AsExpr()
-		builder := query.SQLBuilder{}
-		have := builder.CreateWhere(expr)
+
+		builder, err := query.NewAdvancedSQLBuilder(
+			query.AdvancedSQLBuilderExpr(expr),
+		)
+
+		if err != nil {
+			t.Errorf("input: %s builder creation failed: %v", x.input, err)
+		}
+
+		have := builder.CreateWhereSQL()
+
 		if x.expected != have {
 			t.Errorf("input: %s have: %s, expected: %s", x.input, have, x.expected)
 		}

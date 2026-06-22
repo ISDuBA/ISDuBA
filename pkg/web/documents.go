@@ -58,9 +58,14 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
 
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
-
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	whereClause := builder.CreateWhereSQL()
 	deleted := false
 
 	if err := c.db.Run(
@@ -73,10 +78,9 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 			defer tx.Rollback(rctx)
 
 			const deletePrefix = `DELETE FROM documents WHERE `
-			deleteSQL := deletePrefix + builder.WhereClause
+			deleteSQL := deletePrefix + whereClause
 			slog.Debug("delete document", "SQL",
 				query.InterpolateSQLqnd(deleteSQL, builder.Replacements))
-
 			tags, err := tx.Exec(rctx, deleteSQL, builder.Replacements...)
 			if err != nil {
 				return fmt.Errorf("delete failed: %w", err)
@@ -232,9 +236,17 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	fields := []string{"original", "filename"}
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
-	sql := builder.CreateQuery(fields, "", -1, -1)
+
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderFields(fields),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	sql := builder.CreateQuery(-1, -1)
 
 	var original []byte
 	var filename string
@@ -311,9 +323,16 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	fields := []string{"id"}
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
-	sql := builder.CreateQuery(fields, "", -1, -1)
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderFields(fields),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	sql := builder.CreateQuery(-1, -1)
 
 	var documentID int64
 
@@ -330,7 +349,6 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 		}
 		return
 	}
-
 	if err := c.fm.ForwardDocument(ctx.Request.Context(), int(targetID), documentID); err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return

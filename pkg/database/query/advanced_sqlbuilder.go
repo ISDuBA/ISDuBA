@@ -12,9 +12,11 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 )
@@ -46,6 +48,30 @@ type statementMode interface {
 type (
 	classicMode struct{}
 	cteMode     struct{ classicMode }
+)
+
+var (
+	escapeLike = strings.NewReplacer(
+		`%`, `\%`,
+		`_`, `\_`).Replace
+	whiteSpaces      = regexp.MustCompile(`\s+`)
+	dirtyReplace     *regexp.Regexp
+	dirtyReplaceOnce sync.Once
+)
+
+const (
+	versionsCountClassic = `(SELECT count(*) FROM documents WHERE ` +
+		`documents.advisories_id = advisories.id)`
+	commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = documents.id)`
+	versionsCountCTE          = `(SELECT count(*) FROM docads)`
+	commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = docads.id)`
+	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = documents_id)`
+
+	ilikePrefix = `'%'||regexp_replace(regexp_replace(`
+	ilikeSuffix = `,'(%|_)','\\\1','g'),'(\s+)','%','g')||'%'`
 )
 
 func (classicMode) projectionCommon(
@@ -708,7 +734,7 @@ func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
 func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 	var b strings.Builder
 	sm := statementMode(classicMode{})
-	if sb.usedSources.contains(documentsTable | advisoriesTable) {
+	if sb.mode() != EventMode && sb.usedSources.contains(documentsTable|advisoriesTable) {
 		sm = cteMode{}
 		sb.prefixCTE(&b)
 	}
@@ -767,7 +793,7 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 ) string {
 	var b strings.Builder
 	sm := statementMode(classicMode{})
-	if sb.usedSources.contains(documentsTable | advisoriesTable) {
+	if sb.mode() != EventMode && sb.usedSources.contains(documentsTable|advisoriesTable) {
 		sm = cteMode{}
 		sb.prefixCTE(&b)
 	}
@@ -838,34 +864,102 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 	}
 }
 
+// CheckProjections checks if the provided projection fields are valid.
+func (sb *AdvancedSQLBuilder) CheckProjections(fields []string) error {
+	for _, f := range fields {
+		if !sb.checkField(f) {
+			return fmt.Errorf("column %q does not exist", f)
+		}
+	}
+	return nil
+}
+
+// CheckOrder validates the provided order fields.
+func (sb *AdvancedSQLBuilder) CheckOrder(orderFields []string) error {
+	for _, f := range orderFields {
+		if cleanF := strings.TrimPrefix(f, "-"); !sb.checkField(cleanF) {
+			return fmt.Errorf("order field %q does not exist", f)
+		}
+	}
+	return nil
+}
+
 // check tests for the existence of used columns.
 func (sb *AdvancedSQLBuilder) check() error {
-	// A field is valid if there is a named column or
-	// there exists an alias for it.
-	checkField := func(field string) bool {
-		col := findDocumentColumn(field, sb.mode())
-		if col != nil {
-			sb.usedSources.add(col.sources)
-			return true
-		}
-		if sb.HasAlias(field) {
-			sb.usedSources.add(documentsTable | textTable)
-			return true
-		}
-		return false
+	if err := sb.CheckProjections(sb.fields); err != nil {
+		return err
 	}
-	// check projections.
-	for _, f := range sb.fields {
-		if !checkField(f) {
-			return fmt.Errorf("column %q does not exists", f)
-		}
-	}
-	// check order
-	for _, f := range sb.orderFields {
-		if f := strings.TrimPrefix(f, "-"); !checkField(f) {
-			return fmt.Errorf("order field %q does not exists", f)
-		}
+	if err := sb.CheckOrder(sb.orderFields); err != nil {
+		return err
 	}
 	slog.Debug("advanced sqlbuilder", "used sources", sb.usedSources)
 	return nil
+}
+
+// checkField tests if a field is valid. It is valid if there is a named column or
+// there exists an alias for it
+func (sb *AdvancedSQLBuilder) checkField(field string) bool {
+	col := findDocumentColumn(field, sb.mode())
+	if col != nil {
+		sb.usedSources.add(col.sources)
+		return true
+	}
+	if sb.HasAlias(field) {
+		sb.usedSources.add(documentsTable | textTable)
+		return true
+	}
+	return false
+}
+
+// InterpolateSQLqnd is a quick and dirty hack to re-substitute strings
+// into SQL statements. Warning: USE FOR LOGGING ONLY!
+// The separation SQL <-> replacements were done beforehand to
+// prevent injections!
+func InterpolateSQLqnd(sql string, replacements []any) string {
+	dirtyReplaceOnce.Do(func() {
+		dirtyReplace = regexp.MustCompile(`\$([\d]+)`)
+	})
+	sql = dirtyReplace.ReplaceAllStringFunc(sql, func(s string) string {
+		m := dirtyReplace.FindStringSubmatch(s)
+		index, _ := strconv.Atoi(m[1])
+		if index--; index < 0 || index >= len(replacements) {
+			return fmt.Sprintf("BAD INDEX %d", index+1)
+		}
+		var verb string
+		switch replacements[index].(type) {
+		case string:
+			verb = "s"
+		case int, uint, int8, uint8, int16, uint16, int32, uint32, int64, uint64:
+			verb = "d"
+		case float32, float64:
+			verb = "f"
+		default:
+			verb = "v"
+		}
+		return `'%[` + m[1] + `]` + verb + `'`
+	})
+	return fmt.Sprintf(sql, replacements...)
+}
+
+// CreateWhereSQL creates a SQL WHERE clause from the builders expression.
+func (sb *AdvancedSQLBuilder) CreateWhereSQL() string {
+	var b strings.Builder
+
+	sm := statementMode(classicMode{})
+	if sb.mode() != EventMode &&
+		sb.usedSources.contains(documentsTable|advisoriesTable) {
+		sm = cteMode{}
+	}
+
+	sb.createWhere(&b, sm)
+	return b.String()
+}
+
+// LikeEscape quotes a query string to be more convenient
+// to use with LIKE filters.
+func LikeEscape(query string) string {
+	query = strings.TrimSpace(query)
+	query = escapeLike(query)
+	query = whiteSpaces.ReplaceAllString(query, `%`)
+	return `%` + query + `%`
 }

@@ -118,22 +118,33 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	builder := query.SQLBuilder{Mode: sq.Kind}
-	builder.CreateWhere(expr)
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+		query.AdvancedSQLBuilderParser(&parser),
+	)
+	if err != nil {
+		models.SendErrorMessage(
+			ctx,
+			http.StatusBadRequest,
+			err.Error(),
+		)
+		return
+	}
 	if err := builder.CheckProjections(sq.Columns); err != nil {
-		models.SendErrorMessage(ctx,
+		models.SendErrorMessage(
+			ctx,
 			http.StatusBadRequest,
 			"bad 'columns' value: "+err.Error())
 		return
 	}
-
-	// Check if we have orders given.
 	if orders, ok := ctx.GetPostForm("orders"); ok {
 		os := strings.Fields(orders)
-		if _, err := builder.CreateOrder(os); err != nil {
-			models.SendErrorMessage(ctx,
+
+		if err := builder.CheckOrder(os); err != nil {
+			models.SendErrorMessage(
+				ctx,
 				http.StatusBadRequest,
-				"bad 'orders' value"+err.Error())
+				"bad 'orders' value: "+err.Error())
 			return
 		}
 		sq.Orders = &os
@@ -583,8 +594,14 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				expr = expr.And(query.BoolField("latest"))
 			}
 
-			builder := query.SQLBuilder{Mode: sq.Kind}
-			builder.CreateWhere(expr)
+			builder, err := query.NewAdvancedSQLBuilder(
+				query.AdvancedSQLBuilderExpr(expr),
+				query.AdvancedSQLBuilderParser(&parser),
+			)
+			if err != nil {
+				bad = "bad 'query' value: " + err.Error()
+				return nil
+			}
 
 			// Check columns
 			if cols, ok := ctx.GetPostForm("columns"); ok {
@@ -687,7 +704,7 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 					var s *[]string
 					add(sq.Orders != nil, "orders", s)
 				} else {
-					if _, err := builder.CreateOrder(orders); err != nil {
+					if err := builder.CheckOrder(orders); err != nil {
 						bad = "invalid 'orders' value: " + err.Error()
 						return nil
 					}

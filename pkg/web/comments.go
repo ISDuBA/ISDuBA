@@ -68,8 +68,15 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	}
 
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	whereClause := builder.CreateWhereSQL()
 
 	var (
 		exists            bool
@@ -93,7 +100,7 @@ func (c *Controller) createComment(ctx *gin.Context) {
 			stateSQL := `SELECT state, advisories.tracking_id, advisories.publisher ` +
 				`FROM documents JOIN advisories ` +
 				`ON documents.advisories_id = advisories.id ` +
-				` WHERE ` + builder.WhereClause
+				` WHERE ` + whereClause
 
 			var (
 				stateS     string
@@ -209,8 +216,15 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 	}
 
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("com.id", commentID))
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	whereClause := builder.CreateWhereSQL()
 
 	var (
 		exists            bool
@@ -232,7 +246,7 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 				`ON docs.advisories_id = ads.id ` +
 				`JOIN comments com ` +
 				`ON com.documents_id = docs.id` +
-				` WHERE ` + builder.WhereClause
+				` WHERE ` + whereClause
 
 			var stateS string
 			if err := tx.QueryRow(rctx, stateSQL, builder.Replacements...).Scan(
@@ -327,11 +341,19 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("comments.id", id))
 
-	builder := query.SQLBuilder{}
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	whereClause := builder.CreateWhereSQL()
 
 	fetchSQL := `SELECT documents_id, time, commentator, message ` +
 		`FROM comments JOIN documents ON comments.documents_id = documents.id ` +
-		`WHERE ` + builder.CreateWhere(expr)
+		`WHERE ` + whereClause
 
 	post := comment{ID: id}
 	switch err := c.db.Run(
@@ -382,8 +404,15 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		query.FieldEqString("tracking_id", key.TrackingID).And(
 			query.FieldEqString("publisher", key.Publisher)))
 
-	builder := query.SQLBuilder{}
-	builder.CreateWhere(expr)
+	builder, err := query.NewAdvancedSQLBuilder(
+		query.AdvancedSQLBuilderExpr(expr),
+	)
+	if err != nil {
+		models.SendError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	whereClause := builder.CreateWhereSQL()
 
 	var comments []comment
 	var exists bool
@@ -393,7 +422,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		func(rctx context.Context, conn *pgxpool.Conn) error {
 			existsSQL := `SELECT EXISTS(` +
 				`SELECT FROM documents JOIN advisories ON documents.advisories_id = advisories.id WHERE ` +
-				builder.WhereClause + `)`
+				whereClause + `)`
 			if err := conn.QueryRow(
 				rctx, existsSQL, builder.Replacements...).Scan(&exists); err != nil {
 				return err
@@ -405,7 +434,7 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 				`WHERE documents_id in (` +
 				`SELECT documents.id FROM documents JOIN advisories ON documents.advisories_id = advisories.id ` +
 				`WHERE ` +
-				builder.WhereClause +
+				whereClause +
 				` ) ORDER BY time DESC`
 			rows, _ := conn.Query(rctx, fetchSQL, builder.Replacements...)
 			var err error
