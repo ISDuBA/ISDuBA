@@ -88,9 +88,9 @@ func (c *Controller) cveRelatedDocuments(ctx *gin.Context) {
 		Mode: query.DocumentMode,
 	}
 
-	sb, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(allowedDoc),
-		query.AdvancedSQLBuilderParser(&parser),
+	sb, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(allowedDoc),
+		query.SQLBuilderParser(&parser),
 	)
 
 	if err != nil {

@@ -58,8 +58,8 @@ func (c *Controller) deleteDocument(ctx *gin.Context) {
 	// Expr encapsulates a parsed expression to be converted to an SQL WHERE clause.
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
@@ -237,9 +237,9 @@ func (c *Controller) viewDocument(ctx *gin.Context) {
 
 	fields := []string{"original", "filename"}
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
-		query.AdvancedSQLBuilderFields(fields),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
+		query.SQLBuilderFields(fields),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
@@ -323,9 +323,9 @@ func (c *Controller) forwardDocument(ctx *gin.Context) {
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", id))
 
 	fields := []string{"id"}
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
-		query.AdvancedSQLBuilderFields(fields),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
+		query.SQLBuilderFields(fields),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
@@ -431,12 +431,12 @@ func (c *Controller) overviewDocuments(ctx *gin.Context) {
 		fields = append(fields, "id")
 	}
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
-		query.AdvancedSQLBuilderOrderFields(orderFields),
-		query.AdvancedSQLBuilderFields(fields),
-		query.AdvancedSQLBuilderParser(&parser),
-		query.AdvancedSQLBuilderAggregate(aggregate))
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
+		query.SQLBuilderOrderFields(orderFields),
+		query.SQLBuilderFields(fields),
+		query.SQLBuilderParser(&parser),
+		query.SQLBuilderAggregate(aggregate))
 
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
@@ -471,7 +471,7 @@ func (c *Controller) flatResults(
 	ctx *gin.Context,
 	calcCount bool,
 	limit, offset int64,
-	builder *query.AdvancedSQLBuilder,
+	builder *query.SQLBuilder,
 ) {
 	type documentResult struct {
 		Count     *int64           `json:"count,omitempty"`

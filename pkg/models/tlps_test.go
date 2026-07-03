@@ -58,8 +58,8 @@ func TestAsConditions(t *testing.T) {
 		}
 		expr := ptlps.AsExpr()
 
-		builder, err := query.NewAdvancedSQLBuilder(
-			query.AdvancedSQLBuilderExpr(expr),
+		builder, err := query.NewSQLBuilder(
+			query.SQLBuilderExpr(expr),
 		)
 
 		if err != nil {

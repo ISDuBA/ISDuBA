@@ -44,7 +44,7 @@ func (c *Controller) aggregatedResults(
 	ctx *gin.Context,
 	calcCount bool,
 	limit, offset int64,
-	builder *query.AdvancedSQLBuilder,
+	builder *query.SQLBuilder,
 ) {
 	var (
 		ads  aggregatedDocuments
@@ -216,7 +216,7 @@ func trackError(
 // scanAggregatedDocuments returns a result set into a slice of aggregated documents.
 func scanAggregatedDocuments(
 	rows pgx.Rows,
-	builder *query.AdvancedSQLBuilder,
+	builder *query.SQLBuilder,
 ) (aggregatedDocuments, error) {
 	fields := builder.Fields()
 	idIdx := slices.Index(fields, "id")

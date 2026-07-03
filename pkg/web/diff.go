@@ -92,11 +92,11 @@ func (c *Controller) viewDiff(ctx *gin.Context) {
 			func(rctx context.Context, conn *pgxpool.Conn) error {
 				for _, f := range fromDB {
 					expr := query.FieldEqInt("documents.id", f.id).And(tlpExpr)
-					b, err := query.NewAdvancedSQLBuilder(
-						query.AdvancedSQLBuilderExpr(expr),
+					b, err := query.NewSQLBuilder(
+						query.SQLBuilderExpr(expr),
 					)
 					if err != nil {
-						return fmt.Errorf("creating advanced SQL builder failed: %w", err)
+						return fmt.Errorf("creating SQL builder failed: %w", err)
 					}
 
 					whereClause := b.CreateWhereSQL()

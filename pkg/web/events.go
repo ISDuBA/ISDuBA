@@ -58,11 +58,11 @@ func (c *Controller) overviewEvents(ctx *gin.Context) {
 
 	orderFields := strings.Fields(ctx.DefaultQuery("orders", "-time"))
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
-		query.AdvancedSQLBuilderFields(fields),
-		query.AdvancedSQLBuilderOrderFields(orderFields),
-		query.AdvancedSQLBuilderParser(&parser),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
+		query.SQLBuilderFields(fields),
+		query.SQLBuilderOrderFields(orderFields),
+		query.SQLBuilderParser(&parser),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
@@ -177,9 +177,9 @@ func (c *Controller) viewEvents(ctx *gin.Context) {
 		Mode: query.AdvisoryMode,
 	}
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
-		query.AdvancedSQLBuilderParser(&parser),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
+		query.SQLBuilderParser(&parser),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)

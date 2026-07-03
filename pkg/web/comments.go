@@ -68,8 +68,8 @@ func (c *Controller) createComment(ctx *gin.Context) {
 	}
 
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("id", docID))
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
@@ -216,8 +216,8 @@ func (c *Controller) updateComment(ctx *gin.Context) {
 	}
 
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("com.id", commentID))
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
@@ -341,8 +341,8 @@ func (c *Controller) viewComment(ctx *gin.Context) {
 
 	expr := c.andTLPExpr(ctx, query.FieldEqInt("comments.id", id))
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)
@@ -404,8 +404,8 @@ func (c *Controller) viewComments(ctx *gin.Context) {
 		query.FieldEqString("tracking_id", key.TrackingID).And(
 			query.FieldEqString("publisher", key.Publisher)))
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
 	)
 	if err != nil {
 		models.SendError(ctx, http.StatusInternalServerError, err)

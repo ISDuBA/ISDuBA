@@ -118,9 +118,9 @@ func (c *Controller) createStoredQuery(ctx *gin.Context) {
 		return
 	}
 
-	builder, err := query.NewAdvancedSQLBuilder(
-		query.AdvancedSQLBuilderExpr(expr),
-		query.AdvancedSQLBuilderParser(&parser),
+	builder, err := query.NewSQLBuilder(
+		query.SQLBuilderExpr(expr),
+		query.SQLBuilderParser(&parser),
 	)
 	if err != nil {
 		models.SendErrorMessage(
@@ -594,9 +594,9 @@ func (c *Controller) updateStoredQuery(ctx *gin.Context) {
 				expr = expr.And(query.BoolField("latest"))
 			}
 
-			builder, err := query.NewAdvancedSQLBuilder(
-				query.AdvancedSQLBuilderExpr(expr),
-				query.AdvancedSQLBuilderParser(&parser),
+			builder, err := query.NewSQLBuilder(
+				query.SQLBuilderExpr(expr),
+				query.SQLBuilderParser(&parser),
 			)
 			if err != nil {
 				bad = "bad 'query' value: " + err.Error()

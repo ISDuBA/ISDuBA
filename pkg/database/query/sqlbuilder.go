@@ -21,8 +21,8 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 )
 
-// AdvancedSQLBuilder helps to construct a SQL query.
-type AdvancedSQLBuilder struct {
+// SQLBuilder helps to construct a SQL query.
+type SQLBuilder struct {
 	expr         *Expr
 	parser       *Parser
 	orderFields  []string
@@ -34,15 +34,15 @@ type AdvancedSQLBuilder struct {
 }
 
 type statementMode interface {
-	projection(sb *AdvancedSQLBuilder, b *strings.Builder, name string)
-	from(sb *AdvancedSQLBuilder, b *strings.Builder)
-	accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
-	searchWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
-	mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
-	involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
-	ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
-	ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder)
-	order(sb *AdvancedSQLBuilder, b *strings.Builder, name string)
+	projection(sb *SQLBuilder, b *strings.Builder, name string)
+	from(sb *SQLBuilder, b *strings.Builder)
+	accessWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	searchWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	mentionedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	involvedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	ilikePNameWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	ilikePIDWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	order(sb *SQLBuilder, b *strings.Builder, name string)
 }
 
 type (
@@ -75,7 +75,7 @@ const (
 )
 
 func (classicMode) projectionCommon(
-	sb *AdvancedSQLBuilder, b *strings.Builder,
+	sb *SQLBuilder, b *strings.Builder,
 	name string,
 	versionsCount, commentsCountDocuments string,
 ) {
@@ -101,7 +101,7 @@ func (classicMode) projectionCommon(
 	}
 }
 
-func (cm classicMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, name string) {
+func (cm classicMode) projection(sb *SQLBuilder, b *strings.Builder, name string) {
 	switch name {
 	case "tracking_id", "publisher":
 		b.WriteString("advisories.")
@@ -121,7 +121,7 @@ func (cm classicMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, nam
 	}
 }
 
-func (cm cteMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, name string) {
+func (cm cteMode) projection(sb *SQLBuilder, b *strings.Builder, name string) {
 	switch name {
 	case "tracking_id", "publisher":
 		b.WriteString("docads.")
@@ -142,7 +142,7 @@ func (cm cteMode) projection(sb *AdvancedSQLBuilder, b *strings.Builder, name st
 	}
 }
 
-func (classicMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
+func (classicMode) from(sb *SQLBuilder, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode, DocumentMode:
 		b.WriteString(`documents ` +
@@ -168,7 +168,7 @@ func (classicMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 }
 
 // createUnaliasedSearches creates a CROSS JOIN LATERAL to filter searches with no aliases.
-func (sb *AdvancedSQLBuilder) createUnaliasedSearches(b *strings.Builder) {
+func (sb *SQLBuilder) createUnaliasedSearches(b *strings.Builder) {
 	if sb.expr == nil {
 		return
 	}
@@ -193,7 +193,7 @@ func (sb *AdvancedSQLBuilder) createUnaliasedSearches(b *strings.Builder) {
 }
 
 // createAliasedSearches creates a CROSS JOIN LATERAL for each search text that has an alias.
-func (sb *AdvancedSQLBuilder) createAliasedSearches(b *strings.Builder) {
+func (sb *SQLBuilder) createAliasedSearches(b *strings.Builder) {
 	if sb.parser == nil {
 		return
 	}
@@ -223,7 +223,7 @@ func (sb *AdvancedSQLBuilder) createAliasedSearches(b *strings.Builder) {
 	}
 }
 
-func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
+func (cteMode) from(sb *SQLBuilder, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode, DocumentMode:
 		b.WriteString(`docads`)
@@ -241,7 +241,7 @@ func (cteMode) from(sb *AdvancedSQLBuilder, b *strings.Builder) {
 }
 
 func (classicMode) accessWhereCommon(
-	sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder,
+	sb *SQLBuilder, e *Expr, b *strings.Builder,
 	versionsCount, commentsCountDocuments string,
 ) {
 	switch column := e.stringValue; column {
@@ -263,7 +263,7 @@ func (classicMode) accessWhereCommon(
 	}
 }
 
-func (cm classicMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm classicMode) accessWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	switch column := e.stringValue; column {
 	case "id":
 		b.WriteString("documents.")
@@ -279,7 +279,7 @@ func (cm classicMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Bu
 	}
 }
 
-func (cm cteMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm cteMode) accessWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	switch column := e.stringValue; column {
 	case "id":
 		b.WriteString("docads.")
@@ -293,13 +293,13 @@ func (cm cteMode) accessWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builde
 	}
 }
 
-func (classicMode) searchWhere(_ *AdvancedSQLBuilder, _ *Expr, b *strings.Builder) {
+func (classicMode) searchWhere(_ *SQLBuilder, _ *Expr, b *strings.Builder) {
 	// The Filtering is done by a CROSS JOIN LATERAL so we insert a true here
 	// to be optimzed away by the query planner.
 	b.WriteString("TRUE")
 }
 
-func (classicMode) mentionedWhereCommon(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (classicMode) mentionedWhereCommon(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	switch sb.mode() {
 	case EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
@@ -308,7 +308,7 @@ func (classicMode) mentionedWhereCommon(sb *AdvancedSQLBuilder, e *Expr, b *stri
 	}
 }
 
-func (cm classicMode) mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm classicMode) mentionedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
@@ -325,7 +325,7 @@ func (cm classicMode) mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings
 	}
 }
 
-func (cm cteMode) mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm cteMode) mentionedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
@@ -342,7 +342,7 @@ func (cm cteMode) mentionedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Bui
 	}
 }
 
-func (classicMode) involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (classicMode) involvedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
@@ -357,7 +357,7 @@ func (classicMode) involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Bui
 	}
 }
 
-func (cteMode) involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cteMode) involvedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	switch sb.mode() {
 	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docads "+
@@ -371,7 +371,7 @@ func (cteMode) involvedWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder
 	}
 }
 
-func (cm classicMode) ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm classicMode) ilikePNameWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_names AS (SELECT jsonb_path_query(` +
 		`document, '$.product_tree.**.product.name')::int num ` +
@@ -384,7 +384,7 @@ func (cm classicMode) ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *string
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (cm classicMode) ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm classicMode) ilikePIDWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_ids AS (SELECT jsonb_path_query(` +
 		`document, '$.product_tree.**.product.product_id')::int num ` +
@@ -397,7 +397,7 @@ func (cm classicMode) ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (cm cteMode) ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm cteMode) ilikePNameWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_names AS (` +
 		` SELECT` +
@@ -415,7 +415,7 @@ func (cm cteMode) ilikePNameWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Bu
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (cm cteMode) ilikePIDWhere(sb *AdvancedSQLBuilder, e *Expr, b *strings.Builder) {
+func (cm cteMode) ilikePIDWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
 	b.WriteString(`EXISTS (` +
 		`WITH product_ids AS (` +
 		` SELECT` +
@@ -448,7 +448,7 @@ func (classicMode) orderCommon(b *strings.Builder, name string) {
 	}
 }
 
-func (cm classicMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name string) {
+func (cm classicMode) order(_ *SQLBuilder, b *strings.Builder, name string) {
 	switch name {
 	case "tracking_id", "publisher", "id":
 		b.WriteString("advisories.")
@@ -460,7 +460,7 @@ func (cm classicMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name stri
 	}
 }
 
-func (cm cteMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name string) {
+func (cm cteMode) order(_ *SQLBuilder, b *strings.Builder, name string) {
 	switch name {
 	case "tracking_id", "publisher", "id":
 		b.WriteString("docads.")
@@ -470,52 +470,52 @@ func (cm cteMode) order(_ *AdvancedSQLBuilder, b *strings.Builder, name string) 
 	}
 }
 
-// AdvancedSQLBuilderOption is an option to create an advanced SQL builder.
-type AdvancedSQLBuilderOption func(*AdvancedSQLBuilder)
+// SQLBuilderOption is an option to create an SQL builder.
+type SQLBuilderOption func(*SQLBuilder)
 
-// AdvancedSQLBuilderAggregate creates an option to signal that the builder
+// SQLBuilderAggregate creates an option to signal that the builder
 // is used in a aggregation context.
-func AdvancedSQLBuilderAggregate(aggregate bool) AdvancedSQLBuilderOption {
-	return func(ab *AdvancedSQLBuilder) {
+func SQLBuilderAggregate(aggregate bool) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
 		ab.aggregate = aggregate
 	}
 }
 
-// AdvancedSQLBuilderExpr creates an option to create an advanced SQL builder
+// SQLBuilderExpr creates an option to create an SQL builder
 // with an expression.
-func AdvancedSQLBuilderExpr(e *Expr) AdvancedSQLBuilderOption {
-	return func(ab *AdvancedSQLBuilder) {
+func SQLBuilderExpr(e *Expr) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
 		ab.expr = e
 	}
 }
 
-// AdvancedSQLBuilderOrderFields creates an option to create an advanced SQL builder
+// SQLBuilderOrderFields creates an option to create an SQL builder
 // with a order fields.
-func AdvancedSQLBuilderOrderFields(orderFields []string) AdvancedSQLBuilderOption {
-	return func(ab *AdvancedSQLBuilder) {
+func SQLBuilderOrderFields(orderFields []string) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
 		ab.orderFields = orderFields
 	}
 }
 
-// AdvancedSQLBuilderFields creates an option to create an advanced SQL builder
+// SQLBuilderFields creates an option to create an SQL builder
 // with projection fields.
-func AdvancedSQLBuilderFields(fields []string) AdvancedSQLBuilderOption {
-	return func(ab *AdvancedSQLBuilder) {
+func SQLBuilderFields(fields []string) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
 		ab.fields = fields
 	}
 }
 
-// AdvancedSQLBuilderParser creates an option to create an advanced SQL builder
+// SQLBuilderParser creates an option to create an SQL builder
 // with a given parser.
-func AdvancedSQLBuilderParser(parser *Parser) AdvancedSQLBuilderOption {
-	return func(ab *AdvancedSQLBuilder) {
+func SQLBuilderParser(parser *Parser) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
 		ab.parser = parser
 	}
 }
 
-// NewAdvancedSQLBuilder creates a new advanced builder with a list of options.
-func NewAdvancedSQLBuilder(options ...AdvancedSQLBuilderOption) (*AdvancedSQLBuilder, error) {
-	ab := new(AdvancedSQLBuilder)
+// NewSQLBuilder creates a new builder with a list of options.
+func NewSQLBuilder(options ...SQLBuilderOption) (*SQLBuilder, error) {
+	ab := new(SQLBuilder)
 	for _, option := range options {
 		option(ab)
 	}
@@ -524,27 +524,27 @@ func NewAdvancedSQLBuilder(options ...AdvancedSQLBuilderOption) (*AdvancedSQLBui
 		ab.usedSources = ab.parser.UsedSources
 	}
 	if err := ab.check(); err != nil {
-		return nil, fmt.Errorf("creating advanced SQL builder failed: %w", err)
+		return nil, fmt.Errorf("creating SQL builder failed: %w", err)
 	}
 	return ab, nil
 }
 
 // Expr returns the expression used by the builder.
-func (sb *AdvancedSQLBuilder) Expr() *Expr {
+func (sb *SQLBuilder) Expr() *Expr {
 	return sb.expr
 }
 
 // HasFields returns true if the builder has projection fields.
-func (sb *AdvancedSQLBuilder) HasFields() bool {
+func (sb *SQLBuilder) HasFields() bool {
 	return len(sb.fields) > 0
 }
 
 // Fields returns the projection fields of the query.
-func (sb *AdvancedSQLBuilder) Fields() []string {
+func (sb *SQLBuilder) Fields() []string {
 	return sb.fields
 }
 
-func (sb *AdvancedSQLBuilder) alias(name string) *Expr {
+func (sb *SQLBuilder) alias(name string) *Expr {
 	if sb.parser == nil {
 		return nil
 	}
@@ -552,23 +552,23 @@ func (sb *AdvancedSQLBuilder) alias(name string) *Expr {
 }
 
 // HasAlias checks if there is an alias for a given name.
-func (sb *AdvancedSQLBuilder) HasAlias(name string) bool {
+func (sb *SQLBuilder) HasAlias(name string) bool {
 	return sb.alias(name) != nil
 }
 
 // createWhere construct a WHERE clause for a given expression.
-func (sb *AdvancedSQLBuilder) createWhere(b *strings.Builder, sm statementMode) {
+func (sb *SQLBuilder) createWhere(b *strings.Builder, sm statementMode) {
 	sb.whereRecurse(sb.expr, b, sm)
 }
 
-func (sb *AdvancedSQLBuilder) mode() ParserMode {
+func (sb *SQLBuilder) mode() ParserMode {
 	if sb.parser != nil {
 		return sb.parser.Mode
 	}
 	return DocumentMode
 }
 
-func (sb *AdvancedSQLBuilder) castWhere(e *Expr, b *strings.Builder, sm statementMode) {
+func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString("CAST(")
 	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(" AS ")
@@ -595,7 +595,7 @@ func (sb *AdvancedSQLBuilder) castWhere(e *Expr, b *strings.Builder, sm statemen
 	b.WriteByte(')')
 }
 
-func (sb *AdvancedSQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
+func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 	switch e.valueType {
 	case stringType:
 		b.WriteByte('$')
@@ -633,7 +633,7 @@ func (sb *AdvancedSQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *AdvancedSQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string, sm statementMode) {
+func (sb *SQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string, sm statementMode) {
 	b.WriteByte('(')
 	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(op)
@@ -641,17 +641,17 @@ func (sb *AdvancedSQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string
 	b.WriteByte(')')
 }
 
-func (sb *AdvancedSQLBuilder) notWhere(e *Expr, b *strings.Builder, sm statementMode) {
+func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString("(NOT ")
 	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteByte(')')
 }
 
-func (sb *AdvancedSQLBuilder) nowWhere(b *strings.Builder) {
+func (sb *SQLBuilder) nowWhere(b *strings.Builder) {
 	b.WriteString("current_timestamp")
 }
 
-func (sb *AdvancedSQLBuilder) ilikeWhere(e *Expr, b *strings.Builder, sm statementMode) {
+func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteByte('(')
 	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(` ILIKE ` + ilikePrefix)
@@ -659,7 +659,7 @@ func (sb *AdvancedSQLBuilder) ilikeWhere(e *Expr, b *strings.Builder, sm stateme
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm statementMode) {
+func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm statementMode) {
 	if e == nil {
 		return
 	}
@@ -715,7 +715,7 @@ func (sb *AdvancedSQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm state
 	b.WriteByte(')')
 }
 
-func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
+func (sb *SQLBuilder) replacementIndex(s string) int {
 	if idx, ok := sb.replToIdx[s]; ok {
 		return idx
 	}
@@ -731,7 +731,7 @@ func (sb *AdvancedSQLBuilder) replacementIndex(s string) int {
 // CreateCountSQL returns an SQL count statement to count
 // the number of rows which are possible to fetch by the
 // given filter.
-func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
+func (sb *SQLBuilder) CreateCountSQL() string {
 	var b strings.Builder
 	sm := statementMode(classicMode{})
 	if sb.mode() != EventMode && sb.usedSources.contains(documentsTable|advisoriesTable) {
@@ -745,7 +745,7 @@ func (sb *AdvancedSQLBuilder) CreateCountSQL() string {
 	return b.String()
 }
 
-func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
+func (sb *SQLBuilder) prefixCTE(b *strings.Builder) {
 	b.WriteString(`WITH docads AS (` +
 		`SELECT `)
 	for i, field := range itertools.Enumerate(
@@ -788,7 +788,7 @@ func (sb *AdvancedSQLBuilder) prefixCTE(b *strings.Builder) {
 // CreateQuery creates an SQL statement to query the documents
 // table and the associated texts if needed.
 // WARN: Make sure that the input is vetted against injections.
-func (sb *AdvancedSQLBuilder) CreateQuery(
+func (sb *SQLBuilder) CreateQuery(
 	limit, offset int64,
 ) string {
 	var b strings.Builder
@@ -825,7 +825,7 @@ func (sb *AdvancedSQLBuilder) CreateQuery(
 }
 
 // createOrder returns a ORDER BY clause for given columns.
-func (sb *AdvancedSQLBuilder) createOrder(b *strings.Builder, sm statementMode) {
+func (sb *SQLBuilder) createOrder(b *strings.Builder, sm statementMode) {
 	for i, field := range sb.orderFields {
 		desc := strings.HasPrefix(field, "-")
 		if desc {
@@ -844,7 +844,7 @@ func (sb *AdvancedSQLBuilder) createOrder(b *strings.Builder, sm statementMode) 
 }
 
 // createProjectionsWithCasts joins given projection adding casts if needed.
-func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm statementMode) {
+func (sb *SQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm statementMode) {
 	for i, name := range sb.fields {
 		if i > 0 {
 			b.WriteByte(',')
@@ -865,7 +865,7 @@ func (sb *AdvancedSQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm 
 }
 
 // CheckProjections checks if the provided projection fields are valid.
-func (sb *AdvancedSQLBuilder) CheckProjections(fields []string) error {
+func (sb *SQLBuilder) CheckProjections(fields []string) error {
 	for _, f := range fields {
 		if !sb.checkField(f) {
 			return fmt.Errorf("column %q does not exist", f)
@@ -875,7 +875,7 @@ func (sb *AdvancedSQLBuilder) CheckProjections(fields []string) error {
 }
 
 // CheckOrder validates the provided order fields.
-func (sb *AdvancedSQLBuilder) CheckOrder(orderFields []string) error {
+func (sb *SQLBuilder) CheckOrder(orderFields []string) error {
 	for _, f := range orderFields {
 		if cleanF := strings.TrimPrefix(f, "-"); !sb.checkField(cleanF) {
 			return fmt.Errorf("order field %q does not exist", f)
@@ -885,20 +885,20 @@ func (sb *AdvancedSQLBuilder) CheckOrder(orderFields []string) error {
 }
 
 // check tests for the existence of used columns.
-func (sb *AdvancedSQLBuilder) check() error {
+func (sb *SQLBuilder) check() error {
 	if err := sb.CheckProjections(sb.fields); err != nil {
 		return err
 	}
 	if err := sb.CheckOrder(sb.orderFields); err != nil {
 		return err
 	}
-	slog.Debug("advanced sqlbuilder", "used sources", sb.usedSources)
+	slog.Debug("sqlbuilder", "used sources", sb.usedSources)
 	return nil
 }
 
 // checkField tests if a field is valid. It is valid if there is a named column or
 // there exists an alias for it
-func (sb *AdvancedSQLBuilder) checkField(field string) bool {
+func (sb *SQLBuilder) checkField(field string) bool {
 	col := findDocumentColumn(field, sb.mode())
 	if col != nil {
 		sb.usedSources.add(col.sources)
@@ -942,7 +942,7 @@ func InterpolateSQLqnd(sql string, replacements []any) string {
 }
 
 // CreateWhereSQL creates a SQL WHERE clause from the builders expression.
-func (sb *AdvancedSQLBuilder) CreateWhereSQL() string {
+func (sb *SQLBuilder) CreateWhereSQL() string {
 	var b strings.Builder
 
 	sm := statementMode(classicMode{})
