@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { Button, TableBodyCell, Spinner, Label, PaginationItem, Select } from "flowbite-svelte";
+  import { Button, TableBodyCell, Spinner, Label, Select } from "flowbite-svelte";
   import { tdClass } from "$lib/Table/defaults";
   import CustomTable from "$lib/Table/CustomTable.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
@@ -31,14 +31,8 @@
   import DateRange from "$lib/Components/DateRange.svelte";
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import debounce from "debounce";
-  import {
-    ArrowInDownSquareHalf,
-    ArrowToLeft,
-    ArrowToRight,
-    ChevronsLeft,
-    ChevronsRight,
-    X
-  } from "@boxicons/svelte";
+  import { ArrowInDownSquareHalf, X } from "@boxicons/svelte";
+  import CPagination from "$lib/Components/CPagination.svelte";
 
   interface Props {
     params?: any;
@@ -78,11 +72,6 @@
   });
   let realLogLevels = $derived(logLevels.filter((l) => l.value !== LogLevel.default));
 
-  const paginationItemClass =
-    "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white";
-  const paginationItemDeactivatedClass =
-    "text-gray-400 bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-700 cursor-not-allowed";
-
   const loadFeed = async (id: number) => {
     let result = await fetchFeed(id);
     if (result.ok) {
@@ -92,7 +81,7 @@
     }
   };
 
-  const previous = async () => {
+  const onPrevious = async () => {
     if (offset - limit >= 0) {
       offset = offset - limit > 0 ? offset - limit : 0;
       currentPage -= 1;
@@ -100,7 +89,7 @@
     await loadLogs();
   };
 
-  const next = async () => {
+  const onNext = async () => {
     if (offset + limit <= (count ?? 0)) {
       offset = offset + limit;
       currentPage += 1;
@@ -108,13 +97,13 @@
     await loadLogs();
   };
 
-  const first = async () => {
+  const onFirst = async () => {
     offset = 0;
     currentPage = 1;
     await loadLogs();
   };
 
-  const last = async () => {
+  const onLast = async () => {
     offset = (numberOfPages - 1) * limit;
     currentPage = numberOfPages;
     await loadLogs();
@@ -324,57 +313,22 @@
         ></Select>
         <Label class="mr-3 text-nowrap">Logs per page</Label>
       </div>
-      <div class="flex flex-row flex-wrap items-center">
-        <div class:flex={true} class:mr-3={true}>
-          <PaginationItem
-            class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
-            onclick={first}
-          >
-            <ArrowToLeft />
-          </PaginationItem>
-          <PaginationItem
-            class={currentPage === 1 ? paginationItemDeactivatedClass : paginationItemClass}
-            onclick={previous}
-          >
-            <ChevronsLeft />
-          </PaginationItem>
-        </div>
-
-        <div class="flex flex-row flex-wrap items-center">
-          <input
-            class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-800 dark:text-white`}
-            onchange={() => {
-              if (!parseInt("" + currentPage)) currentPage = 1;
-              currentPage = Math.floor(currentPage);
-              if (currentPage < 1) currentPage = 1;
-              if (currentPage > numberOfPages) currentPage = numberOfPages;
-              offset = (currentPage - 1) * limit;
-              loadLogs();
-            }}
-            bind:value={currentPage}
-          />
-          <span class="mr-3 ml-2 w-max text-nowrap">of {numberOfPages} pages</span>
-        </div>
-
-        <div class:flex={true}>
-          <PaginationItem
-            class={currentPage === numberOfPages
-              ? paginationItemDeactivatedClass
-              : paginationItemClass}
-            onclick={next}
-          >
-            <ChevronsRight />
-          </PaginationItem>
-          <PaginationItem
-            class={currentPage === numberOfPages
-              ? paginationItemDeactivatedClass
-              : paginationItemClass}
-            onclick={last}
-          >
-            <ArrowToRight />
-          </PaginationItem>
-        </div>
-      </div>
+      <CPagination
+        onChange={() => {
+          if (!parseInt("" + currentPage)) currentPage = 1;
+          currentPage = Math.floor(currentPage);
+          if (currentPage < 1) currentPage = 1;
+          if (currentPage > numberOfPages) currentPage = numberOfPages;
+          offset = (currentPage - 1) * limit;
+          loadLogs();
+        }}
+        {onFirst}
+        {onPrevious}
+        {onNext}
+        {onLast}
+        {currentPage}
+        {numberOfPages}
+      />
       <div class="mr-3 text-nowrap">
         {#if count !== undefined}
           {count} entries found
