@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { Button } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
   import { appStore } from "$lib/store.svelte";
   import type { AdvisoryVersion } from "./advisory";
@@ -30,6 +30,9 @@
     onDisabledDiff,
     selectedDiffDocuments
   }: Props = $props();
+
+  const uid = $props.id();
+
   let diffModeActivated = $state(false);
   let firstDocumentIndex: number | undefined = $state();
   let secondDocumentIndex: number | undefined = $state();
@@ -124,7 +127,7 @@
     <div class="flex">
       <div class="me-2 flex flex-row flex-wrap gap-2">
         {#if diffModeActivated}
-          {#each reversedAdvisoryVersions as version, index}
+          {#each reversedAdvisoryVersions as version, index (`version-1-${uid}-${index}`)}
             {@const isDisabled =
               (nextColor === "red" && index === reversedAdvisoryVersions.length - 1) ||
               (nextColor === "green" &&
@@ -174,7 +177,7 @@
             </div>
           {/each}
         {:else}
-          {#each reversedAdvisoryVersions as version, index}
+          {#each reversedAdvisoryVersions as version, index (`version-2-${uid}-${index}`)}
             <Button
               class={`${diffButtonBaseClass}`}
               disabled={selectedDocumentVersion.version === version.version &&

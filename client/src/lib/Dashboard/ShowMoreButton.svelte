@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { Button } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
 
   interface Props {
     id: string;
@@ -19,7 +19,7 @@
   let { id }: Props = $props();
 
   const showMore = () => {
-    push(`/search?query=${id}`);
+    push(`/search?queryID=${id}`);
   };
 </script>
 

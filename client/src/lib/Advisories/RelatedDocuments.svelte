@@ -18,9 +18,10 @@
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
   import { fetchDocumentSSVC } from "./advisory";
   import SSVCBadge from "./SSVC/SSVCBadge.svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { appStore } from "$lib/store.svelte";
   import { addSlashes } from "$lib/utils";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Related {
     [key: string]: string[];
@@ -31,6 +32,8 @@
   }
 
   let { params = null }: Props = $props();
+
+  const uid = $props.id();
 
   let document: any | undefined = $state(undefined);
   let documents: any | undefined = $state(undefined);
@@ -121,11 +124,22 @@
     push("/diff");
   };
 
+  // Get document as an object that can be compared with the other documents.
+  const getComparableDocument = () => {
+    return {
+      publisher: document.publisher.name,
+      tracking_id: document.tracking.id,
+      tracking_version: document.tracking.version,
+      tracking_status: document.tracking.status
+    };
+  };
+
   // Find out if there is a document of the same advisory with same version number but different tracking status because we show
   // tracking status only if there are at least two documents with same version number.
   const hasDocWithSameVersion = (doc: any) => {
+    const docs = [...Object.values(documents), getComparableDocument()];
     return (
-      Object.values(documents).find(
+      docs.find(
         (d: any) =>
           d.publisher === doc.publisher &&
           d.tracking_id === doc.tracking_id &&
@@ -185,20 +199,20 @@
               advisoryState,
               document?.tracking.version,
               ssvc,
-              undefined,
-              false
+              document?.tracking.status,
+              hasDocWithSameVersion(getComparableDocument())
             )}
           </div>
         </TableHeadCell>
-        {#each Object.values(documents) as doc}
+        {#each Object.values(documents) as doc, i (`relateddocuments-1-${uid}-${i}`)}
           {@const d = doc as any}
           {@const sameVersion = hasDocWithSameVersion(d)}
           <TableHeadCell class="text-center align-top">
             <div class="flex h-full flex-col items-center justify-between gap-2">
-              <a
+              <Link
                 class="text-primary-700 dark:text-primary-400 hover:underline"
                 href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
-                >{d.tracking_id}</a
+                >{d.tracking_id}</Link
               >
               {@render generalInformation(
                 d.state,
@@ -215,14 +229,14 @@
         {/each}
       {/snippet}
       {#snippet mainSlot()}
-        {#each Object.keys(cves as Related) as string[] as cve, index (index)}
+        {#each Object.keys(cves as Related) as string[] as cve, j (`relateddocuments-1-${uid}-${j}`)}
           <TableBodyRow
             class={cve && cve === params.cve ? "!bg-primary-100 dark:!bg-primary-800" : ""}
           >
             <TableBodyCell class={`${baseClass} ${cve && cve === params.cve ? "!font-bold" : ""}`}>
               {cve}
             </TableBodyCell>
-            {#each Object.values(documents) as doc}
+            {#each Object.values(documents) as doc, k (`relateddocuments-1-${uid}-${k}`)}
               <TableBodyCell class={baseClass}>
                 {#if (doc as any).cve.includes(cve)}
                   <i

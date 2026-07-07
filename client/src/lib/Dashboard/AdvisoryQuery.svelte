@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { appStore } from "$lib/store.svelte";
   import SectionHeader from "$lib/SectionHeader.svelte";
   import { request } from "$lib/request";
@@ -20,7 +20,7 @@
   import { getPublisher } from "$lib/publisher";
   import { Spinner } from "flowbite-svelte";
   import { getRelativeTime } from "$lib/time";
-  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
   import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
 
@@ -29,6 +29,9 @@
   }
 
   let { storedQuery }: Props = $props();
+
+  const uid = $props.id();
+
   let documents: any[] | null = $state(null);
   let newDocumentsError: ErrorDetails | null = $state(null);
   let isLoading = $state(false);
@@ -99,7 +102,7 @@
       {/if}
       {#if documents}
         {#if documents.length > 0}
-          {#each documents as doc}
+          {#each documents as doc, i (`advisoryquery-${uid}-${i}`)}
             <Activity onClicked={() => openDocument(doc)}>
               {#snippet topLeftSlot()}
                 <div>
@@ -130,7 +133,7 @@
                     </div>
                   {/if}
                   {#if doc.ssvc}
-                    <SsvcBadge vector={doc.ssvc}></SsvcBadge>
+                    <SSVCBadge vector={doc.ssvc}></SSVCBadge>
                   {/if}
                 </div>
               {/snippet}
@@ -145,7 +148,7 @@
                 <div>
                   {#if Object.keys(doc).filter((k) => !ignoredColumns.includes(k)).length > 0}
                     <div class="my-2 rounded-sm border p-2 text-xs text-gray-800">
-                      {#each Object.keys(doc).sort() as key}
+                      {#each Object.keys(doc).sort() as key, i (`advisoryquery-2-${uid}-${i}`)}
                         {#if !ignoredColumns.includes(key) && doc[key] !== undefined && doc[key] !== null}
                           <div>{key}: {doc[key]}</div>
                         {/if}

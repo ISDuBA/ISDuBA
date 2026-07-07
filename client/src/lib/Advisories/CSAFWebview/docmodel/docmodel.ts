@@ -156,7 +156,7 @@ const getId = (csafDoc: any): string => {
  */
 const getTlp = (csafDoc: any): TLP => {
   if (!checkTLPPresent(csafDoc)) return { label: "" };
-  let label = "TLP.ERROR;";
+  let label;
   switch (csafDoc.document.distribution.tlp[CSAFDocProps.LABEL]) {
     case TLP.AMBER:
       label = TLP.AMBER;

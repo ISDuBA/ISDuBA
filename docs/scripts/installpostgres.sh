@@ -10,7 +10,7 @@
 
 set -e # to exit if a command in the script fails
 
-# install PostgreSQL 15, following https://www.postgresql.org/download/linux/ubuntu/
+# install PostgreSQL 17, following https://www.postgresql.org/download/linux/ubuntu/
 sudo apt install ca-certificates -y
 sudo install -d /usr/share/postgresql-common/pgdg
 sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
@@ -20,4 +20,4 @@ sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail htt
 sudo sh -c "echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $VERSION_CODENAME-pgdg main' > /etc/apt/sources.list.d/pgdg.list"
 
 sudo apt update
-sudo apt install postgresql-15 -y
+sudo apt install postgresql-17 -y

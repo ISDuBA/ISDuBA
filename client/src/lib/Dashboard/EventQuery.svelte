@@ -17,10 +17,10 @@
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
   import { Spinner } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { convertVectorToSSVCObject } from "$lib/Advisories/SSVC/SSVCCalculator";
   import { getRelativeTime } from "$lib/time";
-  import SsvcBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import ShowMoreButton from "./ShowMoreButton.svelte";
   import CBadge from "$lib/Components/CBadge.svelte";
 
@@ -29,6 +29,9 @@
   }
 
   let { storedQuery }: Props = $props();
+
+  const uid = $props.id();
+
   const ignoredColumns = [
     "documentURL",
     "id",
@@ -163,7 +166,7 @@
       {/if}
       {#if resultingActivities}
         {#if resultingActivities.length > 0}
-          {#each resultingActivities as activity}
+          {#each resultingActivities as activity, i (`eventquery-1-${uid}-${i}`)}
             <Activity
               onClicked={() => {
                 if (activity.documentURL) push(activity.documentURL);
@@ -232,14 +235,14 @@
                       </div>
                     {/if}
                     {#if activity.ssvc}
-                      <SsvcBadge vector={activity.ssvc}></SsvcBadge>
+                      <SSVCBadge vector={activity.ssvc}></SSVCBadge>
                     {/if}
                   </div>
                   {#if Object.keys(activity).filter((k) => !ignoredColumns.includes(k)).length > 0}
                     <div
                       class="my-2 rounded-sm border p-2 text-xs text-gray-800 dark:text-gray-200"
                     >
-                      {#each Object.keys(activity).sort() as key}
+                      {#each Object.keys(activity).sort() as key, j (`eventquery-1-${uid}-${j}`)}
                         {#if !ignoredColumns.includes(key) && activity[key] !== undefined && activity[key] !== null}
                           <div>{key}: {activity[key]}</div>
                         {/if}

@@ -20,11 +20,13 @@
   import { type ErrorDetails } from "$lib/Errors/error";
   import Activity from "./Activity.svelte";
   import { Button, Spinner } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
 
   interface MergedAttention extends Attention {
     isSource: boolean;
   }
+
+  const uid = $props.id();
 
   let attentionCount = $state(0);
   let attentions: MergedAttention[] = $state([]);
@@ -74,7 +76,7 @@
     {/if}
     {#if attentions}
       {#if attentions.length > 0}
-        {#each attentions as attention}
+        {#each attentions as attention, i (`sourcevents-${uid}-${i}`)}
           <Activity
             onClicked={() => {
               if (attention.id) {

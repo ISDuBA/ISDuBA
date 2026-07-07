@@ -23,7 +23,7 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { request } from "$lib/request";
   import { getPublisher } from "$lib/publisher";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
@@ -31,6 +31,8 @@
   import { onDestroy, onMount, untrack } from "svelte";
   import CIconButton from "$lib/Components/CIconButton.svelte";
   import { getRelativeTime } from "$lib/time";
+
+  const uid = $props.id();
 
   let freeTempDocuments = $state(0);
   let tempDocuments: any[] = $state([]);
@@ -333,7 +335,7 @@
               }}
               color="light"
               class="border-0 p-1"
-              title={`Remove from selection`}
+              title="Remove from selection"
             >
               <i class="bx bx-x text-lg"></i>
             </Button>
@@ -394,7 +396,7 @@
           <TableHeadCell {padding}>File name</TableHeadCell>
         </TableHead>
         <TableBody>
-          {#each tempDocuments as document}
+          {#each tempDocuments as document, i (`diffselection-${uid}-${i}`)}
             {@const doc = document.document}
             {@const tempDocID = `tempdocument${document.file.id}`}
             <TableBodyRow>
@@ -420,7 +422,7 @@
                     }}
                     class:invisible={!appStore.state.app.isToolboxOpen}
                     disabled={docA_ID === tempDocID || docB_ID === tempDocID || disableDiffButtons}
-                    title={`Add to comparison: ${doc.title} - ${doc.tracking.id}`}
+                    title={`Add temporary document to comparison: ${doc.title} - ${doc.tracking.id}`}
                   >
                     <Img
                       src="plus-minus.svg"

@@ -252,6 +252,7 @@
       <CFileinput
         bind:files={privateCert}
         bind:isFileReset={privateCertReset}
+        browseButtonColor="light"
         oldFile={oldSource?.client_cert_private}
         onChanged={inputChange}
         id="private-cert"
@@ -261,6 +262,7 @@
       <CFileinput
         bind:files={publicCert}
         bind:isFileReset={publicCertReset}
+        browseButtonColor="light"
         oldFile={oldSource?.client_cert_public}
         onChanged={inputChange}
         id="public-cert"

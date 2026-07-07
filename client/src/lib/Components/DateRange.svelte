@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import { SvelteDate } from "svelte/reactivity";
   import { Button, Input, Label } from "flowbite-svelte";
   import TimeInput from "./TimeInput.svelte";
 
@@ -88,7 +89,7 @@
       toString = event.target.value;
     }
     if (fromString) {
-      const fromDate = new Date(fromString);
+      const fromDate = new SvelteDate(fromString);
       if (!from) {
         from = fromDate;
       } else {
@@ -98,7 +99,7 @@
       }
     }
     if (toString) {
-      const toDate = new Date(toString);
+      const toDate = new SvelteDate(toString);
       if (!to) {
         to = toDate;
       } else {
@@ -112,7 +113,7 @@
 
   const onFromTimeChanged = (event: any) => {
     if (event) {
-      if (!from) from = new Date();
+      if (!from) from = new SvelteDate();
       if (event.hours !== undefined) {
         from.setUTCHours(Number(event.hours));
       }
@@ -126,7 +127,7 @@
 
   const onToTimeChanged = (event: any) => {
     if (event) {
-      if (!to) to = new Date();
+      if (!to) to = new SvelteDate();
       if (event.hours !== undefined) {
         to.setUTCHours(Number(event.hours));
       }

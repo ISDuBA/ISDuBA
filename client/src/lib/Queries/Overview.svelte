@@ -36,31 +36,20 @@
   let isCloning = $state(false);
 
   let globalRelevantQueries = $derived(
-    $state
-      .snapshot(queries)
-      ?.filter((q) => q.definer === "system-default" && q.global && q.dashboard)
-      .slice(0, 2)
+    queries?.filter((q) => q.definer === "system-default" && q.global && q.dashboard).slice(0, 2)
   );
+
   let globalDashboardQueries = $derived(
-    $state
-      .snapshot(queries)
-      ?.filter(
-        (q) => q.dashboard && q.global && !globalRelevantQueries?.map((q) => q.id).includes(q.id)
-      )
+    queries?.filter(
+      (q) => q.dashboard && q.global && !globalRelevantQueries?.map((q) => q.id).includes(q.id)
+    )
   );
-  let globalSearchQueries = $derived(
-    $state.snapshot(queries)?.filter((q) => !q.dashboard && q.global)
-  );
-  let userQueries = $derived(
-    $state.snapshot(queries)?.filter((q: Query) => {
-      return !q.global;
-    })
-  );
-  let adminQueries = $derived(
-    $state.snapshot(queries)?.filter((q: Query) => {
-      return q.global;
-    })
-  );
+
+  let globalSearchQueries = $derived(queries?.filter((q) => !q.dashboard && q.global));
+
+  let userQueries = $derived(queries?.filter((q: Query) => !q.global));
+
+  let adminQueries = $derived(queries?.filter((q: Query) => q.global));
 
   const fetchQueries = async () => {
     loading = true;

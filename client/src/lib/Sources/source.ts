@@ -260,7 +260,7 @@ const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => 
   for (const entry of dist) {
     if (entry.rolie) {
       for (const feed of entry.rolie.feeds) {
-        let label = "";
+        let label: string;
         if (feed.summary) {
           label = feed.summary;
         } else {

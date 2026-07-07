@@ -16,20 +16,24 @@
     ack: Acknowledgment;
   }
   let { ack }: Props = $props();
-  const keys: Array<string> = [];
-  const values: string[] = [];
-  if (ack.names) {
-    keys.push("Names");
-    values.push(ack.names.join(", "));
-  }
-  if (ack.organization) {
-    keys.push("Organization");
-    values.push(ack.organization);
-  }
-  if (ack.summary) {
-    keys.push("Summary");
-    values.push(ack.summary);
-  }
+
+  const { keys, values } = $derived.by(() => {
+    const keyArray: Array<string> = [],
+      valueArray: Array<string> = [];
+    if (ack.names) {
+      keyArray.push("Names");
+      valueArray.push(ack.names.join(", "));
+    }
+    if (ack.organization) {
+      keyArray.push("Organization");
+      valueArray.push(ack.organization);
+    }
+    if (ack.summary) {
+      keyArray.push("Summary");
+      valueArray.push(ack.summary);
+    }
+    return { keys: keyArray, values: valueArray };
+  });
 </script>
 
 <KeyValue {keys} {values} />

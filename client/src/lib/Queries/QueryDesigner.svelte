@@ -27,13 +27,15 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { onMount, untrack } from "svelte";
-  import { push, querystring } from "svelte-spa-router";
+  import { querystring } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import { parse } from "qs";
   import { appStore } from "$lib/store.svelte";
   import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";
   import { isRoleIncluded } from "$lib/permissions";
   import Sortable from "sortablejs";
   import TypeToggle from "$lib/Search/TypeToggle.svelte";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Props {
     params?: any;
@@ -223,24 +225,24 @@
   };
 
   const generateQueryFrom = (result: any): Search => {
-    let searchType = SEARCHTYPES.DOCUMENT;
-    let columns = [];
+    let searchType: SEARCHTYPES;
+    let columnNames: string[];
     if (result.kind === SEARCHTYPES.ADVISORY) {
       searchType = SEARCHTYPES.ADVISORY;
-      columns = COLUMNS.ADVISORY;
+      columnNames = COLUMNS.ADVISORY;
     } else if (result.kind === SEARCHTYPES.DOCUMENT) {
       searchType = SEARCHTYPES.DOCUMENT;
-      columns = COLUMNS.DOCUMENT;
+      columnNames = COLUMNS.DOCUMENT;
     } else {
       searchType = SEARCHTYPES.EVENT;
-      columns = COLUMNS.EVENT;
+      columnNames = COLUMNS.EVENT;
     }
-    columns = result.columns.concat(
-      columns.filter((c: string) => {
+    columnNames = result.columns.concat(
+      columnNames.filter((c: string) => {
         if (!result.columns.includes(c)) return c;
       })
     );
-    columns = columnsFromNames(columns);
+    let columns = columnsFromNames(columnNames);
     columns = columns.map((c) => {
       if (result.columns.includes(c.name)) c.visible = true;
       return c;
@@ -400,7 +402,7 @@
       </div>
       <div class="flex flex-row items-center gap-x-2">
         <span>Default:</span>
-        <CCheckbox bind:checked={defaultQuery}></CCheckbox>
+        <CCheckbox bind:checked={defaultQuery} disabled={!isAllowedToEdit}></CCheckbox>
       </div>
     </div>
     <div class="mb-6">
@@ -481,6 +483,13 @@
     <div class="mt-6 w-full">
       <Label for="query-criteria">Query criteria:</Label>
       <Input disabled={!isAllowedToEdit} id="query-criteria" bind:value={currentSearch.query} />
+      <Link
+        href="https://github.com/ISDuBA/ISDuBA/blob/main/docs/search.md#filter-expressions"
+        class="text-sm underline"
+      >
+        <i class="bx bx-link"></i>
+        <span>Documentation: Filter expression</span>
+      </Link>
       {#if saveErrorMessage}
         <div class="mt-2 flex md:justify-end">
           <ErrorMessage error={saveErrorMessage}></ErrorMessage>

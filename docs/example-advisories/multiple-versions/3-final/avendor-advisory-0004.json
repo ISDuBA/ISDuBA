@@ -13,6 +13,11 @@
         "category": "summary",
         "title": "Test document summary",
         "text": "Auto generated test CSAF document"
+      },
+      {
+        "category": "summary",
+        "title": "Test document summary",
+        "text": "Test document with two notes that share the same title. Don't use title as key for #each template because multiple notes can have the same title."
       }
     ],
     "publisher": {
@@ -68,7 +73,10 @@
                 "name": "1.1",
                 "product": {
                   "name": "AVendor product_1 1.1",
-                  "product_id": "CSAFPID_0001"
+                  "product_id": "CSAFPID_0001",
+                  "product_identification_helper": {
+                    "purl": "pkg:npm/acme/CSAFPID_0001"
+                  }
                 }
               },
               {

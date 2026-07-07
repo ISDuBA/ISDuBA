@@ -48,6 +48,8 @@
     updateSSVC = undefined
   }: Props = $props();
 
+  const uid = $props.id();
+
   let isVectorInputValid = $state(false);
   let startedCalculation = $state(false);
   let isComplex = $state(false);
@@ -296,8 +298,8 @@
         disabled={disabled || !isEditing}
         onKeyup={(e) => {
           resetError();
-          if (e.detail.key === "Enter") saveSSVC(vectorInput);
-          if (e.detail.key === "Escape") toggleEditing();
+          if (e.detail?.key === "Enter") saveSSVC(vectorInput);
+          if (e.detail?.key === "Escape") toggleEditing();
         }}
         bind:value={vectorInput}
         bind:isValid={isVectorInputValid}
@@ -360,7 +362,7 @@
         {#if currentStep < mainDecisions.length - 1}
           {#if mainDecisions[currentStep].decision_type === "simple"}
             <div class="flex flex-row items-baseline gap-3">
-              {#each mainDecisions[currentStep].options as option}
+              {#each mainDecisions[currentStep].options as option, i (`ssvccalculator-1-${uid}-${i}`)}
                 <Button
                   outline
                   size="xs"
@@ -374,7 +376,7 @@
           {:else if mainDecisions[currentStep].decision_type === "complex"}
             {#if !isComplex}
               <div class="flex flex-row gap-x-3">
-                {#each mainDecisions[currentStep].options as option}
+                {#each mainDecisions[currentStep].options as option, j (`ssvccalculator-2-${uid}-${j}`)}
                   <Button
                     class="h-6"
                     outline

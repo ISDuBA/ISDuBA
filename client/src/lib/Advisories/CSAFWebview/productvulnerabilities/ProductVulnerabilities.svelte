@@ -22,12 +22,15 @@
     Button
   } from "flowbite-svelte";
   import { innerLinkStyle } from "./../helpers";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Props {
     basePath: string;
   }
 
   let { basePath = "" }: Props = $props();
+
+  const uid = $props.id();
 
   const tdClass = "whitespace-nowrap py-1 px-2 font-normal";
   const tablePadding = "px-2";
@@ -97,7 +100,7 @@
     <div class="crosstable mx-auto flex flex-row lg:mx-0">
       <Table border={false} striped={true}>
         <TableHead>
-          {#each headerColumns as column, index}
+          {#each headerColumns as column, index (`productvulnerabilities-${uid}-${index}`)}
             {#if index == 0}
               <TableHeadCell
                 class="sticky left-0 z-30 bg-white align-bottom font-normal text-nowrap dark:bg-gray-800"
@@ -125,11 +128,11 @@
                   <div class={titleStyles[1]}>
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
-                        <a
+                        <Link
                           class={innerLinkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
-                          >{column.content}</a
+                          >{column.content}</Link
                         >
                       </div>
                     </div>
@@ -145,12 +148,12 @@
                   <div class={titleStyles[1]}>
                     <div class={titleStyles[2]}>
                       <div class={titleStyles[3]}>
-                        <a
+                        <Link
                           class={innerLinkStyle}
                           id={crypto.randomUUID()}
                           href={basePath + "cve-" + encodeURIComponent(column.content)}
                           >{column.content}
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -160,20 +163,20 @@
           {/each}
         </TableHead>
         <TableBody>
-          {#each productLines as line}
+          {#each productLines as line, i (`productvulnerabilities-2-${uid}-${i}`)}
             <TableBodyRow>
-              {#each line as column}
+              {#each line as column, j (`productvulnerabilities-3-${uid}-${j}`)}
                 {#if column.name === "Product"}
                   <TableBodyCell class={tdClass + " sticky left-0 bg-inherit"}>
                     <div class="max-w-1/2 min-w-56 text-wrap break-all whitespace-normal">
-                      <a
+                      <Link
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
                         class={innerLinkStyle}
                         >{appStore.state.webview.doc?.productsByID[column.content]}
                         ({column.content.length > 20
                           ? column.content.substring(0, 20) + "..."
-                          : column.content})</a
+                          : column.content})</Link
                       >
                     </div>
                   </TableBodyCell>
@@ -188,7 +191,7 @@
                       <i class="bx b-minus"></i>
                     {:else}
                       <!-- May contain more than one status and thus more than one character -->
-                      {#each column.content as char}
+                      {#each column.content as char, k (`productvulnerabilities-4-${uid}-${k}`)}
                         <i
                           class:bx={true}
                           class:bx-x={char === ProductStatusSymbol.KNOWN_AFFECTED}

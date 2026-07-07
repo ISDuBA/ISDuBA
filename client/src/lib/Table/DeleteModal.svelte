@@ -35,14 +35,14 @@
 
   const deleteDocuments = async () => {
     errorMessage = null;
-    let url = "";
+    let url: string;
     let failed = false;
     isLoading = true;
     for (let i = 0; i < documents.length; i++) {
       const documentToDelete = documents[i];
       if (type === SEARCHTYPES.ADVISORY) {
         url = encodeURI(
-          `/api/advisory/${documentToDelete.publisher}/${documentToDelete.tracking_id}`
+          `/api/advisory/${documentToDelete.data[0].publisher}/${documentToDelete.data[0].tracking_id}`
         );
       } else {
         url = encodeURI(`/api/documents/${documentToDelete.id}`);

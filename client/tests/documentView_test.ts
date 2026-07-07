@@ -8,12 +8,14 @@
 
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
+import { vectorStart } from "$lib/Advisories/SSVC/SSVCCalculator";
 
 test("Advisory view is working", async ({ page }) => {
   await page.goto("/#/search");
+  await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await page.getByText("Avendor-advisory-0004").first().click({ force: true });
+  await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
   // value helps to distinguish the comments.
@@ -23,15 +25,23 @@ test("Advisory view is working", async ({ page }) => {
   await expect(page.getByText(comment)).toBeVisible();
   await page.getByRole("button", { name: "History" }).click();
   await expect(page.getByText(comment)).toBeVisible();
-
-  await page.getByRole("tab", { name: "Vulnerabilities" }).click();
-  const scoresCollapsible = await page.getByText("Scores").first();
-  await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
-  await scoresCollapsible.click({ force: true });
+  // Edit comment
+  await page.getByLabel("Edit comment").first().click();
+  const editedComment = `Lorem ipsum ${Math.random()}`;
+  await page.getByRole("textbox", { name: "Edit comment" }).fill(editedComment);
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText(editedComment)).toBeVisible();
 
   // Test SSVC calculator
   await page.getByTitle("Edit SSVC").click();
   await page.getByRole("button", { name: "Evaluate" }).click();
+  // First test to go back and restart
+  await page.getByRole("button", { name: "poc" }).click();
+  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("button", { name: "none" }).click();
+  await page.getByRole("button", { name: "no" }).click();
+  await page.getByRole("button", { name: "Restart" }).click();
+  // Now make all decisions until the end
   await page.getByRole("button", { name: "active" }).click();
   await page.getByRole("button", { name: "yes" }).click();
   await page.getByRole("button", { name: "total" }).click();
@@ -40,6 +50,51 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByLabel("Irreversible").click();
   await page.getByRole("button", { name: "Save" }).click();
   await page.getByRole("button", { name: "Save" }).click();
-  const ssvcBadge = page.getByTitle("SSVCv2/E:A/A:Y/T:T/P:E/B:I/M:H/D:C/2025-10-15T17:35:23Z/");
+  const autoCalculatedSSVC = "SSVCv2/E:A/A:Y/T:T/P:E/B:I/M:H/D:C/";
+  const ssvcBadge = page.getByTitle(autoCalculatedSSVC);
   expect(ssvcBadge).toBeDefined();
+
+  await page.getByTitle("Edit SSVC").click();
+  // Don't enter ":" and "/" for the decisions because they are added automatically by the client.
+  const secondSSVC = "E:A/A:Y/T:T/P:E/B:I/M:H/D:A/2025-10-15T17:35:23Z/";
+  const manualEnteredSSVC = "EAAYTTPEBIMHDA2025-10-15T17:35:23Z/";
+  const ssvcInput = page.getByRole("textbox", { name: vectorStart });
+  await ssvcInput.fill("");
+  // Need to call pressSequentially because the client listens to events like "keyup".
+  await ssvcInput.pressSequentially(manualEnteredSSVC);
+  await page.getByRole("button", { name: "Save" }).click();
+  const newSsvcBadge = page.getByText("Attend").first();
+  await expect(newSsvcBadge).toBeVisible();
+  const toText = page.getByText(`TO: ${vectorStart}${secondSSVC}`).first();
+  await expect(toText).toBeVisible();
+  const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`).first();
+  await expect(fromText).toBeVisible();
+
+  // Test diff inside document view
+  await page.getByRole("button", { name: "Show changes" }).click();
+  await page.getByRole("button", { name: "Inline" }).click();
+  await page.getByRole("button", { name: "Hide changes" }).click();
+});
+
+test("Tabs with details about document are working", async ({ page }) => {
+  await page.goto("/#/search");
+  await expect(page.getByText("advisories in total")).toBeVisible();
+  await page.getByPlaceholder("Enter a search term").fill("avendor");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByText("Avendor-advisory-0004", { exact: true })).toBeVisible();
+  await expect(page.getByText("Avendor-advisory-0005", { exact: true })).toBeVisible();
+  await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
+
+  await page.getByRole("button", { name: "3 (final)" }).click();
+
+  await page.getByRole("tab", { name: "Vulnerabilities" }).click();
+  const scoresCollapsible = await page.getByText("Scores").first();
+  await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
+  await scoresCollapsible.click({ force: true });
+
+  await page.getByRole("tab", { name: "Notes" }).click();
+  await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
+
+  await page.getByText("AVendor product_1 1.1").click();
+  await page.getByText("pkg:npm/acme/CSAFPID_0001").scrollIntoViewIfNeeded({ timeout: 2000 });
 });

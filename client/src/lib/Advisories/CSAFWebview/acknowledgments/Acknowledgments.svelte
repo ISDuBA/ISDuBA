@@ -18,7 +18,7 @@
 </script>
 
 {#if acknowledgments}
-  {#each acknowledgments as ack}
+  {#each acknowledgments as ack, i (`ack-${i}`)}
     <AcknowledgmentComponent {ack} />
   {/each}
 {/if}

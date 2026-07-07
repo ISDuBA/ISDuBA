@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import Link from "$lib/Components/Link.svelte";
   import { appStore } from "$lib/store.svelte";
   /**
    * updateUI waits until UI is settled and goes back to the last anchor.
@@ -34,5 +35,7 @@
 </script>
 
 {#if appStore.state.webview.ui.history.length > 0}
-  <a class="backbutton" href="#top" onclick={backPressed}>Last pos. <i class="bx bx-undo"></i></a>
+  <Link class="backbutton" href="#top" onclick={backPressed}
+    >Last pos. <i class="bx bx-undo"></i></Link
+  >
 {/if}

@@ -44,7 +44,7 @@
   } from "$lib/aggregatorTypes";
   import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
+  import { push } from "$routes/router.svelte";
   import CAccordionItem from "$lib/Components/CAccordionItem.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import { scale } from "svelte/transition";
@@ -55,12 +55,14 @@
   import { SvelteMap } from "svelte/reactivity";
   import CBadge from "$lib/Components/CBadge.svelte";
 
+  const uid = $props.id();
+
   const textFlushOpen = "text-black dark:text-white";
   const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full`;
   let loadingAggregators: boolean = $state(false);
   let aggregators: Aggregator[] = $state([]);
-  let aggregatorData = $state(new SvelteMap<number, AggregatorEntry[]>());
-  let aggregatorMetaData = $state(new SvelteMap<number, AggregatorMetadata>());
+  let aggregatorData = new SvelteMap<number, AggregatorEntry[]>();
+  let aggregatorMetaData = new SvelteMap<number, AggregatorMetadata>();
 
   let aggregatorError: ErrorDetails | null = $state(null);
   let aggregatorSaveError: ErrorDetails | null = $state(null);
@@ -495,6 +497,7 @@
                       }}
                       class="!p-2"
                       color="light"
+                      title={`Remove aggregator ${aggregator.name}`}
                     >
                       <i class="bx bx-trash text-red-600"></i>
                     </Button>
@@ -684,7 +687,7 @@
               </CBadge>
             {/if}
             <div class="ps-4">
-              {#each list as entry}
+              {#each list as entry, i (`aggregatorviewer-1-${uid}-${i}`)}
                 <Collapsible header="" showBorder={false}>
                   {#snippet headerSlot()}
                     <div class="mb-2 flex items-center gap-2">
@@ -693,10 +696,10 @@
                       >
                         <span>{entry.name}</span>
                         <span class="flex w-fit gap-1">
-                          {#each new Array(entry.feedsSubscribed) as _a}
+                          {#each new Array(entry.feedsSubscribed) as _a, j (`aggregatorviewer-2-${uid}-${j}`)}
                             <FeedBulletPoint filled></FeedBulletPoint>
                           {/each}
-                          {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a}
+                          {#each new Array(entry.feedsAvailable - entry.feedsSubscribed) as _a, k (`aggregatorviewer-3-${uid}-${k}`)}
                             <FeedBulletPoint></FeedBulletPoint>
                           {/each}
                         </span>
@@ -719,7 +722,7 @@
                         >
                       </div>
                     </List>
-                    {#each entry.availableSources as source}
+                    {#each entry.availableSources as source (source.id)}
                       {#if source.id === undefined || !appStore.isSourceManager()}
                         <div class="p-2">
                           <SourceContent {entry} {source}></SourceContent>

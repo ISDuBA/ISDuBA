@@ -42,6 +42,7 @@
   import { appStore } from "$lib/store.svelte";
   import DateRange from "$lib/Components/DateRange.svelte";
   import debounce from "debounce";
+  import { SvelteDate } from "svelte/reactivity";
 
   interface Props {
     chartType?: "bar" | "line" | "scatter";
@@ -87,7 +88,7 @@
     isFeed: boolean;
   };
 
-  let from: Date = $state(initialFrom);
+  let from: Date = $state(new Date());
   let to: Date = $state(new Date());
   let error: ErrorDetails | null = $state(null);
   let chartComponentRef: any = $state();
@@ -95,13 +96,13 @@
   let isLoading = $state(false);
   let stats: StatisticGroup = $state({});
   let intervalID: ReturnType<typeof setInterval> | null;
-  let stepsInMilliseconds = 1000 * 60 * stepsInMinutes;
+  let stepsInMilliseconds = 0;
+  let updateInterval = 0;
   let mode: StatisticsMode = $state("diagram");
   let abortController: AbortController | undefined = undefined;
   const basicButtonClass = "py-1 px-3";
   const buttonClass = `${basicButtonClass} bg-white hover:bg-gray-100`;
   const pressedButtonClass = `${basicButtonClass} bg-gray-200 hover:!bg-gray-100 dark:bg-gray-500 dark:hover:!bg-gray-600 dark:text-white text-black`;
-  const updateInterval = 1000 * 60 * (updateIntervalInMinutes ?? 0);
   const categoryColors = [
     "#AA0000",
     "#E69F00",
@@ -323,9 +324,9 @@
     } else if (diff >= MONTH_MS) {
       maxTo.setDate(maxTo.getDate() + 2);
     } else if (isToday(maxTo)) {
-      maxTo = new Date(Date.now() + HOUR_MS * 0);
+      maxTo = new SvelteDate(Date.now() + HOUR_MS * 0);
     } else {
-      maxTo = setToEndOfDay(new Date(to.getTime()));
+      maxTo = setToEndOfDay(new SvelteDate(to.getTime()));
     }
     chart.options.scales.x.max = maxTo;
   };
@@ -344,6 +345,7 @@
   // Source: https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php/6117889#6117889
   function getWeekNumber(d: Date) {
     // Copy date so don't modify original
+    /* eslint-disable-next-line svelte/prefer-svelte-reactivity */
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     // Set to nearest Thursday: current date + 4 - current day number
     // Make Sunday's day number 7
@@ -357,7 +359,7 @@
   }
 
   const createLabelForXAxis = (date: Date): string | undefined => {
-    let label = "";
+    let label: string;
     const paddedMonth = pad(date.getMonth() + 1);
     const paddedDate = pad(date.getDate());
     const paddedHours = pad(date.getHours());
@@ -538,8 +540,10 @@
   };
 
   onMount(async () => {
+    stepsInMilliseconds = 1000 * 60 * stepsInMinutes;
+    updateInterval = 1000 * 60 * (updateIntervalInMinutes ?? 0);
     from = initialFrom;
-    to = new Date();
+    to = new SvelteDate();
     await loadStats();
     if (!chartComponentRef) {
       return;
@@ -582,8 +586,8 @@
 
   // In case of month or year we need some padding so the last month/year is not cut-off.
   const selectPredefinedRange = (range: string) => {
-    const newFrom = new Date();
-    const newTo = new Date();
+    const newFrom = new SvelteDate();
+    const newTo = new SvelteDate();
     let diff = 1;
     stepsInMilliseconds = HOUR_MS;
     if (range === "month") {

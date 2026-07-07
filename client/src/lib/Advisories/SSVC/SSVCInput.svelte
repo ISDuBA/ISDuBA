@@ -24,6 +24,7 @@
   let {
     autofocus = false,
     disabled = false,
+    /* eslint-disable-next-line no-useless-assignment */
     isValid = $bindable(),
     value = $bindable(),
     onKeyup = undefined
@@ -49,7 +50,7 @@
     const parts = valueToValidate.split("/");
     const decisions = parts.filter((p) => p.length === 3 && p.charAt(1) === ":");
     minLengthReached = decisions.length >= 5;
-    endsWithSlash = valueToValidate.charAt(inputValue.length - 1) === "/";
+    endsWithSlash = valueToValidate.charAt(valueToValidate.length - 1) === "/";
     const lastPart = parts[parts.length - 1];
     const secondToLastPart = parts[parts.length - 2];
     containsValidDate =
@@ -60,6 +61,7 @@
 
   const isDateValid = (date: string) => {
     const dateRegex = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\dZ/;
+    if (isNaN(Date.parse(date))) return false;
     const result = date.match(dateRegex);
     return result?.length === 1;
   };
@@ -91,7 +93,11 @@
 
   const handleInput = async (event: any) => {
     await tick();
-    const newInput = event.target.value;
+    let newInput: string = event.target.value.trim();
+    if (newInput.startsWith("SSVCv2/")) {
+      newInput = newInput.replace("SSVCv2/", "");
+    }
+    inputValue = newInput;
     value = `${vectorStart}${inputValue}`;
     isValid = isVectorValid(newInput);
     if (onKeyup) {
@@ -118,7 +124,7 @@
 <div class="mb-3 flex w-full">
   <Label
     class="flex h-10 items-center rounded-s-md border border-r-0 border-gray-400 px-2 text-gray-500"
-    >{vectorStart}</Label
+    for="ssvc-input">{vectorStart}</Label
   >
   <div class="flex w-full flex-col gap-y-2">
     <Input
@@ -128,6 +134,7 @@
       {autofocus}
       {disabled}
       class={defaultInputClass}
+      id="ssvc-input"
       type="text"
     />
     <div class="flex flex-col gap-1 ps-2">

@@ -9,12 +9,15 @@
 -->
 
 <script lang="ts">
+  import Link from "$lib/Components/Link.svelte";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
 
   interface Props {
     references: any;
   }
   let { references }: Props = $props();
+
+  const uid = $props.id();
 
   const baseCellStyle = "py-2 px-2";
   const cellStyle = "" + baseCellStyle;
@@ -24,12 +27,13 @@
   <div class="mt-1 w-full pl-5">
     <Table border={false} striped={true}>
       <TableBody>
-        {#each references as reference}
+        {#each references as reference, i (`references-${uid}-${i}`)}
           <TableBodyRow>
             <TableBodyCell class={cellStyle}>{reference.category}</TableBodyCell>
             <TableBodyCell class={cellStyle}
               ><p class="mb-2">{reference.summary}</p>
-              <a class="underline" href={reference.url}><i class="bx bx-link"></i>{reference.url}</a
+              <Link class="underline" href={reference.url}
+                ><i class="bx bx-link"></i>{reference.url}</Link
               ></TableBodyCell
             >
             <TableBodyCell></TableBodyCell>

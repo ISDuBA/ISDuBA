@@ -47,14 +47,14 @@
     ...restProps
   }: Props = $props();
 
-  const ctx: AccordionCtxType = {
+  const ctx: AccordionCtxType = $derived({
     flush,
     activeClass: twMerge(activeClass, classActive),
     inactiveClass: twMerge(inactiveClass, classInactive),
     selected: multiple ? undefined : writable()
-  };
+  });
 
-  setContext<AccordionCtxType>("ctx", ctx);
+  setContext<() => AccordionCtxType>("ctx", () => ctx);
 
   let frameClass: string = $derived(twMerge(defaultClass, `${restProps.class}`));
 </script>

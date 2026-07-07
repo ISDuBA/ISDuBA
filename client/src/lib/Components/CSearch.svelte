@@ -17,8 +17,8 @@
     onClear?: () => void;
     onKeyup?: (event: any) => void;
     placeholder?: string;
-    searchTerm: string;
-    search?: () => void;
+    searchTerm?: string;
+    search?: (term: string) => void;
   }
 
   let {
@@ -27,12 +27,12 @@
     onClear = undefined,
     onKeyup = undefined,
     placeholder = "Enter a search term",
-    searchTerm = $bindable(),
+    searchTerm = $bindable(""),
     search
   }: Props = $props();
 
   const dispatchSearchEvent = () => {
-    if (search) search();
+    if (search) search(searchTerm ?? "");
   };
 
   const clearInput = () => {

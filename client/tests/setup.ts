@@ -48,6 +48,9 @@ setup("authenticate and upload document", async ({ page }) => {
     ]);
   await uploadButton.click();
 
+  // When the upload is finished the initial text should be displayed again.
+  await expect(page.getByText("No file selected")).toBeVisible();
+
   const exampleDocumentURL =
     "https://raw.githubusercontent.com/oasis-tcs/csaf/refs/heads/master/csaf_2.0/examples/csaf/bsi-2022-0001.json";
   const response = await fetch(exampleDocumentURL);

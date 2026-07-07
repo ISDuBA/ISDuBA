@@ -19,6 +19,8 @@
     helper: any;
   }
   let { helper }: Props = $props();
+
+  const uid = $props.id();
 </script>
 
 <div>
@@ -28,10 +30,10 @@
     </TableBodyRow>
   </Table>
   {#if helper.cpe}
-    <KeyValue keys={["cpe"]} values={helper.cpe} />
+    <KeyValue keys={["cpe"]} values={[helper.cpe]} />
   {/if}
   {#if helper.hashes}
-    {#each helper.hashes as hash}
+    {#each helper.hashes as hash, i (`pidh-${uid}-${i}`)}
       <FileHash {hash} />
     {/each}
   {/if}
@@ -39,7 +41,7 @@
     <ValueList label="Model numbers" values={helper.model_numbers} />
   {/if}
   {#if helper.purl}
-    <KeyValue keys={["purl"]} values={helper.purl} />
+    <KeyValue keys={["purl"]} values={[helper.purl]} />
   {/if}
   {#if helper.sbom_urls}
     <ValueList label="SBOM URLs" values={helper.sbom_urls} />

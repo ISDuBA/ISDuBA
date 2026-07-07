@@ -972,7 +972,7 @@ func (c *Controller) feedLogs(ctx *gin.Context, feedID *int64) {
 	}
 
 	if lvls := ctx.Query("levels"); lvls != "" {
-		for _, lvl := range strings.Fields(lvls) {
+		for lvl := range strings.FieldsSeq(lvls) {
 			logLevel, ok := parse(ctx, config.ParseFeedLogLevel, lvl)
 			if !ok {
 				return

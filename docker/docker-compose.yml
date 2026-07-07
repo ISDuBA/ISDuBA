@@ -47,7 +47,7 @@ services:
         condition: service_healthy
 
   keycloak-setup:
-    image: keycloak/keycloak:26.0
+    image: keycloak/keycloak:26.5
     container_name: "isduba-keycloak-setup"
     restart: "no"
     entrypoint: ["bash", "/opt/keycloak/init.sh"]

@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // SQLBuilder helps to construct a SQL query.
@@ -41,6 +42,17 @@ var (
 		`_`, `\_`).Replace
 	whiteSpaces = regexp.MustCompile(`\s+`)
 )
+
+// RemoveIgnoredFields removes fields that should be ignored.
+func (sb *SQLBuilder) RemoveIgnoredFields(fields []string) []string {
+	filtered := make([]string, 0, len(fields))
+	for _, f := range fields {
+		if _, found := sb.IgnoreFields[f]; !found {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
+}
 
 // LikeEscape quotes a query string to be more convenient
 // to use with LIKE filters.
@@ -76,6 +88,14 @@ func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
 				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
 		case EventMode:
 			// TODO clarify how to handle event search
+			// Current implementation equals AdvisoryMode/DocumentMode to prevent error when searching for strings, but can also search in comments
+			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
+				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
+				"WHERE txt ILIKE $%[1]d "+
+				"AND documents_texts.documents_id = documents.id) "+
+				"OR "+
+				"EXISTS(SELECT 1 FROM comments "+
+				"WHERE message ILIKE $%[1]d AND comments.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
 		}
 
 		// Ignore alias for now to avoid breaking change
@@ -204,10 +224,13 @@ func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
 }
 
 const (
-	versionsCount = `(SELECT count(*) FROM documents WHERE ` +
+	versionsCountClassic = `(SELECT count(*) FROM documents WHERE ` +
 		`documents.advisories_id = advisories.id)`
-	commentsCountDocuments = `(SELECT count(*) FROM comments WHERE ` +
+	commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents.id)`
+	versionsCountCTE          = `(SELECT count(*) FROM docads)`
+	commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = docads.id)`
 	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = documents_id)`
 )
@@ -221,13 +244,13 @@ func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
 		b.WriteString("advisories.")
 		b.WriteString(column)
 	case "versions":
-		b.WriteString(versionsCount)
+		b.WriteString(versionsCountClassic)
 	case "comments":
 		switch sb.Mode {
 		case AdvisoryMode:
 			b.WriteString(column)
 		case DocumentMode:
-			b.WriteString(commentsCountDocuments)
+			b.WriteString(commentsCountDocumentsClassic)
 		case EventMode:
 			b.WriteString(commentsCountEvents)
 		}
@@ -416,7 +439,7 @@ func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
 		if desc {
 			field = field[1:]
 		}
-		if _, found := sb.Aliases[field]; !found && !ExistsDocumentColumn(field, sb.Mode) {
+		if _, found := sb.Aliases[field]; !found && !existsDocumentColumn(field, sb.Mode) {
 			return "", fmt.Errorf("order field %q does not exists", field)
 		}
 		if b.Len() > 0 {
@@ -520,7 +543,7 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 		case "event_state":
 			b.WriteString("events_log.state::text AS event_state")
 		case "versions":
-			b.WriteString(versionsCount + `AS versions`)
+			b.WriteString(versionsCountClassic + `AS versions`)
 		case "ssvc":
 			b.WriteString("ssvc_current.ssvc AS ssvc")
 		case "comments":
@@ -528,7 +551,7 @@ func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
 			case AdvisoryMode:
 				b.WriteString(p)
 			case DocumentMode:
-				b.WriteString(commentsCountDocuments + `AS comments`)
+				b.WriteString(commentsCountDocumentsClassic + `AS comments`)
 			case EventMode:
 				b.WriteString(commentsCountEvents + `AS comments`)
 			}
@@ -547,9 +570,44 @@ func (sb *SQLBuilder) CheckProjections(proj []string) error {
 		if _, found := sb.IgnoreFields[p]; found {
 			continue
 		}
-		if !ExistsDocumentColumn(p, sb.Mode) {
+		if !existsDocumentColumn(p, sb.Mode) {
 			return fmt.Errorf("column %q does not exists", p)
 		}
 	}
 	return nil
+}
+
+var (
+	dirtyReplace     *regexp.Regexp
+	dirtyReplaceOnce sync.Once
+)
+
+// InterpolateSQLqnd is a quick and dirty hack to re-substitute strings
+// into SQL statements. Warning: USE FOR LOGGING ONLY!
+// The separation SQL <-> replacements were done beforehand to
+// prevent injections!
+func InterpolateSQLqnd(sql string, replacements []any) string {
+	dirtyReplaceOnce.Do(func() {
+		dirtyReplace = regexp.MustCompile(`\$([\d]+)`)
+	})
+	sql = dirtyReplace.ReplaceAllStringFunc(sql, func(s string) string {
+		m := dirtyReplace.FindStringSubmatch(s)
+		index, _ := strconv.Atoi(m[1])
+		if index--; index < 0 || index >= len(replacements) {
+			return fmt.Sprintf("BAD INDEX %d", index+1)
+		}
+		var verb string
+		switch replacements[index].(type) {
+		case string:
+			verb = "s"
+		case int, uint, int8, uint8, int16, uint16, int32, uint32, int64, uint64:
+			verb = "d"
+		case float32, float64:
+			verb = "f"
+		default:
+			verb = "v"
+		}
+		return `'%[` + m[1] + `]` + verb + `'`
+	})
+	return fmt.Sprintf(sql, replacements...)
 }

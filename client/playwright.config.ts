@@ -6,9 +6,9 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { type PlaywrightTestConfig, devices } from "@playwright/experimental-ct-svelte";
+import { defineConfig, devices } from "@playwright/test";
 
-const config: PlaywrightTestConfig = {
+export default defineConfig({
   projects: [
     // Setup project
 
@@ -94,6 +94,4 @@ const config: PlaywrightTestConfig = {
       }
     ]
   ]
-};
-
-export default config;
+});

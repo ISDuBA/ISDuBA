@@ -43,4 +43,16 @@ host    all             all             ::1/128                 scram-sha-256
 block_to_insert
 fi
 
+# Adjust postgresql configuration (random_page_cost)
+PG_CONF_PATH=$(psql -t -P format=unaligned -c 'SHOW config_file;')
+
+# If the parameter exists, replace it. If it does not exist, append it
+if grep -q "^[#]*\s*random_page_cost" "$PG_CONF_PATH"; then
+  sed -i "s|^[#]*\s*random_page_cost\s*=.*|random_page_cost = 1.0|" "$PG_CONF_PATH"
+else
+  echo "random_page_cost = 1.0" >> "$PG_CONF_PATH"
+fi
+
+echo "Set random_page_cost to 1"
+
 echo "Adjusted postgresql configuration"

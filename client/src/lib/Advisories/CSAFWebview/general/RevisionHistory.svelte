@@ -34,7 +34,7 @@
         <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each appStore.state.webview.doc?.revisionHistory as entry}
+        {#each appStore.state.webview.doc?.revisionHistory as entry (`ref-history${entry.number}`)}
           <TableBodyRow>
             <TableBodyCell class={cellStyle}>{entry.number}</TableBodyCell>
             <TableBodyCell class={cellStyle}>{getReadableDateString(entry.date)}</TableBodyCell>

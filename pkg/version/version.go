@@ -7,6 +7,8 @@
 // Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
 // Package version implements the burned-in version of the binaries.
+//
+//revive:disable-next-line:var-naming
 package version
 
 // SemVersion the version in semver.org format, MUST be overwritten during

@@ -6,18 +6,6 @@
 // SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2025 Intevation GmbH <https://intevation.de>
 
-export type ColorVariant =
-  | "dark"
-  | "red"
-  | "yellow"
-  | "green"
-  | "indigo"
-  | "purple"
-  | "pink"
-  | "blue"
-  | "primary"
-  | "none";
-
 export type FormColorType =
   | "blue"
   | "red"
