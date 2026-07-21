@@ -78,13 +78,7 @@ export type AudienceOfNote = string;
  * Contains the information of what kind of note this is.
  */
 export type NoteCategory =
-  | "description"
-  | "details"
-  | "faq"
-  | "general"
-  | "legal_disclaimer"
-  | "other"
-  | "summary";
+  "description" | "details" | "faq" | "general" | "legal_disclaimer" | "other" | "summary";
 /**
  * Holds the content of the note. Content varies depending on type.
  */
@@ -97,12 +91,7 @@ export type TitleOfNote = string;
  * Provides information about the category of publisher releasing the document.
  */
 export type CategoryOfPublisher =
-  | "coordinator"
-  | "discoverer"
-  | "other"
-  | "translator"
-  | "user"
-  | "vendor";
+  "coordinator" | "discoverer" | "other" | "translator" | "user" | "vendor";
 /**
  * Information on how to contact the publisher, possibly including details such as web sites, email addresses, phone numbers, and postal mail addresses.
  */
@@ -431,12 +420,7 @@ export type PartyCategory = "coordinator" | "discoverer" | "other" | "user" | "v
  * Defines contact status of the involved party.
  */
 export type PartyStatus =
-  | "completed"
-  | "contact_attempted"
-  | "disputed"
-  | "in_progress"
-  | "not_contacted"
-  | "open";
+  "completed" | "contact_attempted" | "disputed" | "in_progress" | "not_contacted" | "open";
 /**
  * Contains additional context regarding what is going on.
  */
@@ -517,11 +501,7 @@ export type ListOfRemediations = [Remediation, ...Remediation[]];
  * Specifies the category which this remediation belongs to.
  */
 export type CategoryOfTheRemediation =
-  | "mitigation"
-  | "no_fix_planned"
-  | "none_available"
-  | "vendor_fix"
-  | "workaround";
+  "mitigation" | "no_fix_planned" | "none_available" | "vendor_fix" | "workaround";
 /**
  * Contains the date from which the remediation is available.
  */
@@ -920,20 +900,11 @@ export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion20 {
   baseScore: number;
   exploitability?: "UNPROVEN" | "PROOF_OF_CONCEPT" | "FUNCTIONAL" | "HIGH" | "NOT_DEFINED";
   remediationLevel?:
-    | "OFFICIAL_FIX"
-    | "TEMPORARY_FIX"
-    | "WORKAROUND"
-    | "UNAVAILABLE"
-    | "NOT_DEFINED";
+    "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
   reportConfidence?: "UNCONFIRMED" | "UNCORROBORATED" | "CONFIRMED" | "NOT_DEFINED";
   temporalScore?: number;
   collateralDamagePotential?:
-    | "NONE"
-    | "LOW"
-    | "LOW_MEDIUM"
-    | "MEDIUM_HIGH"
-    | "HIGH"
-    | "NOT_DEFINED";
+    "NONE" | "LOW" | "LOW_MEDIUM" | "MEDIUM_HIGH" | "HIGH" | "NOT_DEFINED";
   targetDistribution?: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
   confidentialityRequirement?: "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
   integrityRequirement?: "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
@@ -959,11 +930,7 @@ export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion30 {
   baseSeverity: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   exploitCodeMaturity?: "UNPROVEN" | "PROOF_OF_CONCEPT" | "FUNCTIONAL" | "HIGH" | "NOT_DEFINED";
   remediationLevel?:
-    | "OFFICIAL_FIX"
-    | "TEMPORARY_FIX"
-    | "WORKAROUND"
-    | "UNAVAILABLE"
-    | "NOT_DEFINED";
+    "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
   reportConfidence?: "UNKNOWN" | "REASONABLE" | "CONFIRMED" | "NOT_DEFINED";
   temporalScore?: number;
   temporalSeverity?: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -1000,11 +967,7 @@ export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion31 {
   baseSeverity: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   exploitCodeMaturity?: "UNPROVEN" | "PROOF_OF_CONCEPT" | "FUNCTIONAL" | "HIGH" | "NOT_DEFINED";
   remediationLevel?:
-    | "OFFICIAL_FIX"
-    | "TEMPORARY_FIX"
-    | "WORKAROUND"
-    | "UNAVAILABLE"
-    | "NOT_DEFINED";
+    "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
   reportConfidence?: "UNKNOWN" | "REASONABLE" | "CONFIRMED" | "NOT_DEFINED";
   temporalScore?: number;
   temporalSeverity?: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
