@@ -9,6 +9,7 @@
 package config
 
 import (
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"strconv"
@@ -133,6 +134,14 @@ func (fll *FeedLogLevel) Scan(src any) error {
 		return nil
 	}
 	return errors.New("unsupported type")
+}
+
+// Value implements [driver.Value].
+func (fll FeedLogLevel) Value() (driver.Value, error) {
+	if fll < DebugFeedLogLevel || fll > ErrorFeedLogLevel {
+		return nil, fmt.Errorf("invalid log level value: %d", fll)
+	}
+	return int64(fll), nil
 }
 
 // String implements [fmt.Stringer].
