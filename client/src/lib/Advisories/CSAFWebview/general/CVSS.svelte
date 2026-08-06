@@ -8,27 +8,13 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import type { CVSSTextualRating } from "$lib/Statistics/statistics";
+  import { getCVSSTextualRating } from "../vulnerabilities/vulnerability/scores/cvss";
 
   interface Props {
     baseScore?: string;
     baseSeverity?: string;
   }
   let { baseScore, baseSeverity }: Props = $props();
-
-  const getCVSSTextualRating = (CVSS: number): CVSSTextualRating => {
-    if (CVSS === 0) {
-      return "None";
-    } else if (CVSS <= 3.9) {
-      return "Low";
-    } else if (CVSS <= 6.9) {
-      return "Medium";
-    } else if (CVSS <= 8.9) {
-      return "High";
-    } else {
-      return "Critical";
-    }
-  };
 
   const getClass = (severity: string | undefined, score: string | undefined) => {
     if (severity && score) {
