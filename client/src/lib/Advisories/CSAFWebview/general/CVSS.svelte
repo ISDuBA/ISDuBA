@@ -9,6 +9,7 @@
 -->
 <script lang="ts">
   import { getCVSSTextualRating } from "../vulnerabilities/vulnerability/scores/cvss";
+  import { AlertTriangle } from "@boxicons/svelte";
 
   interface Props {
     baseScore?: string;
@@ -16,9 +17,20 @@
   }
   let { baseScore, baseSeverity }: Props = $props();
 
+  let invalid: boolean = $derived.by(() => {
+    if (
+      baseSeverity &&
+      baseScore != undefined &&
+      baseSeverity?.toLowerCase() !== getCVSSTextualRating(Number(baseScore)).toLowerCase()
+    ) {
+      return true;
+    }
+    return false;
+  });
+
   const getClass = (severity: string | undefined, score: string | undefined) => {
     if (severity && score) {
-      if (severity.toLowerCase() !== getCVSSTextualRating(Number(score)).toLowerCase()) {
+      if (invalid) {
         return "";
       } else {
         return severity.toLowerCase();
@@ -40,6 +52,9 @@
       <span class="baseSeverity">{baseSeverity}</span>
     {:else if baseSeverity}
       <span class="baseSeverity">({baseSeverity})</span>
+    {/if}
+    {#if invalid}
+      <AlertTriangle />
     {/if}
   </div>
 {/if}
