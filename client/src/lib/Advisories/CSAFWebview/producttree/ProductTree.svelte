@@ -84,16 +84,12 @@
 
 {#if appStore.state.webview.doc?.productTree.product_groups}
   <Collapsible header="Product groups" open path="/product_tree">
-    <ProductGroups
-      productGroups={!selectedProduct && appStore.state.webview.doc?.productTree.product_groups}
-    />
+    <ProductGroups productGroups={appStore.state.webview.doc?.productTree.product_groups} />
   </Collapsible>
 {/if}
 
 {#if appStore.state.webview.doc?.productTree.full_product_names}
   <Collapsible header="Full Product Names" open path="/product_tree">
-    <ProductNames
-      productNames={!selectedProduct && appStore.state.webview.doc?.productTree.full_product_names}
-    />
+    <ProductNames productNames={appStore.state.webview.doc?.productTree.full_product_names} />
   </Collapsible>
 {/if}
