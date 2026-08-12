@@ -47,9 +47,17 @@
             <TableBodyCell class={cellStyle}>{key}</TableBodyCell>
             <TableBodyCell class={cellStyle}>
               {#if key === "baseScore"}
-                <CVSS baseScore={values[index]}></CVSS>
+                <CVSS
+                  baseScore={values[index]?.baseScore}
+                  baseSeverity={values[index]?.baseSeverity}
+                  hideBaseSeverity
+                ></CVSS>
               {:else}
-                <CVSS baseSeverity={values[index]}></CVSS>
+                <CVSS
+                  baseSeverity={values[index]?.baseSeverity}
+                  baseScore={values[index]?.baseScore}
+                  hideBaseScore
+                ></CVSS>
               {/if}
             </TableBodyCell>
           </TableBodyRow>

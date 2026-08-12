@@ -14,8 +14,15 @@
   interface Props {
     baseScore?: string;
     baseSeverity?: string;
+    hideBaseScore?: boolean;
+    hideBaseSeverity?: boolean;
   }
-  let { baseScore, baseSeverity }: Props = $props();
+  let {
+    baseScore,
+    baseSeverity,
+    hideBaseScore = false,
+    hideBaseSeverity = false
+  }: Props = $props();
 
   let invalid: boolean = $derived.by(() => {
     if (
@@ -47,11 +54,15 @@
 
 {#if (baseScore !== null && baseScore !== undefined) || baseSeverity !== undefined}
   <div class={"score " + getClass(baseSeverity, baseScore)}>
-    <span class="baseScore">{baseScore}</span>
-    {#if (baseSeverity && baseScore === null) || baseScore === undefined}
-      <span class="baseSeverity">{baseSeverity}</span>
-    {:else if baseSeverity}
-      <span class="baseSeverity">({baseSeverity})</span>
+    {#if !hideBaseScore}
+      <span class="baseScore">{baseScore}</span>
+    {/if}
+    {#if !hideBaseSeverity}
+      {#if (baseSeverity && baseScore === null) || baseScore === undefined || hideBaseScore}
+        <span class="baseSeverity">{baseSeverity}</span>
+      {:else if baseSeverity}
+        <span class="baseSeverity">({baseSeverity})</span>
+      {/if}
     {/if}
     {#if invalid}
       <AlertTriangle />
