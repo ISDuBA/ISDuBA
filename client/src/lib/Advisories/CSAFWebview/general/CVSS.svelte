@@ -65,7 +65,9 @@
       {/if}
     {/if}
     {#if invalid}
-      <AlertTriangle />
+      <span title="Score and severity do not fit together">
+        <AlertTriangle aria-hidden="true" />
+      </span>
     {/if}
   </div>
 {/if}
