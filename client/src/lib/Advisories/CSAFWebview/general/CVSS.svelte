@@ -65,7 +65,7 @@
       {/if}
     {/if}
     {#if invalid}
-      <span title="Score and severity do not fit together">
+      <span title="Vulnerability score and severity do not match">
         <AlertTriangle aria-hidden="true" />
       </span>
     {/if}
