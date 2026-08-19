@@ -53,7 +53,7 @@ export const request = async (
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
     let json;
-    if (contentType && isJson) {
+    if (isJson) {
       try {
         json = await response.json();
       } catch (e) {
@@ -70,7 +70,7 @@ export const request = async (
         };
       }
     }
-    const content = contentType && isJson ? json : await response.text();
+    const content = isJson ? json : await response.text();
     if (response.ok) {
       return { content: content, ok: true };
     }
@@ -79,7 +79,7 @@ export const request = async (
       appStore.setSessionExpiredMessage("User unauthorized");
       await push("/login");
     }
-    if (contentType && isJson) {
+    if (isJson) {
       // Handle pmd proxy errors
       if (json.messages) {
         return { error: `${response.status}`, content: json.messages, ok: false };
