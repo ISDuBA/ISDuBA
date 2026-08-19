@@ -40,7 +40,13 @@
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
     if (success !== undefined) {
-      return success ? "text-green-600" : "text-red-600";
+      // The returned colors are from the default palette of TailwindCSS:
+      // https://tailwindcss.com/docs/colors#default-color-palette-reference
+      return success
+        ? // color-green-600
+          "oklch(62.7% 0.194 149.214)"
+        : // color-red-600
+          "oklch(57.7% 0.245 27.325)";
     }
     return "";
   };
