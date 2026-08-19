@@ -103,6 +103,7 @@ type Attention = {
 type UploadInfo = {
   success?: boolean;
   message?: string;
+  requestStatus?: number;
 };
 
 const fetchAggregatorAttentionList = async (): Promise<Result<Attention[], ErrorDetails>> => {

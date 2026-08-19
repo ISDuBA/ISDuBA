@@ -9,7 +9,20 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import { slide } from "svelte/transition";
+  import {
+    Button,
+    Card,
+    Label,
+    Listgroup,
+    ListgroupItem,
+    Table,
+    TableBody,
+    TableBodyCell,
+    TableBodyRow,
+    TableHead,
+    TableHeadCell
+  } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
   import CFileinput from "./Components/CFileinput.svelte";
   import { CheckCircle, XCircle } from "@boxicons/svelte";
@@ -53,6 +66,19 @@
   let files: FileList | undefined = $state(undefined);
   let filesCache: FileList | undefined = $state(undefined);
   let isUploading = $state(false);
+
+  let duplicateCount = $derived.by(() => {
+    return uploadInfo.filter((info) => info.requestStatus === 409).length;
+  });
+
+  let failureCount = $derived.by(() => {
+    return uploadInfo.filter((info) => !info.success && info.requestStatus !== 409).length;
+  });
+
+  let successCount = $derived.by(() => {
+    return uploadInfo.filter((info) => info.success).length;
+  });
+
   $effect(() => {
     if (files) {
       uploadInfo = [];
@@ -113,6 +139,26 @@
       >
     </div>
     {#if filesCache}
+      {#if !isUploading}
+        <div transition:slide>
+          <Table>
+            <TableHead>
+              <TableHeadCell class="text-center">Successful</TableHeadCell>
+              <TableHeadCell class="text-center">Already existing</TableHeadCell>
+              <TableHeadCell class="text-center">Other Errors</TableHeadCell>
+              <TableHeadCell class="text-center">Total</TableHeadCell>
+            </TableHead>
+            <TableBody>
+              <TableBodyRow>
+                <TableBodyCell class="text-center">{successCount}</TableBodyCell>
+                <TableBodyCell class="text-center">{duplicateCount}</TableBodyCell>
+                <TableBodyCell class="text-center">{failureCount}</TableBodyCell>
+                <TableBodyCell class="text-center">{uploadInfo.length}</TableBodyCell>
+              </TableBodyRow>
+            </TableBody>
+          </Table>
+        </div>
+      {/if}
       <Listgroup class="mt-6">
         {#each filesCache as file, i (`upload-1-${uid}-${i}`)}
           {@const info = uploadInfo[i]}
