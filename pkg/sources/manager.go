@@ -1112,7 +1112,7 @@ func (m *Manager) AddFeed(
 					sourceID,
 					url.String(),
 					rolie,
-					logLevel,
+					logLevel.String(),
 				).Scan(&feedID)
 			}, 0,
 		); err != nil {
@@ -1517,7 +1517,7 @@ func (fu *FeedUpdater) UpdateLogLevel(level config.FeedLogLevel) error {
 	if config.FeedLogLevel(fu.updatable.logLevel.Load()) == level {
 		return nil
 	}
-	fu.addChange(func(f *feed) { f.logLevel.Store(int32(level)) }, "log_lvl", level)
+	fu.addChange(func(f *feed) { f.logLevel.Store(int32(level)) }, "log_lvl", level.String())
 	return nil
 }
 
