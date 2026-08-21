@@ -57,6 +57,15 @@ setup("authenticate and upload document", async ({ page }) => {
   await expect(page.getByRole("table")).toBeVisible();
   // The total number should be displayed
   await expect(page.getByRole("cell").nth(3)).toContainText("5");
+  await expect(page.getByRole("cell").nth(3).getByRole("radio")).toBeChecked();
+
+  // There should be only successful uploads when the test is running in a CI workflow
+  // or at least duplicates when running in a local setup when the documents where already
+  // uploaded. But no other errors.
+  await expect(page.getByRole("cell").nth(2)).toContainText("0");
+  // When the results are filtered to keep only other errors no files should be visible.
+  await page.getByRole("cell").nth(2).getByRole("radio").click();
+  await page.getByText("avendor-advisory-0005.json").waitFor({ state: "hidden" });
 
   const exampleDocumentURL =
     "https://raw.githubusercontent.com/oasis-tcs/csaf/refs/heads/master/csaf_2.0/examples/csaf/bsi-2022-0001.json";
