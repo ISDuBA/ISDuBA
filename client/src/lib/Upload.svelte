@@ -16,6 +16,7 @@
     Label,
     Listgroup,
     ListgroupItem,
+    Radio,
     Table,
     TableBody,
     TableBodyCell,
@@ -67,6 +68,9 @@
   let filesCache: FileList | undefined = $state(undefined);
   let isUploading = $state(false);
 
+  type UploadFilter = "successful" | "duplicate" | "error" | "total";
+  let filterBy: UploadFilter = $state("total");
+
   let duplicateCount = $derived.by(() => {
     return uploadInfo.filter((info) => info.requestStatus === 409).length;
   });
@@ -84,6 +88,15 @@
       uploadInfo = [];
     }
   });
+
+  const shouldBeDisplayed = (info: UploadInfo) => {
+    return (
+      filterBy === "total" ||
+      (filterBy === "duplicate" && info.requestStatus === 409) ||
+      (filterBy === "successful" && info.success) ||
+      (filterBy === "error" && !info.success && info.requestStatus !== 409)
+    );
+  };
 </script>
 
 <Card size="lg" class="p-4">
@@ -150,10 +163,26 @@
             </TableHead>
             <TableBody>
               <TableBodyRow>
-                <TableBodyCell class="text-center">{successCount}</TableBodyCell>
-                <TableBodyCell class="text-center">{duplicateCount}</TableBodyCell>
-                <TableBodyCell class="text-center">{failureCount}</TableBodyCell>
-                <TableBodyCell class="text-center">{uploadInfo.length}</TableBodyCell>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="successful"
+                    >{successCount}</Radio
+                  >
+                </TableBodyCell>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="duplicate"
+                    >{duplicateCount}</Radio
+                  >
+                </TableBodyCell>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="error"
+                    >{failureCount}</Radio
+                  >
+                </TableBodyCell>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="total"
+                    >{uploadInfo.length}</Radio
+                  >
+                </TableBodyCell>
               </TableBodyRow>
             </TableBody>
           </Table>
@@ -163,19 +192,21 @@
         {#each filesCache as file, i (`upload-1-${uid}-${i}`)}
           {@const info = uploadInfo[i]}
           {@const color = getColor(info)}
-          <ListgroupItem>
-            <div class="flex items-center gap-1">
-              {#if info?.success}
-                <CheckCircle fill={color} />
-              {:else if info}
-                <XCircle fill={color} />
+          {#if shouldBeDisplayed(info)}
+            <ListgroupItem>
+              <div class="flex items-center gap-1">
+                {#if info?.success}
+                  <CheckCircle fill={color} />
+                {:else if info}
+                  <XCircle fill={color} />
+                {/if}
+                <div class="font-bold text-black dark:text-white">{file.name}</div>
+              </div>
+              {#if info?.message}
+                <div>{info.message}</div>
               {/if}
-              <div class="font-bold text-black dark:text-white">{file.name}</div>
-            </div>
-            {#if info?.message}
-              <div>{info.message}</div>
-            {/if}
-          </ListgroupItem>
+            </ListgroupItem>
+          {/if}
         {/each}
       </Listgroup>
     {:else if files}
