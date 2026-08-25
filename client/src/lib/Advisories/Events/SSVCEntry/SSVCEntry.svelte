@@ -12,7 +12,8 @@
   import { TableBodyCell } from "flowbite-svelte";
   import { getReadableDateString } from "../../CSAFWebview/helpers";
   import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
-  import { Check, Copy } from "@boxicons/svelte";
+  import type { CopyState } from "$lib/Components/types";
+  import CopyButton from "$lib/Components/CopyButton.svelte";
 
   type SsvcData = {
     prev_ssvc?: string;
@@ -27,10 +28,9 @@
   }
   let { ssvcData }: Props = $props();
 
-  type TooltipState = undefined | "success" | "failure";
   let tooltipStates: {
-    prev: TooltipState;
-    current: TooltipState;
+    prev: CopyState;
+    current: CopyState;
   } = $state({
     prev: undefined,
     current: undefined
@@ -53,47 +53,15 @@
   });
 
   const tdClass = "py-2 px-2";
-
-  const copySSVC = async (state: "prev" | "current", vector: string) => {
-    try {
-      await navigator.clipboard.writeText(vector);
-      tooltipStates[state] = "success";
-      setTimeout(() => {
-        tooltipStates[state] = undefined;
-      }, 2000);
-    } catch (error) {
-      console.error(error);
-      tooltipStates[state] = "failure";
-    }
-  };
 </script>
 
 {#snippet copyButton(state: "prev" | "current", vector: string)}
-  <div class="relative">
-    <button
-      onclick={() => {
-        copySSVC(state, vector);
-      }}
-      aria-label={`Copy vector ${ssvcData.prev_ssvc}`}
-      class="cursor-pointer"
-    >
-      <Copy />
-    </button>
-    {#if tooltipStates[state]}
-      <div
-        class="ssvc-tooltip absolute -top-[80%] left-[calc(100%+4px)] z-10 mt-1 rounded border-1 border-gray-400 bg-white p-1 text-xs text-gray-800 dark:text-gray-200"
-      >
-        {#if tooltipStates[state] === "success"}
-          <div class="flex items-center gap-1">
-            <Check />
-            <span>Copied</span>
-          </div>
-        {:else}
-          Error: Couldn't copy the vector.
-        {/if}
-      </div>
-    {/if}
-  </div>
+  <CopyButton
+    bind:copyState={tooltipStates[state]}
+    errorMessage="Error: Couldn't copy the vector."
+    title={`Copy vector ${vector}`}
+    value={vector}
+  />
 {/snippet}
 
 <TableBodyCell class={tdClass}>
