@@ -42,6 +42,7 @@ test("Advisory view is working", async ({ page }) => {
 
   // Test SSVC calculator
   await page.getByTitle("Edit SSVC").click();
+  await expect(page.getByText("Enter a SSVC directly")).toBeVisible();
   await page.getByRole("button", { name: "Evaluate" }).click();
   // First test to go back and restart
   await page.getByRole("button", { name: "poc" }).click();
