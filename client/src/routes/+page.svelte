@@ -274,7 +274,7 @@
     <SideNav></SideNav>
   </div>
   <main
-    class="flex max-h-screen w-full flex-col overflow-auto bg-white px-2 py-6 lg:px-6 dark:bg-gray-800"
+    class="mt-6 flex max-h-screen w-full flex-col overflow-auto bg-white px-2 pb-6 lg:px-6 dark:bg-gray-800"
   >
     {#if appStore.state.app.userManager}
       <Router
