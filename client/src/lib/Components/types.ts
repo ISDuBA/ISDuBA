@@ -6,5 +6,9 @@
 // SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2025 Intevation GmbH <https://intevation.de>
 
-export type FormColorType =
+type CopyState = undefined | "success" | "failure";
+
+type FormColorType =
   "blue" | "red" | "green" | "purple" | "teal" | "yellow" | "orange" | "primary" | "secondary";
+
+export type { CopyState, FormColorType };
