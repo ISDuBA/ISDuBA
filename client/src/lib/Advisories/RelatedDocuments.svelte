@@ -67,6 +67,7 @@
   let advisoryState: string | undefined = $state(undefined);
   let loadError: ErrorDetails | null = $state(null);
   let isInconsistent = $state(false);
+  let max = $state(50);
 
   let encodedTrackingID = $derived(
     document?.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
@@ -273,7 +274,7 @@
               )}
             </div>
           </TableHeadCell>
-          {#each documents as doc, i (`relateddocuments-1-${uid}-${i}`)}
+          {#each documents?.slice(0, max) as doc, i (`relateddocuments-1-${uid}-${i}`)}
             {@const d = doc as RelatedDocument}
             {@const sameVersion = hasDocWithSameVersion(d)}
             <TableHeadCell class="text-center align-top">
@@ -296,6 +297,20 @@
               </div>
             </TableHeadCell>
           {/each}
+          {#if documents && max <= documents.length}
+            <TableHeadCell class="">
+              <Button
+                onclick={() => {
+                  if (!documents) return;
+                  max = Math.min(max + 50, documents?.length);
+                }}
+                class="h-6 text-nowrap"
+                color="light"
+              >
+                Load more...
+              </Button>
+            </TableHeadCell>
+          {/if}
         {/snippet}
         {#snippet mainSlot()}
           {#each cves as cve, j (`relateddocuments-1-${uid}-${j}`)}
@@ -307,7 +322,7 @@
               >
                 {cve}
               </TableBodyCell>
-              {#each documents as doc, k (`relateddocuments-1-${uid}-${k}`)}
+              {#each documents?.slice(0, max) as doc, k (`relateddocuments-1-${uid}-${k}`)}
                 <TableBodyCell class={baseClass}>
                   <div class="flex justify-center">
                     {#if (doc as RelatedDocument).cve.includes(cve)}
