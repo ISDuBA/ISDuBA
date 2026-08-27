@@ -268,21 +268,17 @@
   </script>
 </svelte:head>
 
-<div class="bg-primary-700 flex h-screen dark:bg-gray-800 dark:text-white">
-  <div>
-    <SideNav></SideNav>
-  </div>
-  <main
-    class="mt-6 flex max-h-screen w-full flex-col overflow-auto bg-white px-2 pb-6 lg:px-6 dark:bg-gray-800"
-  >
-    {#if appStore.state.app.userManager}
-      <Router
-        {routes}
-        onConditionsFailed={conditionsFailed}
-        onRouteLoaded={routeLoaded}
-        {onRouteLoading}
-      />
-    {/if}
-    <ErrorMessage error={data.loadConfigError ?? null}></ErrorMessage>
-  </main>
-</div>
+<SideNav />
+<main
+  class="mt-6 flex max-h-screen w-full flex-col overflow-auto bg-white px-2 pb-6 lg:px-6 dark:bg-gray-800"
+>
+  {#if appStore.state.app.userManager}
+    <Router
+      {routes}
+      onConditionsFailed={conditionsFailed}
+      onRouteLoaded={routeLoaded}
+      {onRouteLoading}
+    />
+  {/if}
+  <ErrorMessage error={data.loadConfigError ?? null}></ErrorMessage>
+</main>
