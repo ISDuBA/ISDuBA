@@ -14,6 +14,7 @@
   import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import { Check, Copy } from "@boxicons/svelte";
   import type { SSVCEvent } from "../events";
+  import VersionLink from "../VersionLink.svelte";
 
   interface Props {
     ssvcData: SSVCEvent;
@@ -100,7 +101,7 @@
           {getLabel()}
         </small>
         <span class="ml-1 text-xs text-slate-400">
-          on version: {ssvcData.documentVersion}
+          <VersionLink documentID={ssvcData.documents_id} />
         </span>
       </div>
     </div>

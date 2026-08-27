@@ -582,6 +582,8 @@
   let openForwardModal = $state(false);
 
   setContext("advisory", () => relatedDocuments);
+  setContext("advisoryVersions", () => advisoryVersions);
+  setContext("params", () => params);
 </script>
 
 <svelte:head>

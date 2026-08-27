@@ -19,6 +19,7 @@
   import { untrack } from "svelte";
   import { Edit } from "@boxicons/svelte";
   import type { CommentEvent } from "../events";
+  import VersionLink from "../VersionLink.svelte";
 
   interface Props {
     comment: CommentEvent;
@@ -92,7 +93,11 @@
       <small class="ml-1 flex-grow"
         >{fullHistory ? `Comment (${comment.commentator})` : `${comment.commentator}`}
       </small>
-      <small class="ml-1 text-xs text-slate-400">on version: {comment.documentVersion}</small>
+      <small class="ml-1 text-xs">
+        {#if comment.documentVersion}
+          <VersionLink documentID={comment.document_id} />
+        {/if}
+      </small>
     </div>
     {#if !isEditing}
       <div class="mt-1 flex flex-row items-center">
