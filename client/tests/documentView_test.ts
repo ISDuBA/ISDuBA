@@ -88,6 +88,13 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByRole("button", { name: "Show changes" }).click();
   await page.getByRole("button", { name: "Inline" }).click();
   await page.getByRole("button", { name: "Hide changes" }).click();
+
+  // Switch version and check if there is a link at the comment that leads to the previous document
+  await page
+    .getByRole("button", { disabled: false, description: /Switch to version.*/ })
+    .first()
+    .click();
+  await expect(page.getByRole("link", { name: /on version: .*/ }).first()).toBeVisible();
 });
 
 test("Tabs with details about document are working", async ({ page }) => {
