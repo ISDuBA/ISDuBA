@@ -18,9 +18,10 @@
   import { getReadableDateString } from "../../CSAFWebview/helpers";
   import { untrack } from "svelte";
   import { Edit } from "@boxicons/svelte";
+  import type { CommentEvent } from "../events";
 
   interface Props {
-    comment: any;
+    comment: CommentEvent;
     fullHistory: boolean;
     workflowState: string;
     onCommentUpdated: (newComment: string) => void;
@@ -89,7 +90,7 @@
         >{getReadableDateString(comment.time, intlFormat)}</small
       >
       <small class="ml-1 flex-grow"
-        >{fullHistory ? `Comment (${comment.actor})` : `${comment.actor}`}
+        >{fullHistory ? `Comment (${comment.commentator})` : `${comment.commentator}`}
       </small>
       <small class="ml-1 text-xs text-slate-400">on version: {comment.documentVersion}</small>
     </div>
@@ -97,7 +98,7 @@
       <div class="mt-1 flex flex-row items-center">
         <div style="white-space: pre-wrap">{comment.message}</div>
         <div class="ml-auto">
-          {#if appStore.state.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
+          {#if appStore.state.app.tokenParsed?.preferred_username === comment.commentator && isCommentingAllowed}
             <button class="h-7 !p-2" onclick={toggleEditing} aria-label="Edit comment">
               <Edit />
             </button>

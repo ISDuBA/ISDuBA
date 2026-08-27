@@ -13,17 +13,10 @@
   import { getReadableDateString } from "../../CSAFWebview/helpers";
   import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import { Check, Copy } from "@boxicons/svelte";
-
-  type SsvcData = {
-    prev_ssvc?: string;
-    ssvc?: string;
-    actor: string;
-    documentVersion: number;
-    time: string;
-  };
+  import type { SSVCEvent } from "../events";
 
   interface Props {
-    ssvcData: SsvcData;
+    ssvcData: SSVCEvent;
   }
   let { ssvcData }: Props = $props();
 
