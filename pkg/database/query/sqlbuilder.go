@@ -86,13 +86,15 @@ func (classicMode) projectionCommon(
 	case "event_state":
 		b.WriteString("events_log.state::text AS event_state")
 	case "versions":
-		b.WriteString(versionsCount + `AS versions`)
+		b.WriteString(versionsCount)
+		b.WriteString(` AS versions`)
 	case "comments":
 		switch sb.mode() {
 		case AdvisoryMode:
 			b.WriteString(name)
 		case DocumentMode:
-			b.WriteString(commentsCountDocuments + `AS comments`)
+			b.WriteString(commentsCountDocuments)
+			b.WriteString(` AS comments`)
 		case EventMode:
 			b.WriteString(commentsCountEvents + `AS comments`)
 		}

@@ -287,10 +287,6 @@ func (cs columnSource) String() string {
 	return strings.Join(tables, "|")
 }
 
-func existsDocumentColumn(name string, mode ParserMode) bool {
-	return findDocumentColumn(name, mode) != nil
-}
-
 // findDocumentColumn returns a column if it exists.
 func findDocumentColumn(name string, mode ParserMode) *documentColumn {
 	for i := range documentColumns {
