@@ -16,13 +16,19 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await expect(page.getByText("Avendor-advisory-0004", { exact: true })).toBeVisible();
-  await expect(page.getByText("Avendor-advisory-0005", { exact: true })).toBeVisible();
+  const firstDoc = page.getByText("Avendor-advisory-0004", { exact: true });
+  await firstDoc.scrollIntoViewIfNeeded();
+  await expect(firstDoc).toBeVisible();
+  const secondDoc = page.getByText("Avendor-advisory-0005", { exact: true });
+  await secondDoc.scrollIntoViewIfNeeded();
+  await expect(secondDoc).toBeVisible();
 });
 
 test("Advisory view is working", async ({ page }) => {
   test.slow(); // Easy way to triple the default timeout
-  await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
+  const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
+  await doc.scrollIntoViewIfNeeded();
+  await doc.click({ force: true });
   await expect(page.getByText("5.7 (MEDIUM)")).toBeVisible();
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
