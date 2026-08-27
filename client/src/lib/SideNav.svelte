@@ -17,6 +17,15 @@
   import PrevNext from "./Search/PrevNext.svelte";
   import CSidebarItem from "./Components/CSidebarItem.svelte";
   import { setContext } from "svelte";
+  import {
+    BarChartSquare,
+    Dashboard,
+    GitRepoForked,
+    ListUlSquare,
+    Menu,
+    Sitemap,
+    User
+  } from "@boxicons/svelte";
 
   let activeUrl = $derived("/" + page.url.hash);
   let searchLabel = $derived(
@@ -81,7 +90,7 @@
             <!-- Entries which are available after login should go here-->
             <CSidebarItem label="Dashboard" href="/#/">
               {#snippet icon()}
-                <i class="bx bxs-dashboard"></i>
+                <Dashboard pack="filled" />
               {/snippet}
             </CSidebarItem>
             {#if appStore.state.app.search.searchURL}
@@ -96,13 +105,13 @@
                 href={"#" + appStore.state.app.search.searchURL}
               >
                 {#snippet icon()}
-                  <i class="bx bx-spreadsheet"></i>
+                  <ListUlSquare />
                 {/snippet}
               </CSidebarItem>
             {:else}
               <CSidebarItem label={searchLabel} href="/#/search">
                 {#snippet icon()}
-                  <i class="bx bx-spreadsheet"></i>
+                  <ListUlSquare />
                 {/snippet}
               </CSidebarItem>
             {/if}
@@ -112,20 +121,20 @@
             {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager() || appStore.isImporter()}
               <CSidebarItem label="Sources" href="/#/sources">
                 {#snippet icon()}
-                  <i class="bx bx-git-repo-forked"></i>
+                  <GitRepoForked />
                 {/snippet}
               </CSidebarItem>
             {/if}
             {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
               <CSidebarItem label="Aggregators" href="/#/sources/aggregators">
                 {#snippet icon()}
-                  <i class="bx bx-sitemap"></i>
+                  <Sitemap />
                 {/snippet}
               </CSidebarItem>
             {/if}
             <CSidebarItem label="Statistics" href="/#/statistics">
               {#snippet icon()}
-                <i class="bx bx-bar-chart-square"></i>
+                <BarChartSquare />
               {/snippet}
             </CSidebarItem>
             {#if !appStore.state.app.sessionExpired}
@@ -134,7 +143,7 @@
                 href="/#/login"
               >
                 {#snippet icon()}
-                  <i class="bx bx-user"></i>
+                  <User />
                 {/snippet}
               </CSidebarItem>
             {/if}
@@ -146,9 +155,9 @@
       <button
         onclick={toggleDrawer}
         aria-label={drawerOpen ? "open navigation" : "close navigation"}
+        title={drawerOpen ? "open navigation" : "close navigation"}
       >
-        <i title={drawerOpen ? "open navigation" : "close navigation"} class="bx bx-menu text-2xl"
-        ></i>
+        <Menu class="bx bx-menu text-2xl" />
       </button>
     </div>
   </div>

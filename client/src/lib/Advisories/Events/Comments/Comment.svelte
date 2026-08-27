@@ -17,6 +17,7 @@
   import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
   import { getReadableDateString } from "../../CSAFWebview/helpers";
   import { untrack } from "svelte";
+  import { Edit } from "@boxicons/svelte";
 
   interface Props {
     comment: any;
@@ -98,7 +99,7 @@
         <div class="ml-auto">
           {#if appStore.state.app.tokenParsed?.preferred_username === comment.actor && isCommentingAllowed}
             <button class="h-7 !p-2" onclick={toggleEditing} aria-label="Edit comment">
-              <i class="bx bx-edit text-lg"></i>
+              <Edit />
             </button>
           {/if}
         </div>

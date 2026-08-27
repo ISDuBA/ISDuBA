@@ -11,6 +11,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { advisorySearchState } from "../advisory.svelte";
+  import { ChevronDown, ChevronUp } from "@boxicons/svelte";
 
   interface Props {
     header?: string;
@@ -79,13 +80,6 @@
       }, 200);
     }
   };
-  let icon = $derived.by(() => {
-    if (visibility === "block") {
-      return "bx-chevron-down";
-    } else {
-      return "bx-chevron-right";
-    }
-  });
 
   const getClass = (level: number) => {
     switch (level) {
@@ -118,7 +112,11 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div {title} id={header}>
     <div class="inline-flex items-center" onclick={toggle}>
-      <i class="bx {getClass(level)} {icon}"></i>
+      {#if visibility === "block"}
+        <ChevronDown class={getClass(level)} />
+      {:else}
+        <ChevronUp class={getClass(level)} />
+      {/if}
       <div class={getClass(level)}>
         {#if headerSlot}
           {@render headerSlot()}

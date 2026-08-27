@@ -20,6 +20,7 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
+  import { Check, X } from "@boxicons/svelte";
 
   interface Props {
     element: Node;
@@ -43,8 +44,10 @@
 {/snippet}
 
 {#if element}
-  {#if tag === "i"}
-    <i class={(element as HTMLElement).classList.value}></i>
+  {#if tag === "check"}
+    <Check />
+  {:else if tag === "x"}
+    <X />
   {:else if element.nodeType === Node.TEXT_NODE}
     {element.textContent}
   {:else if tag === "h1"}

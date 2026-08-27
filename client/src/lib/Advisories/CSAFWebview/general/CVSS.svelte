@@ -8,31 +8,36 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import type { CVSSTextualRating } from "$lib/Statistics/statistics";
+  import { getCVSSTextualRating } from "../vulnerabilities/vulnerability/scores/cvss";
+  import { AlertTriangle } from "@boxicons/svelte";
 
   interface Props {
     baseScore?: string;
     baseSeverity?: string;
+    hideBaseScore?: boolean;
+    hideBaseSeverity?: boolean;
   }
-  let { baseScore, baseSeverity }: Props = $props();
+  let {
+    baseScore,
+    baseSeverity,
+    hideBaseScore = false,
+    hideBaseSeverity = false
+  }: Props = $props();
 
-  const getCVSSTextualRating = (CVSS: number): CVSSTextualRating => {
-    if (CVSS === 0) {
-      return "None";
-    } else if (CVSS <= 3.9) {
-      return "Low";
-    } else if (CVSS <= 6.9) {
-      return "Medium";
-    } else if (CVSS <= 8.9) {
-      return "High";
-    } else {
-      return "Critical";
+  let invalid: boolean = $derived.by(() => {
+    if (
+      baseSeverity &&
+      baseScore != undefined &&
+      baseSeverity?.toLowerCase() !== getCVSSTextualRating(Number(baseScore)).toLowerCase()
+    ) {
+      return true;
     }
-  };
+    return false;
+  });
 
   const getClass = (severity: string | undefined, score: string | undefined) => {
     if (severity && score) {
-      if (severity.toLowerCase() !== getCVSSTextualRating(Number(score)).toLowerCase()) {
+      if (invalid) {
         return "";
       } else {
         return severity.toLowerCase();
@@ -49,11 +54,20 @@
 
 {#if (baseScore !== null && baseScore !== undefined) || baseSeverity !== undefined}
   <div class={"score " + getClass(baseSeverity, baseScore)}>
-    <span class="baseScore">{baseScore}</span>
-    {#if (baseSeverity && baseScore === null) || baseScore === undefined}
-      <span class="baseSeverity">{baseSeverity}</span>
-    {:else if baseSeverity}
-      <span class="baseSeverity">({baseSeverity})</span>
+    {#if !hideBaseScore}
+      <span class="baseScore">{baseScore}</span>
+    {/if}
+    {#if !hideBaseSeverity}
+      {#if (baseSeverity && baseScore === null) || baseScore === undefined || hideBaseScore}
+        <span class="baseSeverity">{baseSeverity}</span>
+      {:else if baseSeverity}
+        <span class="baseSeverity">({baseSeverity})</span>
+      {/if}
+    {/if}
+    {#if invalid}
+      <span title="Vulnerability score and severity do not match">
+        <AlertTriangle aria-hidden="true" />
+      </span>
     {/if}
   </div>
 {/if}

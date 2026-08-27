@@ -23,6 +23,7 @@
   import { addSlashes } from "$lib/utils";
   import Link from "$lib/Components/Link.svelte";
   import InconsistencyMessage from "./InconsistencyMessage.svelte";
+  import { AlertCircle, Check } from "@boxicons/svelte";
 
   interface Related {
     [key: string]: string[];
@@ -204,7 +205,7 @@
   {:else if document && documents && cves}
     {#if Object.keys(cves).length === 0}
       <div class="mb-2 font-bold">
-        <i class="bx bx-error-circle" aria-hidden="true"></i>
+        <AlertCircle aria-hidden="true" />
         <span>The document {document?.tracking?.id} has no related documents.</span>
       </div>
     {:else}
@@ -266,9 +267,9 @@
               {#each Object.values(documents) as doc, k (`relateddocuments-1-${uid}-${k}`)}
                 <TableBodyCell class={baseClass}>
                   {#if (doc as any).cve.includes(cve)}
-                    <i
-                      class={`${baseClass} bx bx-check text-2xl ${cve && cve === params.cve ? "!font-bold" : ""}`}
-                    ></i>
+                    <Check
+                      class={`${baseClass} text-2xl ${cve && cve === params.cve ? "!font-bold" : ""}`}
+                    />
                   {/if}
                 </TableBodyCell>
               {/each}

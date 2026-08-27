@@ -17,6 +17,7 @@
   import { getContext } from "svelte";
   import Link from "$lib/Components/Link.svelte";
   import SearchableText from "../SearchableText.svelte";
+  import { ArrowOutUpRightSquare, Link as LinkIcon } from "@boxicons/svelte";
 
   interface Props {
     basePath: string;
@@ -70,9 +71,15 @@
       {#if relatedDocuments?.()}
         {@const len = Object.keys(relatedDocuments()).length}
         {#if len > 0}
-          <Button onclick={openRelatedDocuments} color="light" size="xs" class="h-7">
+          <Button
+            onclick={openRelatedDocuments}
+            color="light"
+            size="xs"
+            class="h-7"
+            title="Open related documents"
+          >
             <div class="flex items-center">
-              <i class="bx bx-link-alt bx-rotate-90"></i>
+              <LinkIcon rotate={90} />
               {len}
             </div>
           </Button>
@@ -90,7 +97,7 @@
       <div class={cellStyleValue}>
         {#if publisherNamespace}
           <Link href={publisherNamespace} class="underline">
-            <i class="bx bx-link"></i>
+            <ArrowOutUpRightSquare />
             <SearchableText text={publisherNamespace} textPath="/document/publisher/namespace" />
           </Link>
         {/if}
@@ -157,7 +164,7 @@
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
             <Link href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
-              <i class="bx bx-link"></i>
+              <ArrowOutUpRightSquare />
               <SearchableText
                 text={appStore.state.webview.doc.aggregateSeverity.namespace}
                 textPath="/document/aggregate_severity/namespace"

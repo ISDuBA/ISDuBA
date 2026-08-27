@@ -12,6 +12,7 @@
   import { Label, Input } from "flowbite-svelte";
   import { vectorStart } from "./SSVCCalculator";
   import { onMount, tick } from "svelte";
+  import { CheckCircle, XCircle } from "@boxicons/svelte";
 
   interface Props {
     autofocus: boolean;
@@ -146,9 +147,9 @@
         class:dark:text-green-400={minLengthReached}
       >
         {#if minLengthReached}
-          <i class="bx bx-check-circle"></i>
+          <CheckCircle />
         {:else}
-          <i class="bx bx-x-circle"></i>
+          <XCircle />
         {/if}
         <span>At least 5 key pairs</span>
       </div>
@@ -160,9 +161,9 @@
         class:dark:text-green-400={containsValidDate}
       >
         {#if containsValidDate}
-          <i class="bx bx-check-circle"></i>
+          <CheckCircle />
         {:else}
-          <i class="bx bx-x-circle"></i>
+          <XCircle />
         {/if}
         <span>Contains valid date (yyyy-mm-ddThh:mm:ssZ) after last key pair</span>
       </div>
@@ -174,9 +175,9 @@
         class:dark:text-green-400={endsWithSlash}
       >
         {#if endsWithSlash}
-          <i class="bx bx-check-circle"></i>
+          <CheckCircle />
         {:else}
-          <i class="bx bx-x-circle"></i>
+          <XCircle />
         {/if}
         <span>Ends with "/"</span>
       </div>

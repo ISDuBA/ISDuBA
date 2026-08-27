@@ -14,6 +14,7 @@
   import CCheckbox from "$lib/Components/CCheckbox.svelte";
   import { onMount, untrack } from "svelte";
   import CFileinput from "$lib/Components/CFileinput.svelte";
+  import { X } from "@boxicons/svelte";
 
   // Define enum first
   enum AgeUnit {
@@ -283,7 +284,7 @@
           class="w-fit rounded-none rounded-r-lg border-l-0 p-1 dark:border-gray-500 dark:bg-gray-600"
           color="light"
         >
-          <i class="bx bx-x"></i>
+          <X />
         </Button>
       </div>
     </AccordionItem>
@@ -364,7 +365,7 @@
             disabled={source.ignore_patterns.length === 0 ||
               (source.ignore_patterns.length === 1 && source.ignore_patterns[0] === "")}
           >
-            <i class="bx bx-x"></i>
+            <X />
           </Button>
         </div>
       {/each}
@@ -389,25 +390,15 @@
             oninput={onChangedHeaders}
             bind:value={header[1]}
           />
-          {#if headers.length > 1}
-            <Button
-              onclick={() => removeHeader(index)}
-              title="Remove field-name-field-value-pair"
-              class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
-              color="light"
-            >
-              <i class="bx bx-x"></i>
-            </Button>
-          {:else}
-            <Button
-              title="Remove key-value-pair"
-              class=" row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
-              color="light"
-              disabled={true}
-            >
-              <i class="bx bx-x"></i>
-            </Button>
-          {/if}
+          <Button
+            onclick={() => removeHeader(index)}
+            title="Remove key-value-pair"
+            class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
+            color="light"
+            disabled={headers.length > 1}
+          >
+            <X />
+          </Button>
         </div>
       {/each}
     </AccordionItem>

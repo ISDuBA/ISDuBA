@@ -14,6 +14,7 @@
   import { addSlashes } from "$lib/utils";
   import type { ErrorDetails } from "$lib/Errors/error";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { AlertCircle } from "@boxicons/svelte";
 
   interface Props {
     params: any;
@@ -69,7 +70,7 @@
 
 <div class="flex flex-col gap-6">
   <div class="mb-2 font-bold">
-    <i class="bx bx-error-circle" aria-hidden="true"></i>
+    <AlertCircle aria-hidden="true" />
     <span>The URL doesn't reference any document</span>
   </div>
   <P>

@@ -130,3 +130,8 @@ Webview styles
   background: #000;
   color: #33ff00;
 }
+
+svg {
+  height: auto;
+  width: 16px;
+}

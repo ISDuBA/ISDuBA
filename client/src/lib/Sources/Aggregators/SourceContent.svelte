@@ -16,6 +16,7 @@
   import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import { fetchSource } from "../source";
+  import { Circle, GitRepoForked, Plus } from "@boxicons/svelte";
 
   interface Props {
     source: SourceInfo;
@@ -53,19 +54,19 @@
 
 <div class="mb-2 flex items-center gap-2 text-sm text-black dark:text-white">
   {#if source.id}
-    <i class="bx bx-git-repo-forked text-lg"></i>
+    <GitRepoForked />
   {/if}
   {source.name}
   {#if source.name !== "Not configured"}
     {#if isActive}
-      <i class="bx bxs-circle"></i>
+      <Circle pack="filled" />
     {:else if isActive === false}
-      <i class="bx bx-circle"></i>
+      <Circle />
     {/if}
   {/if}
   {#if entry.feedsSubscribed === 0 && appStore.isSourceManager()}
     <Button href={`/#/sources/new/${encodeURIComponent(entry.url)}`} color="primary" size="xs">
-      <i class="bx bx-plus"></i>
+      <Plus />
       <span>As new source</span>
     </Button>
   {/if}

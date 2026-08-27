@@ -9,6 +9,7 @@
 -->
 
 <script lang="ts">
+  import { X } from "@boxicons/svelte";
   import { Button, Label } from "flowbite-svelte";
 
   interface Props {
@@ -86,7 +87,7 @@
       class="w-fit cursor-pointer rounded-none rounded-r-lg border-l-0 p-1 disabled:cursor-not-allowed dark:border-gray-500 dark:bg-gray-600"
       color="light"
     >
-      <i class="bx bx-x"></i>
+      <X />
     </Button>
   {/if}
 </div>

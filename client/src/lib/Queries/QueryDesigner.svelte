@@ -36,6 +36,15 @@
   import Sortable from "sortablejs";
   import TypeToggle from "$lib/Search/TypeToggle.svelte";
   import FilterHelpLink from "$lib/Search/FilterHelpLink.svelte";
+  import {
+    ArrowDownAZ,
+    ArrowUpAZ,
+    Minus,
+    Save,
+    StopCircle,
+    TestTube,
+    Undo
+  } from "@boxicons/svelte";
 
   interface Props {
     params?: any;
@@ -465,13 +474,13 @@
               {#if order}
                 {order[0] + 1}
                 {#if order[1] === ORDERDIRECTIONS.ASC}
-                  <i class="bx bx-sort-a-z"></i>
+                  <ArrowDownAZ />
                 {/if}
                 {#if order[1] === ORDERDIRECTIONS.DESC}
-                  <i class="bx bx-sort-z-a"></i>
+                  <ArrowUpAZ />
                 {/if}
               {:else}
-                <i class="bx bx-minus"></i>
+                <Minus />
               {/if}
             </button>
           </div>
@@ -502,8 +511,8 @@
         <ErrorMessage error={errorMessage}></ErrorMessage>
         <div class="my-2 ml-auto flex flex-row flex-wrap gap-3">
           {#if !loading}
-            <Button onclick={testQuery} color="light"
-              ><i class="bx bx-test-tube me-2"></i> Test query</Button
+            <Button onclick={testQuery} color="light">
+              <TestTube class="me-2" /> Test query</Button
             >
           {/if}
           {#if loading}
@@ -513,7 +522,7 @@
                 loading = false;
                 unsetMessages();
               }}
-              color="light"><i class="bx bx-stop-circle"></i> Abort query</Button
+              color="light"><StopCircle /> Abort query</Button
             >
           {/if}
           <Button
@@ -525,10 +534,10 @@
               }
               queryCount = null;
             }}
-            color="light"><i class="bx bx-undo me-2 text-xl"></i> Reset</Button
+            color="light"><Undo class="me-2 text-xl" /> Reset</Button
           >
           <Button disabled={disableSave} onclick={saveQuery} color="green"
-            ><i class="bx bxs-save me-2"></i> Save</Button
+            ><Save class="me-2" pack="filled" /> Save</Button
           >
         </div>
       </div>

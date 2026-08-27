@@ -48,12 +48,7 @@ export type LastUpdated = string;
  * Provides information about the category of publisher releasing the document.
  */
 export type CategoryOfPublisher =
-  | "coordinator"
-  | "discoverer"
-  | "other"
-  | "translator"
-  | "user"
-  | "vendor";
+  "coordinator" | "discoverer" | "other" | "translator" | "user" | "vendor";
 /**
  * Information on how to contact the publisher, possibly including details such as web sites, email addresses, phone numbers, and postal mail addresses.
  */

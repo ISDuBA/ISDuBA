@@ -21,6 +21,7 @@
   import Activity from "./Activity.svelte";
   import { Button, Spinner } from "flowbite-svelte";
   import { push } from "$routes/router.svelte";
+  import { GitRepoForked } from "@boxicons/svelte";
 
   interface MergedAttention extends Attention {
     isSource: boolean;
@@ -105,7 +106,7 @@
     color="light"
     class="h-fit w-fit rounded-md !px-2 !py-1"
   >
-    <i class="bx bx-git-repo-forked text-lg"></i>
+    <GitRepoForked size="xs" />
   </Button>
   {#if attentionCount > 10}<div class="">…There are more events</div>{/if}
   <ErrorMessage error={loadAttentionError}></ErrorMessage>

@@ -9,6 +9,8 @@
 -->
 
 <script lang="ts">
+  import { Minus, Plus } from "@boxicons/svelte";
+
   interface Props {
     content: any[];
     isSideBySideViewActivated?: boolean;
@@ -37,7 +39,7 @@
   {#if sideBySideContent.length > 0}
     <div class="flex justify-between gap-2 dark:text-gray-300">
       <div class="flex w-6/12 items-center gap-1">
-        <i class="bx bx-minus"></i>
+        <Minus />
         <div class="h-fit w-fit bg-red-200 dark:bg-[#412732]">
           {#each sideBySideContent[0] as part, i (`replaceoperation-1-${uid}-${i}`)}
             <span>{part.t}</span>
@@ -45,7 +47,7 @@
         </div>
       </div>
       <div class="flex w-6/12 items-center gap-1">
-        <i class="bx bx-plus"></i>
+        <Plus />
         <div class="h-fit w-fit bg-green-200 dark:bg-[#1a363c]">
           {#each sideBySideContent[1] as part, i (`replaceoperation-2-${uid}-${i}`)}
             <span>{part.t}</span>

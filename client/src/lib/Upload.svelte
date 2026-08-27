@@ -12,6 +12,7 @@
   import { Button, Card, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
   import CFileinput from "./Components/CFileinput.svelte";
+  import { CheckCircle, XCircle } from "@boxicons/svelte";
 
   interface Props {
     cancel: () => any;
@@ -113,9 +114,9 @@
           <ListgroupItem>
             <div class="flex items-center gap-1">
               {#if info?.success}
-                <i class={`bx bx-check-circle ${color}`}></i>
+                <CheckCircle fill={color} />
               {:else if info}
-                <i class={`bx bx-x-circle ${color}`}></i>
+                <XCircle fill={color} />
               {/if}
               <div class="font-bold text-black dark:text-white">{file.name}</div>
             </div>

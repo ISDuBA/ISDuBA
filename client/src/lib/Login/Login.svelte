@@ -15,6 +15,7 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { ArrowOutUpRightSquare, MessageExclamation } from "@boxicons/svelte";
 
   const uid = $props.id();
 
@@ -105,16 +106,19 @@
         >
         {#if appStore.state.app.userManager && !appStore.state.app.isUserLoggedIn}
           {#if appStore.state.app.sessionExpired}
-            <div class="text-orange-700 dark:text-yellow-400">
-              <i class="bx bx-message-alt-error"></i> Your session is expired: {appStore.state.app
-                .sessionExpiredMessage || "Please login"}
+            <div class="flex items-center gap-2 text-orange-700 dark:text-yellow-400">
+              <MessageExclamation />
+              <span
+                >Your session is expired: {appStore.state.app.sessionExpiredMessage ||
+                  "Please login"}
+              </span>
             </div>
           {/if}
-          <Button onclick={login}><i class="bx bx-link-external mr-1"></i> Login</Button>
+          <Button onclick={login}><ArrowOutUpRightSquare class="mr-1" /> Login</Button>
         {/if}
         {#if appStore.state.app.userManager && appStore.state.app.isUserLoggedIn}
-          <Button href={profileUrl}><i class="bx bx-link-external mr-1"></i> Profile</Button>
-          <Button onclick={logout}><i class="bx bx-link-external mr-1"></i> Logout</Button>
+          <Button href={profileUrl}><ArrowOutUpRightSquare class="mr-1" /> Profile</Button>
+          <Button onclick={logout}><ArrowOutUpRightSquare class="mr-1" /> Logout</Button>
         {/if}
         <div class="flex flex-row gap-4">
           <div class="flex flex-grow flex-col">

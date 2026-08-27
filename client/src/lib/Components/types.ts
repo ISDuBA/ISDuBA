@@ -7,12 +7,4 @@
 //  Software-Engineering: 2025 Intevation GmbH <https://intevation.de>
 
 export type FormColorType =
-  | "blue"
-  | "red"
-  | "green"
-  | "purple"
-  | "teal"
-  | "yellow"
-  | "orange"
-  | "primary"
-  | "secondary";
+  "blue" | "red" | "green" | "purple" | "teal" | "yellow" | "orange" | "primary" | "secondary";

@@ -12,6 +12,7 @@
   import Link from "$lib/Components/Link.svelte";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import SearchableText from "../SearchableText.svelte";
+  import { ArrowOutUpRightSquare } from "@boxicons/svelte";
 
   interface Props {
     path: string;
@@ -45,7 +46,7 @@
                 ></SearchableText>
               </p>
               <Link class="underline" href={reference.url}
-                ><i class="bx bx-link"></i>
+                ><ArrowOutUpRightSquare />
                 <SearchableText textPath={`${path}/references[${i}]/url`} text={reference.url}
                 ></SearchableText>
               </Link></TableBodyCell

@@ -11,6 +11,7 @@
   import { Button } from "flowbite-svelte";
   import { advisorySearchState } from "./advisory.svelte";
   import { appStore } from "$lib/store.svelte";
+  import { ChevronDown, ChevronUp } from "@boxicons/svelte";
 
   let index = $derived(advisorySearchState.matchIndex);
   let matches = $derived(advisorySearchState.searchMatches);
@@ -42,7 +43,7 @@
     color="light"
     title="Previous match"
   >
-    <i class="bx bx-chevron-up"></i>
+    <ChevronUp />
   </Button>
   <Button
     onclick={next}
@@ -51,7 +52,7 @@
     color="light"
     title="Next match"
   >
-    <i class="bx bx-chevron-down"></i>
+    <ChevronDown />
   </Button>
   {#if matches.length === 0}
     <small>No matches for "{appStore.state.app.search.term}"</small>

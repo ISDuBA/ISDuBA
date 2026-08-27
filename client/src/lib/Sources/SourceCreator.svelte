@@ -31,6 +31,7 @@
   import type { ErrorDetails } from "$lib/Errors/error";
   import validator from "validator";
   import type { InputProps } from "flowbite-svelte";
+  import { Check, Save } from "@boxicons/svelte";
 
   interface Props {
     params: any;
@@ -194,7 +195,7 @@
     <FeedView feeds={pmdFeeds}></FeedView>
 
     <Button onclick={saveAll} color="green">
-      <i class="bx bxs-save me-2"></i>
+      <Save class="me-2" />
       <span>Save source</span>
     </Button>
   {:else}
@@ -207,7 +208,7 @@
         <Spinner color="gray" size="4"></Spinner>
       </div>
       <Button type="submit" color="light" disabled={validUrl === false}>
-        <i class="bx bx-check me-2"></i>
+        <Check class="me-2" />
         <span>Search and load provider metadata</span>
       </Button>
     </form>

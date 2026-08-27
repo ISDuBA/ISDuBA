@@ -9,6 +9,7 @@
 -->
 <script lang="ts">
   import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
+  import { Analyze, Archive, BookOpen, Certification, Eye, Trash } from "@boxicons/svelte";
 
   interface Props {
     advisoryState: string;
@@ -17,15 +18,15 @@
 </script>
 
 {#if advisoryState === NEW}
-  <i class="bx bxs-certification"></i>
+  <Certification pack="filled" />
 {:else if advisoryState === READ}
-  <i class="bx bx-show"></i>
+  <Eye />
 {:else if advisoryState === ASSESSING}
-  <i class="bx bxs-analyse"></i>
+  <Analyze pack="filled" />
 {:else if advisoryState === REVIEW}
-  <i class="bx bx-book-open"></i>
+  <BookOpen />
 {:else if advisoryState === ARCHIVED}
-  <i class="bx bx-archive"></i>
+  <Archive />
 {:else if advisoryState === DELETE}
-  <i class="bx bx-trash"></i>
+  <Trash />
 {/if}

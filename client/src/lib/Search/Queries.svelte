@@ -25,6 +25,7 @@
     sortedQueries
   } from "./search.svelte";
   import type { Query, SEARCHTYPES } from "$lib/Queries/query";
+  import { Cog } from "@boxicons/svelte";
 
   interface Props {
     onLoadedQueries: () => void;
@@ -130,7 +131,7 @@
           push("/queries");
         }}
       >
-        <i class="bx bx-cog"></i>
+        <Cog />
       </Button>
     </ButtonGroup>
     {#if sortedQueries().length === 0}

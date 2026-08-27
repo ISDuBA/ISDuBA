@@ -22,6 +22,7 @@
   import Sortable from "sortablejs";
   import { request } from "$lib/request";
   import type { Snippet } from "svelte";
+  import { CaretDown, CaretUp, Copy, Trash } from "@boxicons/svelte";
 
   interface Props {
     tableContainerID?: string | null;
@@ -175,18 +176,20 @@
       <TableHead class="dark:bg-gray-800">
         <TableHeadCell class={tablePadding}></TableHeadCell>
         <TableHeadCell class={tablePadding} onclick={() => {}}
-          >Name<i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "name"}
-            class:bx-caret-down={orderBy == "-name"}
-          ></i></TableHeadCell
-        >
+          >Name
+          {#if orderBy == "name"}
+            <CaretUp />
+          {:else if orderBy == "-name"}
+            <CaretDown />
+          {/if}
+        </TableHeadCell>
         <TableHeadCell class={tablePadding} onclick={() => {}}
-          >Description<i
-            class:bx={true}
-            class:bx-caret-up={orderBy == "description"}
-            class:bx-caret-down={orderBy == "-description"}
-          ></i>
+          >Description
+          {#if orderBy == "description"}
+            <CaretUp />
+          {:else if orderBy == "-description"}
+            <CaretDown />
+          {/if}
         </TableHeadCell>
         <TableHeadCell class={tablePadding} onclick={() => {}}>
           <div>Dashboard</div>
@@ -260,12 +263,14 @@
                 {#if !queries.find((q) => q.id === query.id) || isAllowedToClone}
                   <CIconButton
                     title={`clone ${query.name}`}
-                    icon="copy"
                     onClicked={async (event) => {
                       event.stopPropagation();
                       clone(query);
                     }}
-                  ></CIconButton>
+                    disabled
+                  >
+                    <Copy />
+                  </CIconButton>
                 {/if}
                 {#if isAllowedToEdit}
                   <CIconButton
@@ -279,9 +284,10 @@
                       openDeleteModal(querytoDelete);
                     }}
                     title={`delete ${query.name}`}
-                    icon="trash"
                     color="red"
-                  ></CIconButton>
+                  >
+                    <Trash />
+                  </CIconButton>
                 {/if}
               </td>
             </tr>

@@ -10,6 +10,7 @@
 
 <script lang="ts">
   import type { ErrorDetails } from "$lib/Errors/error";
+  import { ChevronDown, ChevronUp } from "@boxicons/svelte";
   import { Alert } from "flowbite-svelte";
   interface Props {
     error: ErrorDetails | null;
@@ -43,9 +44,9 @@
       {#if error.details}
         <button class="cursor-pointer" onclick={() => (showDetails = !showDetails)}>
           {#if showDetails}
-            <i class="bx bx-chevron-up text-2xl"></i>
+            <ChevronUp class="text-2xl" />
           {:else}
-            <i class="bx bx-chevron-down text-2xl"></i>
+            <ChevronDown class="text-2xl" />
           {/if}
         </button>
         {#if showDetails}
