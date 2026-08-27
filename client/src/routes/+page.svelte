@@ -23,7 +23,6 @@
   import NotFound from "$lib/NotFound.svelte";
   import { appStore } from "$lib/store.svelte";
   import { push, replace } from "svelte-spa-router";
-  import Messages from "$lib/Messages/Messages.svelte";
   import Login from "$lib/Login/Login.svelte";
   import QueryDesigner from "$lib/Queries/QueryDesigner.svelte";
   import QueryOverview from "$lib/Queries/Overview.svelte";
@@ -286,5 +285,4 @@
     {/if}
     <ErrorMessage error={data.loadConfigError ?? null}></ErrorMessage>
   </main>
-  <Messages></Messages>
 </div>
