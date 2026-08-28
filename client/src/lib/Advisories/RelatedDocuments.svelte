@@ -302,7 +302,7 @@
               <Button
                 onclick={() => {
                   if (!documents) return;
-                  max = Math.min(max + 50, documents?.length);
+                  max = max + 50;
                 }}
                 class="h-6 text-nowrap"
                 color="light"
