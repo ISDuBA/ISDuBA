@@ -84,7 +84,7 @@ type Manager struct {
 	pmdCache  *pmdCache
 	keysCache *keysCache
 
-	val csaf.RemoteValidator
+	val csaf.RemoteValidatorWithContext
 
 	usedSlots int
 	uniqueID  int64
@@ -181,7 +181,7 @@ func (sur SourceUpdateResult) String() string {
 func NewManager(
 	cfg *config.Config,
 	db *database.DB,
-	val csaf.RemoteValidator,
+	val csaf.RemoteValidatorWithContext,
 ) (*Manager, error) {
 	cipherKey, err := createCipherKey(cfg)
 	if err != nil {

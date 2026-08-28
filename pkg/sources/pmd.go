@@ -82,7 +82,7 @@ func (pc *pmdCache) pmd(url string, cfg *config.Config) *CachedProviderMetadata 
 		}
 	}
 	pmdLoader := csaf.NewProviderMetadataLoader(client)
-	lpmd := pmdLoader.Load(url)
+	lpmd := pmdLoader.LoadWithContext(context.TODO(), url)
 	cpmd := &CachedProviderMetadata{Loaded: lpmd}
 	pc.Set(url, cpmd)
 	return cpmd
