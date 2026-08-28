@@ -297,7 +297,7 @@
               </div>
             </TableHeadCell>
           {/each}
-          {#if documents && max <= documents.length}
+          {#if documents && max < documents.length}
             <TableHeadCell class="">
               <Button
                 onclick={() => {
