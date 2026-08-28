@@ -709,7 +709,6 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 	}
 	parsed, _ := url.Parse(input.URL)
 	switch feedID, err := c.sm.AddFeed(
-		ctx.Request.Context(),
 		input.SourceID,
 		input.Label,
 		parsed,

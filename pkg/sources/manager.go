@@ -1072,7 +1072,6 @@ func (m *Manager) AddSource(
 
 // AddFeed adds a new feed to a source.
 func (m *Manager) AddFeed(
-	ctx context.Context,
 	sourceID int64,
 	label string,
 	url *url.URL,
