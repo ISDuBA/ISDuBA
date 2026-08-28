@@ -38,6 +38,7 @@
   import SearchMatchBar from "./SearchMatchBar.svelte";
   import SearchableText from "./CSAFWebview/SearchableText.svelte";
   import { Check, AlertCircle, ArrowRightStroke } from "@boxicons/svelte";
+  import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
 
   let { params } = $props();
 
@@ -61,7 +62,7 @@
   let advisoryVersions: AdvisoryVersion[] = $state([]);
   let advisoryVersionByDocumentID: any = $state(undefined);
   let advisoryState: string = $state("");
-  let historyEntries: any = $state([]);
+  let historyEntries: Array<CommentEvent | SSVCEvent | OtherEvent> = $state([]);
   let isCommentingAllowed: boolean = $state(false);
   let isSSVCediting = $state(false);
   let position = $state("");
@@ -209,7 +210,7 @@
     }
   };
 
-  const loadComments = async () => {
+  const loadComments = async (): Promise<CommentEvent[] | undefined> => {
     if (!document || !encodedPublisherNamespace || !encodedTrackingID) return;
     if (loadCommentsAbortController) {
       loadCommentsAbortController.abort();
@@ -222,7 +223,7 @@
       loadCommentsAbortController
     );
     if (response.ok) {
-      let comments = await response.content;
+      let comments: CommentEvent[] = await response.content;
       for (let i = 0; i < comments.length; i++) {
         comments[i].documentVersion = advisoryVersionByDocumentID[comments[i].document_id];
       }
@@ -265,7 +266,7 @@
       historyEntries = [];
       return;
     }
-    const comments = await loadComments();
+    const comments: CommentEvent[] | undefined = await loadComments();
     let events = await loadEvents();
     if (!events || !comments) {
       historyEntries = [];
@@ -275,39 +276,41 @@
 
     const ssvcChanges = ssvcData?.ssvcChanges || [];
 
-    const commentsByTime = comments.reduce((o: any, n: any) => {
-      o[`${n.time}:${n.commentator}`] = {
-        message: n.message,
-        id: n.id,
-        documentVersion: n.documentVersion
+    const commentsByTime = comments.reduce((o: any, event: CommentEvent) => {
+      o[`${event.time}:${event.commentator}`] = {
+        commentator: event.commentator,
+        message: event.message,
+        id: event.id,
+        documentVersion: event.documentVersion
       };
       return o;
     }, {});
 
     // Same logic as commentsByTime
-    const ssvcByTime = ssvcChanges.reduce((o: any, n: any) => {
-      o[`${n.changedate}:${n.actor}:${n.documents_id}`] = n;
+    const ssvcByTime = ssvcChanges.reduce((o: any, event: SSVCEvent) => {
+      o[`${event.changedate}:${event.actor}:${event.documents_id}`] = event;
       return o;
     }, {});
 
     const commentsEdited = events
-      .filter((e: any) => {
+      .filter((e: GeneralEvent) => {
         return e.event_type === "change_comment";
       })
-      .map((e: any) => {
+      .map((e: CommentEvent) => {
         return {
           id: e.comment_id,
           time: e.time
         };
       })
-      .reduce((o: any, n: any) => {
-        if (!o[n.id]) o[n.id] = [];
-        o[n.id].push(n.time);
+      .reduce((o: any, event: CommentEvent) => {
+        if (!o[event.id]) o[event.id] = [];
+        o[event.id].push(event.time);
         return o;
       }, {});
     events.map((e: any) => {
       if (e.event_type === "add_comment") {
         const comment = commentsByTime[`${e.time}:${e.actor}`];
+        e["commentator"] = comment.commentator;
         e["message"] = comment.message;
         e["comment_id"] = comment.id;
         e["documentVersion"] = comment.documentVersion;
@@ -325,6 +328,8 @@
           e["ssvc"] = ssvcMatch.ssvc;
           e["prev_ssvc"] = ssvcMatch.ssvc_prev;
           e["documentVersion"] = ssvcMatch.documents_version;
+          e["documents_version"] = ssvcMatch.documents_version;
+          e["documents_id"] = ssvcMatch.documents_id;
         }
       }
 
@@ -577,6 +582,8 @@
   let openForwardModal = $state(false);
 
   setContext("advisory", () => relatedDocuments);
+  setContext("advisoryVersions", () => advisoryVersions);
+  setContext("params", () => params);
 </script>
 
 <svelte:head>
@@ -710,13 +717,13 @@
                 workflowState={advisoryState}
                 onCommentUpdated={(newComment: string, index: number) => {
                   // First update the comment locally so the user can see that editing the comment did work
-                  const event = historyEntries[index];
+                  const event: CommentEvent = historyEntries[index] as unknown as CommentEvent;
                   if (event.event_type === "add_comment") {
                     event.message = newComment;
                   } else {
-                    const originalEvent = historyEntries.find((e: any) => {
+                    const originalEvent: CommentEvent = historyEntries.find((e: any) => {
                       return e.event_type === "add_comment" && event.comment_id === e.comment_id;
-                    });
+                    }) as unknown as CommentEvent;
                     if (originalEvent) {
                       originalEvent.message = newComment;
                     }
