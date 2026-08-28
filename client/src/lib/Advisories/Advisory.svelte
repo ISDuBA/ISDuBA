@@ -778,25 +778,22 @@
           {#if isDiffOpen}
             <Diff showTitle={false}></Diff>
           {:else}
-            <div class="grid auto-cols-fr grid-flow-col gap-6">
-              {#if appStore.state.webview.doc}
-                <Webview
-                  widthOffset={canSeeCommentArea ? 464 : 0}
-                  basePath={"#/advisories/" +
-                    document.publisher?.name +
-                    "/" +
-                    document.tracking?.id +
-                    "/documents/" +
-                    params.id +
-                    "/"}
-                  {position}
-                ></Webview>
-              {:else}
-                <div class="mt-32 ml-32">
-                  <Spinner color="gray" size="8"></Spinner>
-                </div>
-              {/if}
-            </div>
+            {#if appStore.state.webview.doc}
+              <Webview
+                basePath={"#/advisories/" +
+                  document.publisher?.name +
+                  "/" +
+                  document.tracking?.id +
+                  "/documents/" +
+                  params.id +
+                  "/"}
+                {position}
+              ></Webview>
+            {:else}
+              <div class="mt-32 ml-32">
+                <Spinner color="gray" size="8"></Spinner>
+              </div>
+            {/if}
             {#if !canSeeCommentArea && availableForwardSelection.length != 0}
               <div class="my-2 flex w-full flex-row justify-end">
                 <Button
