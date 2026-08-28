@@ -246,7 +246,7 @@ func (l *location) download(m *Manager, f *feed) {
 	}
 
 	// Check signatures
-	keys, err := m.openPGPKeys(f.source)
+	keys, err := m.openPGPKeys(context.Background(), f.source)
 	if err != nil {
 		f.log(m, config.ErrorFeedLogLevel, "Loading OpenPGP keys failed: %v", err)
 	} else if keys.CountEntities() > 0 {

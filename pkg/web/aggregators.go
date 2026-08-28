@@ -76,7 +76,7 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 		return
 	}
 	custom := custom{
-		Subscriptions: c.sm.Subscriptions(ca.SourceURLs()),
+		Subscriptions: c.sm.Subscriptions(ctx.Request.Context(), ca.SourceURLs()),
 	}
 	if name != "" {
 		custom.ID = id
@@ -180,10 +180,12 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 	aAgg := argumentedAggregator{
 		Aggregator: ca.Raw,
 		Custom: custom{
-			ID:            id,
-			Name:          name,
-			Attention:     &attention,
-			Subscriptions: c.sm.Subscriptions(ca.SourceURLs()),
+			ID:        id,
+			Name:      name,
+			Attention: &attention,
+			Subscriptions: c.sm.Subscriptions(
+				ctx.Request.Context(),
+				ca.SourceURLs()),
 		},
 	}
 	ctx.JSON(http.StatusOK, &aAgg)

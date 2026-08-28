@@ -463,10 +463,11 @@ func (m *Manager) checkSources() {
 		urls = append(urls, prefetchedPMD{id: s.id, url: s.url})
 	}
 	go func() {
+		ctx := context.Background()
 		prefetched := make([]prefetchedPMD, 0, len(urls))
 		for i := range urls {
 			s := &urls[i]
-			cpmd := m.PMD(s.url)
+			cpmd := m.PMD(ctx, s.url)
 			if !cpmd.Valid() {
 				slog.Warn("invalid PMD", "url", s.url, "id", s.id)
 				continue
@@ -581,7 +582,7 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 }
 
 // Subscriptions return a list of subscription infos for a given list of source URLs.
-func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
+func (m *Manager) Subscriptions(ctx context.Context, urls []string) []SourceSubscriptions {
 	// Extract data needed to figure out real URLs.
 	type urlID struct {
 		url string
@@ -604,7 +605,7 @@ func (m *Manager) Subscriptions(urls []string) []SourceSubscriptions {
 	}
 	// Resolving external PMDs is too time consuming for the
 	// manager run loop. So do it before.
-	rps.resolve(m.pmdCache, m.cfg)
+	rps.resolve(ctx, m.pmdCache, m.cfg)
 
 	// We can subscribe a source more than once.
 	sources := make(map[string][]int64, len(urlIDs))
@@ -978,6 +979,7 @@ func (m *Manager) asManager(fn func(*Manager, context.Context, int64) error, id 
 
 // AddSource registers a new source.
 func (m *Manager) AddSource(
+	ctx context.Context,
 	name string,
 	url string,
 	rate *float64,
@@ -992,7 +994,7 @@ func (m *Manager) AddSource(
 	clientCertPrivate []byte,
 	clientCertPassphrase []byte,
 ) (int64, error) {
-	cpmd := m.PMD(url)
+	cpmd := m.PMD(ctx, url)
 	if !cpmd.Valid() {
 		return 0, InvalidArgumentError("PMD is invalid")
 	}
@@ -1070,6 +1072,7 @@ func (m *Manager) AddSource(
 
 // AddFeed adds a new feed to a source.
 func (m *Manager) AddFeed(
+	ctx context.Context,
 	sourceID int64,
 	label string,
 	url *url.URL,
@@ -1091,7 +1094,7 @@ func (m *Manager) AddFeed(
 			errCh <- InvalidArgumentError("label already exists")
 			return
 		}
-		pmd, err := m.PMD(s.url).Model()
+		pmd, err := m.PMD(ctx, s.url).Model()
 		if err != nil {
 			errCh <- err
 			return
@@ -1150,8 +1153,8 @@ func (m *Manager) RemoveFeed(feedID int64) error {
 }
 
 // PMD returns the provider metadata from the given url.
-func (m *Manager) PMD(url string) *CachedProviderMetadata {
-	return m.pmdCache.pmd(url, m.cfg)
+func (m *Manager) PMD(ctx context.Context, url string) *CachedProviderMetadata {
+	return m.pmdCache.pmd(ctx, url, m.cfg)
 }
 
 // updater collects updates so that only the first update on

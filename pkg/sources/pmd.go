@@ -52,7 +52,7 @@ func newPMDCache() *pmdCache {
 	}
 }
 
-func (pc *pmdCache) pmd(url string, cfg *config.Config) *CachedProviderMetadata {
+func (pc *pmdCache) pmd(ctx context.Context, url string, cfg *config.Config) *CachedProviderMetadata {
 
 	if cpmd, ok := pc.Get(url); ok {
 		return cpmd
@@ -82,7 +82,7 @@ func (pc *pmdCache) pmd(url string, cfg *config.Config) *CachedProviderMetadata 
 		}
 	}
 	pmdLoader := csaf.NewProviderMetadataLoader(client)
-	lpmd := pmdLoader.LoadWithContext(context.TODO(), url)
+	lpmd := pmdLoader.LoadWithContext(ctx, url)
 	cpmd := &CachedProviderMetadata{Loaded: lpmd}
 	pc.Set(url, cpmd)
 	return cpmd
@@ -195,7 +195,7 @@ func (rps *resolvedPMDs) add(urls ...string) {
 const numURLResolvers = 5
 
 // resolve resolves all urls added with add to PMDs.
-func (rps resolvedPMDs) resolve(cache *pmdCache, cfg *config.Config) {
+func (rps resolvedPMDs) resolve(ctx context.Context, cache *pmdCache, cfg *config.Config) {
 	var (
 		wg        sync.WaitGroup
 		toResolve = make(chan *resolvedPMD)
@@ -203,7 +203,7 @@ func (rps resolvedPMDs) resolve(cache *pmdCache, cfg *config.Config) {
 	worker := func() {
 		defer wg.Done()
 		for tr := range toResolve {
-			cpmd := cache.pmd(tr.url, cfg)
+			cpmd := cache.pmd(ctx, tr.url, cfg)
 			if !cpmd.Valid() {
 				slog.Debug("Invalid PMD", "url", tr.url)
 				continue

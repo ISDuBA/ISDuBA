@@ -297,6 +297,7 @@ func (c *Controller) createSource(ctx *gin.Context) {
 	}
 
 	switch id, err := c.sm.AddSource(
+		ctx.Request.Context(),
 		src.Name,
 		src.URL,
 		src.Rate,
@@ -708,6 +709,7 @@ func (c *Controller) createFeed(ctx *gin.Context) {
 	}
 	parsed, _ := url.Parse(input.URL)
 	switch feedID, err := c.sm.AddFeed(
+		ctx.Request.Context(),
 		input.SourceID,
 		input.Label,
 		parsed,
@@ -1129,7 +1131,7 @@ func (c *Controller) pmd(ctx *gin.Context) {
 	type messages struct {
 		Messages []string `json:"messages"`
 	}
-	cpmd := c.sm.PMD(input.URL)
+	cpmd := c.sm.PMD(ctx.Request.Context(), input.URL)
 	if !cpmd.Valid() {
 		h := messages{}
 		msgs := cpmd.Loaded.Messages

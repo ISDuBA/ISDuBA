@@ -9,6 +9,7 @@
 package sources
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -33,12 +34,12 @@ func newKeysCache(expiration time.Duration) *keysCache {
 
 // openPGPKeys extracts the OpenPGP key from them PMD of a source if not already
 // in cache.
-func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
+func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyRing, error) {
 	if keys, ok := m.keysCache.Get(source.id); ok {
 		return keys, nil
 	}
 	keys, _ := crypto.NewKeyRing(nil)
-	cpmd := m.pmdCache.pmd(source.url, m.cfg)
+	cpmd := m.pmdCache.pmd(ctx, source.url, m.cfg)
 	if !cpmd.Valid() {
 		// Try again soon.
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
