@@ -106,6 +106,10 @@ test("Tabs with details about document are working", async ({ page }) => {
   const scoresCollapsible = await page.getByText("Scores").first();
   await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
   await scoresCollapsible.click({ force: true });
+  const idsCollapsible = page.getByText("IDs").first();
+  await idsCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
+  await idsCollapsible.click({ force: true });
+  expect(page.getByText("GitHub Issue")).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
