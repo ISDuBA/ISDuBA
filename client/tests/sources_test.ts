@@ -21,8 +21,14 @@ test("Sources are working", async ({ page }) => {
   await page.getByLabel("Domain/PMD").fill("intevation.de");
   await checkUrlButton.click();
   const sourceName = `Source ${Math.random()}`;
+
+  await expect(page.getByText("Add new CSAF trusted provider ")).toBeVisible();
+  const nameInput = page.getByLabel("Name");
+  // Name should be pre-filled with the Publisher Name
+  await expect(nameInput).toHaveValue(/Intevation GmbH.*/);
+  await nameInput.clear();
   // The input element listens to input events so we have to use pressSequentially instead of fill
-  await page.getByLabel("Name").pressSequentially(sourceName);
+  await nameInput.pressSequentially(sourceName);
   await page.getByText("Advanced options").click();
   await page.getByLabel("Strict mode").check();
   const unsubscribeButton = await page.getByRole("button", {

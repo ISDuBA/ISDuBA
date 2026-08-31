@@ -28,9 +28,8 @@
   interface Props {
     position: string;
     basePath: string;
-    widthOffset: number;
   }
-  let { position = "", basePath = "", widthOffset = 0 }: Props = $props();
+  let { position = "", basePath = "" }: Props = $props();
 
   const sideScroll = "w-full overflow-y-auto h-max";
   const tabItemActiveClass =
@@ -59,6 +58,7 @@
   };
 
   let closeAll = $state(false);
+  let gridWidth = $state(0);
   let tabOpen: WebviewDataSections = $state({
     vulnerabilitiesOverview: true,
     productTree: false,
@@ -98,8 +98,6 @@
     return open;
   });
 
-  let innerWidth = $state(0);
-
   let maxTabs: number = $derived.by(() => {
     return Object.keys(tabOpen).length;
   });
@@ -118,9 +116,7 @@
     return maxTabs - tabCount;
   });
   // Number of sections that can be shown next to each other
-  let screenPhase: number = $derived(
-    Math.max(0, Math.floor((innerWidth - widthOffset) / 550 - 1 + missingTabs))
-  );
+  let screenPhase: number = $derived(Math.max(0, Math.floor(gridWidth / 750 - 2 + missingTabs)));
 
   $effect(() => {
     const path = getAdvisorySearchHit()?.path;
@@ -190,189 +186,189 @@
   });
 </script>
 
-<svelte:window bind:innerWidth />
-
-<div class="flex w-full flex-col">
-  {#if appStore.state.webview.doc}
-    <div class="mb-4 w-full">
-      <General {basePath} />
-    </div>
-  {/if}
-  {#if aliases}
-    <div class="mb-4">
-      <ValueList label="Aliases" values={aliases} path="/document/tracking/aliases" />
-    </div>
-  {/if}
-  {#if screenPhase < Object.keys(tabOpen).length}
-    <Tabs class="mb-2 flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse">
-      <TabItem
-        activeClass={tabItemActiveClass}
-        inactiveClass={tabItemInactiveClass}
-        open={reallyOpen.vulnerabilitiesOverview}
-        onclick={() => openTab("vulnerabilitiesOverview")}
-        title="Overview"
-      >
-        {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
-          <div class={sideScroll}>
-            <ProductVulnerabilities {basePath} />
-          </div>
-        {:else}
-          <i>
-            <h2>No Vulnerabilities overview</h2>
-            (As no products are connected to vulnerabilities.)
-          </i>
+<div bind:clientWidth={gridWidth} class="grid auto-cols-fr grid-flow-col gap-6">
+  <div class="flex w-full flex-col">
+    {#if appStore.state.webview.doc}
+      <div class="mb-4 w-full">
+        <General {basePath} />
+      </div>
+    {/if}
+    {#if aliases}
+      <div class="mb-4">
+        <ValueList label="Aliases" values={aliases} path="/document/tracking/aliases" />
+      </div>
+    {/if}
+    {#if screenPhase < Object.keys(tabOpen).length}
+      <Tabs class="mb-2 flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse">
+        <TabItem
+          activeClass={tabItemActiveClass}
+          inactiveClass={tabItemInactiveClass}
+          open={reallyOpen.vulnerabilitiesOverview}
+          onclick={() => openTab("vulnerabilitiesOverview")}
+          title="Overview"
+        >
+          {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+            <div class={sideScroll}>
+              <ProductVulnerabilities {basePath} />
+            </div>
+          {:else}
+            <i>
+              <h2>No Vulnerabilities overview</h2>
+              (As no products are connected to vulnerabilities.)
+            </i>
+          {/if}
+        </TabItem>
+        {#if screenPhase < 2}
+          <TabItem
+            activeClass={tabItemActiveClass}
+            inactiveClass={tabItemInactiveClass}
+            open={reallyOpen.productTree}
+            onclick={() => openTab("productTree")}
+            title="Product tree"
+          >
+            <div class={sideScroll}>
+              <ProductTree {basePath} />
+            </div>
+          </TabItem>
         {/if}
-      </TabItem>
-      {#if screenPhase < 2}
-        <TabItem
-          activeClass={tabItemActiveClass}
-          inactiveClass={tabItemInactiveClass}
-          open={reallyOpen.productTree}
-          onclick={() => openTab("productTree")}
-          title="Product tree"
-        >
-          <div class={sideScroll}>
-            <ProductTree {basePath} />
-          </div>
-        </TabItem>
-      {/if}
-      {#if screenPhase < 3}
-        <TabItem
-          activeClass={tabItemActiveClass}
-          inactiveClass={tabItemInactiveClass}
-          open={reallyOpen.vulnerabilities}
-          onclick={() => openTab("vulnerabilities")}
-          title="Vulnerabilities"
-        >
-          <div class={sideScroll}>
-            <Vulnerabilities {basePath} />
-          </div>
-        </TabItem>
-      {/if}
-      {#if screenPhase < 4 && appStore.state.webview.doc?.notes}
-        <TabItem
-          activeClass={tabItemActiveClass}
-          inactiveClass={tabItemInactiveClass}
-          open={reallyOpen.notes}
-          onclick={() => openTab("notes")}
-          title="Notes"
-        >
-          <div class={sideScroll}>
-            <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
-          </div>
-        </TabItem>
-      {/if}
-      {#if screenPhase < 5 && appStore.state.webview.doc?.acknowledgments}
-        <TabItem
-          activeClass={tabItemActiveClass}
-          inactiveClass={tabItemInactiveClass}
-          open={reallyOpen.Acknowledgments}
-          onclick={() => openTab("Acknowledgments")}
-          title="Acknowledgments"
-        >
-          <div class={sideScroll}>
-            <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
-          </div>
-        </TabItem>
-      {/if}
-      {#if screenPhase < 6}
-        <TabItem
-          activeClass={tabItemActiveClass}
-          inactiveClass={tabItemInactiveClass}
-          open={reallyOpen.references}
-          onclick={() => openTab("references")}
-          title="References"
-        >
-          <div class={sideScroll}>
-            <References path="/document" references={appStore.state.webview.doc?.references} />
-          </div>
-        </TabItem>
-      {/if}
-      {#if screenPhase < 7}
-        <TabItem
-          activeClass={tabItemActiveClass}
-          inactiveClass={tabItemInactiveClass}
-          open={reallyOpen.revisionHistory}
-          onclick={() => openTab("revisionHistory")}
-          title="Revision history"
-        >
-          <div class={sideScroll}>
-            <RevisionHistory />
-          </div>
-        </TabItem>
-      {/if}
-    </Tabs>
-  {:else}
+        {#if screenPhase < 3}
+          <TabItem
+            activeClass={tabItemActiveClass}
+            inactiveClass={tabItemInactiveClass}
+            open={reallyOpen.vulnerabilities}
+            onclick={() => openTab("vulnerabilities")}
+            title="Vulnerabilities"
+          >
+            <div class={sideScroll}>
+              <Vulnerabilities {basePath} />
+            </div>
+          </TabItem>
+        {/if}
+        {#if screenPhase < 4 && appStore.state.webview.doc?.notes}
+          <TabItem
+            activeClass={tabItemActiveClass}
+            inactiveClass={tabItemInactiveClass}
+            open={reallyOpen.notes}
+            onclick={() => openTab("notes")}
+            title="Notes"
+          >
+            <div class={sideScroll}>
+              <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
+            </div>
+          </TabItem>
+        {/if}
+        {#if screenPhase < 5 && appStore.state.webview.doc?.acknowledgments}
+          <TabItem
+            activeClass={tabItemActiveClass}
+            inactiveClass={tabItemInactiveClass}
+            open={reallyOpen.Acknowledgments}
+            onclick={() => openTab("Acknowledgments")}
+            title="Acknowledgments"
+          >
+            <div class={sideScroll}>
+              <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+            </div>
+          </TabItem>
+        {/if}
+        {#if screenPhase < 6}
+          <TabItem
+            activeClass={tabItemActiveClass}
+            inactiveClass={tabItemInactiveClass}
+            open={reallyOpen.references}
+            onclick={() => openTab("references")}
+            title="References"
+          >
+            <div class={sideScroll}>
+              <References path="/document" references={appStore.state.webview.doc?.references} />
+            </div>
+          </TabItem>
+        {/if}
+        {#if screenPhase < 7}
+          <TabItem
+            activeClass={tabItemActiveClass}
+            inactiveClass={tabItemInactiveClass}
+            open={reallyOpen.revisionHistory}
+            onclick={() => openTab("revisionHistory")}
+            title="Revision history"
+          >
+            <div class={sideScroll}>
+              <RevisionHistory />
+            </div>
+          </TabItem>
+        {/if}
+      </Tabs>
+    {:else}
+      <div>
+        <FakeButton active>Overview</FakeButton>
+        <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class={sideScroll}>
+          {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+            <ProductVulnerabilities {basePath} />
+          {:else}
+            <i>
+              <h2>No Vulnerabilities overview</h2>
+              (As no products are connected to vulnerabilities.)
+            </i>
+          {/if}
+        </div>
+      </div>
+    {/if}
+  </div>
+  {#if screenPhase > 1}
     <div>
-      <FakeButton active>Overview</FakeButton>
+      <FakeButton active>Product tree</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
-          <ProductVulnerabilities {basePath} />
-        {:else}
-          <i>
-            <h2>No Vulnerabilities overview</h2>
-            (As no products are connected to vulnerabilities.)
-          </i>
-        {/if}
+        <ProductTree {basePath} />
+      </div>
+    </div>
+  {/if}
+  {#if screenPhase > 2}
+    <div>
+      <FakeButton active>Vulnerabilities</FakeButton>
+      <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class={sideScroll}>
+        <Vulnerabilities {basePath} />
+      </div>
+    </div>
+  {/if}
+  {#if screenPhase > 3 && appStore.state.webview.doc?.notes}
+    <div>
+      <FakeButton active>Notes</FakeButton>
+      <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class={sideScroll}>
+        <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
+      </div>
+    </div>
+  {/if}
+
+  {#if screenPhase > 4 && appStore.state.webview.doc?.acknowledgments}
+    <div>
+      <FakeButton active>Acknowledgments</FakeButton>
+      <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class={sideScroll}>
+        <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+      </div>
+    </div>
+  {/if}
+
+  {#if screenPhase > 5}
+    <div>
+      <FakeButton active>References</FakeButton>
+      <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class={sideScroll}>
+        <References path="/document" references={appStore.state.webview.doc?.references} />
+      </div>
+    </div>
+  {/if}
+
+  {#if screenPhase > 6}
+    <div>
+      <FakeButton active>Revision history</FakeButton>
+      <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class={sideScroll}>
+        <RevisionHistory />
       </div>
     </div>
   {/if}
 </div>
-{#if screenPhase > 1}
-  <div>
-    <FakeButton active>Product tree</FakeButton>
-    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-    <div class={sideScroll}>
-      <ProductTree {basePath} />
-    </div>
-  </div>
-{/if}
-{#if screenPhase > 2}
-  <div>
-    <FakeButton active>Vulnerabilities</FakeButton>
-    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-    <div class={sideScroll}>
-      <Vulnerabilities {basePath} />
-    </div>
-  </div>
-{/if}
-{#if screenPhase > 3 && appStore.state.webview.doc?.notes}
-  <div>
-    <FakeButton active>Notes</FakeButton>
-    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-    <div class={sideScroll}>
-      <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
-    </div>
-  </div>
-{/if}
-
-{#if screenPhase > 4 && appStore.state.webview.doc?.acknowledgments}
-  <div>
-    <FakeButton active>Acknowledgments</FakeButton>
-    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-    <div class={sideScroll}>
-      <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
-    </div>
-  </div>
-{/if}
-
-{#if screenPhase > 5}
-  <div>
-    <FakeButton active>References</FakeButton>
-    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-    <div class={sideScroll}>
-      <References path="/document" references={appStore.state.webview.doc?.references} />
-    </div>
-  </div>
-{/if}
-
-{#if screenPhase > 6}
-  <div>
-    <FakeButton active>Revision history</FakeButton>
-    <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-    <div class={sideScroll}>
-      <RevisionHistory />
-    </div>
-  </div>
-{/if}

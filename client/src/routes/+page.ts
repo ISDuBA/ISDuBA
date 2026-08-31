@@ -15,7 +15,7 @@ import { getErrorDetails } from "$lib/Errors/error";
 import type { HttpResponse } from "$lib/types";
 import { appStore } from "$lib/store.svelte";
 
-const loadConfig = () => {
+const loadConfig = (fetch: any) => {
   return new Promise((resolve) => {
     fetch("api/client-config").then((response: any) => {
       if (response.ok) {
@@ -30,9 +30,10 @@ const loadConfig = () => {
   });
 };
 
-export const load: PageLoad = async () => {
+export const load: PageLoad = async ({ fetch }) => {
   const loadPath: string = window.location.hash.replace("#", "");
-  const response: any = await loadConfig();
+  // Svelte displays a warning when not using the provided fetch function.
+  const response: any = await loadConfig(fetch);
   if (!response.ok) {
     const errorResponse: HttpResponse = response;
     errorResponse.error = response.status.toString();

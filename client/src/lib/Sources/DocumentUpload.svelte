@@ -29,6 +29,7 @@
       const formData = new FormData();
       formData.append("file", file);
       const resp = await request(`/api/documents`, "POST", formData);
+      info.requestStatus = resp.status;
       if (resp.error) {
         info.success = false;
         let details = getErrorDetails(`Could not upload file`, resp);

@@ -183,11 +183,11 @@
                     {activity.actor} mentioned you
                   {:else if activity.event === "add_comment"}
                     {activity.actor} added a comment
-                  {:else if activity.event === "add_ssvc"}
+                  {:else if activity.event === "add_sscv"}
                     {activity.actor} added a SSVC "{activity.ssvcLabel}""
                   {:else if activity.event === "import_document"}
                     {activity.actor} imported a document
-                  {:else if activity.event === "change_ssvc" || activity.event === "change_sscv"}
+                  {:else if activity.event === "change_sscv"}
                     {activity.actor} changed a SSVC to "{activity.ssvcLabel}"
                   {:else if activity.event === "change_comment"}
                     {activity.actor} changed a comment
