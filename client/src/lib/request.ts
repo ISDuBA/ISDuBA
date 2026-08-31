@@ -47,65 +47,63 @@ export const request = async (
   formData?: FormData | string | undefined,
   abortController?: AbortController
 ): Promise<HttpResponse> => {
+  const httpResponse: HttpResponse = {
+    ok: true
+  };
   try {
     const token = await getAccessToken();
     const response = await requestData(abortController, path, token, requestMethod, formData);
+    httpResponse.ok = response.ok;
+    httpResponse.status = response.status;
     const contentType = response.headers.get("content-type");
     const isJson = contentType?.includes("application/json");
     let json;
-    if (contentType && isJson) {
+    if (isJson) {
       try {
         json = await response.json();
       } catch (e) {
+        httpResponse.ok = false;
         if (e instanceof DOMException && e.name == "AbortError") {
-          return {
-            error: e.name,
-            ok: false
-          };
+          httpResponse.error = e.name;
+        } else {
+          // 783 used by Shopify to indicate that the request includes a JSON syntax error. See https://shopify.dev/docs/api/usage/response-codes
+          httpResponse.error = "783";
         }
-        return {
-          error: "783", // Used by Shopify to indicate that the request includes a JSON syntax error. See https://shopify.dev/docs/api/usage/response-codes
-          content: `${json.error}`,
-          ok: false
-        };
+        httpResponse.content = `${json.error}`;
+        return httpResponse;
       }
     }
-    const content = contentType && isJson ? json : await response.text();
+    const content = isJson ? json : await response.text();
     if (response.ok) {
-      return { content: content, ok: true };
+      httpResponse.content = content;
+      return httpResponse;
     }
     if (response.status == 401) {
       appStore.setSessionExpired(true);
       appStore.setSessionExpiredMessage("User unauthorized");
       await push("/login");
     }
-    if (contentType && isJson) {
+    httpResponse.error = `${response.status}`;
+    if (isJson) {
       // Handle pmd proxy errors
       if (json.messages) {
-        return { error: `${response.status}`, content: json.messages, ok: false };
+        httpResponse.content = json.messages;
       } else {
-        return { error: `${response.status}`, content: json.error, ok: false };
+        httpResponse.content = json.error;
       }
     }
-    return { error: `${response.status}`, content: content, ok: false };
+    return httpResponse;
   } catch (error: any) {
+    httpResponse.ok = false;
     if (error.name === "AbortError") {
-      return {
-        error: error.name,
-        ok: false
-      };
+      httpResponse.error = error.name;
     }
     if (/fetch/.test(error)) {
-      return {
-        error: "600",
-        content: error,
-        ok: false
-      };
+      httpResponse.error = "600";
+      httpResponse.content = error;
     }
-    return {
-      error: `${error.name}: ${error.message}`,
-      ok: false
-    };
+    httpResponse.error = `${error.name}: ${error.message}`;
+    return httpResponse;
   }
 };
 

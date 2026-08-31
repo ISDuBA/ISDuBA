@@ -43,7 +43,7 @@
   let baseSeverity = $derived(appStore.state.webview.doc?.highestScore?.baseSeverity);
   let baseScore = $derived(appStore.state.webview.doc?.highestScore?.baseScore);
   const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
-  const cellStyleKey = "content-center w-40 py-0";
+  const cellStyleKey = "content-center w-40 max-w-full py-0 text-balance";
 
   const openRelatedDocuments = () => {
     // Use push of external router since we want PrevNext to disappear when user navigates to related
@@ -88,7 +88,7 @@
     </div>
   </div>
   <div class="flex w-full flex-row flex-wrap">
-    <div class="grid w-full grid-cols-[auto_minmax(0,_1fr)] gap-1.5 text-sm">
+    <div class="grid w-full grid-cols-[minmax(140px,1fr)_auto] gap-1.5 text-sm">
       <div class={cellStyleKey}>Publisher name</div>
       <div class={cellStyleValue}>
         <SearchableText text={publisherName} textPath="/document/publisher/name" />

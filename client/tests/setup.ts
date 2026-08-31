@@ -46,10 +46,26 @@ setup("authenticate and upload document", async ({ page }) => {
       "../docs/example-advisories/multiple-versions/3-interim/avendor-advisory-0004.json",
       "../docs/example-advisories/multiple-versions/3-final/avendor-advisory-0004.json"
     ]);
+  await expect(page.getByText("5 files selected")).toBeVisible();
+  await expect(page.getByText("avendor-advisory-0005.json")).toBeVisible();
   await uploadButton.click();
 
   // When the upload is finished the initial text should be displayed again.
   await expect(page.getByText("No file selected")).toBeVisible();
+
+  // A table containing the summary should be visible
+  await expect(page.getByRole("table")).toBeVisible();
+  // The total number should be displayed
+  await expect(page.getByRole("cell").nth(3)).toContainText("5");
+  await expect(page.getByRole("cell").nth(3).getByRole("radio")).toBeChecked();
+
+  // There should be only successful uploads when the test is running in a CI workflow
+  // or at least duplicates when running in a local setup when the documents where already
+  // uploaded. But no other errors.
+  await expect(page.getByRole("cell").nth(2)).toContainText("0");
+  // When the results are filtered to keep only other errors no files should be visible.
+  await page.getByRole("cell").nth(2).getByRole("radio").click();
+  await page.getByText("avendor-advisory-0005.json").waitFor({ state: "hidden" });
 
   const exampleDocumentURL =
     "https://raw.githubusercontent.com/oasis-tcs/csaf/refs/heads/master/csaf_2.0/examples/csaf/bsi-2022-0001.json";
