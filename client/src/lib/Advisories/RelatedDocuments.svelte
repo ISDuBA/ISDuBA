@@ -58,6 +58,7 @@
   let { params = null }: Props = $props();
 
   const uid = $props.id();
+  const STEP = 50;
 
   let document: any | undefined = $state(undefined);
   let documents: RelatedDocument[] | undefined = $state(undefined);
@@ -67,7 +68,7 @@
   let advisoryState: string | undefined = $state(undefined);
   let loadError: ErrorDetails | null = $state(null);
   let isInconsistent = $state(false);
-  let max = $state(50);
+  let max = $state(STEP);
 
   let encodedTrackingID = $derived(
     document?.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
@@ -298,17 +299,31 @@
             </TableHeadCell>
           {/each}
           {#if documents && max < documents.length}
-            <TableHeadCell class="">
-              <Button
-                onclick={() => {
-                  if (!documents) return;
-                  max = max + 50;
-                }}
-                class="h-6 text-nowrap"
-                color="light"
-              >
-                Load more...
-              </Button>
+            <TableHeadCell>
+              <div class="flex flex-col items-center gap-2">
+                <span class="text-gray-500 normal-case">Displaying {max} of {documents.length}</span
+                >
+                <Button
+                  onclick={() => {
+                    if (!documents) return;
+                    max = max + STEP;
+                  }}
+                  class="h-6 text-nowrap"
+                  color="light"
+                >
+                  Load {max + STEP >= documents.length ? documents.length - max : STEP} more...
+                </Button>
+                <Button
+                  onclick={() => {
+                    if (!documents) return;
+                    max = documents.length;
+                  }}
+                  class="h-6 text-nowrap"
+                  color="light"
+                >
+                  Load all...
+                </Button>
+              </div>
             </TableHeadCell>
           {/if}
         {/snippet}
