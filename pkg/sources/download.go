@@ -79,7 +79,7 @@ func (i *inserter) sql(table string) string {
 
 // download fetches the files of a document and stores
 // them into the database.
-func (l *location) download(m *Manager, f *feed) {
+func (l *location) download(ctx context.Context, m *Manager, f *feed) {
 
 	var (
 		strictMode     bool                     // All checks have to be fulfilled.
@@ -123,7 +123,7 @@ func (l *location) download(m *Manager, f *feed) {
 		}
 		if checksum != nil {
 			var check func(*dlStatus, *feed)
-			if remoteChecksum, err := f.source.loadHash(client, m, hashFile); err != nil {
+			if remoteChecksum, err := f.source.loadHash(ctx, client, m, hashFile); err != nil {
 				check = func(ds *dlStatus, f *feed) {
 					ds.set(checksumFailed)
 					f.log(m, config.WarnFeedLogLevel, "Fetching hash %q failed: %v", hashFile, err)
@@ -150,7 +150,7 @@ func (l *location) download(m *Manager, f *feed) {
 			{".sha256", sha256.New},
 		} {
 			guess := l.doc.String() + h.ext
-			if rc, err := f.source.loadHash(client, m, guess); err == nil {
+			if rc, err := f.source.loadHash(ctx, client, m, guess); err == nil {
 				remoteChecksum, checksum = rc, h.cstr()
 				break
 			}
@@ -177,7 +177,7 @@ func (l *location) download(m *Manager, f *feed) {
 	writers = append(writers, &data)
 
 	// Download the CSAF document.
-	resp, err := f.source.httpGet(client, m, l.doc.String())
+	resp, err := f.source.httpGetWithContext(ctx, client, m, l.doc.String())
 	if err != nil {
 		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %v", l.doc, err)
 		return
@@ -246,7 +246,7 @@ func (l *location) download(m *Manager, f *feed) {
 	}
 
 	// Check signatures
-	keys, err := m.openPGPKeys(context.Background(), f.source)
+	keys, err := m.openPGPKeys(ctx, f.source)
 	if err != nil {
 		f.log(m, config.ErrorFeedLogLevel, "Loading OpenPGP keys failed: %v", err)
 	} else if keys.CountEntities() > 0 {
@@ -265,7 +265,7 @@ func (l *location) download(m *Manager, f *feed) {
 			}
 			var err error
 			var signature *crypto.PGPSignature
-			if signature, signatureData, err = f.source.loadSignature(client, m, sign); err != nil {
+			if signature, signatureData, err = f.source.loadSignature(ctx, client, m, sign); err != nil {
 				if signatureCheck {
 					ds.set(signatureFailed)
 					f.log(m, config.ErrorFeedLogLevel,
@@ -292,7 +292,7 @@ func (l *location) download(m *Manager, f *feed) {
 
 	if strictMode && status != allSucceeded {
 		// Don't import, only write the stats.
-		if err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
+		if err := m.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
 			var i inserter
 			status.toInserter(&i)
 			if !f.invalid.Load() {

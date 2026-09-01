@@ -72,7 +72,7 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 		if !u.IsAbs() {
 			u = joinURL(base, u)
 		}
-		res, err := source.httpGet(client, m, u.String())
+		res, err := source.httpGetWithContext(ctx, client, m, u.String())
 		if err != nil {
 			slog.Warn(
 				"Fetching public OpenPGP key failed",
@@ -118,8 +118,8 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 }
 
 // loadSignature loads an ascii armored OpenPGP signature file from a given url.
-func (s *source) loadSignature(client *http.Client, m *Manager, u *url.URL) (*crypto.PGPSignature, []byte, error) {
-	resp, err := s.httpGet(client, m, u.String())
+func (s *source) loadSignature(ctx context.Context, client *http.Client, m *Manager, u *url.URL) (*crypto.PGPSignature, []byte, error) {
+	resp, err := s.httpGetWithContext(ctx, client, m, u.String())
 	if err != nil {
 		return nil, nil, err
 	}

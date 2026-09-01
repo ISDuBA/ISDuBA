@@ -283,13 +283,13 @@ func (m *Manager) findSourceByName(name string) *source {
 
 // refreshFeeds checks if there are feeds that need reloading
 // and does so in that case.
-func (m *Manager) refreshFeeds() {
+func (m *Manager) refreshFeeds(ctx context.Context) {
 	now := time.Now()
 	for f := range m.activeFeeds() {
 		// Does the feed need a refresh?
 		if !f.refreshBlocked && (f.nextCheck.IsZero() || !now.Before(f.nextCheck)) {
 			slog.Debug("refreshing feed", "feed", f.id, "source", f.source.name)
-			f.refresh(m)
+			f.refresh(ctx, m)
 			// Even if there was an error try again later.
 			f.nextCheck = time.Now().Add(m.cfg.Sources.FeedRefresh)
 		}
@@ -341,10 +341,10 @@ func (dj *downloadJob) finish(m *Manager) {
 	}
 }
 
-func (m *Manager) download(wg *sync.WaitGroup) {
+func (m *Manager) download(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range m.jobs {
-		job.l.download(m, job.f)
+		job.l.download(ctx, m, job.f)
 		job.finish(m)
 	}
 }
@@ -370,7 +370,7 @@ func (m *Manager) Run(ctx context.Context) {
 
 	for range m.cfg.Sources.DownloadSlots {
 		wg.Add(1)
-		go m.download(&wg)
+		go m.download(ctx, &wg)
 	}
 
 	// Cleaning feed logs at start.
@@ -388,7 +388,7 @@ out:
 		m.pmdCache.Cleanup()
 		m.keysCache.Cleanup()
 		m.compactDone()
-		m.refreshFeeds()
+		m.refreshFeeds(ctx)
 		m.startDownloads()
 		select {
 		case fn := <-m.fns:

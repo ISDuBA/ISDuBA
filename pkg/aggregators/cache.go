@@ -10,6 +10,7 @@ package aggregators
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,6 +24,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
 	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/gocsaf/csaf/v3/util"
 )
 
 // holdingDuration is the duration how long PMDs are cached.
@@ -48,25 +50,30 @@ func newCache(timeout time.Duration) *Cache {
 }
 
 // GetAggregator fetches a cached aggregator.
-func (c *Cache) GetAggregator(url string, cfg *config.Config) (*CachedAggregator, error) {
+func (c *Cache) GetAggregator(ctx context.Context, url string, cfg *config.Config) (*CachedAggregator, error) {
 	if !strings.HasSuffix(url, "/aggregator.json") {
 		return nil, errors.New("invalid aggregator url")
 	}
 	if ca, ok := c.Get(url); ok {
 		return ca, nil
 	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("User-Agent", sources.UserAgent)
-	client := &http.Client{
+	header := http.Header{}
+	header.Add("User-Agent", sources.UserAgent)
+	baseClient := &http.Client{
 		Transport: cfg.General.Transport(),
 	}
 	if c.timeout > 0 {
-		client.Timeout = c.timeout
+		baseClient.Timeout = c.timeout
 	}
-	resp, err := client.Do(req)
+	client := util.Client(&util.HeaderClient{
+		Client: baseClient,
+		Header: header,
+	})
+	cwc, ok := client.(util.ClientWithContext)
+	if !ok {
+		cwc = &util.BasicClient{Client: client}
+	}
+	resp, err := cwc.GetWithContext(ctx, url)
 	if err != nil {
 		return nil, err
 	}

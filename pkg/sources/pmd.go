@@ -73,7 +73,7 @@ func (pc *pmdCache) pmd(ctx context.Context, url string, cfg *config.Config) *Ca
 		Header: header,
 	})
 
-	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+	if slog.Default().Enabled(ctx, slog.LevelDebug) {
 		client = &util.LoggingClient{
 			Client: client,
 			Log: func(method, url string) {
