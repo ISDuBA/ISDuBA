@@ -231,7 +231,6 @@ func (f *feed) fetchIndex(ctx context.Context, m *Manager, fn func([]location, e
 			m.fns <- func(*Manager, context.Context) { f.refreshBlocked = false }
 		}()
 		var limiter *rate.Limiter
-
 		m.inManager(func(m *Manager, _ context.Context) {
 			f.source.applyHeaders(&header)
 			if client == nil {
@@ -239,19 +238,13 @@ func (f *feed) fetchIndex(ctx context.Context, m *Manager, fn func([]location, e
 			}
 			limiter = f.source.wait()
 		})
-
 		if limiter != nil {
 			limiter.Wait(ctx)
 		}
-		cclient := util.Client(&util.HeaderClient{
+		cwc := &util.HeaderClient{
 			Client: client,
 			Header: header,
-		})
-		cwc, ok := cclient.(util.ClientWithContext)
-		if !ok {
-			cwc = &util.BasicClient{Client: cclient}
 		}
-
 		resp, err := cwc.GetWithContext(ctx, indexURL)
 		if err != nil {
 			fn(nil, err)

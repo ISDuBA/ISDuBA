@@ -65,13 +65,9 @@ func (c *Cache) GetAggregator(ctx context.Context, url string, cfg *config.Confi
 	if c.timeout > 0 {
 		baseClient.Timeout = c.timeout
 	}
-	client := util.Client(&util.HeaderClient{
+	cwc := &util.HeaderClient{
 		Client: baseClient,
 		Header: header,
-	})
-	cwc, ok := client.(util.ClientWithContext)
-	if !ok {
-		cwc = &util.BasicClient{Client: client}
 	}
 	resp, err := cwc.GetWithContext(ctx, url)
 	if err != nil {

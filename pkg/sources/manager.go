@@ -343,9 +343,17 @@ func (dj *downloadJob) finish(m *Manager) {
 
 func (m *Manager) download(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	for job := range m.jobs {
-		job.l.download(ctx, m, job.f)
-		job.finish(m)
+	for {
+		select {
+		case job, ok := <-m.jobs:
+			if !ok {
+				return
+			}
+			job.l.download(ctx, m, job.f)
+			job.finish(m)
+		case <-ctx.Done():
+			return
+		}
 	}
 }
 
@@ -396,7 +404,7 @@ out:
 		case <-ctx.Done():
 			break out
 		case <-checkingTicker.C:
-			m.checkSources()
+			m.checkSources(ctx)
 		case <-feedLogCleaningTicker.C:
 			m.cleanFeedLogs(ctx)
 		case <-refreshTicker.C:
@@ -444,7 +452,7 @@ type prefetchedPMD struct {
 	checksum []byte
 }
 
-func (m *Manager) checkSources() {
+func (m *Manager) checkSources(ctx context.Context) {
 	// Check if not already running.
 	if m.blockSourceChecking {
 		return
@@ -463,7 +471,6 @@ func (m *Manager) checkSources() {
 		urls = append(urls, prefetchedPMD{id: s.id, url: s.url})
 	}
 	go func() {
-		ctx := context.Background()
 		prefetched := make([]prefetchedPMD, 0, len(urls))
 		for i := range urls {
 			s := &urls[i]
