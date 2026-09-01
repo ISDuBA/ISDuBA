@@ -510,13 +510,9 @@ func (s *source) httpGetWithContext(ctx context.Context, client *http.Client, m 
 	if limiter != nil {
 		limiter.Wait(ctx)
 	}
-	cclient := util.Client(&util.HeaderClient{
+	cwc := &util.HeaderClient{
 		Client: client,
 		Header: header,
-	})
-	cwc, ok := cclient.(util.ClientWithContext)
-	if !ok {
-		cwc = &util.BasicClient{Client: cclient}
 	}
 	return cwc.GetWithContext(ctx, url)
 }
