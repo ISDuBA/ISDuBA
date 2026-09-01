@@ -267,7 +267,6 @@
                       event.stopPropagation();
                       clone(query);
                     }}
-                    disabled
                   >
                     <Copy />
                   </CIconButton>
