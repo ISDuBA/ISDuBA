@@ -117,13 +117,21 @@ func (m *Manager) refresh(ctx context.Context) {
 	)
 	fetch := func() {
 		defer wg.Done()
-		for agg := range toFetch {
-			cagg, err := m.Cache.GetAggregator(agg.url, m.cfg)
-			if err != nil {
-				slog.Warn("fetching aggregator failed", "url", agg.url, "err", err)
-				continue
+		for {
+			select {
+			case agg, ok := <-toFetch:
+				if !ok {
+					break
+				}
+				cagg, err := m.Cache.GetAggregator(ctx, agg.url, m.cfg)
+				if err != nil {
+					slog.Warn("fetching aggregator failed", "url", agg.url, "err", err)
+					continue
+				}
+				agg.newChecksum = aggregatorChecksum(cagg)
+			case <-ctx.Done():
+				return
 			}
-			agg.newChecksum = aggregatorChecksum(cagg)
 		}
 	}
 	for range numWorkers {

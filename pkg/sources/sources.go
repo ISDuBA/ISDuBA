@@ -118,20 +118,20 @@ func (ip ignorePatterns) ignore(u *url.URL) bool {
 
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
-func (f *feed) refresh(m *Manager) {
-	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
+func (f *feed) refresh(ctx context.Context, m *Manager) {
+	f.log(ctx, m, config.InfoFeedLogLevel, "refreshing feed")
 
 	// Fetching the index is too expensive for the manager main loop.
 	// So we do it async and call back when its is done.
-	f.fetchIndex(m, func(candidates []location, err error) {
+	f.fetchIndex(ctx, m, func(candidates []location, err error) {
 		if err != nil {
-			f.log(m, config.ErrorFeedLogLevel, "fetching feed index failed: %v", err)
+			f.log(ctx, m, config.ErrorFeedLogLevel, "fetching feed index failed: %v", err)
 			return
 		}
 		if candidates == nil {
 			slog.Debug("feed has not changed", "feed", f.id)
-			f.log(m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
-			f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
+			f.log(ctx, m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
+			f.log(ctx, m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 			return
 		}
 
@@ -141,7 +141,7 @@ func (f *feed) refresh(m *Manager) {
 		m.fns <- func(m *Manager, ctx context.Context) {
 			// Filter out candidates which are already in the database with same or newer.
 			if candidates, err = f.removeOlder(ctx, m.db, candidates); err != nil {
-				f.log(m, config.ErrorFeedLogLevel,
+				f.log(ctx, m, config.ErrorFeedLogLevel,
 					"feed refresh failed with database error: %v", err)
 				return
 			}
@@ -162,7 +162,7 @@ func (f *feed) refresh(m *Manager) {
 			})
 
 			slog.Debug("feed entries to download", "feed", f.id, "queue", len(f.queue))
-			f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
+			f.log(ctx, m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 		}
 	})
 }
@@ -195,7 +195,7 @@ func (f *feed) resetIndexTags() {
 }
 
 // fetchIndex fetches the content of the feed index.
-func (f *feed) fetchIndex(m *Manager, fn func([]location, error)) {
+func (f *feed) fetchIndex(ctx context.Context, m *Manager, fn func([]location, error)) {
 	// Prevent stacked calling
 	f.refreshBlocked = true
 
@@ -208,16 +208,12 @@ func (f *feed) fetchIndex(m *Manager, fn func([]location, error)) {
 		}
 	}
 	slog.Debug("fetching index", "url", indexURL, "rolie", f.rolie)
-	req, err := http.NewRequest(http.MethodGet, indexURL, nil)
-	if err != nil {
-		fn(nil, err)
-		return
-	}
+	header := http.Header{}
 	if f.lastETag != "" {
-		req.Header.Add("If-None-Match", f.lastETag)
+		header.Add("If-None-Match", f.lastETag)
 	}
 	if !f.lastModified.IsZero() {
-		req.Header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
+		header.Add("If-Modified-Since", f.lastModified.Format(http.TimeFormat))
 	}
 	client := f.source.httpClient(m)
 	// Copy relevant data to avoid races.
@@ -234,7 +230,22 @@ func (f *feed) fetchIndex(m *Manager, fn func([]location, error)) {
 			// Re-enable refreshing
 			m.fns <- func(*Manager, context.Context) { f.refreshBlocked = false }
 		}()
-		resp, err := f.source.doRequest(client, m, req)
+		var limiter *rate.Limiter
+		m.inManager(func(m *Manager, _ context.Context) {
+			f.source.applyHeaders(&header)
+			if client == nil {
+				client = f.source.httpClient(m)
+			}
+			limiter = f.source.wait()
+		})
+		if limiter != nil {
+			limiter.Wait(ctx)
+		}
+		cwc := &util.HeaderClient{
+			Client: client,
+			Header: header,
+		}
+		resp, err := cwc.GetWithContext(ctx, indexURL)
 		if err != nil {
 			fn(nil, err)
 			return
@@ -473,26 +484,23 @@ func (s *source) httpClient(m *Manager) *http.Client {
 	return &client
 }
 
-func (s *source) applyHeaders(req *http.Request) {
-	for _, header := range s.headers {
-		if k, v, ok := strings.Cut(header, ":"); ok {
-			req.Header.Add(k, v)
+func (s *source) applyHeaders(header *http.Header) {
+	for _, h := range s.headers {
+		if k, v, ok := strings.Cut(h, ":"); ok {
+			header.Add(k, v)
 		}
 	}
-	if req.Header.Get("User-Agent") == "" {
-		req.Header.Add("User-Agent", UserAgent)
+	if header.Get("User-Agent") == "" {
+		header.Add("User-Agent", UserAgent)
 	}
 }
 
-// doRequest executes an HTTP request with the source specific parameters.
-func (s *source) doRequest(client *http.Client, m *Manager, req *http.Request) (*http.Response, error) {
-	// The manager owns the configuration.
-	// So we let the manager do the adjustment of the request.
-
+func (s *source) httpGetWithContext(ctx context.Context, client *http.Client, m *Manager, url string) (*http.Response, error) {
 	var limiter *rate.Limiter
+	header := http.Header{}
 
 	m.inManager(func(m *Manager, _ context.Context) {
-		s.applyHeaders(req)
+		s.applyHeaders(&header)
 		if client == nil {
 			client = s.httpClient(m)
 		}
@@ -500,22 +508,18 @@ func (s *source) doRequest(client *http.Client, m *Manager, req *http.Request) (
 	})
 
 	if limiter != nil {
-		limiter.Wait(context.Background())
+		limiter.Wait(ctx)
 	}
-	return client.Do(req)
-}
-
-func (s *source) httpGet(client *http.Client, m *Manager, url string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
+	cwc := &util.HeaderClient{
+		Client: client,
+		Header: header,
 	}
-	return s.doRequest(client, m, req)
+	return cwc.GetWithContext(ctx, url)
 }
 
 // loadHash fetches text form of a hash from remote location.
-func (s *source) loadHash(client *http.Client, m *Manager, url string) ([]byte, error) {
-	resp, err := s.httpGet(client, m, url)
+func (s *source) loadHash(ctx context.Context, client *http.Client, m *Manager, url string) ([]byte, error) {
+	resp, err := s.httpGetWithContext(ctx, client, m, url)
 	if err != nil {
 		return nil, err
 	}

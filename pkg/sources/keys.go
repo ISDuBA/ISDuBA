@@ -9,6 +9,7 @@
 package sources
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -33,12 +34,12 @@ func newKeysCache(expiration time.Duration) *keysCache {
 
 // openPGPKeys extracts the OpenPGP key from them PMD of a source if not already
 // in cache.
-func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
+func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyRing, error) {
 	if keys, ok := m.keysCache.Get(source.id); ok {
 		return keys, nil
 	}
 	keys, _ := crypto.NewKeyRing(nil)
-	cpmd := m.pmdCache.pmd(source.url, m.cfg)
+	cpmd := m.pmdCache.pmd(ctx, source.url, m.cfg)
 	if !cpmd.Valid() {
 		// Try again soon.
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
@@ -71,7 +72,7 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 		if !u.IsAbs() {
 			u = joinURL(base, u)
 		}
-		res, err := source.httpGet(client, m, u.String())
+		res, err := source.httpGetWithContext(ctx, client, m, u.String())
 		if err != nil {
 			slog.Warn(
 				"Fetching public OpenPGP key failed",
@@ -117,8 +118,8 @@ func (m *Manager) openPGPKeys(source *source) (*crypto.KeyRing, error) {
 }
 
 // loadSignature loads an ascii armored OpenPGP signature file from a given url.
-func (s *source) loadSignature(client *http.Client, m *Manager, u *url.URL) (*crypto.PGPSignature, []byte, error) {
-	resp, err := s.httpGet(client, m, u.String())
+func (s *source) loadSignature(ctx context.Context, client *http.Client, m *Manager, u *url.URL) (*crypto.PGPSignature, []byte, error) {
+	resp, err := s.httpGetWithContext(ctx, client, m, u.String())
 	if err != nil {
 		return nil, nil, err
 	}

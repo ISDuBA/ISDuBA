@@ -40,7 +40,7 @@ type Controller struct {
 	ts  *tempstore.Store
 	sm  *sources.Manager
 	am  *aggregators.Manager
-	val csaf.RemoteValidator
+	val csaf.RemoteValidatorWithContext
 }
 
 // NewController returns a new Controller.
@@ -51,7 +51,7 @@ func NewController(
 	ts *tempstore.Store,
 	dl *sources.Manager,
 	am *aggregators.Manager,
-	val csaf.RemoteValidator,
+	val csaf.RemoteValidatorWithContext,
 ) *Controller {
 	return &Controller{
 		cfg: cfg,
