@@ -119,19 +119,19 @@ func (ip ignorePatterns) ignore(u *url.URL) bool {
 // refresh fetches the feed index and accordingly updates
 // the list of locations if needed.
 func (f *feed) refresh(ctx context.Context, m *Manager) {
-	f.log(m, config.InfoFeedLogLevel, "refreshing feed")
+	f.log(ctx, m, config.InfoFeedLogLevel, "refreshing feed")
 
 	// Fetching the index is too expensive for the manager main loop.
 	// So we do it async and call back when its is done.
 	f.fetchIndex(ctx, m, func(candidates []location, err error) {
 		if err != nil {
-			f.log(m, config.ErrorFeedLogLevel, "fetching feed index failed: %v", err)
+			f.log(ctx, m, config.ErrorFeedLogLevel, "fetching feed index failed: %v", err)
 			return
 		}
 		if candidates == nil {
 			slog.Debug("feed has not changed", "feed", f.id)
-			f.log(m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
-			f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
+			f.log(ctx, m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
+			f.log(ctx, m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 			return
 		}
 
@@ -141,7 +141,7 @@ func (f *feed) refresh(ctx context.Context, m *Manager) {
 		m.fns <- func(m *Manager, ctx context.Context) {
 			// Filter out candidates which are already in the database with same or newer.
 			if candidates, err = f.removeOlder(ctx, m.db, candidates); err != nil {
-				f.log(m, config.ErrorFeedLogLevel,
+				f.log(ctx, m, config.ErrorFeedLogLevel,
 					"feed refresh failed with database error: %v", err)
 				return
 			}
@@ -162,7 +162,7 @@ func (f *feed) refresh(ctx context.Context, m *Manager) {
 			})
 
 			slog.Debug("feed entries to download", "feed", f.id, "queue", len(f.queue))
-			f.log(m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
+			f.log(ctx, m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
 		}
 	})
 }
