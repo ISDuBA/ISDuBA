@@ -525,6 +525,7 @@
                         }}
                         class="!p-2"
                         color="light"
+                        title={`Edit aggregator ${aggregator.name}`}
                       >
                         <Pencil />
                       </Button>
@@ -619,6 +620,7 @@
                         }
                       }}
                       color="light"
+                      title={`Cancel editing ${aggregator.name}`}
                     >
                       <X />
                     </Button>
@@ -637,6 +639,7 @@
                         validEditedName === false ||
                         editedName === "" ||
                         editedUrl === ""}
+                      title={`Save ${aggregator.name}`}
                     >
                       <Check class="me-2" />
                       <span>Save</span>
