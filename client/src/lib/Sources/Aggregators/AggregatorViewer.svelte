@@ -30,7 +30,9 @@
     Label,
     Button,
     Toggle,
-    type InputProps
+    type InputProps,
+    Accordion,
+    AccordionItem
   } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import type { ErrorDetails } from "$lib/Errors/error";
@@ -45,25 +47,25 @@
   import { appStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import { push } from "$routes/router.svelte";
-  import CAccordionItem from "$lib/Components/CAccordionItem.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  import { scale } from "svelte/transition";
+  import { fade, scale } from "svelte/transition";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
   import type { AggregatorEntry, AggregatorRole, FeedInfo, SourceInfo } from "./aggregator";
   import SourceContent from "./SourceContent.svelte";
-  import CAccordion from "$lib/Components/CAccordion.svelte";
-  import { SvelteMap } from "svelte/reactivity";
+  import { SvelteMap, SvelteSet } from "svelte/reactivity";
   import CBadge from "$lib/Components/CBadge.svelte";
   import { Check, ChevronDown, ChevronUp, Pencil, Plus, Trash, X } from "@boxicons/svelte";
 
   const uid = $props.id();
 
   const textFlushOpen = "text-black dark:text-white";
-  const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full`;
+  const accordionItemDefaultClass = `flex items-center gap-x-4 ${textFlushOpen} font-semibold w-full pt-0 py-2`;
   let loadingAggregators: boolean = $state(false);
   let aggregators: Aggregator[] = $state([]);
   let aggregatorData = new SvelteMap<number, AggregatorEntry[]>();
   let aggregatorMetaData = new SvelteMap<number, AggregatorMetadata>();
+  let loadingAggregator = new SvelteMap<number, boolean>();
+  let openAggregators: Set<number> = new SvelteSet<number>();
 
   let aggregatorError: ErrorDetails | null = $state(null);
   let aggregatorSaveError: ErrorDetails | null = $state(null);
@@ -133,7 +135,6 @@
   });
 
   let blinkId: number | undefined = $state(undefined);
-  let openAggregator: boolean[] = $state([]);
   let showCreateForm = $state(false);
   let aggregatorToEdit: number | undefined = $state(undefined);
   let formClass = "max-w-[800pt]";
@@ -197,7 +198,6 @@
     const result = await fetchAggregators();
     loadingAggregators = false;
     if (result.ok) {
-      openAggregator = new Array(result.value.length).fill(false);
       aggregators = result.value;
     } else {
       aggregatorError = result.error;
@@ -363,19 +363,15 @@
     }
   };
 
-  const toggleAggregatorView = async (aggregator: Aggregator) => {
+  const loadAggregatorData = async (aggregator: Aggregator) => {
+    if (aggregator.id && aggregatorData.get(aggregator.id)) return;
     await navigator.locks.request("toggleAgg", async () => {
       if (aggregator.id === undefined) {
         return;
       }
-      if (aggregatorData.get(aggregator.id)) {
-        aggregatorData.delete(aggregator.id);
-        saveAggregatorExpand();
-        return;
-      }
-      loadingAggregators = true;
+      loadingAggregator.set(aggregator.id, true);
       const resp = await fetchAggregatorData(aggregator.url);
-      loadingAggregators = false;
+      loadingAggregator.set(aggregator.id, false);
       if (resp.ok) {
         aggregatorData.set(aggregator.id, parseAggregatorData(resp.value));
         aggregatorMetaData.set(aggregator.id, resp.value);
@@ -392,6 +388,7 @@
       aggregatorError = result.error;
     }
     aggregatorData.delete(id);
+    aggregatorMetaData.delete(id);
     await getAggregators();
   };
 
@@ -404,7 +401,7 @@
       aggregator.name = "";
       aggregator.url = "";
       sessionStorage.setItem(
-        "openAggregator",
+        "openAggregators",
         JSON.stringify([...aggregatorData.keys(), result.value])
       );
       await getAggregators();
@@ -429,21 +426,32 @@
   };
 
   const saveAggregatorExpand = () => {
-    let idList = [...aggregatorData.keys()];
-    sessionStorage.setItem("openAggregator", JSON.stringify(idList));
+    let idList = [...Array.from(openAggregators.values())];
+    sessionStorage.setItem("openAggregators", JSON.stringify(idList));
   };
 
   const restoreAggregatorExpand = async () => {
-    let idList = JSON.parse(sessionStorage.getItem("openAggregator") ?? "[]");
+    let idList = JSON.parse(sessionStorage.getItem("openAggregators") ?? "[]");
     if (idList) {
       for (let id of idList) {
         let index = aggregators.findIndex((a) => a.id === id);
-        if (index !== -1) {
-          openAggregator[index] = true;
-          await toggleAggregatorView(aggregators[index]);
+        if (index !== -1 && aggregators[index].id) {
+          openAggregators.add(aggregators[index].id);
+          await loadAggregatorData(aggregators[index]);
         }
       }
     }
+  };
+
+  const setOpen = (open: boolean, aggregator: Aggregator) => {
+    if (aggregator.id === undefined) return;
+    if (open) {
+      openAggregators.add(aggregator.id);
+      loadAggregatorData(aggregator);
+    } else {
+      openAggregators.delete(aggregator.id);
+    }
+    saveAggregatorExpand();
   };
 
   onMount(async () => {
@@ -459,24 +467,27 @@
 <div class="pb-10">
   <SectionHeader title="Aggregators"></SectionHeader>
   {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
-    <CAccordion flush multiple class="my-4">
+    <Accordion flush multiple class="my-4">
       {#each aggregators as aggregator, index (index)}
         {@const list = aggregatorData.get(aggregator.id ?? -1) ?? []}
         {@const metadata = aggregatorMetaData.get(aggregator.id ?? -1)}
-        <CAccordionItem
+        <AccordionItem
+          headingTag="h3"
           id={`aggregator-${aggregator.id}`}
-          paddingFlush="pt-0 py-2"
-          defaultClass={`${accordionItemDefaultClass} ${aggregator.id === blinkId ? "blink" : ""}`}
-          bind:open={openAggregator[index]}
-          {textFlushOpen}
-          toggleCallback={async () => {
-            await toggleAggregatorView(aggregator);
+          classes={{
+            button: `${accordionItemDefaultClass} ${aggregator.id === blinkId ? "blink" : ""}`
           }}
+          bind:open={
+            () => aggregator?.id !== undefined && openAggregators.has(aggregator.id),
+            (newValue) => setOpen(newValue, aggregator)
+          }
         >
-          {#snippet headerSlot()}
+          {#snippet arrowup()}{/snippet}
+          {#snippet arrowdown()}{/snippet}
+          {#snippet header()}
             <div class="flex flex-col items-start gap-2">
               <div class="flex flex-wrap items-center gap-2">
-                {#if list.length > 0}
+                {#if aggregator.id && openAggregators.has(aggregator.id)}
                   <ChevronUp class="text-xl" />
                 {:else}
                   <ChevronDown class="text-xl" />
@@ -551,6 +562,15 @@
                         <span>Not active</span>
                       {/if}
                     </Toggle>
+                  </div>
+                {/if}
+                {#if aggregator.id && loadingAggregator.get(aggregator.id)}
+                  <div
+                    in:fade={{ delay: 200, duration: 500 }}
+                    out:fade={{ delay: 0, duration: 100 }}
+                  >
+                    Loading ...
+                    <Spinner color="gray" size="4"></Spinner>
                   </div>
                 {/if}
               </div>
@@ -758,9 +778,9 @@
               {/each}
             </div>
           {/if}
-        </CAccordionItem>
+        </AccordionItem>
       {/each}
-    </CAccordion>
+    </Accordion>
     <div class:invisible={!loadingAggregators} class={loadingAggregators ? "loadingFadeIn" : ""}>
       Loading ...
       <Spinner color="gray" size="4"></Spinner>
