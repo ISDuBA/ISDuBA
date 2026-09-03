@@ -10,108 +10,308 @@ package query
 
 import (
 	"fmt"
+	"log/slog"
+	"maps"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/ISDuBA/ISDuBA/pkg/itertools"
 )
 
 // SQLBuilder helps to construct a SQL query.
 type SQLBuilder struct {
-	WhereClause         string
-	Replacements        []any
-	replToIdx           map[string]int
-	Aliases             map[string]string
-	IgnoreFields        map[string]struct{}
-	Mode                ParserMode
-	TextTables          bool
-	ReturnSearchResults bool
+	expr         *Expr
+	parser       *Parser
+	orderFields  []string
+	fields       []string
+	Replacements []any
+	replToIdx    map[string]int
+	usedSources  columnSource
+	aggregate    bool
 }
 
-// CreateWhere construct a WHERE clause for a given expression.
-func (sb *SQLBuilder) CreateWhere(e *Expr) string {
-	var b strings.Builder
-	sb.whereRecurse(e, &b)
-	sb.WhereClause = b.String()
-	return sb.WhereClause
+type statementMode interface {
+	projection(sb *SQLBuilder, b *strings.Builder, name string)
+	from(sb *SQLBuilder, b *strings.Builder)
+	accessWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	searchWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	mentionedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	involvedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	ilikePNameWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	ilikePIDWhere(sb *SQLBuilder, e *Expr, b *strings.Builder)
+	order(sb *SQLBuilder, b *strings.Builder, name string)
 }
+
+type (
+	classicMode struct{}
+	cteMode     struct{ classicMode }
+)
 
 var (
 	escapeLike = strings.NewReplacer(
 		`%`, `\%`,
 		`_`, `\_`).Replace
-	whiteSpaces = regexp.MustCompile(`\s+`)
+	whiteSpaces      = regexp.MustCompile(`\s+`)
+	dirtyReplace     *regexp.Regexp
+	dirtyReplaceOnce sync.Once
 )
 
-// RemoveIgnoredFields removes fields that should be ignored.
-func (sb *SQLBuilder) RemoveIgnoredFields(fields []string) []string {
-	filtered := make([]string, 0, len(fields))
-	for _, f := range fields {
-		if _, found := sb.IgnoreFields[f]; !found {
-			filtered = append(filtered, f)
-		}
-	}
-	return filtered
-}
+const (
+	versionsCountClassic = `(SELECT count(*) FROM documents WHERE ` +
+		`documents.advisories_id = advisories.id)`
+	commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = documents.id)`
+	versionsCountCTE          = `(SELECT count(*) FROM docads)`
+	commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = docads.id)`
+	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
+		`comments.documents_id = documents_id)`
 
-// LikeEscape quotes a query string to be more convenient
-// to use with LIKE filters.
-func LikeEscape(query string) string {
-	query = strings.TrimSpace(query)
-	query = escapeLike(query)
-	query = whiteSpaces.ReplaceAllString(query, `%`)
-	return `%` + query + `%`
-}
+	ilikePrefix = `'%'||regexp_replace(regexp_replace(`
+	ilikeSuffix = `,'(%|_)','\\\1','g'),'(\s+)','%','g')||'%'`
+)
 
-func (sb *SQLBuilder) searchWhere(e *Expr, b *strings.Builder) {
-	if sb.ReturnSearchResults {
-		fmt.Fprintf(b, "txt ILIKE $%d",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-
-		// We need the text tables to be joined.
-		sb.TextTables = true
-
-		// Handle alias
-		if e.alias == "" {
-			return
-		}
-		if sb.Aliases == nil {
-			sb.Aliases = map[string]string{}
-		}
-		sb.Aliases[e.alias] = `txt`
-	} else {
-		switch sb.Mode {
-		case AdvisoryMode, DocumentMode:
-			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
-				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
-				"WHERE txt ILIKE $%d "+
-				"AND documents_texts.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
+func (classicMode) projectionCommon(
+	sb *SQLBuilder, b *strings.Builder,
+	name string,
+	versionsCount, commentsCountDocuments string,
+) {
+	switch name {
+	case "state", "event", "tracking_status":
+		b.WriteString(name)
+		b.WriteString("::text")
+	case "event_state":
+		b.WriteString("events_log.state::text AS event_state")
+	case "versions":
+		b.WriteString(versionsCount)
+		b.WriteString(` AS versions`)
+	case "comments":
+		switch sb.mode() {
+		case AdvisoryMode:
+			b.WriteString(name)
+		case DocumentMode:
+			b.WriteString(commentsCountDocuments)
+			b.WriteString(` AS comments`)
 		case EventMode:
-			// TODO clarify how to handle event search
-			// Current implementation equals AdvisoryMode/DocumentMode to prevent error when searching for strings, but can also search in comments
-			fmt.Fprintf(b, "EXISTS(SELECT 1 FROM documents_texts "+
-				"JOIN unique_texts ON unique_texts.id = documents_texts.txt_id "+
-				"WHERE txt ILIKE $%[1]d "+
-				"AND documents_texts.documents_id = documents.id) "+
-				"OR "+
-				"EXISTS(SELECT 1 FROM comments "+
-				"WHERE message ILIKE $%[1]d AND comments.documents_id = documents.id)", sb.replacementIndex(LikeEscape(e.stringValue))+1)
+			b.WriteString(commentsCountEvents + `AS comments`)
 		}
-
-		// Ignore alias for now to avoid breaking change
-		if e.alias == "" {
-			return
-		}
-		if sb.IgnoreFields == nil {
-			sb.IgnoreFields = map[string]struct{}{}
-		}
-		sb.IgnoreFields[e.alias] = struct{}{}
+	default:
+		b.WriteString(name)
 	}
-
 }
 
-func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
-	switch sb.Mode {
+func (cm classicMode) projection(sb *SQLBuilder, b *strings.Builder, name string) {
+	switch name {
+	case "tracking_id", "publisher":
+		b.WriteString("advisories.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "id":
+		b.WriteString("documents.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc AS ssvc")
+	default:
+		cm.projectionCommon(sb, b, name,
+			versionsCountClassic, commentsCountDocumentsClassic)
+	}
+}
+
+func (cm cteMode) projection(sb *SQLBuilder, b *strings.Builder, name string) {
+	switch name {
+	case "tracking_id", "publisher":
+		b.WriteString("docads.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "id":
+		b.WriteString("docads.")
+		b.WriteString(name)
+		b.WriteString(` AS `)
+		b.WriteString(name)
+	case "versions":
+		// ToDo: Evaluate removal from projectionCommon
+		b.WriteString("docads.versions AS versions")
+	default:
+		cm.projectionCommon(sb, b, name,
+			versionsCountCTE, commentsCountDocumentsCTE)
+	}
+}
+
+func (classicMode) from(sb *SQLBuilder, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode, DocumentMode:
+		b.WriteString(`documents ` +
+			`JOIN advisories ON ` +
+			`advisories.id = documents.advisories_id`)
+	case EventMode:
+		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
+			`JOIN advisories ON advisories.id = documents.advisories_id ` +
+			`LEFT JOIN (SELECT message, id FROM comments) AS comment ON events_log.comments_id = comment.id`)
+	}
+	// Add SSVC if exists
+	if sb.usedSources.contains(ssvcHistoryTable) {
+		b.WriteString(` LEFT JOIN LATERAL ( ` +
+			`SELECT ssvc FROM ssvc_history ` +
+			`WHERE documents_id = documents.id ` +
+			`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
+			`) AS ssvc_current ON TRUE`)
+	}
+	if sb.usedSources.contains(textTable) {
+		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
+			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
+	}
+}
+
+// createUnaliasedSearches creates a CROSS JOIN LATERAL to filter searches with no aliases.
+func (sb *SQLBuilder) createUnaliasedSearches(b *strings.Builder) {
+	if sb.expr == nil {
+		return
+	}
+	texts := slices.Sorted(sb.expr.UnaliasedSearches())
+	if len(texts) == 0 {
+		return
+	}
+	b.WriteString(
+		` CROSS JOIN LATERAL(` +
+			`SELECT unique_texts.id AS id FROM documents_texts` +
+			` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND` +
+			` documents_texts.documents_id = docads.id AND (`)
+	for i, text := range texts {
+		if i > 0 {
+			b.WriteString(" OR ")
+		}
+		replacement := sb.replacementIndex(LikeEscape(text)) + 1
+		b.WriteString("txt ILIKE $")
+		b.WriteString(strconv.Itoa(replacement))
+	}
+	b.WriteString("))")
+}
+
+// createAliasedSearches creates a CROSS JOIN LATERAL for each search text that has an alias.
+func (sb *SQLBuilder) createAliasedSearches(b *strings.Builder) {
+	if sb.parser == nil {
+		return
+	}
+	names := slices.Sorted(maps.Keys(sb.parser.aliases))
+	for _, name := range names {
+		srch := sb.parser.aliases[name]
+		replacement := sb.replacementIndex(LikeEscape(srch.stringValue)) + 1
+		if sb.aggregate {
+			fmt.Fprintf(b,
+				` CROSS JOIN LATERAL(`+
+					`SELECT unique_texts.id AS id FROM documents_texts`+
+					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+					` documents_texts.documents_id = docads.id AND`+
+					` txt ILIKE $%d) _search_join_%d`,
+				replacement,
+				srch.intValue)
+		} else {
+			fmt.Fprintf(b,
+				` CROSS JOIN LATERAL(`+
+					`SELECT txt FROM documents_texts`+
+					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+					` documents_texts.documents_id = docads.id AND`+
+					` txt ILIKE $%d) _search_join_%d`,
+				replacement,
+				srch.intValue)
+		}
+	}
+}
+
+func (cteMode) from(sb *SQLBuilder, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode, DocumentMode:
+		b.WriteString(`docads`)
+	case EventMode:
+		b.WriteString(`events_log JOIN docads ON events_log.documents_id = docads.id ` +
+			`LEFT JOIN (SELECT message, id FROM comments) AS comment ` +
+			`ON events_log.comments_id = comment.id`)
+	}
+
+	// SSVC is already in docads
+
+	// For every search we need a CROSS JOIN LITERAL.
+	sb.createUnaliasedSearches(b)
+	sb.createAliasedSearches(b)
+}
+
+func (classicMode) accessWhereCommon(
+	sb *SQLBuilder, e *Expr, b *strings.Builder,
+	versionsCount, commentsCountDocuments string,
+) {
+	switch column := e.stringValue; column {
+	case "versions":
+		b.WriteString(versionsCount)
+	case "comments":
+		switch sb.mode() {
+		case AdvisoryMode:
+			b.WriteString(column)
+		case DocumentMode:
+			b.WriteString(commentsCountDocuments)
+		case EventMode:
+			b.WriteString(commentsCountEvents)
+		}
+	case "event_state":
+		b.WriteString("events_log.state")
+	default:
+		b.WriteString(column)
+	}
+}
+
+func (cm classicMode) accessWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	switch column := e.stringValue; column {
+	case "id":
+		b.WriteString("documents.")
+		b.WriteString(column)
+	case "tracking_id", "publisher":
+		b.WriteString("advisories.")
+		b.WriteString(column)
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc")
+	default:
+		cm.accessWhereCommon(sb, e, b,
+			versionsCountClassic, commentsCountDocumentsClassic)
+	}
+}
+
+func (cm cteMode) accessWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	switch column := e.stringValue; column {
+	case "id":
+		b.WriteString("docads.")
+		b.WriteString(column)
+	case "tracking_id", "publisher":
+		b.WriteString("docads.")
+		b.WriteString(column)
+	default:
+		cm.classicMode.accessWhereCommon(sb, e, b,
+			versionsCountCTE, commentsCountDocumentsCTE)
+	}
+}
+
+func (classicMode) searchWhere(_ *SQLBuilder, _ *Expr, b *strings.Builder) {
+	// The Filtering is done by a CROSS JOIN LATERAL so we insert a true here
+	// to be optimzed away by the query planner.
+	b.WriteString("TRUE")
+}
+
+func (classicMode) mentionedWhereCommon(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case EventMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
+			"AND comments.id = events_log.comments_id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	}
+}
+
+func (cm classicMode) mentionedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
 	case AdvisoryMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
 			"JOIN documents docs ON comments.documents_id = docs.id "+
@@ -122,15 +322,30 @@ func (sb *SQLBuilder) mentionedWhere(e *Expr, b *strings.Builder) {
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
 			"AND comments.documents_id = documents.id)",
 			sb.replacementIndex(LikeEscape(e.stringValue))+1)
-	case EventMode:
-		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
-			"AND comments.id = events_log.comments_id)",
-			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	default:
+		cm.mentionedWhereCommon(sb, e, b)
 	}
 }
 
-func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
-	switch sb.Mode {
+func (cm cteMode) mentionedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments "+
+			"JOIN docads ON comments.documents_id = docads.id "+
+			"WHERE message ILIKE $%d "+
+			"AND docads.advisories_id = docads.advisories_id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	case DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM comments WHERE message ILIKE $%d "+
+			"AND comments.documents_id = docads.id)",
+			sb.replacementIndex(LikeEscape(e.stringValue))+1)
+	default:
+		cm.mentionedWhereCommon(sb, e, b)
+	}
+}
+
+func (classicMode) involvedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
 	case AdvisoryMode, EventMode:
 		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docs "+
 			"ON events_log.documents_id = docs.id "+
@@ -144,9 +359,220 @@ func (sb *SQLBuilder) involvedWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder) {
+func (cteMode) involvedWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	switch sb.mode() {
+	case AdvisoryMode, EventMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log JOIN documents docads "+
+			"ON events_log.documents_id = docads.id "+
+			"WHERE actor = $%d)",
+			sb.replacementIndex(e.stringValue)+1)
+	case DocumentMode:
+		fmt.Fprintf(b, "EXISTS(SELECT 1 FROM events_log WHERE actor = $%d "+
+			"AND events_log.documents_id = docads.id)",
+			sb.replacementIndex(e.stringValue)+1)
+	}
+}
+
+func (cm classicMode) ilikePNameWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_names AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.name')::int num ` +
+		`FROM documents ds WHERE ds.id = documents.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_names ` +
+		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = documents.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
+func (cm classicMode) ilikePIDWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_ids AS (SELECT jsonb_path_query(` +
+		`document, '$.product_tree.**.product.product_id')::int num ` +
+		`FROM documents ds WHERE ds.id = documents.id)` +
+		`SELECT * FROM documents_texts dts JOIN product_ids ` +
+		`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
+		`WHERE dts.documents_id = documents.id AND ` +
+		`unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
+func (cm cteMode) ilikePNameWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_names AS (` +
+		` SELECT` +
+		`  jsonb_path_query(ds.document, '$.product_tree.**.product.name')::int num` +
+		` FROM docads JOIN documents ds` +
+		`  ON ds.id = docads.id` +
+		`)` +
+		`SELECT * FROM documents_texts dts JOIN product_names` +
+		` ON product_names.num = dts.num JOIN unique_texts` +
+		` ON dts.txt_id = unique_texts.id ` +
+		`WHERE` +
+		` dts.documents_id = docads.id` +
+		` AND unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
+func (cm cteMode) ilikePIDWhere(sb *SQLBuilder, e *Expr, b *strings.Builder) {
+	b.WriteString(`EXISTS (` +
+		`WITH product_ids AS (` +
+		` SELECT` +
+		`  jsonb_path_query(ds.document, '$.product_tree.**.product.product_id')::int num` +
+		` FROM docads JOIN documents ds` +
+		`  ON ds.id = docads.id` +
+		`)` +
+		`SELECT * FROM documents_texts dts JOIN product_ids` +
+		` ON product_ids.num = dts.num JOIN unique_texts` +
+		` ON dts.txt_id = unique_texts.id ` +
+		`WHERE` +
+		` dts.documents_id = docads.id` +
+		` AND unique_texts.txt ILIKE ` + ilikePrefix)
+	sb.whereRecurse(e.children[0], b, cm)
+	b.WriteString(ilikeSuffix + `)`)
+}
+
+func (classicMode) orderCommon(b *strings.Builder, name string) {
+	switch name {
+	case "cvss_v2_score", "cvss_v3_score", "critical":
+		b.WriteString("COALESCE(")
+		b.WriteString(name)
+		b.WriteString(",0)")
+	case "version":
+		// TODO: This is not optimal (SemVer).
+		b.WriteString(
+			`CASE WHEN version ~ '^[[:digit:]]+$' THEN version::int END`)
+	default:
+		b.WriteString(name)
+	}
+}
+
+func (cm classicMode) order(_ *SQLBuilder, b *strings.Builder, name string) {
+	switch name {
+	case "tracking_id", "publisher", "id":
+		b.WriteString("advisories.")
+		b.WriteString(name)
+	case "ssvc":
+		b.WriteString("ssvc_current.ssvc")
+	default:
+		cm.orderCommon(b, name)
+	}
+}
+
+func (cm cteMode) order(_ *SQLBuilder, b *strings.Builder, name string) {
+	switch name {
+	case "tracking_id", "publisher", "id":
+		b.WriteString("docads.")
+		b.WriteString(name)
+	default:
+		cm.orderCommon(b, name)
+	}
+}
+
+// SQLBuilderOption is an option to create an SQL builder.
+type SQLBuilderOption func(*SQLBuilder)
+
+// SQLBuilderAggregate creates an option to signal that the builder
+// is used in a aggregation context.
+func SQLBuilderAggregate(aggregate bool) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
+		ab.aggregate = aggregate
+	}
+}
+
+// SQLBuilderExpr creates an option to create an SQL builder
+// with an expression.
+func SQLBuilderExpr(e *Expr) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
+		ab.expr = e
+	}
+}
+
+// SQLBuilderOrderFields creates an option to create an SQL builder
+// with a order fields.
+func SQLBuilderOrderFields(orderFields []string) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
+		ab.orderFields = orderFields
+	}
+}
+
+// SQLBuilderFields creates an option to create an SQL builder
+// with projection fields.
+func SQLBuilderFields(fields []string) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
+		ab.fields = fields
+	}
+}
+
+// SQLBuilderParser creates an option to create an SQL builder
+// with a given parser.
+func SQLBuilderParser(parser *Parser) SQLBuilderOption {
+	return func(ab *SQLBuilder) {
+		ab.parser = parser
+	}
+}
+
+// NewSQLBuilder creates a new builder with a list of options.
+func NewSQLBuilder(options ...SQLBuilderOption) (*SQLBuilder, error) {
+	ab := new(SQLBuilder)
+	for _, option := range options {
+		option(ab)
+	}
+	// If given the parser has already a list of used source tables.
+	if ab.parser != nil {
+		ab.usedSources = ab.parser.UsedSources
+	}
+	if err := ab.check(); err != nil {
+		return nil, fmt.Errorf("creating SQL builder failed: %w", err)
+	}
+	return ab, nil
+}
+
+// Expr returns the expression used by the builder.
+func (sb *SQLBuilder) Expr() *Expr {
+	return sb.expr
+}
+
+// HasFields returns true if the builder has projection fields.
+func (sb *SQLBuilder) HasFields() bool {
+	return len(sb.fields) > 0
+}
+
+// Fields returns the projection fields of the query.
+func (sb *SQLBuilder) Fields() []string {
+	return sb.fields
+}
+
+func (sb *SQLBuilder) alias(name string) *Expr {
+	if sb.parser == nil {
+		return nil
+	}
+	return sb.parser.aliases[name]
+}
+
+// HasAlias checks if there is an alias for a given name.
+func (sb *SQLBuilder) HasAlias(name string) bool {
+	return sb.alias(name) != nil
+}
+
+// createWhere construct a WHERE clause for a given expression.
+func (sb *SQLBuilder) createWhere(b *strings.Builder, sm statementMode) {
+	sb.whereRecurse(sb.expr, b, sm)
+}
+
+func (sb *SQLBuilder) mode() ParserMode {
+	if sb.parser != nil {
+		return sb.parser.Mode
+	}
+	return DocumentMode
+}
+
+func (sb *SQLBuilder) castWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString("CAST(")
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(" AS ")
 	switch e.valueType {
 	case stringType:
@@ -209,174 +635,84 @@ func (sb *SQLBuilder) cnstWhere(e *Expr, b *strings.Builder) {
 	}
 }
 
-func (sb *SQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string) {
+func (sb *SQLBuilder) binaryWhere(e *Expr, b *strings.Builder, op string, sm statementMode) {
 	b.WriteByte('(')
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(op)
-	sb.whereRecurse(e.children[1], b)
+	sb.whereRecurse(e.children[1], b, sm)
 	b.WriteByte(')')
 }
 
-func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder) {
+func (sb *SQLBuilder) notWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteString("(NOT ")
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteByte(')')
 }
 
-const (
-	versionsCountClassic = `(SELECT count(*) FROM documents WHERE ` +
-		`documents.advisories_id = advisories.id)`
-	commentsCountDocumentsClassic = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = documents.id)`
-	versionsCountCTE          = `(SELECT count(*) FROM docads)`
-	commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = docads.id)`
-	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = documents_id)`
-)
-
-func (sb *SQLBuilder) accessWhere(e *Expr, b *strings.Builder) {
-	switch column := e.stringValue; column {
-	case "id":
-		b.WriteString("documents.")
-		b.WriteString(column)
-	case "tracking_id", "publisher":
-		b.WriteString("advisories.")
-		b.WriteString(column)
-	case "versions":
-		b.WriteString(versionsCountClassic)
-	case "comments":
-		switch sb.Mode {
-		case AdvisoryMode:
-			b.WriteString(column)
-		case DocumentMode:
-			b.WriteString(commentsCountDocumentsClassic)
-		case EventMode:
-			b.WriteString(commentsCountEvents)
-		}
-	case "event_state":
-		b.WriteString("events_log.state")
-	case "ssvc":
-		b.WriteString("ssvc_current.ssvc")
-	default:
-		b.WriteString(column)
-	}
-}
-
-func (sb *SQLBuilder) nowWhere(_ *Expr, b *strings.Builder) {
+func (sb *SQLBuilder) nowWhere(b *strings.Builder) {
 	b.WriteString("current_timestamp")
 }
 
-const (
-	ilikePrefix = `'%'||regexp_replace(regexp_replace(`
-	ilikeSuffix = `,'(%|_)','\\\1','g'),'(\s+)','%','g')||'%'`
-)
-
-func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder) {
+func (sb *SQLBuilder) ilikeWhere(e *Expr, b *strings.Builder, sm statementMode) {
 	b.WriteByte('(')
-	sb.whereRecurse(e.children[0], b)
+	sb.whereRecurse(e.children[0], b, sm)
 	b.WriteString(` ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[1], b)
+	sb.whereRecurse(e.children[1], b, sm)
 	b.WriteString(ilikeSuffix + `)`)
 }
 
-func (sb *SQLBuilder) ilikePNameWhere(e *Expr, b *strings.Builder) {
-	b.WriteString(`EXISTS (` +
-		`WITH product_names AS (SELECT jsonb_path_query(` +
-		`document, '$.product_tree.**.product.name')::int num ` +
-		`FROM documents ds WHERE ds.id = documents.id)` +
-		`SELECT * FROM documents_texts dts JOIN product_names ` +
-		`ON product_names.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
-		`WHERE dts.documents_id = documents.id AND ` +
-		`unique_texts.txt ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[0], b)
-	b.WriteString(ilikeSuffix + `)`)
-}
-func (sb *SQLBuilder) ilikePIDWhere(e *Expr, b *strings.Builder) {
-	b.WriteString(`EXISTS (` +
-		`WITH product_ids AS (SELECT jsonb_path_query(` +
-		`document, '$.product_tree.**.product.product_id')::int num ` +
-		`FROM documents ds WHERE ds.id = documents.id)` +
-		`SELECT * FROM documents_texts dts JOIN product_ids ` +
-		`ON product_ids.num = dts.num JOIN unique_texts ON dts.txt_id = unique_texts.id ` +
-		`WHERE dts.documents_id = documents.id AND ` +
-		`unique_texts.txt ILIKE ` + ilikePrefix)
-	sb.whereRecurse(e.children[0], b)
-	b.WriteString(ilikeSuffix + `)`)
-	/*
-		b.WriteString(`EXISTS (` +
-			`SELECT jsonb_path_query(` +
-			`document, '$.product_tree.**.product.product_id')::int ` +
-			`FROM documents ds WHERE ds.id = documents.id ` +
-			`INTERSECT ` +
-			`SELECT num FROM documents_texts ` +
-			`WHERE documents_id = documents.id AND ` +
-			`txt ILIKE `)
-		recurse(e.children[0])
-		b.WriteByte(')')
-	*/
-	/*
-		b.WriteString(`EXISTS (` +
-			`SELECT num FROM documents_texts ` +
-			`WHERE documents_id = documents.id AND ` +
-			`txt ILIKE `)
-		recurse(e.children[0])
-		b.WriteString(` INTERSECT ` +
-			`SELECT jsonb_path_query(` +
-			`document, '$.product_tree.**.product.product_id')::int ` +
-			`FROM documents ds WHERE ds.id = documents.id)`)
-	*/
-}
-
-func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder) {
+func (sb *SQLBuilder) whereRecurse(e *Expr, b *strings.Builder, sm statementMode) {
+	if e == nil {
+		return
+	}
 	b.WriteByte('(')
 	switch e.exprType {
 	case access:
-		sb.accessWhere(e, b)
+		sm.accessWhere(sb, e, b)
 	case cnst:
 		sb.cnstWhere(e, b)
 	case cast:
-		sb.castWhere(e, b)
+		sb.castWhere(e, b, sm)
 	case eq:
-		sb.binaryWhere(e, b, "=")
+		sb.binaryWhere(e, b, "=", sm)
 	case ne:
-		sb.binaryWhere(e, b, "<>")
+		sb.binaryWhere(e, b, "<>", sm)
 	case lt:
-		sb.binaryWhere(e, b, "<")
+		sb.binaryWhere(e, b, "<", sm)
 	case gt:
-		sb.binaryWhere(e, b, ">")
+		sb.binaryWhere(e, b, ">", sm)
 	case le:
-		sb.binaryWhere(e, b, "<=")
+		sb.binaryWhere(e, b, "<=", sm)
 	case ge:
-		sb.binaryWhere(e, b, ">=")
+		sb.binaryWhere(e, b, ">=", sm)
 	case not:
-		sb.notWhere(e, b)
+		sb.notWhere(e, b, sm)
 	case and:
-		sb.binaryWhere(e, b, "AND")
+		sb.binaryWhere(e, b, "AND", sm)
 	case or:
-		sb.binaryWhere(e, b, "OR")
+		sb.binaryWhere(e, b, "OR", sm)
 	case search:
-		sb.searchWhere(e, b)
+		sm.searchWhere(sb, e, b)
 	case mentioned:
-		sb.mentionedWhere(e, b)
+		sm.mentionedWhere(sb, e, b)
 	case involved:
-		sb.involvedWhere(e, b)
+		sm.involvedWhere(sb, e, b)
 	case ilike:
-		sb.ilikeWhere(e, b)
+		sb.ilikeWhere(e, b, sm)
 	case ilikePName:
-		sb.ilikePNameWhere(e, b)
+		sm.ilikePNameWhere(sb, e, b)
 	case ilikePID:
-		sb.ilikePIDWhere(e, b)
+		sm.ilikePIDWhere(sb, e, b)
 	case now:
-		sb.nowWhere(e, b)
+		sb.nowWhere(b)
 	case add:
-		sb.binaryWhere(e, b, "+")
+		sb.binaryWhere(e, b, "+", sm)
 	case sub:
-		sb.binaryWhere(e, b, "-")
+		sb.binaryWhere(e, b, "-", sm)
 	case mul:
-		sb.binaryWhere(e, b, "*")
+		sb.binaryWhere(e, b, "*", sm)
 	case div:
-		sb.binaryWhere(e, b, "/")
+		sb.binaryWhere(e, b, "/", sm)
 	}
 	b.WriteByte(')')
 }
@@ -394,104 +730,86 @@ func (sb *SQLBuilder) replacementIndex(s string) int {
 	return idx
 }
 
-func (sb *SQLBuilder) createFrom(b *strings.Builder) {
-	switch sb.Mode {
-	case AdvisoryMode, DocumentMode:
-		b.WriteString(`documents ` +
-			`JOIN advisories ON ` +
-			`advisories.id = documents.advisories_id`)
-	case EventMode:
-		b.WriteString(`events_log JOIN documents ON events_log.documents_id = documents.id ` +
-			`JOIN advisories ON advisories.id = documents.advisories_id ` +
-			`LEFT JOIN (SELECT message, id FROM comments) AS comment ON events_log.comments_id = comment.id`)
-	}
-
-	// Add SSVC if exists
-	b.WriteString(` LEFT JOIN LATERAL ( ` +
-		`SELECT ssvc FROM ssvc_history ` +
-		`WHERE documents_id = documents.id ` +
-		`ORDER BY changedate DESC, change_number DESC LIMIT 1 ` +
-		`) AS ssvc_current ON TRUE`)
-
-	if sb.TextTables {
-		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
-			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
-	}
-}
-
 // CreateCountSQL returns an SQL count statement to count
 // the number of rows which are possible to fetch by the
 // given filter.
 func (sb *SQLBuilder) CreateCountSQL() string {
 	var b strings.Builder
+	sm := statementMode(classicMode{})
+	if sb.mode() != EventMode && sb.usedSources.contains(documentsTable|advisoriesTable) {
+		sm = cteMode{}
+		sb.prefixCTE(&b)
+	}
 	b.WriteString("SELECT count(*) FROM ")
-	sb.createFrom(&b)
+	sm.from(sb, &b)
 	b.WriteString(" WHERE ")
-	b.WriteString(sb.WhereClause)
+	sb.createWhere(&b, sm)
 	return b.String()
 }
 
-// CreateOrder returns a ORDER BY clause for given columns.
-func (sb *SQLBuilder) CreateOrder(fields []string) (string, error) {
-	var b strings.Builder
-	for _, field := range fields {
-		desc := strings.HasPrefix(field, "-")
-		if desc {
-			field = field[1:]
-		}
-		if _, found := sb.Aliases[field]; !found && !existsDocumentColumn(field, sb.Mode) {
-			return "", fmt.Errorf("order field %q does not exists", field)
-		}
-		if b.Len() > 0 {
+func (sb *SQLBuilder) prefixCTE(b *strings.Builder) {
+	b.WriteString(`WITH docads AS (` +
+		`SELECT `)
+	for i, field := range itertools.Enumerate(
+		itertools.Unique(itertools.Concat(
+			itertools.Filter(
+				slices.Values(sb.fields),
+				// Aliases are not real columns.
+				itertools.Not(sb.HasAlias)),
+			itertools.Filter(itertools.Apply(
+				slices.Values(sb.orderFields),
+				func(s string) string {
+					// Remove leading '-' from orderFields
+					return strings.TrimPrefix(s, "-")
+				}),
+				// Aliases are not real columns.
+				itertools.Not(sb.HasAlias)),
+			sb.expr.Accesses(),
+		))) {
+		if i > 0 {
 			b.WriteByte(',')
 		}
 		switch field {
-		case "tracking_id", "publisher", "id":
-			b.WriteString("advisories.")
-			b.WriteString(field)
-		case "cvss_v2_score", "cvss_v3_score", "critical":
-			b.WriteString("COALESCE(")
-			b.WriteString(field)
-			b.WriteString(",0)")
+		case "id":
+			b.WriteString("documents.id AS id")
+		case "versions":
+			b.WriteString(versionsCountClassic + ` AS versions`)
 		case "ssvc":
-			b.WriteString("ssvc_current.ssvc")
-		case "version":
-			// TODO: This is not optimal (SemVer).
-			b.WriteString(
-				`CASE WHEN version ~ '^[[:digit:]]+$' THEN version::int END`)
+			b.WriteString(`(` +
+				`SELECT ssvc FROM ssvc_history ` +
+				`WHERE documents_id = documents.id ` +
+				`ORDER BY changedate DESC, change_number DESC LIMIT 1)`)
 		default:
 			b.WriteString(field)
 		}
-
-		if desc {
-			b.WriteString(" DESC")
-		} else {
-			b.WriteString(" ASC")
-		}
 	}
-	return b.String(), nil
+	b.WriteString(` FROM documents JOIN advisories` +
+		` ON documents.advisories_id = advisories.id)`)
 }
 
 // CreateQuery creates an SQL statement to query the documents
 // table and the associated texts if needed.
 // WARN: Make sure that the input is vetted against injections.
 func (sb *SQLBuilder) CreateQuery(
-	fields []string,
-	order string,
 	limit, offset int64,
 ) string {
 	var b strings.Builder
+	sm := statementMode(classicMode{})
+	if sb.mode() != EventMode && sb.usedSources.contains(documentsTable|advisoriesTable) {
+		sm = cteMode{}
+		sb.prefixCTE(&b)
+	}
 
 	b.WriteString("SELECT ")
-	sb.projectionsWithCasts(&b, fields)
+	sb.createProjectionsWithCasts(&b, sm)
 	b.WriteString(" FROM ")
-	sb.createFrom(&b)
+	sm.from(sb, &b)
 	b.WriteString(" WHERE ")
-	b.WriteString(sb.WhereClause)
+	sb.createWhere(&b, sm)
 
-	if order != "" {
+	if len(sb.orderFields) > 0 {
 		b.WriteString(" ORDER BY ")
-		b.WriteString(order)
+		sb.createOrder(&b, sm)
 	}
 
 	if limit >= 0 {
@@ -503,84 +821,97 @@ func (sb *SQLBuilder) CreateQuery(
 		b.WriteString(strconv.FormatInt(offset, 10))
 	}
 
-	return b.String()
+	query := b.String()
+	slog.Debug("sql builder", "query", query)
+	return query
 }
 
-// projectionsWithCasts joins given projection adding casts if needed.
-func (sb *SQLBuilder) projectionsWithCasts(b *strings.Builder, proj []string) {
-	for i, p := range proj {
-		if _, found := sb.IgnoreFields[p]; found {
-			continue
+// createOrder returns a ORDER BY clause for given columns.
+func (sb *SQLBuilder) createOrder(b *strings.Builder, sm statementMode) {
+	for i, field := range sb.orderFields {
+		desc := strings.HasPrefix(field, "-")
+		if desc {
+			field = field[1:]
 		}
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		if alias, found := sb.Aliases[p]; found {
-			b.WriteString(`CASE WHEN length(`)
-			b.WriteString(alias)
-			b.WriteString(`)<= 200 THEN `)
-			b.WriteString(alias)
-			b.WriteString(` ELSE substring(`)
-			b.WriteString(alias)
-			b.WriteString(`, 0, 197)END||'...'AS `)
-			b.WriteString(p)
-			continue
-		}
-		switch p {
-		case "tracking_id", "publisher":
-			b.WriteString("advisories.")
-			b.WriteString(p)
-			b.WriteString(` AS `)
-			b.WriteString(p)
-		case "id":
-			b.WriteString("documents.")
-			b.WriteString(p)
-			b.WriteString(` AS `)
-			b.WriteString(p)
-		case "state", "event", "tracking_status":
-			b.WriteString(p)
-			b.WriteString("::text")
-		case "event_state":
-			b.WriteString("events_log.state::text AS event_state")
-		case "versions":
-			b.WriteString(versionsCountClassic + `AS versions`)
-		case "ssvc":
-			b.WriteString("ssvc_current.ssvc AS ssvc")
-		case "comments":
-			switch sb.Mode {
-			case AdvisoryMode:
-				b.WriteString(p)
-			case DocumentMode:
-				b.WriteString(commentsCountDocumentsClassic + `AS comments`)
-			case EventMode:
-				b.WriteString(commentsCountEvents + `AS comments`)
-			}
-		default:
-			b.WriteString(p)
+		sm.order(sb, b, field)
+		if desc {
+			b.WriteString(" DESC")
+		} else {
+			b.WriteString(" ASC")
 		}
 	}
 }
 
-// CheckProjections checks if the requested projections are valid.
-func (sb *SQLBuilder) CheckProjections(proj []string) error {
-	for _, p := range proj {
-		if _, found := sb.Aliases[p]; found {
+// createProjectionsWithCasts joins given projection adding casts if needed.
+func (sb *SQLBuilder) createProjectionsWithCasts(b *strings.Builder, sm statementMode) {
+	for i, name := range sb.fields {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		if srch := sb.alias(name); srch != nil {
+			if sb.aggregate {
+				fmt.Fprintf(b, "_search_join_%d.id AS %s", srch.intValue, name)
+			} else {
+				fmt.Fprintf(b,
+					`CASE WHEN length(_search_join_%[1]d.txt)<= 200 THEN _search_join_%[1]d.txt `+
+						`ELSE substring(_search_join_%[1]d.txt, 0, 197)||'...' END AS "%[2]s"`,
+					srch.intValue, name)
+			}
 			continue
 		}
-		if _, found := sb.IgnoreFields[p]; found {
-			continue
-		}
-		if !existsDocumentColumn(p, sb.Mode) {
-			return fmt.Errorf("column %q does not exists", p)
+		sm.projection(sb, b, name)
+	}
+}
+
+// CheckProjections checks if the provided projection fields are valid.
+func (sb *SQLBuilder) CheckProjections(fields []string) error {
+	for _, f := range fields {
+		if !sb.checkField(f) {
+			return fmt.Errorf("column %q does not exist", f)
 		}
 	}
 	return nil
 }
 
-var (
-	dirtyReplace     *regexp.Regexp
-	dirtyReplaceOnce sync.Once
-)
+// CheckOrder validates the provided order fields.
+func (sb *SQLBuilder) CheckOrder(orderFields []string) error {
+	for _, f := range orderFields {
+		if cleanF := strings.TrimPrefix(f, "-"); !sb.checkField(cleanF) {
+			return fmt.Errorf("order field %q does not exist", f)
+		}
+	}
+	return nil
+}
+
+// check tests for the existence of used columns.
+func (sb *SQLBuilder) check() error {
+	if err := sb.CheckProjections(sb.fields); err != nil {
+		return err
+	}
+	if err := sb.CheckOrder(sb.orderFields); err != nil {
+		return err
+	}
+	slog.Debug("sqlbuilder", "used sources", sb.usedSources)
+	return nil
+}
+
+// checkField tests if a field is valid. It is valid if there is a named column or
+// there exists an alias for it
+func (sb *SQLBuilder) checkField(field string) bool {
+	col := findDocumentColumn(field, sb.mode())
+	if col != nil {
+		sb.usedSources.add(col.sources)
+		return true
+	}
+	if sb.HasAlias(field) {
+		sb.usedSources.add(documentsTable | textTable)
+		return true
+	}
+	return false
+}
 
 // InterpolateSQLqnd is a quick and dirty hack to re-substitute strings
 // into SQL statements. Warning: USE FOR LOGGING ONLY!
@@ -610,4 +941,27 @@ func InterpolateSQLqnd(sql string, replacements []any) string {
 		return `'%[` + m[1] + `]` + verb + `'`
 	})
 	return fmt.Sprintf(sql, replacements...)
+}
+
+// CreateWhereSQL creates a SQL WHERE clause from the builders expression.
+func (sb *SQLBuilder) CreateWhereSQL() string {
+	var b strings.Builder
+
+	sm := statementMode(classicMode{})
+	if sb.mode() != EventMode &&
+		sb.usedSources.contains(documentsTable|advisoriesTable) {
+		sm = cteMode{}
+	}
+
+	sb.createWhere(&b, sm)
+	return b.String()
+}
+
+// LikeEscape quotes a query string to be more convenient
+// to use with LIKE filters.
+func LikeEscape(query string) string {
+	query = strings.TrimSpace(query)
+	query = escapeLike(query)
+	query = whiteSpaces.ReplaceAllString(query, `%`)
+	return `%` + query + `%`
 }

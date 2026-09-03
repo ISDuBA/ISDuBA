@@ -115,6 +115,8 @@ var documentColumns = []documentColumn{
 	{"four_cves", stringType, docAdvEvtModes, true, documentsTable},
 	{"comments", intType, docAdvEvtModes, false, documentsTable},
 	{"tracking_status", statusType, docAdvEvtModes, false, documentsTable},
+	{"original", stringType, docAdvEvtModes, false, documentsTable},
+	{"filename", stringType, docAdvEvtModes, false, documentsTable},
 	// Advisories only
 	{"state", workflowType, advModes, false, advisoriesTable},
 	{"recent", timeType, advModes, false, advisoriesTable},
@@ -283,10 +285,6 @@ func (cs columnSource) String() string {
 		tables = append(tables, fmt.Sprintf("unknown table(s): %b", cs))
 	}
 	return strings.Join(tables, "|")
-}
-
-func existsDocumentColumn(name string, mode ParserMode) bool {
-	return findDocumentColumn(name, mode) != nil
 }
 
 // findDocumentColumn returns a column if it exists.
