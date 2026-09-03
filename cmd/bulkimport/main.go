@@ -15,17 +15,20 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/ISDuBA/ISDuBA/pkg/config"
-	"github.com/ISDuBA/ISDuBA/pkg/database"
-	"github.com/ISDuBA/ISDuBA/pkg/version"
 	"io"
 	"io/fs"
 	"log/slog"
 	"os"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
+
+	"github.com/ISDuBA/ISDuBA/pkg/config"
+	"github.com/ISDuBA/ISDuBA/pkg/database"
+	"github.com/ISDuBA/ISDuBA/pkg/version"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -139,7 +142,10 @@ func process(creds *config.Database, dry bool, importer string, files []string, 
 	defer func() {
 		slog.Info("processing took", "duration", time.Since(start))
 	}()
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGKILL, syscall.SIGTERM)
+	defer stop()
 
 	db, err := database.NewDB(ctx, creds)
 	if err != nil {
