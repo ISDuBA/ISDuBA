@@ -578,9 +578,10 @@
               {#if aggregator.id !== undefined && aggregator.id === aggregatorToEdit}
                 <div class="flex flex-wrap gap-4">
                   <div class="flex flex-col items-center gap-1 md:flex-row">
-                    <Label>Name</Label>
+                    <Label for="edited-aggregator-name">Name</Label>
                     <Input
                       class="h-fit w-fit"
+                      id="edited-aggregator-name"
                       bind:value={editedName}
                       onclick={(event) => {
                         event.stopPropagation();
@@ -595,9 +596,10 @@
                     ></Input>
                   </div>
                   <div class="flex flex-col items-center gap-1 md:flex-row">
-                    <Label>URL</Label>
+                    <Label for="edited-aggregator-url">URL</Label>
                     <Input
                       class="h-fit w-fit"
+                      id="edited-aggregator-url"
                       bind:value={editedUrl}
                       onclick={(event) => {
                         event.stopPropagation();

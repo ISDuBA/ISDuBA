@@ -16,10 +16,12 @@ test("Aggregator is working", async ({ page }) => {
   await page.goto("/#/sources/aggregators");
   await expect(page.getByRole("heading", { name: "Aggregators" })).toBeVisible();
   await page.getByRole("button", { name: "New aggregator" }).click();
-  await page.getByLabel("Name").fill(aggName);
+  const newAggregatorNameInput = page.getByLabel("Name");
+  await newAggregatorNameInput.fill(aggName);
   const aggURL = "https://wid.cert-bund.de/.well-known/csaf-aggregator/aggregator.json";
   await page.getByLabel("URL").fill(aggURL);
   await page.getByRole("button", { name: "Save aggregator" }).click();
+  await newAggregatorNameInput.waitFor({ state: "hidden" });
   // Accordion item of the new aggregator should be opened right away
   const hintText =
     "These are the currently available providers. Please review their feeds and adjust the sources if needed.";
@@ -31,7 +33,8 @@ test("Aggregator is working", async ({ page }) => {
     exact: true
   });
   await accordionHeader.scrollIntoViewIfNeeded();
-  await accordionHeader.click({ force: true });
+  // Prevent that PW hits the toggle button
+  await accordionHeader.click({ position: { x: 1, y: 1 }, scroll: "none" });
   await page.getByText(hintText).waitFor({ state: "hidden" });
 
   // Edit aggregator
