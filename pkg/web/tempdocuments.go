@@ -64,13 +64,13 @@ func (c *Controller) importTempDocument(ctx *gin.Context) {
 		if len(msgs) > 0 {
 			return errors.New("schema validation failed: " + strings.Join(msgs, ", "))
 		}
-		if rmv := c.val; rmv != nil {
-			rvr, err := rmv.ValidateWithContext(ctx, document)
+		if c.val != nil {
+			rvr, err := c.val.ValidateWithContext(ctx, document)
 			if err != nil {
-				return fmt.Errorf("Calling remote validator failed: %w", err)
+				return fmt.Errorf("calling remote validator failed: %w", err)
 			}
 			if !rvr.Valid {
-				return fmt.Errorf("CSAF file does not validate remotely: %s", file.Filename)
+				return fmt.Errorf("CSAF file does not validate remotely: %q", file.Filename)
 			}
 		}
 		return nil
