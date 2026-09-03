@@ -12,7 +12,7 @@ A collection of scripts which allows to set up ISDuBA on a Ubuntu 24.04 setup an
 some important setup-steps. 
 
 These scripts install the following:
- * [Postgresql 15](https://www.postgresql.org/docs/release/15.0/)
+ * [Postgresql 17](https://www.postgresql.org/docs/release/17.0/)
  * [Keycloak 26](https://www.keycloak.org/docs/latest/release_notes/index.html#keycloak-26-0-0)
  * make
  * bash
@@ -99,7 +99,7 @@ The following will briefly explain what every other script does. It's not necess
  Installs ca-certificates, curl, gnupg and playwright with dependencies.
  
 #### [installpostgres.sh](./installpostgres.sh)
-  Installs Postgresql 15.
+  Installs Postgresql 17.
 
 #### [installutilities.sh](./installutilities.sh)
   Installs 
