@@ -605,44 +605,41 @@ CREATE TABLE aggregators (
 
 -- update_products_id_and_names_texts updates the products_id_texts and products_name_texts tables
 CREATE FUNCTION update_products_id_and_names_texts() RETURNS trigger AS $$
-    BEGIN
-        WITH pn AS (
-            SELECT DISTINCT 
-                jsonb_path_query(NEW.document, '$.product_tree.**.product.name')::int num,
-                id
-            FROM
-                documents
-        ),
-        pn_data AS (
-            SELECT
-                documents_id,
-                pn.num AS num,
-                txt_id
-            FROM pn JOIN documents_texts dts
-                ON pn.id = dts.documents_id AND pn.num = dts.num
-        )
-        INSERT INTO products_name_texts
-            SELECT * FROM pn_data;
+BEGIN
+    WITH pn AS (
+        SELECT DISTINCT
+            jsonb_path_query(NEW.document, '$.product_tree.**.product.name')::int num,
+            NEW.id
+    ),
+    pn_data AS (
+        SELECT
+            NEW.id,
+            pn.num AS num,
+            txt_id
+        FROM pn JOIN documents_texts dts
+            ON pn.id = dts.documents_id AND pn.num = dts.num
+    )
+    INSERT INTO products_name_texts
+        SELECT * FROM pn_data;
 
-        WITH pid AS (
-            SELECT DISTINCT 
-                jsonb_path_query(NEW.document, '$.product_tree.**.product.product_id')::int num,
-                id
-            FROM
-                documents
-        ),
-        pid_data AS (
-            SELECT
-                documents_id,
-                pid.num AS num,
-                txt_id
-            FROM pid JOIN documents_texts dts
-                ON pid.id = dts.documents_id AND pid.num = dts.num
-        )
-        INSERT INTO products_id_texts
+    WITH pid AS (
+        SELECT DISTINCT
+            jsonb_path_query(NEW.document, '$.product_tree.**.product.product_id')::int num,
+            NEW.id
+    ),
+    pid_data AS (
+        SELECT
+            NEW.id,
+            pid.num AS num,
+            txt_id
+        FROM pid JOIN documents_texts dts
+            ON pid.id = dts.documents_id AND pid.num = dts.num
+    )
+    INSERT INTO products_id_texts
         SELECT * FROM pid_data;
-        RETURN NULL;
-    END;
+
+    RETURN NULL;
+END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_products_id_and_names_texts
