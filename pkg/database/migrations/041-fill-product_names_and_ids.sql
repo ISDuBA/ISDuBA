@@ -16,9 +16,20 @@ CREATE TABLE products_name_texts (
 CREATE INDEX ON products_name_texts(documents_id);
 CREATE INDEX ON products_name_texts(txt_id);
 
+CREATE TABLE products_id_texts (
+    documents_id int NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    num          int NOT NULL,
+    txt_id       int NOT NULL REFERENCES unique_texts(id) ON DELETE CASCADE,
+    UNIQUE(documents_id, num)
+);
+
+CREATE INDEX ON products_id_texts(documents_id);
+CREATE INDEX ON products_id_texts(txt_id);
+
 
 
 GRANT INSERT, DELETE, SELECT, UPDATE ON products_name_texts TO {{ .User | sanitize }};
+GRANT INSERT, DELETE, SELECT, UPDATE ON products_id_texts   TO {{ .User | sanitize }};
 
 
 
