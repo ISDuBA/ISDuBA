@@ -17,7 +17,7 @@ import {
   type Publisher,
   type Reference,
   type RevisionHistoryEntry
-} from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+} from "$lib/Advisories/types/docmodeltypes";
 import {
   extractProducts,
   generateProductVulnerabilities

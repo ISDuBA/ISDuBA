@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import SingleNote from "$lib/Advisories/CSAFWebview/notes/Note.svelte";
-  import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import type { Note } from "$lib/Advisories/types/docmodeltypes";
   import { onMount } from "svelte";
   import Collapsible from "../Collapsible.svelte";
   import { advisorySearchState } from "$lib/Advisories/advisory.svelte";

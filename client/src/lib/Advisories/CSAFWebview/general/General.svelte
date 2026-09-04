@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
-  import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import { Status } from "$lib/Advisories/types/docmodeltypes";
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
   import { Button } from "flowbite-svelte";
@@ -18,13 +18,15 @@
   import Link from "$lib/Components/Link.svelte";
   import SearchableText from "../SearchableText.svelte";
   import { ArrowOutUpRightSquare, Link as LinkIcon } from "@boxicons/svelte";
+  import { getTrackingVersion } from "$lib/Advisories/document";
 
   interface Props {
     basePath: string;
   }
   let { basePath = "" }: Props = $props();
 
-  let trackingVersion = $derived(appStore.state.webview.doc?.trackingVersion);
+  let doc = $derived(appStore.state.webview.doc);
+  let trackingVersion = $derived(doc != null ? getTrackingVersion(doc) : undefined);
   let generator = $derived(appStore.state.webview.doc?.generator);
   let publisherName = $derived(appStore.state.webview.doc?.publisher.name);
   let publisherCategory = $derived(appStore.state.webview.doc?.publisher.category);

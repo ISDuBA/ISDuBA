@@ -6,7 +6,8 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+import type { DocModel } from "$lib/Advisories/types/docmodeltypes";
+import type { CSAFDocumentv2_1 } from "./Advisories/types/csaf-2.1";
 import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./workflow";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
@@ -63,7 +64,7 @@ type AppStore = {
     routerParams: any;
   };
   webview: {
-    doc: DocModel | null;
+    doc: DocModel | CSAFDocumentv2_1 | null;
     providerMetadata: any;
     currentFeed: any;
     four_cves: any;

@@ -15,7 +15,7 @@ import {
   type DocModel,
   type DocModelKey,
   TLP
-} from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+} from "$lib/Advisories/types/docmodeltypes";
 
 const allEmpty = (docModel: DocModel, properties: DocModelKey[]) => {
   properties.forEach((p) => {

@@ -28,7 +28,6 @@
   import { addSlashes } from "$lib/utils";
   import {
     type AdvisoryVersion,
-    fetchDocumentSSVC,
     fetchSearchHits,
     loadAdvisoryVersions,
     advisorySearchState,
@@ -39,6 +38,7 @@
   import SearchableText from "./CSAFWebview/SearchableText.svelte";
   import { Check, AlertCircle, ArrowRightStroke } from "@boxicons/svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
+  import { fetchDocumentSSVC } from "./document";
 
   let { params } = $props();
 

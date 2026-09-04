@@ -130,36 +130,6 @@ const loadAdvisoryVersions = async (
   }
 };
 
-const fetchDocumentSSVC = async (
-  documentId: string | number,
-  abortController?: AbortController
-): Promise<string | ErrorDetails | undefined> => {
-  const response = await request(
-    `/api/ssvc/documents/${documentId}`,
-    "GET",
-    undefined,
-    abortController
-  );
-
-  // Any error
-  if (!response.ok) {
-    if (response.error !== "AbortError") {
-      return getErrorDetails("Could not load SSVC.", response);
-    } else {
-      return undefined;
-    }
-  }
-
-  const result = await response.content;
-
-  // got a non-empty result
-  if (result && typeof result.ssvc === "string" && result.ssvc !== "") {
-    return result.ssvc;
-  }
-  // no SSVC
-  return undefined;
-};
-
 interface SearchMatch {
   path: string;
   positions: number[][];
@@ -218,7 +188,6 @@ export {
   advisorySearchState,
   updateMultipleStates,
   loadAdvisoryVersions,
-  fetchDocumentSSVC,
   fetchSearchHits,
   getAdvisoryAnchorLink,
   getAdvisorySearchHit,
