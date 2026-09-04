@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import type { Note } from "$lib/Advisories/types/docmodeltypes";
   import SearchableText from "../SearchableText.svelte";
 
   interface Props {
