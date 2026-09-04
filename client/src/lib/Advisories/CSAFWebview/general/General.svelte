@@ -18,7 +18,13 @@
   import Link from "$lib/Components/Link.svelte";
   import SearchableText from "../SearchableText.svelte";
   import { ArrowOutUpRightSquare, Link as LinkIcon } from "@boxicons/svelte";
-  import { getTrackingVersion } from "$lib/Advisories/document";
+  import {
+    getCategory,
+    getGenerator,
+    getPublisher,
+    getTitle,
+    getTrackingVersion
+  } from "$lib/Advisories/document";
 
   interface Props {
     basePath: string;
@@ -27,14 +33,15 @@
 
   let doc = $derived(appStore.state.webview.doc);
   let trackingVersion = $derived(doc != null ? getTrackingVersion(doc) : undefined);
-  let generator = $derived(appStore.state.webview.doc?.generator);
-  let publisherName = $derived(appStore.state.webview.doc?.publisher.name);
-  let publisherCategory = $derived(appStore.state.webview.doc?.publisher.category);
-  let publisherNamespace = $derived(appStore.state.webview.doc?.publisher.namespace);
-  let publisherIssuingAuthority = $derived(appStore.state.webview.doc?.publisher.issuing_authority);
-  let publisherContactDetails = $derived(appStore.state.webview.doc?.publisher.contact_details);
-  let category = $derived(appStore.state.webview.doc?.category);
-  let title = $derived(appStore.state.webview.doc?.title);
+  let generator = $derived(doc != null ? getGenerator(doc) : undefined);
+  let publisher = $derived(doc != null ? getPublisher(doc) : undefined);
+  let publisherName = $derived(publisher?.name ?? undefined);
+  let publisherCategory = $derived(publisher?.category ?? undefined);
+  let publisherNamespace = $derived(publisher?.namespace ?? undefined);
+  let publisherIssuingAuthority = $derived(publisher?.issuing_authority ?? undefined);
+  let publisherContactDetails = $derived(publisher?.contact_details ?? undefined);
+  let category = $derived(doc != null ? getCategory(doc) : undefined);
+  let title = $derived(doc != null ? getTitle(doc) : undefined);
   let lang = $derived(appStore.state.webview.doc?.lang);
   let sourceLang = $derived(appStore.state.webview.doc?.sourceLang);
   let csafVersion = $derived(appStore.state.webview.doc?.csafVersion);

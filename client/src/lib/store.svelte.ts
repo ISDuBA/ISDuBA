@@ -255,7 +255,7 @@ export const appStore = {
     state.webview.ui.feedErrorMsg = msg;
   },
 
-  setDocument: (data: any) => {
+  setDocument: (data: DocModel | CSAFDocumentv2_1 | null) => {
     state.webview.doc = data;
   },
 

@@ -13,14 +13,76 @@ import type { DocModel } from "./types/docmodeltypes";
 import type { CSAFDocumentv2_1, Version } from "./types/csaf-2.1";
 
 const isV2_1 = (document: DocModel | CSAFDocumentv2_1): boolean => {
-  return Object.keys(document).includes("$schema");
+  if (
+    Object.keys(document).includes("document") &&
+    (document as CSAFDocumentv2_1).document.csaf_version === "2.1"
+  ) {
+    return true;
+  }
+  return false;
 };
 
 const getTrackingVersion = (document: DocModel | CSAFDocumentv2_1): Version | string => {
   if (isV2_1(document)) {
-    return (document as DocModel).trackingVersion;
-  } else {
     return (document as CSAFDocumentv2_1).document.tracking.version;
+  } else {
+    return (document as DocModel).trackingVersion;
+  }
+};
+
+const getGenerator = (document: DocModel | CSAFDocumentv2_1) => {
+  if (isV2_1(document)) {
+    return (document as CSAFDocumentv2_1).document.tracking.generator;
+  } else {
+    return (document as DocModel).generator;
+  }
+};
+
+const getTLP = (document: DocModel | CSAFDocumentv2_1) => {
+  if (isV2_1(document)) {
+    return (document as CSAFDocumentv2_1).document.distribution.tlp;
+  } else {
+    return (document as DocModel).tlp;
+  }
+};
+
+const getPublisher = (document: DocModel | CSAFDocumentv2_1) => {
+  if (isV2_1(document)) {
+    return (document as CSAFDocumentv2_1).document.publisher;
+  } else {
+    return (document as DocModel).publisher;
+  }
+};
+
+const getTitle = (document: DocModel | CSAFDocumentv2_1) => {
+  if (isV2_1(document)) {
+    return (document as CSAFDocumentv2_1).document.title;
+  } else {
+    return (document as DocModel).title;
+  }
+};
+
+const getCategory = (document: DocModel | CSAFDocumentv2_1) => {
+  if (isV2_1(document)) {
+    return (document as CSAFDocumentv2_1).document.category;
+  } else {
+    return (document as DocModel).category;
+  }
+};
+
+const getReferences = (document: DocModel | CSAFDocumentv2_1) => {
+  if (isV2_1(document)) {
+    return (document as CSAFDocumentv2_1).document.references;
+  } else {
+    return (document as DocModel).references;
+  }
+};
+
+const getProductTree = (document: DocModel | CSAFDocumentv2_1) => {
+  if (isV2_1(document)) {
+    return (document as CSAFDocumentv2_1).product_tree;
+  } else {
+    return (document as DocModel).productTree;
   }
 };
 
@@ -54,4 +116,15 @@ const fetchDocumentSSVC = async (
   return undefined;
 };
 
-export { fetchDocumentSSVC, getTrackingVersion };
+export {
+  isV2_1,
+  fetchDocumentSSVC,
+  getTrackingVersion,
+  getGenerator,
+  getTLP,
+  getPublisher,
+  getTitle,
+  getCategory,
+  getReferences,
+  getProductTree
+};

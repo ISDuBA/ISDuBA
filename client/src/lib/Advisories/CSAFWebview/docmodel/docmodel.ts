@@ -6,6 +6,8 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //
 
+import { getTrackingVersion, isV2_1 } from "$lib/Advisories/document";
+import type { CSAFDocumentv2_1 } from "$lib/Advisories/types/csaf-2.1";
 import {
   CSAFDocProps,
   EMPTY,
@@ -250,16 +252,6 @@ const getPublisher = (csafDoc: any): Publisher => {
 };
 
 /**
- * getTrackingVersion retrieves tracking version.
- * @param csafDoc
- * @returns version | ""
- */
-const getTrackingVersion = (csafDoc: any): string => {
-  if (!checkTrackingPresent(csafDoc)) return EMPTY;
-  return csafDoc.document.tracking[CSAFDocProps.TRACKINGVERSION] || EMPTY;
-};
-
-/**
  * getVulnerabilities retrieves the vulnerabilites section.
  * @param csafDoc
  * @returns vulnerabilities | []
@@ -420,7 +412,8 @@ const getAliases = (csafDoc: any) => {
  * @param csafDoc
  * @returns DocModel
  */
-const convertToDocModel = (csafDoc: any): DocModel => {
+const convertToDocModel = (csafDoc: any): DocModel | CSAFDocumentv2_1 => {
+  if (isV2_1(csafDoc)) return csafDoc;
   const docModel: DocModel = {
     aggregateSeverity: getAggregateSeverity(csafDoc),
     acknowledgments: getAcknowledgments(csafDoc),
@@ -456,7 +449,7 @@ const convertToDocModel = (csafDoc: any): DocModel => {
     vulnerabilities: getVulnerabilities(csafDoc),
     highestScore: getHighestScore(csafDoc)
   };
-  const products = extractProducts(csafDoc);
+  const products = extractProducts(docModel);
   const productLookup = products.reduce((o: any, n: any) => {
     o[n.product_id] = n.name;
     return o;

@@ -23,7 +23,13 @@
 
   import { Tabs, TabItem } from "flowbite-svelte";
   import { onMount, tick } from "svelte";
-  import { advisorySearchState, getAdvisorySearchHit } from "../advisory.svelte";
+  import {
+    advisorySearchState,
+    getAdvisorySearchHit,
+    getProductVulneravbilities
+  } from "../advisory.svelte";
+  import { getReferences } from "../document";
+  import type { DocumentReferences } from "../types/csaf-2.1";
 
   interface Props {
     position: string;
@@ -108,7 +114,12 @@
       count++;
     if (appStore.state.webview.doc?.notes) count++;
     if (appStore.state.webview.doc?.acknowledgments) count++;
-    if (appStore.state.webview.doc && appStore.state.webview.doc.references.length > 0) count++;
+    if (
+      appStore.state.webview.doc !== null &&
+      getReferences(appStore.state.webview.doc) !== undefined &&
+      (getReferences(appStore.state.webview.doc) as DocumentReferences).length > 0
+    )
+      count++;
     if (appStore.state.webview.doc?.isRevisionHistoryPresent) count++;
     return count;
   });
@@ -207,7 +218,7 @@
           onclick={() => openTab("vulnerabilitiesOverview")}
           title="Overview"
         >
-          {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+          {#if getProductVulneravbilities().length > 1}
             <div class={sideScroll}>
               <ProductVulnerabilities {basePath} />
             </div>
@@ -302,7 +313,7 @@
         <FakeButton active>Overview</FakeButton>
         <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
-          {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+          {#if getProductVulneravbilities().length > 1}
             <ProductVulnerabilities {basePath} />
           {:else}
             <i>
@@ -357,7 +368,12 @@
       <FakeButton active>References</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        <References path="/document" references={appStore.state.webview.doc?.references} />
+        <References
+          path="/document"
+          references={appStore.state.webview.doc
+            ? getReferences(appStore.state.webview.doc)
+            : undefined}
+        />
       </div>
     </div>
   {/if}

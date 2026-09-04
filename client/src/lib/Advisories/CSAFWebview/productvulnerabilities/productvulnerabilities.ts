@@ -6,6 +6,7 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
+import { getProductTree } from "$lib/Advisories/document";
 import {
   ProductStatusSymbol,
   type Vulnerability,
@@ -183,16 +184,16 @@ const generateLineWith = (product: Product, vulnerabilities: Vulnerability[]) =>
  * @returns An array of products [{product_id:"", name}]
  */
 const extractProducts = (jsonDocument: any): Product[] => {
-  if (!jsonDocument.product_tree) {
+  if (!jsonDocument || !getProductTree(jsonDocument)) {
     return [];
   }
   let products: any = [];
-  if (jsonDocument.product_tree.branches) {
-    const productsFromBranches = jsonDocument.product_tree.branches.reduce(parseBranch, []);
+  if (getProductTree(jsonDocument)?.branches) {
+    const productsFromBranches = getProductTree(jsonDocument).branches.reduce(parseBranch, []);
     products = products.concat(productsFromBranches);
   }
-  if (jsonDocument.product_tree["full_product_names"]) {
-    products = products.concat(jsonDocument.product_tree["full_product_names"]);
+  if (getProductTree(jsonDocument)?.["full_product_names"]) {
+    products = products.concat(getProductTree(jsonDocument)["full_product_names"]);
   }
   const productsFromRelationships: Product[] = getProductsFromRelationships(jsonDocument);
   return products.concat(productsFromRelationships);
@@ -204,8 +205,8 @@ const extractProducts = (jsonDocument: any): Product[] => {
  * @returns An array of products [{product_id:"", name}]
  */
 const getProductsFromRelationships = (jsonDocument: any): Product[] => {
-  if (!jsonDocument.product_tree.relationships) return [];
-  return jsonDocument.product_tree.relationships.map((relationship: Relationship) => {
+  if (!jsonDocument || !getProductTree(jsonDocument)?.relationships) return [];
+  return getProductTree(jsonDocument).relationships.map((relationship: Relationship) => {
     return {
       product_id: relationship.full_product_name.product_id,
       name: relationship.full_product_name.name

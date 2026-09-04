@@ -38,7 +38,9 @@
   import SearchableText from "./CSAFWebview/SearchableText.svelte";
   import { Check, AlertCircle, ArrowRightStroke } from "@boxicons/svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
-  import { fetchDocumentSSVC } from "./document";
+  import { fetchDocumentSSVC, getTLP } from "./document";
+  import { exampleDocument } from "./csaf-document-v2.1";
+  import type { CSAFDocumentv2_1 } from "./types/csaf-2.1";
 
   let { params } = $props();
 
@@ -613,6 +615,11 @@
   class="relative grid h-fit w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2 lg:h-full"
   id="top"
 >
+  <Button
+    onclick={() => {
+      appStore.setDocument(exampleDocument as unknown as CSAFDocumentv2_1);
+    }}>Display example document for CSAF 2.1</Button
+  >
   {#if documentNotFound}
     <div class="mb-2 font-bold">
       <AlertCircle aria-hidden="true" />
@@ -632,8 +639,8 @@
               textPath="/document/tracking/id"
             />
           </span>
-          {#if appStore.state.webview.doc?.tlp.label}
-            <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
+          {#if appStore.state.webview.doc && getTLP(appStore.state.webview.doc).label}
+            <Tlp tlp={getTLP(appStore.state.webview.doc).label}></Tlp>
           {/if}
         </Label>
         {#if isLoadingSearchMatches}

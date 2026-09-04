@@ -7,7 +7,7 @@
  * SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
-export const getPublisher = (publisher: string, width?: number) => {
+export const getPublisherAbbreviation = (publisher: string, width?: number) => {
   if (width && width > 1280) return publisher;
   switch (publisher) {
     case "Red Hat Product Security":
