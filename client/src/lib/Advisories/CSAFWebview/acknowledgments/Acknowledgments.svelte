@@ -9,16 +9,17 @@
 -->
 
 <script lang="ts">
-  import AcknowledgmentComponent from "./Acknowledgment.svelte";
-  import type { Acknowledgment } from "../docmodel/docmodeltypes";
+  import Acknowledgment from "./Acknowledgment.svelte";
+  import type { Acknowledgment as Acknowledgment2_0 } from "$lib/Advisories/types/csaf-2.0";
+  import type { Acknowledgment as Acknowledgment2_1 } from "$lib/Advisories/types/csaf-2.1";
   interface Props {
-    acknowledgments: Acknowledgment[];
+    acknowledgments: Acknowledgment2_0[] | Acknowledgment2_1[];
   }
   let { acknowledgments }: Props = $props();
 </script>
 
 {#if acknowledgments}
   {#each acknowledgments as ack, i (`ack-${i}`)}
-    <AcknowledgmentComponent {ack} path={`/document/acknowledgments[${i}]`} />
+    <Acknowledgment {ack} path={`/document/acknowledgments[${i}]`} />
   {/each}
 {/if}

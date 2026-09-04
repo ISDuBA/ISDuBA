@@ -25,7 +25,7 @@
   } from "flowbite-svelte";
   import { push } from "#routes/router.svelte.ts";
   import { request } from "#lib/request.ts";
-  import { getPublisher } from "#lib/publisher.ts";
+  import { getPublisherAbbreviation } from "#lib/publisher.ts";
   import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
   import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { onDestroy, onMount, untrack } from "svelte";
@@ -307,7 +307,7 @@
               {/if}
             </div>
             <span class="text-sm text-gray-600 dark:text-slate-300"
-              >{getPublisher(docA.document.publisher.name)}</span
+              >{getPublisherAbbreviation(docA.document.publisher.name)}</span
             >
             <span class="text-sm text-gray-600 dark:text-slate-300"
               >Version: {docA.document.tracking.version}</span
@@ -352,7 +352,7 @@
               {/if}
             </div>
             <span class="text-sm text-gray-600 dark:text-slate-300"
-              >{getPublisher(docB.document.publisher.name)}</span
+              >{getPublisherAbbreviation(docB.document.publisher.name)}</span
             >
             <span class="text-sm text-gray-600 dark:text-slate-300"
               >Version: {docB.document.tracking.version}</span
