@@ -11,6 +11,10 @@ import { getAccessToken, request } from "$lib/request";
 import { appStore } from "$lib/store.svelte";
 import type { WorkflowState } from "$lib/workflow";
 import { push } from "$routes/router.svelte";
+import {
+  extractProducts,
+  generateProductVulnerabilities
+} from "./CSAFWebview/productvulnerabilities/productvulnerabilities";
 
 type StateChange = {
   publisher: string;
@@ -180,6 +184,23 @@ const getAdvisorySearchHit = () => {
   return derivedHit;
 };
 
+const products = $derived(extractProducts(appStore.state.webview.doc));
+
+const productLookup = $derived.by(() => {
+  return products.reduce((o: any, n: any) => {
+    o[n.product_id] = n.name;
+    return o;
+  }, {});
+});
+
+const productVulnerabilities = $derived(
+  generateProductVulnerabilities(appStore.state.webview.doc, products, productLookup)
+);
+
+const getProductVulneravbilities = () => {
+  return productVulnerabilities ?? [];
+};
+
 const getAdvisoryLink = (doc: any) =>
   `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
 const getAdvisoryAnchorLink = (doc: any) => "#" + getAdvisoryLink(doc);
@@ -191,6 +212,7 @@ export {
   fetchSearchHits,
   getAdvisoryAnchorLink,
   getAdvisorySearchHit,
-  isResultConsistent
+  isResultConsistent,
+  getProductVulneravbilities
 };
 export type { AdvisoryVersion, SearchMatch };

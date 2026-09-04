@@ -4,12 +4,8 @@
 
 
 /**
- * Contains the URL of the CSAF JSON schema which the document promises to be valid for.
- */
-export type JSONSchema = "https://docs.oasis-open.org/csaf/csaf/v2.1/schema/csaf.json";
-/**
  * Contains a list of acknowledgment elements associated with the whole document.
- *
+ * 
  * @minItems 1
  */
 export type DocumentAcknowledgments = [Acknowledgment, ...Acknowledgment[]];
@@ -56,15 +52,7 @@ export type DocumentCategory = string;
 /**
  * Gives the version of the CSAF specification which the document was generated for.
  */
-export type CSAFVersion = "2.1";
-/**
- * Provides the unique ID for the sharing group.
- */
-export type SharingGroupID = string;
-/**
- * Contains a human-readable name for the sharing group.
- */
-export type SharingGroupName = string;
+export type CSAFVersion = "2.0";
 /**
  * Provides a textual description of additional constraints.
  */
@@ -72,7 +60,7 @@ export type TextualDescription = string;
 /**
  * Provides the TLP label of the document.
  */
-export type LabelOfTLP = "AMBER" | "AMBER+STRICT" | "CLEAR" | "GREEN" | "RED";
+export type LabelOfTLP = "AMBER" | "GREEN" | "RED" | "WHITE";
 /**
  * Provides a URL where to find the textual description of the TLP version which is used in this document. Default is the URL to the definition by FIRST.
  */
@@ -81,10 +69,6 @@ export type URLOfTLPVersion = string;
  * Identifies the language used by this document, corresponding to IETF BCP 47 / RFC 5646.
  */
 export type DocumentLanguage = string;
-/**
- * Contains the SPDX license expression for the CSAF document.
- */
-export type LicenseExpression = string;
 /**
  * Holds notes associated with the whole document.
  *
@@ -100,26 +84,6 @@ export type AudienceOfNote = string;
  */
 export type NoteCategory = "description" | "details" | "faq" | "general" | "legal_disclaimer" | "other" | "summary";
 /**
- * Specifies a list of product_group_ids to give context to the parent item.
- *
- * @minItems 1
- */
-export type ListOfProductGroupIds = [ReferenceTokenForProductGroupInstance, ...ReferenceTokenForProductGroupInstance[]];
-/**
- * Token required to identify a group of products so that it can be referred to from other parts in the document. There is no predefined or required format for the product_group_id as long as it uniquely identifies a group in the context of the current document.
- */
-export type ReferenceTokenForProductGroupInstance = string;
-/**
- * Specifies a list of product_ids to give context to the parent item.
- *
- * @minItems 1
- */
-export type ListOfProductIds = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
-/**
- * Token required to identify a full_product_name so that it can be referred to from other parts in the document. There is no predefined or required format for the product_id as long as it uniquely identifies a product in the context of the current document.
- */
-export type ReferenceTokenForProductInstance = string;
-/**
  * Holds the content of the note. Content varies depending on type.
  */
 export type NoteContent = string;
@@ -130,8 +94,7 @@ export type TitleOfNote = string;
 /**
  * Provides information about the category of publisher releasing the document.
  */
-export type CategoryOfPublisher =
-  "coordinator" | "discoverer" | "multiplier" | "other" | "translator" | "user" | "vendor";
+export type CategoryOfPublisher = "coordinator" | "discoverer" | "other" | "translator" | "user" | "vendor";
 /**
  * Information on how to contact the publisher, possibly including details such as web sites, email addresses, phone numbers, and postal mail addresses.
  */
@@ -205,7 +168,7 @@ export type EngineVersion = string;
  */
 export type UniqueIdentifierForTheDocument = string;
 /**
- * The date when this document was first released to the specified target group.
+ * The date when this document was first published.
  */
 export type InitialReleaseDate = string;
 /**
@@ -235,24 +198,6 @@ export type SummaryOfTheRevision = string;
  */
 export type DocumentStatus = "draft" | "final" | "interim";
 /**
- * Contains a list of extensions valid at the document property level of the CSAF document and associated with this document metadata.
- *
- * @minItems 1
- */
-export type DocumentLevelExtensions = [CSAFExtensionContent, ...CSAFExtensionContent[]];
-/**
- * Contains the URL of the CSAF Extension JSON schema which the JSON object promises to be valid for.
- */
-export type CSAFExtensionSchema = string;
-/**
- * Holds the category of the extension content.
- */
-export type ExtensionCategory = "critical" | "high_value" | "informational";
-/**
- * Determines whether using the extension would fail a mandatory test.
- */
-export type Critical = boolean;
-/**
  * Contains branch elements as children of the current element.
  *
  * @minItems 1
@@ -265,8 +210,8 @@ export type CategoryOfTheBranch =
   | "architecture"
   | "host_name"
   | "language"
+  | "legacy"
   | "patch_level"
-  | "platform"
   | "product_family"
   | "product_name"
   | "product_version"
@@ -282,6 +227,10 @@ export type NameOfTheBranch = string;
  * The value should be the product’s full canonical name, including version number and other attributes, as it would be used in a human-friendly document.
  */
 export type TextualDescriptionOfTheProduct = string;
+/**
+ * Token required to identify a full_product_name so that it can be referred to from other parts in the document. There is no predefined or required format for the product_id as long as it uniquely identifies a product in the context of the current document.
+ */
+export type ReferenceTokenForProductInstance = string;
 /**
  * The Common Platform Enumeration (CPE) attribute refers to a method for naming platforms external to this specification.
  */
@@ -303,7 +252,7 @@ export type ListOfFileHashes = [FileHash, ...FileHash[]];
  */
 export type AlgorithmOfTheCryptographicHash = string;
 /**
- * Contains the cryptographic hash value in lowercase hexadecimal representation.
+ * Contains the cryptographic hash value in hexadecimal representation.
  */
 export type ValueOfTheCryptographicHash = string;
 /**
@@ -311,23 +260,17 @@ export type ValueOfTheCryptographicHash = string;
  */
 export type Filename = string;
 /**
- * Contains a list of model numbers.
+ * Contains a list of full or abbreviated (partial) model numbers.
  *
  * @minItems 1
  */
 export type ListOfModels = [ModelNumber, ...ModelNumber[]];
 /**
- * Contains a model number of the component to identify - possibly with placeholders.
+ * Contains a full or abbreviated (partial) model number of the component to identify.
  */
 export type ModelNumber = string;
 /**
- * Contains a list of Package-URLs (PURL).
- *
- * @minItems 1
- */
-export type ListOfPURLs = [PackageURLRepresentation, ...PackageURLRepresentation[]];
-/**
- * The Package-URL (PURL) attribute refers to a method for reliably identifying and locating software packages external to this specification.
+ * The package URL (purl) attribute refers to a method for reliably identifying and locating software packages external to this specification.
  */
 export type PackageURLRepresentation = string;
 /**
@@ -341,23 +284,23 @@ export type ListOfSBOMURLs = [SBOMURL, ...SBOMURL[]];
  */
 export type SBOMURL = string;
 /**
- * Contains a list of serial numbers.
+ * Contains a list of full or abbreviated (partial) serial numbers.
  *
  * @minItems 1
  */
 export type ListOfSerialNumbers = [SerialNumber, ...SerialNumber[]];
 /**
- * Contains a serial number of the component to identify - possibly with placeholders.
+ * Contains a full or abbreviated (partial) serial number of the component to identify.
  */
 export type SerialNumber = string;
 /**
- * Contains a list of stock keeping units.
+ * Contains a list of full or abbreviated (partial) stock keeping units.
  *
  * @minItems 1
  */
 export type ListOfStockKeepingUnits = [StockKeepingUnit, ...StockKeepingUnit[]];
 /**
- * Contains a stock keeping unit (SKU) which is used in the ordering process to identify the component - possibly with placeholders.
+ * Contains a full or abbreviated (partial) stock keeping unit (SKU) which is used in the ordering process to identify the component.
  */
 export type StockKeepingUnit = string;
 /**
@@ -375,12 +318,6 @@ export type NamespaceOfTheGenericURI = string;
  */
 export type URI = string;
 /**
- * Contains a list of extensions valid at the full product name element level of the CSAF document and associated with this full product name element.
- *
- * @minItems 1
- */
-export type ProductLevelExtensions = [CSAFExtensionContent, ...CSAFExtensionContent[]];
-/**
  * Contains a list of full product names.
  *
  * @minItems 1
@@ -392,6 +329,10 @@ export type ListOfFullProductNames = [FullProductName, ...FullProductName[]];
  * @minItems 1
  */
 export type ListOfProductGroups = [ProductGroup, ...ProductGroup[]];
+/**
+ * Token required to identify a group of products so that it can be referred to from other parts in the document. There is no predefined or required format for the product_group_id as long as it uniquely identifies a group in the context of the current document.
+ */
+export type ReferenceTokenForProductGroupInstance = string;
 /**
  * Lists the product_ids of those products which known as one group in the document.
  *
@@ -407,26 +348,20 @@ export type ListOfProductIDs = [
  */
 export type SummaryOfTheProductGroup = string;
 /**
- * Contains a list of product paths.
+ * Contains a list of relationships.
  *
  * @minItems 1
  */
-export type ListOfProductPaths = [ProductPath, ...ProductPath[]];
+export type ListOfRelationships = [Relationship, ...Relationship[]];
+/**
+ * Defines the category of relationship for the referenced component.
+ */
+export type RelationshipCategory =
+  "default_component_of" | "external_component_of" | "installed_on" | "installed_with" | "optional_component_of";
 /**
  * Token required to identify a full_product_name so that it can be referred to from other parts in the document. There is no predefined or required format for the product_id as long as it uniquely identifies a product in the context of the current document.
  */
 export type ReferenceTokenForProductInstance1 = string;
-/**
- * Contains an ordered list of product subpaths, each one relating to the path defined by all previous elements up to the beginning node of the product path.
- *
- * @minItems 1
- */
-export type ListOfProductSubpaths = [Subpath, ...Subpath[]];
-/**
- * Defines the category of relationship between the previous item and the referenced next product.
- */
-export type RelationshipCategory =
-  "default_component_of" | "external_component_of" | "installed_on" | "installed_with" | "optional_component_of";
 /**
  * Token required to identify a full_product_name so that it can be referred to from other parts in the document. There is no predefined or required format for the product_id as long as it uniquely identifies a product in the context of the current document.
  */
@@ -448,12 +383,6 @@ export type VulnerabilityAcknowledgments = [Acknowledgment, ...Acknowledgment[]]
  */
 export type CVE = string;
 /**
- * Contains a list of CWEs.
- *
- * @minItems 1
- */
-export type ListOfCWEs = [CWE, ...CWE[]];
-/**
  * Holds the ID for the weakness associated.
  */
 export type WeaknessID = string;
@@ -462,31 +391,9 @@ export type WeaknessID = string;
  */
 export type WeaknessName = string;
 /**
- * Holds the version string of the CWE specification this weakness was extracted from.
- */
-export type CWEVersion = string;
-/**
- * Holds the date and time the vulnerability was originally disclosed to the public.
- */
-export type DisclosureDate = string;
-/**
  * Holds the date and time the vulnerability was originally discovered.
  */
 export type DiscoveryDate = string;
-/**
- * Contains a list of dates of first known exploitations.
- *
- * @minItems 1
- */
-export type ListOfFirstKnownExploitationDates = [FirstKnownExploitationDate, ...FirstKnownExploitationDate[]];
-/**
- * Contains the date when the information was last updated.
- */
-export type DateOfTheInformation = string;
-/**
- * Contains the date when the exploitation happened.
- */
-export type DateOfTheExploitation = string;
 /**
  * Contains a list of machine readable flags.
  *
@@ -498,6 +405,12 @@ export type ListOfFlags = [Flag, ...Flag[]];
  */
 export type DateOfTheFlag = string;
 /**
+ * Specifies a list of product_group_ids to give context to the parent item.
+ *
+ * @minItems 1
+ */
+export type ListOfProductGroupIds = [ReferenceTokenForProductGroupInstance, ...ReferenceTokenForProductGroupInstance[]];
+/**
  * Specifies the machine readable label.
  */
 export type LabelOfTheFlag =
@@ -506,6 +419,12 @@ export type LabelOfTheFlag =
   | "vulnerable_code_cannot_be_controlled_by_adversary"
   | "vulnerable_code_not_in_execute_path"
   | "vulnerable_code_not_present";
+/**
+ * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
+ */
+export type ListOfProductIds = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Represents a list of unique labels or tracking IDs for the vulnerability (if such information exists).
  *
@@ -527,10 +446,6 @@ export type Text = string;
  */
 export type ListOfInvolvements = [Involvement, ...Involvement[]];
 /**
- * Contains the contact information of the party that was used in this state.
- */
-export type PartyContactInformation = string;
-/**
  * Holds the date and time of the involvement entry.
  */
 export type DateOfInvolvement = string;
@@ -546,166 +461,6 @@ export type PartyStatus = "completed" | "contact_attempted" | "disputed" | "in_p
  * Contains additional context regarding what is going on.
  */
 export type SummaryOfTheInvolvement = string;
-/**
- * Contains metric objects for the current vulnerability.
- *
- * @minItems 1
- */
-export type ListOfMetrics = [Metric, ...Metric[]];
-export type CVSSv3 =
-  JSONSchemaForCommonVulnerabilityScoringSystemVersion30 | JSONSchemaForCommonVulnerabilityScoringSystemVersion31;
-export type CVSSv4 = (
-  | {
-      baseScore?: number;
-      baseSeverity?: "NONE";
-      [k: string]: unknown;
-    }
-  | {
-      baseScore?: number;
-      baseSeverity?: "LOW";
-      [k: string]: unknown;
-    }
-  | {
-      baseScore?: number;
-      baseSeverity?: "MEDIUM";
-      [k: string]: unknown;
-    }
-  | {
-      baseScore?: number;
-      baseSeverity?: "HIGH";
-      [k: string]: unknown;
-    }
-  | {
-      baseScore?: number;
-      baseSeverity?: "CRITICAL";
-      [k: string]: unknown;
-    }
-) & {
-  Automatable?: "NO" | "YES" | "NOT_DEFINED";
-  Recovery?: "AUTOMATIC" | "USER" | "IRRECOVERABLE" | "NOT_DEFINED";
-  Safety?: "NEGLIGIBLE" | "PRESENT" | "NOT_DEFINED";
-  attackComplexity?: "HIGH" | "LOW";
-  attackRequirements?: "NONE" | "PRESENT";
-  attackVector?: "NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL";
-  availabilityRequirement?: "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
-  confidentialityRequirement?: "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
-  exploitMaturity?: "UNREPORTED" | "PROOF_OF_CONCEPT" | "ATTACKED" | "NOT_DEFINED";
-  integrityRequirement?: "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
-  modifiedAttackComplexity?: "HIGH" | "LOW" | "NOT_DEFINED";
-  modifiedAttackRequirements?: "NONE" | "PRESENT" | "NOT_DEFINED";
-  modifiedAttackVector?: "NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL" | "NOT_DEFINED";
-  modifiedPrivilegesRequired?: "HIGH" | "LOW" | "NONE" | "NOT_DEFINED";
-  modifiedSubAvailabilityImpact?: "NEGLIGIBLE" | "LOW" | "HIGH" | "SAFETY" | "NOT_DEFINED";
-  modifiedSubConfidentialityImpact?: "NEGLIGIBLE" | "LOW" | "HIGH" | "NOT_DEFINED";
-  modifiedSubIntegrityImpact?: "NEGLIGIBLE" | "LOW" | "HIGH" | "SAFETY" | "NOT_DEFINED";
-  modifiedUserInteraction?: "NONE" | "PASSIVE" | "ACTIVE" | "NOT_DEFINED";
-  modifiedVulnAvailabilityImpact?: "NONE" | "LOW" | "HIGH" | "NOT_DEFINED";
-  modifiedVulnConfidentialityImpact?: "NONE" | "LOW" | "HIGH" | "NOT_DEFINED";
-  modifiedVulnIntegrityImpact?: "NONE" | "LOW" | "HIGH" | "NOT_DEFINED";
-  privilegesRequired?: "HIGH" | "LOW" | "NONE";
-  providerUrgency?: "CLEAR" | "GREEN" | "AMBER" | "RED" | "NOT_DEFINED";
-  subAvailabilityImpact?: "NONE" | "LOW" | "HIGH";
-  subConfidentialityImpact?: "NONE" | "LOW" | "HIGH";
-  subIntegrityImpact?: "NONE" | "LOW" | "HIGH";
-  userInteraction?: "NONE" | "PASSIVE" | "ACTIVE";
-  valueDensity?: "DIFFUSE" | "CONCENTRATED" | "NOT_DEFINED";
-  vectorString: string;
-  /**
-   * CVSS Version
-   */
-  version: "4.0";
-  vulnAvailabilityImpact?: "NONE" | "LOW" | "HIGH";
-  vulnConfidentialityImpact?: "NONE" | "LOW" | "HIGH";
-  vulnIntegrityImpact?: "NONE" | "LOW" | "HIGH";
-  vulnerabilityResponseEffort?: "LOW" | "MODERATE" | "HIGH" | "NOT_DEFINED";
-  [k: string]: unknown;
-};
-/**
- * Contains the rank ordering of probabilities from highest to lowest.
- */
-export type Percentile = string;
-/**
- * Contains the likelihood that any exploitation activity for this Vulnerability is being observed in the 30 days following the given timestamp.
- */
-export type Probability = string;
-/**
- * Holds the date and time the EPSS value was recorded.
- */
-export type EPSSTimestamp = string;
-/**
- * Contains an assessment of the severity of the vulnerability regarding the products on a qualitative scale.
- */
-export type QualitativeSeverityRating = "critical" | "high" | "low" | "medium" | "none";
-/**
- * Timestamp of the selections, in RFC 3339 format.
- */
-export type Timestamp = string;
-/**
- * The schema version of this selection list.
- */
-export type Schemaversion = "2.0.0";
-/**
- * Optional list of identifiers for the item or items (vulnerabilities, reports, advisories, systems, assets, etc.) being evaluated by these selections.
- *
- * @minItems 1
- */
-export type TargetIds = [string, ...string[]];
-/**
- * List of selections made from decision points. Each selection item corresponds to value keys contained in a specific decision point identified by its namespace, key, and version. Note that selection objects are deliberately minimal objects and do not contain the full decision point details.
- *
- * @minItems 1
- */
-export type Selections = [Selection, ...Selection[]];
-/**
- * The namespace of the SSVC object.
- */
-export type Namespace = string;
-/**
- * A short, non-empty string identifier for the object. Keys must start with an alphanumeric, contain only alphanumerics and `_`, and end with an alphanumeric.(`T*` is explicitly grandfathered in as a valid key, but should not be used for new objects.)
- */
-export type Key = string;
-/**
- * The version of the SSVC object. This must be a valid semantic version string.
- */
-export type Version1 = string;
-export type Name = string;
-export type Definition = string;
-/**
- * A list of selected value keys from the decision point values.
- *
- * @minItems 1
- */
-export type Values = [MinimalDecisionPointValue, ...MinimalDecisionPointValue[]];
-export type Name1 = string;
-export type Definition1 = string;
-/**
- * A short, non-empty string identifier for the object. Keys must start with an alphanumeric, contain only alphanumerics and `_`, and end with an alphanumeric.(`T*` is explicitly grandfathered in as a valid key, but should not be used for new objects.)
- */
-export type Key1 = string;
-/**
- * A list of resources that provide additional context about the decision points found in this selection.
- *
- * @minItems 1
- */
-export type DecisionPointResources = [Reference1, ...Reference1[]];
-export type Uri = string;
-export type Summary = string;
-/**
- * A list of references that provide additional context about the specific values selected.
- *
- * @minItems 1
- */
-export type References = [Reference1, ...Reference1[]];
-/**
- * Contains a list of extensions valid at the metrics-content-level of the CSAF document and associated with this metric element.
- *
- * @minItems 1
- */
-export type MetricsContentLevelExtensions = [CSAFExtensionContent, ...CSAFExtensionContent[]];
-/**
- * Contains the URL of the source that originally determined the metric.
- */
-export type Source = string;
 /**
  * Holds notes associated with this vulnerability item.
  *
@@ -761,17 +516,15 @@ export type ListOfProductIds7 = [ReferenceTokenForProductInstance, ...ReferenceT
  */
 export type ListOfProductIds8 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
- * Specifies a list of product_ids to give context to the parent item.
- *
- * @minItems 1
- */
-export type ListOfProductIds9 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
-/**
  * Holds a list of references associated with this vulnerability item.
  *
  * @minItems 1
  */
 export type VulnerabilityReferences = [Reference, ...Reference[]];
+/**
+ * Holds the date and time the vulnerability was originally released into the wild.
+ */
+export type ReleaseDate = string;
 /**
  * Contains a list of remediations.
  *
@@ -781,8 +534,7 @@ export type ListOfRemediations = [Remediation, ...Remediation[]];
 /**
  * Specifies the category which this remediation belongs to.
  */
-export type CategoryOfTheRemediation =
-  "fix_planned" | "mitigation" | "no_fix_planned" | "none_available" | "optional_patch" | "vendor_fix" | "workaround";
+export type CategoryOfTheRemediation = "mitigation" | "no_fix_planned" | "none_available" | "vendor_fix" | "workaround";
 /**
  * Contains the date from which the remediation is available.
  */
@@ -815,6 +567,12 @@ export type AdditionalRestartInformation = string;
  */
 export type URLToTheRemediation = string;
 /**
+ * Contains score objects for the current vulnerability.
+ *
+ * @minItems 1
+ */
+export type ListOfScores = [Score, ...Score[]];
+/**
  * Contains information about a vulnerability that can change with time.
  *
  * @minItems 1
@@ -836,28 +594,15 @@ export type DetailsOfTheThreat = string;
  * Gives the document producer the ability to apply a canonical name or title to the vulnerability.
  */
 export type Title = string;
-/**
- * Contains a list of extensions valid at the vulnerability item level of the CSAF document and associated with this vulnerability element.
- *
- * @minItems 1
- */
-export type VulnerabilityLevelExtensions = [CSAFExtensionContent, ...CSAFExtensionContent[]];
-/**
- * Contains a list of extensions valid at the root-level of the CSAF document and associated with this CSAF document.
- *
- * @minItems 1
- */
-export type RootLevelExtensions = [CSAFExtensionContent, ...CSAFExtensionContent[]];
 
 /**
  * Representation of security advisory information as a JSON document.
  */
-export interface CSAFDocumentv2_1 {
-  $schema: JSONSchema;
+export interface CSAFDocumentv2_0 {
   document: DocumentLevelMetaData;
   product_tree?: ProductTree;
   vulnerabilities?: Vulnerabilities;
-  x_extensions?: RootLevelExtensions;
+  [k: string]: unknown;
 }
 /**
  * Captures the meta-data about this document describing a particular set of security advisories.
@@ -867,16 +612,15 @@ export interface DocumentLevelMetaData {
   aggregate_severity?: AggregateSeverity;
   category: DocumentCategory;
   csaf_version: CSAFVersion;
-  distribution: RulesForDocumentSharing;
+  distribution?: RulesForSharingDocument;
   lang?: DocumentLanguage;
-  license_expression?: LicenseExpression;
   notes?: DocumentNotes;
   publisher: Publisher;
   references?: DocumentReferences;
   source_lang?: SourceLanguage;
   title: TitleOfThisDocument;
   tracking: Tracking;
-  x_extensions?: DocumentLevelExtensions;
+  [k: string]: unknown;
 }
 /**
  * Acknowledges contributions by describing those that contributed.
@@ -886,6 +630,7 @@ export interface Acknowledgment {
   organization?: ContributingOrganization;
   summary?: SummaryOfTheAcknowledgment;
   urls?: ListOfURLs;
+  [k: string]: unknown;
 }
 /**
  * Is a vehicle that is provided by the document producer to convey the urgency and criticality with which the one or more vulnerabilities reported should be addressed. It is a document-level metric and applied to the document as a whole — not any specific vulnerability. The range of values in this field is defined according to the document producer's policies and procedures.
@@ -893,21 +638,15 @@ export interface Acknowledgment {
 export interface AggregateSeverity {
   namespace?: NamespaceOfAggregateSeverity;
   text: TextOfAggregateSeverity;
+  [k: string]: unknown;
 }
 /**
  * Describe any constraints on how this document might be shared.
  */
-export interface RulesForDocumentSharing {
-  sharing_group?: SharingGroup;
+export interface RulesForSharingDocument {
   text?: TextualDescription;
-  tlp: TrafficLightProtocolTLP;
-}
-/**
- * Contains information about the group this document is intended to be shared with.
- */
-export interface SharingGroup {
-  id: SharingGroupID;
-  name?: SharingGroupName;
+  tlp?: TrafficLightProtocolTLP;
+  [k: string]: unknown;
 }
 /**
  * Provides details about the TLP classification of the document.
@@ -915,6 +654,7 @@ export interface SharingGroup {
 export interface TrafficLightProtocolTLP {
   label: LabelOfTLP;
   url?: URLOfTLPVersion;
+  [k: string]: unknown;
 }
 /**
  * Is a place to put all manner of text blobs related to the current context.
@@ -922,10 +662,9 @@ export interface TrafficLightProtocolTLP {
 export interface Note {
   audience?: AudienceOfNote;
   category: NoteCategory;
-  group_ids?: ListOfProductGroupIds;
-  product_ids?: ListOfProductIds;
   text: NoteContent;
   title?: TitleOfNote;
+  [k: string]: unknown;
 }
 /**
  * Provides information about the publisher of the document.
@@ -936,6 +675,7 @@ export interface Publisher {
   issuing_authority?: IssuingAuthority;
   name: NameOfPublisher;
   namespace: NamespaceOfPublisher;
+  [k: string]: unknown;
 }
 /**
  * Holds any reference to conferences, papers, advisories, and other resources that are related and considered related to either a surrounding part of or the entire document and to be of value to the document consumer.
@@ -944,6 +684,7 @@ export interface Reference {
   category?: CategoryOfReference;
   summary: SummaryOfTheReference;
   url: URLOfReference;
+  [k: string]: unknown;
 }
 /**
  * Is a container designated to hold all management attributes necessary to track a CSAF document as a whole.
@@ -957,6 +698,7 @@ export interface Tracking {
   revision_history: RevisionHistory;
   status: DocumentStatus;
   version: Version;
+  [k: string]: unknown;
 }
 /**
  * Is a container to hold all elements related to the generation of the document. These items will reference when the document was actually created, including the date it was generated and the entity that generated it.
@@ -964,6 +706,7 @@ export interface Tracking {
 export interface DocumentGenerator {
   date?: DateOfDocumentGeneration;
   engine: EngineOfDocumentGeneration;
+  [k: string]: unknown;
 }
 /**
  * Contains information about the engine that generated the CSAF document.
@@ -971,6 +714,7 @@ export interface DocumentGenerator {
 export interface EngineOfDocumentGeneration {
   name: EngineName;
   version?: EngineVersion;
+  [k: string]: unknown;
 }
 /**
  * Contains all the information elements required to track the evolution of a CSAF document.
@@ -980,20 +724,6 @@ export interface Revision {
   legacy_version?: LegacyVersionOfTheRevision;
   number: Version;
   summary: SummaryOfTheRevision;
-}
-/**
- * Representation of additional information extending a CSAF Document.
- */
-export interface CSAFExtensionContent {
-  $schema: CSAFExtensionSchema;
-  category: ExtensionCategory;
-  content: Content;
-  critical: Critical;
-}
-/**
- * Contains the additional information in its properties.
- */
-export interface Content {
   [k: string]: unknown;
 }
 /**
@@ -1003,7 +733,8 @@ export interface ProductTree {
   branches?: ListOfBranches;
   full_product_names?: ListOfFullProductNames;
   product_groups?: ListOfProductGroups;
-  product_paths?: ListOfProductPaths;
+  relationships?: ListOfRelationships;
+  [k: string]: unknown;
 }
 /**
  * Is a part of the hierarchical structure of the product tree.
@@ -1013,6 +744,7 @@ export interface Branch {
   category: CategoryOfTheBranch;
   name: NameOfTheBranch;
   product?: FullProductName;
+  [k: string]: unknown;
 }
 /**
  * Specifies information about the product and assigns the product_id.
@@ -1021,7 +753,7 @@ export interface FullProductName {
   name: TextualDescriptionOfTheProduct;
   product_id: ReferenceTokenForProductInstance;
   product_identification_helper?: HelperToIdentifyTheProduct;
-  x_extensions?: ProductLevelExtensions;
+  [k: string]: unknown;
 }
 /**
  * Provides at least one method which aids in identifying the product in an asset database.
@@ -1030,11 +762,12 @@ export interface HelperToIdentifyTheProduct {
   cpe?: CommonPlatformEnumerationRepresentation;
   hashes?: ListOfHashes;
   model_numbers?: ListOfModels;
-  purls?: ListOfPURLs;
+  purl?: PackageURLRepresentation;
   sbom_urls?: ListOfSBOMURLs;
   serial_numbers?: ListOfSerialNumbers;
   skus?: ListOfStockKeepingUnits;
   x_generic_uris?: ListOfGenericURIs;
+  [k: string]: unknown;
 }
 /**
  * Contains all information to identify a file based on its cryptographic hash values.
@@ -1042,6 +775,7 @@ export interface HelperToIdentifyTheProduct {
 export interface CryptographicHashes {
   file_hashes: ListOfFileHashes;
   filename: Filename;
+  [k: string]: unknown;
 }
 /**
  * Contains one hash value and algorithm of the file to be identified.
@@ -1049,6 +783,7 @@ export interface CryptographicHashes {
 export interface FileHash {
   algorithm: AlgorithmOfTheCryptographicHash;
   value: ValueOfTheCryptographicHash;
+  [k: string]: unknown;
 }
 /**
  * Provides a generic extension point for any identifier which is either vendor-specific or derived from a standard not yet supported.
@@ -1056,6 +791,7 @@ export interface FileHash {
 export interface GenericURI {
   namespace: NamespaceOfTheGenericURI;
   uri: URI;
+  [k: string]: unknown;
 }
 /**
  * Defines a new logical group of products that can then be referred to in other parts of the document to address a group of products with a single identifier.
@@ -1064,21 +800,17 @@ export interface ProductGroup {
   group_id: ReferenceTokenForProductGroupInstance;
   product_ids: ListOfProductIDs;
   summary?: SummaryOfTheProductGroup;
+  [k: string]: unknown;
 }
 /**
- * Establishes a path along existing full_product_name_t elements, allowing the document producer to define a path of multiple products that form a new full_product_name entry.
+ * Establishes a link between two existing full_product_name_t elements, allowing the document producer to define a combination of two products that form a new full_product_name entry.
  */
-export interface ProductPath {
-  beginning_product_reference: ReferenceTokenForProductInstance1;
-  full_product_name: FullProductName;
-  subpaths: ListOfProductSubpaths;
-}
-/**
- * Contains the next node along the current path and its relationship to the previous node.
- */
-export interface Subpath {
+export interface Relationship {
   category: RelationshipCategory;
-  next_product_reference: ReferenceTokenForProductInstance2;
+  full_product_name: FullProductName;
+  product_reference: ReferenceTokenForProductInstance1;
+  relates_to_product_reference: ReferenceTokenForProductInstance2;
+  [k: string]: unknown;
 }
 /**
  * Is a container for the aggregation of all fields that are related to a single vulnerability in the document.
@@ -1086,21 +818,20 @@ export interface Subpath {
 export interface Vulnerability {
   acknowledgments?: VulnerabilityAcknowledgments;
   cve?: CVE;
-  cwes?: ListOfCWEs;
-  disclosure_date?: DisclosureDate;
+  cwe?: CWE;
   discovery_date?: DiscoveryDate;
-  first_known_exploitation_dates?: ListOfFirstKnownExploitationDates;
   flags?: ListOfFlags;
   ids?: ListOfIDs;
   involvements?: ListOfInvolvements;
-  metrics?: ListOfMetrics;
   notes?: VulnerabilityNotes;
   product_status?: ProductStatus;
   references?: VulnerabilityReferences;
+  release_date?: ReleaseDate;
   remediations?: ListOfRemediations;
+  scores?: ListOfScores;
   threats?: ListOfThreats;
   title?: Title;
-  x_extensions?: VulnerabilityLevelExtensions;
+  [k: string]: unknown;
 }
 /**
  * Holds the MITRE standard Common Weakness Enumeration (CWE) for the weakness associated.
@@ -1108,16 +839,7 @@ export interface Vulnerability {
 export interface CWE {
   id: WeaknessID;
   name: WeaknessName;
-  version: CWEVersion;
-}
-/**
- * Contains information on when this vulnerability was first known to be exploited in the wild in the products specified.
- */
-export interface FirstKnownExploitationDate {
-  date: DateOfTheInformation;
-  exploitation_date: DateOfTheExploitation;
-  group_ids?: ListOfProductGroupIds;
-  product_ids?: ListOfProductIds;
+  [k: string]: unknown;
 }
 /**
  * Contains product specific information in regard to this vulnerability as a single machine readable flag.
@@ -1127,6 +849,7 @@ export interface Flag {
   group_ids?: ListOfProductGroupIds;
   label: LabelOfTheFlag;
   product_ids?: ListOfProductIds;
+  [k: string]: unknown;
 }
 /**
  * Contains a single unique label or tracking ID for the vulnerability.
@@ -1134,40 +857,65 @@ export interface Flag {
 export interface ID {
   system_name: SystemName;
   text: Text;
+  [k: string]: unknown;
 }
 /**
  * Is a container, that allows the document producers to comment on the level of involvement (or engagement) of themselves or third parties in the vulnerability identification, scoping, and remediation process.
  */
 export interface Involvement {
-  contact?: PartyContactInformation;
   date?: DateOfInvolvement;
-  group_ids?: ListOfProductGroupIds;
   party: PartyCategory;
-  product_ids?: ListOfProductIds;
   status: PartyStatus;
   summary?: SummaryOfTheInvolvement;
+  [k: string]: unknown;
 }
 /**
- * Contains all metadata about the metric including products it applies to and the source and the content itself.
+ * Contains different lists of product_ids which provide details on the status of the referenced product related to the current vulnerability.
  */
-export interface Metric {
-  content: Content1;
+export interface ProductStatus {
+  first_affected?: ListOfProductIds1;
+  first_fixed?: ListOfProductIds2;
+  fixed?: ListOfProductIds3;
+  known_affected?: ListOfProductIds4;
+  known_not_affected?: ListOfProductIds5;
+  last_affected?: ListOfProductIds6;
+  recommended?: ListOfProductIds7;
+  under_investigation?: ListOfProductIds8;
+  [k: string]: unknown;
+}
+/**
+ * Specifies details on how to handle (and presumably, fix) a vulnerability.
+ */
+export interface Remediation {
+  category: CategoryOfTheRemediation;
+  date?: DateOfTheRemediation;
+  details: DetailsOfTheRemediation;
+  entitlements?: ListOfEntitlements;
+  group_ids?: ListOfProductGroupIds;
+  product_ids?: ListOfProductIds;
+  restart_required?: RestartRequiredByRemediation;
+  url?: URLToTheRemediation;
+  [k: string]: unknown;
+}
+/**
+ * Provides information on category of restart is required by this remediation to become effective.
+ */
+export interface RestartRequiredByRemediation {
+  category: CategoryOfRestart;
+  details?: AdditionalRestartInformation;
+  [k: string]: unknown;
+}
+/**
+ * Specifies information about (at least one) score of the vulnerability and for which products the given value applies.
+ */
+export interface Score {
+  cvss_v2?: JSONSchemaForCommonVulnerabilityScoringSystemVersion20;
+  cvss_v3?:
+    JSONSchemaForCommonVulnerabilityScoringSystemVersion30 | JSONSchemaForCommonVulnerabilityScoringSystemVersion31;
   products: ListOfProductIds;
-  source?: Source;
+  [k: string]: unknown;
 }
-/**
- * Specifies information about (at least one) metric or score for the given products regarding the current vulnerability.
- */
-export interface Content1 {
-  cvss_v2?: CVSSv2;
-  cvss_v3?: CVSSv3;
-  cvss_v4?: CVSSv4;
-  epss?: EPSS;
-  qualitative_severity_rating?: QualitativeSeverityRating;
-  ssvc_v2?: SSVCv2;
-  x_extensions?: MetricsContentLevelExtensions;
-}
-export interface CVSSv2 {
+export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion20 {
   /**
    * CVSS Version
    */
@@ -1265,97 +1013,6 @@ export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion31 {
   [k: string]: unknown;
 }
 /**
- * Contains the EPSS data.
- */
-export interface EPSS {
-  percentile: Percentile;
-  probability: Probability;
-  timestamp: EPSSTimestamp;
-}
-/**
- * This schema defines the structure to represent an SSVC SelectionList object.
- */
-export interface SSVCv2 {
-  timestamp: Timestamp;
-  schemaVersion: Schemaversion;
-  target_ids?: TargetIds;
-  selections: Selections;
-  decision_point_resources?: DecisionPointResources;
-  references?: References;
-}
-/**
- * A minimal selection object that contains the decision point ID and the selected values.
- * While the Selection object parallels the DecisionPoint object, it is intentionally minimal, with
- * fewer required fields and no additional metadata, as it is meant to represent a selection made from a
- * previously defined decision point. The expectation is that a Selection object will usually have
- * fewer values than the original decision point, as it represents a specific evaluation
- * at a specific time and may therefore rule out some values that were previously considered.
- * Other fields like name and description may be copied from the decision point, but are not required.
- */
-export interface Selection {
-  namespace: Namespace;
-  key: Key;
-  version: Version1;
-  name?: Name;
-  definition?: Definition;
-  values: Values;
-}
-/**
- * A minimal representation of a decision point value.
- * Intended to parallel the DecisionPointValue object, but with fewer required fields.
- * A decision point value is uniquely identified within a decision point by its key.
- * Globally, the combination of Decision Point namespace, key, and version coupled with the value key
- * uniquely identifies a value across all decision points and values.
- * Other required fields in the DecisionPointValue object, such as name and description, are optional here.
- */
-export interface MinimalDecisionPointValue {
-  name?: Name1;
-  definition?: Definition1;
-  key: Key1;
-}
-/**
- * A reference to a resource that provides additional context about the decision points or selections.
- * This object is intentionally minimal and contains only the URL and an optional description.
- */
-export interface Reference1 {
-  uri: Uri;
-  summary: Summary;
-}
-/**
- * Contains different lists of product_ids which provide details on the status of the referenced product related to the current vulnerability.
- */
-export interface ProductStatus {
-  first_affected?: ListOfProductIds1;
-  first_fixed?: ListOfProductIds2;
-  fixed?: ListOfProductIds3;
-  known_affected?: ListOfProductIds4;
-  known_not_affected?: ListOfProductIds5;
-  last_affected?: ListOfProductIds6;
-  recommended?: ListOfProductIds7;
-  under_investigation?: ListOfProductIds8;
-  unknown?: ListOfProductIds9;
-}
-/**
- * Specifies details on how to handle (and presumably, fix) a vulnerability.
- */
-export interface Remediation {
-  category: CategoryOfTheRemediation;
-  date?: DateOfTheRemediation;
-  details: DetailsOfTheRemediation;
-  entitlements?: ListOfEntitlements;
-  group_ids?: ListOfProductGroupIds;
-  product_ids?: ListOfProductIds;
-  restart_required?: RestartRequiredByRemediation;
-  url?: URLToTheRemediation;
-}
-/**
- * Provides information on the category of restart required by this remediation to become effective.
- */
-export interface RestartRequiredByRemediation {
-  category: CategoryOfRestart;
-  details?: AdditionalRestartInformation;
-}
-/**
  * Contains the vulnerability kinetic information. This information can change as the vulnerability ages and new information becomes available.
  */
 export interface Threat {
@@ -1364,4 +1021,5 @@ export interface Threat {
   details: DetailsOfTheThreat;
   group_ids?: ListOfProductGroupIds;
   product_ids?: ListOfProductIds;
+  [k: string]: unknown;
 }

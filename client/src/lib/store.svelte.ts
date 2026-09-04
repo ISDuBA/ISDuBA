@@ -6,13 +6,13 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import type { DocModel } from "$lib/Advisories/types/docmodeltypes";
 import type { CSAFDocumentv2_1 } from "./Advisories/types/csaf-2.1";
 import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./workflow";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
 import type { SearchParameters } from "./Search/search.svelte";
 import { SEARCHTYPES } from "./Queries/query";
+import type { CSAFDocumentv2_0 } from "./Advisories/types/csaf-2.0";
 
 export type ProfileWithRoles = UserProfile & {
   realm_access: {
@@ -64,7 +64,7 @@ type AppStore = {
     routerParams: any;
   };
   webview: {
-    doc: DocModel | CSAFDocumentv2_1 | null;
+    doc: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null;
     rawDoc: any;
     providerMetadata: any;
     currentFeed: any;
@@ -257,7 +257,7 @@ export const appStore = {
     state.webview.ui.feedErrorMsg = msg;
   },
 
-  setDocument: (data: any) => {
+  setDocument: (data: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null) => {
     state.webview.doc = data;
   },
 

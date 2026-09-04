@@ -13,7 +13,6 @@
   import { appStore } from "$lib/store.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
-  import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import Diff from "$lib/Diff/Diff.svelte";
   import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
@@ -40,6 +39,9 @@
   import RawDocument from "./RawDocument.svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
   import { fetchDocumentSSVC } from "./document";
+  import { exampleDocument } from "./csaf-document-v2.1";
+  import type { CSAFDocumentv2_1 } from "./types/csaf-2.1";
+  import type { CSAFDocumentv2_0 } from "./types/csaf-2.0";
 
   let { params } = $props();
 
@@ -157,14 +159,13 @@
       abortController
     );
     if (response.ok) {
-      const result = await response.content;
+      const result: CSAFDocumentv2_0 | CSAFDocumentv2_1 = await response.content;
       if (!isResultConsistent(params, result.document)) {
         isInconsistent = true;
       }
       ({ document } = result);
+      appStore.setDocument(result);
       appStore.setRawDocument(result);
-      const docModel = convertToDocModel(result);
-      appStore.setDocument(docModel);
     } else if (response.error) {
       if (response.error === "AbortError") {
         return;
@@ -615,6 +616,11 @@
   class="relative grid h-fit w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2 lg:h-full"
   id="top"
 >
+  <Button
+    onclick={() => {
+      appStore.setDocument(exampleDocument as unknown as CSAFDocumentv2_1);
+    }}>Display example document for CSAF 2.1</Button
+  >
   {#if documentNotFound}
     <div class="mb-2 font-bold">
       <AlertCircle aria-hidden="true" />
@@ -634,8 +640,8 @@
               textPath="/document/tracking/id"
             />
           </span>
-          {#if appStore.state.webview.doc?.tlp.label}
-            <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
+          {#if appStore.state.webview.doc && getTLP(appStore.state.webview.doc).label}
+            <Tlp tlp={getTLP(appStore.state.webview.doc).label}></Tlp>
           {/if}
         </Label>
         <RawDocument />

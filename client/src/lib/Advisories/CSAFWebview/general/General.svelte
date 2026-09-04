@@ -18,7 +18,20 @@
   import Link from "$lib/Components/Link.svelte";
   import SearchableText from "../SearchableText.svelte";
   import { ArrowOutUpRightSquare, Link as LinkIcon } from "@boxicons/svelte";
-  import { getTrackingVersion } from "$lib/Advisories/document";
+  import { getLang, getSourceLang } from "$lib/Advisories/document";
+  import {
+    getInitialReleaseDate,
+    getCurrentReleaseDate,
+    getPublisher,
+    getStatus,
+    getTitle,
+    getGenerator,
+    getTrackingVersion,
+    getCategory,
+    getCSAFVersion,
+    getDistributionText,
+    getHighestScore
+  } from "$lib/Advisories/docmodel";
 
   interface Props {
     basePath: string;
@@ -26,24 +39,26 @@
   let { basePath = "" }: Props = $props();
 
   let doc = $derived(appStore.state.webview.doc);
-  let trackingVersion = $derived(doc != null ? getTrackingVersion(doc) : undefined);
-  let generator = $derived(appStore.state.webview.doc?.generator);
-  let publisherName = $derived(appStore.state.webview.doc?.publisher.name);
-  let publisherCategory = $derived(appStore.state.webview.doc?.publisher.category);
-  let publisherNamespace = $derived(appStore.state.webview.doc?.publisher.namespace);
-  let publisherIssuingAuthority = $derived(appStore.state.webview.doc?.publisher.issuing_authority);
-  let publisherContactDetails = $derived(appStore.state.webview.doc?.publisher.contact_details);
-  let category = $derived(appStore.state.webview.doc?.category);
-  let title = $derived(appStore.state.webview.doc?.title);
-  let lang = $derived(appStore.state.webview.doc?.lang);
-  let sourceLang = $derived(appStore.state.webview.doc?.sourceLang);
-  let csafVersion = $derived(appStore.state.webview.doc?.csafVersion);
-  let distributionText = $derived(appStore.state.webview.doc?.distributionText);
-  let published = $derived(appStore.state.webview.doc?.published);
-  let lastUpdate = $derived(appStore.state.webview.doc?.lastUpdate);
-  let status = $derived(appStore.state.webview.doc?.status);
-  let baseSeverity = $derived(appStore.state.webview.doc?.highestScore?.baseSeverity);
-  let baseScore = $derived(appStore.state.webview.doc?.highestScore?.baseScore);
+  let trackingVersion = $derived(getTrackingVersion(doc));
+  let generator = $derived(getGenerator(doc));
+  let publisher = $derived(getPublisher(doc));
+  let publisherName = $derived(publisher?.name ?? undefined);
+  let publisherCategory = $derived(publisher?.category ?? undefined);
+  let publisherNamespace = $derived(publisher?.namespace ?? undefined);
+  let publisherIssuingAuthority = $derived(publisher?.issuing_authority ?? undefined);
+  let publisherContactDetails = $derived(publisher?.contact_details ?? undefined);
+  let category = $derived(getCategory(doc));
+  let title = $derived(getTitle(doc));
+  let lang = $derived(doc != null ? getLang(doc) : undefined);
+  let sourceLang = $derived(doc != null ? getSourceLang(doc) : undefined);
+  let csafVersion = $derived(getCSAFVersion(doc));
+  let distributionText = $derived(getDistributionText(doc));
+  let published = $derived(doc != null ? getInitialReleaseDate(doc) : undefined);
+  let lastUpdate = $derived(doc != null ? getCurrentReleaseDate(doc) : undefined);
+  let status = $derived(getStatus(doc));
+  let highestScore = $derived(getHighestScore(doc));
+  let baseSeverity = $derived(highestScore?.baseSeverity);
+  let baseScore: string | undefined = $derived(highestScore?.baseScore ? `${highestScore?.baseScore}` : undefined);
   const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
   const cellStyleKey = "content-center w-40 max-w-full py-0 text-balance";
 
@@ -63,11 +78,11 @@
         <span class="-mt-1 inline-block text-xl text-balance">
           <SearchableText text={title} textPath="/document/title" />
         </span>
-        {#if appStore.state.webview.doc?.status !== Status.final}
+        {#if status !== Status.final}
           <span class="ml-3 text-lg text-gray-400">{status}</span>
         {/if}
       </div>
-      {#if appStore.state.webview.doc?.highestScore}
+      {#if highestScore}
         <Cvss {baseScore} baseSeverity={baseSeverity ?? ""}></Cvss>
       {/if}
       {#if relatedDocuments?.()}

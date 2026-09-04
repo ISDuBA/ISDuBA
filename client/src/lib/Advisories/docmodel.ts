@@ -6,28 +6,56 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //
 
+import type {
+  CSAFDocumentv2_0,
+  CSAFVersion as CSAFVersion2_0,
+  DocumentLanguage,
+  Title,
+  TrafficLightProtocolTLP as TrafficLightProtocolTLP2_0,
+  DocumentStatus,
+  DocumentCategory,
+  Vulnerability as Vulnerability2_0,
+  Vulnerabilities as Vulnerabilities2_0,
+  Score,
+  DocumentGenerator as DocumentGenerator2_0
+} from "./types/csaf-2.0";
+import type {
+  CSAFDocumentv2_1,
+  CSAFVersion as CSAFVersion2_1,
+  TrafficLightProtocolTLP as TrafficLightProtocolTLP2_1,
+  Vulnerability as Vulnerability2_1,
+  Vulnerabilities as Vulnerabilities2_1,
+  Metric,
+  CVSSv2,
+  CVSSv3,
+  CVSSv4,
+  DocumentGenerator as DocumentGenerator2_1,
+  Version
+} from "$lib/Advisories/types/csaf-2.1";
 import {
   CSAFDocProps,
   EMPTY,
-  Status,
-  TLP,
   type AggregateSeverity,
   type DocModel,
   type Note,
-  type Publisher,
   type Reference,
   type RevisionHistoryEntry
 } from "$lib/Advisories/types/docmodeltypes";
 import {
   extractProducts,
   generateProductVulnerabilities
-} from "../productvulnerabilities/productvulnerabilities";
+} from "./CSAFWebview/productvulnerabilities/productvulnerabilities";
 
-/**
- * checkDocumentPresent checks whether the "document" property is present.
- * @param csafDoc
- * @returns true/false
- */
+const isV2_1 = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): boolean => {
+  if (
+    Object.keys(document).includes("document") &&
+    (document as CSAFDocumentv2_1).document.csaf_version === "2.1"
+  ) {
+    return true;
+  }
+  return false;
+};
+
 const checkDocumentPresent = (csafDoc: any): boolean => {
   return csafDoc[CSAFDocProps.DOCUMENT];
 };
@@ -74,11 +102,11 @@ const checkPublisher = (csafDoc: any): boolean => {
 
 /**
  * checkVulnerabilities checks whether the "vulnerabitlites" section is present.
- * @param csafDoc
+ * @param document
  * @returns true / false
  */
-const checkVulnerabilities = (csafDoc: any): boolean => {
-  return csafDoc[CSAFDocProps.VULNERABILITIES];
+const checkVulnerabilities = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): boolean => {
+  return document[CSAFDocProps.VULNERABILITIES] !== undefined;
 };
 
 /**
@@ -99,44 +127,23 @@ const checkRevisionHistoryPresent = (csafDoc: any): boolean => {
   return checkTrackingPresent(csafDoc) && csafDoc.document.tracking[CSAFDocProps.REVISIONHISTORY];
 };
 
-/**
- * getTitle retrieves title information.
- * @param csafDoc
- * @returns title | ""
- */
-const getTitle = (csafDoc: any): string => {
-  if (!checkDocumentPresent(csafDoc)) return EMPTY;
-  return csafDoc.document[CSAFDocProps.TITLE] || EMPTY;
+const getTitle = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): Title | "" => {
+  return document?.document.title || EMPTY;
 };
 
-/**
- * getLanguage retrieves language information.
- * @param csafDoc
- * @returns language | ""
- */
-const getLanguage = (csafDoc: any): string => {
-  if (!checkDocumentPresent(csafDoc)) return EMPTY;
-  return csafDoc.document[CSAFDocProps.LANG] || EMPTY;
+const getLanguage = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): DocumentLanguage | "" => {
+  if (!checkDocumentPresent(document)) return EMPTY;
+  return document.document.lang || EMPTY;
 };
 
-/**
- * getCSAFVersion retrieves version information.
- * @param csafDoc
- * @returns version | ""
- */
-const getCSAFVersion = (csafDoc: any): string => {
-  if (!checkDocumentPresent(csafDoc)) return EMPTY;
-  return csafDoc.document[CSAFDocProps.CSAFVERSION] || EMPTY;
+const getCSAFVersion = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): CSAFVersion2_0 | CSAFVersion2_1 | "" => {
+  return document?.document.csaf_version || EMPTY;
 };
 
-/**
- * getDistributionText retrieves distribution text.
- * @param csafDoc
- * @returns version | ""
- */
-const getDistributionText = (csafDoc: any): string => {
-  if (!checkDistributionPresent(csafDoc)) return EMPTY;
-  return csafDoc.document[CSAFDocProps.DISTRIBUTION][CSAFDocProps.TEXT] || EMPTY;
+const getDistributionText = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): string => {
+  return document?.document.distribution?.text || EMPTY;
 };
 
 /**
@@ -149,171 +156,136 @@ const getId = (csafDoc: any): string => {
   return csafDoc.document.tracking[CSAFDocProps.ID] || EMPTY;
 };
 
-/**
- * getTlp retrieves TLP information
- * @param csafDoc
- * @returns TLP | ""
- */
-const getTlp = (csafDoc: any): TLP => {
-  if (!checkTLPPresent(csafDoc)) return { label: "" };
-  let label;
-  switch (csafDoc.document.distribution.tlp[CSAFDocProps.LABEL]) {
-    case TLP.AMBER:
-      label = TLP.AMBER;
-      break;
-    case TLP.GREEN:
-      label = TLP.GREEN;
-      break;
-    case TLP.WHITE:
-      label = TLP.WHITE;
-      break;
-    case TLP.RED:
-      label = TLP.RED;
-      break;
-    default:
-      label = TLP.ERROR;
-      break;
+const getTLP = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1
+): TrafficLightProtocolTLP2_0 | TrafficLightProtocolTLP2_1 | undefined => {
+  if (!checkTLPPresent(document)) return undefined;
+  return document.document.distribution?.tlp;
+};
+
+const getStatus = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): DocumentStatus | "" => {
+  return document?.document.tracking.status ?? EMPTY;
+};
+
+const getTrackingVersion = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): Version | string => {
+  return document?.document.tracking.version ?? EMPTY;
+};
+
+const getInitialReleaseDate = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
+  return document.document.tracking.initial_release_date;
+};
+
+const getCurrentReleaseDate = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
+  return document.document.tracking.current_release_date;
+};
+
+const getCategory = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): DocumentCategory => {
+  if (!checkDocumentPresent(document)) return EMPTY;
+  return document?.document.category || EMPTY;
+};
+
+const getPublisher = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null) => {
+  return document?.document.publisher;
+};
+
+const getVulnerabilities = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1
+): Vulnerabilities2_0 | Vulnerabilities2_1 | [] => {
+  if (!checkVulnerabilities(document) || document.vulnerabilities === undefined) return [];
+  return document.vulnerabilities;
+};
+
+const getCVSSOfVulnerability = (
+  vulnerability: Vulnerability2_0 | Vulnerability2_1,
+  cvssVersion: 2 | 3 | 4,
+  csafVersion: "2.0" | "2.1"
+): Array<CVSSv2 | CVSSv3 | CVSSv4> => {
+  const listOfCVSS: Array<CVSSv2 | CVSSv3 | CVSSv4> = [];
+  if (csafVersion === "2.0" && (vulnerability as Vulnerability2_0).scores) {
+    (vulnerability as Vulnerability2_0).scores?.forEach((score: Score) => {
+      if (cvssVersion === 2 && score.cvss_v2) listOfCVSS.push(score.cvss_v2);
+      if (cvssVersion === 3 && score.cvss_v3) listOfCVSS.push(score.cvss_v3);
+    });
+  } else if (csafVersion === "2.1" && (vulnerability as Vulnerability2_1).metrics) {
+    (vulnerability as Vulnerability2_1).metrics?.forEach((metric: Metric) => {
+      if (cvssVersion === 2 && metric.content.cvss_v2) listOfCVSS.push(metric.content.cvss_v2);
+      if (cvssVersion === 3 && metric.content.cvss_v3) listOfCVSS.push(metric.content.cvss_v3);
+      if (cvssVersion === 4 && metric.content.cvss_v4) listOfCVSS.push(metric.content.cvss_v4);
+    });
   }
-  return { label: label, url: csafDoc.document.distribution.tlp.url };
-};
-
-/**
- * getStatus retrieves the status of the document.
- * @param csafDoc
- * @returns status | ""
- */
-const getStatus = (csafDoc: any): string => {
-  if (!checkTrackingPresent(csafDoc)) return EMPTY;
-  switch (csafDoc.document.tracking[CSAFDocProps.STATUS]) {
-    case Status.draft:
-      return Status.draft;
-    case Status.final:
-      return Status.final;
-    case Status.interim:
-      return Status.interim;
-    default:
-      return Status.ERROR;
-  }
-};
-
-/**
- * getPublished retrieves the pubilshed info.
- * @param csafDoc
- * @returns info | ""
- */
-const getPublished = (csafDoc: any): string => {
-  if (!checkTrackingPresent(csafDoc)) return EMPTY;
-  return csafDoc.document.tracking[CSAFDocProps.INITIALRELEASEDATE] || EMPTY;
-};
-
-/**
- * getLastUpdate retrieves the last update info.
- * @param csafDoc
- * @returns info | ""
- */
-const getLastUpdate = (csafDoc: any): string => {
-  if (!checkTrackingPresent(csafDoc)) return EMPTY;
-  return csafDoc.document.tracking[CSAFDocProps.CURRENTRELEASEDATE] || EMPTY;
-};
-
-/**
- * getCategory retrieves the category info.
- * @param csafDoc
- * @returns info | ""
- */
-const getCategory = (csafDoc: any): string => {
-  if (!checkDocumentPresent(csafDoc)) return EMPTY;
-  return csafDoc.document[CSAFDocProps.CATEGORY] || EMPTY;
-};
-
-/**
- * getPublisher retrieves publisher info.
- * @param csafDoc
- * @returns publisher info
- */
-const getPublisher = (csafDoc: any): Publisher => {
-  if (!checkPublisher(csafDoc)) {
-    return {
-      category: "",
-      name: "",
-      namespace: ""
-    };
-  }
-  const publisher = csafDoc.document[CSAFDocProps.PUBLISHER];
-  return {
-    category: publisher[CSAFDocProps.PUBLISHER_CATEGORY],
-    name: publisher[CSAFDocProps.PUBLISHER_NAME],
-    namespace: publisher[CSAFDocProps.PUBLISHER_NAMESPACE],
-    contact_details: publisher[CSAFDocProps.CONTACT_DETAILS],
-    issuing_authority: publisher[CSAFDocProps.ISSUING_AUTHORITY]
-  };
-};
-
-/**
- * getTrackingVersion retrieves tracking version.
- * @param csafDoc
- * @returns version | ""
- */
-const getTrackingVersion = (csafDoc: any): string => {
-  if (!checkTrackingPresent(csafDoc)) return EMPTY;
-  return csafDoc.document.tracking[CSAFDocProps.TRACKINGVERSION] || EMPTY;
-};
-
-/**
- * getVulnerabilities retrieves the vulnerabilites section.
- * @param csafDoc
- * @returns vulnerabilities | []
- */
-const getVulnerabilities = (csafDoc: any) => {
-  if (!checkVulnerabilities(csafDoc)) return [];
-  return csafDoc.vulnerabilities;
+  return listOfCVSS;
 };
 
 /**
  * Retrieves the CVSS object with the highest base score,
  * prioritizing CVSS v3 over v2 across the entire document.
  * If any CVSS v3 score exists, all CVSS v2 scores are ignored.
- * @param {object} csafDoc - The CSAF document object.
- * @returns {object | null} The preferred and highest CVSS object, or null if none are found.
  */
-const getHighestScore = (csafDoc: any): object | null => {
-  if (!csafDoc?.vulnerabilities?.length) {
+const getHighestScore = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): CVSSv2 | CVSSv3 | CVSSv4 | null => {
+  if (!document?.vulnerabilities?.length) {
     return null;
   }
 
+  let hasCvssV4 = false;
   let hasCvssV3 = false;
-  let highestScoreObject: any = null;
+  let highestScoreObject: CVSSv2 | CVSSv3 | CVSSv4 | null = null;
   let highestBaseScore = -1;
 
-  // First pass: Check if any CVSS v3 scores exist
-  for (const vulnerability of csafDoc.vulnerabilities) {
-    if (vulnerability.scores?.some((score: any) => score.cvss_v3)) {
-      hasCvssV3 = true;
-      break;
+  // First pass: Check if any CVSS v3 or v4 scores exist
+  if (document.document.csaf_version === "2.1") {
+    for (const vulnerability of document.vulnerabilities as Vulnerabilities2_1) {
+      if (vulnerability.metrics?.some((score: Metric) => score.content.cvss_v4)) {
+        hasCvssV4 = true;
+        break;
+      }
+    }
+  }
+  for (const vulnerability of document.vulnerabilities) {
+    if (document.document.csaf_version === "2.1") {
+      if (
+        (vulnerability as Vulnerability2_1).metrics?.some(
+          (metric: Metric) => metric.content.cvss_v3
+        )
+      ) {
+        hasCvssV3 = true;
+        break;
+      }
+    } else if (document.document.csaf_version === "2.0") {
+      if ((vulnerability as Vulnerability2_0).scores?.some((score: Score) => score.cvss_v3)) {
+        hasCvssV3 = true;
+        break;
+      }
     }
   }
 
   // Second pass: Find the highest score based on the first pass's result
-  for (const vulnerability of csafDoc.vulnerabilities) {
-    if (!vulnerability.scores) {
+  for (const vulnerability of document.vulnerabilities) {
+    if (
+      (document.document.csaf_version === "2.0" && !(vulnerability as Vulnerability2_0).scores) ||
+      (document.document.csaf_version === "2.1" && !(vulnerability as Vulnerability2_1).metrics)
+    ) {
       continue;
     }
 
-    for (const score of vulnerability.scores) {
-      if (hasCvssV3) {
-        // If v3 exists anywhere, only consider v3 scores
-        if (score.cvss_v3 && score.cvss_v3.baseScore > highestBaseScore) {
-          highestBaseScore = score.cvss_v3.baseScore;
-          highestScoreObject = score.cvss_v3;
-        }
-      } else {
-        // If no v3 scores were found, consider all v2 scores
-        if (score.cvss_v2 && score.cvss_v2.baseScore > highestBaseScore) {
-          highestBaseScore = score.cvss_v2.baseScore;
-          highestScoreObject = score.cvss_v2;
-        }
-      }
+    let cvssList: Array<CVSSv2 | CVSSv3 | CVSSv4>;
+    // Consider only the scores with the highest CVSS version
+    if (hasCvssV4) {
+      cvssList = getCVSSOfVulnerability(vulnerability, 4, document.document.csaf_version);
+    } else if (hasCvssV3) {
+      cvssList = getCVSSOfVulnerability(vulnerability, 3, document.document.csaf_version);
+    } else {
+      cvssList = getCVSSOfVulnerability(vulnerability, 2, document.document.csaf_version);
     }
+    cvssList.forEach((cvss: CVSSv2 | CVSSv3 | CVSSv4) => {
+      if (cvss.baseScore && cvss.baseScore > highestBaseScore) {
+        highestBaseScore = cvss.baseScore;
+        highestScoreObject = cvss;
+      }
+    });
   }
 
   return highestScoreObject;
@@ -395,14 +367,10 @@ const getAggregateSeverity = (csafDoc: any): AggregateSeverity | null => {
   return csafDoc.document[CSAFDocProps.AGGREGATE_SEVERITY] || null;
 };
 
-/**
- * getGenerator retrieves generator info.
- * @param csafDoc
- * @returns generator info || null
- */
-const getGenerator = (csafDoc: any) => {
-  if (!checkTrackingPresent(csafDoc)) return null;
-  return csafDoc.document.tracking[CSAFDocProps.GENERATOR] || null;
+const getGenerator = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): DocumentGenerator2_0 | DocumentGenerator2_1 | null => {
+  return document?.document.tracking.generator || null;
 };
 
 /**
@@ -420,7 +388,8 @@ const getAliases = (csafDoc: any) => {
  * @param csafDoc
  * @returns DocModel
  */
-const convertToDocModel = (csafDoc: any): DocModel => {
+const convertToDocModel = (csafDoc: any): DocModel | CSAFDocumentv2_1 => {
+  if (isV2_1(csafDoc)) return csafDoc;
   const docModel: DocModel = {
     aggregateSeverity: getAggregateSeverity(csafDoc),
     acknowledgments: getAcknowledgments(csafDoc),
@@ -451,12 +420,12 @@ const convertToDocModel = (csafDoc: any): DocModel => {
     status: getStatus(csafDoc),
     sourceLang: getSourceLang(csafDoc),
     title: getTitle(csafDoc),
-    tlp: getTlp(csafDoc),
+    tlp: getTLP(csafDoc),
     trackingVersion: getTrackingVersion(csafDoc),
     vulnerabilities: getVulnerabilities(csafDoc),
     highestScore: getHighestScore(csafDoc)
   };
-  const products = extractProducts(csafDoc);
+  const products = extractProducts(docModel);
   const productLookup = products.reduce((o: any, n: any) => {
     o[n.product_id] = n.name;
     return o;
@@ -470,4 +439,20 @@ const convertToDocModel = (csafDoc: any): DocModel => {
   return docModel;
 };
 
-export { convertToDocModel };
+export {
+  isV2_1,
+  convertToDocModel,
+  getCategory,
+  getCSAFVersion,
+  getDistributionText,
+  getInitialReleaseDate,
+  getCurrentReleaseDate,
+  getGenerator,
+  getHighestScore,
+  getPublisher,
+  getStatus,
+  getVulnerabilities,
+  getTLP,
+  getTitle,
+  getTrackingVersion
+};

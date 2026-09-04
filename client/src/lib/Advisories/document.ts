@@ -9,20 +9,35 @@
 import type { ErrorDetails } from "$lib/Errors/error";
 import { request } from "$lib/request";
 import { getErrorDetails } from "$lib/Errors/error";
-import type { DocModel } from "./types/docmodeltypes";
-import type { CSAFDocumentv2_1, Version } from "./types/csaf-2.1";
+import type { CSAFDocumentv2_1 } from "./types/csaf-2.1";
+import type { CSAFDocumentv2_0 } from "./types/csaf-2.0";
 
-const isV2_1 = (document: DocModel | CSAFDocumentv2_1): boolean => {
-  return Object.keys(document).includes("$schema");
-};
-
-const getTrackingVersion = (document: DocModel | CSAFDocumentv2_1): Version | string => {
-  if (isV2_1(document)) {
-    return (document as DocModel).trackingVersion;
-  } else {
-    return (document as CSAFDocumentv2_1).document.tracking.version;
+const isV2_1 = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): boolean => {
+  if (
+    Object.keys(document).includes("document") &&
+    (document as CSAFDocumentv2_1).document.csaf_version === "2.1"
+  ) {
+    return true;
   }
+  return false;
 };
+
+const getReferences = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
+  return document.document.references;
+};
+
+const getProductTree = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
+  return document.product_tree;
+};
+
+const getLang = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
+  return document.document.lang;
+};
+
+const getSourceLang = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
+  return document.document.source_lang;
+};
+
 
 const fetchDocumentSSVC = async (
   documentId: string | number,
@@ -54,4 +69,11 @@ const fetchDocumentSSVC = async (
   return undefined;
 };
 
-export { fetchDocumentSSVC, getTrackingVersion };
+export {
+  isV2_1,
+  fetchDocumentSSVC,
+  getReferences,
+  getProductTree,
+  getLang,
+  getSourceLang,
+};
