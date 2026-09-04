@@ -17,7 +17,7 @@
   import { onMount } from "svelte";
   import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
   import Activity from "./Activity.svelte";
-  import { getPublisher } from "#lib/publisher.ts";
+  import { getPublisherAbbreviation } from "#lib/publisher.ts";
   import { Spinner } from "flowbite-svelte";
   import { getRelativeTime } from "#lib/time.ts";
   import ShowMoreButton from "./ShowMoreButton.svelte";
@@ -113,7 +113,7 @@
               {/snippet}
               {#snippet topRightSlot()}
                 <div>
-                  <span class="ml-auto">{getPublisher(doc.publisher)}</span>
+                  <span class="ml-auto">{getPublisherAbbreviation(doc.publisher)}</span>
                 </div>
               {/snippet}
               <div class="text-black dark:text-white">{doc.title ?? "Title: undefined"}</div>
