@@ -14,7 +14,7 @@
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
-  import type { Relationship } from "$lib/pmdTypes";
+  import type { Relationship } from "$lib/Advisories/types/csaf-2.0";
   import { A } from "flowbite-svelte";
   import SearchableText from "../../SearchableText.svelte";
 

@@ -4,17 +4,17 @@
 
  SPDX-License-Identifier: Apache-2.0
 
- SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
- Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
+ SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 
 <script lang="ts">
-  import type { CSAFDocumentv2_0, ProductTree } from "$lib/Advisories/types/csaf-2.0";
+  import type { CSAFDocumentv2_1, ProductTree } from "$lib/Advisories/types/csaf-2.1";
   import { appStore } from "$lib/store.svelte";
   import { untrack } from "svelte";
   import Collapsible from "../../Collapsible.svelte";
   import { productTreeCutoffs } from "../../efficiencyCutoffs";
-  import Relation from "./Relation.svelte";
+  import ProductPath from "./ProductPath.svelte";
 
   interface Props {
     basePath: string;
@@ -26,11 +26,11 @@
   let openRelationships = $state(false);
 
   let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
-  let doc: CSAFDocumentv2_0 | null = $derived(
-    appStore.state.webview.doc as CSAFDocumentv2_0 | null
+  let doc: CSAFDocumentv2_1 | null = $derived(
+    appStore.state.webview.doc as CSAFDocumentv2_1 | null
   );
   let productTree: ProductTree | undefined = $derived(doc?.product_tree);
-  let relationships = $derived(productTree?.relationships);
+  let productPaths = $derived(productTree?.product_paths);
 
   $effect(() => {
     untrack(() => openRelationships);
@@ -43,17 +43,17 @@
         break;
       }
     }
-    const len = productTree?.relationships?.length;
+    const len = productTree?.product_paths?.length;
     openRelationships = (len && len !== 0) || 0 <= productTreeCutoffs.relations;
   });
 </script>
 
 <Collapsible
-  header="Relationships"
+  header="Product Paths"
   open={!!selectedProduct || openRelationships}
   path="/product_tree"
 >
-  {#each relationships as relation, i (`relationships-${uid}-${i}`)}
-    <Relation {basePath} {relation} path={`/product_tree/relationships[${i}]`} />
+  {#each productPaths as productPath, i (`productpaths-${uid}-${i}`)}
+    <ProductPath {basePath} {productPath} path={`/product_tree/productpaths[${i}]`} />
   {/each}
 </Collapsible>

@@ -9,7 +9,6 @@
 -->
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
-  import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
   import { Button } from "flowbite-svelte";
@@ -18,32 +17,57 @@
   import Link from "$lib/Components/Link.svelte";
   import SearchableText from "../SearchableText.svelte";
   import { ArrowOutUpRightSquare, Link as LinkIcon } from "@boxicons/svelte";
+  import {
+    getInitialReleaseDate,
+    getCurrentReleaseDate,
+    getPublisher,
+    getStatus,
+    getTitle,
+    getGenerator,
+    getTrackingVersion,
+    getCategory,
+    getCSAFVersion,
+    getDistributionText,
+    getHighestScore,
+    getLang,
+    getSourceLang,
+    getDistributionSharingGroup,
+    getLicenseExpression,
+    getPublisherContact
+  } from "$lib/Advisories/docmodel";
+  import { cellStyleKey, cellStyleValue } from "$lib/Advisories/classes";
 
   interface Props {
     basePath: string;
   }
   let { basePath = "" }: Props = $props();
 
-  let trackingVersion = $derived(appStore.state.webview.doc?.trackingVersion);
-  let generator = $derived(appStore.state.webview.doc?.generator);
-  let publisherName = $derived(appStore.state.webview.doc?.publisher.name);
-  let publisherCategory = $derived(appStore.state.webview.doc?.publisher.category);
-  let publisherNamespace = $derived(appStore.state.webview.doc?.publisher.namespace);
-  let publisherIssuingAuthority = $derived(appStore.state.webview.doc?.publisher.issuing_authority);
-  let publisherContactDetails = $derived(appStore.state.webview.doc?.publisher.contact_details);
-  let category = $derived(appStore.state.webview.doc?.category);
-  let title = $derived(appStore.state.webview.doc?.title);
-  let lang = $derived(appStore.state.webview.doc?.lang);
-  let sourceLang = $derived(appStore.state.webview.doc?.sourceLang);
-  let csafVersion = $derived(appStore.state.webview.doc?.csafVersion);
-  let distributionText = $derived(appStore.state.webview.doc?.distributionText);
-  let published = $derived(appStore.state.webview.doc?.published);
-  let lastUpdate = $derived(appStore.state.webview.doc?.lastUpdate);
-  let status = $derived(appStore.state.webview.doc?.status);
-  let baseSeverity = $derived(appStore.state.webview.doc?.highestScore?.baseSeverity);
-  let baseScore = $derived(appStore.state.webview.doc?.highestScore?.baseScore);
-  const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
-  const cellStyleKey = "content-center w-40 max-w-full py-0 text-balance";
+  let doc = $derived(appStore.state.webview.doc);
+  let trackingVersion = $derived(getTrackingVersion(doc));
+  let generator = $derived(getGenerator(doc));
+  let publisher = $derived(getPublisher(doc));
+  let publisherName = $derived(publisher?.name ?? undefined);
+  let publisherCategory = $derived(publisher?.category ?? undefined);
+  let publisherNamespace = $derived(publisher?.namespace ?? undefined);
+  let publisherIssuingAuthority = $derived(publisher?.issuing_authority ?? undefined);
+  let publisherContact = $derived(getPublisherContact(doc));
+  let aggregateSeverity = $derived(doc?.document.aggregate_severity);
+  let category = $derived(getCategory(doc));
+  let title = $derived(getTitle(doc));
+  let lang = $derived(getLang(doc));
+  let sourceLang = $derived(getSourceLang(doc));
+  let licenseExpression = $derived(getLicenseExpression(doc));
+  let csafVersion = $derived(getCSAFVersion(doc));
+  let distributionText = $derived(getDistributionText(doc));
+  let distributionSharingGroup = $derived(getDistributionSharingGroup(doc));
+  let published = $derived(doc != null ? getInitialReleaseDate(doc) : undefined);
+  let lastUpdate = $derived(doc != null ? getCurrentReleaseDate(doc) : undefined);
+  let status = $derived(getStatus(doc));
+  let highestScore = $derived(getHighestScore(doc));
+  let baseSeverity: string | null = $derived((highestScore?.baseSeverity as string) ?? null);
+  let baseScore: string | undefined = $derived(
+    highestScore?.baseScore ? `${highestScore?.baseScore}` : undefined
+  );
 
   const openRelatedDocuments = () => {
     // Use push of external router since we want PrevNext to disappear when user navigates to related
@@ -61,11 +85,11 @@
         <span class="-mt-1 inline-block text-xl text-balance">
           <SearchableText text={title} textPath="/document/title" />
         </span>
-        {#if appStore.state.webview.doc?.status !== Status.final}
+        {#if status !== "final"}
           <span class="ml-3 text-lg text-gray-400">{status}</span>
         {/if}
       </div>
-      {#if appStore.state.webview.doc?.highestScore}
+      {#if highestScore}
         <Cvss {baseScore} baseSeverity={baseSeverity ?? ""}></Cvss>
       {/if}
       {#if relatedDocuments?.()}
@@ -102,14 +126,43 @@
           </Link>
         {/if}
       </div>
-      {#if publisherContactDetails}
-        <div class={cellStyleKey}>Publisher contact details</div>
-        <div class={cellStyleValue}>
-          <SearchableText
-            text={publisherContactDetails}
-            textPath="/document/publisher/contact_details"
-          />
-        </div>
+      {#if publisherContact}
+        {#if publisherContact.details}
+          <div class={cellStyleKey}>Publisher contact details</div>
+          <div class={cellStyleValue}>
+            <SearchableText
+              text={publisherContact.details}
+              textPath="/document/publisher/contact/details"
+            />
+          </div>
+        {/if}
+        {#if publisherContact.email}
+          <div class={cellStyleKey}>Publisher contact email</div>
+          <div class={cellStyleValue}>
+            <SearchableText
+              text={publisherContact.email}
+              textPath="/document/publisher/contact/email"
+            />
+          </div>
+        {/if}
+        {#if publisherContact.public_openpgp_key_url}
+          <div class={cellStyleKey}>Publisher contact OpenPGP key</div>
+          <div class={cellStyleValue}>
+            <SearchableText
+              text={publisherContact.public_openpgp_key_url}
+              textPath="/document/publisher/contact/public_openpgp_key_url"
+            />
+          </div>
+        {/if}
+        {#if publisherContact.url}
+          <div class={cellStyleKey}>Publisher contact URL</div>
+          <div class={cellStyleValue}>
+            <SearchableText
+              text={publisherContact.url}
+              textPath="/document/publisher/contact/url"
+            />
+          </div>
+        {/if}
       {/if}
       {#if publisherIssuingAuthority}
         <div class={cellStyleKey}>Publisher issuing authority</div>
@@ -142,31 +195,55 @@
       <div class={cellStyleValue}>
         <SearchableText text={csafVersion} textPath="/document/csaf_version" />
       </div>
+      {#if licenseExpression}
+        <div class={cellStyleKey}>License expression</div>
+        <div class={cellStyleValue}>
+          <SearchableText text={csafVersion} textPath="/document/license_expression" />
+        </div>
+      {/if}
       <div class={cellStyleKey}>Category</div>
       <div class={cellStyleValue}>
         <SearchableText text={category} textPath="/document/category" />
       </div>
+      {#if distributionSharingGroup}
+        <div class={cellStyleKey}>Distribution sharing group ID</div>
+        <div class={cellStyleValue}>
+          <SearchableText
+            text={distributionSharingGroup.id}
+            textPath="/document/distribution/sharing_group/id"
+          />
+        </div>
+        {#if distributionSharingGroup.name}
+          <div class={cellStyleKey}>Distribution sharing group name</div>
+          <div class={cellStyleValue}>
+            <SearchableText
+              text={distributionSharingGroup.name}
+              textPath="/document/distribution/sharing_group/name"
+            />
+          </div>
+        {/if}
+      {/if}
       {#if distributionText}
         <div class={cellStyleKey}>Distribution</div>
         <div class={cellStyleValue}>
           <SearchableText text={distributionText} textPath="/document/distribution/text" />
         </div>
       {/if}
-      {#if appStore.state.webview.doc?.aggregateSeverity}
+      {#if aggregateSeverity}
         <div class={cellStyleKey}>Aggregate severity text</div>
         <div class={cellStyleValue}>
           <SearchableText
-            text={appStore.state.webview.doc.aggregateSeverity.text}
+            text={aggregateSeverity.text}
             textPath="/document/aggregate_severity/text"
           />
         </div>
-        {#if appStore.state.webview.doc?.aggregateSeverity.namespace}
+        {#if aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <Link href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
+            <Link href={aggregateSeverity.namespace} class="underline">
               <ArrowOutUpRightSquare />
               <SearchableText
-                text={appStore.state.webview.doc.aggregateSeverity.namespace}
+                text={aggregateSeverity.namespace}
                 textPath="/document/aggregate_severity/namespace"
               />
             </Link>
@@ -186,7 +263,9 @@
         </div>
       {/if}
       <div class={cellStyleKey}>Tracking Version</div>
-      <div class={cellStyleValue}>{trackingVersion}</div>
+      <div class={cellStyleValue}>
+        <SearchableText text={trackingVersion} textPath="/document/tracking/version" />
+      </div>
     </div>
   </div>
   <div class="mt-3 flex flex-row">
@@ -194,13 +273,13 @@
       Generator:
       {#if generator}
         <SearchableText
-          text={appStore.state.webview.doc?.generator?.engine.name}
+          text={generator?.engine.name}
           textPath="/document/tracking/generator/engine/name"
         />
       {/if}
       {#if generator?.engine?.version}
         <SearchableText
-          text={appStore.state.webview.doc?.generator?.engine.version}
+          text={generator?.engine.version}
           textPath="/document/tracking/generator/engine/version"
         />
       {/if}

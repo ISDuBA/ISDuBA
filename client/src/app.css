@@ -106,6 +106,7 @@ Webview styles
   animation-iteration-count: infinite;
 }
 
+/* CISA defined which colors to use for TLPs: https://www.cisa.gov/news-events/news/traffic-light-protocol-tlp-definitions-and-usage */
 .tlpwhite {
   font-size: small;
   padding: 0.25em;
@@ -118,7 +119,8 @@ Webview styles
   background: #000;
   color: #ff2b2b;
 }
-.tlpamber {
+.tlpamber,
+.tlpamber-strict {
   font-size: small;
   padding: 0.25em;
   background: #000;

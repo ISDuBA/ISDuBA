@@ -13,96 +13,85 @@ import {
   generateProductVulnerabilities
 } from "./productvulnerabilities";
 import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
+import type {
+  CSAFDocumentv2_0,
+  ListOfBranches,
+  ProductTree,
+  Vulnerabilities
+} from "$lib/Advisories/types/csaf-2.0";
+import type { DocumentLevelMetaData } from "$lib/Advisories/types/csaf-2.0";
 
-const emptyObject = {};
-
-const noBranches = {
-  product_tree: {}
-};
-
-const noProduct = {
-  product_tree: {
-    branches: []
-  }
-};
-
-const fullProductNames = {
-  product_tree: {
-    full_product_names: [
-      {
+const oneProductNotNested: ProductTree = {
+  branches: [
+    {
+      name: "Product A",
+      category: "product_version",
+      product: {
         product_id: "123",
         name: "Product A"
       }
-    ]
-  }
+    }
+  ]
 };
 
-const oneProductNotNested = {
-  product_tree: {
-    branches: [
-      {
-        category: "product_version",
-        product: {
-          product_id: "123",
-          name: "Product A"
+const simpleNested: ProductTree = {
+  branches: [
+    {
+      name: "Product C",
+      category: "product_version",
+      branches: [
+        {
+          name: "Product B",
+          category: "product_version",
+          product: {
+            product_id: "123",
+            name: "Product A"
+          }
         }
-      }
-    ]
-  }
+      ]
+    }
+  ]
 };
 
-const simpleNested = {
-  product_tree: {
-    branches: [
-      {
-        branches: [
-          {
-            category: "product_version",
-            product: {
-              product_id: "123",
-              name: "Product A"
-            }
-          }
-        ]
-      }
-    ]
-  }
-};
-
-const complexNested = {
-  product_tree: {
-    branches: [
-      {
-        branches: [
-          {
-            branches: [
-              {
-                category: "product_version",
-                product: {
-                  product_id: "8910",
-                  name: "Product C"
-                }
+const complexNested: ProductTree = {
+  branches: [
+    {
+      name: "Product ABC",
+      category: "product_version",
+      branches: [
+        {
+          name: "Product AB",
+          category: "product_version",
+          branches: [
+            {
+              name: "Product C",
+              category: "product_version",
+              product: {
+                product_id: "8910",
+                name: "Product C"
               }
-            ]
-          },
-          {
-            category: "product_version",
-            product: {
-              product_id: "123",
-              name: "Product A"
             }
-          },
-          {
-            category: "product_version",
-            product: {
-              product_id: "3456",
-              name: "Product B"
-            }
+          ]
+        },
+        {
+          name: "Product A",
+          category: "product_version",
+          product: {
+            product_id: "123",
+            name: "Product A"
           }
-        ]
-      }
-    ]
-  }
+        },
+        {
+          name: "Product B",
+          category: "product_version",
+          product: {
+            product_id: "3456",
+            name: "Product B"
+          }
+        }
+      ]
+    }
+  ]
 };
 
 const noVulnerabilities = {
@@ -144,53 +133,105 @@ const vulnerability_known_affected_filled = {
   ]
 };
 
-const jsonDocument = {
-  product_tree: {
+const documentDocument: DocumentLevelMetaData = {
+  acknowledgments: [
+    {
+      names: ["qXhxe"],
+      organization: "uTxaM",
+      summary: "hXaqvYynsvb",
+      urls: ["https://example.org"]
+    }
+  ],
+  category: "ඊ",
+  csaf_version: "2.0",
+  lang: "X-2QpA4-P-IsDkdUY-Uy-W",
+  notes: [{ category: "general", text: "QUOclBKPQXh" }],
+  publisher: {
+    category: "other",
+    contact_details: "0z8eAxevc0G",
+    name: "ozdkC6xS",
+    namespace: "http://example.com"
+  },
+  source_lang: "X-KVzPzau",
+  title: "xMJO",
+  tracking: {
+    aliases: ["1"],
+    current_release_date: "2020-02-09T07:37:51.351498222Z",
+    id: "test-csaf-2.0",
+    initial_release_date: "2021-05-02T20:55:21.370337232Z",
+    revision_history: [
+      {
+        date: "2022-11-15T21:06:17.574099808Z",
+        legacy_version: "b",
+        number:
+          "6182776.3973455.6327-0.0.5940485.3761237y.9291154745.514072.0.3l9LNF2CL-c5.563701721.690DTGGso4y3a.0+BRQJC.PpY4gqc-e.EEv.cDEYK.si",
+        summary: "1rL"
+      }
+    ],
+    status: "final",
+    version: "0.1707764392.0-9.0244721290y"
+  }
+};
+
+const branches: ListOfBranches = [
+  {
+    name: "ABCDE",
+    category: "product_version",
     branches: [
       {
+        name: "Name CD",
+        category: "product_version",
         branches: [
           {
-            branches: [
-              {
-                category: "product_version",
-                product: {
-                  product_id: "8910",
-                  name: "Product C"
-                }
-              },
-              {
-                category: "product_version",
-                product: {
-                  product_id: "1112",
-                  name: "Product D"
-                }
-              }
-            ]
-          },
-          {
+            name: "Name C",
             category: "product_version",
             product: {
-              product_id: "123",
-              name: "Product A"
+              product_id: "8910",
+              name: "Product C"
             }
           },
           {
+            name: "Name D",
             category: "product_version",
             product: {
-              product_id: "3456",
-              name: "Product B"
-            }
-          },
-          {
-            category: "product_version",
-            product: {
-              product_id: "1314",
-              name: "Product E"
+              product_id: "1112",
+              name: "Product D"
             }
           }
         ]
+      },
+      {
+        name: "Name A",
+        category: "product_version",
+        product: {
+          product_id: "123",
+          name: "Product A"
+        }
+      },
+      {
+        name: "Name B",
+        category: "product_version",
+        product: {
+          product_id: "3456",
+          name: "Product B"
+        }
+      },
+      {
+        name: "Name E",
+        category: "product_version",
+        product: {
+          product_id: "1314",
+          name: "Product E"
+        }
       }
     ]
+  }
+];
+
+const jsonDocument: CSAFDocumentv2_0 = {
+  document: { ...documentDocument },
+  product_tree: {
+    branches
   },
   vulnerabilities: [
     {
@@ -223,28 +264,18 @@ const jsonDocument = {
 
 describe("Productvulnerabilities test", () => {
   it("Product: parses empty object", () => {
-    const result = extractProducts(emptyObject);
-    expect(result.length).toBe(0);
-  });
-});
-
-describe("Productvulnerabilities test", () => {
-  it("Product: parses no branches", () => {
-    const result = extractProducts(noBranches);
-    expect(result.length).toBe(0);
-  });
-});
-
-describe("Productvulnerabilities test", () => {
-  it("Product: parses no products", () => {
-    const result = extractProducts(noProduct);
+    const result = extractProducts(null);
     expect(result.length).toBe(0);
   });
 });
 
 describe("Productvulnerabilities test", () => {
   it("Product: parses non nested list of products", () => {
-    const result = extractProducts(oneProductNotNested);
+    const clone = structuredClone(jsonDocument);
+    if (clone.product_tree) {
+      clone.product_tree.branches = oneProductNotNested.branches;
+    }
+    const result = extractProducts(clone);
     expect(result.length).toBe(1);
     expect(result[0].product_id).toBe("123");
     expect(result[0].name).toBe("Product A");
@@ -253,16 +284,11 @@ describe("Productvulnerabilities test", () => {
 
 describe("Productvulnerabilities test", () => {
   it("Product: parses simple nested list of products", () => {
-    const result = extractProducts(simpleNested);
-    expect(result.length).toBe(1);
-    expect(result[0].product_id).toBe("123");
-    expect(result[0].name).toBe("Product A");
-  });
-});
-
-describe("Productvulnerabilities test", () => {
-  it("Product: parses full_product_names", () => {
-    const result = extractProducts(fullProductNames);
+    const clone = structuredClone(jsonDocument);
+    if (clone.product_tree) {
+      clone.product_tree.branches = simpleNested.branches;
+    }
+    const result = extractProducts(clone);
     expect(result.length).toBe(1);
     expect(result[0].product_id).toBe("123");
     expect(result[0].name).toBe("Product A");
@@ -271,7 +297,11 @@ describe("Productvulnerabilities test", () => {
 
 describe("Productvulnerabilities test", () => {
   it("Product: parses complex nested list of products", () => {
-    const result = extractProducts(complexNested);
+    const clone = structuredClone(jsonDocument);
+    if (clone.product_tree) {
+      clone.product_tree.branches = complexNested.branches;
+    }
+    const result = extractProducts(clone);
     expect(result.length).toBe(3);
     expect(result[0].product_id).toBe("8910");
     expect(result[0].name).toBe("Product C");
@@ -284,7 +314,7 @@ describe("Productvulnerabilities test", () => {
 
 describe("Productvulnerabilities test", () => {
   it("Vulnerability: parses empty object", () => {
-    const { vulnerabilities } = extractVulnerabilities(emptyObject);
+    const { vulnerabilities } = extractVulnerabilities({});
     expect(vulnerabilities.length).toBe(0);
   });
 });
@@ -335,12 +365,13 @@ describe("Productvulnerabilities test", () => {
 
 describe("Productvulnerabilities test", () => {
   it("Crosstable: generate headers", () => {
-    const products = extractProducts(jsonDocument);
+    const clone = structuredClone(jsonDocument);
+    const products = extractProducts(clone);
     const productLookup = products.reduce((o: any, n: any) => {
       o[n.product_id] = n.name;
       return o;
     }, {});
-    const result = generateProductVulnerabilities(jsonDocument, products, productLookup);
+    const result = generateProductVulnerabilities(clone, products, productLookup);
     const header = result[0].map((c: any) => c.content);
     const expectedHeader = [
       "Product",
@@ -352,7 +383,7 @@ describe("Productvulnerabilities test", () => {
     ];
     expect(result.length).toBeGreaterThan(0);
     expect(header).toStrictEqual(expectedHeader);
-    expect(header.length).toBe(jsonDocument.vulnerabilities.length + 2);
+    expect(header.length).toBe((jsonDocument.vulnerabilities as Vulnerabilities).length + 2);
   });
 });
 

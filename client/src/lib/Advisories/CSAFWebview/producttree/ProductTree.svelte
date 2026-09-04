@@ -10,13 +10,17 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
-  import Branch from "./branch/Branch.svelte";
+  import Branch20 from "./branch/Branchv2_0.svelte";
+  import Branch21 from "./branch/Branchv2_1.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import ProductGroups from "./productgroup/ProductGroups.svelte";
   import ProductNames from "./product/ProductNames.svelte";
   import Relationships from "./relationship/Relationships.svelte";
   import { productTreeCutoffs } from "../efficiencyCutoffs";
   import { untrack } from "svelte";
+  import type { Branch as Branch2_0, ProductTree } from "$lib/Advisories/types/csaf-2.0";
+  import type { Branch as Branch2_1 } from "$lib/Advisories/types/csaf-2.1";
+  import ProductPaths from "./productpaths/ProductPaths.svelte";
 
   interface Props {
     basePath: string;
@@ -29,13 +33,16 @@
   let openBranches = $state(false);
   let openRelationships = $state(false);
   let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
+  let doc = $derived(appStore.state.webview.doc);
+  let productTree = $derived(doc?.product_tree);
+  let csafVersion = $derived(doc?.document.csaf_version);
 
   $effect(() => {
     untrack(() => openSubBranches);
     untrack(() => openBranches);
     untrack(() => openRelationships);
     let size = 0;
-    for (let branch of appStore.state.webview.doc?.productTree.branches ?? []) {
+    for (let branch of productTree?.branches ?? []) {
       if (branch.branches) {
         size = size + branch.branches.length;
       }
@@ -45,51 +52,51 @@
     }
     openBranches = !!selectedProduct || size <= productTreeCutoffs.level2Upper;
     openSubBranches = !!selectedProduct || size <= productTreeCutoffs.level2Lower;
-    openRelationships =
-      appStore.state.webview.doc?.productTree.relationships?.length ??
-      0 <= productTreeCutoffs.relations;
   });
 </script>
 
-{#if appStore.state.webview.doc?.productTree.branches}
-  <Collapsible
-    header="Branches"
-    open={!!selectedProduct ||
-      appStore.state.webview.doc?.productTree.branches.length <= productTreeCutoffs.level1}
-    path="/product_tree"
-  >
-    {#each appStore.state.webview.doc?.productTree.branches as branch, i (`producttree-${uid}-${i}`)}
-      <Branch
-        {branch}
-        {openSubBranches}
-        open={openBranches}
-        path={`/product_tree/branches[${i}]`}
-      />
-    {/each}
-  </Collapsible>
-{/if}
+{#if doc && productTree}
+  {#if productTree.branches}
+    <Collapsible
+      header="Branches"
+      open={!!selectedProduct || productTree.branches.length <= productTreeCutoffs.level1}
+      path="/product_tree"
+    >
+      {#each productTree.branches as branch, i (`producttree-${uid}-${i}`)}
+        {#if csafVersion === "2.0"}
+          <Branch20
+            branch={branch as Branch2_0}
+            {openSubBranches}
+            open={openBranches}
+            path={`/product_tree/branches[${i}]`}
+          />
+        {:else if csafVersion === "2.1"}
+          <Branch21
+            branch={branch as Branch2_1}
+            {openSubBranches}
+            open={openBranches}
+            path={`/product_tree/branches[${i}]`}
+          />
+        {/if}
+      {/each}
+    </Collapsible>
+  {/if}
 
-{#if appStore.state.webview.doc?.productTree.relationships}
-  <Collapsible
-    header="Relationships"
-    open={!!selectedProduct || openRelationships}
-    path="/product_tree"
-  >
-    <Relationships
-      {basePath}
-      relationships={appStore.state.webview.doc?.productTree.relationships}
-    />
-  </Collapsible>
-{/if}
+  {#if csafVersion === "2.0" && (productTree as ProductTree | undefined)?.relationships}
+    <Relationships {basePath} />
+  {:else if csafVersion === "2.1" && productTree.product_paths}
+    <ProductPaths {basePath} />
+  {/if}
 
-{#if appStore.state.webview.doc?.productTree.product_groups}
-  <Collapsible header="Product groups" open path="/product_tree">
-    <ProductGroups productGroups={appStore.state.webview.doc?.productTree.product_groups} />
-  </Collapsible>
-{/if}
+  {#if productTree.product_groups}
+    <Collapsible header="Product groups" open path="/product_tree">
+      <ProductGroups productGroups={productTree.product_groups} />
+    </Collapsible>
+  {/if}
 
-{#if appStore.state.webview.doc?.productTree.full_product_names}
-  <Collapsible header="Full Product Names" open path="/product_tree">
-    <ProductNames productNames={appStore.state.webview.doc?.productTree.full_product_names} />
-  </Collapsible>
+  {#if productTree.full_product_names}
+    <Collapsible header="Full Product Names" open path="/product_tree">
+      <ProductNames productNames={productTree.full_product_names} />
+    </Collapsible>
+  {/if}
 {/if}

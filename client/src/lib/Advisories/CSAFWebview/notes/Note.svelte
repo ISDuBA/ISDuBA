@@ -10,21 +10,35 @@
 
 <script lang="ts">
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import { getCSAFVersion } from "$lib/Advisories/docmodel";
+  import { appStore } from "$lib/store.svelte";
   import SearchableText from "../SearchableText.svelte";
+  import type { Note as Note2_0 } from "$lib/Advisories/types/csaf-2.0";
+  import type { Note as Note2_1 } from "$lib/Advisories/types/csaf-2.1";
+  import ValueList from "../ValueList.svelte";
 
   interface Props {
-    note: Note;
+    note: Note2_0 | Note2_1;
     path: string;
   }
   let { note, path }: Props = $props();
 
+  let csafVersion = $derived(getCSAFVersion(appStore.state.webview.doc));
   let keys: string[] = $derived(note.audience ? ["Audience"] : []);
   let values: string[] = $derived(note.audience ? [note.audience] : []);
   let paths: string[] = $derived(note.audience ? [`${path}/audience`] : []);
 </script>
 
 <KeyValue {keys} {values} {paths} />
+{#if csafVersion === "2.1"}
+  {@const note21 = note as Note2_1}
+  {#if note21.group_ids}
+    <ValueList label="Group IDs" values={note21.group_ids} path={`${path}/group_id`} />
+  {/if}
+  {#if note21.product_ids}
+    <ValueList label="Product IDs" values={note21.product_ids} path={`${path}/product_ids`} />
+  {/if}
+{/if}
 <div class="ml-7">
   <h5>Text</h5>
 </div>
