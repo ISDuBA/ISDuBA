@@ -324,8 +324,8 @@ func (f *feed) removeOlder(
 		return nil, fmt.Errorf("sending same or newer batch failed: %w", err)
 	}
 
-	for i := len(remove) - 1; i >= 0; i-- {
-		candidates = slices.Delete(candidates, remove[i][0], remove[i][1]+1)
+	for _, r := range slices.Backward(remove) {
+		candidates = slices.Delete(candidates, r[0], r[1]+1)
 	}
 
 	return candidates, nil
