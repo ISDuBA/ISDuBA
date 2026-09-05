@@ -1477,7 +1477,7 @@ func (m *Manager) UpdateSource(
 			resCh <- result{err: NoSuchEntryError("no such source")}
 			return
 		}
-		su := SourceUpdater{updater: updater[*source]{updatable: s, manager: m}}
+		su := SourceUpdater{updatable: s, manager: m}
 		if err := updates(&su); err != nil {
 			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
 			return
@@ -1497,7 +1497,7 @@ func (m *Manager) UpdateSource(
 				if s.active {
 					s.active = false
 					s.status = []string{deactivatedDueToClientCertIssue}
-					x := SourceUpdater{updater: updater[*source]{updatable: s, manager: m}}
+					x := SourceUpdater{updatable: s, manager: m}
 					x.addChange(nil, "active", false)
 					if err := x.updateDB(ctx, "sources", s.id); err != nil {
 						slog.Error("deactivating source failed", "err", err)
@@ -1563,7 +1563,7 @@ func (m *Manager) UpdateFeed(
 		if f.source.id == 0 {
 			resCh <- result{err: InvalidArgumentError("cannot update this feed")}
 		}
-		fu := FeedUpdater{updater: updater[*feed]{updatable: f, manager: m}}
+		fu := FeedUpdater{updatable: f, manager: m}
 		if err := updates(&fu); err != nil {
 			resCh <- result{err: fmt.Errorf("updates failed: %w", err)}
 			return
