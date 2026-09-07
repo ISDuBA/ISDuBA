@@ -72,13 +72,13 @@ func run(cfg *config.Config) error {
 	go agg.Run(ctx)
 
 	// Is the remote validator configured?
-	var val csaf.RemoteValidator
+	var val csaf.RemoteValidatorWithContext
 	if cfg.RemoteValidator.URL != "" {
-		v, err := cfg.RemoteValidator.Open()
+		v, err := cfg.RemoteValidator.OpenWithContext()
 		if err != nil {
 			return fmt.Errorf("configuring remote validator failed: %w", err)
 		}
-		val = csaf.SynchronizedRemoteValidator(v)
+		val = csaf.SynchronizedRemoteValidatorWithContext(v)
 		defer val.Close()
 	}
 

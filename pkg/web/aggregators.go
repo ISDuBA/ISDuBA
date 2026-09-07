@@ -51,7 +51,7 @@ type argumentedAggregator struct {
 //	@Router			/aggregator [get]
 func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 	url := ctx.Query("url")
-	ca, err := c.am.Cache.GetAggregator(url, c.cfg)
+	ca, err := c.am.Cache.GetAggregator(ctx, url, c.cfg)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
@@ -76,7 +76,7 @@ func (c *Controller) aggregatorProxy(ctx *gin.Context) {
 		return
 	}
 	custom := custom{
-		Subscriptions: c.sm.Subscriptions(ca.SourceURLs()),
+		Subscriptions: c.sm.Subscriptions(ctx.Request.Context(), ca.SourceURLs()),
 	}
 	if name != "" {
 		custom.ID = id
@@ -172,7 +172,7 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 		models.SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ca, err := c.am.Cache.GetAggregator(url, c.cfg)
+	ca, err := c.am.Cache.GetAggregator(ctx, url, c.cfg)
 	if err != nil {
 		models.SendError(ctx, http.StatusBadRequest, err)
 		return
@@ -180,10 +180,12 @@ func (c *Controller) viewAggregator(ctx *gin.Context) {
 	aAgg := argumentedAggregator{
 		Aggregator: ca.Raw,
 		Custom: custom{
-			ID:            id,
-			Name:          name,
-			Attention:     &attention,
-			Subscriptions: c.sm.Subscriptions(ca.SourceURLs()),
+			ID:        id,
+			Name:      name,
+			Attention: &attention,
+			Subscriptions: c.sm.Subscriptions(
+				ctx.Request.Context(),
+				ca.SourceURLs()),
 		},
 	}
 	ctx.JSON(http.StatusOK, &aAgg)

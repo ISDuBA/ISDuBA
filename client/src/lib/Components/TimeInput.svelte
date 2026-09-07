@@ -30,7 +30,7 @@
     onTimeChanged
   }: Props = $props();
 
-  const minutesInputClass = `max-w-20 rounded-s-none ${roundEnd ? "" : "rounded-e-none"}`;
+  let minutesInputClass = $derived(`max-w-20 rounded-s-none ${roundEnd ? "" : "rounded-e-none"}`);
   const numberRegex = /\d/i;
 
   const timeChanged = () => {

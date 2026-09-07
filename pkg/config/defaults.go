@@ -19,7 +19,7 @@ import (
 const DefaultConfigFile = "isduba.toml"
 
 const (
-	defaultAdvisoryUploadLimit   = 512 * 1024 * 1024
+	defaultAdvisoryUploadLimit   = 15 * 1024 * 1024
 	defaultAnonymousEventLogging = false
 )
 

@@ -36,7 +36,9 @@
   const iconClass = "text-lg";
   const resetButtonClass = "rounded-s-none px-3";
   const defaultInputClass = "h-fit";
-  const inputClass = `${defaultInputClass} ${clearable || showTimeControls ? "rounded-e-none" : ""}`;
+  let inputClass = $derived(
+    `${defaultInputClass} ${clearable || showTimeControls ? "rounded-e-none" : ""}`
+  );
   let hideFrom = $state(false);
   let hideTo = $state(false);
   let fromString: string | undefined = $state();

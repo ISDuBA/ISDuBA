@@ -58,7 +58,7 @@
     return "default";
   });
 
-  let source: Source = {
+  let source: Source = $state({
     name: "",
     url: "",
     rate: undefined,
@@ -68,7 +68,7 @@
     ignore_patterns: [""],
     attention: false,
     client_cert_passphrase: ""
-  };
+  });
 
   let formClass = "max-w-[800pt]";
   const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
@@ -191,8 +191,8 @@
       {/if}
     </List>
 
-    <SourceForm bind:this={sourceForm} {inputChange} {formClass} {source}></SourceForm>
-    <FeedView feeds={pmdFeeds}></FeedView>
+    <SourceForm bind:this={sourceForm} {inputChange} {formClass} bind:source></SourceForm>
+    <FeedView bind:feeds={pmdFeeds}></FeedView>
 
     <Button onclick={saveAll} color="green">
       <Save class="me-2" />

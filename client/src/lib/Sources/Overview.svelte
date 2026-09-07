@@ -34,7 +34,7 @@
   let loadingSources: boolean = $state(false);
 
   let sources: Source[] = $state([]);
-  let statsComponents: { [idToRole: string]: SourceBasicStats } = {};
+  let statsComponents: { [idToRole: string]: SourceBasicStats } = $state({});
 
   async function getMessage() {
     const response = await request("api/sources/message", "GET");

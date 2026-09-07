@@ -121,7 +121,7 @@
 
   // single selection
   const self = {};
-  const selected = ctx.selected ?? writable();
+  const selected = ctxClosure().selected ?? writable();
 
   let _open: boolean = open;
   open = false;

@@ -9,7 +9,21 @@
 -->
 
 <script lang="ts">
-  import { Button, Card, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import { slide } from "svelte/transition";
+  import {
+    Button,
+    Card,
+    Label,
+    Listgroup,
+    ListgroupItem,
+    Radio,
+    Table,
+    TableBody,
+    TableBodyCell,
+    TableBodyRow,
+    TableHead,
+    TableHeadCell
+  } from "flowbite-svelte";
   import { type UploadInfo } from "$lib/Sources/source";
   import CFileinput from "./Components/CFileinput.svelte";
   import { CheckCircle, XCircle } from "@boxicons/svelte";
@@ -40,18 +54,49 @@
   const getColor = (uploadInfo: UploadInfo) => {
     let success = uploadInfo?.success;
     if (success !== undefined) {
-      return success ? "text-green-600" : "text-red-600";
+      // The returned colors are from the default palette of TailwindCSS:
+      // https://tailwindcss.com/docs/colors#default-color-palette-reference
+      return success
+        ? // color-green-600
+          "oklch(62.7% 0.194 149.214)"
+        : // color-red-600
+          "oklch(57.7% 0.245 27.325)";
     }
     return "";
   };
   let files: FileList | undefined = $state(undefined);
   let filesCache: FileList | undefined = $state(undefined);
   let isUploading = $state(false);
+
+  type UploadFilter = "successful" | "duplicate" | "error" | "total";
+  let filterBy: UploadFilter = $state("total");
+
+  let duplicateCount = $derived.by(() => {
+    return uploadInfo.filter((info) => info.requestStatus === 409).length;
+  });
+
+  let failureCount = $derived.by(() => {
+    return uploadInfo.filter((info) => !info.success && info.requestStatus !== 409).length;
+  });
+
+  let successCount = $derived.by(() => {
+    return uploadInfo.filter((info) => info.success).length;
+  });
+
   $effect(() => {
     if (files) {
       uploadInfo = [];
     }
   });
+
+  const shouldBeDisplayed = (info: UploadInfo) => {
+    return (
+      filterBy === "total" ||
+      (filterBy === "duplicate" && info.requestStatus === 409) ||
+      (filterBy === "successful" && info.success) ||
+      (filterBy === "error" && !info.success && info.requestStatus !== 409)
+    );
+  };
 </script>
 
 <Card size="lg" class="p-4">
@@ -107,23 +152,61 @@
       >
     </div>
     {#if filesCache}
+      {#if !isUploading}
+        <div transition:slide>
+          <Table>
+            <TableHead>
+              <TableHeadCell class="text-center">Successful</TableHeadCell>
+              <TableHeadCell class="text-center">Already existing</TableHeadCell>
+              <TableHeadCell class="text-center">Other Errors</TableHeadCell>
+              <TableHeadCell class="text-center">Total</TableHeadCell>
+            </TableHead>
+            <TableBody>
+              <TableBodyRow>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="successful"
+                    >{successCount}</Radio
+                  >
+                </TableBodyCell>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="duplicate"
+                    >{duplicateCount}</Radio
+                  >
+                </TableBodyCell>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="error"
+                    >{failureCount}</Radio
+                  >
+                </TableBodyCell>
+                <TableBodyCell>
+                  <Radio bind:group={filterBy} labelClass="justify-center" value="total"
+                    >{uploadInfo.length}</Radio
+                  >
+                </TableBodyCell>
+              </TableBodyRow>
+            </TableBody>
+          </Table>
+        </div>
+      {/if}
       <Listgroup class="mt-6">
         {#each filesCache as file, i (`upload-1-${uid}-${i}`)}
           {@const info = uploadInfo[i]}
           {@const color = getColor(info)}
-          <ListgroupItem>
-            <div class="flex items-center gap-1">
-              {#if info?.success}
-                <CheckCircle fill={color} />
-              {:else if info}
-                <XCircle fill={color} />
+          {#if shouldBeDisplayed(info)}
+            <ListgroupItem>
+              <div class="flex items-center gap-1">
+                {#if info?.success}
+                  <CheckCircle fill={color} />
+                {:else if info}
+                  <XCircle fill={color} />
+                {/if}
+                <div class="font-bold text-black dark:text-white">{file.name}</div>
+              </div>
+              {#if info?.message}
+                <div>{info.message}</div>
               {/if}
-              <div class="font-bold text-black dark:text-white">{file.name}</div>
-            </div>
-            {#if info?.message}
-              <div>{info.message}</div>
-            {/if}
-          </ListgroupItem>
+            </ListgroupItem>
+          {/if}
         {/each}
       </Listgroup>
     {:else if files}

@@ -37,7 +37,7 @@
             <TableBodyCell class={cellStyle}>
               <div class="markdown-text">
                 <div class="display-markdown max-w-2/3">
-                  {index}
+                  {values[index]}
                 </div>
               </div>
             </TableBodyCell>

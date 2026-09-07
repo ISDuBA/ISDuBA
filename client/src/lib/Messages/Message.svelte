@@ -12,7 +12,6 @@
   import { Toast } from "flowbite-svelte";
   import { MESSAGE } from "./messagetypes";
   import { onMount } from "svelte";
-  import { appStore } from "$lib/store.svelte";
   import { blur } from "svelte/transition";
   import {
     MessageCircle,
@@ -48,7 +47,6 @@
     if (!autoclose) return;
     setTimeout(() => {
       open = false;
-      appStore.removeError(error.id);
     }, 8000);
   });
 </script>
@@ -58,9 +56,6 @@
     color={coloryByType(error.type)}
     bind:toastStatus={open}
     transition={blur}
-    onclose={() => {
-      appStore.removeError(error.id);
-    }}
     class={divClass}
     {dismissable}
   >

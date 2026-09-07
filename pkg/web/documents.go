@@ -162,7 +162,7 @@ func (c *Controller) importDocument(ctx *gin.Context) {
 
 	// Is remote validator configured?
 	if c.val != nil {
-		rvr, err := c.val.Validate(document)
+		rvr, err := c.val.ValidateWithContext(ctx.Request.Context(), document)
 		if err != nil {
 			slog.Error("remote validation failed", "err", err)
 			models.SendErrorMessage(ctx, http.StatusInternalServerError,

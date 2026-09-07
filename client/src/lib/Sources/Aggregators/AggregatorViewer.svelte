@@ -379,7 +379,6 @@
       if (resp.ok) {
         aggregatorData.set(aggregator.id, parseAggregatorData(resp.value));
         aggregatorMetaData.set(aggregator.id, resp.value);
-        aggregatorMetaData = aggregatorMetaData;
         saveAggregatorExpand();
       } else {
         aggregatorError = resp.error;

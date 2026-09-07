@@ -218,7 +218,7 @@
                 navigateToVersion(version);
               }}
               color="light"
-              title={`Version ${version.version}`}
+              title={`Switch to version ${version.version}`}
             >
               {version.version}
               <!-- Show tracking status only if there are at least two documents with same version number -->

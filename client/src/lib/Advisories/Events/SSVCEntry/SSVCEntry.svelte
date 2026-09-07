@@ -14,17 +14,11 @@
   import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
   import type { CopyState } from "$lib/Components/types";
   import CopyButton from "$lib/Components/CopyButton.svelte";
-
-  type SsvcData = {
-    prev_ssvc?: string;
-    ssvc?: string;
-    actor: string;
-    documentVersion: number;
-    time: string;
-  };
+  import type { SSVCEvent } from "../events";
+  import VersionLink from "../VersionLink.svelte";
 
   interface Props {
-    ssvcData: SsvcData;
+    ssvcData: SSVCEvent;
   }
   let { ssvcData }: Props = $props();
 
@@ -75,7 +69,7 @@
           {getLabel()}
         </small>
         <span class="ml-1 text-xs text-slate-400">
-          on version: {ssvcData.documentVersion}
+          <VersionLink documentID={ssvcData.documents_id} />
         </span>
       </div>
     </div>

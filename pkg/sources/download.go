@@ -79,7 +79,7 @@ func (i *inserter) sql(table string) string {
 
 // download fetches the files of a document and stores
 // them into the database.
-func (l *location) download(m *Manager, f *feed) {
+func (l *location) download(ctx context.Context, m *Manager, f *feed) {
 
 	var (
 		strictMode     bool                     // All checks have to be fulfilled.
@@ -106,7 +106,7 @@ func (l *location) download(m *Manager, f *feed) {
 		func(ds *dlStatus, f *feed) {
 			if filename = filepath.Base(l.doc.String()); !util.ConformingFileName(filename) {
 				ds.set(filenameFailed)
-				f.log(m, config.WarnFeedLogLevel, "File name %q is not conforming", filename)
+				f.log(ctx, m, config.WarnFeedLogLevel, "File name %q is not conforming", filename)
 			}
 		},
 	}
@@ -123,17 +123,17 @@ func (l *location) download(m *Manager, f *feed) {
 		}
 		if checksum != nil {
 			var check func(*dlStatus, *feed)
-			if remoteChecksum, err := f.source.loadHash(client, m, hashFile); err != nil {
+			if remoteChecksum, err := f.source.loadHash(ctx, client, m, hashFile); err != nil {
 				check = func(ds *dlStatus, f *feed) {
 					ds.set(checksumFailed)
-					f.log(m, config.WarnFeedLogLevel, "Fetching hash %q failed: %v", hashFile, err)
+					f.log(ctx, m, config.WarnFeedLogLevel, "Fetching hash %q failed: %v", hashFile, err)
 				}
 			} else {
 				writers = append(writers, checksum)
 				check = func(ds *dlStatus, f *feed) {
 					if !bytes.Equal(checksum.Sum(nil), remoteChecksum) {
 						ds.set(checksumFailed)
-						f.log(m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
+						f.log(ctx, m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
 					}
 				}
 			}
@@ -150,7 +150,7 @@ func (l *location) download(m *Manager, f *feed) {
 			{".sha256", sha256.New},
 		} {
 			guess := l.doc.String() + h.ext
-			if rc, err := f.source.loadHash(client, m, guess); err == nil {
+			if rc, err := f.source.loadHash(ctx, client, m, guess); err == nil {
 				remoteChecksum, checksum = rc, h.cstr()
 				break
 			}
@@ -161,13 +161,13 @@ func (l *location) download(m *Manager, f *feed) {
 			check = func(ds *dlStatus, f *feed) {
 				if !bytes.Equal(checksum.Sum(nil), remoteChecksum) {
 					ds.set(checksumFailed)
-					f.log(m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
+					f.log(ctx, m, config.ErrorFeedLogLevel, "Checksum mismatch for document %q", l.doc)
 				}
 			}
 		} else { // We didn't found a hash.
 			check = func(ds *dlStatus, f *feed) {
 				ds.set(checksumFailed)
-				f.log(m, config.WarnFeedLogLevel, "Fetching hash for %q failed", l.doc)
+				f.log(ctx, m, config.WarnFeedLogLevel, "Fetching hash for %q failed", l.doc)
 			}
 		}
 		checks = append(checks, check)
@@ -177,14 +177,14 @@ func (l *location) download(m *Manager, f *feed) {
 	writers = append(writers, &data)
 
 	// Download the CSAF document.
-	resp, err := f.source.httpGet(client, m, l.doc.String())
+	resp, err := f.source.httpGetWithContext(ctx, client, m, l.doc.String())
 	if err != nil {
-		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %v", l.doc, err)
+		f.log(ctx, m, config.ErrorFeedLogLevel, "downloading %q failed: %v", l.doc, err)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
 		resp.Body.Close()
-		f.log(m, config.ErrorFeedLogLevel, "downloading %q failed: %s (%d)",
+		f.log(ctx, m, config.ErrorFeedLogLevel, "downloading %q failed: %s (%d)",
 			l.doc, http.StatusText(resp.StatusCode), resp.StatusCode)
 		return
 	}
@@ -199,7 +199,7 @@ func (l *location) download(m *Manager, f *feed) {
 		return json.NewDecoder(tee).Decode(&doc)
 	}(); err != nil {
 		// If it is not JSON there is no way to carry on.
-		f.log(m, config.ErrorFeedLogLevel, "decoding document %q failed: %v", l.doc, err)
+		f.log(ctx, m, config.ErrorFeedLogLevel, "decoding document %q failed: %v", l.doc, err)
 		return
 	}
 
@@ -208,7 +208,7 @@ func (l *location) download(m *Manager, f *feed) {
 		expr := util.NewPathEval()
 		if err := util.IDMatchesFilename(expr, doc, filename); err != nil {
 			ds.set(filenameFailed)
-			f.log(m, config.ErrorFeedLogLevel, "Tracking ID in %q is not conforming: %v", l.doc, err)
+			f.log(ctx, m, config.ErrorFeedLogLevel, "Tracking ID in %q is not conforming: %v", l.doc, err)
 		}
 	})
 
@@ -217,10 +217,10 @@ func (l *location) download(m *Manager, f *feed) {
 		if errors, err := csaf.ValidateCSAF(doc); err != nil || len(errors) > 0 {
 			ds.set(schemaValidationFailed)
 			if err != nil {
-				f.log(m, config.ErrorFeedLogLevel,
+				f.log(ctx, m, config.ErrorFeedLogLevel,
 					"Schema validation of document %q failed: %v", l.doc, err)
 			} else {
-				f.log(m, config.ErrorFeedLogLevel,
+				f.log(ctx, m, config.ErrorFeedLogLevel,
 					"Schema validation of document %q has %d errors", l.doc, len(errors))
 			}
 			return
@@ -234,21 +234,21 @@ func (l *location) download(m *Manager, f *feed) {
 			case err != nil:
 				ds.set(remoteValidationFailed)
 				slog.Error("Remote validation failed", "err", err, "url", l.doc)
-				f.log(m, config.ErrorFeedLogLevel,
+				f.log(ctx, m, config.ErrorFeedLogLevel,
 					"Remote validation of document %q failed: %v", l.doc, err)
 			case !rvr.Valid:
 				// XXX: Maybe we should tell more details here?!
 				ds.set(remoteValidationFailed)
-				f.log(m, config.ErrorFeedLogLevel,
+				f.log(ctx, m, config.ErrorFeedLogLevel,
 					"Remote validator classifies document %q as invalid", l.doc)
 			}
 		})
 	}
 
 	// Check signatures
-	keys, err := m.openPGPKeys(f.source)
+	keys, err := m.openPGPKeys(ctx, f.source)
 	if err != nil {
-		f.log(m, config.ErrorFeedLogLevel, "Loading OpenPGP keys failed: %v", err)
+		f.log(ctx, m, config.ErrorFeedLogLevel, "Loading OpenPGP keys failed: %v", err)
 	} else if keys.CountEntities() > 0 {
 		// Only check signature if we have something in the key ring.
 		checks = append(checks, func(ds *dlStatus, f *feed) {
@@ -265,10 +265,10 @@ func (l *location) download(m *Manager, f *feed) {
 			}
 			var err error
 			var signature *crypto.PGPSignature
-			if signature, signatureData, err = f.source.loadSignature(client, m, sign); err != nil {
+			if signature, signatureData, err = f.source.loadSignature(ctx, client, m, sign); err != nil {
 				if signatureCheck {
 					ds.set(signatureFailed)
-					f.log(m, config.ErrorFeedLogLevel,
+					f.log(ctx, m, config.ErrorFeedLogLevel,
 						"Loading OpenPGP signature for %q failed: %v", l.doc, err)
 				}
 			} else {
@@ -276,7 +276,7 @@ func (l *location) download(m *Manager, f *feed) {
 				if err := keys.VerifyDetached(pm, signature, crypto.GetUnixTime()); err != nil {
 					if signatureCheck {
 						ds.set(signatureFailed)
-						f.log(m, config.ErrorFeedLogLevel,
+						f.log(ctx, m, config.ErrorFeedLogLevel,
 							"Verifying OpenPGP signature of %q failed: %v", l.doc, err)
 					}
 				}
@@ -292,7 +292,7 @@ func (l *location) download(m *Manager, f *feed) {
 
 	if strictMode && status != allSucceeded {
 		// Don't import, only write the stats.
-		if err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
+		if err := m.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
 			var i inserter
 			status.toInserter(&i)
 			if !f.invalid.Load() {
@@ -302,7 +302,7 @@ func (l *location) download(m *Manager, f *feed) {
 			_, err := conn.Exec(ctx, sql, i.values...)
 			return err
 		}, 0); err != nil {
-			f.log(m, config.ErrorFeedLogLevel, "storing stats of %q failed: %v", l.doc, err)
+			f.log(ctx, m, config.ErrorFeedLogLevel, "storing stats of %q failed: %v", l.doc, err)
 		}
 		return
 	}
@@ -341,7 +341,7 @@ func (l *location) download(m *Manager, f *feed) {
 		importer = &m.cfg.Sources.FeedImporter
 	}
 
-	switch err := m.db.Run(context.Background(), func(ctx context.Context, conn *pgxpool.Conn) error {
+	switch err := m.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
 		_, err := models.ImportDocumentData(
 			ctx, conn,
 			doc, data.Bytes(),
@@ -352,11 +352,11 @@ func (l *location) download(m *Manager, f *feed) {
 		return err
 	}, 0); {
 	case errors.Is(err, models.ErrAlreadyInDatabase):
-		f.log(m, config.InfoFeedLogLevel, "not storing duplicate %q: %v", l.doc, err)
+		f.log(ctx, m, config.InfoFeedLogLevel, "not storing duplicate %q: %v", l.doc, err)
 	case err != nil:
-		f.log(m, config.ErrorFeedLogLevel, "storing %q failed: %v", l.doc, err)
+		f.log(ctx, m, config.ErrorFeedLogLevel, "storing %q failed: %v", l.doc, err)
 		return
 	}
 
-	f.log(m, config.InfoFeedLogLevel, "downloading %q done", l.doc)
+	f.log(ctx, m, config.InfoFeedLogLevel, "downloading %q done", l.doc)
 }

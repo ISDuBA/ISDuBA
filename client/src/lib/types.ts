@@ -10,6 +10,7 @@ export type HttpResponse = {
   content?: any;
   error?: string;
   ok: boolean;
+  status?: number;
 };
 
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };

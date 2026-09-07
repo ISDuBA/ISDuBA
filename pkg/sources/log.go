@@ -18,14 +18,14 @@ import (
 )
 
 // log writes a log message into the logs of a feed.
-func (f *feed) log(m *Manager, level config.FeedLogLevel, format string, args ...any) {
+func (f *feed) log(ctx context.Context, m *Manager, level config.FeedLogLevel, format string, args ...any) {
 	if f.invalid.Load() || level < config.FeedLogLevel(f.logLevel.Load()) {
 		return
 	}
 	message := fmt.Sprintf(format, args...)
 	const sql = `INSERT INTO feed_logs (feeds_id, lvl, msg) VALUES ($1, $2, $3)`
 	if err := m.db.Run(
-		context.Background(),
+		ctx,
 		func(ctx context.Context, con *pgxpool.Conn) error {
 			_, err := con.Exec(ctx, sql, f.id, level.String(), message)
 			return err

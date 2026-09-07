@@ -20,6 +20,7 @@
   import { getReadableDateString } from "../CSAFWebview/helpers";
   import type { Snippet } from "svelte";
   import SSVCEntry from "$lib/Advisories/Events/SSVCEntry/SSVCEntry.svelte";
+  import type { CommentEvent, OtherEvent, SSVCEvent } from "./events";
 
   const intlFormat = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
@@ -27,7 +28,7 @@
   });
 
   interface Props {
-    entries: any;
+    entries: Array<CommentEvent | SSVCEvent | OtherEvent>;
     workflowState: string;
     onCommentUpdated: (newComment: any, index: number) => void;
     additionalButtons?: Snippet;
@@ -50,7 +51,18 @@
     <TableBody>
       {#each historyEntries as event, i (`history-${uid}-${i}`)}
         <TableBodyRow color="default">
-          {#if event.event_type !== "add_comment" && event.event_type !== "add_ssvc" && event.event_type !== "add_sscv" && event.event_type !== "change_ssvc" && event.event_type !== "change_sscv"}
+          {#if event.event_type === "add_comment"}
+            <Comment
+              {workflowState}
+              onCommentUpdated={(newComment: string) => {
+                onCommentUpdated(newComment, i);
+              }}
+              comment={event}
+              {fullHistory}
+            ></Comment>
+          {:else if ["add_sscv", "change_sscv"].includes(event.event_type)}
+            <SSVCEntry ssvcData={event as SSVCEvent} />
+          {:else}
             <TableBodyCell class={tdClass}>
               <div class="flex flex-col">
                 <div class="flex flex-row items-baseline">
@@ -66,30 +78,17 @@
                       Import ({event.actor})
                     {/if}
                     {#if event.event_type === "change_comment"}
-                      Edit comment ({event.actor})
+                      Edit comment ({event.commentator})
                     {/if}
                   </small>
-                  {#if /state_change|import_document/.test(event.event_type)}
+                  {#if ["state_change", "import_document"].includes(event.event_type)}
                     <div class="border border-1 p-1 text-xs text-gray-800 dark:text-gray-200">
-                      {event.state}
+                      {(event as OtherEvent).state}
                     </div>
                   {/if}
                 </div>
               </div>
             </TableBodyCell>
-          {/if}
-          {#if event.event_type === "add_ssvc" || event.event_type === "add_sscv" || event.event_type === "change_ssvc" || event.event_type === "change_sscv"}
-            <SSVCEntry ssvcData={event} />
-          {/if}
-          {#if event.event_type === "add_comment"}
-            <Comment
-              {workflowState}
-              onCommentUpdated={(newComment: string) => {
-                onCommentUpdated(newComment, i);
-              }}
-              comment={event}
-              {fullHistory}
-            ></Comment>
           {/if}
         </TableBodyRow>
       {/each}

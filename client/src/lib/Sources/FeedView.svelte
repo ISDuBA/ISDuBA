@@ -31,7 +31,7 @@
 
   let {
     edit = false,
-    feeds = [],
+    feeds = $bindable([]),
     placeholderFeed = false,
     updateFeed = async (_feed: Feed) => {},
     clickFeed = async (_feed: Feed) => {},

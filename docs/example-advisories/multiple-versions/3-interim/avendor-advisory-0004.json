@@ -139,6 +139,12 @@
   "vulnerabilities": [
     {
       "cve": "CVE-2020-1234",
+      "ids": [
+        {
+          "system_name": "GitHub Issue",
+          "text": "1592"
+        }
+      ],
       "notes": [
         {
           "category": "description",
