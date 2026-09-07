@@ -226,14 +226,12 @@ func (st *Store) Store(user, filename string, store func(io.Writer) error) (id i
 		}
 		id++
 		st.entries[user] = append(userEntries, entry{
-			Entry: Entry{
-				Inserted: now,
-				Expired:  now.Add(st.cfg.StorageDuration),
-				Filename: filename,
-				Length:   nw.N,
-				ID:       id,
-			},
-			data: data,
+			Inserted: now,
+			Expired:  now.Add(st.cfg.StorageDuration),
+			Filename: filename,
+			Length:   nw.N,
+			ID:       id,
+			data:     data,
 		})
 		st.total++
 	}
