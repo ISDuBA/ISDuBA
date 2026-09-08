@@ -38,6 +38,7 @@
   import SearchMatchBar from "./SearchMatchBar.svelte";
   import SearchableText from "./CSAFWebview/SearchableText.svelte";
   import { Check, AlertCircle, ArrowRightStroke } from "@boxicons/svelte";
+  import RawDocument from "./RawDocument.svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
 
   let { params } = $props();
@@ -161,6 +162,7 @@
         isInconsistent = true;
       }
       ({ document } = result);
+      appStore.setRawDocument(result);
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
     } else if (response.error) {
@@ -636,6 +638,7 @@
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
         </Label>
+        <RawDocument />
         {#if isLoadingSearchMatches}
           <Spinner color="gray" size="4"></Spinner>
         {:else if appStore.state.app.search.term && appStore.state.webview.doc && !appStore.state.app.search.advanced}

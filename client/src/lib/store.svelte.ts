@@ -64,6 +64,7 @@ type AppStore = {
   };
   webview: {
     doc: DocModel | null;
+    rawDoc: any;
     providerMetadata: any;
     currentFeed: any;
     four_cves: any;
@@ -130,6 +131,7 @@ const generateInitialState = (): AppStore => {
     },
     webview: {
       doc: null,
+      rawDoc: null,
       providerMetadata: null,
       currentFeed: null,
       four_cves: [],
@@ -256,6 +258,10 @@ export const appStore = {
 
   setDocument: (data: any) => {
     state.webview.doc = data;
+  },
+
+  setRawDocument: (data: any) => {
+    state.webview.rawDoc = data;
   },
 
   setSelectedCVE: (cve: string) => {
