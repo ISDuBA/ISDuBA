@@ -101,6 +101,15 @@ services:
       keycloak:
         condition: service_healthy
 
+  validator:
+    container_name: "remote-validator"
+    image: "ghcr.io/secvisogram/csaf-validator-service:sha-8b4919b"
+    networks:
+      - isduba
+
+    ports:
+      - "8082:8082"
+
 networks:
   isduba:
     name: isduba

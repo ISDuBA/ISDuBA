@@ -41,5 +41,9 @@ admin_password = "postgres"
 migrate = true
 terminate_after_migration = false
 
+[remote_validator]
+url = "http://validator:8082"
+presets = ["mandatory"]
+
 [publishers_tlps]
 '*' = ["WHITE"]
