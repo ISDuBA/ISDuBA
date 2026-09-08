@@ -167,10 +167,12 @@ func (classicMode) from(sb *SQLBuilder, b *strings.Builder) {
 		b.WriteString(` JOIN documents_texts ON documents.id = documents_texts.documents_id ` +
 			`JOIN unique_texts ON documents_texts.txt_id = unique_texts.id`)
 	}
+	sb.createUnaliasedSearches(b, "documents")
+	sb.createAliasedSearches(b, "documents")
 }
 
 // createUnaliasedSearches creates a CROSS JOIN LATERAL to filter searches with no aliases.
-func (sb *SQLBuilder) createUnaliasedSearches(b *strings.Builder) {
+func (sb *SQLBuilder) createUnaliasedSearches(b *strings.Builder, docTable string) {
 	if sb.expr == nil {
 		return
 	}
@@ -178,11 +180,11 @@ func (sb *SQLBuilder) createUnaliasedSearches(b *strings.Builder) {
 	if len(texts) == 0 {
 		return
 	}
-	b.WriteString(
-		` CROSS JOIN LATERAL(` +
-			`SELECT unique_texts.id AS id FROM documents_texts` +
-			` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND` +
-			` documents_texts.documents_id = docads.id AND (`)
+	fmt.Fprintf(b,
+		` CROSS JOIN LATERAL(`+
+			`SELECT unique_texts.id AS id FROM documents_texts`+
+			` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
+			` documents_texts.documents_id = %s.id AND (`, docTable)
 	for i, text := range texts {
 		if i > 0 {
 			b.WriteString(" OR ")
@@ -195,7 +197,7 @@ func (sb *SQLBuilder) createUnaliasedSearches(b *strings.Builder) {
 }
 
 // createAliasedSearches creates a CROSS JOIN LATERAL for each search text that has an alias.
-func (sb *SQLBuilder) createAliasedSearches(b *strings.Builder) {
+func (sb *SQLBuilder) createAliasedSearches(b *strings.Builder, docTable string) {
 	if sb.parser == nil {
 		return
 	}
@@ -208,8 +210,9 @@ func (sb *SQLBuilder) createAliasedSearches(b *strings.Builder) {
 				` CROSS JOIN LATERAL(`+
 					`SELECT unique_texts.id AS id FROM documents_texts`+
 					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
-					` documents_texts.documents_id = docads.id AND`+
+					` documents_texts.documents_id = %s.id AND`+
 					` txt ILIKE $%d) _search_join_%d`,
+				docTable,
 				replacement,
 				srch.intValue)
 		} else {
@@ -217,8 +220,9 @@ func (sb *SQLBuilder) createAliasedSearches(b *strings.Builder) {
 				` CROSS JOIN LATERAL(`+
 					`SELECT txt FROM documents_texts`+
 					` JOIN unique_texts ON unique_texts.id = documents_texts.txt_id AND`+
-					` documents_texts.documents_id = docads.id AND`+
+					` documents_texts.documents_id = %s.id AND`+
 					` txt ILIKE $%d) _search_join_%d`,
+				docTable,
 				replacement,
 				srch.intValue)
 		}
@@ -238,8 +242,8 @@ func (cteMode) from(sb *SQLBuilder, b *strings.Builder) {
 	// SSVC is already in docads
 
 	// For every search we need a CROSS JOIN LITERAL.
-	sb.createUnaliasedSearches(b)
-	sb.createAliasedSearches(b)
+	sb.createUnaliasedSearches(b, "docads")
+	sb.createAliasedSearches(b, "docads")
 }
 
 func (classicMode) accessWhereCommon(
