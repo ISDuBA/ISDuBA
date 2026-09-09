@@ -166,9 +166,9 @@ interface SearchMatch {
 }
 
 const fetchSearchHits = async (id: number): Promise<SearchMatch[] | ErrorDetails> => {
-  const query = appStore.state.app.search.query;
+  const query = `"${appStore.state.app.search.term}" search _clientSearch as`;
   const response = await request(
-    `/api/documents/texts/${id}?query=${encodeURIComponent(query ?? "")}`,
+    `/api/documents/texts/${id}?query=${encodeURIComponent(query?.trim() ?? "")}`,
     "GET"
   );
   if (!response.ok) {

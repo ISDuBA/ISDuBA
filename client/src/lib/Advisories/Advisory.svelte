@@ -467,7 +467,7 @@
     appStore.setDocument(null);
     await loadDocument();
     await getAdvisoryVersions();
-    if (appStore.state.app.search.query) {
+    if (appStore.state.app.search.term) {
       isLoadingSearchMatches = true;
       const hitsResult = await fetchSearchHits(params.id);
       isLoadingSearchMatches = false;
