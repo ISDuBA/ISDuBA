@@ -185,7 +185,7 @@ const generateLineWith = (product: Product, vulnerabilities: Vulnerability[]) =>
  * @param jsonDocument
  * @returns An array of products [{product_id:"", name}]
  */
-const extractProducts = (jsonDocument: CSAFDocumentv2_0 | CSAFDocumentv2_1): Product[] => {
+const extractProducts = (jsonDocument: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): Product[] => {
   if (!jsonDocument || !getProductTree(jsonDocument)) {
     return [];
   }
