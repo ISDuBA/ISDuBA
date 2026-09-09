@@ -18,7 +18,6 @@
   import Link from "$lib/Components/Link.svelte";
   import SearchableText from "../SearchableText.svelte";
   import { ArrowOutUpRightSquare, Link as LinkIcon } from "@boxicons/svelte";
-  import { getLang, getSourceLang } from "$lib/Advisories/document";
   import {
     getInitialReleaseDate,
     getCurrentReleaseDate,
@@ -30,7 +29,9 @@
     getCategory,
     getCSAFVersion,
     getDistributionText,
-    getHighestScore
+    getHighestScore,
+    getLang,
+    getSourceLang
   } from "$lib/Advisories/docmodel";
 
   interface Props {
@@ -50,7 +51,7 @@
   let aggregateSeverity = $derived(doc?.document.aggregate_severity);
   let category = $derived(getCategory(doc));
   let title = $derived(getTitle(doc));
-  let lang = $derived(doc != null ? getLang(doc) : undefined);
+  let lang = $derived(getLang(doc));
   let sourceLang = $derived(doc != null ? getSourceLang(doc) : undefined);
   let csafVersion = $derived(getCSAFVersion(doc));
   let distributionText = $derived(getDistributionText(doc));

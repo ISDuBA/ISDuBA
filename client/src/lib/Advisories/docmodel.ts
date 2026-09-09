@@ -20,7 +20,8 @@ import type {
   DocumentGenerator as DocumentGenerator2_0,
   ProductTree as ProductTree2_0,
   RevisionHistory as RevisionHistory2_0,
-  DocumentReferences as DocumentReferences2_0
+  DocumentReferences as DocumentReferences2_0,
+  ListOfScores
 } from "./types/csaf-2.0";
 import type {
   CSAFDocumentv2_1,
@@ -36,7 +37,8 @@ import type {
   ProductTree as ProductTree2_1,
   RevisionHistory as RevisionHistory2_1,
   DocumentReferences as DocumentReferences2_1,
-  Version
+  Version,
+  ListOfMetrics
 } from "$lib/Advisories/types/csaf-2.1";
 import {
   CSAFDocProps,
@@ -44,6 +46,7 @@ import {
   type AggregateSeverity,
   type Note
 } from "$lib/Advisories/types/docmodeltypes";
+import { compareScores } from "./CSAFWebview/vulnerabilities/vulnerability/scores/cvss";
 
 const isV2_1 = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): boolean => {
   if (
@@ -130,9 +133,10 @@ const getTitle = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): Title |
   return document?.document.title || EMPTY;
 };
 
-const getLanguage = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): DocumentLanguage | "" => {
-  if (!checkDocumentPresent(document)) return EMPTY;
-  return document.document.lang || EMPTY;
+const getLang = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): DocumentLanguage | "" => {
+  return document?.document.lang || EMPTY;
 };
 
 const getCSAFVersion = (
@@ -321,14 +325,8 @@ const getAcknowledgments = (csafDoc: any) => {
   return csafDoc.document[CSAFDocProps.ACKNOWLEDGMENTS];
 };
 
-/**
- * getSourceLang retrieves the source language.
- * @param csafDoc
- * @returns lang | ""
- */
-const getSourceLang = (csafDoc: any): string => {
-  if (!checkDocumentPresent(csafDoc)) return EMPTY;
-  return csafDoc.document[CSAFDocProps.SOURCELANG] || EMPTY;
+const getSourceLang = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): string => {
+  return document?.document.source_lang || EMPTY;
 };
 
 const getReferences = (
@@ -367,10 +365,12 @@ export {
   getCurrentReleaseDate,
   getGenerator,
   getHighestScore,
+  getLang,
   getProductTree,
   getPublisher,
   getReferences,
   getRevisionHistory,
+  getSourceLang,
   getStatus,
   getVulnerabilities,
   getTLP,
