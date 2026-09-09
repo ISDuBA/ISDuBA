@@ -39,10 +39,15 @@
   import RawDocument from "./RawDocument.svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
   import { fetchDocumentSSVC } from "./document";
-  import { exampleDocument } from "./csaf-document-v2.1";
   import type { CSAFDocumentv2_1 } from "./types/csaf-2.1";
   import type { CSAFDocumentv2_0 } from "./types/csaf-2.0";
   import { getTLP } from "./docmodel";
+  import { example1 } from "./examples21/bsi-2022-0001";
+  import { example2 } from "./examples21/cisco-sa-20180328-smi2";
+  import { example3 } from "./examples21/rhsa-2019_1862";
+  import { example4 } from "./examples21/rhsa-2021_5186";
+  import { example5 } from "./examples21/rhsa-2021_5217";
+  import { example6 } from "./examples21/rhsa-2022_0011";
 
   let { params } = $props();
 
@@ -617,11 +622,17 @@
   class="relative grid h-fit w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2 lg:h-full"
   id="top"
 >
-  <Button
-    onclick={() => {
-      appStore.setDocument(exampleDocument as unknown as CSAFDocumentv2_1);
-    }}>Display example document for CSAF 2.1</Button
-  >
+  <div id="test-buttons" class="flex gap-2">
+    Examples for CSAF 2.1
+    {#each [example1, example2, example3, example4, example5, example6] as example, index (index)}
+      <Button
+        color="light"
+        onclick={() => {
+          appStore.setDocument(example as unknown as CSAFDocumentv2_1);
+        }}>Example {index}</Button
+      >
+    {/each}
+  </div>
   {#if documentNotFound}
     <div class="mb-2 font-bold">
       <AlertCircle aria-hidden="true" />
