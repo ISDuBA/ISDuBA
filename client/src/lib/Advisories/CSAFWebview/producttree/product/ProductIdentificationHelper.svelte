@@ -14,16 +14,19 @@
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
   import XGenericUri from "./XGenericURI.svelte";
   import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  import type { HelperToIdentifyTheProduct } from "$lib/pmdTypes";
+  import type { HelperToIdentifyTheProduct as HelperToIdentifyTheProduct2_0 } from "$lib/Advisories/types/csaf-2.0";
+  import type { HelperToIdentifyTheProduct as HelperToIdentifyTheProduct2_1 } from "$lib/Advisories/types/csaf-2.1";
+  import { appStore } from "$lib/store.svelte";
 
   interface Props {
-    helper: HelperToIdentifyTheProduct;
+    helper: HelperToIdentifyTheProduct2_0 | HelperToIdentifyTheProduct2_1;
     path: string;
   }
   let { helper, path }: Props = $props();
 
   const uid = $props.id();
 
+  let csafVersion = $derived(appStore.state.webview.doc?.document.csaf_version);
   let extendedPath = $derived(`${path}/product_identification_helper`);
 </script>
 
@@ -53,8 +56,18 @@
       path={`${extendedPath}/model_numbers`}
     />
   {/if}
-  {#if helper.purl}
-    <KeyValue keys={["purl"]} values={[helper.purl]} paths={[`${extendedPath}/purl`]} />
+  {#if csafVersion === "2.0" && (helper as HelperToIdentifyTheProduct2_0).purl}
+    <KeyValue
+      keys={["purl"]}
+      values={[(helper as HelperToIdentifyTheProduct2_0).purl]}
+      paths={[`${extendedPath}/purl`]}
+    />
+  {:else if csafVersion === "2.1" && (helper as HelperToIdentifyTheProduct2_1).purls}
+    <KeyValue
+      keys={["purls"]}
+      values={(helper as HelperToIdentifyTheProduct2_1).purls}
+      paths={[`${extendedPath}/purls`]}
+    />
   {/if}
   {#if helper.sbom_urls}
     <ValueList label="SBOM URLs" values={helper.sbom_urls} path={`${extendedPath}/sbom_urls`} />

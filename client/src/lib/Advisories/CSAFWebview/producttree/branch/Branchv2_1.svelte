@@ -1,0 +1,49 @@
+<!--
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+
+ SPDX-License-Identifier: Apache-2.0
+
+ SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
+-->
+
+<script lang="ts">
+  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import Product from "$lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
+  import type { Branch } from "$lib/Advisories/types/csaf-2.1";
+  import CBadge from "$lib/Components/CBadge.svelte";
+  import Self from "./Branchv2_1.svelte";
+  import SearchableText from "../../SearchableText.svelte";
+
+  interface Props {
+    branch: Branch;
+    open: boolean;
+    openSubBranches: boolean;
+    path: string;
+  }
+  let { branch, open, openSubBranches = false, path }: Props = $props();
+
+  const uid = $props.id();
+</script>
+
+<div class="pl-3">
+  <Collapsible {open} header={branch.category + ": " + branch.name} {path}>
+    {#snippet headerSlot()}
+      <div class="py-2">
+        <CBadge class="rounded-full" large color="dark">
+          <SearchableText text={branch.category} textPath={`${path}/category`} />
+        </CBadge>
+        <SearchableText text={branch.name} textPath={`${path}/name`} />
+      </div>
+    {/snippet}
+    {#if branch.branches}
+      {#each branch.branches as b, i (`branch-${uid}-${i}`)}
+        <Self branch={b} {open} {openSubBranches} path={`${path}/branches[${i}]`} />
+      {/each}
+    {/if}
+    {#if branch.product}
+      <Product product={branch.product} path={`${path}/product`} />
+    {/if}
+  </Collapsible>
+</div>
