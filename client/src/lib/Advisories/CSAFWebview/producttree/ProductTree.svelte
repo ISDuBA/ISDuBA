@@ -10,14 +10,14 @@
 
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
-  import Branch from "./branch/Branch.svelte";
+  import Branch20 from "./branch/Branchv2_0.svelte";
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import ProductGroups from "./productgroup/ProductGroups.svelte";
   import ProductNames from "./product/ProductNames.svelte";
   import Relationships from "./relationship/Relationships.svelte";
   import { productTreeCutoffs } from "../efficiencyCutoffs";
   import { untrack } from "svelte";
-  import type { ProductTree } from "$lib/Advisories/types/csaf-2.0";
+  import type { Branch as Branch2_0, ProductTree } from "$lib/Advisories/types/csaf-2.0";
 
   interface Props {
     basePath: string;
@@ -61,8 +61,8 @@
     >
       {#each productTree.branches as branch, i (`producttree-${uid}-${i}`)}
         {#if csafVersion === "2.0"}
-          <Branch
-            {branch}
+          <Branch20
+            branch={branch as Branch2_0}
             {openSubBranches}
             open={openBranches}
             path={`/product_tree/branches[${i}]`}
