@@ -65,7 +65,7 @@ services:
 
   db:
     container_name: "isduba-db"
-    image: library/postgres:16-alpine
+    image: library/postgres:17-alpine
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
