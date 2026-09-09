@@ -22,14 +22,6 @@ const isV2_1 = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): boolean => {
   return false;
 };
 
-const getReferences = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
-  return document.document.references;
-};
-
-const getProductTree = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
-  return document.product_tree;
-};
-
 const getLang = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1) => {
   return document.document.lang;
 };
@@ -72,8 +64,6 @@ const fetchDocumentSSVC = async (
 export {
   isV2_1,
   fetchDocumentSSVC,
-  getReferences,
-  getProductTree,
   getLang,
   getSourceLang,
 };

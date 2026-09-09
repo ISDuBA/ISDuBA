@@ -28,8 +28,8 @@
     getAdvisorySearchHit,
     getProductVulneravbilities
   } from "../advisory.svelte";
-  import { getReferences } from "../document";
   import type { DocumentReferences } from "../types/csaf-2.1";
+  import { getAliases, getReferences, getRevisionHistory } from "../docmodel";
 
   interface Props {
     position: string;
@@ -75,6 +75,11 @@
     revisionHistory: false
   });
 
+  let doc = $derived(appStore.state.webview.doc);
+  let acknowledgments = $derived(doc?.document.acknowledgments);
+  let aliases = getAliases(doc);
+  let notes = $derived(doc?.document.notes);
+
   // When a link in a component inside the Webview is clicked we want the appropriate
   // tab to be opened.
   // Alternatively, it should be possible to drill down the method openTab so the children
@@ -109,18 +114,17 @@
   });
   let tabCount: number = $derived.by(() => {
     let count = 1;
-    if (appStore.state.webview.doc && appStore.state.webview.doc["isProductTreePresent"]) count++;
-    if (appStore.state.webview.doc && appStore.state.webview.doc["isVulnerabilitiesPresent"])
-      count++;
-    if (appStore.state.webview.doc?.notes) count++;
-    if (appStore.state.webview.doc?.acknowledgments) count++;
+    if (doc?.product_tree) count++;
+    if (doc?.vulnerabilities) count++;
+    if (notes) count++;
+    if (acknowledgments) count++;
     if (
-      appStore.state.webview.doc !== null &&
-      getReferences(appStore.state.webview.doc) !== undefined &&
-      (getReferences(appStore.state.webview.doc) as DocumentReferences).length > 0
+      doc !== null &&
+      getReferences(doc) !== undefined &&
+      (getReferences(doc) as DocumentReferences).length > 0
     )
       count++;
-    if (appStore.state.webview.doc?.isRevisionHistoryPresent) count++;
+    if (getRevisionHistory(doc)) count++;
     return count;
   });
   let missingTabs: number = $derived.by(() => {
@@ -190,8 +194,6 @@
     }
   });
 
-  let aliases = $derived(appStore.state.webview.doc?.aliases);
-
   onMount(() => {
     setSelectedItems();
   });
@@ -199,7 +201,7 @@
 
 <div bind:clientWidth={gridWidth} class="grid auto-cols-fr grid-flow-col gap-6">
   <div class="flex w-full flex-col">
-    {#if appStore.state.webview.doc}
+    {#if doc}
       <div class="mb-4 w-full">
         <General {basePath} />
       </div>
@@ -255,7 +257,7 @@
             </div>
           </TabItem>
         {/if}
-        {#if screenPhase < 4 && appStore.state.webview.doc?.notes}
+        {#if screenPhase < 4 && notes}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -264,11 +266,11 @@
             title="Notes"
           >
             <div class={sideScroll}>
-              <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
+              <Notes initOpen {notes} path="/document" />
             </div>
           </TabItem>
         {/if}
-        {#if screenPhase < 5 && appStore.state.webview.doc?.acknowledgments}
+        {#if screenPhase < 5 && acknowledgments}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -277,7 +279,7 @@
             title="Acknowledgments"
           >
             <div class={sideScroll}>
-              <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+              <Acknowledgments {acknowledgments} />
             </div>
           </TabItem>
         {/if}
@@ -290,7 +292,7 @@
             title="References"
           >
             <div class={sideScroll}>
-              <References path="/document" references={appStore.state.webview.doc?.references} />
+              <References path="/document" references={getReferences(doc)} />
             </div>
           </TabItem>
         {/if}
@@ -343,22 +345,22 @@
       </div>
     </div>
   {/if}
-  {#if screenPhase > 3 && appStore.state.webview.doc?.notes}
+  {#if screenPhase > 3 && notes}
     <div>
       <FakeButton active>Notes</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
+        <Notes initOpen {notes} path="/document" />
       </div>
     </div>
   {/if}
 
-  {#if screenPhase > 4 && appStore.state.webview.doc?.acknowledgments}
+  {#if screenPhase > 4 && acknowledgments}
     <div>
       <FakeButton active>Acknowledgments</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+        <Acknowledgments {acknowledgments} />
       </div>
     </div>
   {/if}
@@ -368,12 +370,7 @@
       <FakeButton active>References</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        <References
-          path="/document"
-          references={appStore.state.webview.doc
-            ? getReferences(appStore.state.webview.doc)
-            : undefined}
-        />
+        <References path="/document" references={doc ? getReferences(doc) : undefined} />
       </div>
     </div>
   {/if}

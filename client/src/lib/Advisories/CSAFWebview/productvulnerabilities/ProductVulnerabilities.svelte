@@ -24,6 +24,7 @@
   import { innerLinkStyle } from "./../helpers";
   import Link from "$lib/Components/Link.svelte";
   import { AlertTriangle, Check, Heart, Minus, X } from "@boxicons/svelte";
+  import { getProductsByID, getProductVulneravbilities } from "$lib/Advisories/advisory.svelte";
 
   interface Props {
     basePath: string;
@@ -54,7 +55,7 @@
     untrack(() => headerColumns);
     untrack(() => productLines);
     if (appStore.state.webview.doc) {
-      const vulnerabilities = [...appStore.state.webview.doc.productVulnerabilities];
+      const vulnerabilities = getProductVulneravbilities();
 
       headerColumns = vulnerabilities.shift()!;
       productLines = vulnerabilities;
@@ -192,7 +193,7 @@
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
                         class={innerLinkStyle}
-                        >{appStore.state.webview.doc?.productsByID[column.content]}
+                        >{getProductsByID()[column.content]}
                         ({column.content.length > 20
                           ? column.content.substring(0, 20) + "..."
                           : column.content})</Link

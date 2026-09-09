@@ -42,6 +42,7 @@
   import { exampleDocument } from "./csaf-document-v2.1";
   import type { CSAFDocumentv2_1 } from "./types/csaf-2.1";
   import type { CSAFDocumentv2_0 } from "./types/csaf-2.0";
+  import { getTLP } from "./docmodel";
 
   let { params } = $props();
 
@@ -640,8 +641,8 @@
               textPath="/document/tracking/id"
             />
           </span>
-          {#if appStore.state.webview.doc && getTLP(appStore.state.webview.doc).label}
-            <Tlp tlp={getTLP(appStore.state.webview.doc).label}></Tlp>
+          {#if getTLP(appStore.state.webview.doc)?.label}
+            <Tlp tlp={getTLP(appStore.state.webview.doc)?.label}></Tlp>
           {/if}
         </Label>
         <RawDocument />

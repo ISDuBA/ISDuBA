@@ -15,7 +15,9 @@ import {
   extractProducts,
   generateProductVulnerabilities
 } from "./CSAFWebview/productvulnerabilities/productvulnerabilities";
-
+import { getRevisionHistory } from "./docmodel";
+import type { Revision as Revision2_0 } from "./types/csaf-2.0";
+import type { Revision as Revision2_1 } from "./types/csaf-2.1";
 type StateChange = {
   publisher: string;
   trackingID: string;
@@ -184,9 +186,11 @@ const getAdvisorySearchHit = () => {
   return derivedHit;
 };
 
-const products = $derived(extractProducts(appStore.state.webview.doc));
+const doc = $derived(appStore.state.webview.doc);
 
-const productLookup = $derived.by(() => {
+const products = $derived(extractProducts(doc));
+
+const productsByID = $derived.by(() => {
   return products.reduce((o: any, n: any) => {
     o[n.product_id] = n.name;
     return o;
@@ -194,12 +198,28 @@ const productLookup = $derived.by(() => {
 });
 
 const productVulnerabilities = $derived(
-  generateProductVulnerabilities(appStore.state.webview.doc, products, productLookup)
+  generateProductVulnerabilities(doc, products, productsByID)
 );
+
+const getProductsByID = () => {
+  return productsByID;
+};
 
 const getProductVulneravbilities = () => {
   return productVulnerabilities ?? [];
 };
+
+const sortedRevisionHistory = $derived(
+  getRevisionHistory(doc)?.sort(
+    (entry1: Revision2_0 | Revision2_1, entry2: Revision2_0 | Revision2_1) => {
+      if (entry1.date < entry2.date) return 1;
+      if (entry1.date > entry2.date) return -1;
+      return 0;
+    }
+  ) ?? []
+);
+
+const getSortedRevisionHistory = () => sortedRevisionHistory;
 
 const getAdvisoryLink = (doc: any) =>
   `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
@@ -213,6 +233,8 @@ export {
   getAdvisoryAnchorLink,
   getAdvisorySearchHit,
   isResultConsistent,
-  getProductVulneravbilities
+  getProductsByID,
+  getProductVulneravbilities,
+  getSortedRevisionHistory
 };
 export type { AdvisoryVersion, SearchMatch };

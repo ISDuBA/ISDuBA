@@ -17,7 +17,10 @@ import type {
   Vulnerability as Vulnerability2_0,
   Vulnerabilities as Vulnerabilities2_0,
   Score,
-  DocumentGenerator as DocumentGenerator2_0
+  DocumentGenerator as DocumentGenerator2_0,
+  ProductTree as ProductTree2_0,
+  RevisionHistory as RevisionHistory2_0,
+  DocumentReferences as DocumentReferences2_0
 } from "./types/csaf-2.0";
 import type {
   CSAFDocumentv2_1,
@@ -30,21 +33,17 @@ import type {
   CVSSv3,
   CVSSv4,
   DocumentGenerator as DocumentGenerator2_1,
+  ProductTree as ProductTree2_1,
+  RevisionHistory as RevisionHistory2_1,
+  DocumentReferences as DocumentReferences2_1,
   Version
 } from "$lib/Advisories/types/csaf-2.1";
 import {
   CSAFDocProps,
   EMPTY,
   type AggregateSeverity,
-  type DocModel,
-  type Note,
-  type Reference,
-  type RevisionHistoryEntry
+  type Note
 } from "$lib/Advisories/types/docmodeltypes";
-import {
-  extractProducts,
-  generateProductVulnerabilities
-} from "./CSAFWebview/productvulnerabilities/productvulnerabilities";
 
 const isV2_1 = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): boolean => {
   if (
@@ -157,10 +156,9 @@ const getId = (csafDoc: any): string => {
 };
 
 const getTLP = (
-  document: CSAFDocumentv2_0 | CSAFDocumentv2_1
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
 ): TrafficLightProtocolTLP2_0 | TrafficLightProtocolTLP2_1 | undefined => {
-  if (!checkTLPPresent(document)) return undefined;
-  return document.document.distribution?.tlp;
+  return document?.document.distribution?.tlp;
 };
 
 const getStatus = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): DocumentStatus | "" => {
@@ -291,30 +289,16 @@ const getHighestScore = (
   return highestScoreObject;
 };
 
-/**
- * getRevisionHistory retrieves revision history sorted by date.
- * @param csafDoc
- * @returns history | []
- */
-const getRevisionHistory = (csafDoc: any): RevisionHistoryEntry[] => {
-  if (!checkRevisionHistoryPresent(csafDoc)) return [];
-  const result: RevisionHistoryEntry[] = csafDoc.document.tracking[CSAFDocProps.REVISIONHISTORY];
-  result.sort((entry1: RevisionHistoryEntry, entry2: RevisionHistoryEntry) => {
-    if (entry1.date < entry2.date) return 1;
-    if (entry1.date > entry2.date) return -1;
-    return 0;
-  });
-  return result;
+const getRevisionHistory = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): RevisionHistory2_0 | RevisionHistory2_1 | null => {
+  return document?.document.tracking.revision_history ?? null;
 };
 
-/**
- * getProductTree retrieves the product tree.
- * @param csafDoc
- * @returns tree | []
- */
-const getProductTree = (csafDoc: any) => {
-  if (!checkproducTree(csafDoc)) return [];
-  return csafDoc[CSAFDocProps.PRODUCTTREE];
+const getProductTree = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): ProductTree2_0 | ProductTree2_1 | undefined => {
+  return document?.product_tree;
 };
 
 /**
@@ -347,14 +331,10 @@ const getSourceLang = (csafDoc: any): string => {
   return csafDoc.document[CSAFDocProps.SOURCELANG] || EMPTY;
 };
 
-/**
- * getReferences retrieves references.
- * @param csafDoc
- * @returns references | []
- */
-const getReferences = (csafDoc: any): Reference[] => {
-  if (!checkDocumentPresent(csafDoc)) return [];
-  return csafDoc.document[CSAFDocProps.REFERENCES] || [];
+const getReferences = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): DocumentReferences2_0 | DocumentReferences2_1 | [] => {
+  return document?.document.references || [];
 };
 
 /**
@@ -373,75 +353,13 @@ const getGenerator = (
   return document?.document.tracking.generator || null;
 };
 
-/**
- * getAliases retrieves aliases.
- * @param csafDoc
- * @returns aliases | null
- */
-const getAliases = (csafDoc: any) => {
-  if (!checkTrackingPresent(csafDoc)) return null;
-  return csafDoc.document.tracking[CSAFDocProps.ALIASES] || null;
-};
-
-/**
- * convertToDocModel converts a CSAF document to a basic view model.
- * @param csafDoc
- * @returns DocModel
- */
-const convertToDocModel = (csafDoc: any): DocModel | CSAFDocumentv2_1 => {
-  if (isV2_1(csafDoc)) return csafDoc;
-  const docModel: DocModel = {
-    aggregateSeverity: getAggregateSeverity(csafDoc),
-    acknowledgments: getAcknowledgments(csafDoc),
-    aliases: getAliases(csafDoc),
-    category: getCategory(csafDoc),
-    csafVersion: getCSAFVersion(csafDoc),
-    distributionText: getDistributionText(csafDoc),
-    generator: getGenerator(csafDoc),
-    id: getId(csafDoc),
-    isDistributionPresent: checkDistributionPresent(csafDoc),
-    isDocPresent: checkDocumentPresent(csafDoc),
-    isProductTreePresent: checkproducTree(csafDoc),
-    isPublisherPresent: checkPublisher(csafDoc),
-    isRevisionHistoryPresent: checkRevisionHistoryPresent(csafDoc),
-    isTLPPresent: checkTLPPresent(csafDoc),
-    isTrackingPresent: checkTrackingPresent(csafDoc),
-    isVulnerabilitiesPresent: checkVulnerabilities(csafDoc),
-    lang: getLanguage(csafDoc),
-    lastUpdate: getLastUpdate(csafDoc),
-    notes: getNotes(csafDoc),
-    productsByID: {},
-    productTree: getProductTree(csafDoc),
-    productVulnerabilities: [],
-    published: getPublished(csafDoc),
-    publisher: getPublisher(csafDoc),
-    references: getReferences(csafDoc),
-    revisionHistory: getRevisionHistory(csafDoc),
-    status: getStatus(csafDoc),
-    sourceLang: getSourceLang(csafDoc),
-    title: getTitle(csafDoc),
-    tlp: getTLP(csafDoc),
-    trackingVersion: getTrackingVersion(csafDoc),
-    vulnerabilities: getVulnerabilities(csafDoc),
-    highestScore: getHighestScore(csafDoc)
-  };
-  const products = extractProducts(docModel);
-  const productLookup = products.reduce((o: any, n: any) => {
-    o[n.product_id] = n.name;
-    return o;
-  }, {});
-  docModel.productsByID = productLookup;
-  docModel.productVulnerabilities = generateProductVulnerabilities(
-    csafDoc,
-    products,
-    productLookup
-  );
-  return docModel;
+const getAliases = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null) => {
+  return document?.document.tracking.aliases || null;
 };
 
 export {
   isV2_1,
-  convertToDocModel,
+  getAliases,
   getCategory,
   getCSAFVersion,
   getDistributionText,
@@ -449,7 +367,10 @@ export {
   getCurrentReleaseDate,
   getGenerator,
   getHighestScore,
+  getProductTree,
   getPublisher,
+  getReferences,
+  getRevisionHistory,
   getStatus,
   getVulnerabilities,
   getTLP,

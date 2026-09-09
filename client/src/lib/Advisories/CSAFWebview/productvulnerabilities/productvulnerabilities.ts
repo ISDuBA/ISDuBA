@@ -6,7 +6,9 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
-import { getProductTree } from "$lib/Advisories/document";
+import { getProductTree } from "$lib/Advisories/docmodel";
+import type { CSAFDocumentv2_0, ProductTree } from "$lib/Advisories/types/csaf-2.0";
+import type { CSAFDocumentv2_1 } from "$lib/Advisories/types/csaf-2.1";
 import {
   ProductStatusSymbol,
   type Vulnerability,
@@ -183,20 +185,26 @@ const generateLineWith = (product: Product, vulnerabilities: Vulnerability[]) =>
  * @param jsonDocument
  * @returns An array of products [{product_id:"", name}]
  */
-const extractProducts = (jsonDocument: any): Product[] => {
+const extractProducts = (jsonDocument: CSAFDocumentv2_0 | CSAFDocumentv2_1): Product[] => {
   if (!jsonDocument || !getProductTree(jsonDocument)) {
     return [];
   }
   let products: any = [];
-  if (getProductTree(jsonDocument)?.branches) {
-    const productsFromBranches = getProductTree(jsonDocument).branches.reduce(parseBranch, []);
+  const productTree = getProductTree(jsonDocument);
+  if (productTree?.branches) {
+    const productsFromBranches = productTree.branches.reduce(parseBranch, []);
     products = products.concat(productsFromBranches);
   }
-  if (getProductTree(jsonDocument)?.["full_product_names"]) {
-    products = products.concat(getProductTree(jsonDocument)["full_product_names"]);
+  if (productTree?.["full_product_names"]) {
+    products = products.concat(productTree["full_product_names"]);
   }
-  const productsFromRelationships: Product[] = getProductsFromRelationships(jsonDocument);
-  return products.concat(productsFromRelationships);
+  if (jsonDocument.document.csaf_version === "2.0") {
+    const productsFromRelationships: Product[] = getProductsFromRelationships(
+      jsonDocument as CSAFDocumentv2_0
+    );
+    products.push(...productsFromRelationships);
+  }
+  return products;
 };
 
 /**
@@ -204,9 +212,10 @@ const extractProducts = (jsonDocument: any): Product[] => {
  * @param jsonDocument
  * @returns An array of products [{product_id:"", name}]
  */
-const getProductsFromRelationships = (jsonDocument: any): Product[] => {
-  if (!jsonDocument || !getProductTree(jsonDocument)?.relationships) return [];
-  return getProductTree(jsonDocument).relationships.map((relationship: Relationship) => {
+const getProductsFromRelationships = (jsonDocument: CSAFDocumentv2_0): Product[] => {
+  const productTree = getProductTree(jsonDocument) as ProductTree;
+  if (!productTree?.relationships) return [];
+  return productTree.relationships.map((relationship: Relationship) => {
     return {
       product_id: relationship.full_product_name.product_id,
       name: relationship.full_product_name.name

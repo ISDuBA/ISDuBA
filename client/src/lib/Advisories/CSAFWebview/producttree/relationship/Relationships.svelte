@@ -9,18 +9,51 @@
 -->
 
 <script lang="ts">
-  import type { Relationship } from "$lib/pmdTypes";
+  import type { CSAFDocumentv2_0, ProductTree } from "$lib/Advisories/types/csaf-2.0";
+  import { appStore } from "$lib/store.svelte";
+  import { untrack } from "svelte";
+  import Collapsible from "../../Collapsible.svelte";
+  import { productTreeCutoffs } from "../../efficiencyCutoffs";
   import Relation from "./Relation.svelte";
 
   interface Props {
-    relationships: Relationship[];
     basePath: string;
   }
-  let { basePath = "", relationships }: Props = $props();
+  let { basePath = "" }: Props = $props();
 
   const uid = $props.id();
+
+  let openRelationships = $state(false);
+
+  let selectedProduct = $derived(appStore.state.webview.ui.selectedProduct);
+  let doc: CSAFDocumentv2_0 | null = $derived(
+    appStore.state.webview.doc as CSAFDocumentv2_0 | null
+  );
+  let productTree: ProductTree | undefined = $derived(doc?.product_tree);
+  let relationships = $derived(productTree?.relationships);
+
+  $effect(() => {
+    untrack(() => openRelationships);
+    let size = 0;
+    for (let branch of productTree?.branches ?? []) {
+      if (branch.branches) {
+        size = size + branch.branches.length;
+      }
+      if (size >= productTreeCutoffs.level2Upper) {
+        break;
+      }
+    }
+    const len = productTree?.relationships?.length;
+    openRelationships = (len && len !== 0) || 0 <= productTreeCutoffs.relations;
+  });
 </script>
 
-{#each relationships as relation, i (`relationships-${uid}-${i}`)}
-  <Relation {basePath} {relation} path={`/product_tree/relationships[${i}]`} />
-{/each}
+<Collapsible
+  header="Relationships"
+  open={!!selectedProduct || openRelationships}
+  path="/product_tree"
+>
+  {#each relationships as relation, i (`relationships-${uid}-${i}`)}
+    <Relation {basePath} {relation} path={`/product_tree/relationships[${i}]`} />
+  {/each}
+</Collapsible>

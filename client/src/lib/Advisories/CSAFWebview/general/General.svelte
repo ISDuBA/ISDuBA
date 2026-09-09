@@ -47,6 +47,7 @@
   let publisherNamespace = $derived(publisher?.namespace ?? undefined);
   let publisherIssuingAuthority = $derived(publisher?.issuing_authority ?? undefined);
   let publisherContactDetails = $derived(publisher?.contact_details ?? undefined);
+  let aggregateSeverity = $derived(doc?.document.aggregate_severity);
   let category = $derived(getCategory(doc));
   let title = $derived(getTitle(doc));
   let lang = $derived(doc != null ? getLang(doc) : undefined);
@@ -57,8 +58,10 @@
   let lastUpdate = $derived(doc != null ? getCurrentReleaseDate(doc) : undefined);
   let status = $derived(getStatus(doc));
   let highestScore = $derived(getHighestScore(doc));
-  let baseSeverity = $derived(highestScore?.baseSeverity);
-  let baseScore: string | undefined = $derived(highestScore?.baseScore ? `${highestScore?.baseScore}` : undefined);
+  let baseSeverity: string | null = $derived((highestScore?.baseSeverity as string) ?? null);
+  let baseScore: string | undefined = $derived(
+    highestScore?.baseScore ? `${highestScore?.baseScore}` : undefined
+  );
   const cellStyleValue = "content-center px-6 py-0 [word-wrap:break-word] hyphens-auto";
   const cellStyleKey = "content-center w-40 max-w-full py-0 text-balance";
 
@@ -169,21 +172,21 @@
           <SearchableText text={distributionText} textPath="/document/distribution/text" />
         </div>
       {/if}
-      {#if appStore.state.webview.doc?.aggregateSeverity}
+      {#if aggregateSeverity}
         <div class={cellStyleKey}>Aggregate severity text</div>
         <div class={cellStyleValue}>
           <SearchableText
-            text={appStore.state.webview.doc.aggregateSeverity.text}
+            text={aggregateSeverity.text}
             textPath="/document/aggregate_severity/text"
           />
         </div>
-        {#if appStore.state.webview.doc?.aggregateSeverity.namespace}
+        {#if aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <Link href={appStore.state.webview.doc?.aggregateSeverity.namespace} class="underline">
+            <Link href={aggregateSeverity.namespace} class="underline">
               <ArrowOutUpRightSquare />
               <SearchableText
-                text={appStore.state.webview.doc.aggregateSeverity.namespace}
+                text={aggregateSeverity.namespace}
                 textPath="/document/aggregate_severity/namespace"
               />
             </Link>
@@ -211,13 +214,13 @@
       Generator:
       {#if generator}
         <SearchableText
-          text={appStore.state.webview.doc?.generator?.engine.name}
+          text={generator?.engine.name}
           textPath="/document/tracking/generator/engine/name"
         />
       {/if}
       {#if generator?.engine?.version}
         <SearchableText
-          text={appStore.state.webview.doc?.generator?.engine.version}
+          text={generator?.engine.version}
           textPath="/document/tracking/generator/engine/version"
         />
       {/if}
