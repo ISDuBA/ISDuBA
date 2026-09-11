@@ -20,8 +20,7 @@ import type {
   DocumentGenerator as DocumentGenerator2_0,
   ProductTree as ProductTree2_0,
   RevisionHistory as RevisionHistory2_0,
-  DocumentReferences as DocumentReferences2_0,
-  ListOfScores
+  DocumentReferences as DocumentReferences2_0
 } from "./types/csaf-2.0";
 import type {
   CSAFDocumentv2_1,
@@ -46,7 +45,6 @@ import {
   type AggregateSeverity,
   type Note
 } from "$lib/Advisories/types/docmodeltypes";
-import { compareScores } from "./CSAFWebview/vulnerabilities/vulnerability/scores/cvss";
 
 const isV2_1 = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): boolean => {
   if (
@@ -72,37 +70,6 @@ const checkTrackingPresent = (csafDoc: any): boolean => {
 };
 
 /**
- * checkDistributionPresent checks whether the "distribution" property is present.
- * @param csafDoc
- * @returns true/false
- */
-const checkDistributionPresent = (csafDoc: any): boolean => {
-  return checkDocumentPresent(csafDoc) && csafDoc.document[CSAFDocProps.DISTRIBUTION];
-};
-
-/**
- * checkTLPPresent checks whether the "TLP" property is present.
- * @param csafDoc
- * @returns true/false
- */
-const checkTLPPresent = (csafDoc: any): boolean => {
-  return (
-    checkDistributionPresent(csafDoc) &&
-    csafDoc.document.distribution[CSAFDocProps.TLP] &&
-    csafDoc.document.distribution[CSAFDocProps.TLP][CSAFDocProps.LABEL]
-  );
-};
-
-/**
- * checkPublisher checks whether the "Publisher" property is present.
- * @param csafDoc
- * @returns true / false
- */
-const checkPublisher = (csafDoc: any): boolean => {
-  return checkDocumentPresent(csafDoc) && csafDoc.document[CSAFDocProps.PUBLISHER];
-};
-
-/**
  * checkVulnerabilities checks whether the "vulnerabitlites" section is present.
  * @param document
  * @returns true / false
@@ -111,31 +78,11 @@ const checkVulnerabilities = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1): bo
   return document[CSAFDocProps.VULNERABILITIES] !== undefined;
 };
 
-/**
- * checkproducTree checks whether the "product tree" section is present.
- * @param csafDoc
- * @returns true / false
- */
-const checkproducTree = (csafDoc: any): boolean => {
-  return csafDoc[CSAFDocProps.PRODUCTTREE];
-};
-
-/**
- * checkRevisionHistoryPresent checks whether the "revision history" section is present.
- * @param csafDoc
- * @returns true / false
- */
-const checkRevisionHistoryPresent = (csafDoc: any): boolean => {
-  return checkTrackingPresent(csafDoc) && csafDoc.document.tracking[CSAFDocProps.REVISIONHISTORY];
-};
-
 const getTitle = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): Title | "" => {
   return document?.document.title || EMPTY;
 };
 
-const getLang = (
-  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
-): DocumentLanguage | "" => {
+const getLang = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): DocumentLanguage | "" => {
   return document?.document.lang || EMPTY;
 };
 
