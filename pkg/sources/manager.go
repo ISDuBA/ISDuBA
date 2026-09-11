@@ -818,7 +818,7 @@ func (m *Manager) StreamFeedLog(
 				cond.WriteString(` OR `)
 			}
 			fmt.Fprintf(&cond, "lvl = $%d", len(args)+1)
-			args = append(args, lvl)
+			args = append(args, lvl.String())
 		}
 		cond.WriteByte(')')
 	}

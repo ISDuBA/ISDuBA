@@ -8,7 +8,7 @@
 
 services:
   keycloak:
-    image: keycloak/keycloak:26.0
+    image: keycloak/keycloak:26.7.3
     container_name: "isduba-keycloak"
     ports:
       - "${KEYCLOAK_PORT}:8080"
@@ -47,7 +47,7 @@ services:
         condition: service_healthy
 
   keycloak-setup:
-    image: keycloak/keycloak:26.5
+    image: keycloak/keycloak:26.7.3
     container_name: "isduba-keycloak-setup"
     restart: "no"
     entrypoint: ["bash", "/opt/keycloak/init.sh"]
@@ -65,7 +65,7 @@ services:
 
   db:
     container_name: "isduba-db"
-    image: library/postgres:16-alpine
+    image: library/postgres:17-alpine
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
