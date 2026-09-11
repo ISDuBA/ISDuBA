@@ -53,7 +53,7 @@
   let category = $derived(getCategory(doc));
   let title = $derived(getTitle(doc));
   let lang = $derived(getLang(doc));
-  let sourceLang = $derived(doc != null ? getSourceLang(doc) : undefined);
+  let sourceLang = $derived(getSourceLang(doc));
   let csafVersion = $derived(getCSAFVersion(doc));
   let distributionText = $derived(getDistributionText(doc));
   let distributionSharingGroup = $derived(getDistributionSharingGroup(doc));
