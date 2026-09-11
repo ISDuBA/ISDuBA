@@ -32,8 +32,12 @@
 <KeyValue {keys} {values} {paths} />
 {#if csafVersion === "2.1"}
   {@const note21 = note as Note2_1}
-  <ValueList label="Group IDs" values={note21.group_ids} path={`${path}/group_id`} />
-  <ValueList label="Product IDs" values={note21.product_ids} path={`${path}/product_ids`} />
+  {#if note21.group_ids}
+    <ValueList label="Group IDs" values={note21.group_ids} path={`${path}/group_id`} />
+  {/if}
+  {#if note21.product_ids}
+    <ValueList label="Product IDs" values={note21.product_ids} path={`${path}/product_ids`} />
+  {/if}
 {/if}
 <div class="ml-7">
   <h5>Text</h5>
