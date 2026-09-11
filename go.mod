@@ -18,7 +18,7 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocsaf/csaf/v3 v3.6.0
 	github.com/gomarkdown/markdown v0.0.0-20260824154242-13c5cf49db8d
-	github.com/jackc/pgx/v5 v5.10.0
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/samber/slog-gin v1.21.1
 	github.com/sergi/go-diff v1.4.0
 	github.com/swaggo/files v1.0.1
