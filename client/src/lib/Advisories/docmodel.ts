@@ -38,7 +38,7 @@ import type {
   RevisionHistory as RevisionHistory2_1,
   DocumentReferences as DocumentReferences2_1,
   Version,
-  ListOfMetrics
+  SharingGroup
 } from "$lib/Advisories/types/csaf-2.1";
 import {
   CSAFDocProps,
@@ -147,6 +147,15 @@ const getCSAFVersion = (
 
 const getDistributionText = (document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): string => {
   return document?.document.distribution?.text || EMPTY;
+};
+
+const getDistributionSharingGroup = (
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
+): SharingGroup | undefined => {
+  if (document?.document.csaf_version === "2.1") {
+    return document.document.distribution?.sharing_group;
+  }
+  return undefined;
 };
 
 /**
@@ -360,6 +369,7 @@ export {
   getAliases,
   getCategory,
   getCSAFVersion,
+  getDistributionSharingGroup,
   getDistributionText,
   getInitialReleaseDate,
   getCurrentReleaseDate,

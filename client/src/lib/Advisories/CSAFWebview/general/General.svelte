@@ -31,7 +31,8 @@
     getDistributionText,
     getHighestScore,
     getLang,
-    getSourceLang
+    getSourceLang,
+    getDistributionSharingGroup
   } from "$lib/Advisories/docmodel";
 
   interface Props {
@@ -55,6 +56,7 @@
   let sourceLang = $derived(doc != null ? getSourceLang(doc) : undefined);
   let csafVersion = $derived(getCSAFVersion(doc));
   let distributionText = $derived(getDistributionText(doc));
+  let distributionSharingGroup = $derived(getDistributionSharingGroup(doc));
   let published = $derived(doc != null ? getInitialReleaseDate(doc) : undefined);
   let lastUpdate = $derived(doc != null ? getCurrentReleaseDate(doc) : undefined);
   let status = $derived(getStatus(doc));
@@ -167,6 +169,24 @@
       <div class={cellStyleValue}>
         <SearchableText text={category} textPath="/document/category" />
       </div>
+      {#if distributionSharingGroup}
+        <div class={cellStyleKey}>Distribution sharing group ID</div>
+        <div class={cellStyleValue}>
+          <SearchableText
+            text={distributionSharingGroup.id}
+            textPath="/document/distribution/sharing_group/id"
+          />
+        </div>
+        {#if distributionSharingGroup.name}
+          <div class={cellStyleKey}>Distribution sharing group name</div>
+          <div class={cellStyleValue}>
+            <SearchableText
+              text={distributionSharingGroup.name}
+              textPath="/document/distribution/sharing_group/name"
+            />
+          </div>
+        {/if}
+      {/if}
       {#if distributionText}
         <div class={cellStyleKey}>Distribution</div>
         <div class={cellStyleValue}>
