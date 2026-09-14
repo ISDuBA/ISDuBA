@@ -301,15 +301,11 @@ func extractProductsMetadata(
 	walkProducts = func(v any) {
 		switch val := v.(type) {
 		case map[string]any:
-			if nameVal, hasName := val["name"]; hasName {
-				if idxFloat, ok := nameVal.(float64); ok {
-					*nameIndices = append(*nameIndices, int(idxFloat))
-				}
+			if nameVal, hasName := val["name"].(string); hasName {
+				*nameIndices = append(*nameIndices, idxer.index(nameVal))
 			}
-			if idVal, hasID := val["product_id"]; hasID {
-				if idxFloat, ok := idVal.(float64); ok {
-					*idIndices = append(*idIndices, int(idxFloat))
-				}
+			if idVal, hasID := val["product_id"].(string); hasID {
+				*idIndices = append(*idIndices, idxer.index(idVal))
 			}
 			for _, item := range val {
 				walkProducts(item)
@@ -372,6 +368,11 @@ func ImportDocumentData(
 
 	idxer := newIndexer[string]()
 
+	var productsNameIndices []int
+	var productsIDIndices []int
+
+	extractProductsMetadata(document, &productsNameIndices, &productsIDIndices, idxer)
+
 	var bad []string
 	var reps []replacer
 
@@ -414,10 +415,6 @@ func ImportDocumentData(
 		return 0, nil
 	}
 
-	var productsNameIndices []int
-	var productsIDIndices []int
-	extractProductsMetadata(document, &productsNameIndices, &productsIDIndices, idxer)
-
 	// Allow only one insert at a time.
 	// There are transaction serialization issues with the unique texts.
 	// TODO: This has to be investigated!
@@ -446,7 +443,7 @@ func ImportDocumentData(
 			`ON t.txt_id = u.id ` +
 			`WHERE d.advisories_id = $1`
 		insertProductsNameTexts = `INSERT INTO products_name_texts (documents_id, num, txt_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
-		insertProductsIdTexts   = `INSERT INTO products_id_texts (documents_id, num, txt_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
+		insertProductsIDTexts   = `INSERT INTO products_id_texts (documents_id, num, txt_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
 	)
 
 	// We need an advisory before we insert a document.
@@ -589,7 +586,7 @@ func ImportDocumentData(
 
 	for i, idIdx := range productsIDIndices {
 		if idIdx >= 0 && idIdx < len(txtIDs) && txtIDs[idIdx] != -1 {
-			productsBatch.Queue(insertProductsIdTexts, id, i, txtIDs[idIdx])
+			productsBatch.Queue(insertProductsIDTexts, id, i, txtIDs[idIdx])
 		}
 	}
 
