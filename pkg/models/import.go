@@ -280,6 +280,46 @@ func StoreFilename(filename string) DocumentStoreChainFunc {
 	}
 }
 
+// extractProductsMetadata walks the product_tree and collects the indices
+// of all product names and product ids that were indexed by transformJSON.
+func extractProductsMetadata(
+	doc any,
+	nameIndices, idIndices *[]int,
+	idxer *indexer[string],
+) {
+	docMap, ok := doc.(map[string]any)
+	if !ok {
+		return
+	}
+
+	productTree, ok := docMap["product_tree"].(map[string]any)
+	if !ok {
+		return
+	}
+
+	var walkProducts func(any)
+	walkProducts = func(v any) {
+		switch val := v.(type) {
+		case map[string]any:
+			if nameVal, hasName := val["name"].(string); hasName {
+				*nameIndices = append(*nameIndices, idxer.index(nameVal))
+			}
+			if idVal, hasID := val["product_id"].(string); hasID {
+				*idIndices = append(*idIndices, idxer.index(idVal))
+			}
+			for _, item := range val {
+				walkProducts(item)
+			}
+		case []any:
+			for _, item := range val {
+				walkProducts(item)
+			}
+		}
+	}
+
+	walkProducts(productTree)
+}
+
 // ImportDocument imports a given advisory into the database.
 func ImportDocument(
 	ctx context.Context,
@@ -327,6 +367,11 @@ func ImportDocumentData(
 	)
 
 	idxer := newIndexer[string]()
+
+	var productsNameIndices []int
+	var productsIDIndices []int
+
+	extractProductsMetadata(document, &productsNameIndices, &productsIDIndices, idxer)
 
 	var bad []string
 	var reps []replacer
@@ -397,6 +442,8 @@ func ImportDocumentData(
 			`ON d.id = t.documents_id JOIN unique_texts u ` +
 			`ON t.txt_id = u.id ` +
 			`WHERE d.advisories_id = $1`
+		insertProductsNameTexts = `INSERT INTO products_name_texts (documents_id, num, txt_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
+		insertProductsIDTexts   = `INSERT INTO products_id_texts (documents_id, num, txt_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
 	)
 
 	// We need an advisory before we insert a document.
@@ -527,6 +574,26 @@ func ImportDocumentData(
 	}
 	if err := tx.SendBatch(ctx, batch).Close(); err != nil {
 		return 0, fmt.Errorf("inserting txt failed: %w", err)
+	}
+
+	productsBatch := &pgx.Batch{}
+
+	for i, nameIdx := range productsNameIndices {
+		if nameIdx >= 0 && nameIdx < len(txtIDs) && txtIDs[nameIdx] != -1 {
+			productsBatch.Queue(insertProductsNameTexts, id, i, txtIDs[nameIdx])
+		}
+	}
+
+	for i, idIdx := range productsIDIndices {
+		if idIdx >= 0 && idIdx < len(txtIDs) && txtIDs[idIdx] != -1 {
+			productsBatch.Queue(insertProductsIDTexts, id, i, txtIDs[idIdx])
+		}
+	}
+
+	if productsBatch.Len() > 0 {
+		if err := tx.SendBatch(ctx, productsBatch).Close(); err != nil {
+			return 0, fmt.Errorf("inserting products txt failed: %w", err)
+		}
 	}
 
 	if inTx != nil {
