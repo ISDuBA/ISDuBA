@@ -27,12 +27,8 @@ type feedIndex struct {
 	sameOrNewer    func(*location) bool
 }
 
-// rolieLocations assumes that the feed index is ROLIE.
-func (fi *feedIndex) rolieLocations(r io.Reader) ([]location, error) {
-	rolie, err := csaf.LoadROLIEFeed(r)
-	if err != nil {
-		return nil, fmt.Errorf("loading rolie feed from data failed: %w", err)
-	}
+// extractLocation gets the location from entry links
+func (fi *feedIndex) extractLocation(links []csaf.Link, updated, cut time.Time) (location, bool, error) {
 	resolve := func(href string, store **url.URL) error {
 		u, err := url.Parse(href)
 		if err != nil {
@@ -44,6 +40,64 @@ func (fi *feedIndex) rolieLocations(r io.Reader) ([]location, error) {
 		*store = u
 		return nil
 	}
+	// Apply age filter
+	if fi.age != nil && updated.Before(cut) {
+		return location{}, false, nil
+	}
+	dl := location{updated: updated}
+	sha512 := false
+	for j := range links {
+		link := &links[j]
+		switch link.Rel {
+		case "self":
+			if err := resolve(link.HRef, &dl.doc); err != nil {
+				return location{}, false, err
+			}
+			// Apply ignore patterns
+			if fi.ignorePatterns.ignore(dl.doc) {
+				return location{}, false, nil
+			}
+		case "signature":
+			if err := resolve(link.HRef, &dl.signature); err != nil {
+				return location{}, false, err
+			}
+		case "hash":
+			if sha512 {
+				// If we already have SHA512 don't bother with others.
+				continue
+			}
+			switch href := strings.ToLower(link.HRef); {
+			case strings.HasSuffix(href, ".sha512"):
+				if err := resolve(link.HRef, &dl.hash); err != nil {
+					return location{}, false, err
+				}
+				sha512 = true
+			case strings.HasSuffix(href, ".sha256"):
+				if err := resolve(link.HRef, &dl.hash); err != nil {
+					return location{}, false, err
+				}
+			default:
+				slog.Warn("unknown hash format", "href", link.HRef)
+			}
+		}
+	}
+	// Only return if we don't have already the same or we are
+	// waiting to request a new one.
+	if dl.doc != nil {
+		return location{}, false, nil
+	}
+	if fi.sameOrNewer != nil && fi.sameOrNewer(&dl) {
+		return location{}, false, nil
+	}
+	return dl, true, nil
+}
+
+// rolieLocations assumes that the feed index is ROLIE.
+func (fi *feedIndex) rolieLocations(r io.Reader) ([]location, error) {
+	rolie, err := csaf.LoadROLIEFeed(r)
+	if err != nil {
+		return nil, fmt.Errorf("loading rolie feed from data failed: %w", err)
+	}
 	// If we have a max age set calculate the cut time.
 	var cut time.Time
 	if fi.age != nil {
@@ -52,62 +106,49 @@ func (fi *feedIndex) rolieLocations(r io.Reader) ([]location, error) {
 	// Extract the locations
 	entries := rolie.Feed.Entry
 	dls := make([]location, 0, len(entries))
-nextEntry:
 	for _, entry := range entries {
 		links := entry.Link
 		updated := time.Time(entry.Updated)
-		// Apply age filter
-		if fi.age != nil && updated.Before(cut) {
-			continue
+		dl, ok, err := fi.extractLocation(links, updated, cut)
+		if err != nil {
+			return nil, err
 		}
-		dl := location{updated: updated}
-		sha512 := false
-	nextLink:
-		for j := range links {
-			link := &links[j]
-			switch link.Rel {
-			case "self":
-				if err := resolve(link.HRef, &dl.doc); err != nil {
-					return nil, err
-				}
-				// Apply ignore patterns
-				if fi.ignorePatterns.ignore(dl.doc) {
-					continue nextEntry
-				}
-			case "signature":
-				if err := resolve(link.HRef, &dl.signature); err != nil {
-					return nil, err
-				}
-			case "hash":
-				if sha512 {
-					// If we already have SHA512 don't bother with others.
-					continue nextLink
-				}
-				switch href := strings.ToLower(link.HRef); {
-				case strings.HasSuffix(href, ".sha512"):
-					if err := resolve(link.HRef, &dl.hash); err != nil {
-						return nil, err
-					}
-					sha512 = true
-				case strings.HasSuffix(href, ".sha256"):
-					if err := resolve(link.HRef, &dl.hash); err != nil {
-						return nil, err
-					}
-				default:
-					slog.Warn("unknown hash format", "href", link.HRef)
-				}
-			}
-		}
-		// Only append if we don't have already the same or we are
-		// waiting to request a new one.
-		if dl.doc != nil {
-			if fi.sameOrNewer != nil && fi.sameOrNewer(&dl) {
-				continue
-			}
+		if ok {
 			dls = append(dls, dl)
 		}
 	}
 	return dls, nil
+}
+
+func (fi *feedIndex) streamingRolieLocations(r io.Reader) ([]location, error) {
+	// If we have a max age set calculate the cut time.
+	var cut time.Time
+	if fi.age != nil {
+		cut = time.Now().Add(-*fi.age)
+	}
+	var dls []location
+	var handleErr error
+	srp := &csaf.StreamingROLIEParser{
+		HandleEntry: func(sr *csaf.StreamingROLIEParser) {
+			if handleErr != nil {
+				return
+			}
+			links := sr.Links
+			updated := time.Time(sr.Updated)
+			dl, ok, err := fi.extractLocation(links, updated, cut)
+			if err != nil {
+				handleErr = err
+			}
+			if ok {
+				dls = append(dls, dl)
+			}
+		},
+	}
+	if err := srp.Parse(r); err != nil {
+		return nil, fmt.Errorf("streaming rolie feed from data failed: %w", err)
+	}
+	return dls, handleErr
+
 }
 
 // directoryLocations assumes that the feed index is changes.csv

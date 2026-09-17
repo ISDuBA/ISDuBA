@@ -65,6 +65,7 @@
 # '*' = ["WHITE"]
 
 # [sources]
+# streaming_rolie = true
 # strict_mode = true
 # secure = true
 # signature_check = true

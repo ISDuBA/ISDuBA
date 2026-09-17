@@ -126,6 +126,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
+- `streaming_rolie`: Enables use of experimental gocsaf v3.6.0 streaming ROLIE parser. Defaults to `true`.
 - `strict_mode`: Enables strict checking of sources. Defaults to `true`.
 - `secure`: Enables secure mode (Checks TLS certificates of HTTPS transfer). Defaults to `true`.
 - `signature_check`: Failing OpenPGP signature check stops import of document. Defaults to `true`.
@@ -193,7 +194,7 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_WEB_PORT`                     | `web port`                           |
 | `ISDUBA_WEB_GIN_MODE`                 | `web gin_mode`                       |
 | `ISDUBA_WEB_STATIC`                   | `web static`                         |
-| `ISDUBA_WEB_EXTERNAL_URL`             | `web external_url`                         |
+| `ISDUBA_WEB_EXTERNAL_URL`             | `web external_url`                   |
 | `ISDUBA_DB_HOST`                      | `database host`                      |
 | `ISDUBA_DB_PORT`                      | `database port`                      |
 | `ISDUBA_DB_DATABASE`                  | `database database`                  |
@@ -216,6 +217,7 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_SOURCES_FEED_LOG_LEVEL`       | `sources feed_log_level`             |
 | `ISDUBA_SOURCES_FEED_IMPORTER`        | `sources feed_importer`              |
 | `ISDUBA_SOURCES_DEFAULT_MESSAGE`      | `sources default_message`            |
+| `ISDUBA_SOURCES_STREAMING_ROLIE`      | `sources streaming_rolie`            |
 | `ISDUBA_SOURCES_STRICT_MODE`          | `sources strict_mode`                |
 | `ISDUBA_SOURCES_SECURE`               | `sources secure`                     |
 | `ISDUBA_SOURCES_SIGNATURE_CHECK`      | `sources signature_check`            |

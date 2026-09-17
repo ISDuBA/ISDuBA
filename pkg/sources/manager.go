@@ -123,6 +123,7 @@ type SourceInfo struct {
 	Rate                    *float64
 	Slots                   *int
 	Headers                 []string
+	StreamingROLIE          *bool
 	StrictMode              *bool
 	Secure                  *bool
 	SignatureCheck          *bool
@@ -574,6 +575,7 @@ func (m *Manager) Source(id int64, stats bool) *SourceInfo {
 			Rate:                    s.rate,
 			Slots:                   s.slots,
 			Headers:                 s.headers,
+			StreamingROLIE:          s.streamingROLIE,
 			StrictMode:              s.strictMode,
 			Secure:                  s.secure,
 			SignatureCheck:          s.signatureCheck,
@@ -684,6 +686,7 @@ func (m *Manager) Sources(fn func(*SourceInfo), stats bool) {
 				Rate:                    s.rate,
 				Slots:                   s.slots,
 				Headers:                 s.headers,
+				StreamingROLIE:          s.streamingROLIE,
 				StrictMode:              s.strictMode,
 				Secure:                  s.secure,
 				SignatureCheck:          s.signatureCheck,
@@ -992,6 +995,7 @@ func (m *Manager) AddSource(
 	rate *float64,
 	slots *int,
 	headers []string,
+	streamingROLIE *bool,
 	strictMode *bool,
 	secure *bool,
 	signatureCheck *bool,
@@ -1017,6 +1021,7 @@ func (m *Manager) AddSource(
 		rate:                 rate,
 		slots:                slots,
 		headers:              headers,
+		streamingROLIE:       streamingROLIE,
 		strictMode:           strictMode,
 		secure:               secure,
 		signatureCheck:       signatureCheck,
@@ -1048,7 +1053,7 @@ func (m *Manager) AddSource(
 		}
 		const sql = `INSERT INTO sources (` +
 			`name, url, rate, slots, headers, ` +
-			`strict_mode, secure, signature_check, age, ignore_patterns, ` +
+			`streaming_rolie, strict_mode, secure, signature_check, age, ignore_patterns, ` +
 			`client_cert_public, client_cert_private, client_cert_passphrase, ` +
 			`checksum, checksum_ack, checksum_updated) ` +
 			`VALUES (` +
@@ -1062,7 +1067,7 @@ func (m *Manager) AddSource(
 			func(rctx context.Context, con *pgxpool.Conn) error {
 				return con.QueryRow(rctx, sql,
 					name, url, rate, slots, headers,
-					strictMode, secure, signatureCheck, age, ignorePatterns,
+					streamingROLIE, strictMode, secure, signatureCheck, age, ignorePatterns,
 					clientCertPublic, clientCertPrivate, clientCertPassphrase,
 					s.checksum, s.checksumAck, s.checksumUpdated,
 				).Scan(&s.id)
@@ -1335,6 +1340,18 @@ func (su *SourceUpdater) UpdateHeaders(headers []string) error {
 	}
 	headers = clone(headers)
 	su.addChange(func(s *source) { s.headers = headers }, "headers", headers)
+	return nil
+}
+
+// UpdateStreamingROLIE requests an update on streamingROLIE.
+func (su *SourceUpdater) UpdateStreamingROLIE(streamingROLIE *bool) error {
+	if su.updatable.streamingROLIE == nil && streamingROLIE == nil {
+		return nil
+	}
+	if su.updatable.streamingROLIE != nil && streamingROLIE != nil && *su.updatable.streamingROLIE == *streamingROLIE {
+		return nil
+	}
+	su.addChange(func(s *source) { s.streamingROLIE = streamingROLIE }, "streaming_rolie", streamingROLIE)
 	return nil
 }
 

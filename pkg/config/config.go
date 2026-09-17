@@ -97,6 +97,7 @@ type Sources struct {
 	PublishersTLPs    models.PublishersTLPs `toml:"publishers_tlps"`
 	FeedImporter      string                `toml:"feed_importer"`
 	DefaultMessage    string                `toml:"default_message"`
+	StreamingROLIE    bool                  `toml:"streaming_rolie"`
 	StrictMode        bool                  `toml:"strict_mode"`
 	Secure            bool                  `toml:"secure"`
 	SignatureCheck    bool                  `toml:"signature_check"`
@@ -307,6 +308,7 @@ func Load(file string) (*Config, error) {
 			FeedImporter:      defaultSourcesFeedImporter,
 			PublishersTLPs:    defaultSourcesPublishersTLPs,
 			DefaultMessage:    defaultSourcesDefaultMessage,
+			StreamingROLIE:    defaultSourcesStreamingROLIE,
 			StrictMode:        defaultSourcesStrictMode,
 			Secure:            defaultSourcesSecure,
 			SignatureCheck:    defaultSourcesSignatureCheck,
@@ -452,6 +454,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_SOURCES_FEED_LOG_LEVEL", storeFeedLogLevel(&cfg.Sources.FeedLogLevel)},
 		envStore{"ISDUBA_SOURCES_FEED_IMPORTER", storeString(&cfg.Sources.FeedImporter)},
 		envStore{"ISDUBA_SOURCES_DEFAULT_MESSAGE", storeString(&cfg.Sources.DefaultMessage)},
+		envStore{"ISDUBA_SOURCES_STREAMING_ROLIE", storeBool(&cfg.Sources.StreamingROLIE)},
 		envStore{"ISDUBA_SOURCES_STRICT_MODE", storeBool(&cfg.Sources.StrictMode)},
 		envStore{"ISDUBA_SOURCES_SECURE", storeBool(&cfg.Sources.Secure)},
 		envStore{"ISDUBA_SOURCES_SIGNATURE_CHECK", storeBool(&cfg.Sources.SignatureCheck)},
