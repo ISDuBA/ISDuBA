@@ -141,9 +141,9 @@ const getPublisherContact = (
 };
 
 const getVulnerabilities = (
-  document: CSAFDocumentv2_0 | CSAFDocumentv2_1
+  document: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null
 ): Vulnerabilities2_0 | Vulnerabilities2_1 | [] => {
-  return document.vulnerabilities ?? [];
+  return document?.vulnerabilities ?? [];
 };
 
 const getCVSSOfVulnerability = (
