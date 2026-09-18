@@ -49,7 +49,10 @@ test("Advisory view is working", async ({ page }) => {
   // Test SSVC calculator
   await page.getByTitle("Edit SSVC").click();
   await expect(page.getByText("Enter a SSVC directly")).toBeVisible();
-  await page.getByRole("button", { name: "Evaluate" }).click();
+  const evaluateButton = page.getByRole("button", { name: "Evaluate" });
+  // Wait until button is visible after animation
+  await expect(evaluateButton).toBeVisible();
+  await evaluateButton.click();
   // First test to go back and restart
   await page.getByRole("button", { name: "poc" }).click();
   await page.getByRole("button", { name: "Back" }).click();
