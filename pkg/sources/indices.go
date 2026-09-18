@@ -83,7 +83,7 @@ func (fi *feedIndex) extractLocation(links []csaf.Link, updated, cut time.Time) 
 	}
 	// Only return if we don't have already the same or we are
 	// waiting to request a new one.
-	if dl.doc != nil {
+	if dl.doc == nil {
 		return location{}, false, nil
 	}
 	if fi.sameOrNewer != nil && fi.sameOrNewer(&dl) {
