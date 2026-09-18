@@ -14,7 +14,10 @@ const clonedQueryName = `${queryName} (1)`;
 
 test("Queries can be configured", async ({ page }) => {
   await page.goto("/#/queries");
-  await page.getByRole("link", { name: "New query", exact: false }).first().click();
+  let newQueryButton = page.getByRole("link", { name: "New query", exact: false }).first();
+  // When the list of queries is long it might be necessary to scroll
+  await newQueryButton.scrollIntoViewIfNeeded();
+  await newQueryButton.click();
   await page.getByLabel("Name:").fill(queryName);
   await page.getByLabel("Dashboard").check();
   await page.getByLabel("Hide").check();
@@ -29,7 +32,8 @@ test("Queries can be configured", async ({ page }) => {
 
   await page.getByLabel("Query criteria:").fill("");
   await page.getByRole("button", { name: "Save", exact: false }).click();
-  const newQueryButton = page.getByRole("link", { name: "New query", exact: false }).first();
+  newQueryButton = page.getByRole("link", { name: "New query", exact: false }).first();
+  await newQueryButton.scrollIntoViewIfNeeded();
   await expect(newQueryButton).toBeVisible();
 });
 
