@@ -166,6 +166,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `keycloak_client_id`: The public client identifier. Defaults to `"auth"`.
 - `update_interval`: Specifies how often the token should be renewed. Defaults to `"5m"`.
 - `idle_timeout`: When the user should be logged out after inactivity. Defaults to `"30m"`.
+- `about_text` : Text that is displayed at the bottom of the login page. May contain HTML tags like `<a>`.
 
 ### <a name="section_aggregators"></a> Section `[aggregators]` Aggregators configuration
 
