@@ -263,17 +263,35 @@
 
   const toggleEditing = () => {
     isEditing = !isEditing;
+    console.debug("toggleEditing - new value for isEditing", isEditing);
   };
 
   $effect(() => {
     onChangeDisabled(disabled);
   });
 
+  $effect(() => {
+    console.debug("$effect startedCalculation", startedCalculation);
+  });
+
   const onChangeDisabled = (disabled: boolean) => {
+    console.debug("onChangeDisabled - disabled", disabled);
     if (disabled) {
       startedCalculation = false;
       resetUserDecisions();
     }
+  };
+
+  const startCalulation = () => {
+    console.debug("startCalulation");
+    startedCalculation = true;
+  };
+
+  const cancelCalculation = () => {
+    console.debug("cancelCalculation");
+    resetUserDecisions();
+    startedCalculation = false;
+    isEditing = false;
   };
 </script>
 
@@ -326,13 +344,7 @@
         >
           Cancel
         </Button>
-        <Button
-          color="light"
-          size="xs"
-          class="h-8"
-          {disabled}
-          onclick={() => (startedCalculation = true)}
-        >
+        <Button color="light" size="xs" class="h-8" {disabled} onclick={startCalulation}>
           Evaluate
         </Button>
         <Button
@@ -450,11 +462,7 @@
               size="xs"
               class="h-6 p-3"
               title="Cancel SSVC input"
-              onclick={() => {
-                resetUserDecisions();
-                startedCalculation = false;
-                isEditing = false;
-              }}>Cancel</Button
+              onclick={cancelCalculation}>Cancel</Button
             >
           </div>
         </div>
