@@ -45,7 +45,7 @@
                   text={reference.summary}
                 ></SearchableText>
               </p>
-              <Link class="underline" href={reference.url}
+              <Link class="flex gap-1 underline" href={reference.url}
                 ><ArrowOutUpRightSquare />
                 <SearchableText textPath={`${path}/references[${i}]/url`} text={reference.url}
                 ></SearchableText>
