@@ -134,6 +134,7 @@ const (
 	defaultClientKeycloakClientID = "auth"
 	defaultClientUpdateInterval   = 5 * time.Minute
 	defaultClientIdleTimeout      = 30 * time.Minute
+	defaultClientAboutText        = "Hosted by <a href=\"https://example.com\">Example Corp</a>"
 )
 
 const (

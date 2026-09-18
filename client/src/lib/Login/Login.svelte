@@ -16,11 +16,16 @@
   import { request } from "$lib/request";
   import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
   import { ArrowOutUpRightSquare, MessageExclamation } from "@boxicons/svelte";
+  import DOMPurify from "dompurify";
 
   const uid = $props.id();
 
   let viewError: ErrorDetails | null = $state(null);
   let versionError: ErrorDetails | null = $state(null);
+
+  let aboutText = $derived.by(() => {
+    return DOMPurify.sanitize(appStore.getAboutText(), { USE_PROFILES: { html: true } });
+  });
 
   async function logout() {
     appStore.setSessionExpired(true);
@@ -88,114 +93,121 @@
   <title>Login</title>
 </svelte:head>
 
-<div class="flex h-screen items-center justify-center">
-  <div class="flex w-96 flex-col gap-4">
-    <div class="inline-flex flex-row justify-between">
-      <Heading class="mb-2 flex items-center gap-4">
-        <img class="h-10" src="favicon.svg" alt="Icon of ISDuBA" aria-hidden="true" />
-        <span>ISDuBA</span>
-      </Heading>
-      <DarkMode />
-    </div>
-    <Card class="p-4 sm:p-6 md:p-8">
-      <div class="flex flex-col gap-4">
-        <P class="flex flex-col"
-          ><span><b>Server URL:</b>&nbsp;{appStore.getKeycloakURL()}</span><span
-            ><b>Realm:</b>&nbsp;{appStore.getKeycloakRealm()}</span
-          ></P
-        >
-        {#if appStore.state.app.userManager && !appStore.state.app.isUserLoggedIn}
-          {#if appStore.state.app.sessionExpired}
-            <div class="flex items-center gap-2 text-orange-700 dark:text-yellow-400">
-              <MessageExclamation />
-              <span
-                >Your session is expired: {appStore.state.app.sessionExpiredMessage ||
-                  "Please login"}
+<div class="flex h-screen flex-col">
+  <div class="flex h-full items-center justify-center">
+    <div class="flex w-96 flex-col gap-4">
+      <div class="inline-flex flex-row justify-between">
+        <Heading class="mb-2 flex items-center gap-4">
+          <img class="h-10" src="favicon.svg" alt="Icon of ISDuBA" aria-hidden="true" />
+          <span>ISDuBA</span>
+        </Heading>
+        <DarkMode />
+      </div>
+      <Card class="p-4 sm:p-6 md:p-8">
+        <div class="flex flex-col gap-4">
+          <P class="flex flex-col"
+            ><span><b>Server URL:</b>&nbsp;{appStore.getKeycloakURL()}</span><span
+              ><b>Realm:</b>&nbsp;{appStore.getKeycloakRealm()}</span
+            ></P
+          >
+          {#if appStore.state.app.userManager && !appStore.state.app.isUserLoggedIn}
+            {#if appStore.state.app.sessionExpired}
+              <div class="flex items-center gap-2 text-orange-700 dark:text-yellow-400">
+                <MessageExclamation />
+                <span
+                  >Your session is expired: {appStore.state.app.sessionExpiredMessage ||
+                    "Please login"}
+                </span>
+              </div>
+            {/if}
+            <Button onclick={login}><ArrowOutUpRightSquare class="mr-1" /> Login</Button>
+          {/if}
+          {#if appStore.state.app.userManager && appStore.state.app.isUserLoggedIn}
+            <Button href={profileUrl}><ArrowOutUpRightSquare class="mr-1" /> Profile</Button>
+            <Button onclick={logout}><ArrowOutUpRightSquare class="mr-1" /> Logout</Button>
+          {/if}
+          <div class="flex flex-row gap-4">
+            <div class="flex flex-grow flex-col">
+              <A href="/swagger/index.html" class="text-left no-underline hover:underline">API</A>
+            </div>
+            <div class="flex flex-grow flex-col">
+              <span class="text-right dark:text-white">
+                ISDuBA is Free Software →<A
+                  href="https://github.com/ISDuBA/"
+                  class="no-underline hover:underline">Github</A
+                >
               </span>
             </div>
-          {/if}
-          <Button onclick={login}><ArrowOutUpRightSquare class="mr-1" /> Login</Button>
-        {/if}
-        {#if appStore.state.app.userManager && appStore.state.app.isUserLoggedIn}
-          <Button href={profileUrl}><ArrowOutUpRightSquare class="mr-1" /> Profile</Button>
-          <Button onclick={logout}><ArrowOutUpRightSquare class="mr-1" /> Logout</Button>
-        {/if}
-        <div class="flex flex-row gap-4">
-          <div class="flex flex-grow flex-col">
-            <A href="/swagger/index.html" class="text-left no-underline hover:underline">API</A>
-          </div>
-          <div class="flex flex-grow flex-col">
-            <span class="text-right dark:text-white">
-              ISDuBA is Free Software →<A
-                href="https://github.com/ISDuBA/"
-                class="no-underline hover:underline">Github</A
-              >
-            </span>
           </div>
         </div>
-      </div>
-    </Card>
-    {#if appStore.state.app.isUserLoggedIn && !appStore.state.app.sessionExpired}
-      <div class="mt-4 flex w-full flex-row gap-4">
-        <div class="flex flex-grow flex-col">
-          <span class="text-xl">User:</span>
-          <span class="ml-3">{appStore.state.app.tokenParsed?.preferred_username}</span>
-        </div>
-        {#if !viewError}
+      </Card>
+      {#if appStore.state.app.isUserLoggedIn && !appStore.state.app.sessionExpired}
+        <div class="mt-4 flex w-full flex-row gap-4">
           <div class="flex flex-grow flex-col">
-            <span class="text-xl">View: </span>
-            <List tag="ul" class="list-none space-y-1">
-              {#await getView() then view}
-                {#each view.entries() as [publisher, tlps], i (`login-1-${uid}-${i}`)}
-                  <Li class="ml-3"
-                    >{publisher === "*" ? "all" : publisher}:
-                    {#each tlps as tlp, j (`login-2-${uid}-${j}`)}
-                      <div
-                        class={getTLPClass(tlp)}
-                        style="width: fit-content; display: inline; margin-right: 0.25em;"
-                      >
-                        {tlp}
-                      </div>
-                    {/each}
-                  </Li>
-                {/each}
-              {/await}
-            </List>
+            <span class="text-xl">User:</span>
+            <span class="ml-3">{appStore.state.app.tokenParsed?.preferred_username}</span>
           </div>
-          <div class="flex flex-col">
-            <span class="text-xl">Roles:</span>
-            <List tag="ul" class="list-none space-y-1">
-              {#if appStore.isAdmin()}
-                <Li class="ml-3">Admin</Li>
-              {/if}
-              {#if appStore.isReviewer()}
-                <Li class="ml-3">Reviewer</Li>
-              {/if}
-              {#if appStore.isAuditor()}
-                <Li class="ml-3">Auditor</Li>
-              {/if}
-              {#if appStore.isImporter()}
-                <Li class="ml-3">Importer</Li>
-              {/if}
-              {#if appStore.isEditor()}
-                <Li class="ml-3">Editor</Li>
-              {/if}
-              {#if appStore.isSourceManager()}
-                <Li class="ml-3">Source-Manager</Li>
-              {/if}
-            </List>
-          </div>
-        {/if}
-      </div>
-      <P>
-        {#await getVersion() then version}
-          {#if !versionError}
-            <span class="text-m">Version: {version}</span>
+          {#if !viewError}
+            <div class="flex flex-grow flex-col">
+              <span class="text-xl">View: </span>
+              <List tag="ul" class="list-none space-y-1">
+                {#await getView() then view}
+                  {#each view.entries() as [publisher, tlps], i (`login-1-${uid}-${i}`)}
+                    <Li class="ml-3"
+                      >{publisher === "*" ? "all" : publisher}:
+                      {#each tlps as tlp, j (`login-2-${uid}-${j}`)}
+                        <div
+                          class={getTLPClass(tlp)}
+                          style="width: fit-content; display: inline; margin-right: 0.25em;"
+                        >
+                          {tlp}
+                        </div>
+                      {/each}
+                    </Li>
+                  {/each}
+                {/await}
+              </List>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xl">Roles:</span>
+              <List tag="ul" class="list-none space-y-1">
+                {#if appStore.isAdmin()}
+                  <Li class="ml-3">Admin</Li>
+                {/if}
+                {#if appStore.isReviewer()}
+                  <Li class="ml-3">Reviewer</Li>
+                {/if}
+                {#if appStore.isAuditor()}
+                  <Li class="ml-3">Auditor</Li>
+                {/if}
+                {#if appStore.isImporter()}
+                  <Li class="ml-3">Importer</Li>
+                {/if}
+                {#if appStore.isEditor()}
+                  <Li class="ml-3">Editor</Li>
+                {/if}
+                {#if appStore.isSourceManager()}
+                  <Li class="ml-3">Source-Manager</Li>
+                {/if}
+              </List>
+            </div>
           {/if}
-        {/await}
-      </P>
-    {/if}
-    <ErrorMessage error={viewError}></ErrorMessage>
-    <ErrorMessage error={versionError}></ErrorMessage>
+        </div>
+        <P>
+          {#await getVersion() then version}
+            {#if !versionError}
+              <span class="text-m">Version: {version}</span>
+            {/if}
+          {/await}
+        </P>
+      {/if}
+      <ErrorMessage error={viewError}></ErrorMessage>
+      <ErrorMessage error={versionError}></ErrorMessage>
+    </div>
   </div>
+  {#if aboutText}
+    <div id="about-text">
+      {@html aboutText}
+    </div>
+  {/if}
 </div>
