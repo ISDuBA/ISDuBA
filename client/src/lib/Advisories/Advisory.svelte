@@ -13,7 +13,6 @@
   import { appStore } from "$lib/store.svelte";
   import Version from "$lib/Advisories/Version.svelte";
   import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
-  import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
   import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
   import Diff from "$lib/Diff/Diff.svelte";
   import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
@@ -28,7 +27,6 @@
   import { addSlashes } from "$lib/utils";
   import {
     type AdvisoryVersion,
-    fetchDocumentSSVC,
     fetchSearchHits,
     loadAdvisoryVersions,
     advisorySearchState,
@@ -40,6 +38,11 @@
   import { Check, AlertCircle, ArrowRightStroke } from "@boxicons/svelte";
   import RawDocument from "./RawDocument.svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
+  import { fetchDocumentSSVC } from "./document";
+  import type { CSAFDocumentv2_1 } from "./types/csaf-2.1";
+  import type { CSAFDocumentv2_0 } from "./types/csaf-2.0";
+  import { getTLP } from "./docmodel";
+  import { exampleDoc } from "./examples21/test-csaf-2.1";
 
   let { params } = $props();
 
@@ -75,6 +78,8 @@
   let relatedDocuments: any = $state(undefined);
   let isLoadingSearchMatches = $state(false);
   let abortControllers: AbortController[] = $state([]);
+
+  let TLP = $derived(getTLP(appStore.state.webview.doc));
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -157,14 +162,13 @@
       abortController
     );
     if (response.ok) {
-      const result = await response.content;
+      const result: CSAFDocumentv2_0 | CSAFDocumentv2_1 = await response.content;
       if (!isResultConsistent(params, result.document)) {
         isInconsistent = true;
       }
       ({ document } = result);
+      appStore.setDocument(result);
       appStore.setRawDocument(result);
-      const docModel = convertToDocModel(result);
-      appStore.setDocument(docModel);
     } else if (response.error) {
       if (response.error === "AbortError") {
         return;
@@ -611,6 +615,15 @@
   {/if}
 </Modal>
 
+<div id="test-buttons" class="mb-2 flex gap-2">
+  <Button
+    color="light"
+    size="xs"
+    onclick={() => {
+      appStore.setDocument(exampleDoc as unknown as CSAFDocumentv2_1);
+    }}>Example Doc CSAF 2.1</Button
+  >
+</div>
 <div
   class="relative grid h-fit w-full grow grid-rows-[auto_minmax(100px,_1fr)] gap-y-2 px-2 lg:h-full"
   id="top"
@@ -634,8 +647,8 @@
               textPath="/document/tracking/id"
             />
           </span>
-          {#if appStore.state.webview.doc?.tlp.label}
-            <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
+          {#if TLP}
+            <Tlp tlp={TLP.label}></Tlp>
           {/if}
         </Label>
         <RawDocument />

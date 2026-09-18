@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { onMount } from "svelte";
   import { appStore } from "$lib/store.svelte";
   import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
   import {
@@ -24,6 +24,7 @@
   import { innerLinkStyle } from "./../helpers";
   import Link from "$lib/Components/Link.svelte";
   import { AlertTriangle, Check, Heart, Minus, X } from "@boxicons/svelte";
+  import { getProductsByID, getProductVulneravbilities } from "$lib/Advisories/advisory.svelte";
 
   interface Props {
     basePath: string;
@@ -36,8 +37,11 @@
   const tdClass = "whitespace-nowrap py-1 px-2 font-normal";
   const tablePadding = "px-2";
   let renderAllCVEs = $state(false);
-  let headerColumns: any[] = $state([]);
-  let productLines: any[] = $state([]);
+
+  let vulnerabilities: any[] = $derived(getProductVulneravbilities());
+  let headerColumns = $derived(vulnerabilities.shift()!);
+  let productLines = $derived(vulnerabilities);
+  let fourCVEs = $derived(appStore.state.webview.four_cves);
 
   const titleStyles = [
     "w-4 overflow-hidden",
@@ -49,19 +53,6 @@
   onMount(() => {
     appStore.resetSelectedProduct();
   });
-
-  $effect(() => {
-    untrack(() => headerColumns);
-    untrack(() => productLines);
-    if (appStore.state.webview.doc) {
-      const vulnerabilities = [...appStore.state.webview.doc.productVulnerabilities];
-
-      headerColumns = vulnerabilities.shift()!;
-      productLines = vulnerabilities;
-    }
-  });
-
-  let fourCVEs = $derived(appStore.state.webview.four_cves);
 </script>
 
 {#snippet symbol(symbol: string)}
@@ -192,7 +183,7 @@
                         id={crypto.randomUUID()}
                         href={basePath + "product-" + encodeURIComponent(column.content)}
                         class={innerLinkStyle}
-                        >{appStore.state.webview.doc?.productsByID[column.content]}
+                        >{getProductsByID()[column.content]}
                         ({column.content.length > 20
                           ? column.content.substring(0, 20) + "..."
                           : column.content})</Link
