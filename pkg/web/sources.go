@@ -107,6 +107,7 @@ func newSource(si *sources.SourceInfo, healthy *bool) *source {
 		Rate:                 si.Rate,
 		Slots:                si.Slots,
 		Headers:              si.Headers,
+		StreamingROLIE:       si.StreamingROLIE,
 		StrictMode:           si.StrictMode,
 		Secure:               si.Secure,
 		SignatureCheck:       si.SignatureCheck,

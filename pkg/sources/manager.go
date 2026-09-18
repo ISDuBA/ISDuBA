@@ -1058,9 +1058,9 @@ func (m *Manager) AddSource(
 			`checksum, checksum_ack, checksum_updated) ` +
 			`VALUES (` +
 			`$1, $2, $3, $4, $5, ` +
-			`$6, $7, $8, $9, $10, ` +
-			`$11, $12, $13, ` +
-			`$14, $15, $16) ` +
+			`$6, $7, $8, $9, $10, $11, ` +
+			`$12, $13, $14, ` +
+			`$15, $16, $17) ` +
 			`RETURNING id`
 		if err := m.db.Run(
 			ctx,
