@@ -120,7 +120,7 @@
       <div class={cellStyleKey}>Publisher namespace</div>
       <div class={cellStyleValue}>
         {#if publisherNamespace}
-          <Link href={publisherNamespace} class="underline">
+          <Link href={publisherNamespace} class="flex gap-1 underline">
             <ArrowOutUpRightSquare />
             <SearchableText text={publisherNamespace} textPath="/document/publisher/namespace" />
           </Link>
@@ -240,7 +240,7 @@
         {#if aggregateSeverity.namespace}
           <div class={cellStyleKey}>Aggregate severity namespace</div>
           <div class={cellStyleValue}>
-            <Link href={aggregateSeverity.namespace} class="underline">
+            <Link href={aggregateSeverity.namespace} class="flex gap-1 underline">
               <ArrowOutUpRightSquare />
               <SearchableText
                 text={aggregateSeverity.namespace}
