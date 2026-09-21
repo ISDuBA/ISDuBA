@@ -136,7 +136,29 @@ test("Advisory view is working", async ({ page }) => {
 
 test("Tabs with details about document are working", async ({ page }) => {
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
-  await page.getByRole("button", { name: "3 (final)" }).click();
+  const finalVer3 = page.getByRole("button", { name: "3 (final)" });
+  if (!(await finalVer3.isDisabled())) {
+    await finalVer3.click();
+  }
+
+  // Overview should be opened right away so no need to click
+  await expect(page.getByRole("tab", { name: "Overview" })).toBeVisible();
+  const underInvestigation = page.getByText("Under investigation");
+  await underInvestigation.scrollIntoViewIfNeeded();
+  await expect(underInvestigation).toBeVisible();
+  const totalResult = page.getByText("TOTAL RESULT");
+  await totalResult.scrollIntoViewIfNeeded();
+  await expect(totalResult).toBeVisible();
+  const linkToProduct = page.getByRole("link", { name: "AVendor product_1 1.1 (CSAFPID_0001)" });
+  await linkToProduct.scrollIntoViewIfNeeded();
+  await expect(linkToProduct).toBeVisible();
+  const cve = page.getByRole("link", { name: "CVE-2020-9876" });
+  await expect(cve).toBeVisible();
+
+  await page.getByRole("tab", { name: "Revision history" }).click();
+  const initialVersion = page.getByText("Initial version");
+  await initialVersion.scrollIntoViewIfNeeded();
+  await expect(initialVersion).toBeVisible();
 
   await page.getByRole("tab", { name: "Vulnerabilities" }).click();
   const scoresCollapsible = await page.getByText("Scores").first();
@@ -148,9 +170,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   expect(page.getByText("GitHub Issue")).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
+  await expect(page.getByText("summary: Test document summary").first()).toBeVisible();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
 
   await page.getByRole("tab", { name: "Product tree" }).click();
   await page.getByText("AVendor product_1 1.1").first().click();
+  await expect(page.getByText("product_name").first()).toBeVisible();
+  await expect(page.getByText("product_version").first()).toBeVisible();
   await page.getByText("pkg:npm/acme/CSAFPID_0001").scrollIntoViewIfNeeded({ timeout: 2000 });
 });
