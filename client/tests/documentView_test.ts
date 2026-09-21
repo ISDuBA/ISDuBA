@@ -68,9 +68,39 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText(editedComment)).toBeVisible();
 
-  // Test SSVC calculator
+  // Test diff inside document view
+  await page.getByRole("button", { name: "Show changes" }).click();
+  await page.getByRole("button", { name: "Inline" }).click();
+  await page.getByRole("button", { name: "Hide changes" }).click();
+
+  // Test view of raw document
+  expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
+  await page.getByRole("button", { name: "View raw document" }).click();
+  expect(page.getByRole("heading", { name: "Raw document" })).toBeVisible();
+  expect(page.getByText(`"document": {`)).toBeVisible();
+  const copyButton = page.getByRole("button", { name: "Copy document" });
+  await copyButton.click();
+  expect(page.getByText("Copied")).toBeVisible();
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await copyButton.waitFor({ state: "hidden" });
+
+  // Switch version and check if there is a link at the comment that leads to the previous document
+  await page
+    .getByRole("button", { disabled: false, description: /Switch to version.*/ })
+    .first()
+    .click();
+  await expect(page.getByRole("link", { name: /on version: .*/ }).first()).toBeVisible();
+});
+
+test("SSVC calculator is working", async ({ page }) => {
+  const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
+  await doc.scrollIntoViewIfNeeded();
+  await doc.click({ force: true });
+
   await page.getByTitle("Edit SSVC").click();
   await expect(page.getByText("Enter a SSVC directly")).toBeVisible();
+  await expect(page.getByText("At least 5 key pairs")).toBeVisible();
+  await expect(page.getByText(`Ends with "/"`)).toBeVisible();
   const evaluateButton = page.getByRole("button", { name: "Evaluate" });
   // Wait until button is visible after animation
   await expect(evaluateButton).toBeVisible();
@@ -105,33 +135,11 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   const newSsvcBadge = page.getByText("Attend").first();
   await expect(newSsvcBadge).toBeVisible();
+  await page.getByRole("button", { name: "History" }).click();
   const toText = page.getByText(`TO: ${vectorStart}${secondSSVC}`).first();
   await expect(toText).toBeVisible();
   const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`).first();
   await expect(fromText).toBeVisible();
-
-  // Test diff inside document view
-  await page.getByRole("button", { name: "Show changes" }).click();
-  await page.getByRole("button", { name: "Inline" }).click();
-  await page.getByRole("button", { name: "Hide changes" }).click();
-
-  // Test view of raw document
-  expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
-  await page.getByRole("button", { name: "View raw document" }).click();
-  expect(page.getByRole("heading", { name: "Raw document" })).toBeVisible();
-  expect(page.getByText(`"document": {`)).toBeVisible();
-  const copyButton = page.getByRole("button", { name: "Copy document" });
-  await copyButton.click();
-  expect(page.getByText("Copied")).toBeVisible();
-  await page.getByRole("button", { name: "Close dialog" }).click();
-  await copyButton.waitFor({ state: "hidden" });
-
-  // Switch version and check if there is a link at the comment that leads to the previous document
-  await page
-    .getByRole("button", { disabled: false, description: /Switch to version.*/ })
-    .first()
-    .click();
-  await expect(page.getByRole("link", { name: /on version: .*/ }).first()).toBeVisible();
 });
 
 test("Tabs with details about document are working", async ({ page }) => {
