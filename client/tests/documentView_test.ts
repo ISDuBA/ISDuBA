@@ -31,6 +31,21 @@ test.beforeEach(async ({ page }) => {
   await expect(secondDoc).toBeVisible();
 });
 
+test("Advisory metadata is displayed", async ({ page }) => {
+  const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
+  await doc.scrollIntoViewIfNeeded();
+  await doc.click({ force: true });
+  await expect(page.getByText("WHITE", { exact: true })).toBeVisible(); // TLP
+  await expect(page.getByText("csaf_vex", { exact: true })).toBeVisible(); // Category
+  await expect(page.getByText("vendor", { exact: true })).toBeVisible(); // Publisher category
+  // Publisher name should appear twice
+  await expect(page.getByText("ACME Inc.", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("ACME Inc.", { exact: true }).nth(1)).toBeVisible();
+  // Initial release date. Might be identical to current release date so we just take the first one.
+  await expect(page.getByText("2024-09-06 12:16:41Z", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Generator: csaf-tool 0.3.2")).toBeVisible();
+});
+
 test("Advisory view is working", async ({ page }) => {
   test.slow(); // Easy way to triple the default timeout
   const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
