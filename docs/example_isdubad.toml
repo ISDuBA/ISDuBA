@@ -97,6 +97,9 @@
 # keycloak_client_id = "auth"
 # update_interval = "5m"
 # idle_timeout = "30m"
+# about_text = """Hosted by \
+#                 <a href="https://example.com"> \
+#                 Example Corp</a>"""
 
 # [forwarder]
 # update_interval = "5m"

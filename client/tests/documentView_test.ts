@@ -16,6 +16,13 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
+  // First try to find a link to a match because that ensures that the final results and their
+  // matches are loaded. Otherwise it might be that PW finds the documents because they were
+  // already in the initially shown list and then they are detached from the DOM because the
+  // browser renders the updated list.
+  const searchMatch = page.getByRole("link", { name: "Navigate directly to the 1. match" }).first();
+  await searchMatch.scrollIntoViewIfNeeded();
+  await expect(searchMatch).toBeVisible();
   const firstDoc = page.getByText("Avendor-advisory-0004", { exact: true });
   await firstDoc.scrollIntoViewIfNeeded();
   await expect(firstDoc).toBeVisible();
@@ -49,7 +56,10 @@ test("Advisory view is working", async ({ page }) => {
   // Test SSVC calculator
   await page.getByTitle("Edit SSVC").click();
   await expect(page.getByText("Enter a SSVC directly")).toBeVisible();
-  await page.getByRole("button", { name: "Evaluate" }).click();
+  const evaluateButton = page.getByRole("button", { name: "Evaluate" });
+  // Wait until button is visible after animation
+  await expect(evaluateButton).toBeVisible();
+  await evaluateButton.click();
   // First test to go back and restart
   await page.getByRole("button", { name: "poc" }).click();
   await page.getByRole("button", { name: "Back" }).click();
