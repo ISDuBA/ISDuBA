@@ -20,9 +20,17 @@ test("Delete documents", async ({ page }) => {
   await expect(page.getByText("advisories in total")).toBeVisible();
   await page.getByPlaceholder("Enter a search term").fill("avendor");
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await page.getByTitle("delete Avendor-advisory-0004").click();
+
+  const firstDoc = page.getByText("Avendor-advisory-0004", { exact: true });
+  await firstDoc.scrollIntoViewIfNeeded();
+  await expect(firstDoc).toBeVisible();
+  const secondDoc = page.getByText("Avendor-advisory-0005", { exact: true });
+  await secondDoc.scrollIntoViewIfNeeded();
+  await expect(secondDoc).toBeVisible();
+
+  await page.getByTitle("delete Avendor-advisory-0004", { exact: true }).click();
   await page.getByText("Yes").click();
-  await page.getByTitle("delete Avendor-advisory-0005").click();
+  await page.getByTitle("delete Avendor-advisory-0005", { exact: true }).click();
   await page.getByText("Yes").click();
   await expect(page.getByText("No results were found.")).toBeVisible();
 });
