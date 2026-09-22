@@ -30,7 +30,8 @@ test("Delete documents", async ({ page }) => {
 
   await page.getByTitle("delete Avendor-advisory-0004", { exact: true }).click();
   await page.getByText("Yes").click();
+  await expect(page.getByText("1 matches found")).toBeVisible();
   await page.getByTitle("delete Avendor-advisory-0005", { exact: true }).click();
   await page.getByText("Yes").click();
-  await expect(page.getByText("No results were found.")).toBeVisible();
+  await expect(page.getByText("No results were found.")).toBeVisible({ timeout: 10000 });
 });
