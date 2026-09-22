@@ -31,6 +31,21 @@ test.beforeEach(async ({ page }) => {
   await expect(secondDoc).toBeVisible();
 });
 
+test("Advisory metadata is displayed", async ({ page }) => {
+  const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
+  await doc.scrollIntoViewIfNeeded();
+  await doc.click({ force: true });
+  await expect(page.getByText("WHITE", { exact: true })).toBeVisible(); // TLP
+  await expect(page.getByText("csaf_vex", { exact: true })).toBeVisible(); // Category
+  await expect(page.getByText("vendor", { exact: true })).toBeVisible(); // Publisher category
+  // Publisher name should appear twice
+  await expect(page.getByText("ACME Inc.", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("ACME Inc.", { exact: true }).nth(1)).toBeVisible();
+  // Initial release date. Might be identical to current release date so we just take the first one.
+  await expect(page.getByText("2024-09-06 12:16:41Z", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Generator: csaf-tool 0.3.2")).toBeVisible();
+});
+
 test("Advisory view is working", async ({ page }) => {
   test.slow(); // Easy way to triple the default timeout
   const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
@@ -53,9 +68,39 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText(editedComment)).toBeVisible();
 
-  // Test SSVC calculator
+  // Test diff inside document view
+  await page.getByRole("button", { name: "Show changes" }).click();
+  await page.getByRole("button", { name: "Inline" }).click();
+  await page.getByRole("button", { name: "Hide changes" }).click();
+
+  // Test view of raw document
+  expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
+  await page.getByRole("button", { name: "View raw document" }).click();
+  expect(page.getByRole("heading", { name: "Raw document" })).toBeVisible();
+  expect(page.getByText(`"document": {`)).toBeVisible();
+  const copyButton = page.getByRole("button", { name: "Copy document" });
+  await copyButton.click();
+  expect(page.getByText("Copied")).toBeVisible();
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await copyButton.waitFor({ state: "hidden" });
+
+  // Switch version and check if there is a link at the comment that leads to the previous document
+  await page
+    .getByRole("button", { disabled: false, description: /Switch to version.*/ })
+    .first()
+    .click();
+  await expect(page.getByRole("link", { name: /on version: .*/ }).first()).toBeVisible();
+});
+
+test("SSVC calculator is working", async ({ page }) => {
+  const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
+  await doc.scrollIntoViewIfNeeded();
+  await doc.click({ force: true });
+
   await page.getByTitle("Edit SSVC").click();
   await expect(page.getByText("Enter a SSVC directly")).toBeVisible();
+  await expect(page.getByText("At least 5 key pairs")).toBeVisible();
+  await expect(page.getByText(`Ends with "/"`)).toBeVisible();
   const evaluateButton = page.getByRole("button", { name: "Evaluate" });
   // Wait until button is visible after animation
   await expect(evaluateButton).toBeVisible();
@@ -90,38 +135,38 @@ test("Advisory view is working", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   const newSsvcBadge = page.getByText("Attend").first();
   await expect(newSsvcBadge).toBeVisible();
+  await page.getByRole("button", { name: "History" }).click();
   const toText = page.getByText(`TO: ${vectorStart}${secondSSVC}`).first();
   await expect(toText).toBeVisible();
   const fromText = page.getByText(`FROM: ${autoCalculatedSSVC}`).first();
   await expect(fromText).toBeVisible();
-
-  // Test diff inside document view
-  await page.getByRole("button", { name: "Show changes" }).click();
-  await page.getByRole("button", { name: "Inline" }).click();
-  await page.getByRole("button", { name: "Hide changes" }).click();
-
-  // Test view of raw document
-  expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
-  await page.getByRole("button", { name: "View raw document" }).click();
-  expect(page.getByRole("heading", { name: "Raw document" })).toBeVisible();
-  expect(page.getByText(`"document": {`)).toBeVisible();
-  const copyButton = page.getByRole("button", { name: "Copy document" });
-  await copyButton.click();
-  expect(page.getByText("Copied")).toBeVisible();
-  await page.getByRole("button", { name: "Close dialog" }).click();
-  await copyButton.waitFor({ state: "hidden" });
-
-  // Switch version and check if there is a link at the comment that leads to the previous document
-  await page
-    .getByRole("button", { disabled: false, description: /Switch to version.*/ })
-    .first()
-    .click();
-  await expect(page.getByRole("link", { name: /on version: .*/ }).first()).toBeVisible();
 });
 
 test("Tabs with details about document are working", async ({ page }) => {
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
-  await page.getByRole("button", { name: "3 (final)" }).click();
+  const finalVer3 = page.getByRole("button", { name: "3 (final)" });
+  if (!(await finalVer3.isDisabled())) {
+    await finalVer3.click();
+  }
+
+  // Overview should be opened right away so no need to click
+  await expect(page.getByRole("tab", { name: "Overview" })).toBeVisible();
+  const underInvestigation = page.getByText("Under investigation");
+  await underInvestigation.scrollIntoViewIfNeeded();
+  await expect(underInvestigation).toBeVisible();
+  const totalResult = page.getByText("TOTAL RESULT");
+  await totalResult.scrollIntoViewIfNeeded();
+  await expect(totalResult).toBeVisible();
+  const linkToProduct = page.getByRole("link", { name: "AVendor product_1 1.1 (CSAFPID_0001)" });
+  await linkToProduct.scrollIntoViewIfNeeded();
+  await expect(linkToProduct).toBeVisible();
+  const cve = page.getByRole("link", { name: "CVE-2020-9876" });
+  await expect(cve).toBeVisible();
+
+  await page.getByRole("tab", { name: "Revision history" }).click();
+  const initialVersion = page.getByText("Initial version");
+  await initialVersion.scrollIntoViewIfNeeded();
+  await expect(initialVersion).toBeVisible();
 
   await page.getByRole("tab", { name: "Vulnerabilities" }).click();
   const scoresCollapsible = await page.getByText("Scores").first();
@@ -133,9 +178,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   expect(page.getByText("GitHub Issue")).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
+  await expect(page.getByText("summary: Test document summary").first()).toBeVisible();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
 
   await page.getByRole("tab", { name: "Product tree" }).click();
   await page.getByText("AVendor product_1 1.1").first().click();
+  await expect(page.getByText("product_name").first()).toBeVisible();
+  await expect(page.getByText("product_version").first()).toBeVisible();
   await page.getByText("pkg:npm/acme/CSAFPID_0001").scrollIntoViewIfNeeded({ timeout: 2000 });
 });

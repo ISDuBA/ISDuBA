@@ -4,16 +4,16 @@
 
  SPDX-License-Identifier: Apache-2.0
 
- SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
- Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
+ SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 
 <script lang="ts">
   import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
   import Product from "$lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
-  import type { Branch } from "$lib/pmdTypes";
+  import type { Branch } from "$lib/Advisories/types/csaf-2.1";
   import CBadge from "$lib/Components/CBadge.svelte";
-  import Self from "./Branch.svelte";
+  import Self from "./Branchv2_1.svelte";
   import SearchableText from "../../SearchableText.svelte";
 
   interface Props {
