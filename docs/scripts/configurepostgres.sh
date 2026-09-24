@@ -34,9 +34,9 @@ fi
 # Adjust postgresql configuration
 PG_HBA_PATH=$(psql -t -P format=unaligned -c 'SHOW hba_file;')
 
-if ! grep -q -F "# ISDuBA configuration" $PG_HBA_PATH;
+if ! grep -q -F "# ISDuBA configuration" "$PG_HBA_PATH";
 then
-tee -a $PG_HBA_PATH <<block_to_insert > /dev/null
+tee -a "$PG_HBA_PATH" <<block_to_insert > /dev/null
 # ISDuBA configuration
 host    all             all             127.0.0.1/32            scram-sha-256
 host    all             all             ::1/128                 scram-sha-256

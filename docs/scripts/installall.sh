@@ -19,7 +19,6 @@ echo "where OPTIONS:"
 echo "  -h, --help                       show this help text and exit script (optional)"
 echo "  -b, --branch=name                set up on branch 'name' instead of main (optional)"
 echo "  -k, --keycloakRunning            signal the script that there is a keycloak running"
-echo "  -q, --quick                      skip creation of groups and users not necessary for testing."
 echo "                                   on port 8080 (optional)"
 
 }
@@ -58,9 +57,6 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       help
       exit 0
-      ;;
-    -q|--quick)
-      args+=(-q)
       ;;
     -k|--keycloakRunning)
       echo "Assuming keycloak is running..."

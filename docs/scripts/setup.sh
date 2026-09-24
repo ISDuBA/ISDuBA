@@ -17,9 +17,6 @@ while [[ $# -gt 0 ]]; do
       echo "Assuming keycloak is running..."
       args+=(-k)
       ;;
-    -q|--quick)
-      args+=(-q)
-      ;;
     *)
       echo "Unknown option: $1"
       exit 1
