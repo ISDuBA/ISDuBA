@@ -74,9 +74,10 @@
         classes={{
           div: "max-w-60 relative h-screen bg-primary-700 dark:bg-gray-900 px-0"
         }}
+        disableBreakpoints={true}
       >
         <SidebarWrapper
-          class="bg-primary-700 sidebar-wrapper w-full overflow-y-auto rounded bg-gray-50 px-0 py-4 dark:bg-gray-900"
+          class="bg-primary-700 sidebar-wrapper w-full overflow-y-auto rounded px-0 py-4 dark:bg-gray-900"
         >
           <SidebarGroup>
             <SidebarBrand
