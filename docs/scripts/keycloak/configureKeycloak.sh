@@ -71,7 +71,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Create keycloak admin user
-if [[ -z "${KEYCLOAK_ADMIN}" ]]; then
+if [[ -z "${KEYCLOAK_ADMIN:-}" ]]; then
   export KEYCLOAK_ADMIN="keycloak"
   echo "No Keycloak admin set. Trying to create admin with name \"keycloak\"."
   echo "Note that if a keycloak user has been previously set to something other than \"keycloak\", you need to change the environment variable \"KEYCLOAK_ADMIN\" for this script to work."
@@ -79,7 +79,7 @@ else
   export KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN}"
 fi
 
-if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+if [[ -z "${KEYCLOAK_ADMIN_PASSWORD:-}" ]]; then
   if [ -f "$file" ]; then
     KEYCLOAK_ADMIN_PASSWORD=$(<./../password.txt)
     export KEYCLOAK_ADMIN_PASSWORD

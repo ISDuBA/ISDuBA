@@ -12,11 +12,7 @@ set -euo pipefail # to exit if a command in the script fails
 
 sudo apt install -y unzip # needed to unzip the keycloak archive
 
-version="26.7.3"
-
-if [ -n "$1" ]; then
-  version="$1"
-fi
+version="${1:-26.7.3}"
 
 full="keycloak-$version.zip"
 
