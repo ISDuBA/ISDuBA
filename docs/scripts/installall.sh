@@ -8,9 +8,10 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-set -e # to exit if a command in the script fails
+set -euo pipefail # to exit if a command in the script fails
 
 args=()
+ISDUBA_BRANCH_NAME=
 
 # Help function if --help was called
 help() {
@@ -19,7 +20,6 @@ echo "where OPTIONS:"
 echo "  -h, --help                       show this help text and exit script (optional)"
 echo "  -b, --branch=name                set up on branch 'name' instead of main (optional)"
 echo "  -k, --keycloakRunning            signal the script that there is a keycloak running"
-echo "  -q, --quick                      skip creation of groups and users not necessary for testing."
 echo "                                   on port 8080 (optional)"
 
 }
@@ -59,9 +59,6 @@ while [[ $# -gt 0 ]]; do
       help
       exit 0
       ;;
-    -q|--quick)
-      args+=(-q)
-      ;;
     -k|--keycloakRunning)
       echo "Assuming keycloak is running..."
       args+=(-k)
@@ -86,7 +83,7 @@ done
 
 prepare
 
-if [ ! -z "$ISDUBA_BRANCH_NAME" ]; then # check out branch if given
+if [ -n "$ISDUBA_BRANCH_NAME" ]; then # check out branch if given
   checkout "$ISDUBA_BRANCH_NAME"
 fi
 

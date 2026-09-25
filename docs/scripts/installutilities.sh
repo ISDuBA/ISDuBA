@@ -8,7 +8,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-set -e # to exit if a command in the script fails
+set -euo pipefail # to exit if a command in the script fails
 
 sudo apt-get update
 
@@ -16,14 +16,14 @@ sudo apt-get update
 sudo apt install -y make bash curl sed tar
 
 # Install Java
-sudo apt install -y openjdk-21-jre-headless
+sudo apt install -y openjdk-25-jre-headless
 
 # Install or update Go
 
 # look up current go version
 go_version="$(curl https://go.dev/VERSION\?m=text | head -1)"
 
-if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+if [[ -z "${KEYCLOAK_ADMIN_PASSWORD:-}" ]]; then
   sudo apt install xkcdpass
 fi
 
@@ -34,11 +34,11 @@ if [ -x "$(command -v go version)" ] && [[ $(go version) == *"$go_version"* ]]; 
 else
   latest_go=$go_version".linux-amd64.tar.gz"
 
-  curl -o /tmp/$latest_go https://dl.google.com/go/$latest_go
+  curl -o /tmp/"$latest_go" "https://dl.google.com/go/$latest_go"
   sudo rm -rf /usr/local/go # remove any old installations
-  sudo tar -C /usr/local -xzf /tmp/$latest_go
+  sudo tar -C /usr/local -xzf /tmp/"$latest_go"
 
-  sudo rm -f /tmp/$latest_go
+  sudo rm -f /tmp/"$latest_go"
 
   sudo ln -snf /usr/local/go/bin/go /usr/local/bin/go
   echo "Successfully installed $go_version."
