@@ -16,7 +16,7 @@ sudo apt-get update
 sudo apt install -y make bash curl sed tar
 
 # Install Java
-sudo apt install -y openjdk-21-jre-headless
+sudo apt install -y openjdk-25-jre-headless
 
 # Install or update Go
 

@@ -108,7 +108,7 @@ The following will briefly explain what every other script does. It's not necess
    * [curl](https://curl.se/)
    * [sed](https://www.gnu.org/software/sed/)
    * [tar](https://www.gnu.org/software/tar/)
-   * [Java (openjdk-21-jre-headless)](https://openjdk.org/projects/jdk/21/)
+   * [Java (openjdk-25-jre-headless)](https://openjdk.org/projects/jdk/25/)
    * [Go](https://go.dev/)
    * [xkcdpass](https://pypi.org/project/xkcdpass/)
    * [graphviz](https://graphviz.org/)
