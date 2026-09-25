@@ -14,7 +14,7 @@ sudo apt install -y unzip # needed to unzip the keycloak archive
 
 version="26.7.3"
 
-if [ ! -z "$1" ]; then
+if [ -n "$1" ]; then
   version="$1"
 fi
 
@@ -24,17 +24,17 @@ if [ -d /opt/keycloak ] && sudo /opt/keycloak/bin/kc.sh --version | grep -q -F "
   echo "A Keycloak installation already exists. Skipping installation."
 else
   # Make sure no potentially broken zip file exists
-  rm --force $full
+  rm --force "$full"
   # download and extract keycloak
-  wget https://github.com/keycloak/keycloak/releases/download/$version/$full
+  wget "https://github.com/keycloak/keycloak/releases/download/$version/$full"
 
   echo "Extracting Keycloak..."
-  unzip -q $full
+  unzip -q "$full"
 
   sudo mkdir -p /opt/
 
-  sudo mv keycloak-$version /opt/keycloak
-  rm --force $full
+  sudo mv keycloak-"$version" /opt/keycloak
+  rm --force "$full"
   echo "Successfully installed Keycloak at /opt/keycloak."
 fi
 

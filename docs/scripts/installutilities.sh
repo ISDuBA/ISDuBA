@@ -34,11 +34,11 @@ if [ -x "$(command -v go version)" ] && [[ $(go version) == *"$go_version"* ]]; 
 else
   latest_go=$go_version".linux-amd64.tar.gz"
 
-  curl -o /tmp/$latest_go https://dl.google.com/go/$latest_go
+  curl -o /tmp/"$latest_go" "https://dl.google.com/go/$latest_go"
   sudo rm -rf /usr/local/go # remove any old installations
-  sudo tar -C /usr/local -xzf /tmp/$latest_go
+  sudo tar -C /usr/local -xzf /tmp/"$latest_go"
 
-  sudo rm -f /tmp/$latest_go
+  sudo rm -f /tmp/"$latest_go"
 
   sudo ln -snf /usr/local/go/bin/go /usr/local/bin/go
   echo "Successfully installed $go_version."

@@ -82,7 +82,7 @@ done
 
 prepare
 
-if [ ! -z "$ISDUBA_BRANCH_NAME" ]; then # check out branch if given
+if [ -n "$ISDUBA_BRANCH_NAME" ]; then # check out branch if given
   checkout "$ISDUBA_BRANCH_NAME"
 fi
 
