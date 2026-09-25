@@ -14,6 +14,9 @@ all: build_isdubad build_importer build_client test
 # https://github.com/gocsaf/csaf/blob/3093f717817b9369d390e56d1012eaedcfa19e32/Makefile#L40-L49
 GITDESC := $(shell git describe --tags --always)
 GITDESCPATCH := $(shell echo '$(GITDESC)' | sed -E 's/v?[0-9]+\.[0-9]+\.([0-9]+)[-+]?.*/\1/')
+ifeq ($(shell expr "$(GITDESCPATCH)" : '^[0-9]\+$$'),0)
+$(error Version parsing failed: '$(GITDESC)' does not match expected semantic versioning tags.)
+endif
 SEMVERPATCH := $(shell echo $$(( $(GITDESCPATCH) + 1 )))
 # Hint: The second regexp in the next line only matches
 #       if there is a hyphen (`-`) followed by a number,
