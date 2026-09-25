@@ -43,7 +43,7 @@ cd keycloak
 
 cd ..
 
-./installplaywright.sh # prepare frontend
+./installclient.sh # prepare frontend
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
 

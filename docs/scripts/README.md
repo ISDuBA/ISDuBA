@@ -95,7 +95,7 @@ The following will briefly explain what every other script does. It's not necess
 #### [installkeycloak.sh](./installkeycloak.sh)
  Installs keycloak version 26, creates a keycloak user on your system and gives them the ownership over it.
  
-#### [installplaywright.sh](./installplaywright.sh)
+#### [installclient.sh](./installclient.sh)
  Installs ca-certificates, curl, gnupg and playwright with dependencies.
  
 #### [installpostgres.sh](./installpostgres.sh)
