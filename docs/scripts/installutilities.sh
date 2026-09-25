@@ -23,7 +23,7 @@ sudo apt install -y openjdk-25-jre-headless
 # look up current go version
 go_version="$(curl https://go.dev/VERSION\?m=text | head -1)"
 
-if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+if [[ -z "${KEYCLOAK_ADMIN_PASSWORD:-}" ]]; then
   sudo apt install xkcdpass
 fi
 
