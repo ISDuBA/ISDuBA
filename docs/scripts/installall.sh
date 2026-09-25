@@ -11,6 +11,7 @@
 set -euo pipefail # to exit if a command in the script fails
 
 args=()
+ISDUBA_BRANCH_NAME=
 
 # Help function if --help was called
 help() {
