@@ -74,7 +74,7 @@
   };
 
   const getDiff = async () => {
-    urlPath = `/api/diff/${appStore.state.app.diff.docB_ID}/${appStore.state.app.diff.docA_ID}?word-diff=true`;
+    urlPath = `/api/diff/${appStore.state.app.diff.docA_ID}/${appStore.state.app.diff.docB_ID}?word-diff=true`;
     error = null;
     const response = await request(urlPath, "GET");
     if (response.ok) {
