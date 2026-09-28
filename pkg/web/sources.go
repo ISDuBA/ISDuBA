@@ -60,7 +60,6 @@ type source struct {
 	Rate                 *float64       `json:"rate,omitempty" form:"rate" binding:"omitnil,gte=0"`
 	Slots                *int           `json:"slots,omitempty" form:"slots" binding:"omitnil,gte=0"`
 	Headers              []string       `json:"headers,omitempty" form:"headers"`
-	StreamingROLIE       *bool          `json:"streaming_rolie,omitempty" form:"streaming_rolie"`
 	StrictMode           *bool          `json:"strict_mode,omitempty" form:"strict_mode"`
 	Secure               *bool          `json:"secure,omitempty" form:"secure"`
 	SignatureCheck       *bool          `json:"signature_check,omitempty" form:"signature_check"`
@@ -107,7 +106,6 @@ func newSource(si *sources.SourceInfo, healthy *bool) *source {
 		Rate:                 si.Rate,
 		Slots:                si.Slots,
 		Headers:              si.Headers,
-		StreamingROLIE:       si.StreamingROLIE,
 		StrictMode:           si.StrictMode,
 		Secure:               si.Secure,
 		SignatureCheck:       si.SignatureCheck,
@@ -305,7 +303,6 @@ func (c *Controller) createSource(ctx *gin.Context) {
 		src.Rate,
 		src.Slots,
 		src.Headers,
-		src.StreamingROLIE,
 		src.StrictMode,
 		src.Secure,
 		src.SignatureCheck,
@@ -520,10 +517,6 @@ func (c *Controller) updateSource(ctx *gin.Context) {
 				b = &v
 			}
 			return update(b)
-		}
-		// streamingROLIE
-		if err := optBool("streaming_rolie", su.UpdateStreamingROLIE); err != nil {
-			return err
 		}
 		// strictMode
 		if err := optBool("strict_mode", su.UpdateStrictMode); err != nil {

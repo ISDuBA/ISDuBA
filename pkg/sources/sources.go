@@ -86,7 +86,6 @@ type source struct {
 	limiter        *rate.Limiter
 	slots          *int
 	headers        []string
-	streamingROLIE *bool
 	strictMode     *bool
 	secure         *bool
 	signatureCheck *bool
@@ -263,7 +262,7 @@ func (f *feed) fetchIndex(ctx context.Context, m *Manager, fn func([]location, e
 		}
 		var locations []location
 		if f.rolie {
-			if f.source.useStreamingROLIE(m) {
+			if m.cfg.Sources.StreamingROLIE {
 				locations, err = fi.streamingRolieLocations(resp.Body)
 			} else {
 				locations, err = fi.rolieLocations(resp.Body)
@@ -550,14 +549,6 @@ func (s *source) useStrictMode(m *Manager) bool {
 		return *s.strictMode
 	}
 	return m.cfg.Sources.StrictMode
-}
-
-// useStreamingROLIE tells whether the streaming ROLIE parser should be used
-func (s *source) useStreamingROLIE(m *Manager) bool {
-	if s.streamingROLIE != nil {
-		return *s.streamingROLIE
-	}
-	return m.cfg.Sources.StreamingROLIE
 }
 
 // storeLastChanges is intended to be called in the transaction storing the

@@ -340,7 +340,6 @@ CREATE TABLE sources (
     rate                   float,
     slots                  int,
     headers                text[],
-    streaming_rolie        bool,
     strict_mode            bool,
     secure                 bool,
     signature_check        bool,

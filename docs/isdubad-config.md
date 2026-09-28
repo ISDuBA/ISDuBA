@@ -126,7 +126,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 
 ### <a name="section_sources"></a> Section `[sources]` Sources
 
-- `streaming_rolie`: Enables use of experimental gocsaf v3.6.0 streaming ROLIE parser. Defaults to `true`.
+- `streaming_rolie`: Enables use of experimental gocsaf v3.6.0 streaming ROLIE parser. Defaults to `false`.
 - `strict_mode`: Enables strict checking of sources. Defaults to `true`.
 - `secure`: Enables secure mode (Checks TLS certificates of HTTPS transfer). Defaults to `true`.
 - `signature_check`: Failing OpenPGP signature check stops import of document. Defaults to `true`.
