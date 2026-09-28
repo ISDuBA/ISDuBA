@@ -106,13 +106,6 @@ func keepByKeys(keys []string) replacer {
 	}
 }
 
-func keepByValues(values []string) replacer {
-	return func(_ []string, v string) (any, bool) {
-		_, found := slices.BinarySearch(values, v)
-		return v, found
-	}
-}
-
 func replaceByIndex(index func(string) int) replacer {
 	return func(_ []string, v string) (any, bool) {
 		return index(v), true
@@ -211,39 +204,6 @@ var (
 		"discovery_date",
 		"vectorString",
 	})
-	excludeValues = sorted([]string{
-		"HIGH",
-		"MEDIUM",
-		"LOW",
-		"LOW_MEDIUM",
-		"MEDIUM_HIGH",
-		"CHANGED",
-		"UNCHANGED",
-		"MULTIPLE",
-		"SINGLE",
-		"NONE",
-		"NETWORK",
-		"ADJACENT_NETWORK",
-		"LOCAL",
-		"PHYSICAL",
-		"NOT_DEFINED",
-		"PARTIAL",
-		"COMPLETE",
-		"UNPROVEN",
-		"PROOF_OF_CONCEPT",
-		"FUNCTIONAL",
-		"OFFICIAL_FIX",
-		"TEMPORARY_FIX",
-		"WORKAROUND",
-		"UNAVAILABLE",
-		"UNCONFIRMED",
-		"UNCORROBORATED",
-		"CONFIRMED",
-		"UNKNOWN",
-		"REASONABLE",
-		"REQUIRED",
-		"CRITICAL",
-	})
 )
 
 // DocumentStoreChainFunc is a function which is called after the document
@@ -341,7 +301,6 @@ func ImportDocumentData(
 			keepAndIndex(idxer.index, "document", "title"),
 			keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
 			keepByKeys(excludeKeys),
-			keepByValues(excludeValues),
 			replaceByIndex(idxer.index),
 		)...))
 
