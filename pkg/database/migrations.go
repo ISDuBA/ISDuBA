@@ -43,8 +43,10 @@ type migration struct {
 type (
 	// Transaction offers the possibility to run Go code in a transaction.
 	Transaction interface {
-		Transaction(context.Context) (pgx.Tx, error)
+		// Connection should be called if the callback only needs a connection.
 		Connection() *pgx.Conn
+		// Transaction should be called if the callback should run a transaction.
+		Transaction(context.Context) (pgx.Tx, error)
 	}
 	// MigrationCode is a callback function to be used as a migration.
 	MigrationCode func(context.Context, Transaction) error
