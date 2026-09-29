@@ -354,6 +354,7 @@
           >Step {currentStep + 1}/{steps.length}</span
         >
         <StepIndicator
+          clickable={false}
           glow={false}
           completedCustom=""
           currentCustom=""
