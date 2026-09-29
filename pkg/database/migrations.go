@@ -21,6 +21,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 
 	"github.com/jackc/pgx/v5"
@@ -37,6 +38,81 @@ type migration struct {
 	version     int64
 	description string
 	path        string
+}
+
+type (
+	// Transaction offers the possibility to run Go code in a transaction.
+	Transaction interface {
+		Transaction(context.Context) (pgx.Tx, error)
+		Connection() *pgx.Conn
+	}
+	// MigrationCode is a callback function to be used as a migration.
+	MigrationCode func(context.Context, Transaction) error
+)
+
+type transaction struct {
+	conn *pgx.Conn
+	tx   pgx.Tx
+}
+
+// Transaction implements [Transaction].
+func (t *transaction) Transaction(ctx context.Context) (pgx.Tx, error) {
+	if t.tx != nil {
+		return t.tx, nil
+	}
+	tx, err := t.conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+	t.tx = tx
+	return tx, nil
+}
+
+func (t *transaction) Connection() *pgx.Conn {
+	return t.conn
+}
+
+func (t *transaction) rollback(ctx context.Context) {
+	if t.tx != nil {
+		t.tx.Rollback(ctx)
+	}
+}
+
+func (t *transaction) commit(ctx context.Context) error {
+	if t.tx != nil {
+		return t.tx.Commit(ctx)
+	}
+	return nil
+}
+
+const insertVersion = `INSERT INTO versions (version, description) VALUES ($1, $2)`
+
+func (t *transaction) insertVersion(ctx context.Context, ver int64, desc string) error {
+	var err error
+	if t.tx != nil {
+		_, err = t.tx.Exec(ctx, insertVersion, ver, desc)
+	} else {
+		_, err = t.conn.Exec(ctx, insertVersion, ver, desc)
+	}
+	return err
+}
+
+var (
+	migrationCodes   = map[string]MigrationCode{}
+	migrationCodesMu sync.Mutex
+)
+
+// RegisterMigrationCode registers code to be executed as migration.
+func RegisterMigrationCode(name string, mc MigrationCode) {
+	migrationCodesMu.Lock()
+	defer migrationCodesMu.Unlock()
+	migrationCodes[name] = mc
+}
+
+func migrationCode(name string) MigrationCode {
+	migrationCodesMu.Lock()
+	defer migrationCodesMu.Unlock()
+	return migrationCodes[name]
 }
 
 // CheckMigrations checks if the version of the database matches
@@ -125,6 +201,30 @@ func doMigrations(
 		if mig.version <= version {
 			continue
 		}
+		ver := mig.version
+		if ver == 0 { // Version 0 is special as it is intented to setup directly to lastest.
+			ver = migs[len(migs)-1].version
+			version = ver
+		}
+		// Check if this migration is a code.
+		if mc := migrationCode(mig.description); mc != nil {
+			if err := func() error {
+				slog.InfoContext(ctx, "running code migration", "name", mig.description)
+				t := &transaction{conn: conn}
+				defer t.rollback(ctx)
+				if err := mc(ctx, t); err != nil {
+					return fmt.Errorf("executing code migration %q failed: %w", mig.path, err)
+				}
+				if err := t.insertVersion(ctx, ver, mig.description); err != nil {
+					return fmt.Errorf("inserting version of migration %q failed: %w", mig.path, err)
+				}
+				return t.commit(ctx)
+			}(); err != nil {
+				return true, fmt.Errorf("applying migration %q failed: %w", mig.path, err)
+			}
+			continue
+		}
+		// This migration is an SQL script.
 		data, err := migrations.ReadFile(mig.path)
 		if err != nil {
 			return true, fmt.Errorf("loading migration %q failed: %w", mig.path, err)
@@ -137,14 +237,8 @@ func doMigrations(
 		if err := tmpl.Execute(&script, cfg); err != nil {
 			return true, fmt.Errorf("templating migration %q failed: %w", mig.path, err)
 		}
-		const insertVersion = `INSERT INTO versions (version, description) VALUES ($1, $2)`
 		if err := func() error {
 			slog.InfoContext(ctx, "running migration", "name", mig.description)
-			ver := mig.version
-			if ver == 0 { // Version 0 is special as it is intented to setup directly to lastest.
-				ver = migs[len(migs)-1].version
-				version = ver
-			}
 			// Should this script run without a transaction?
 			if strings.HasSuffix(mig.description, "_notx") {
 				if _, err := conn.Exec(ctx, script.String()); err != nil {
