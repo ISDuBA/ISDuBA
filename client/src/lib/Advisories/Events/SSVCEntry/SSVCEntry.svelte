@@ -53,6 +53,7 @@
   <CopyButton
     bind:copyState={tooltipStates[state]}
     errorMessage="Error: Couldn't copy the vector."
+    paddingClass="p-0"
     title={`Copy vector ${vector}`}
     value={vector}
   />
@@ -75,14 +76,14 @@
     </div>
     <div class="flex flex-row items-baseline justify-between">
       <small class="flex flex-col items-end text-[10px] text-gray-400">
-        <div class="flex gap-1">
+        <div class="flex items-center gap-1">
           {`${ssvcData.prev_ssvc ? "TO: " : ""}${ssvcData.ssvc}`}
           {#if ssvcData.ssvc}
             {@render copyButton("current", ssvcData.ssvc)}
           {/if}
         </div>
         {#if ssvcData.prev_ssvc}
-          <div class="flex gap-1">
+          <div class="flex items-center gap-1">
             <span>FROM: {ssvcData.prev_ssvc}</span>
             {@render copyButton("prev", ssvcData.prev_ssvc)}
           </div>

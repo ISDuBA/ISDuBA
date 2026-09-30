@@ -10,14 +10,45 @@
 <script lang="ts">
   import { Check, Copy } from "@boxicons/svelte";
   import type { CopyState } from "./types";
+  import { Button } from "flowbite-svelte";
 
   interface Props {
     copyState?: CopyState;
     errorMessage: string;
+    paddingClass?: string;
+    showBorder?: boolean;
+    successMessage?: string;
     title: string;
+    tooltipPlacement?: "topright" | "bottomright";
     value: string;
   }
-  let { copyState = $bindable(undefined), errorMessage, title, value }: Props = $props();
+  let {
+    copyState = $bindable(undefined),
+    errorMessage,
+    paddingClass = "py-1",
+    showBorder = false,
+    successMessage = "Copied",
+    title,
+    tooltipPlacement = "topright",
+    value
+  }: Props = $props();
+
+  let buttonClass = $derived.by(() => {
+    let btnClass = "cursor-pointer h-7 " + paddingClass;
+    if (!showBorder) {
+      btnClass += " border-0";
+    }
+    return btnClass;
+  });
+
+  let tooltipPlacementClass = $derived.by(() => {
+    switch (tooltipPlacement) {
+      case "bottomright":
+        return "-bottom-[80%]";
+      case "topright":
+        return "-top-[80%]";
+    }
+  });
 
   const copyToClipboard = async () => {
     try {
@@ -34,17 +65,24 @@
 </script>
 
 <div class="relative">
-  <button onclick={copyToClipboard} class="cursor-pointer" disabled={!value} {title}>
+  <Button
+    onclick={copyToClipboard}
+    class={buttonClass}
+    color="light"
+    disabled={!value}
+    size="xs"
+    {title}
+  >
     <Copy />
-  </button>
+  </Button>
   {#if copyState}
     <div
-      class="tooltip absolute -top-[80%] left-[calc(100%+4px)] z-10 mt-1 rounded border-1 border-gray-400 bg-white p-1 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+      class={`tooltip absolute ${tooltipPlacementClass} left-[calc(100%+4px)] z-10 mt-1 rounded border border-gray-400 bg-white p-1 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200`}
     >
       {#if copyState === "success"}
         <div class="flex items-center gap-1">
           <Check />
-          <span>Copied</span>
+          <span>{successMessage}</span>
         </div>
       {:else}
         {errorMessage}
