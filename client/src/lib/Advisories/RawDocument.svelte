@@ -9,12 +9,37 @@
 -->
 <script lang="ts">
   import { appStore } from "$lib/store.svelte";
+  import hljs from "highlight.js";
+  import json from "highlight.js/lib/languages/json";
+  import "highlight.js/styles/stackoverflow-light.css";
 
-  let json = $derived(
+  hljs.registerLanguage("json", json);
+
+  let rawDoc = $derived(
     appStore.state.webview.rawDoc ? JSON.stringify(appStore.state.webview.rawDoc, null, 2) : ""
   );
+
+  let docWithHighlighting = $derived.by(() => {
+    return hljs.highlight(rawDoc, { language: "json" }).value;
+  });
 </script>
 
+<svelte:head>
+  {#if appStore.state.app.isDarkMode}
+    <link
+      rel="stylesheet"
+      href="../../../node_modules/highlight.js/styles/stackoverflow-dark.min.css"
+    />
+  {:else}
+    <link
+      rel="stylesheet"
+      href="../../../node_modules/highlight.js/styles/stackoverflow-light.min.css"
+    />
+  {/if}
+</svelte:head>
+
 <div>
-  <pre>{json}</pre>
+  <pre>
+    {@html docWithHighlighting}
+  </pre>
 </div>
