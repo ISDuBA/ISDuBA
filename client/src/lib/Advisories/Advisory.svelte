@@ -8,7 +8,7 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { Button, Select, Label, Modal, Spinner } from "flowbite-svelte";
+  import { Button, Select, Label, Modal, Spinner, ButtonGroup, RadioButton } from "flowbite-svelte";
   import { onDestroy, onMount, setContext, untrack } from "svelte";
   import { appStore } from "$lib/store.svelte";
   import Version from "$lib/Advisories/Version.svelte";
@@ -25,7 +25,7 @@
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./Events/Events.svelte";
   import Tlp from "./TLP.svelte";
-  import { addSlashes } from "$lib/utils";
+  import { addSlashes, selectedClass } from "$lib/utils";
   import {
     type AdvisoryVersion,
     fetchDocumentSSVC,
@@ -37,14 +37,22 @@
   import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
   import SearchMatchBar from "./SearchMatchBar.svelte";
   import SearchableText from "./CSAFWebview/SearchableText.svelte";
-  import { Check, AlertCircle, ArrowRightStroke } from "@boxicons/svelte";
+  import {
+    Check,
+    AlertCircle,
+    ArrowRightStroke,
+    ArrowInDownSquareHalf,
+    Code,
+    GridRowBottom
+  } from "@boxicons/svelte";
   import RawDocument from "./RawDocument.svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
+  import CopyButton from "$lib/Components/CopyButton.svelte";
 
   let { params } = $props();
 
   let oldParams: any = $state(null);
-  let document: any = $state({});
+  let csafDocument: any = $state({});
   let ssvcVector: string = $state("");
   let comment: string = $state("");
   let loadCommentsError: ErrorDetails | null = $state(null);
@@ -75,6 +83,8 @@
   let relatedDocuments: any = $state(undefined);
   let isLoadingSearchMatches = $state(false);
   let abortControllers: AbortController[] = $state([]);
+  let showRawDocument = $state(false);
+  let downloadAbortController: AbortController | undefined = $state(undefined);
 
   $effect(() => {
     if ([NEW, READ, ASSESSING].includes(advisoryState)) {
@@ -102,10 +112,17 @@
     appStore.isEditor() || appStore.isReviewer() || appStore.isAuditor() || appStore.isAdmin()
   );
   let encodedTrackingID = $derived(
-    document.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
+    csafDocument?.tracking?.id
+      ? encodeURIComponent(addSlashes(csafDocument.tracking.id))
+      : undefined
   );
   let encodedPublisherNamespace = $derived(
-    document.publisher?.name ? encodeURIComponent(addSlashes(document.publisher?.name)) : undefined
+    csafDocument?.publisher?.name
+      ? encodeURIComponent(addSlashes(csafDocument.publisher.name))
+      : undefined
+  );
+  let json = $derived(
+    appStore.state.webview.rawDoc ? JSON.stringify(appStore.state.webview.rawDoc, null, 2) : ""
   );
 
   const setAsReadTimeout: number[] = [];
@@ -144,7 +161,7 @@
   };
 
   const loadDocument = async () => {
-    document = {};
+    csafDocument = {};
     appStore.setDocument(null);
     isInconsistent = false;
     documentNotFound = false;
@@ -161,7 +178,7 @@
       if (!isResultConsistent(params, result.document)) {
         isInconsistent = true;
       }
-      ({ document } = result);
+      csafDocument = result.document;
       appStore.setRawDocument(result);
       const docModel = convertToDocModel(result);
       appStore.setDocument(docModel);
@@ -191,7 +208,7 @@
   };
 
   const loadEvents = async () => {
-    if (!document || !encodedPublisherNamespace || !encodedTrackingID) return;
+    if (!csafDocument || !encodedPublisherNamespace || !encodedTrackingID) return;
     if (loadEventsAbortController) {
       loadEventsAbortController.abort();
     }
@@ -213,7 +230,7 @@
   };
 
   const loadComments = async (): Promise<CommentEvent[] | undefined> => {
-    if (!document || !encodedPublisherNamespace || !encodedTrackingID) return;
+    if (!csafDocument || !encodedPublisherNamespace || !encodedTrackingID) return;
     if (loadCommentsAbortController) {
       loadCommentsAbortController.abort();
     }
@@ -264,7 +281,7 @@
   };
 
   const buildHistory = async () => {
-    if (!canSeeCommentArea || !document || !encodedPublisherNamespace || !encodedTrackingID) {
+    if (!canSeeCommentArea || !csafDocument || !encodedPublisherNamespace || !encodedTrackingID) {
       historyEntries = [];
       return;
     }
@@ -481,7 +498,7 @@
       }
     }
     if (couldNotLoadDocument || isInconsistent) return;
-    if (document) {
+    if (csafDocument) {
       await loadFourCVEs();
       await loadDocumentSSVC();
       await buildHistory();
@@ -492,7 +509,7 @@
         advisoryState === NEW &&
         canSetStateRead(advisoryState) &&
         (advisoryVersions.length === 1 ||
-          advisoryVersions[0].version === document.tracking?.version)
+          advisoryVersions[0].version === csafDocument.tracking?.version)
       ) {
         const id: any = setTimeout(async () => {
           if (advisoryState === "new" && canSetStateRead(advisoryState)) {
@@ -542,6 +559,25 @@
       lastSuccessfulForwardTarget = selectedForwardTarget;
     }
   };
+
+  const downloadRawDocument = () => {
+    if (downloadAbortController) {
+      downloadAbortController.abort();
+    }
+    downloadAbortController = new AbortController();
+    const file = new Blob([json], { type: "application/json" });
+    let a = document.createElement("a"),
+      url = URL.createObjectURL(file);
+    a.href = url;
+    a.download = `${appStore.state.webview.rawDoc.document.tracking.id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 0);
+  };
+
   onDestroy(() => {
     appStore.setDocument(null);
     advisorySearchState.matchIndex = -1;
@@ -589,7 +625,7 @@
 </script>
 
 <svelte:head>
-  <title>{documentNotFound ? "Document not found" : document.tracking?.id}</title>
+  <title>{documentNotFound ? "Document not found" : csafDocument.tracking?.id}</title>
 </svelte:head>
 
 <Modal bind:open={openForwardModal}>
@@ -621,7 +657,7 @@
       <span>The URL doesn't reference any document</span>
     </div>
   {:else if isInconsistent}
-    <InconsistencyMessage {document} {params}></InconsistencyMessage>
+    <InconsistencyMessage document={csafDocument} {params}></InconsistencyMessage>
   {:else if !couldNotLoadDocument && !isInconsistent}
     <div
       class="sticky -top-6 z-100 flex w-full flex-none flex-col bg-white pt-6 lg:static lg:pt-0 dark:bg-gray-800"
@@ -630,7 +666,7 @@
         <Label class="text-lg">
           <span class="mr-2">
             <SearchableText
-              text={document.tracking ? document.tracking.id : ""}
+              text={csafDocument.tracking ? csafDocument.tracking.id : ""}
               textPath="/document/tracking/id"
             />
           </span>
@@ -638,7 +674,42 @@
             <Tlp tlp={appStore.state.webview.doc?.tlp.label}></Tlp>
           {/if}
         </Label>
-        <RawDocument />
+        <div class="flex gap-1">
+          <ButtonGroup color="light" size="sm" class="h-7">
+            <RadioButton
+              checkedClass={selectedClass}
+              title="View raw document"
+              value={false}
+              bind:group={showRawDocument}
+            >
+              <GridRowBottom />
+            </RadioButton>
+            <RadioButton
+              checkedClass={selectedClass}
+              title="View raw document"
+              value={true}
+              bind:group={showRawDocument}
+            >
+              <Code />
+            </RadioButton>
+          </ButtonGroup>
+          <Button
+            onclick={downloadRawDocument}
+            class="h-7 py-1"
+            color="light"
+            size="xs"
+            title="Download document"
+          >
+            <ArrowInDownSquareHalf />
+          </Button>
+          <CopyButton
+            errorMessage="Could not copy the document"
+            showBorder={true}
+            title="Copy document"
+            tooltipPlacement="bottomright"
+            value={json}
+          />
+        </div>
         {#if isLoadingSearchMatches}
           <Spinner color="gray" size="4"></Spinner>
         {:else if appStore.state.app.search.term && appStore.state.webview.doc && !appStore.state.app.search.advanced}
@@ -650,7 +721,7 @@
       >
         <div class="flex flex-col gap-2">
           <Label class="mt-4 max-w-full hyphens-auto text-gray-600 [word-wrap:break-word]"
-            >{document.publisher ? document.publisher.name : ""}</Label
+            >{csafDocument.publisher ? csafDocument.publisher.name : ""}</Label
           >
         </div>
         <div class="mt-4 flex h-fit flex-row gap-2 self-center">
@@ -764,13 +835,13 @@
         <div class="mb-2 flex flex-col gap-2">
           {#if advisoryVersions?.length > 0}
             <Version
-              publisherNamespace={document.publisher?.name}
+              publisherNamespace={csafDocument.publisher?.name}
               {advisoryVersions}
               selectedDocumentVersion={{
-                id: document.id,
-                tracking_id: document.tracking?.id,
-                tracking_status: document.tracking?.status,
-                version: document.tracking?.version
+                id: csafDocument.id,
+                tracking_id: csafDocument.tracking?.id,
+                tracking_status: csafDocument.tracking?.status,
+                version: csafDocument.tracking?.version
               }}
               selectedDiffDocuments={() => (isDiffOpen = true)}
               onDisabledDiff={() => (isDiffOpen = false)}
@@ -782,16 +853,20 @@
             <Diff showTitle={false}></Diff>
           {:else}
             {#if appStore.state.webview.doc}
-              <Webview
-                basePath={"#/advisories/" +
-                  document.publisher?.name +
-                  "/" +
-                  document.tracking?.id +
-                  "/documents/" +
-                  params.id +
-                  "/"}
-                {position}
-              ></Webview>
+              {#if showRawDocument}
+                <RawDocument />
+              {:else}
+                <Webview
+                  basePath={"#/advisories/" +
+                    csafDocument.publisher?.name +
+                    "/" +
+                    csafDocument.tracking?.id +
+                    "/documents/" +
+                    params.id +
+                    "/"}
+                  {position}
+                ></Webview>
+              {/if}
             {:else}
               <div class="mt-32 ml-32">
                 <Spinner color="gray" size="8"></Spinner>
