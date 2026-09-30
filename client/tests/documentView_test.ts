@@ -102,14 +102,13 @@ test("Advisory view is working", async ({ page }) => {
 
   // Test view of raw document
   expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
-  await page.getByRole("button", { name: "View raw document" }).click();
-  expect(page.getByRole("heading", { name: "Raw document" })).toBeVisible();
+  await page.getByTitle("View raw document").click({ force: true });
   expect(page.getByText(`"document": {`)).toBeVisible();
   const copyButton = page.getByRole("button", { name: "Copy document" });
   await copyButton.click();
   expect(page.getByText("Copied")).toBeVisible();
-  await page.getByRole("button", { name: "Close dialog" }).click();
-  await copyButton.waitFor({ state: "hidden" });
+  await page.getByTitle("Open normal document view").click({ force: true });
+  expect(page.getByText(`"document": {`)).not.toBeVisible();
 
   // Switch version and check if there is a link at the comment that leads to the previous document
   await page
