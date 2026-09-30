@@ -104,9 +104,9 @@ test("Advisory view is working", async ({ page }) => {
   expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
   await page.getByTitle("View raw document").click({ force: true });
   expect(page.getByText(`"document": {`)).toBeVisible();
-  const copyButton = page.getByRole("button", { name: "Copy document" });
+  const copyButton = page.getByRole("button", { name: "Copy raw document" });
   await copyButton.click();
-  expect(page.getByText("Copied")).toBeVisible();
+  expect(page.getByText("Copied raw document")).toBeVisible();
   await page.getByTitle("Open normal document view").click({ force: true });
   expect(page.getByText(`"document": {`)).not.toBeVisible();
 
