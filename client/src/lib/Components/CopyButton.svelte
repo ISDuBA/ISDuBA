@@ -17,6 +17,7 @@
     errorMessage: string;
     paddingClass?: string;
     showBorder?: boolean;
+    successMessage?: string;
     title: string;
     tooltipPlacement?: "topright" | "bottomright";
     value: string;
@@ -26,6 +27,7 @@
     errorMessage,
     paddingClass = "py-1",
     showBorder = false,
+    successMessage = "Copied",
     title,
     tooltipPlacement = "topright",
     value
@@ -80,7 +82,7 @@
       {#if copyState === "success"}
         <div class="flex items-center gap-1">
           <Check />
-          <span>Copied</span>
+          <span>{successMessage}</span>
         </div>
       {:else}
         {errorMessage}

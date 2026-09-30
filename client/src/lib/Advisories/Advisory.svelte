@@ -705,7 +705,8 @@
           <CopyButton
             errorMessage="Could not copy the document"
             showBorder={true}
-            title="Copy document"
+            successMessage="Copied raw document"
+            title="Copy raw document"
             tooltipPlacement="bottomright"
             value={json}
           />
