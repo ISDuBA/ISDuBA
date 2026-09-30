@@ -150,7 +150,6 @@ func transformJSON(document any, replace replacer) {
 
 	array = func(arr []any) {
 		for i, v := range arr {
-			_ = i
 			switch x := v.(type) {
 			case string:
 				if y, ok := replace(keys, x); ok {
@@ -280,6 +279,49 @@ func StoreFilename(filename string) DocumentStoreChainFunc {
 	}
 }
 
+// extractProductsMetadata walks the product_tree and collects the indices
+// of all product names and product ids that were indexed by transformJSON.
+func extractProductsMetadata(doc any, idxer *indexer[string]) (nameIndices, idIndices []int) {
+	docMap, ok := doc.(map[string]any)
+	if !ok {
+		return
+	}
+
+	productTree, ok := docMap["product_tree"].(map[string]any)
+	if !ok {
+		return
+	}
+
+	addUnique := func(indices *[]int, s string) {
+		if idx := idxer.index(s); !slices.Contains(*indices, idx) {
+			*indices = append(*indices, idx)
+		}
+	}
+
+	var walkProducts func(any)
+	walkProducts = func(v any) {
+		switch val := v.(type) {
+		case map[string]any:
+			if name, ok := val["name"].(string); ok {
+				addUnique(&nameIndices, name)
+			}
+			if id, ok := val["product_id"].(string); ok {
+				addUnique(&idIndices, id)
+			}
+			for _, item := range val {
+				walkProducts(item)
+			}
+		case []any:
+			for _, item := range val {
+				walkProducts(item)
+			}
+		}
+	}
+
+	walkProducts(productTree)
+	return
+}
+
 // ImportDocument imports a given advisory into the database.
 func ImportDocument(
 	ctx context.Context,
@@ -328,11 +370,14 @@ func ImportDocumentData(
 
 	idxer := newIndexer[string]()
 
+	productsNameIndices, productsIDIndices := extractProductsMetadata(
+		document,
+		idxer)
+
 	var bad []string
-	var reps []replacer
 
 	transformJSON(document, chainReplacers(
-		append(reps,
+		[]replacer{
 			badStrings(&bad),
 			storer(&tlp, &tlpOk, "document", "distribution", "tlp", "label"),
 			storer(&publisher, &publisherOK, "document", "publisher", "name"),
@@ -343,7 +388,7 @@ func ImportDocumentData(
 			keepByKeys(excludeKeys),
 			keepByValues(excludeValues),
 			replaceByIndex(idxer.index),
-		)...))
+		}...))
 
 	// Check if there where some string decoding errors.
 	if len(bad) > 0 {
@@ -397,6 +442,8 @@ func ImportDocumentData(
 			`ON d.id = t.documents_id JOIN unique_texts u ` +
 			`ON t.txt_id = u.id ` +
 			`WHERE d.advisories_id = $1`
+		insertProductsNameTexts = `INSERT INTO products_name_texts (documents_id, num, txt_id) VALUES ($1, $2, $3)`
+		insertProductsIDTexts   = `INSERT INTO products_id_texts (documents_id, num, txt_id) VALUES ($1, $2, $3)`
 	)
 
 	// We need an advisory before we insert a document.
@@ -527,6 +574,23 @@ func ImportDocumentData(
 	}
 	if err := tx.SendBatch(ctx, batch).Close(); err != nil {
 		return 0, fmt.Errorf("inserting txt failed: %w", err)
+	}
+
+	productsBatch := &pgx.Batch{}
+	queueProducts := func(indices []int, sqlText string) {
+		for i, idx := range indices {
+			if idx >= 0 && idx < len(txtIDs) && txtIDs[idx] != -1 {
+				productsBatch.Queue(sqlText, id, i, txtIDs[idx])
+			}
+		}
+	}
+	queueProducts(productsNameIndices, insertProductsNameTexts)
+	queueProducts(productsIDIndices, insertProductsIDTexts)
+
+	if productsBatch.Len() > 0 {
+		if err := tx.SendBatch(ctx, productsBatch).Close(); err != nil {
+			return 0, fmt.Errorf("inserting products txt failed: %w", err)
+		}
 	}
 
 	if inTx != nil {
