@@ -12,6 +12,7 @@
   import hljs from "highlight.js";
   import json from "highlight.js/lib/languages/json";
   import "highlight.js/styles/stackoverflow-light.css";
+  import DOMPurify from "dompurify";
 
   hljs.registerLanguage("json", json);
 
@@ -20,7 +21,8 @@
   );
 
   let docWithHighlighting = $derived.by(() => {
-    return hljs.highlight(rawDoc, { language: "json" }).value;
+    const html = hljs.highlight(rawDoc, { language: "json" }).value;
+    return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
   });
 </script>
 
