@@ -226,7 +226,7 @@ func ChainInTx(inTxs ...DocumentStoreChainFunc) DocumentStoreChainFunc {
 	}
 }
 
-// StoreFilename returns a function to store the file name along side the document.
+// StoreFilename returns a function to store the file name alongside the document.
 func StoreFilename(filename string) DocumentStoreChainFunc {
 	return func(ctx context.Context, tx pgx.Tx, docID int64, duplicate bool) error {
 		if duplicate {
@@ -268,6 +268,21 @@ func ImportDocument(
 	return ImportDocumentData(ctx, conn, document, buf.Bytes(), actor, pstlps, inTx, dry)
 }
 
+func indexDocument(document any, pre ...replacer) *indexer[string] {
+	idxer := newIndexer[string]()
+
+	reps := append(pre,
+		keepAndIndex(idxer.index, "document", "publisher", "name"),
+		keepAndIndex(idxer.index, "document", "title"),
+		keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
+		keepByKeys(excludeKeys),
+		replaceByIndex(idxer.index),
+	)
+
+	transformJSON(document, chainReplacers(reps...))
+	return idxer
+}
+
 // ImportDocumentData imports a given advisory into the database.
 func ImportDocumentData(
 	ctx context.Context,
@@ -286,23 +301,13 @@ func ImportDocumentData(
 		trackingID, trackingIDOK = "", false
 	)
 
-	idxer := newIndexer[string]()
-
 	var bad []string
-	var reps []replacer
-
-	transformJSON(document, chainReplacers(
-		append(reps,
-			badStrings(&bad),
-			storer(&tlp, &tlpOk, "document", "distribution", "tlp", "label"),
-			storer(&publisher, &publisherOK, "document", "publisher", "name"),
-			storer(&trackingID, &trackingIDOK, "document", "tracking", "id"),
-			keepAndIndex(idxer.index, "document", "publisher", "name"),
-			keepAndIndex(idxer.index, "document", "title"),
-			keepAndIndexSuffix(idxer.index, "vulnerabilities", "cve"),
-			keepByKeys(excludeKeys),
-			replaceByIndex(idxer.index),
-		)...))
+	idxer := indexDocument(document,
+		badStrings(&bad),
+		storer(&tlp, &tlpOk, "document", "distribution", "tlp", "label"),
+		storer(&publisher, &publisherOK, "document", "publisher", "name"),
+		storer(&trackingID, &trackingIDOK, "document", "tracking", "id"),
+	)
 
 	// Check if there where some string decoding errors.
 	if len(bad) > 0 {
