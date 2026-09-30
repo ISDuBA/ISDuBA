@@ -678,7 +678,7 @@
           <ButtonGroup color="light" size="sm" class="h-7">
             <RadioButton
               checkedClass={selectedClass}
-              title="View raw document"
+              title="Open normal document view"
               value={false}
               bind:group={showRawDocument}
             >
