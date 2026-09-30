@@ -41,7 +41,13 @@
 </svelte:head>
 
 <div>
-  <pre>
+  <pre id="raw-document">
     {@html docWithHighlighting}
   </pre>
 </div>
+
+<style>
+  #raw-document {
+    text-wrap: wrap;
+  }
+</style>
