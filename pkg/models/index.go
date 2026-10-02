@@ -92,6 +92,7 @@ func keepAndIndexSuffix(index func(string) int, path ...string) replacer {
 	}
 }
 
+// transformJSON replaces defined things in-place in the document.
 func transformJSON(document any, replace replacer) {
 	var (
 		array  func(arr []any)
@@ -111,7 +112,6 @@ func transformJSON(document any, replace replacer) {
 				array(x)
 			case map[string]any:
 				object(x)
-
 			}
 		}
 	}

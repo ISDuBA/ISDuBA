@@ -19,9 +19,9 @@ import (
 )
 
 // batchSize to process only a managable amount of documents each iteration
-const batchSize = 100
+const batchSize = 20
 
-// UdateDocumentsIndex reindexes all documents from their originals
+// UpdateDocumentsIndex reindexes all documents from their originals
 func UpdateDocumentsIndex(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -38,8 +38,12 @@ func UpdateDocumentsIndex(
 		original   []byte
 	}
 
-	var last, total int64
-	for {
+	total := 0
+	defer func() {
+		slog.Info("updated documents index", "total", total)
+	}()
+
+	for last := int64(0); ; {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
@@ -52,7 +56,7 @@ func UpdateDocumentsIndex(
 		var batch []docRow
 		for rows.Next() {
 			var row docRow
-			if err := rows.Scan(*&row.id, *&row.advisoryID, &row.original); err != nil {
+			if err := rows.Scan(&row.id, &row.advisoryID, &row.original); err != nil {
 				return fmt.Errorf("scanning document failed: %w", err)
 			}
 			batch = append(batch, row)
@@ -70,13 +74,15 @@ func UpdateDocumentsIndex(
 			}
 			last = row.id
 		}
-		total += int64(len(batch))
-		slog.Info("updated documents index", "total", total, "last_id", last)
+		total += len(batch)
+		if total%500 == 0 {
+			slog.Info("updated documents index", "total", total, "last_id", last)
+		}
 	}
 }
 
 // updateDocumentIndex redoes indexing of one document from its original
-// and stores the updated texts in the database
+// and stores the updated texts in the database.
 func updateDocumentIndex(ctx context.Context, tx pgx.Tx, id, advisoryID int64, original []byte) error {
 	const (
 		updateDoc  = `UPDATE documents SET document = $1 WHERE id = $2`
@@ -88,6 +94,7 @@ func updateDocumentIndex(ctx context.Context, tx pgx.Tx, id, advisoryID int64, o
 		return fmt.Errorf("decoding original failed: %w", err)
 	}
 
+	// indexDocument side-effects the given document.
 	idxer := indexDocument(document)
 
 	if _, err := tx.Exec(ctx, updateDoc, document, id); err != nil {
