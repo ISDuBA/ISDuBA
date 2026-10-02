@@ -15,11 +15,14 @@ import (
 )
 
 func init() {
-	RegisterMigrationCode("update_documents_index", func(ctx context.Context, t Transaction) error {
-		tx, err := t.Transaction(ctx)
-		if err != nil {
-			return err
-		}
-		return models.UpdateDocumentsIndex(ctx, tx)
-	})
+	RegisterMigrationCode("update_documents_index", updateDocumentsIndex)
+}
+
+// updateDocumentsIndex inserts missing entries into fulltext index.
+func updateDocumentsIndex(ctx context.Context, t Transaction) error {
+	tx, err := t.Transaction(ctx)
+	if err != nil {
+		return err
+	}
+	return models.UpdateDocumentsIndex(ctx, tx)
 }
