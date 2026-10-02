@@ -21,6 +21,7 @@ import (
 // batchSize to process only a managable amount of documents each iteration
 const batchSize = 100
 
+// UdateDocumentsIndex reindexes all documents from their originals
 func UpdateDocumentsIndex(
 	ctx context.Context,
 	tx pgx.Tx,
