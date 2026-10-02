@@ -95,7 +95,7 @@ The following will briefly explain what every other script does. It's not necess
 #### [installkeycloak.sh](./installkeycloak.sh)
  Installs keycloak version 26, creates a keycloak user on your system and gives them the ownership over it.
  
-#### [installplaywright.sh](./installplaywright.sh)
+#### [installclient.sh](./installclient.sh)
  Installs ca-certificates, curl, gnupg and playwright with dependencies.
  
 #### [installpostgres.sh](./installpostgres.sh)
@@ -108,7 +108,7 @@ The following will briefly explain what every other script does. It's not necess
    * [curl](https://curl.se/)
    * [sed](https://www.gnu.org/software/sed/)
    * [tar](https://www.gnu.org/software/tar/)
-   * [Java (openjdk-21-jre-headless)](https://openjdk.org/projects/jdk/21/)
+   * [Java (openjdk-25-jre-headless)](https://openjdk.org/projects/jdk/25/)
    * [Go](https://go.dev/)
    * [xkcdpass](https://pypi.org/project/xkcdpass/)
    * [graphviz](https://graphviz.org/)
