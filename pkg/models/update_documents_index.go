@@ -29,8 +29,11 @@ func UpdateDocumentsIndex(
 	globalInsertLock.Lock()
 	defer globalInsertLock.Unlock()
 
-	const selectBatch = `SELECT id, advisories_id, original ` +
-		`FROM documents WHERE id > $1 ORDER BY id LIMIT $2`
+	const (
+		selectBatch = `SELECT id, advisories_id, original ` +
+			`FROM documents WHERE id > $1 ORDER BY id LIMIT $2`
+		truncateDocTexts = `TRUNCATE documents_texts`
+	)
 
 	type docRow struct {
 		id         int64
@@ -43,6 +46,10 @@ func UpdateDocumentsIndex(
 		slog.Info("updated documents index", "total", total)
 	}()
 
+	_, err := tx.Exec(ctx, truncateDocTexts)
+	if err != nil {
+		return fmt.Errorf("truncating documents_texts failed: %w", err)
+	}
 	for last := int64(0); ; {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -85,8 +92,7 @@ func UpdateDocumentsIndex(
 // and stores the updated texts in the database.
 func updateDocumentIndex(ctx context.Context, tx pgx.Tx, id, advisoryID int64, original []byte) error {
 	const (
-		updateDoc  = `UPDATE documents SET document = $1 WHERE id = $2`
-		deleteText = `DELETE FROM documents_texts WHERE documents_id = $1`
+		updateDoc = `UPDATE documents SET document = $1 WHERE id = $2`
 	)
 
 	var document any
@@ -99,10 +105,6 @@ func updateDocumentIndex(ctx context.Context, tx pgx.Tx, id, advisoryID int64, o
 
 	if _, err := tx.Exec(ctx, updateDoc, document, id); err != nil {
 		return fmt.Errorf("updating document failed: %w", err)
-	}
-
-	if _, err := tx.Exec(ctx, deleteText, id); err != nil {
-		return fmt.Errorf("deleting old texts failed: %w", err)
 	}
 
 	return storeDocumentTexts(ctx, tx, advisoryID, id, idxer)
