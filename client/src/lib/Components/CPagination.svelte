@@ -56,7 +56,7 @@
 
   <div class="flex flex-row flex-wrap items-center">
     <input
-      class={`${numberOfPages < 10000 ? "w-16" : "w-20"} cursor-pointer border pr-1 text-right dark:bg-gray-800 dark:text-white`}
+      class={`${numberOfPages < 10000 ? "w-16" : "w-20"} border pr-1 text-right dark:bg-gray-800 dark:text-white`}
       onchange={onChange}
       bind:value={currentPage}
     />

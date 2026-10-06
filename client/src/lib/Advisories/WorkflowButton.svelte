@@ -41,8 +41,7 @@
     }
   });
 
-  const buttonClass =
-    "h-fit w-fit rounded-xs border-0 p-0 hover:bg-transparent cursor-pointer disabled:cursor-default";
+  const buttonClass = "h-fit w-fit rounded-xs border-0 p-0 hover:bg-transparent";
 </script>
 
 <button
