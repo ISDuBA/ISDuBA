@@ -256,9 +256,9 @@
 {/snippet}
 
 <div class="flex-grow">
-  <div class="mt-2 mb-2 flex flex-row items-baseline justify-between">
+  <div class="mt-4 mb-2 flex flex-row items-baseline justify-between">
     {#if documents?.length > 0}
-      <div class="flex flex-row items-baseline gap-8">
+      <div class="flex flex-row gap-8">
         {#if isMultiSelectionAllowed}
           <div class="flex items-center gap-2">
             {#if appStore.isAdmin()}
@@ -321,9 +321,12 @@
         {/if}
         <div class="flex items-baseline gap-2">
           <Select
-            size="md"
+            classes={{
+              select: "h-8 py-0"
+            }}
+            size="sm"
             id="pagecount"
-            class="mt-2 h-8 w-24 !p-2 leading-3"
+            class="w-24"
             items={[
               { name: "10", value: 10 },
               { name: "25", value: 25 },
