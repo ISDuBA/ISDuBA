@@ -23,7 +23,7 @@
     dtClass,
     ddClass
   } from "$lib/Sources/source";
-  import { Button, Spinner, Modal, List, DescriptionList } from "flowbite-svelte";
+  import { Button, Spinner, Modal, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
   import type { CSAFProviderMetadata } from "$lib/provider";
@@ -38,6 +38,7 @@
   import ImportStats from "$lib/Statistics/ImportStats.svelte";
   import CBadge from "$lib/Components/CBadge.svelte";
   import { Check, Save, Trash } from "@boxicons/svelte";
+  import SourceMetaData from "./SourceMetaData.svelte";
 
   interface Props {
     params: any;
@@ -325,46 +326,20 @@
 {#if source.id !== 0}
   <div class="mb-3 grid w-full grid-cols-1 justify-stretch gap-10 lg:grid-cols-2">
     <div class="w-full">
-      <List tag="dl" class="w-full divide-y divide-gray-200 text-sm">
-        <div>
-          <DescriptionList tag="dt" class={dtClass}>Domain/PMD</DescriptionList>
-          <DescriptionList tag="dd" class={ddClass}>{source.url}</DescriptionList>
-        </div>
-        {#if pmd}
+      <SourceMetaData {pmd} {source}>
+        {#snippet extension()}
           <div>
-            <DescriptionList tag="dt" class={dtClass}>Canonical URL</DescriptionList>
-            <DescriptionList tag="dd" class={ddClass}>{pmd.canonical_url}</DescriptionList>
-          </div>
-          <div>
-            <DescriptionList tag="dt" class={dtClass}>Publisher Name</DescriptionList>
-            <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.name}</DescriptionList>
-          </div>
-          <div>
-            <DescriptionList tag="dt" class={dtClass}>Publisher Contact</DescriptionList>
-            <DescriptionList tag="dd" class={ddClass}
-              >{pmd.publisher.contact_details}</DescriptionList
-            >
-          </div>
-          <div>
-            {#if pmd.publisher.issuing_authority}
-              <DescriptionList tag="dt" class={dtClass}>Issuing Authority</DescriptionList>
-              <DescriptionList tag="dd" class={ddClass}
-                >{pmd.publisher.issuing_authority}</DescriptionList
-              >
+            <DescriptionList tag="dt" class={dtClass}>Status</DescriptionList>
+            {#if source.status}
+              {#each source.status as s, i (`sourceeditor-${uid}-${i}`)}
+                <DescriptionList tag="dd" class={ddClass}>{s}</DescriptionList>
+              {/each}
+            {:else}
+              <DescriptionList tag="dd" class={ddClass}>OK</DescriptionList>
             {/if}
           </div>
-        {/if}
-        <div>
-          <DescriptionList tag="dt" class={dtClass}>Status</DescriptionList>
-          {#if source.status}
-            {#each source.status as s, i (`sourceeditor-${uid}-${i}`)}
-              <DescriptionList tag="dd" class={ddClass}>{s}</DescriptionList>
-            {/each}
-          {:else}
-            <DescriptionList tag="dd" class={ddClass}>OK</DescriptionList>
-          {/if}
-        </div>
-      </List>
+        {/snippet}
+      </SourceMetaData>
       {#if source.stats}
         <h4 class="mt-3">Status</h4>
         <div class="grid w-full grid-cols-[max-content_max-content_max-content] gap-x-4 text-sm">

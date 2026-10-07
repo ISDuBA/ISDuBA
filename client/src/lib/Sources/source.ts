@@ -12,8 +12,8 @@ import type { Result } from "$lib/types";
 import type { CSAFProviderMetadata } from "$lib/provider";
 import type { AggregatorMetadata } from "$lib/aggregatorTypes";
 
-const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
-const ddClass: string = "text-md break-words font-semibold ml-2 mb-1";
+const dtClass: string = "mt-1 text-gray-500 md:text-sm dark:text-gray-400";
+const ddClass: string = "text-md text-gray-900 dark:text-gray-100 break-words mb-1";
 
 type Source = {
   id?: number;

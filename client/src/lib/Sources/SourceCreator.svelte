@@ -21,7 +21,7 @@
     resetSourceAttention
   } from "$lib/Sources/source";
   import SectionHeader from "$lib/SectionHeader.svelte";
-  import { Input, Label, Button, Spinner, List, DescriptionList } from "flowbite-svelte";
+  import { Input, Label, Button, Spinner } from "flowbite-svelte";
   import SourceForm from "./SourceForm.svelte";
   import type { CSAFProviderMetadata } from "$lib/provider";
   import { push } from "$routes/router.svelte";
@@ -32,6 +32,7 @@
   import validator from "validator";
   import type { InputProps } from "flowbite-svelte";
   import { Check, Save } from "@boxicons/svelte";
+  import SourceMetaData from "./SourceMetaData.svelte";
 
   interface Props {
     params: any;
@@ -71,8 +72,6 @@
   });
 
   let formClass = "max-w-[800pt]";
-  const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
-  const ddClass: string = "break-words font-semibold ml-2 mb-1";
   let loadingPMD: boolean = $state(false);
 
   let pmd: CSAFProviderMetadata | null = $state(null);
@@ -161,36 +160,7 @@
 <div>
   <SectionHeader title="Add new CSAF trusted provider"></SectionHeader>
   {#if params?.domain}
-    <List tag="dl" class="divide-y divide-gray-200 text-sm 2xl:w-max">
-      <div>
-        <DescriptionList tag="dt" class={dtClass}>Domain/PMD</DescriptionList>
-        <DescriptionList tag="dd" class={ddClass}>{source.url}</DescriptionList>
-      </div>
-      {#if pmd}
-        <div>
-          <DescriptionList tag="dt" class={dtClass}>Canonical URL</DescriptionList>
-          <DescriptionList tag="dd" class={ddClass}>{pmd.canonical_url}</DescriptionList>
-        </div>
-        <div>
-          <DescriptionList tag="dt" class={dtClass}>Publisher Name</DescriptionList>
-          <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.name}</DescriptionList>
-        </div>
-        <div>
-          <DescriptionList tag="dt" class={dtClass}>Publisher Contact</DescriptionList>
-          <DescriptionList tag="dd" class={ddClass}>{pmd.publisher.contact_details}</DescriptionList
-          >
-        </div>
-        <div>
-          {#if pmd.publisher.issuing_authority}
-            <DescriptionList tag="dt" class={dtClass}>Issuing Authority</DescriptionList>
-            <DescriptionList tag="dd" class={ddClass}
-              >{pmd.publisher.issuing_authority}</DescriptionList
-            >
-          {/if}
-        </div>
-      {/if}
-    </List>
-
+    <SourceMetaData {pmd} {source} />
     <SourceForm bind:this={sourceForm} {inputChange} {formClass} bind:source></SourceForm>
     <FeedView bind:feeds={pmdFeeds}></FeedView>
 
