@@ -181,11 +181,7 @@
           {#if placeholderFeed}
             <TableBodyCell class={tdClass}>{feed.label}</TableBodyCell>
             <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
-              <button
-                class="cursor-pointer"
-                onclick={async () => await clickFeed(feed)}
-                aria-label="View feed archive"
-              >
+              <button onclick={async () => await clickFeed(feed)} aria-label="View feed archive">
                 <Archive />
               </button>
             </TableBodyCell>
@@ -218,10 +214,8 @@
               class={`${tdClass} break-all whitespace-normal`}
             >
               {#if edit && feed.enable}
-                <button
-                  class="cursor-pointer"
-                  onclick={async () => await clickFeed(feed)}
-                  aria-label="View feed details">{feed.url}</button
+                <button onclick={async () => await clickFeed(feed)} aria-label="View feed details"
+                  >{feed.url}</button
                 >
               {:else}
                 <span class="text-amber-600">
@@ -254,7 +248,6 @@
               {#if feed.enable}
                 <TableBodyCell onclick={async () => await clickFeed(feed)} class={tdClass}>
                   <button
-                    class="cursor-pointer"
                     onclick={async () => await clickFeed(feed)}
                     aria-label="View feed archive"
                   >

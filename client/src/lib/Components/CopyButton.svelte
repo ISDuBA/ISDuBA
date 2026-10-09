@@ -34,7 +34,7 @@
 </script>
 
 <div class="relative">
-  <button onclick={copyToClipboard} class="cursor-pointer" disabled={!value} {title}>
+  <button onclick={copyToClipboard} disabled={!value} {title}>
     <Copy />
   </button>
   {#if copyState}
