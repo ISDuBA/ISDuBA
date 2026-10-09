@@ -120,28 +120,8 @@ The following will briefly explain what every other script does. It's not necess
 #### [start_all.sh](./start_all.sh)
  Requires sudo privileges. Starts isdubad, the isduba client and keycloak. Is not called during setup, but is necessary for the integration-tests.
 
-### Keycloak-scripts
-
-All these following scripts will adjust Keycloak to create a development setup with example users and groups as outlined in [the users example file list users.txt.](../../developer/users.txt).
-Aside from [configureKeycloak.sh](#configurekeycloak.sh), these scripts require Keycloak to be running and you to be able to log into keycloak.
- 
-#### [assignUserToRoleAndGroup.sh](./keycloak/assignUserToRoleAndGroup.sh)
- Can be used to give ISDuBA users a role or a group. 
-
-```
- Usage: assignUserToRoleAndGroup.sh name OPTIONS"
- where name:
-   -n, --name=name                  username of the user to be added to roles or groups.
- where OPTIONS:
-   -h, --help                       show this help text and exit script (optional).
-   -g, --group=name                 name of the group the user should be added to (optional).
-   -r, --role=name                  name of the role the user should be added to (optional).
-       --noLogin                    do not attempt to log into keycloak. Requires active 
-login to not cause errors (optional).
-```
-
 #### [configureKeycloak.sh](./keycloak/configureKeycloak.sh)
- If not signalled to be already running, starts Keycloak, creates an admin user if it doesn't exist yet and calls all other Keycloak scripts with default values.
+ If not signalled to be already running, starts Keycloak, creates an admin user if it doesn't exist yet and imports the realm from [./keycloak/isduba-realm.json](./keycloak/isduba-realm.json)
  
 ```
  Usage: configureKeycloak.sh [OPTIONS]
@@ -151,54 +131,4 @@ login to not cause errors (optional).
  -f, --file                       Specify file storing the keycloak admin password. (optional, default: ./../password.txt)
  -l, --live                       Specify the port which accepts keycloak health checks. (Optional, default: 9000)
  -p, --password                   Specify the keycloak admin password directly (optional).
-```
-
-#### [createGroup.sh](./keycloak/createGroup.sh)
- [Create a group](./../keycloak.md#groups) for ISDuBAs Keycloak. 
-```
-Usage: createGroup.sh [OPTIONS] --name name
- where OPTIONS:
- -h, --help                       show this help text and exit script (optional).
- -w, --white                      grant the group access to TLP:WHITE advisories (optional).
- -g, --green                      grant the group access to TLP:GREEN advisories (optional).
- -a, --amber                      grant the group access to TLP:AMBER advisories (optional).
- -r, --red                        grant the group access to TLP:RED advisories (optional).
- -p, --publisher=name             restrict access to advisories of the named publisher (optional).
-     --noLogin                    do not attempt to log into keycloak. Requires active login to not cause errors (optional).
-and 
- -n, --name=name                  name of the group that is supposed to be created (mandatory).
-```
-
-#### [createRealm.sh](./keycloak/createRealm.sh)
- Creates an `isduba` Keycloak realm that can be used to manage all ISDuBA-users.
-
-#### [createRole.sh](./keycloak/createRole.sh)
- [Create a role] for ISDuBAs Keycloak. ISDuBA uses a set set of roles that are created during the initial setup, so there should be no reason to call this script manually.
-``` 
- Usage: createRole name description [login]
- where:
-  name: name of the role
-  description: description of the role
-  login=[true|false]: Whether to log into keycloak again (default:true).
-```
-#### [createUser.sh](./keycloak/createUser.sh)
- Creates a singular user for ISDuBA, along with credentials.
-```
- Usage: createUser.sh username first_name last_name email_address password [login]
- where:
-  username: username of the user
-  first_name: first name of the user
-  last_name: surname of the user
-  email_address: the users registrered email-address
-  password: password of the user
-  login=[true|false]: whether to login to keycloak again (default:true)
-```
-#### [createUsers.sh](./keycloak/createUsers.sh)
- Reads users to be created from a file and calls the [createUser skript](#createuser.sh) to create them.
-```
-Usage: createUsers.sh OPTIONS"
-where OPTIONS:"
-  -h, --help                       show this help text and exit script (optional).
-  -f, --file=file                  name of the file that contains all user information (mandatory).
-      --noLogin                    do not attempt to log into keycloak. Requires active login to not cause errors (optional).
 ```
