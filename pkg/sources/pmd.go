@@ -21,18 +21,26 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/cache"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/gocsaf/csaf/v3/csaf"
+	v20 "github.com/gocsaf/csaf/v3/csaf/v20"
+	v21 "github.com/gocsaf/csaf/v3/csaf/v21"
 	"github.com/gocsaf/csaf/v3/util"
 )
 
 // holdingPMDsDuration is the duration how long PMDs are cached.
 const holdingPMDsDuration = time.Minute * 15
 
+type pmdModel struct {
+	version csaf.SpecVersion
+	v20     *v20.Provider
+	v21     *v21.Provider
+}
+
 // CachedProviderMetadata holds a loaded PMD and enables access to
 // the respective model.
 type CachedProviderMetadata struct {
 	Loaded  *csaf.LoadedProviderMetadata
 	modelMu sync.Mutex
-	model   *csaf.ProviderMetadata
+	model   *pmdModel
 }
 
 type pmdCache struct {
@@ -41,7 +49,7 @@ type pmdCache struct {
 
 type resolvedPMD struct {
 	url string
-	pmd *csaf.ProviderMetadata
+	pmd *pmdModel
 }
 
 type resolvedPMDs []resolvedPMD
@@ -50,6 +58,79 @@ func newPMDCache() *pmdCache {
 	return &pmdCache{
 		ExpirationCache: cache.NewExpirationCache[string, *CachedProviderMetadata](holdingPMDsDuration),
 	}
+}
+
+// CanonicalURL returns the provider canonical url string
+func (pm *pmdModel) CanonicalURL() string {
+	switch {
+	case pm.v20 != nil:
+		return string(pm.v20.CanonicalURL)
+	case pm.v21 != nil:
+		return string(pm.v21.CanonicalURL)
+	default:
+		return ""
+	}
+}
+
+type pgpKeyElem struct {
+	URL         string
+	Fingerprint string
+}
+
+// PgpKeyElems returns the list of strings of the provider openpgpkey urls
+func (pm *pmdModel) PgpKeyElems() []pgpKeyElem {
+	var keyElems []pgpKeyElem
+	switch {
+	case pm.v20 != nil:
+		for _, elem := range pm.v20.PublicOpenpgpKeys {
+			keyElems = append(keyElems, pgpKeyElem{URL: string(elem.URL), Fingerprint: *elem.Fingerprint})
+		}
+	case pm.v21 != nil:
+		for _, elem := range pm.v21.PGPKeys {
+			keyElems = append(keyElems, pgpKeyElem{URL: string(elem.URL), Fingerprint: elem.Fingerprint})
+		}
+	}
+	return keyElems
+}
+
+// ROLIEFeedURLs returns the list of strings of provider rolie feed urls
+func (pm *pmdModel) ROLIEFeedURLs() []string {
+	var rolieFeedURLs []string
+	switch {
+	case pm.v20 != nil:
+		for _, distElem := range pm.v20.Distributions {
+			for _, feedsElem := range distElem.Rolie.Feeds {
+				rolieFeedURLs = append(rolieFeedURLs, string(feedsElem.URL))
+			}
+		}
+	case pm.v21 != nil:
+		for _, distElem := range pm.v21.Distributions {
+			for _, feedsElem := range distElem.Rolie.Feeds {
+				rolieFeedURLs = append(rolieFeedURLs, string(feedsElem.URL))
+			}
+		}
+	}
+	return rolieFeedURLs
+}
+
+// DirectoryURLs returns the list of strings of provider directory urls
+func (pm *pmdModel) DirectoryURLs() []string {
+	var directoryURLs []string
+	switch {
+	case pm.v20 != nil:
+		for _, distElem := range pm.v20.Distributions {
+			if distElem.Rolie == nil && distElem.DirectoryURL != nil {
+				directoryURLs = append(directoryURLs, string(*distElem.DirectoryURL))
+			}
+		}
+	case pm.v21 != nil:
+		for _, distElem := range pm.v21.Distributions {
+			if distElem.Rolie == nil && distElem.Directory.URL != "" {
+				directoryURLs = append(directoryURLs, string(distElem.Directory.URL))
+			}
+		}
+	}
+	return directoryURLs
 }
 
 func (pc *pmdCache) pmd(ctx context.Context, url string, cfg *config.Config) *CachedProviderMetadata {
@@ -94,7 +175,7 @@ func (cpmd *CachedProviderMetadata) Valid() bool {
 }
 
 // Model returns the model for the loaded PMD.
-func (cpmd *CachedProviderMetadata) Model() (*csaf.ProviderMetadata, error) {
+func (cpmd *CachedProviderMetadata) Model() (*pmdModel, error) {
 	if !cpmd.Valid() {
 		return nil, InvalidArgumentError("PMD is invalid")
 	}
@@ -103,41 +184,38 @@ func (cpmd *CachedProviderMetadata) Model() (*csaf.ProviderMetadata, error) {
 	if cpmd.model != nil {
 		return cpmd.model, nil
 	}
-	model := new(csaf.ProviderMetadata)
-	// XXX: This is ugly! We should better keep the original data when loading the PMD.
-	if err := util.ReMarshalJSON(model, cpmd.Loaded.Document); err != nil {
-		return nil, InvalidArgumentError(
-			fmt.Sprintf("re-marshaling of PDM failed: %v", err.Error()))
+	doc, ok := cpmd.Loaded.Document.(map[string]any)
+	if !ok {
+		return nil, InvalidArgumentError("PMD is not valid JSON")
+	}
+	version, _ := doc["metadata_version"].(csaf.SpecVersion)
+	model := &pmdModel{version: version}
+	var err error
+	switch version {
+	case csaf.Version20:
+		model.v20 = new(v20.Provider)
+		// XXX: This is ugly! We should better keep the original data when loading the PMD.
+		err = util.ReMarshalJSON(model.v20, doc)
+	case csaf.Version21:
+		model.v21 = new(v21.Provider)
+		// XXX: This is ugly! We should better keep the original data when loading the PMD.
+		err = util.ReMarshalJSON(model.v21, doc)
+	default:
+		return nil, InvalidArgumentError(fmt.Sprintf("unsupported metadata_version %q", version))
+	}
+	if err != nil {
+		return nil, err
 	}
 	cpmd.model = model
 	return model, nil
 }
 
 // availableFeeds returns a list of the feeds available for the given provider.
-func availableFeeds(pmd *csaf.ProviderMetadata) []string {
+func availableFeeds(pmd *pmdModel) []string {
 	var feeds []string
-	add := func(feed string) {
+	for _, feed := range append(pmd.ROLIEFeedURLs(), pmd.DirectoryURLs()...) {
 		if !slices.Contains(feeds, feed) {
 			feeds = append(feeds, feed)
-		}
-	}
-	// ROLIE feeds
-	for i := range pmd.Distributions {
-		d := pmd.Distributions[i]
-		if d.Rolie == nil {
-			continue
-		}
-		feeds := d.Rolie.Feeds
-		for j := range feeds {
-			if f := &feeds[j]; f.URL != nil {
-				add(string(*f.URL))
-			}
-		}
-	}
-	// Directory feeds
-	for i := range pmd.Distributions {
-		if d := pmd.Distributions[i]; d.Rolie == nil && d.DirectoryURL != "" {
-			add(d.DirectoryURL)
 		}
 	}
 	return feeds
@@ -145,7 +223,7 @@ func availableFeeds(pmd *csaf.ProviderMetadata) []string {
 
 // checksumPMD calculates a checksum over the relevant fields in a PMD.
 // Currently only the feed paths are used.
-func checksumPMD(pmd *csaf.ProviderMetadata) []byte {
+func checksumPMD(pmd *pmdModel) []byte {
 	feeds := availableFeeds(pmd)
 	hash := sha1.New()
 	for _, feed := range feeds {
@@ -155,30 +233,13 @@ func checksumPMD(pmd *csaf.ProviderMetadata) []byte {
 }
 
 // isROLIEFeed checks if the given url leads to a ROLIE feed.
-func isROLIEFeed(pmd *csaf.ProviderMetadata, url string) bool {
-	for i := range pmd.Distributions {
-		d := pmd.Distributions[i]
-		if d.Rolie == nil {
-			continue
-		}
-		feeds := d.Rolie.Feeds
-		for j := range feeds {
-			if f := &feeds[j]; f.URL != nil && string(*f.URL) == url {
-				return true
-			}
-		}
-	}
-	return false
+func isROLIEFeed(pmd *pmdModel, url string) bool {
+	return slices.Contains(pmd.ROLIEFeedURLs(), url)
 }
 
 // isDirectoryFeed checks if the given url leads to a directory based feed.
-func isDirectoryFeed(pmd *csaf.ProviderMetadata, url string) bool {
-	for i := range pmd.Distributions {
-		if d := pmd.Distributions[i]; d.Rolie == nil && d.DirectoryURL == url {
-			return true
-		}
-	}
-	return false
+func isDirectoryFeed(pmd *pmdModel, url string) bool {
+	return slices.Contains(pmd.DirectoryURLs(), url)
 }
 
 // add deduplicates urls as each lookup is expensive.
@@ -227,7 +288,7 @@ func (rps resolvedPMDs) resolve(ctx context.Context, cache *pmdCache, cfg *confi
 	wg.Wait()
 }
 
-func (rps resolvedPMDs) pmd(url string) *csaf.ProviderMetadata {
+func (rps resolvedPMDs) pmd(url string) *pmdModel {
 	if idx := slices.IndexFunc(rps, func(rp resolvedPMD) bool { return rp.url == url }); idx >= 0 {
 		return rps[idx].pmd
 	}

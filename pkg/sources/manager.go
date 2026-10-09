@@ -618,7 +618,7 @@ func (m *Manager) Subscriptions(ctx context.Context, urls []string) []SourceSubs
 	sources := make(map[string][]int64, len(urlIDs))
 	for _, urlID := range urlIDs {
 		if pmd := rps.pmd(urlID.url); pmd != nil && pmd.CanonicalURL != nil {
-			url := string(*pmd.CanonicalURL)
+			url := pmd.CanonicalURL()
 			sources[url] = append(sources[url], urlID.id)
 		}
 	}
@@ -628,13 +628,14 @@ func (m *Manager) Subscriptions(ctx context.Context, urls []string) []SourceSubs
 		subs := make([]SourceSubscriptions, 0, len(urls))
 		for _, url := range urls {
 			pmd := rps.pmd(url)
-			if pmd == nil || pmd.CanonicalURL == nil {
+			canonicalURL := pmd.CanonicalURL()
+			if pmd == nil || canonicalURL == "" {
 				// loading failed
 				continue
 			}
 			var subscriptions []SourceSubscription
 			// Look sources up by the canonical URL
-			for _, sourceID := range sources[string(*pmd.CanonicalURL)] {
+			for _, sourceID := range sources[canonicalURL] {
 				s := m.findSourceByID(sourceID)
 				if s == nil {
 					continue
