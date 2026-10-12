@@ -21,7 +21,7 @@
   let { extension, pmd = null, source }: Props = $props();
 </script>
 
-<List tag="dl" class="mb-4 divide-y divide-gray-200 text-sm 2xl:w-max">
+<List tag="dl" class="mb-4 w-fit divide-y divide-gray-200 text-sm">
   <div>
     <DescriptionList tag="dt" class={dtClass}>Domain/PMD</DescriptionList>
     <DescriptionList tag="dd" class={ddClass}>{source.url}</DescriptionList>
