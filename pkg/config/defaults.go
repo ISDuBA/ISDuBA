@@ -141,3 +141,7 @@ const (
 	defaultAggregatorsTimeout        = 30 * time.Second
 	defaultAggregatorsUpdateInterval = 1 * time.Hour
 )
+
+const (
+	defaultPprofURL = ""
+)

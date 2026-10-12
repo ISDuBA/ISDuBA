@@ -127,3 +127,6 @@
 # [aggregators]
 # timeout = "30s"
 # update_interval = "2h"
+
+# [pprof]
+# pprof_url = ""

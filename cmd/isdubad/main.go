@@ -160,12 +160,6 @@ func main() {
 		cfgFile     string
 		showVersion bool
 	)
-	go func() {
-		slog.Info("Starting pprof debug server on localhost:6060")
-		if err := http.ListenAndServe("localhost:6060", nil); err != nil {
-			fmt.Println("pprof server error:", err)
-		}
-	}()
 	flag.StringVar(&cfgFile, "config", config.DefaultConfigFile, "configuration file")
 	flag.StringVar(&cfgFile, "c", config.DefaultConfigFile, "configuration file (shorthand)")
 	flag.BoolVar(&showVersion, "version", false, "show version")
@@ -178,5 +172,11 @@ func main() {
 	cfg, err := config.Load(cfgFile)
 	check(err)
 	check(cfg.Log.Config())
+	if cfg.Pprof.PprofURL != "" {
+		go func() {
+			slog.Info("Starting pprof debug server", "port", cfg.Pprof.PprofURL)
+			check(http.ListenAndServe(cfg.Pprof.PprofURL, nil))
+		}()
+	}
 	check(run(cfg))
 }
