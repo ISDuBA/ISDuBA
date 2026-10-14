@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -171,5 +172,11 @@ func main() {
 	cfg, err := config.Load(cfgFile)
 	check(err)
 	check(cfg.Log.Config())
+	if cfg.Pprof.PprofURL != "" {
+		go func() {
+			slog.Info("Starting pprof debug server", "port", cfg.Pprof.PprofURL)
+			check(http.ListenAndServe(cfg.Pprof.PprofURL, nil))
+		}()
+	}
 	check(run(cfg))
 }

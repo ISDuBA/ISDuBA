@@ -30,6 +30,7 @@ The configuration consists of the following sections:
 - [`[remote_validator]`](#section_remote_validator) Remote validator
 - [`[client]`](#section_client) Client configuration
 - [`[aggregators]`](#section_aggregators) Aggregators configuration
+- [`[pprof]`](#section_pprof) Pprof configuration
 - [`[forwarder]`](./forwarder.md) Forwarder configuration
 
 ### <a name="section_general"></a> Section `[general]` General parameters
@@ -175,6 +176,10 @@ Aggregators are checked for updates in regular intervals.
 - `update_interval`: Time interval to check aggregators for updates. Defaults to `"2h"`.
 - `timeout`: The duration before fetching an aggregator.json fails. Defaults to `"30s"`.
 
+### <a name="section_pprof"></a> Section `[pprof]` Pprof configuration
+[pprof](https://github.com/google/pprof) is a tool for visualization and analysis of profiling data.
+- `pprof_url`: Listen address for the HTTP server that exposes pprof profiling data. Defaults to `""` (disabled).
+
 ## <a name="env_vars"></a>Environment variables
 
 | Env variable                          | Overwrites                           |
@@ -194,7 +199,7 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_WEB_PORT`                     | `web port`                           |
 | `ISDUBA_WEB_GIN_MODE`                 | `web gin_mode`                       |
 | `ISDUBA_WEB_STATIC`                   | `web static`                         |
-| `ISDUBA_WEB_EXTERNAL_URL`             | `web external_url`                         |
+| `ISDUBA_WEB_EXTERNAL_URL`             | `web external_url`                   |
 | `ISDUBA_DB_HOST`                      | `database host`                      |
 | `ISDUBA_DB_PORT`                      | `database port`                      |
 | `ISDUBA_DB_DATABASE`                  | `database database`                  |
@@ -235,3 +240,4 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_FORWARDER_STRATEGY`           | `forwarder strategy`                 |
 | `ISDUBA_AGGREGATORS_UPDATE_INTERVAL`  | `aggregators update_interval`        |
 | `ISDUBA_AGGREGATORS_TIMEOUT`          | `aggregators timeout`                |
+| `ISDUBA_PPROF_URL`  		        | `pprof pprof_url`		               |

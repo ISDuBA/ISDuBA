@@ -142,6 +142,11 @@ type Client struct {
 	AboutText        string        `toml:"about_text" json:"about_text"`
 }
 
+// Pprof are the config options for the pprof utility
+type Pprof struct {
+	PprofURL string `toml:"pprof_url" json:"pprof_url"`
+}
+
 // Config are all the configuration options.
 type Config struct {
 	General         General                     `toml:"general"`
@@ -156,6 +161,7 @@ type Config struct {
 	Client          Client                      `toml:"client"`
 	Forwarder       Forwarder                   `toml:"forwarder"`
 	Aggregators     Aggregators                 `toml:"aggregators"`
+	Pprof           Pprof                       `toml:"pprof"`
 }
 
 func escape(s string) string {
@@ -335,6 +341,9 @@ func Load(file string) (*Config, error) {
 			Timeout:        defaultAggregatorsTimeout,
 			UpdateInterval: defaultAggregatorsUpdateInterval,
 		},
+		Pprof: Pprof{
+			PprofURL: defaultPprofURL,
+		},
 	}
 	if file != "" {
 		md, err := toml.DecodeFile(file, cfg)
@@ -473,5 +482,6 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_FORWARDER_STRATEGY", storeForwarderStrategy(&cfg.Forwarder.Strategy)},
 		envStore{"ISDUBA_AGGREGATORS_TIMEOUT", storeDuration(&cfg.Aggregators.Timeout)},
 		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
+		envStore{"ISDUBA_PPROF_URL", storeString(&cfg.Pprof.PprofURL)},
 	)
 }
