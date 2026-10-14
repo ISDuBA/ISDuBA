@@ -13,7 +13,14 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { Button, Spinner, TableBodyCell, TableBodyRow, TableHeadCell } from "flowbite-svelte";
+  import {
+    Button,
+    Input,
+    Spinner,
+    TableBodyCell,
+    TableBodyRow,
+    TableHeadCell
+  } from "flowbite-svelte";
   import { tick } from "svelte";
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
   import { fetchDocumentSSVC, isResultConsistent } from "$lib/Advisories/advisory.svelte";
@@ -25,6 +32,7 @@
   import InconsistencyMessage from "./InconsistencyMessage.svelte";
   import { AlertCircle, Check } from "@boxicons/svelte";
   import type { WorkflowState } from "$lib/workflow";
+  import SectionHeader from "$lib/SectionHeader.svelte";
 
   interface BasicRelatedDocument {
     document_id: number;
@@ -69,6 +77,7 @@
   let loadError: ErrorDetails | null = $state(null);
   let isInconsistent = $state(false);
   let max = $state(STEP);
+  let isMaxInputValid = $state(true);
 
   let encodedTrackingID = $derived(
     document?.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
@@ -238,7 +247,10 @@
   </div>
 {/snippet}
 
-<div style="max-height: 90vh;">
+<div class="flex flex-col" style="max-height: 94vh;">
+  <SectionHeader
+    title={`Documents having the same CVEs as ${params.trackingID ?? document?.tracking?.id}`}
+  />
   <ErrorMessage error={loadError}></ErrorMessage>
   {#if isLoading}
     <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
@@ -254,16 +266,65 @@
         <span>The document {document?.tracking?.id} has no related documents.</span>
       </div>
     {:else}
+      {#if documents}
+        <div class="flex items-center gap-2">
+          <span>Display</span>
+          <Input
+            oninput={(event: any) => {
+              const value = event.target.value;
+              const n = Number(value);
+              if (value === "" || isNaN(n)) {
+                isMaxInputValid = false;
+              } else {
+                isMaxInputValid = true;
+              }
+            }}
+            onchange={(event: any) => {
+              const value = event.target.value;
+              if (value === "") return;
+              const n = Number(value);
+              if (!isNaN(n)) {
+                max = n;
+              }
+            }}
+            class="w-20! {isMaxInputValid
+              ? ''
+              : 'focus:border-red-500 focus:ring-red-500 dark:focus:border-red-500 dark:focus:ring-red-500'}"
+            size="sm"
+            value={max}
+          />
+          <span>of {documents.length} documents</span>
+          <Button
+            onclick={() => {
+              if (!documents) return;
+              max = max + STEP;
+            }}
+            class="h-6 px-2 text-nowrap"
+            color="light"
+          >
+            + {max + STEP >= documents.length ? documents.length - max : STEP}
+          </Button>
+          <Button
+            onclick={() => {
+              if (!documents) return;
+              max = documents.length;
+            }}
+            class="h-6 px-2 text-nowrap"
+            color="light"
+          >
+            Load all
+          </Button>
+        </div>
+      {/if}
       <CustomTable
         tableClass="h-fit w-fit border-separate border-spacing-0"
         tableContainerClass="h-full"
-        containerClass="h-full"
+        containerClass="h-[86vh]"
         hoverable={false}
-        title={`Documents having the same CVEs as ${params.trackingID ?? document?.tracking?.id}`}
         stickyHeaders={true}
       >
         {#snippet tableHeadSlot()}
-          <TableHeadCell class="text-center align-top">
+          <TableHeadCell class="px-2 text-center align-top">
             <div class="flex flex-col items-center gap-2">
               <span>{params.trackingID ?? document?.tracking?.id}</span>
               {@render generalInformation(
@@ -278,54 +339,28 @@
           {#each documents?.slice(0, max) as doc, i (`relateddocuments-1-${uid}-${i}`)}
             {@const d = doc as RelatedDocument}
             {@const sameVersion = hasDocWithSameVersion(d)}
-            <TableHeadCell class="text-center align-top">
-              <div class="flex h-full flex-col items-center justify-between gap-2">
-                <Link
-                  class="text-primary-700 dark:text-primary-400 hover:underline"
-                  href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
-                  >{d.tracking_id}</Link
-                >
-                {@render generalInformation(
-                  d.state,
-                  d.tracking_version,
-                  d.ssvc,
-                  d.tracking_status,
-                  sameVersion
-                )}
+            <TableHeadCell class="px-2 text-center align-top">
+              <div class="flex h-full min-h-28 flex-col items-center justify-between gap-2">
+                <div class="flex flex-col items-center gap-2">
+                  <Link
+                    class="text-primary-700 dark:text-primary-400 hover:underline"
+                    href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
+                    >{d.tracking_id}</Link
+                  >
+                  {@render generalInformation(
+                    d.state,
+                    d.tracking_version,
+                    d.ssvc,
+                    d.tracking_status,
+                    sameVersion
+                  )}
+                </div>
                 <Button color="light" size="xs" class="h-6" onclick={() => compare(d)}>
                   Compare
                 </Button>
               </div>
             </TableHeadCell>
           {/each}
-          {#if documents && max < documents.length}
-            <TableHeadCell>
-              <div class="flex flex-col items-center gap-2">
-                <span class="text-gray-500 normal-case">Displaying {max} of {documents.length}</span
-                >
-                <Button
-                  onclick={() => {
-                    if (!documents) return;
-                    max = max + STEP;
-                  }}
-                  class="h-6 text-nowrap"
-                  color="light"
-                >
-                  Load {max + STEP >= documents.length ? documents.length - max : STEP} more...
-                </Button>
-                <Button
-                  onclick={() => {
-                    if (!documents) return;
-                    max = documents.length;
-                  }}
-                  class="h-6 text-nowrap"
-                  color="light"
-                >
-                  Load all...
-                </Button>
-              </div>
-            </TableHeadCell>
-          {/if}
         {/snippet}
         {#snippet mainSlot()}
           {#each cves as cve, j (`relateddocuments-1-${uid}-${j}`)}
