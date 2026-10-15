@@ -179,6 +179,9 @@
             });
             documents = newDocuments;
             cves = newCves;
+            if (max > documents.length) {
+              max = documents.length;
+            }
           } else if (response.error) {
             loadError = getErrorDetails(`Could not load documents.`, response);
           }
@@ -283,8 +286,10 @@
               const value = event.target.value;
               if (value === "") return;
               const n = Number(value);
-              if (!isNaN(n)) {
-                max = n;
+              if (!isNaN(n) && documents) {
+                const newValue = n >= documents.length ? documents.length : n;
+                event.target.value = newValue;
+                max = newValue;
               }
             }}
             class="w-20! {isMaxInputValid
@@ -297,12 +302,13 @@
           <Button
             onclick={() => {
               if (!documents) return;
-              max = max + STEP;
+              max = max + STEP >= documents.length ? documents.length : max + STEP;
             }}
             class="h-6 px-2 text-nowrap"
             color="light"
+            disabled={max >= documents.length}
           >
-            + {max + STEP >= documents.length ? documents.length - max : STEP}
+            + {Math.max(1, max + STEP >= documents.length ? documents.length - max : STEP)}
           </Button>
           <Button
             onclick={() => {
@@ -311,6 +317,7 @@
             }}
             class="h-6 px-2 text-nowrap"
             color="light"
+            disabled={max >= documents.length}
           >
             Load all
           </Button>
