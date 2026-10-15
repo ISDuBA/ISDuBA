@@ -6,13 +6,22 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
+import { getProductTree } from "$lib/Advisories/docmodel";
+import type {
+  CSAFDocumentv2_0,
+  ProductStatus,
+  ProductTree,
+  Relationship,
+  Vulnerability as Vulnerability2_0
+} from "$lib/Advisories/types/csaf-2.0";
+import type {
+  CSAFDocumentv2_1,
+  Vulnerability as Vulnerability2_1
+} from "$lib/Advisories/types/csaf-2.1";
 import {
   ProductStatusSymbol,
   type Vulnerability,
   type Product,
-  type Relationship,
-  type ProductStatus_t,
-  type ProductStatus_t_Key,
   type VulnerabilitesExtractionResult
 } from "./productvulnerabilitiestypes";
 
@@ -43,15 +52,17 @@ const generateProductVulnerabilities = (jsonDocument: any, products: any, produc
   products = products.filter((product: Product) => {
     return relevantProducts[product.product_id];
   });
-  vulnerabilities.sort((vuln1: Vulnerability, vuln2: Vulnerability) => {
-    if (!vuln1.cve && vuln2.cve) return -1;
-    if (vuln1.cve && !vuln2.cve) return 1;
-    if (vuln1.cve && vuln2.cve) {
-      if (vuln1.cve < vuln2.cve) return -1;
-      if (vuln1.cve > vuln2.cve) return 1;
+  vulnerabilities.sort(
+    (vuln1: Vulnerability2_0 | Vulnerability2_1, vuln2: Vulnerability2_0 | Vulnerability2_1) => {
+      if (!vuln1.cve && vuln2.cve) return -1;
+      if (vuln1.cve && !vuln2.cve) return 1;
+      if (vuln1.cve && vuln2.cve) {
+        if (vuln1.cve < vuln2.cve) return -1;
+        if (vuln1.cve > vuln2.cve) return 1;
+      }
+      return 0;
     }
-    return 0;
-  });
+  );
   const result = generateCrossTableFrom(products, vulnerabilities, productLookup);
   return result;
 };
@@ -84,7 +95,7 @@ const generateProductVulnerabilities = (jsonDocument: any, products: any, produc
  */
 const generateCrossTableFrom = (
   products: Product[],
-  vulnerabilities: Vulnerability[],
+  vulnerabilities: Vulnerability2_0[] | Vulnerability2_1[],
   productLookup: any
 ) => {
   let result: any = [];
@@ -92,7 +103,7 @@ const generateCrossTableFrom = (
     { name: "Product", content: "Product" },
     { name: "Total result", content: "Total result" }
   ];
-  const getCVE = vulnerabilities.map((vulnerability: Vulnerability) => {
+  const getCVE = vulnerabilities.map((vulnerability: Vulnerability2_0 | Vulnerability2_1) => {
     return { name: vulnerability.cve, content: vulnerability.cve };
   });
   header = header.concat(getCVE);
@@ -126,7 +137,10 @@ const generateCrossTableFrom = (
  * @param vulnerabilities
  * @returns Array of columns for the line.
  */
-const generateLineWith = (product: Product, vulnerabilities: Vulnerability[]) => {
+const generateLineWith = (
+  product: Product,
+  vulnerabilities: Vulnerability2_0[] | Vulnerability2_1[]
+) => {
   const DUMMY_TOTAL = "N.A";
   const line: any = [DUMMY_TOTAL];
   vulnerabilities.forEach((vulnerability: Vulnerability) => {
@@ -182,20 +196,26 @@ const generateLineWith = (product: Product, vulnerabilities: Vulnerability[]) =>
  * @param jsonDocument
  * @returns An array of products [{product_id:"", name}]
  */
-const extractProducts = (jsonDocument: any): Product[] => {
-  if (!jsonDocument.product_tree) {
+const extractProducts = (jsonDocument: CSAFDocumentv2_0 | CSAFDocumentv2_1 | null): Product[] => {
+  if (!jsonDocument || !getProductTree(jsonDocument)) {
     return [];
   }
   let products: any = [];
-  if (jsonDocument.product_tree.branches) {
-    const productsFromBranches = jsonDocument.product_tree.branches.reduce(parseBranch, []);
+  const productTree = getProductTree(jsonDocument);
+  if (productTree?.branches) {
+    const productsFromBranches = productTree.branches.reduce(parseBranch, []);
     products = products.concat(productsFromBranches);
   }
-  if (jsonDocument.product_tree["full_product_names"]) {
-    products = products.concat(jsonDocument.product_tree["full_product_names"]);
+  if (productTree?.["full_product_names"]) {
+    products = products.concat(productTree["full_product_names"]);
   }
-  const productsFromRelationships: Product[] = getProductsFromRelationships(jsonDocument);
-  return products.concat(productsFromRelationships);
+  if (jsonDocument.document.csaf_version === "2.0") {
+    const productsFromRelationships: Product[] = getProductsFromRelationships(
+      jsonDocument as CSAFDocumentv2_0
+    );
+    products.push(...productsFromRelationships);
+  }
+  return products;
 };
 
 /**
@@ -203,9 +223,10 @@ const extractProducts = (jsonDocument: any): Product[] => {
  * @param jsonDocument
  * @returns An array of products [{product_id:"", name}]
  */
-const getProductsFromRelationships = (jsonDocument: any): Product[] => {
-  if (!jsonDocument.product_tree.relationships) return [];
-  return jsonDocument.product_tree.relationships.map((relationship: Relationship) => {
+const getProductsFromRelationships = (jsonDocument: CSAFDocumentv2_0): Product[] => {
+  const productTree = getProductTree(jsonDocument) as ProductTree;
+  if (!productTree?.relationships) return [];
+  return productTree.relationships.map((relationship: Relationship) => {
     return {
       product_id: relationship.full_product_name.product_id,
       name: relationship.full_product_name.name
@@ -241,14 +262,9 @@ const isProduct = (branch: any) => {
   return branch.product && branch.product.product_id && branch.product.name;
 };
 
-/**
- * generateDictFrom generates a lookup from productstatus and section.
- * @param productStatus
- * @param section
- * @returns dict
- */
-const generateDictFrom = (productStatus: ProductStatus_t, section: ProductStatus_t_Key) => {
-  return productStatus[section]?.reduce((o: any, n: string) => {
+// generateDictFrom generates a lookup from productstatus and section.
+const generateDictFrom = (productStatus: ProductStatus, section: keyof ProductStatus) => {
+  return (productStatus[section] as [])?.reduce((o: any, n: string) => {
     o[n] = n;
     return o;
   }, {});
@@ -271,7 +287,7 @@ const extractVulnerabilities = (jsonDocument: any): VulnerabilitesExtractionResu
    * vulnerabilities as a collection of all vulnerabilities found
    */
   const vulnerabilities = jsonDocument.vulnerabilities.reduce(
-    (acc: Vulnerability[], vulnerability: any) => {
+    (acc: Vulnerability2_0[] | Vulnerability2_1[], vulnerability: any) => {
       const result: Vulnerability = {};
       if (vulnerability.cve) {
         result.cve = vulnerability.cve;

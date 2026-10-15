@@ -11,9 +11,10 @@
 <script lang="ts">
   import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
-  import type { Acknowledgment } from "../docmodel/docmodeltypes";
+  import type { Acknowledgment as Acknowledgment2_0 } from "$lib/Advisories/types/csaf-2.0";
+  import type { Acknowledgment as Acknowledgment2_1 } from "$lib/Advisories/types/csaf-2.1";
   interface Props {
-    ack: Acknowledgment;
+    ack: Acknowledgment2_0 | Acknowledgment2_1;
     path: string;
   }
   let { ack, path }: Props = $props();
