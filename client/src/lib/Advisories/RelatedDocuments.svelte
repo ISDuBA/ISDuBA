@@ -232,7 +232,7 @@
   tracking_status: string | undefined,
   sameVersion: boolean
 )}
-  <div class="flex items-center gap-2">
+  <div class="flex items-center">
     {#if state}
       <WorkflowStateIcon advisoryState={state}></WorkflowStateIcon>
     {/if}
