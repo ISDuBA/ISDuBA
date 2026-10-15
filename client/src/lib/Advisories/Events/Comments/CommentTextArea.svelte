@@ -19,7 +19,7 @@
   interface Props {
     ariaLabel?: string;
     value: string;
-    buttonText: string;
+    buttonText: "Save" | "Send";
     cancelable?: boolean;
     errorMessage: ErrorDetails | null;
     workflowState?: string;
