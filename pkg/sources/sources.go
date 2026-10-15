@@ -262,7 +262,11 @@ func (f *feed) fetchIndex(ctx context.Context, m *Manager, fn func([]location, e
 		}
 		var locations []location
 		if f.rolie {
-			locations, err = fi.rolieLocations(resp.Body)
+			if m.cfg.Sources.StreamingROLIE {
+				locations, err = fi.streamingRolieLocations(resp.Body)
+			} else {
+				locations, err = fi.rolieLocations(resp.Body)
+			}
 		} else {
 			locations, err = fi.directoryLocations(resp.Body)
 		}

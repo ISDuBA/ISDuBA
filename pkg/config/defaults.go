@@ -109,6 +109,7 @@ const (
 	defaultSourcesFeedImporter      = "feedimporter"
 	defaultSourcesDefaultMessage    = "Missing something? To suggest new CSAF sources, " +
 		"please contact your CSAF source manager. Otherwise contact your administrator."
+	defaultSourcesStreamingROLIE = false
 	defaultSourcesStrictMode     = true
 	defaultSourcesSecure         = true
 	defaultSourcesSignatureCheck = true
