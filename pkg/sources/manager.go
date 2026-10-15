@@ -617,8 +617,8 @@ func (m *Manager) Subscriptions(ctx context.Context, urls []string) []SourceSubs
 	// We can subscribe a source more than once.
 	sources := make(map[string][]int64, len(urlIDs))
 	for _, urlID := range urlIDs {
-		if pmd := rps.pmd(urlID.url); pmd != nil && pmd.CanonicalURL != nil {
-			url := string(*pmd.CanonicalURL)
+		if pmd := rps.pmd(urlID.url); pmd != nil && pmd.CanonicalURL != "" {
+			url := pmd.CanonicalURL
 			sources[url] = append(sources[url], urlID.id)
 		}
 	}
@@ -628,13 +628,13 @@ func (m *Manager) Subscriptions(ctx context.Context, urls []string) []SourceSubs
 		subs := make([]SourceSubscriptions, 0, len(urls))
 		for _, url := range urls {
 			pmd := rps.pmd(url)
-			if pmd == nil || pmd.CanonicalURL == nil {
+			if pmd == nil || pmd.CanonicalURL == "" {
 				// loading failed
 				continue
 			}
 			var subscriptions []SourceSubscription
 			// Look sources up by the canonical URL
-			for _, sourceID := range sources[string(*pmd.CanonicalURL)] {
+			for _, sourceID := range sources[pmd.CanonicalURL] {
 				s := m.findSourceByID(sourceID)
 				if s == nil {
 					continue
