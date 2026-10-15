@@ -116,6 +116,11 @@
               </Button>
             {/if}
           {/if}
+          {#if cancelable && cancel}
+            <Button size="xs" onclick={() => cancel()} color="light">
+              <span>Cancel</span>
+            </Button>
+          {/if}
           {#if !((workflowState === REVIEW || workflowState === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
             <Button
               color="green"
@@ -124,11 +129,6 @@
               disabled={count > 10000 || count === 0 || value === old}
             >
               <span>{buttonText}</span>
-            </Button>
-          {/if}
-          {#if cancelable && cancel}
-            <Button size="xs" onclick={() => cancel()} outline color="red">
-              <span>Cancel</span>
             </Button>
           {/if}
         </div>
