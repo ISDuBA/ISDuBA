@@ -59,13 +59,14 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 	}
 	client := source.httpClient(m)
 	defer client.CloseIdleConnections()
-	for _, pgpKeyElem := range pmd.PgpKeyElems() {
-		if pgpKeyElem.URL == "" {
+	for i := range pmd.PublicOpenpgpKeys {
+		key := &pmd.PublicOpenpgpKeys[i]
+		if key.URL == "" {
 			continue
 		}
-		u, err := url.Parse(pgpKeyElem.URL)
+		u, err := url.Parse(key.URL)
 		if err != nil {
-			slog.Warn("Invalid OpenPGP url", "url", pgpKeyElem.URL, "err", err)
+			slog.Warn("Invalid OpenPGP url", "url", key.URL, "err", err)
 			continue
 		}
 		if !u.IsAbs() {
@@ -99,8 +100,8 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 				"error", err)
 			continue
 		}
-		if pgpKeyElem.Fingerprint != "" &&
-			!strings.EqualFold(ckey.GetFingerprint(), string(pgpKeyElem.Fingerprint)) {
+		if key.Fingerprint != "" &&
+			!strings.EqualFold(ckey.GetFingerprint(), key.Fingerprint) {
 			slog.Warn(
 				"Fingerprint of public OpenPGP key does not match remotely loaded",
 				"url", u)
