@@ -80,8 +80,15 @@ func (c *Controller) Bind() http.Handler {
 	r.Use(sloggin.New(slog.Default()))
 	r.Use(gin.Recovery())
 	// Serve API description.
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
+	r.GET("/swagger/*any", func(c *gin.Context) {
+		if c.Param("any") == "/swagger-ui.css" {
+			// Serve our own CSS file to overwrite elements of the header.
+			c.Redirect(http.StatusFound, "/swagger-ui.css")
+		} else {
+			handlerFunc := ginSwagger.WrapHandler(swaggerFiles.Handler)
+			handlerFunc(c)
+		}
+	})
 	if c.cfg.Web.Static != "" {
 		r.Use(static.Serve("/", static.LocalFile(c.cfg.Web.Static, false)))
 	}
