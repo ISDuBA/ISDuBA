@@ -168,6 +168,14 @@
           "text": "1592"
         }
       ],
+      "involvements": [
+        {
+          "party": "discoverer",
+          "status": "in_progress",
+          "date": "2022-05-08T09:14:02Z",
+          "summary": "Summary of involvement"
+        }
+      ],
       "notes": [
         {
           "category": "description",

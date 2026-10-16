@@ -144,6 +144,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   await expect(page.getByText("Jane Doe")).toBeVisible();
   await expect(page.getByText("Summary of vulnerability acknowledgment")).toBeVisible();
   await expect(page.getByText("https://example.com/example_corp_2", { exact: true })).toBeVisible();
+  // Involvements
+  await page.getByText("Involvements").click();
+  await expect(page.getByText("discoverer")).toBeVisible();
+  await expect(page.getByText("in_progress")).toBeVisible();
+  await expect(page.getByText("2022-05-08T09:14:02Z")).toBeVisible();
+  await expect(page.getByText("Summary of involvement")).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
