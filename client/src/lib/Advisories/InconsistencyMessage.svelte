@@ -69,7 +69,7 @@
 </script>
 
 <div class="flex flex-col gap-6">
-  <div class="mb-2 font-bold">
+  <div class="mb-2 flex gap-1 font-bold">
     <AlertCircle aria-hidden="true" />
     <span>The URL doesn't reference any document</span>
   </div>
