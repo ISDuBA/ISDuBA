@@ -10,11 +10,11 @@
 
 <script lang="ts">
   import { Button, Label, Textarea } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { canSetStateReview, isRoleIncluded } from "$lib/permissions";
-  import { ARCHIVED, EDITOR, REVIEW, REVIEWER } from "$lib/workflow";
-  import { appStore } from "$lib/store.svelte";
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { canSetStateReview, isRoleIncluded } from "#lib/permissions.ts";
+  import { ARCHIVED, EDITOR, REVIEW, REVIEWER } from "#lib/workflow.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
 
   interface Props {
     ariaLabel?: string;

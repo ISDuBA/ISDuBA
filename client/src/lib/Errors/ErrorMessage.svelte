@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
   import { ChevronDown, ChevronUp } from "@boxicons/svelte";
   import { Alert } from "flowbite-svelte";
   interface Props {

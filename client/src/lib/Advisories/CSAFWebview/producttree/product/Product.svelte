@@ -9,13 +9,13 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { tick, untrack } from "svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "./ProductIdentificationHelper.svelte";
-  import type { FullProductName } from "$lib/pmdTypes";
-  import { getAdvisorySearchHit } from "$lib/Advisories/advisory.svelte";
+  import type { FullProductName } from "#lib/pmdTypes.ts";
+  import { getAdvisorySearchHit } from "#lib/Advisories/advisory.svelte.ts";
 
   interface Props {
     path: string;

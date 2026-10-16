@@ -10,18 +10,18 @@
 
 <script lang="ts">
   import { Badge, Button, Spinner, TableBodyCell } from "flowbite-svelte";
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import { push } from "$routes/router.svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
-  import { tdClass } from "$lib/Table/defaults";
-  import { request } from "$lib/request";
+  import SectionHeader from "#lib/SectionHeader.svelte";
+  import { push } from "#routes/router.svelte.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { type ErrorDetails, getErrorDetails } from "#lib/Errors/error.ts";
+  import { tdClass } from "#lib/Table/defaults.ts";
+  import { request } from "#lib/request.ts";
   import { onDestroy, onMount } from "svelte";
-  import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { type Source, fetchSources } from "$lib/Sources/source";
-  import { appStore } from "$lib/store.svelte";
-  import { DAY_MS } from "$lib/time";
-  import ImportStats from "$lib/Statistics/ImportStats.svelte";
+  import CustomTable from "#lib/Table/CustomTable.svelte";
+  import { type Source, fetchSources } from "#lib/Sources/source.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import { DAY_MS } from "#lib/time.ts";
+  import ImportStats from "#lib/Statistics/ImportStats.svelte";
   import SourceBasicStats from "./SourceBasicStats.svelte";
   import { ArrowOutUpSquareHalf, Circle, GitRepoForked, Plus } from "@boxicons/svelte";
 

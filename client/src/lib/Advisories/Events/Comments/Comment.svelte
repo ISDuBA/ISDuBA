@@ -10,11 +10,11 @@
 
 <script lang="ts">
   import { TableBodyCell } from "flowbite-svelte";
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import CommentTextArea from "./CommentTextArea.svelte";
-  import { request } from "$lib/request";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "$lib/workflow";
+  import { request } from "#lib/request.ts";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import { ARCHIVED, ASSESSING, NEW, READ, REVIEW } from "#lib/workflow.ts";
   import { getReadableDateString } from "../../CSAFWebview/helpers";
   import { untrack } from "svelte";
   import { Edit } from "@boxicons/svelte";

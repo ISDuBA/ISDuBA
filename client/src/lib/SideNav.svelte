@@ -11,9 +11,9 @@
 <script lang="ts">
   import { Drawer, Sidebar, SidebarWrapper, SidebarGroup, SidebarBrand } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { page } from "$app/state";
-  import { truncate } from "$lib/utils";
+  import { truncate } from "#lib/utils.ts";
   import PrevNext from "./Search/PrevNext.svelte";
   import CSidebarItem from "./Components/CSidebarItem.svelte";
   import { setContext } from "svelte";

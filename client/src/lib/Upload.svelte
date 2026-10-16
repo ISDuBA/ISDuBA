@@ -22,11 +22,11 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
-  import { type UploadInfo } from "$lib/Sources/source";
+  import { type UploadInfo } from "#lib/Sources/source.ts";
   import CFileinput from "./Components/CFileinput.svelte";
   import { CheckCircle, XCircle } from "@boxicons/svelte";
   import SectionHeader from "./SectionHeader.svelte";
-  import Link from "$lib/Components/Link.svelte";
+  import Link from "#lib/Components/Link.svelte";
 
   interface Props {
     cancel: () => any;

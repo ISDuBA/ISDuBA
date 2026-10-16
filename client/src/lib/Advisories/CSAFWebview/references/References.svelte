@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import Link from "$lib/Components/Link.svelte";
+  import Link from "#lib/Components/Link.svelte";
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import SearchableText from "../SearchableText.svelte";
   import { ArrowOutUpRightSquare } from "@boxicons/svelte";
