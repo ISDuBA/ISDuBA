@@ -785,7 +785,7 @@ export interface Relationship {
  * Is a container for the aggregation of all fields that are related to a single vulnerability in the document.
  */
 export interface Vulnerability {
-  Acknowledgments?: VulnerabilityAcknowledgments;
+  acknowledgments?: VulnerabilityAcknowledgments;
   cve?: CVE;
   cwe?: CWE;
   discovery_date?: DiscoveryDate;
