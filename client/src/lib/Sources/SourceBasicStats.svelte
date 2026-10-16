@@ -8,10 +8,10 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { fetchBasicStatistic, type StatisticGroup } from "$lib/Statistics/statistics";
+  import { fetchBasicStatistic, type StatisticGroup } from "#lib/Statistics/statistics.ts";
   import { Spinner } from "flowbite-svelte";
-  import type { Result } from "$lib/types";
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import type { Result } from "#lib/types.ts";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
 
   interface Props {
     from?: Date;

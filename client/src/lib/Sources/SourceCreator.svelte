@@ -19,16 +19,16 @@
     saveFeeds,
     fetchSourceDefaultConfig,
     resetSourceAttention
-  } from "$lib/Sources/source";
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  } from "#lib/Sources/source.ts";
+  import SectionHeader from "#lib/SectionHeader.svelte";
   import { Input, Label, Button, Spinner } from "flowbite-svelte";
   import SourceForm from "./SourceForm.svelte";
-  import type { CSAFProviderMetadata } from "$lib/provider";
-  import { push } from "$routes/router.svelte";
+  import type { CSAFProviderMetadata } from "#lib/provider.d.ts";
+  import { push } from "#routes/router.svelte.ts";
   import FeedView from "./FeedView.svelte";
   import { onMount } from "svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
   import validator from "validator";
   import type { InputProps } from "flowbite-svelte";
   import { Check, Save } from "@boxicons/svelte";

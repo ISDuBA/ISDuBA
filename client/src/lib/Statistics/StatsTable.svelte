@@ -9,10 +9,10 @@
 -->
 
 <script lang="ts">
-  import { getLabelForKey, type StatisticGroup } from "$lib/Statistics/statistics";
-  import { toLocaleISOString } from "$lib/time";
-  import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { tdClass } from "$lib/Table/defaults";
+  import { getLabelForKey, type StatisticGroup } from "#lib/Statistics/statistics.ts";
+  import { toLocaleISOString } from "#lib/time.ts";
+  import CustomTable from "#lib/Table/CustomTable.svelte";
+  import { tdClass } from "#lib/Table/defaults.ts";
   import { TableBodyCell } from "flowbite-svelte";
 
   interface Props {

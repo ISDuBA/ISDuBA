@@ -22,21 +22,21 @@
     resetSourceAttention,
     dtClass,
     ddClass
-  } from "$lib/Sources/source";
+  } from "#lib/Sources/source.ts";
   import { Button, Spinner, Modal, DescriptionList } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
-  import type { CSAFProviderMetadata } from "$lib/provider";
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { type ErrorDetails, getErrorDetails } from "#lib/Errors/error.ts";
+  import type { CSAFProviderMetadata } from "#lib/provider.d.ts";
+  import SectionHeader from "#lib/SectionHeader.svelte";
   import { onDestroy, onMount } from "svelte";
   import SourceForm from "./SourceForm.svelte";
-  import { request } from "$lib/request";
+  import { request } from "#lib/request.ts";
   import FeedView from "./FeedView.svelte";
-  import { push } from "$routes/router.svelte";
-  import { DAY_MS } from "$lib/time";
+  import { push } from "#routes/router.svelte.ts";
+  import { DAY_MS } from "#lib/time.ts";
   import SourceBasicStats from "./SourceBasicStats.svelte";
-  import ImportStats from "$lib/Statistics/ImportStats.svelte";
-  import CBadge from "$lib/Components/CBadge.svelte";
+  import ImportStats from "#lib/Statistics/ImportStats.svelte";
+  import CBadge from "#lib/Components/CBadge.svelte";
   import { Check, Save, Trash } from "@boxicons/svelte";
   import SourceMetaData from "./SourceMetaData.svelte";
 

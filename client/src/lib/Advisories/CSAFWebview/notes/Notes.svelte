@@ -9,11 +9,11 @@
 -->
 
 <script lang="ts">
-  import SingleNote from "$lib/Advisories/CSAFWebview/notes/Note.svelte";
-  import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import SingleNote from "#lib/Advisories/CSAFWebview/notes/Note.svelte";
+  import type { Note } from "#lib/Advisories/CSAFWebview/docmodel/docmodeltypes.ts";
   import { onMount } from "svelte";
   import Collapsible from "../Collapsible.svelte";
-  import { advisorySearchState } from "$lib/Advisories/advisory.svelte";
+  import { advisorySearchState } from "#lib/Advisories/advisory.svelte.ts";
 
   interface Props {
     notes: Note[];

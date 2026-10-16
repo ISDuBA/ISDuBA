@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
   import type { hashEntry } from "./producttypes";
 
   interface Props {

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import Link from "$lib/Components/Link.svelte";
+  import Link from "#lib/Components/Link.svelte";
 </script>
 
 <Link href="/#/filter_help" class="text-sm underline">

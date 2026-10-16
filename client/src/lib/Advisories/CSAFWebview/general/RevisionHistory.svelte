@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import {
     Table,
     TableBody,
@@ -18,7 +18,7 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
-  import { tablePadding } from "$lib/Table/defaults";
+  import { tablePadding } from "#lib/Table/defaults.ts";
   import { getReadableDateString } from "../helpers";
   import SearchableText from "../SearchableText.svelte";
   const baseCellStyle = "py-0 px-2";

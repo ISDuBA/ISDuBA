@@ -9,12 +9,12 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { tick, untrack } from "svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
-  import type { Relationship } from "$lib/pmdTypes";
+  import type { Relationship } from "#lib/pmdTypes.ts";
   import { A } from "flowbite-svelte";
   import SearchableText from "../../SearchableText.svelte";
 

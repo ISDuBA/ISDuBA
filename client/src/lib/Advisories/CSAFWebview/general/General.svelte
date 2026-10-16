@@ -8,14 +8,14 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
-  import { Status } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import { appStore } from "#lib/store.svelte.ts";
+  import { Status } from "#lib/Advisories/CSAFWebview/docmodel/docmodeltypes.ts";
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
   import { Button } from "flowbite-svelte";
   import { push } from "svelte-spa-router";
   import { getContext } from "svelte";
-  import Link from "$lib/Components/Link.svelte";
+  import Link from "#lib/Components/Link.svelte";
   import SearchableText from "../SearchableText.svelte";
   import { ArrowOutUpRightSquare, Link as LinkIcon } from "@boxicons/svelte";
 
