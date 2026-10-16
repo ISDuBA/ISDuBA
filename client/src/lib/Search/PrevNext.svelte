@@ -9,13 +9,13 @@
 -->
 
 <script lang="ts">
-  import CSidebarItem from "$lib/Components/CSidebarItem.svelte";
-  import { activeClass, sidebarItemClass, sidebarItemLinkClass } from "$lib/sidenav";
-  import { appStore } from "$lib/store.svelte";
-  import { request } from "$lib/request";
-  import { SEARCHTYPES } from "$lib/Queries/query";
+  import CSidebarItem from "#lib/Components/CSidebarItem.svelte";
+  import { activeClass, sidebarItemClass, sidebarItemLinkClass } from "#lib/sidenav.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import { request } from "#lib/request.ts";
+  import { SEARCHTYPES } from "#lib/Queries/query.ts";
   import { tick } from "svelte";
-  import { advisorySearchState } from "$lib/Advisories/advisory.svelte";
+  import { advisorySearchState } from "#lib/Advisories/advisory.svelte.ts";
   import { Spinner } from "flowbite-svelte";
 
   const uid = $props.id();

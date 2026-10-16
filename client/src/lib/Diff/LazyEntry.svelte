@@ -9,11 +9,11 @@
 -->
 
 <script lang="ts">
-  import { request } from "$lib/request";
+  import { request } from "#lib/request.ts";
   import DiffEntry from "./DiffEntry.svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
   import { Button } from "flowbite-svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { ChevronDown, ChevronUp } from "@boxicons/svelte";
 
   interface Props {

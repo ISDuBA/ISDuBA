@@ -10,9 +10,9 @@
 
 <script lang="ts">
   import { Button } from "flowbite-svelte";
-  import { push } from "$routes/router.svelte";
-  import DiffVersionIndicator from "$lib/Diff/DiffVersionIndicator.svelte";
-  import { appStore } from "$lib/store.svelte";
+  import { push } from "#routes/router.svelte.ts";
+  import DiffVersionIndicator from "#lib/Diff/DiffVersionIndicator.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import type { AdvisoryVersion } from "./advisory.svelte";
   import { ArrowRightLeft } from "@boxicons/svelte";
 

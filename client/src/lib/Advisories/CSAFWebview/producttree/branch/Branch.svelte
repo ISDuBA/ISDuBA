@@ -9,10 +9,10 @@
 -->
 
 <script lang="ts">
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  import Product from "$lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
-  import type { Branch } from "$lib/pmdTypes";
-  import CBadge from "$lib/Components/CBadge.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import Product from "#lib/Advisories/CSAFWebview/producttree/product/Product.svelte";
+  import type { Branch } from "#lib/pmdTypes.ts";
+  import CBadge from "#lib/Components/CBadge.svelte";
   import Self from "./Branch.svelte";
   import SearchableText from "../../SearchableText.svelte";
 

@@ -8,7 +8,7 @@
 
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { vectorStart } from "$lib/Advisories/SSVC/SSVCCalculator";
+import { vectorStart } from "#lib/Advisories/SSVC/SSVCCalculator.ts";
 
 test.beforeEach(async ({ page }) => {
   // Go to Search and ensure that the client finished loading the results

@@ -9,19 +9,19 @@
 -->
 
 <script lang="ts">
-  import { push } from "$routes/router.svelte";
-  import { appStore } from "$lib/store.svelte";
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import { request } from "$lib/request";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { push } from "#routes/router.svelte.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import SectionHeader from "#lib/SectionHeader.svelte";
+  import { request } from "#lib/request.ts";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { onMount } from "svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
   import Activity from "./Activity.svelte";
-  import { getPublisher } from "$lib/publisher";
+  import { getPublisher } from "#lib/publisher.ts";
   import { Spinner } from "flowbite-svelte";
-  import { getRelativeTime } from "$lib/time";
+  import { getRelativeTime } from "#lib/time.ts";
   import ShowMoreButton from "./ShowMoreButton.svelte";
-  import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
+  import CVSS from "#lib/Advisories/CSAFWebview/general/CVSS.svelte";
   import ActivityBottom from "./ActivityBottom.svelte";
 
   interface Props {

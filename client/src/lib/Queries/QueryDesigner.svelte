@@ -9,10 +9,10 @@
 -->
 
 <script lang="ts">
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  import SectionHeader from "#lib/SectionHeader.svelte";
   import { Input, Spinner, Button, Img, Label, Select } from "flowbite-svelte";
-  import CCheckbox from "$lib/Components/CCheckbox.svelte";
-  import { request } from "$lib/request";
+  import CCheckbox from "#lib/Components/CCheckbox.svelte";
+  import { request } from "#lib/request.ts";
   import {
     COLUMNS,
     ORDERDIRECTIONS,
@@ -23,19 +23,19 @@
     proposeName,
     setIgnored,
     fetchIgnored
-  } from "$lib/Queries/query";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  } from "#lib/Queries/query.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { onMount, untrack } from "svelte";
   import { router } from "svelte-spa-router";
-  import { push } from "$routes/router.svelte";
+  import { push } from "#routes/router.svelte.ts";
   import { parse } from "qs";
-  import { appStore } from "$lib/store.svelte";
-  import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "$lib/workflow";
-  import { isRoleIncluded } from "$lib/permissions";
+  import { appStore } from "#lib/store.svelte.ts";
+  import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "#lib/workflow.ts";
+  import { isRoleIncluded } from "#lib/permissions.ts";
   import Sortable from "sortablejs";
-  import TypeToggle from "$lib/Search/TypeToggle.svelte";
-  import FilterHelpLink from "$lib/Search/FilterHelpLink.svelte";
+  import TypeToggle from "#lib/Search/TypeToggle.svelte";
+  import FilterHelpLink from "#lib/Search/FilterHelpLink.svelte";
   import {
     ArrowDownAZ,
     ArrowUpAZ,

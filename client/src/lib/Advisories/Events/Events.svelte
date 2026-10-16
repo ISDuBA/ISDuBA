@@ -16,10 +16,10 @@
     TableBodyCell,
     TableBodyRow
   } from "flowbite-svelte";
-  import Comment from "$lib/Advisories/Events/Comments/Comment.svelte";
+  import Comment from "#lib/Advisories/Events/Comments/Comment.svelte";
   import { getReadableDateString } from "../CSAFWebview/helpers";
   import type { Snippet } from "svelte";
-  import SSVCEntry from "$lib/Advisories/Events/SSVCEntry/SSVCEntry.svelte";
+  import SSVCEntry from "#lib/Advisories/Events/SSVCEntry/SSVCEntry.svelte";
   import type { CommentEvent, OtherEvent, SSVCEvent } from "./events";
 
   const intlFormat = new Intl.DateTimeFormat(undefined, {

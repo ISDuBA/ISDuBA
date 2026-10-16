@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import type { Relationship } from "$lib/pmdTypes";
+  import type { Relationship } from "#lib/pmdTypes.ts";
   import Relation from "./Relation.svelte";
 
   interface Props {

@@ -9,8 +9,8 @@
 -->
 
 <script lang="ts">
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import ValueList from "#lib/Advisories/CSAFWebview/ValueList.svelte";
   import type { Acknowledgment } from "../docmodel/docmodeltypes";
   interface Props {
     ack: Acknowledgment;

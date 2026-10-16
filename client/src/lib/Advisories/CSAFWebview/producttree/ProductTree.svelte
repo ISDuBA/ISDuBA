@@ -9,9 +9,9 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import Branch from "./branch/Branch.svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
   import ProductGroups from "./productgroup/ProductGroups.svelte";
   import ProductNames from "./product/ProductNames.svelte";
   import Relationships from "./relationship/Relationships.svelte";

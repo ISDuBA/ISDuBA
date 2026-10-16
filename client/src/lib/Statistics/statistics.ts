@@ -6,11 +6,11 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import type { CVSSTextualRating } from "$lib/Advisories/CSAFWebview/vulnerabilities/vulnerability/scores/cvss";
-import { getErrorDetails } from "$lib/Errors/error";
-import type { ErrorDetails } from "$lib/Errors/error";
-import { request } from "$lib/request";
-import type { Result } from "$lib/types";
+import type { CVSSTextualRating } from "#lib/Advisories/CSAFWebview/vulnerabilities/vulnerability/scores/cvss.ts";
+import { getErrorDetails } from "#lib/Errors/error.ts";
+import type { ErrorDetails } from "#lib/Errors/error.ts";
+import { request } from "#lib/request.ts";
+import type { Result } from "#lib/types.ts";
 
 type StatisticEntry = [Date, number | null];
 type Statistic = StatisticEntry[];

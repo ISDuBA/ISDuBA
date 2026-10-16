@@ -21,30 +21,36 @@
     Table,
     Img
   } from "flowbite-svelte";
-  import { tablePadding, title, publisher, searchColumnName, tdClass } from "$lib/Table/defaults";
+  import {
+    tablePadding,
+    title,
+    publisher,
+    searchColumnName,
+    tdClass
+  } from "#lib/Table/defaults.ts";
   import { Spinner } from "flowbite-svelte";
-  import { request } from "$lib/request";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { ADMIN, EDITOR, IMPORTER, REVIEWER } from "$lib/workflow";
-  import { getAllowedWorkflowChanges, isRoleIncluded } from "$lib/permissions";
-  import { appStore } from "$lib/store.svelte";
-  import { getPublisher } from "$lib/publisher";
-  import CIconButton from "$lib/Components/CIconButton.svelte";
-  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
-  import { SEARCHTYPES } from "$lib/Queries/query";
-  import CCheckbox from "$lib/Components/CCheckbox.svelte";
-  import { areArraysEqual } from "$lib/utils";
+  import { request } from "#lib/request.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import { ADMIN, EDITOR, IMPORTER, REVIEWER } from "#lib/workflow.ts";
+  import { getAllowedWorkflowChanges, isRoleIncluded } from "#lib/permissions.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import { getPublisher } from "#lib/publisher.ts";
+  import CIconButton from "#lib/Components/CIconButton.svelte";
+  import SSVCBadge from "#lib/Advisories/SSVC/SSVCBadge.svelte";
+  import { SEARCHTYPES } from "#lib/Queries/query.ts";
+  import CCheckbox from "#lib/Components/CCheckbox.svelte";
+  import { areArraysEqual } from "#lib/utils.ts";
   import DeleteModal from "./DeleteModal.svelte";
-  import { getAdvisoryAnchorLink, updateMultipleStates } from "$lib/Advisories/advisory.svelte";
-  import CVSS from "$lib/Advisories/CSAFWebview/general/CVSS.svelte";
-  import type { SearchParameters } from "$lib/Search/search.svelte";
+  import { getAdvisoryAnchorLink, updateMultipleStates } from "#lib/Advisories/advisory.svelte.ts";
+  import CVSS from "#lib/Advisories/CSAFWebview/general/CVSS.svelte";
+  import type { SearchParameters } from "#lib/Search/search.svelte.ts";
   import MatchList from "./MatchList.svelte";
-  import { routerState } from "$routes/router.svelte";
-  import Link from "$lib/Components/Link.svelte";
+  import { routerState } from "#routes/router.svelte.ts";
+  import Link from "#lib/Components/Link.svelte";
   import { CaretDown, CaretUp, GitCommit, Minus, Plus, Trash } from "@boxicons/svelte";
-  import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
-  import CPagination from "$lib/Components/CPagination.svelte";
+  import WorkflowStateIcon from "#lib/Advisories/WorkflowStateIcon.svelte";
+  import CPagination from "#lib/Components/CPagination.svelte";
 
   const toggleRow = (i: number) => {
     openRow = openRow === i ? null : i;
@@ -117,7 +123,7 @@
     )
   );
   let workflowOptions = $derived.by(() => {
-    return allowedWorkflowStateChanges.map((c) => {
+    return allowedWorkflowStateChanges.map((c: any) => {
       return { name: c.to, value: c.to };
     });
   });
