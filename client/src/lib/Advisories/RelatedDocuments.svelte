@@ -13,7 +13,14 @@
   import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
   import { request } from "$lib/request";
   import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { Button, Spinner, TableBodyCell, TableBodyRow, TableHeadCell } from "flowbite-svelte";
+  import {
+    Button,
+    Input,
+    Spinner,
+    TableBodyCell,
+    TableBodyRow,
+    TableHeadCell
+  } from "flowbite-svelte";
   import { tick } from "svelte";
   import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
   import { fetchDocumentSSVC, isResultConsistent } from "$lib/Advisories/advisory.svelte";
@@ -24,9 +31,32 @@
   import Link from "$lib/Components/Link.svelte";
   import InconsistencyMessage from "./InconsistencyMessage.svelte";
   import { AlertCircle, Check } from "@boxicons/svelte";
+  import type { WorkflowState } from "$lib/workflow";
+  import SectionHeader from "$lib/SectionHeader.svelte";
 
-  interface Related {
-    [key: string]: string[];
+  interface BasicRelatedDocument {
+    document_id: number;
+    publisher: string;
+    ssvc?: string;
+    state: WorkflowState;
+    title: string;
+    tracking_id: string;
+    tracking_status: string;
+    tracking_version: string;
+  }
+
+  interface RelatedDocumentFromBackend extends BasicRelatedDocument {
+    cve: string;
+  }
+
+  interface RelatedDocument extends BasicRelatedDocument {
+    cve: string[];
+  }
+
+  interface RelatedCVEResponse {
+    error?: string;
+    ok: boolean;
+    content: RelatedDocumentFromBackend[];
   }
 
   interface Props {
@@ -36,15 +66,18 @@
   let { params = null }: Props = $props();
 
   const uid = $props.id();
+  const STEP = 50;
 
   let document: any | undefined = $state(undefined);
-  let documents: any | undefined = $state(undefined);
-  let cves: Related | undefined = $state(undefined);
+  let documents: RelatedDocument[] | undefined = $state(undefined);
+  let cves: string[] | undefined = $state(undefined);
   let ssvc: string | undefined = $state(undefined);
   let isLoading: boolean = $state(false);
   let advisoryState: string | undefined = $state(undefined);
   let loadError: ErrorDetails | null = $state(null);
   let isInconsistent = $state(false);
+  let max = $state(STEP);
+  let isMaxInputValid = $state(true);
 
   let encodedTrackingID = $derived(
     document?.tracking?.id ? encodeURIComponent(addSlashes(document.tracking?.id)) : undefined
@@ -108,24 +141,47 @@
           }
           loadAdvisoryState();
           if (loadError) return;
-          const response = await request(`/api/documents/${params.id}/cve_related`, "GET");
+          const response: RelatedCVEResponse = (await request(
+            `/api/documents/${params.id}/cve_related`,
+            "GET"
+          )) as RelatedCVEResponse;
           if (response.ok) {
-            cves = {};
-            documents = {};
-            response.content.forEach((doc: any) => {
-              if (cves && !cves[doc.cve]) {
-                cves[doc.cve] = [doc];
-              } else if (cves) {
-                cves[doc.cve].push(doc);
+            const newCves: string[] = [];
+            const newDocuments: RelatedDocument[] = [];
+
+            for (let i = 0; i < response.content.length; i++) {
+              const doc = response.content[i];
+              const docIndex = newDocuments.findIndex((d: RelatedDocument) => {
+                return doc.document_id === d.document_id;
+              });
+              if (docIndex === -1) {
+                newDocuments.push({
+                  ...doc,
+                  cve: [doc.cve]
+                });
+              } else {
+                newDocuments[docIndex].cve.push(doc.cve);
               }
 
-              if (!documents[doc.document_id]) {
-                documents[doc.document_id] = doc;
-                documents[doc.document_id].cve = [doc.cve];
-              } else if (documents) {
-                documents[doc.document_id].cve.push(doc.cve);
+              if (!newCves.includes(doc.cve)) {
+                newCves.push(doc.cve);
               }
+            }
+
+            // We are more interested in documents with more CVEs so they should come first
+            newDocuments.sort((a: RelatedDocument, b: RelatedDocument) => {
+              if (a.cve.length < b.cve.length) {
+                return -1;
+              } else if (a.cve.length > b.cve.length) {
+                return 1;
+              }
+              return 0;
             });
+            documents = newDocuments;
+            cves = newCves;
+            if (max > documents.length) {
+              max = documents.length;
+            }
           } else if (response.error) {
             loadError = getErrorDetails(`Could not load documents.`, response);
           }
@@ -155,7 +211,8 @@
   // Find out if there is a document of the same advisory with same version number but different tracking status because we show
   // tracking status only if there are at least two documents with same version number.
   const hasDocWithSameVersion = (doc: any) => {
-    const docs = [...Object.values(documents), getComparableDocument()];
+    if (!documents) return false;
+    const docs = [...documents, getComparableDocument()];
     return (
       docs.find(
         (d: any) =>
@@ -175,7 +232,7 @@
   tracking_status: string | undefined,
   sameVersion: boolean
 )}
-  <div class="flex items-center gap-2">
+  <div class="flex items-center">
     {#if state}
       <WorkflowStateIcon advisoryState={state}></WorkflowStateIcon>
     {/if}
@@ -193,7 +250,10 @@
   </div>
 {/snippet}
 
-<div style="max-height: 90vh;">
+<div class="flex flex-col" style="max-height: 94vh;">
+  <SectionHeader
+    title={`Documents having the same CVEs as ${params.trackingID ?? document?.tracking?.id}`}
+  />
   <ErrorMessage error={loadError}></ErrorMessage>
   {#if isLoading}
     <div class:invisible={!isLoading} class={isLoading ? "loadingFadeIn" : ""}>
@@ -203,22 +263,75 @@
   {:else if document && isInconsistent}
     <InconsistencyMessage {document} {params} relatedDocuments />
   {:else if document && documents && cves}
-    {#if Object.keys(cves).length === 0}
+    {#if documents?.length === 0}
       <div class="mb-2 font-bold">
         <AlertCircle aria-hidden="true" />
         <span>The document {document?.tracking?.id} has no related documents.</span>
       </div>
     {:else}
+      {#if documents}
+        <div class="flex items-center gap-2">
+          <span>Display</span>
+          <Input
+            oninput={(event: any) => {
+              const value = event.target.value;
+              const n = Number(value);
+              if (value === "" || isNaN(n)) {
+                isMaxInputValid = false;
+              } else {
+                isMaxInputValid = true;
+              }
+            }}
+            onchange={(event: any) => {
+              const value = event.target.value;
+              if (value === "") return;
+              const n = Number(value);
+              if (!isNaN(n) && documents) {
+                const newValue = n >= documents.length ? documents.length : n;
+                event.target.value = newValue;
+                max = newValue;
+              }
+            }}
+            class="w-20! {isMaxInputValid
+              ? ''
+              : 'focus:border-red-500 focus:ring-red-500 dark:focus:border-red-500 dark:focus:ring-red-500'}"
+            size="sm"
+            value={max}
+          />
+          <span>of {documents.length} documents</span>
+          <Button
+            onclick={() => {
+              if (!documents) return;
+              max = max + STEP >= documents.length ? documents.length : max + STEP;
+            }}
+            class="h-6 px-2 text-nowrap"
+            color="light"
+            disabled={max >= documents.length}
+          >
+            + {Math.max(1, max + STEP >= documents.length ? documents.length - max : STEP)}
+          </Button>
+          <Button
+            onclick={() => {
+              if (!documents) return;
+              max = documents.length;
+            }}
+            class="h-6 px-2 text-nowrap"
+            color="light"
+            disabled={max >= documents.length}
+          >
+            Load all
+          </Button>
+        </div>
+      {/if}
       <CustomTable
         tableClass="h-fit w-fit border-separate border-spacing-0"
         tableContainerClass="h-full"
-        containerClass="h-full"
+        containerClass="h-[86vh]"
         hoverable={false}
-        title={`Documents having the same CVEs as ${params.trackingID ?? document?.tracking?.id}`}
         stickyHeaders={true}
       >
         {#snippet tableHeadSlot()}
-          <TableHeadCell class="text-center align-top">
+          <TableHeadCell class="px-2 text-center align-top">
             <div class="flex flex-col items-center gap-2">
               <span>{params.trackingID ?? document?.tracking?.id}</span>
               {@render generalInformation(
@@ -230,23 +343,25 @@
               )}
             </div>
           </TableHeadCell>
-          {#each Object.values(documents) as doc, i (`relateddocuments-1-${uid}-${i}`)}
-            {@const d = doc as any}
+          {#each documents?.slice(0, max) as doc, i (`relateddocuments-1-${uid}-${i}`)}
+            {@const d = doc as RelatedDocument}
             {@const sameVersion = hasDocWithSameVersion(d)}
-            <TableHeadCell class="text-center align-top">
-              <div class="flex h-full flex-col items-center justify-between gap-2">
-                <Link
-                  class="text-primary-700 dark:text-primary-400 hover:underline"
-                  href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
-                  >{d.tracking_id}</Link
-                >
-                {@render generalInformation(
-                  d.state,
-                  d.tracking_version,
-                  d.ssvc,
-                  d.tracking_status,
-                  sameVersion
-                )}
+            <TableHeadCell class="px-2 text-center align-top">
+              <div class="flex h-full min-h-28 flex-col items-center justify-between gap-2">
+                <div class="flex flex-col items-center gap-2">
+                  <Link
+                    class="text-primary-700 dark:text-primary-400 hover:underline"
+                    href={`/#/advisories/${encodeURIComponent(d.publisher)}/${encodeURIComponent(d.tracking_id)}/documents/${d.document_id}`}
+                    >{d.tracking_id}</Link
+                  >
+                  {@render generalInformation(
+                    d.state,
+                    d.tracking_version,
+                    d.ssvc,
+                    d.tracking_status,
+                    sameVersion
+                  )}
+                </div>
                 <Button color="light" size="xs" class="h-6" onclick={() => compare(d)}>
                   Compare
                 </Button>
@@ -255,7 +370,7 @@
           {/each}
         {/snippet}
         {#snippet mainSlot()}
-          {#each Object.keys(cves as Related) as string[] as cve, j (`relateddocuments-1-${uid}-${j}`)}
+          {#each cves as cve, j (`relateddocuments-1-${uid}-${j}`)}
             <TableBodyRow
               class={cve && cve === params.cve ? "!bg-primary-100 dark:!bg-primary-800" : ""}
             >
@@ -264,13 +379,13 @@
               >
                 {cve}
               </TableBodyCell>
-              {#each Object.values(documents) as doc, k (`relateddocuments-1-${uid}-${k}`)}
+              {#each documents?.slice(0, max) as doc, k (`relateddocuments-1-${uid}-${k}`)}
                 <TableBodyCell class={baseClass}>
-                  {#if (doc as any).cve.includes(cve)}
-                    <Check
-                      class={`${baseClass} text-2xl ${cve && cve === params.cve ? "!font-bold" : ""}`}
-                    />
-                  {/if}
+                  <div class="flex justify-center">
+                    {#if (doc as RelatedDocument).cve.includes(cve)}
+                      <Check />
+                    {/if}
+                  </div>
                 </TableBodyCell>
               {/each}
             </TableBodyRow>
