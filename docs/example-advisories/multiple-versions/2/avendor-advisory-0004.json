@@ -1,5 +1,13 @@
 {
   "document": {
+    "acknowledgments": [
+      {
+        "organization": "Example Corp",
+        "names": ["John Doe"],
+        "summary": "Summary of document acknowledgment",
+        "urls": ["https://example.com/example_corp"]
+      }
+    ],
     "category": "csaf_vex",
     "csaf_version": "2.0",
     "distribution": {
@@ -130,6 +138,14 @@
   },
   "vulnerabilities": [
     {
+      "acknowledgments": [
+        {
+          "organization": "Example Corp 2",
+          "names": ["Jane Doe"],
+          "summary": "Summary of vulnerability acknowledgment",
+          "urls": ["https://example.com/example_corp_2"]
+        }
+      ],
       "cve": "CVE-2020-1234",
       "ids": [
         {
@@ -155,9 +171,7 @@
             "vectorString": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N",
             "version": "3.1"
           },
-          "products": [
-            "CSAFPID_0001"
-          ]
+          "products": ["CSAFPID_0001"]
         }
       ],
       "threats": [

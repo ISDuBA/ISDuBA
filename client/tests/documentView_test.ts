@@ -122,6 +122,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
   await page.getByRole("button", { name: "3 (final)" }).click();
 
+  await page.getByRole("tab", { name: "Acknowledgments" }).click();
+  await expect(page.getByText("Example Corp", { exact: true })).toBeVisible();
+  await expect(page.getByText("John Doe")).toBeVisible();
+  await expect(page.getByText("Summary of document acknowledgment")).toBeVisible();
+  await expect(page.getByText("https://example.com/example_corp", { exact: true })).toBeVisible();
+
   await page.getByRole("tab", { name: "Vulnerabilities" }).click();
   const scoresCollapsible = await page.getByText("Scores").first();
   await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
@@ -130,6 +136,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   await idsCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
   await idsCollapsible.click({ force: true });
   expect(page.getByText("GitHub Issue")).toBeVisible();
+  const acknowledgmentsCollapsible = page.getByText("Acknowledgments").nth(1);
+  await acknowledgmentsCollapsible.click({ force: true });
+  await expect(page.getByText("Example Corp 2", { exact: true })).toBeVisible();
+  await expect(page.getByText("Jane Doe")).toBeVisible();
+  await expect(page.getByText("Summary of vulnerability acknowledgment")).toBeVisible();
+  await expect(page.getByText("https://example.com/example_corp_2", { exact: true })).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
