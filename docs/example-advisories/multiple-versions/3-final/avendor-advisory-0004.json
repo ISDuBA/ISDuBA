@@ -2,6 +2,8 @@
   "document": {
     "category": "csaf_vex",
     "csaf_version": "2.0",
+    "lang": "en",
+    "source_lang": "en",
     "distribution": {
       "tlp": {
         "label": "WHITE",
@@ -168,9 +170,7 @@
             "vectorString": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N",
             "version": "3.1"
           },
-          "products": [
-            "CSAFPID_0001"
-          ]
+          "products": ["CSAFPID_0001"]
         }
       ],
       "threats": [

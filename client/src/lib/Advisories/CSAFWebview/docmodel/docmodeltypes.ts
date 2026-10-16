@@ -38,7 +38,7 @@ export const CSAFDocProps = {
   REFERENCES: "references",
   REVISIONHISTORY: "revision_history",
   STATUS: "status",
-  SOURCELANG: "sourcelang",
+  SOURCELANG: "source_lang",
   TEXT: "text",
   TITLE: "title",
   TLP: "tlp",
