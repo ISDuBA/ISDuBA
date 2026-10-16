@@ -26,6 +26,7 @@
   import CFileinput from "./Components/CFileinput.svelte";
   import { CheckCircle, XCircle } from "@boxicons/svelte";
   import SectionHeader from "./SectionHeader.svelte";
+  import Link from "$lib/Components/Link.svelte";
 
   interface Props {
     cancel: () => any;
@@ -198,7 +199,16 @@
               {:else if info}
                 <XCircle fill={color} />
               {/if}
-              <div class="font-bold text-black dark:text-white">{file.name}</div>
+              {#if info?.success}
+                <Link
+                  class="text-primary-700 dark:text-primary-400 hover:underline"
+                  href="/#/documents/{info.id}"
+                >
+                  {file.name}
+                </Link>
+              {:else}
+                <div class="font-bold text-black dark:text-white">{file.name}</div>
+              {/if}
             </div>
             {#if info?.message}
               <div>{info.message}</div>

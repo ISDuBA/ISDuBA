@@ -181,10 +181,11 @@ const fetchSearchHits = async (id: number): Promise<SearchMatch[] | ErrorDetails
 // with the parameters in the URL.
 const isResultConsistent = (params: any, document: any) => {
   return (
-    params.trackingID &&
-    params.publisherNamespace &&
-    document.tracking.id === params.trackingID &&
-    document.publisher.name === params.publisherNamespace
+    (!params.trackingID && !params.publisherNamespace) ||
+    (params.trackingID &&
+      params.publisherNamespace &&
+      document.tracking.id === params.trackingID &&
+      document.publisher.name === params.publisherNamespace)
   );
 };
 
