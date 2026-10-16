@@ -160,7 +160,7 @@
                   >{source.url}</TableBodyCell
                 >
                 <TableBodyCell class={tdClass}>
-                  <Circle pack={source.healthy ? "filled" : "basic"} />
+                  <Circle pack={source.active ? "filled" : "basic"} />
                 </TableBodyCell>
                 <TableBodyCell class={tdClass}
                   >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
