@@ -130,6 +130,18 @@ test("Tabs with details about document are working", async ({ page }) => {
   await idsCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
   await idsCollapsible.click({ force: true });
   expect(page.getByText("GitHub Issue")).toBeVisible();
+  // Product status
+  const productStatusCollapsible = page.getByText("Product status").first();
+  await productStatusCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
+  await productStatusCollapsible.click({ force: true });
+  await expect(page.getByText("FIRST_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("FIRST_FIXED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("FIXED_CSAFPID_0001", { exact: true })).toBeVisible();
+  await expect(page.getByText("KNOWN_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("KNOWN_NOT_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("LAST_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("RECOMMENDED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("UNDER_INVESTIGATION_CSAFPID_0001")).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
