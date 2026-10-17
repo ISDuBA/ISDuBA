@@ -126,6 +126,14 @@
   "vulnerabilities": [
     {
       "cve": "CVE-2020-1234",
+      "involvements": [
+        {
+          "party": "discoverer",
+          "status": "in_progress",
+          "date": "2022-05-08T09:14:02Z",
+          "summary": "Summary of involvement"
+        }
+      ],
       "notes": [
         {
           "category": "description",
@@ -144,9 +152,7 @@
             "vectorString": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N",
             "version": "3.1"
           },
-          "products": [
-            "CSAFPID_0001"
-          ]
+          "products": ["CSAFPID_0001"]
         }
       ],
       "threats": [
