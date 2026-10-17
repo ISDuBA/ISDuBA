@@ -180,7 +180,7 @@
         </div>
       {/if}
       {#if sourceLang}
-        <div class={cellStyleKey}>Source lang</div>
+        <div class={cellStyleKey}>Source language</div>
         <div class={cellStyleValue}>
           <SearchableText text={sourceLang} textPath="/document/source_lang" />
         </div>
