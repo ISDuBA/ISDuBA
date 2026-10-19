@@ -26,7 +26,6 @@
   import { ArrowOutUpSquareHalf, Circle, GitRepoForked, Plus } from "@boxicons/svelte";
 
   const shortLoadInterval = 5;
-  const longLoadMultiplier = 6;
 
   let messageError: ErrorDetails | null = $state(null);
   let sourcesError: ErrorDetails | null = $state(null);
@@ -46,14 +45,7 @@
     return new Map<string, [string]>();
   }
 
-  let updateIteration = $state(0);
   let sourceUpdate = setInterval(async () => {
-    updateIteration = (updateIteration + 1) % longLoadMultiplier;
-    if (updateIteration == 0) {
-      for (let comp of Object.values(statsComponents)) {
-        comp.reload();
-      }
-    }
     if (appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()) {
       getSources();
     }
@@ -70,6 +62,24 @@
       sourcesError = result.error;
     }
   };
+
+  $effect(() => {
+    const customInterval = appStore.getImportStatsInterval() / 1_000_000;
+    // If not a positve number, disable refresh
+    if (customInterval <= 0) {
+      return;
+    }
+
+    const importStatsUpdate = setInterval(() => {
+      for (const comp of Object.values(statsComponents)) {
+        void comp.reload();
+      }
+    }, customInterval);
+
+    return () => {
+      clearInterval(importStatsUpdate);
+    };
+  });
 
   onMount(async () => {
     if (appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()) {
@@ -128,7 +138,7 @@
           {
             label: "Imported (last 24h)",
             attribute: "statsHistory",
-            progressDuration: shortLoadInterval * longLoadMultiplier
+            progressDuration: appStore.getImportStatsInterval() / 1_000_000_000
           }
         ]}
       >

@@ -134,12 +134,13 @@ type Aggregators struct {
 
 // Client are the config options for the client.
 type Client struct {
-	KeycloakURL      string        `toml:"keycloak_url" json:"keycloak_url"`
-	KeycloakRealm    string        `toml:"keycloak_realm" json:"keycloak_realm"`
-	KeycloakClientID string        `toml:"keycloak_client_id" json:"keycloak_client_id"`
-	UpdateInterval   time.Duration `toml:"update_interval" json:"update_interval" swaggertype:"integer"`
-	IdleTimeout      time.Duration `toml:"idle_timeout" json:"idle_timeout" swaggertype:"integer"`
-	AboutText        string        `toml:"about_text" json:"about_text"`
+	KeycloakURL         string        `toml:"keycloak_url" json:"keycloak_url"`
+	KeycloakRealm       string        `toml:"keycloak_realm" json:"keycloak_realm"`
+	KeycloakClientID    string        `toml:"keycloak_client_id" json:"keycloak_client_id"`
+	UpdateInterval      time.Duration `toml:"update_interval" json:"update_interval" swaggertype:"integer"`
+	IdleTimeout         time.Duration `toml:"idle_timeout" json:"idle_timeout" swaggertype:"integer"`
+	ImportStatsInterval time.Duration `toml:"import_stats_interval" json:"import_stats_interval" swaggertype:"integer"`
+	AboutText           string        `toml:"about_text" json:"about_text"`
 }
 
 // Pprof are the config options for the pprof utility
@@ -331,11 +332,12 @@ func Load(file string) (*Config, error) {
 			Cache:   defaultRemoteValidatorCache,
 		},
 		Client: Client{
-			KeycloakRealm:    defaultClientKeycloakRealm,
-			KeycloakClientID: defaultClientKeycloakClientID,
-			UpdateInterval:   defaultClientUpdateInterval,
-			IdleTimeout:      defaultClientIdleTimeout,
-			AboutText:        defaultClientAboutText,
+			KeycloakRealm:       defaultClientKeycloakRealm,
+			KeycloakClientID:    defaultClientKeycloakClientID,
+			UpdateInterval:      defaultClientUpdateInterval,
+			IdleTimeout:         defaultClientIdleTimeout,
+			ImportStatsInterval: defaultClientImportStatsInterval,
+			AboutText:           defaultClientAboutText,
 		},
 		Aggregators: Aggregators{
 			Timeout:        defaultAggregatorsTimeout,
@@ -477,6 +479,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_REALM", storeString(&cfg.Client.KeycloakRealm)},
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
+		envStore{"ISDUBA_CLIENT_IMPORT_STATS_INTERVAL", storeDuration(&cfg.Client.ImportStatsInterval)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
 		envStore{"ISDUBA_FORWARDER_STRATEGY", storeForwarderStrategy(&cfg.Forwarder.Strategy)},

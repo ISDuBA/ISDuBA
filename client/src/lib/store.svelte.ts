@@ -198,6 +198,7 @@ export const appStore = {
   getKeycloakRealm: () => state.app.config?.keycloak_realm,
   getKeycloakURL: () => state.app.config?.keycloak_url,
   getUpdateInterval: () => state.app.config?.update_interval,
+  getImportStatsInterval: () => state.app.config?.import_stats_interval ?? 0,
   getAboutText: () => state.app.config?.about_text,
 
   // Setters
