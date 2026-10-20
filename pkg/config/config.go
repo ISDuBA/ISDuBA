@@ -145,7 +145,7 @@ type Client struct {
 
 // Pprof are the config options for the pprof utility
 type Pprof struct {
-	PprofURL string `toml:"pprof_url" json:"pprof_url"`
+	URL string `toml:"url" json:"url"`
 }
 
 // Config are all the configuration options.
@@ -344,7 +344,7 @@ func Load(file string) (*Config, error) {
 			UpdateInterval: defaultAggregatorsUpdateInterval,
 		},
 		Pprof: Pprof{
-			PprofURL: defaultPprofURL,
+			URL: defaultPprofURL,
 		},
 	}
 	if file != "" {
@@ -485,6 +485,6 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_FORWARDER_STRATEGY", storeForwarderStrategy(&cfg.Forwarder.Strategy)},
 		envStore{"ISDUBA_AGGREGATORS_TIMEOUT", storeDuration(&cfg.Aggregators.Timeout)},
 		envStore{"ISDUBA_AGGREGATORS_UPDATE_INTERVAL", storeDuration(&cfg.Aggregators.UpdateInterval)},
-		envStore{"ISDUBA_PPROF_URL", storeString(&cfg.Pprof.PprofURL)},
+		envStore{"ISDUBA_PPROF_URL", storeString(&cfg.Pprof.URL)},
 	)
 }
