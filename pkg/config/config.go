@@ -139,6 +139,7 @@ type Client struct {
 	KeycloakClientID    string        `toml:"keycloak_client_id" json:"keycloak_client_id"`
 	UpdateInterval      time.Duration `toml:"update_interval" json:"update_interval" swaggertype:"integer"`
 	IdleTimeout         time.Duration `toml:"idle_timeout" json:"idle_timeout" swaggertype:"integer"`
+	ImportStatsEnabled  bool          `toml:"import_stats_enabled" json:"import_stats_enabled"`
 	ImportStatsInterval time.Duration `toml:"import_stats_interval" json:"import_stats_interval" swaggertype:"integer"`
 	AboutText           string        `toml:"about_text" json:"about_text"`
 }
@@ -336,6 +337,7 @@ func Load(file string) (*Config, error) {
 			KeycloakClientID:    defaultClientKeycloakClientID,
 			UpdateInterval:      defaultClientUpdateInterval,
 			IdleTimeout:         defaultClientIdleTimeout,
+			ImportStatsEnabled:  defaultClientImportStatsEnabled,
 			ImportStatsInterval: defaultClientImportStatsInterval,
 			AboutText:           defaultClientAboutText,
 		},
@@ -480,6 +482,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"ISDUBA_CLIENT_KEYCLOAK_CLIENT_ID", storeString(&cfg.Client.KeycloakClientID)},
 		envStore{"ISDUBA_CLIENT_UPDATE_INTERVAL", storeDuration(&cfg.Client.UpdateInterval)},
 		envStore{"ISDUBA_CLIENT_IMPORT_STATS_INTERVAL", storeDuration(&cfg.Client.ImportStatsInterval)},
+		envStore{"ISDUBA_CLIENT_IMPORT_STATS_ENABLED", storeBool(&cfg.Client.ImportStatsEnabled)},
 		envStore{"ISDUBA_CLIENT_IDLE_TIMEOUT", storeDuration(&cfg.Client.IdleTimeout)},
 		envStore{"ISDUBA_FORWARDER_UPDATE_INTERVAL", storeDuration(&cfg.Forwarder.UpdateInterval)},
 		envStore{"ISDUBA_FORWARDER_STRATEGY", storeForwarderStrategy(&cfg.Forwarder.Strategy)},

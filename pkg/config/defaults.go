@@ -135,6 +135,7 @@ const (
 	defaultClientUpdateInterval      = 5 * time.Minute
 	defaultClientIdleTimeout         = 30 * time.Minute
 	defaultClientImportStatsInterval = 30 * time.Second
+	defaultClientImportStatsEnabled  = true
 	defaultClientAboutText           = "Hosted by <a href=\"https://example.com\">Example Corp</a>"
 )
 
