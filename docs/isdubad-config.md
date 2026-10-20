@@ -166,6 +166,8 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `keycloak_realm`: The name of the Keycloak realm. Defaults to `"isduba"`.
 - `keycloak_client_id`: The public client identifier. Defaults to `"auth"`.
 - `update_interval`: Specifies how often the token should be renewed. Defaults to `"5m"`.
+- `import_stats_interval`: Specifies how often the display of imported advisories should be renewed on the sources page. Defaults to `"30s"`.\
+   Set the duration to a not positive duration (e.g. "0s") to disable regular updates.
 - `idle_timeout`: When the user should be logged out after inactivity. Defaults to `"30m"`.
 - `about_text` : Text that is displayed at the bottom of the login page. May contain HTML tags like `<a>`.
 
