@@ -65,7 +65,7 @@
 
   $effect(() => {
     const customInterval = appStore.getImportStatsInterval() / 1_000_000;
-    // If not a positve number, disable refresh
+    // If not a positve number, disable requests for download numbers
     if (customInterval <= 0) {
       return;
     }
@@ -80,6 +80,24 @@
       clearInterval(importStatsUpdate);
     };
   });
+
+  let tableHeaders = $derived([
+    { label: "", attribute: "icon" },
+    { label: "Name", attribute: "name" },
+    { label: "Domain/PMD", attribute: "url" },
+    { label: "Active", attribute: "active" },
+    { label: "Loading/Queued", attribute: "stats" },
+    { label: "Healthy", attribute: "healthy" },
+    ...(appStore.getImportStatsInterval() > 0
+      ? [
+          {
+            label: "Imported (last 24h)",
+            attribute: "statsHistory",
+            progressDuration: appStore.getImportStatsInterval() / 1_000_000_000
+          }
+        ]
+      : [])
+  ]);
 
   onMount(async () => {
     if (appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()) {
@@ -99,8 +117,14 @@
 <div>
   <SectionHeader title="Sources"></SectionHeader>
   <div class="flex flex-col gap-4">
-    <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-4" title=""
-    ></ImportStats>
+    {#if appStore.getImportStatsInterval() > 0}
+      <ImportStats
+        axes={[{ label: "Imports", types: ["imports"] }]}
+        divContainerClass="mb-4"
+        title=""
+      ></ImportStats>
+    {/if}
+
     {#if appStore.isImporter()}
       <Button href="/#/sources/upload" class="my-2 w-fit" color="primary">
         <ArrowOutUpSquareHalf />
@@ -108,40 +132,7 @@
       </Button>
     {/if}
     {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
-      <CustomTable
-        title="CSAF Provider"
-        headers={[
-          {
-            label: "",
-            attribute: "icon"
-          },
-          {
-            label: "Name",
-            attribute: "name"
-          },
-          {
-            label: "Domain/PMD",
-            attribute: "url"
-          },
-          {
-            label: "Active",
-            attribute: "active"
-          },
-          {
-            label: "Loading/Queued",
-            attribute: "stats"
-          },
-          {
-            label: "Healthy",
-            attribute: "healthy"
-          },
-          {
-            label: "Imported (last 24h)",
-            attribute: "statsHistory",
-            progressDuration: appStore.getImportStatsInterval() / 1_000_000_000
-          }
-        ]}
-      >
+      <CustomTable title="CSAF Provider" headers={tableHeaders}>
         {#snippet mainSlot()}
           {#each sources as source, index (index)}
             <tr
@@ -184,20 +175,22 @@
                 <TableBodyCell class={tdClass}></TableBodyCell>
                 <TableBodyCell class={tdClass}></TableBodyCell>
               {/if}
-              <TableBodyCell class={tdClass}>
-                {#if source.id !== undefined}
-                  {@const yesterday = Date.now() - DAY_MS}
-                  <SourceBasicStats
-                    bind:this={statsComponents[`${source.id}full`]}
-                    sourceID={source.id}
-                  ></SourceBasicStats>
-                  (<SourceBasicStats
-                    bind:this={statsComponents[`${source.id}last`]}
-                    from={new Date(yesterday)}
-                    sourceID={source.id}
-                  ></SourceBasicStats>)
-                {/if}
-              </TableBodyCell>
+              {#if appStore.getImportStatsInterval() > 0}
+                <TableBodyCell class={tdClass}>
+                  {#if source.id !== undefined}
+                    {@const yesterday = Date.now() - DAY_MS}
+                    <SourceBasicStats
+                      bind:this={statsComponents[`${source.id}full`]}
+                      sourceID={source.id}
+                    ></SourceBasicStats>
+                    (<SourceBasicStats
+                      bind:this={statsComponents[`${source.id}last`]}
+                      from={new Date(yesterday)}
+                      sourceID={source.id}
+                    ></SourceBasicStats>)
+                  {/if}
+                </TableBodyCell>
+              {/if}
             </tr>
           {/each}
         {/snippet}
