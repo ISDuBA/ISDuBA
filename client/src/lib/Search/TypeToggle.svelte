@@ -10,8 +10,8 @@
 
 <script lang="ts">
   import { Button, ButtonGroup } from "flowbite-svelte";
-  import { SEARCHTYPES } from "$lib/Queries/query";
-  import { selectedClass } from "$lib/utils";
+  import { SEARCHTYPES } from "#lib/Queries/query.ts";
+  import { selectedClass } from "#lib/utils.ts";
 
   interface Props {
     advisoryButtonVisible?: boolean;

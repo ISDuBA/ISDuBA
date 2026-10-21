@@ -8,7 +8,7 @@
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import hljs from "highlight.js";
   import json from "highlight.js/lib/languages/json";
   import "highlight.js/styles/stackoverflow-light.css";

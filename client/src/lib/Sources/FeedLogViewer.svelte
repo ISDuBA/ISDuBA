@@ -10,12 +10,12 @@
 
 <script lang="ts">
   import { Button, TableBodyCell, Spinner, Label, Select } from "flowbite-svelte";
-  import { tdClass } from "$lib/Table/defaults";
-  import CustomTable from "$lib/Table/CustomTable.svelte";
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { request } from "$lib/request";
+  import { tdClass } from "#lib/Table/defaults.ts";
+  import CustomTable from "#lib/Table/CustomTable.svelte";
+  import SectionHeader from "#lib/SectionHeader.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { request } from "#lib/request.ts";
   import { onMount } from "svelte";
   import {
     fetchFeedLogs,
@@ -25,14 +25,14 @@
     logLevels,
     LogLevel
   } from "./source";
-  import ImportStats from "$lib/Statistics/ImportStats.svelte";
-  import { DAY_MS } from "$lib/time";
-  import CSearch from "$lib/Components/CSearch.svelte";
-  import DateRange from "$lib/Components/DateRange.svelte";
-  import CCheckbox from "$lib/Components/CCheckbox.svelte";
+  import ImportStats from "#lib/Statistics/ImportStats.svelte";
+  import { DAY_MS } from "#lib/time.ts";
+  import CSearch from "#lib/Components/CSearch.svelte";
+  import DateRange from "#lib/Components/DateRange.svelte";
+  import CCheckbox from "#lib/Components/CCheckbox.svelte";
   import debounce from "debounce";
   import { ArrowInDownSquareHalf, X } from "@boxicons/svelte";
-  import CPagination from "$lib/Components/CPagination.svelte";
+  import CPagination from "#lib/Components/CPagination.svelte";
 
   interface Props {
     params?: any;

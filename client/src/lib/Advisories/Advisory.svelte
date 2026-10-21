@@ -10,22 +10,22 @@
 <script lang="ts">
   import { Button, Select, Label, Modal, Spinner, ButtonGroup, RadioButton } from "flowbite-svelte";
   import { onDestroy, onMount, setContext, untrack } from "svelte";
-  import { appStore } from "$lib/store.svelte";
-  import Version from "$lib/Advisories/Version.svelte";
-  import Webview from "$lib/Advisories/CSAFWebview/Webview.svelte";
-  import { convertToDocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodel";
-  import SsvcCalculator from "$lib/Advisories/SSVC/SSVCCalculator.svelte";
-  import Diff from "$lib/Diff/Diff.svelte";
-  import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
-  import { canSetStateRead } from "$lib/permissions";
+  import { appStore } from "#lib/store.svelte.ts";
+  import Version from "#lib/Advisories/Version.svelte";
+  import Webview from "#lib/Advisories/CSAFWebview/Webview.svelte";
+  import { convertToDocModel } from "#lib/Advisories/CSAFWebview/docmodel/docmodel.ts";
+  import SsvcCalculator from "#lib/Advisories/SSVC/SSVCCalculator.svelte";
+  import Diff from "#lib/Diff/Diff.svelte";
+  import { ARCHIVED, ASSESSING, DELETE, NEW, READ, REVIEW } from "#lib/workflow.ts";
+  import { canSetStateRead } from "#lib/permissions.ts";
   import CommentTextArea from "./Events/Comments/CommentTextArea.svelte";
-  import { request } from "$lib/request";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { request } from "#lib/request.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import WorkflowStates from "./WorkflowStates.svelte";
   import History from "./Events/Events.svelte";
   import Tlp from "./TLP.svelte";
-  import { addSlashes, selectedClass } from "$lib/utils";
+  import { addSlashes, selectedClass } from "#lib/utils.ts";
   import {
     type AdvisoryVersion,
     fetchDocumentSSVC,
@@ -33,8 +33,8 @@
     loadAdvisoryVersions,
     advisorySearchState,
     isResultConsistent
-  } from "$lib/Advisories/advisory.svelte";
-  import InconsistencyMessage from "$lib/Advisories/InconsistencyMessage.svelte";
+  } from "#lib/Advisories/advisory.svelte.ts";
+  import InconsistencyMessage from "#lib/Advisories/InconsistencyMessage.svelte";
   import SearchMatchBar from "./SearchMatchBar.svelte";
   import SearchableText from "./CSAFWebview/SearchableText.svelte";
   import {
@@ -47,7 +47,7 @@
   } from "@boxicons/svelte";
   import RawDocument from "./RawDocument.svelte";
   import type { CommentEvent, GeneralEvent, OtherEvent, SSVCEvent } from "./Events/events";
-  import CopyButton from "$lib/Components/CopyButton.svelte";
+  import CopyButton from "#lib/Components/CopyButton.svelte";
 
   let { params } = $props();
 

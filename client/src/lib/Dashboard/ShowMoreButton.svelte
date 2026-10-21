@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { Button } from "flowbite-svelte";
-  import { push } from "$routes/router.svelte";
+  import { push } from "#routes/router.svelte.ts";
   import { ListUlSquare } from "@boxicons/svelte";
 
   interface Props {

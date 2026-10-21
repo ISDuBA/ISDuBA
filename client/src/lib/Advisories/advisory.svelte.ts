@@ -6,11 +6,11 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-import { getAccessToken, request } from "$lib/request";
-import { appStore } from "$lib/store.svelte";
-import type { WorkflowState } from "$lib/workflow";
-import { push } from "$routes/router.svelte";
+import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+import { getAccessToken, request } from "#lib/request.ts";
+import { appStore } from "#lib/store.svelte.ts";
+import type { WorkflowState } from "#lib/workflow.ts";
+import { push } from "#routes/router.svelte.ts";
 
 type StateChange = {
   publisher: string;

@@ -9,10 +9,10 @@
 -->
 
 <script lang="ts">
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { request } from "$lib/request";
-  import CustomTable from "$lib/Table/CustomTable.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { request } from "#lib/request.ts";
+  import CustomTable from "#lib/Table/CustomTable.svelte";
   import {
     Button,
     Input,
@@ -22,17 +22,17 @@
     TableHeadCell
   } from "flowbite-svelte";
   import { tick } from "svelte";
-  import WorkflowStateIcon from "$lib/Advisories/WorkflowStateIcon.svelte";
-  import { fetchDocumentSSVC, isResultConsistent } from "$lib/Advisories/advisory.svelte";
+  import WorkflowStateIcon from "#lib/Advisories/WorkflowStateIcon.svelte";
+  import { fetchDocumentSSVC, isResultConsistent } from "#lib/Advisories/advisory.svelte.ts";
   import SSVCBadge from "./SSVC/SSVCBadge.svelte";
-  import { push } from "$routes/router.svelte";
-  import { appStore } from "$lib/store.svelte";
-  import { addSlashes } from "$lib/utils";
-  import Link from "$lib/Components/Link.svelte";
+  import { push } from "#routes/router.svelte.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import { addSlashes } from "#lib/utils.ts";
+  import Link from "#lib/Components/Link.svelte";
   import InconsistencyMessage from "./InconsistencyMessage.svelte";
   import { AlertCircle, Check } from "@boxicons/svelte";
-  import type { WorkflowState } from "$lib/workflow";
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  import type { WorkflowState } from "#lib/workflow.ts";
+  import SectionHeader from "#lib/SectionHeader.svelte";
 
   interface BasicRelatedDocument {
     document_id: number;

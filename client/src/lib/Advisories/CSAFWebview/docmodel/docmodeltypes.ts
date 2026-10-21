@@ -11,7 +11,7 @@ import type {
   ListOfAcknowledgedNames,
   ListOfURLs,
   SummaryOfTheReference
-} from "$lib/pmdTypes";
+} from "#lib/pmdTypes.ts";
 
 export const CSAFDocProps = {
   ACKNOWLEDGMENTS: "acknowledgments",

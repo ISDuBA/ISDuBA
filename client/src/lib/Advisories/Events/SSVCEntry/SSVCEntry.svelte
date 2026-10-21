@@ -11,9 +11,9 @@
 <script lang="ts">
   import { TableBodyCell } from "flowbite-svelte";
   import { getReadableDateString } from "../../CSAFWebview/helpers";
-  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
-  import type { CopyState } from "$lib/Components/types";
-  import CopyButton from "$lib/Components/CopyButton.svelte";
+  import SSVCBadge from "#lib/Advisories/SSVC/SSVCBadge.svelte";
+  import type { CopyState } from "#lib/Components/types.ts";
+  import CopyButton from "#lib/Components/CopyButton.svelte";
   import type { SSVCEvent } from "../events";
   import VersionLink from "../VersionLink.svelte";
 

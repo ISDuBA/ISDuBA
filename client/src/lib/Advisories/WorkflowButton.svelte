@@ -8,8 +8,8 @@
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import CBadge from "$lib/Components/CBadge.svelte";
-  import { getAllowedWorkflowChanges } from "$lib/permissions";
+  import CBadge from "#lib/Components/CBadge.svelte";
+  import { getAllowedWorkflowChanges } from "#lib/permissions.ts";
   import { getContext } from "svelte";
   import WorkflowStateIcon from "./WorkflowStateIcon.svelte";
 
