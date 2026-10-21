@@ -49,7 +49,7 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 	if err != nil {
 		// Try again soon.
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
-		return nil, fmt.Errorf("re-marshaling failed: %w", err)
+		return nil, fmt.Errorf("could not get valid PMD model: %w", err)
 	}
 	base, err := url.Parse(source.url)
 	if err != nil {
@@ -100,8 +100,8 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 				"error", err)
 			continue
 		}
-		if key.Fingerprint != "" &&
-			!strings.EqualFold(ckey.GetFingerprint(), key.Fingerprint) {
+		if fp := fingerprint(key); fp != "" &&
+			!strings.EqualFold(ckey.GetFingerprint(), fp) {
 			slog.Warn(
 				"Fingerprint of public OpenPGP key does not match remotely loaded",
 				"url", u)
