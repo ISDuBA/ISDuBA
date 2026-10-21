@@ -9,8 +9,8 @@
 -->
 
 <script lang="ts">
-  import type { CSAFDocumentv2_1, ProductTree } from "$lib/Advisories/types/csaf-2.1";
-  import { appStore } from "$lib/store.svelte";
+  import type { CSAFDocumentv2_1, ProductTree } from "#lib/Advisories/types/csaf-2.1.d.ts";
+  import { appStore } from "#lib/store.svelte.ts";
   import { untrack } from "svelte";
   import Collapsible from "../../Collapsible.svelte";
   import { productTreeCutoffs } from "../../efficiencyCutoffs";

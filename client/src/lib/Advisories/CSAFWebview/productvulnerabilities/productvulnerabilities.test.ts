@@ -18,8 +18,8 @@ import type {
   ListOfBranches,
   ProductTree,
   Vulnerabilities
-} from "$lib/Advisories/types/csaf-2.0";
-import type { DocumentLevelMetaData } from "$lib/Advisories/types/csaf-2.0";
+} from "#lib/Advisories/types/csaf-2.0.d.ts";
+import type { DocumentLevelMetaData } from "#lib/Advisories/types/csaf-2.0.d.ts";
 
 const oneProductNotNested: ProductTree = {
   branches: [

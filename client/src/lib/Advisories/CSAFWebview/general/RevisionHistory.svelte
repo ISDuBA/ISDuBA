@@ -21,7 +21,7 @@
   import { tablePadding } from "#lib/Table/defaults.ts";
   import { getReadableDateString } from "../helpers";
   import SearchableText from "../SearchableText.svelte";
-  import { getRevisionHistory } from "$lib/Advisories/docmodel";
+  import { getRevisionHistory } from "#lib/Advisories/docmodel.ts";
   const baseCellStyle = "py-0 px-2";
   const cellStyle = "whitespace-nowrap " + baseCellStyle;
 

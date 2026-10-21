@@ -6,9 +6,9 @@
 // SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 
-import type { ErrorDetails } from "$lib/Errors/error";
-import { request } from "$lib/request";
-import { getErrorDetails } from "$lib/Errors/error";
+import type { ErrorDetails } from "#lib/Errors/error.ts";
+import { request } from "#lib/request.ts";
+import { getErrorDetails } from "#lib/Errors/error.ts";
 import type { CSAFDocumentv2_1 } from "./types/csaf-2.1";
 import type { CSAFDocumentv2_0 } from "./types/csaf-2.0";
 

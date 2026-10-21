@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import type { CSAFDocumentv2_1 } from "#lib/Advisories/types/csaf-2.1";
+import type { CSAFDocumentv2_1 } from "#lib/Advisories/types/csaf-2.1.d.ts";
 import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./workflow";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";

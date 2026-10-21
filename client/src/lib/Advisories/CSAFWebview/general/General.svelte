@@ -8,7 +8,7 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "#lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { getReadableDateString } from "../helpers";
   import Cvss from "./CVSS.svelte";
   import { Button } from "flowbite-svelte";
