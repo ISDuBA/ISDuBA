@@ -652,7 +652,7 @@
   id="top"
 >
   {#if documentNotFound}
-    <div class="mb-2 font-bold">
+    <div class="mb-2 flex gap-1 font-bold">
       <AlertCircle aria-hidden="true" />
       <span>The URL doesn't reference any document</span>
     </div>

@@ -101,6 +101,7 @@ type Attention = {
 };
 
 type UploadInfo = {
+  id?: number;
   success?: boolean;
   message?: string;
   requestStatus?: number;
