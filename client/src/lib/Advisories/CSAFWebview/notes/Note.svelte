@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import { getCSAFVersion } from "#lib/Advisories/docmodel";
+  import { getCSAFVersion } from "#lib/Advisories/docmodel.ts";
   import { appStore } from "#lib/store.svelte.ts";
   import SearchableText from "../SearchableText.svelte";
   import type { Note as Note2_0 } from "#lib/Advisories/types/csaf-2.0.d.ts";

@@ -6,18 +6,18 @@
 // SPDX-FileCopyrightText: 2023 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 
-import { getProductTree } from "$lib/Advisories/docmodel";
+import { getProductTree } from "#lib/Advisories/docmodel.ts";
 import type {
   CSAFDocumentv2_0,
   ProductStatus,
   ProductTree,
   Relationship,
   Vulnerability as Vulnerability2_0
-} from "$lib/Advisories/types/csaf-2.0";
+} from "#lib/Advisories/types/csaf-2.0.d.ts";
 import type {
   CSAFDocumentv2_1,
   Vulnerability as Vulnerability2_1
-} from "$lib/Advisories/types/csaf-2.1";
+} from "#lib/Advisories/types/csaf-2.1.d.ts";
 import {
   ProductStatusSymbol,
   type Vulnerability,

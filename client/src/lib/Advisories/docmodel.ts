@@ -45,7 +45,7 @@ import type {
   LicenseExpression,
   Contact,
   Involvement
-} from "$lib/Advisories/types/csaf-2.1";
+} from "#lib/Advisories/types/csaf-2.1.d.ts";
 
 const EMPTY = "";
 

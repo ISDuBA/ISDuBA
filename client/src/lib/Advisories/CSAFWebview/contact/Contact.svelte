@@ -9,9 +9,9 @@
 -->
 
 <script lang="ts">
-  import { cellStyleKey, cellStyleValue } from "$lib/Advisories/classes";
-  import SearchableText from "$lib/Advisories/CSAFWebview/SearchableText.svelte";
-  import type { Contact } from "$lib/Advisories/types/csaf-2.1";
+  import { cellStyleKey, cellStyleValue } from "#lib/Advisories/classes.ts";
+  import SearchableText from "#lib/Advisories/CSAFWebview/SearchableText.svelte";
+  import type { Contact } from "#lib/Advisories/types/csaf-2.1.d.ts";
 
   interface Props {
     contact: Contact;

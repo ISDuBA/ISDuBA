@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import type { CSAFDocumentv2_0, ProductTree } from "#lib/Advisories/types/csaf-2.0.d.ts";
-  import { appStore } from "#lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { untrack } from "svelte";
   import Collapsible from "../../Collapsible.svelte";
   import { productTreeCutoffs } from "../../efficiencyCutoffs";

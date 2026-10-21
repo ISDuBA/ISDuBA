@@ -24,7 +24,7 @@
   import { innerLinkStyle } from "./../helpers";
   import Link from "#lib/Components/Link.svelte";
   import { AlertTriangle, Check, Heart, Minus, X } from "@boxicons/svelte";
-  import { getProductsByID, getProductVulneravbilities } from "$lib/Advisories/advisory.svelte";
+  import { getProductsByID, getProductVulneravbilities } from "#lib/Advisories/advisory.svelte.ts";
 
   interface Props {
     basePath: string;

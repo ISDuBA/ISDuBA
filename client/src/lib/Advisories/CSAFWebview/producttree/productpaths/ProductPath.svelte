@@ -9,15 +9,15 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { tick, untrack } from "svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "../product/ProductIdentificationHelper.svelte";
-  import type { ProductPath } from "$lib/Advisories/types/csaf-2.1";
+  import type { ProductPath } from "#lib/Advisories/types/csaf-2.1.d.ts";
   import { A } from "flowbite-svelte";
   import SearchableText from "../../SearchableText.svelte";
-  import Link from "$lib/Components/Link.svelte";
+  import Link from "#lib/Components/Link.svelte";
 
   interface Props {
     basePath: string;
