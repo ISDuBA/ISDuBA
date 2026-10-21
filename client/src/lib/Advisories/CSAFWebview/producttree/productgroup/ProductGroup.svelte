@@ -9,9 +9,9 @@
 -->
 
 <script lang="ts">
-  import type { ProductGroup } from "$lib/pmdTypes";
-  import ValueField from "$lib/Advisories/CSAFWebview/ValueField.svelte";
-  import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
+  import type { ProductGroup } from "#lib/pmdTypes.ts";
+  import ValueField from "#lib/Advisories/CSAFWebview/ValueField.svelte";
+  import ValueList from "#lib/Advisories/CSAFWebview/ValueList.svelte";
 
   interface Props {
     productGroup: ProductGroup;

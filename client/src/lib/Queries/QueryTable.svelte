@@ -10,17 +10,17 @@
 
 <script lang="ts">
   import { Img, Table, TableHead, TableHeadCell, TableBodyCell } from "flowbite-svelte";
-  import { tablePadding, tdClass } from "$lib/Table/defaults";
-  import CCheckbox from "$lib/Components/CCheckbox.svelte";
-  import CIconButton from "$lib/Components/CIconButton.svelte";
+  import { tablePadding, tdClass } from "#lib/Table/defaults.ts";
+  import CCheckbox from "#lib/Components/CCheckbox.svelte";
+  import CIconButton from "#lib/Components/CIconButton.svelte";
   import { getContext } from "svelte";
   import { setIgnored, updateStoredQuery } from "./query";
   import type { Order, Query } from "./query";
-  import { push } from "$routes/router.svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { push } from "#routes/router.svelte.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import Sortable from "sortablejs";
-  import { request } from "$lib/request";
+  import { request } from "#lib/request.ts";
   import type { Snippet } from "svelte";
   import { CaretDown, CaretUp, Copy, Trash } from "@boxicons/svelte";
 

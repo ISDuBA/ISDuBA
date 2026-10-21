@@ -24,9 +24,9 @@
     type SSVCOption
   } from "./SSVCCalculator";
   import { onMount } from "svelte";
-  import { request } from "$lib/request";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { request } from "#lib/request.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import ComplexDecision from "./ComplexDecision.svelte";
   import SsvcInput from "./SSVCInput.svelte";
   import { slide } from "svelte/transition";
@@ -354,6 +354,7 @@
           >Step {currentStep + 1}/{steps.length}</span
         >
         <StepIndicator
+          clickable={false}
           glow={false}
           completedCustom=""
           currentCustom=""

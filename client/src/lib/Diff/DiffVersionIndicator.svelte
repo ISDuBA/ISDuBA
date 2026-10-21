@@ -28,15 +28,21 @@
     `${basicIconClass} text-${color}-700 dark:text-${color}-300 ${!permanent ? "!hidden" : ""} ${isDisabled ? "" : "group-hover:!hidden"}`
   );
   let hoverClass = $derived(
-    `${basicIconClass} bx-${hoverIcon ?? icon} text-${color}-700 dark:text-${color}-300 !hidden ${isDisabled ? "" : "group-hover:!inline"}`
+    `${basicIconClass} text-${color}-700 dark:text-${color}-300 !hidden ${isDisabled ? "" : "group-hover:!inline"}`
   );
 </script>
 
 <div class={containerClass}>
+  <!-- Selected version -->
   {#if icon === "minus"}
     <Minus class={iconClass} />
   {:else}
     <Plus class={iconClass} />
   {/if}
-  <i class={hoverClass}></i>
+  <!-- Hovered unselected version -->
+  {#if hoverIcon === "minus" || (hoverIcon === undefined && icon === "minus")}
+    <Minus class={hoverClass} />
+  {:else if hoverIcon === "plus" || (hoverIcon === undefined && icon === "plus")}
+    <Plus class={hoverClass} />
+  {/if}
 </div>

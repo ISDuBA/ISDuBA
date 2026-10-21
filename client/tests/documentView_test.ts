@@ -8,7 +8,7 @@
 
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { vectorStart } from "$lib/Advisories/SSVC/SSVCCalculator";
+import { vectorStart } from "#lib/Advisories/SSVC/SSVCCalculator.ts";
 
 test.beforeEach(async ({ page }) => {
   // Go to Search and ensure that the client finished loading the results
@@ -36,6 +36,8 @@ test("Advisory view is working", async ({ page }) => {
   const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
   await doc.scrollIntoViewIfNeeded();
   await doc.click({ force: true });
+  await expect(page.getByText("Language en")).toBeVisible();
+  await expect(page.getByText("Source language en")).toBeVisible();
   await expect(page.getByText("5.7 (MEDIUM)")).toBeVisible();
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
@@ -102,14 +104,13 @@ test("Advisory view is working", async ({ page }) => {
 
   // Test view of raw document
   expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
-  await page.getByRole("button", { name: "View raw document" }).click();
-  expect(page.getByRole("heading", { name: "Raw document" })).toBeVisible();
+  await page.getByTitle("View raw document").click({ force: true });
   expect(page.getByText(`"document": {`)).toBeVisible();
-  const copyButton = page.getByRole("button", { name: "Copy document" });
+  const copyButton = page.getByRole("button", { name: "Copy raw document" });
   await copyButton.click();
-  expect(page.getByText("Copied")).toBeVisible();
-  await page.getByRole("button", { name: "Close dialog" }).click();
-  await copyButton.waitFor({ state: "hidden" });
+  expect(page.getByText("Copied raw document")).toBeVisible();
+  await page.getByTitle("Open normal document view").click({ force: true });
+  expect(page.getByText(`"document": {`)).not.toBeVisible();
 
   // Switch version and check if there is a link at the comment that leads to the previous document
   await page
@@ -123,6 +124,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
   await page.getByRole("button", { name: "3 (final)" }).click();
 
+  await page.getByRole("tab", { name: "Acknowledgments" }).click();
+  await expect(page.getByText("Example Corp", { exact: true })).toBeVisible();
+  await expect(page.getByText("John Doe")).toBeVisible();
+  await expect(page.getByText("Summary of document acknowledgment")).toBeVisible();
+  await expect(page.getByText("https://example.com/example_corp", { exact: true })).toBeVisible();
+
   await page.getByRole("tab", { name: "Vulnerabilities" }).click();
   const scoresCollapsible = await page.getByText("Scores").first();
   await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
@@ -131,6 +138,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   await idsCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
   await idsCollapsible.click({ force: true });
   expect(page.getByText("GitHub Issue")).toBeVisible();
+  const acknowledgmentsCollapsible = page.getByText("Acknowledgments").nth(1);
+  await acknowledgmentsCollapsible.click({ force: true });
+  await expect(page.getByText("Example Corp 2", { exact: true })).toBeVisible();
+  await expect(page.getByText("Jane Doe")).toBeVisible();
+  await expect(page.getByText("Summary of vulnerability acknowledgment")).toBeVisible();
+  await expect(page.getByText("https://example.com/example_corp_2", { exact: true })).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();

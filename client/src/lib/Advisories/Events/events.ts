@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 // Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 
-import type { WorkflowState } from "$lib/workflow";
+import type { WorkflowState } from "#lib/workflow.ts";
 
 type CommentEventType = "add_comment" | "change_comment" | "delete_comment";
 type SSVCEventType = "add_sscv" | "change_sscv" | "delete_sscv";

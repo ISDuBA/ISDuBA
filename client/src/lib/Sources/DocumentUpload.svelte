@@ -9,10 +9,10 @@
 -->
 
 <script lang="ts">
-  import { getErrorDetails } from "$lib/Errors/error";
-  import { type UploadInfo } from "$lib/Sources/source";
-  import Upload from "$lib/Upload.svelte";
-  import { request } from "$lib/request";
+  import { getErrorDetails } from "#lib/Errors/error.ts";
+  import { type UploadInfo } from "#lib/Sources/source.ts";
+  import Upload from "#lib/Upload.svelte";
+  import { request } from "#lib/request.ts";
 
   let cancelled = false;
 
@@ -34,6 +34,8 @@
         info.success = false;
         let details = getErrorDetails(`Could not upload file`, resp);
         info.message = `${details.message} ${details.details ?? ""}`;
+      } else {
+        info.id = resp.content.id;
       }
       uploadInfo.push(info);
       if (updateCallback) {

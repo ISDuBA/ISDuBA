@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { onMount, untrack } from "svelte";
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { ProductStatusSymbol } from "./productvulnerabilitiestypes";
   import {
     Table,
@@ -22,7 +22,7 @@
     Button
   } from "flowbite-svelte";
   import { innerLinkStyle } from "./../helpers";
-  import Link from "$lib/Components/Link.svelte";
+  import Link from "#lib/Components/Link.svelte";
   import { AlertTriangle, Check, Heart, Minus, X } from "@boxicons/svelte";
 
   interface Props {

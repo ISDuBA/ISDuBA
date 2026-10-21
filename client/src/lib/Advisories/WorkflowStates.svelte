@@ -8,9 +8,18 @@
  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW, EDITOR, REVIEWER } from "$lib/workflow";
-  import { isRoleIncluded } from "$lib/permissions";
-  import { appStore } from "$lib/store.svelte";
+  import {
+    ASSESSING,
+    ARCHIVED,
+    DELETE,
+    NEW,
+    READ,
+    REVIEW,
+    EDITOR,
+    REVIEWER
+  } from "#lib/workflow.ts";
+  import { isRoleIncluded } from "#lib/permissions.ts";
+  import { appStore } from "#lib/store.svelte.ts";
   import WorkflowButton from "./WorkflowButton.svelte";
   import { setContext } from "svelte";
 

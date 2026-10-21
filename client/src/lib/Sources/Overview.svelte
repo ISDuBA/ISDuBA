@@ -10,23 +10,22 @@
 
 <script lang="ts">
   import { Badge, Button, Spinner, TableBodyCell } from "flowbite-svelte";
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import { push } from "$routes/router.svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { type ErrorDetails, getErrorDetails } from "$lib/Errors/error";
-  import { tdClass } from "$lib/Table/defaults";
-  import { request } from "$lib/request";
+  import SectionHeader from "#lib/SectionHeader.svelte";
+  import { push } from "#routes/router.svelte.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { type ErrorDetails, getErrorDetails } from "#lib/Errors/error.ts";
+  import { tdClass } from "#lib/Table/defaults.ts";
+  import { request } from "#lib/request.ts";
   import { onDestroy, onMount } from "svelte";
-  import CustomTable from "$lib/Table/CustomTable.svelte";
-  import { type Source, fetchSources } from "$lib/Sources/source";
-  import { appStore } from "$lib/store.svelte";
-  import { DAY_MS } from "$lib/time";
-  import ImportStats from "$lib/Statistics/ImportStats.svelte";
+  import CustomTable from "#lib/Table/CustomTable.svelte";
+  import { type Source, fetchSources } from "#lib/Sources/source.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import { DAY_MS } from "#lib/time.ts";
+  import ImportStats from "#lib/Statistics/ImportStats.svelte";
   import SourceBasicStats from "./SourceBasicStats.svelte";
   import { ArrowOutUpSquareHalf, Circle, GitRepoForked, Plus } from "@boxicons/svelte";
 
   const shortLoadInterval = 5;
-  const longLoadMultiplier = 6;
 
   let messageError: ErrorDetails | null = $state(null);
   let sourcesError: ErrorDetails | null = $state(null);
@@ -46,14 +45,7 @@
     return new Map<string, [string]>();
   }
 
-  let updateIteration = $state(0);
   let sourceUpdate = setInterval(async () => {
-    updateIteration = (updateIteration + 1) % longLoadMultiplier;
-    if (updateIteration == 0) {
-      for (let comp of Object.values(statsComponents)) {
-        comp.reload();
-      }
-    }
     if (appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()) {
       getSources();
     }
@@ -70,6 +62,42 @@
       sourcesError = result.error;
     }
   };
+
+  $effect(() => {
+    const customInterval = appStore.getImportStatsInterval() / 1_000_000;
+    // If not a positve number, disable requests for download numbers
+    if (customInterval <= 0) {
+      return;
+    }
+
+    const importStatsUpdate = setInterval(() => {
+      for (const comp of Object.values(statsComponents)) {
+        void comp.reload();
+      }
+    }, customInterval);
+
+    return () => {
+      clearInterval(importStatsUpdate);
+    };
+  });
+
+  let tableHeaders = $derived([
+    { label: "", attribute: "icon" },
+    { label: "Name", attribute: "name" },
+    { label: "Domain/PMD", attribute: "url" },
+    { label: "Active", attribute: "active" },
+    { label: "Loading/Queued", attribute: "stats" },
+    { label: "Healthy", attribute: "healthy" },
+    ...(appStore.getImportStatsInterval() > 0
+      ? [
+          {
+            label: "Imported (last 24h)",
+            attribute: "statsHistory",
+            progressDuration: appStore.getImportStatsInterval() / 1_000_000_000
+          }
+        ]
+      : [])
+  ]);
 
   onMount(async () => {
     if (appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()) {
@@ -89,8 +117,14 @@
 <div>
   <SectionHeader title="Sources"></SectionHeader>
   <div class="flex flex-col gap-4">
-    <ImportStats axes={[{ label: "Imports", types: ["imports"] }]} divContainerClass="mb-4" title=""
-    ></ImportStats>
+    {#if appStore.getImportStatsInterval() > 0}
+      <ImportStats
+        axes={[{ label: "Imports", types: ["imports"] }]}
+        divContainerClass="mb-4"
+        title=""
+      ></ImportStats>
+    {/if}
+
     {#if appStore.isImporter()}
       <Button href="/#/sources/upload" class="my-2 w-fit" color="primary">
         <ArrowOutUpSquareHalf />
@@ -98,40 +132,7 @@
       </Button>
     {/if}
     {#if appStore.isAuditor() || appStore.isEditor() || appStore.isSourceManager()}
-      <CustomTable
-        title="CSAF Provider"
-        headers={[
-          {
-            label: "",
-            attribute: "icon"
-          },
-          {
-            label: "Name",
-            attribute: "name"
-          },
-          {
-            label: "Domain/PMD",
-            attribute: "url"
-          },
-          {
-            label: "Active",
-            attribute: "active"
-          },
-          {
-            label: "Loading/Queued",
-            attribute: "stats"
-          },
-          {
-            label: "Healthy",
-            attribute: "healthy"
-          },
-          {
-            label: "Imported (last 24h)",
-            attribute: "statsHistory",
-            progressDuration: shortLoadInterval * longLoadMultiplier
-          }
-        ]}
-      >
+      <CustomTable title="CSAF Provider" headers={tableHeaders}>
         {#snippet mainSlot()}
           {#each sources as source, index (index)}
             <tr
@@ -160,7 +161,7 @@
                   >{source.url}</TableBodyCell
                 >
                 <TableBodyCell class={tdClass}>
-                  <Circle pack={source.healthy ? "filled" : "basic"} />
+                  <Circle pack={source.active ? "filled" : "basic"} />
                 </TableBodyCell>
                 <TableBodyCell class={tdClass}
                   >{source.stats?.downloading}/{source.stats?.waiting}</TableBodyCell
@@ -174,20 +175,22 @@
                 <TableBodyCell class={tdClass}></TableBodyCell>
                 <TableBodyCell class={tdClass}></TableBodyCell>
               {/if}
-              <TableBodyCell class={tdClass}>
-                {#if source.id !== undefined}
-                  {@const yesterday = Date.now() - DAY_MS}
-                  <SourceBasicStats
-                    bind:this={statsComponents[`${source.id}full`]}
-                    sourceID={source.id}
-                  ></SourceBasicStats>
-                  (<SourceBasicStats
-                    bind:this={statsComponents[`${source.id}last`]}
-                    from={new Date(yesterday)}
-                    sourceID={source.id}
-                  ></SourceBasicStats>)
-                {/if}
-              </TableBodyCell>
+              {#if appStore.getImportStatsInterval() > 0}
+                <TableBodyCell class={tdClass}>
+                  {#if source.id !== undefined}
+                    {@const yesterday = Date.now() - DAY_MS}
+                    <SourceBasicStats
+                      bind:this={statsComponents[`${source.id}full`]}
+                      sourceID={source.id}
+                    ></SourceBasicStats>
+                    (<SourceBasicStats
+                      bind:this={statsComponents[`${source.id}last`]}
+                      from={new Date(yesterday)}
+                      sourceID={source.id}
+                    ></SourceBasicStats>)
+                  {/if}
+                </TableBodyCell>
+              {/if}
             </tr>
           {/each}
         {/snippet}

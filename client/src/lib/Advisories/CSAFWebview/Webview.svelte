@@ -8,10 +8,10 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
-  import General from "$lib/Advisories/CSAFWebview/general/General.svelte";
-  import ProductTree from "$lib/Advisories/CSAFWebview/producttree/ProductTree.svelte";
-  import Vulnerabilities from "$lib/Advisories/CSAFWebview/vulnerabilities/Vulnerabilities.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
+  import General from "#lib/Advisories/CSAFWebview/general/General.svelte";
+  import ProductTree from "#lib/Advisories/CSAFWebview/producttree/ProductTree.svelte";
+  import Vulnerabilities from "#lib/Advisories/CSAFWebview/vulnerabilities/Vulnerabilities.svelte";
   import ValueList from "./ValueList.svelte";
   import RevisionHistory from "./general/RevisionHistory.svelte";
   import Notes from "./notes/Notes.svelte";
@@ -19,7 +19,7 @@
   import References from "./references/References.svelte";
   import ProductVulnerabilities from "./productvulnerabilities/ProductVulnerabilities.svelte";
   import FakeButton from "./FakeButton.svelte";
-  import { push } from "$routes/router.svelte";
+  import { push } from "#routes/router.svelte.ts";
 
   import { Tabs, TabItem } from "flowbite-svelte";
   import { onMount, tick } from "svelte";
