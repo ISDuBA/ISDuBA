@@ -172,10 +172,10 @@ func main() {
 	cfg, err := config.Load(cfgFile)
 	check(err)
 	check(cfg.Log.Config())
-	if cfg.Pprof.PprofURL != "" {
+	if cfg.Pprof.URL != "" {
 		go func() {
-			slog.Info("Starting pprof debug server", "port", cfg.Pprof.PprofURL)
-			check(http.ListenAndServe(cfg.Pprof.PprofURL, nil))
+			slog.Info("Starting pprof debug server", "port", cfg.Pprof.URL)
+			check(http.ListenAndServe(cfg.Pprof.URL, nil))
 		}()
 	}
 	check(run(cfg))

@@ -180,7 +180,7 @@ Aggregators are checked for updates in regular intervals.
 
 ### <a name="section_pprof"></a> Section `[pprof]` Pprof configuration
 [pprof](https://github.com/google/pprof) is a tool for visualization and analysis of profiling data.
-- `pprof_url`: Listen address for the HTTP server that exposes pprof profiling data. Defaults to `""` (disabled).
+- `url`: Listen address for the HTTP server that exposes pprof profiling data. Defaults to `""` (disabled).
 
 ## <a name="env_vars"></a>Environment variables
 
@@ -242,4 +242,4 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_FORWARDER_STRATEGY`           | `forwarder strategy`                 |
 | `ISDUBA_AGGREGATORS_UPDATE_INTERVAL`  | `aggregators update_interval`        |
 | `ISDUBA_AGGREGATORS_TIMEOUT`          | `aggregators timeout`                |
-| `ISDUBA_PPROF_URL`  		        | `pprof pprof_url`		               |
+| `ISDUBA_PPROF_URL`  		        | `pprof url`		               |

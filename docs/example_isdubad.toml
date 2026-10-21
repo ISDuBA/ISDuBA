@@ -130,4 +130,4 @@
 # update_interval = "2h"
 
 # [pprof]
-# pprof_url = ""
+# url = ""
