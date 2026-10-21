@@ -35,6 +35,7 @@
       if (
         params &&
         result.id === Number(params.id) &&
+        data &&
         data[0].publisher === params.publisherNamespace &&
         data[0].tracking_id === params.trackingID
       ) {
