@@ -100,8 +100,8 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 				"error", err)
 			continue
 		}
-		if fp := fingerprint(key); fp != "" &&
-			!strings.EqualFold(ckey.GetFingerprint(), fp) {
+		if fp := key.Fingerprint; fp != nil &&
+			!strings.EqualFold(ckey.GetFingerprint(), *fp) {
 			slog.Warn(
 				"Fingerprint of public OpenPGP key does not match remotely loaded",
 				"url", u)

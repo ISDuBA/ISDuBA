@@ -110,17 +110,6 @@ func dirURL(d *provider.ProviderDistributionsElem) string {
 	return ""
 }
 
-// fingerprint returns an OpenPGP key fingerprint, if present
-func fingerprint(k *provider.ProviderPublicOpenpgpKeysElem) string {
-	if fp, _ := k.GetFingerprint21(); fp != "" {
-		return fp
-	}
-	if fp, _ := k.GetFingerprint20(); fp != nil {
-		return *fp
-	}
-	return ""
-}
-
 // availableFeeds returns a list of the feeds available for the given provider.
 func availableFeeds(pmd *provider.Provider) []string {
 	var feeds []string
