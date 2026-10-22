@@ -26,17 +26,19 @@ type (
 
 // The different TLP levels
 const (
-	TLPWhite TLP = "WHITE" // TLPWhite represents TLP:WHITE
-	TLPGreen TLP = "GREEN" // TLPGreen represents TLP:GREEN
-	TLPAmber TLP = "AMBER" // TLPAmber represents TLP:AMBER
-	TLPRed   TLP = "RED"   // TLPRed   represents TLP:RED
+	TLPWhite       TLP = "WHITE"        // TLPWhite represents TLP:WHITE
+	TLPClear       TLP = "CLEAR"        // TLPClear represents TLP:CLEAR (replaces WHITE in CSAF 2.1)
+	TLPGreen       TLP = "GREEN"        // TLPGreen represents TLP:GREEN
+	TLPAmber       TLP = "AMBER"        // TLPAmber represents TLP:AMBER
+	TLPAmberStrict TLP = "AMBER+STRICT" // TLPAmberStrict represents TLP:AMBER+STRICT (only in CSAF 2.1)
+	TLPRed         TLP = "RED"          // TLPRed   represents TLP:RED
 )
 
 // UnmarshalText implements [encoding.TextUnmarshaler].
 func (tlp *TLP) UnmarshalText(text []byte) error {
 	s := TLP(text)
 	switch s {
-	case TLPWhite, TLPGreen, TLPAmber, TLPRed:
+	case TLPWhite, TLPClear, TLPGreen, TLPAmber, TLPAmberStrict, TLPRed:
 		*tlp = s
 		return nil
 	default:
@@ -44,13 +46,26 @@ func (tlp *TLP) UnmarshalText(text []byte) error {
 	}
 }
 
+// corrected ensures the equality between TLP 1 WHITE and TLP 2 CLEAR labels
+func (tlp TLP) corrected() TLP {
+	if tlp == TLPWhite {
+		return TLPClear
+	}
+	return tlp
+}
+
 // Allowed checks if a pair of publisher/tlp is allowed.
 func (ptlps PublishersTLPs) Allowed(publisher string, tlp TLP) bool {
+	corrected := tlp.corrected()
 	if p, ok := ptlps[Publisher(publisher)]; ok {
-		return slices.Contains(p, tlp)
+		return slices.ContainsFunc(p, func(t TLP) bool {
+			return t.corrected() == corrected
+		})
 	}
 	wildcard, ok := ptlps["*"]
-	return ok && slices.Contains(wildcard, tlp)
+	return ok && slices.ContainsFunc(wildcard, func(t TLP) bool {
+		return t.corrected() == corrected
+	})
 }
 
 // or transforms a slice of string kinds into list of or-ed string field accesses.

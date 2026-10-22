@@ -49,7 +49,7 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 	if err != nil {
 		// Try again soon.
 		m.keysCache.SetWithExpiration(source.id, keys, holdingPMDsDuration)
-		return nil, fmt.Errorf("re-marshaling failed: %w", err)
+		return nil, fmt.Errorf("could not get valid PMD model: %w", err)
 	}
 	base, err := url.Parse(source.url)
 	if err != nil {
@@ -59,14 +59,14 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 	}
 	client := source.httpClient(m)
 	defer client.CloseIdleConnections()
-	for i := range pmd.PGPKeys {
-		key := &pmd.PGPKeys[i]
-		if key.URL == nil {
+	for i := range pmd.PublicOpenpgpKeys {
+		key := &pmd.PublicOpenpgpKeys[i]
+		if key.URL == "" {
 			continue
 		}
-		u, err := url.Parse(*key.URL)
+		u, err := url.Parse(key.URL)
 		if err != nil {
-			slog.Warn("Invalid OpenPGP url", "url", *key.URL, "err", err)
+			slog.Warn("Invalid OpenPGP url", "url", key.URL, "err", err)
 			continue
 		}
 		if !u.IsAbs() {
@@ -100,8 +100,8 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 				"error", err)
 			continue
 		}
-		if key.Fingerprint != "" &&
-			!strings.EqualFold(ckey.GetFingerprint(), string(key.Fingerprint)) {
+		if fp := key.Fingerprint; fp != nil &&
+			!strings.EqualFold(ckey.GetFingerprint(), *fp) {
 			slog.Warn(
 				"Fingerprint of public OpenPGP key does not match remotely loaded",
 				"url", u)
