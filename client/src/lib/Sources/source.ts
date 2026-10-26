@@ -9,7 +9,14 @@
 import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
 import { request } from "#lib/request.ts";
 import type { Result } from "#lib/types.ts";
-import type { CSAFProviderMetadata } from "#lib/provider.d.ts";
+import type {
+  CSAFProviderMetadata as CSAFProviderMetadata2_0,
+  Distribution as Distribution2_0
+} from "#lib/Provider/types/provider-2.0.js";
+import type {
+  CSAFProviderMetadata as CSAFProviderMetadata2_1,
+  Distribution as Distribution2_1
+} from "#lib/Provider/types/provider-2.1.js";
 import type { AggregatorMetadata } from "#lib/aggregatorTypes.ts";
 
 const dtClass: string = "mt-1 text-gray-500 md:text-sm dark:text-gray-400";
@@ -254,7 +261,10 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
   }
 };
 
-const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => {
+const parseFeeds = (
+  pmd: CSAFProviderMetadata2_0 | CSAFProviderMetadata2_1,
+  currentFeeds: Feed[]
+): Feed[] => {
   const feeds: Feed[] = [];
 
   const dist = pmd.distributions ?? [];
@@ -277,15 +287,21 @@ const parseFeeds = (pmd: CSAFProviderMetadata, currentFeeds: Feed[]): Feed[] => 
         });
       }
     }
-    if (entry.directory_url) {
-      const splitUrl = entry.directory_url.split("/");
+    let url;
+    if (entry.directory) {
+      url = (entry as Distribution2_1).directory?.url;
+    } else {
+      url = (entry as Distribution2_0).directory_url;
+    }
+    if (url) {
+      const splitUrl = url.split("/");
       let label = splitUrl.pop() ?? "Default label";
       // If the url ends with '/'
       if (label.length === 0) {
         label = splitUrl.pop() ?? "Default label";
       }
       feeds.push({
-        url: entry.directory_url,
+        url,
         label: label,
         log_level: LogLevel.default,
         rolie: false,
@@ -348,7 +364,9 @@ const saveFeeds = async (
   return { ok: true, value: ids };
 };
 
-const getSourceName = async (pmd: CSAFProviderMetadata): Promise<string> => {
+const getSourceName = async (
+  pmd: CSAFProviderMetadata2_0 | CSAFProviderMetadata2_1
+): Promise<string> => {
   const result = await fetchSources();
   if (!result.ok) {
     return `New Source #${Math.floor(Math.random() * 1000)}`;
@@ -366,7 +384,9 @@ const getSourceName = async (pmd: CSAFProviderMetadata): Promise<string> => {
   }
 };
 
-const fetchPMD = async (url: string): Promise<Result<CSAFProviderMetadata, ErrorDetails>> => {
+const fetchPMD = async (
+  url: string
+): Promise<Result<CSAFProviderMetadata2_0 | CSAFProviderMetadata2_0, ErrorDetails>> => {
   const resp = await request(`/api/pmd?url=${encodeURIComponent(url)}`, "GET");
   if (resp.ok) {
     return {

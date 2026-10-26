@@ -35,7 +35,7 @@
   import { ADMIN, EDITOR, IMPORTER, REVIEWER } from "#lib/workflow.ts";
   import { getAllowedWorkflowChanges, isRoleIncluded } from "#lib/permissions.ts";
   import { appStore } from "#lib/store.svelte.ts";
-  import { getPublisher } from "#lib/publisher.ts";
+  import { getPublisherAbbreviation } from "#lib/publisher.ts";
   import CIconButton from "#lib/Components/CIconButton.svelte";
   import SSVCBadge from "#lib/Advisories/SSVC/SSVCBadge.svelte";
   import { SEARCHTYPES } from "#lib/Queries/query.ts";
@@ -596,7 +596,9 @@
                   <TableBodyCell class={publisher + " relative"}>
                     {@render advisoryLink(item)}
                     <div class={publisher + " m-2"}>
-                      <span title={item[column]}>{getPublisher(item[column], innerWidth)}</span>
+                      <span title={item[column]}
+                        >{getPublisherAbbreviation(item[column], innerWidth)}</span
+                      >
                     </div></TableBodyCell
                   >
                 {:else if column === "recent"}

@@ -23,7 +23,8 @@
   import SectionHeader from "#lib/SectionHeader.svelte";
   import { Input, Label, Button, Spinner } from "flowbite-svelte";
   import SourceForm from "./SourceForm.svelte";
-  import type { CSAFProviderMetadata } from "#lib/provider.d.ts";
+  import type { CSAFProviderMetadata as CSAFProviderMetadata2_0 } from "#lib/Provider/types/provider-2.0.js";
+  import type { CSAFProviderMetadata as CSAFProviderMetadata2_1 } from "#lib/Provider/types/provider-2.1.js";
   import { push } from "#routes/router.svelte.ts";
   import FeedView from "./FeedView.svelte";
   import { onMount } from "svelte";
@@ -74,7 +75,7 @@
   let formClass = "max-w-[800pt]";
   let loadingPMD: boolean = $state(false);
 
-  let pmd: CSAFProviderMetadata | null = $state(null);
+  let pmd: CSAFProviderMetadata2_0 | CSAFProviderMetadata2_1 | null = $state(null);
   let pmdFeeds: Feed[] = $state([]);
 
   const loadPMD = async () => {

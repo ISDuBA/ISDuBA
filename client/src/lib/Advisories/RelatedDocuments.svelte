@@ -23,7 +23,8 @@
   } from "flowbite-svelte";
   import { tick } from "svelte";
   import WorkflowStateIcon from "#lib/Advisories/WorkflowStateIcon.svelte";
-  import { fetchDocumentSSVC, isResultConsistent } from "#lib/Advisories/advisory.svelte.ts";
+  import { isResultConsistent } from "#lib/Advisories/advisory.svelte.ts";
+  import { fetchDocumentSSVC } from "./document";
   import SSVCBadge from "./SSVC/SSVCBadge.svelte";
   import { push } from "#routes/router.svelte.ts";
   import { appStore } from "#lib/store.svelte.ts";

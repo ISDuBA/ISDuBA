@@ -26,7 +26,8 @@
   import { Button, Spinner, Modal, DescriptionList } from "flowbite-svelte";
   import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
   import { type ErrorDetails, getErrorDetails } from "#lib/Errors/error.ts";
-  import type { CSAFProviderMetadata } from "#lib/provider.d.ts";
+  import type { CSAFProviderMetadata as CSAFProviderMetadata2_0 } from "#lib/Provider/types/provider-2.0.js";
+  import type { CSAFProviderMetadata as CSAFProviderMetadata2_1 } from "#lib/Provider/types/provider-2.1.js";
   import SectionHeader from "#lib/SectionHeader.svelte";
   import { onDestroy, onMount } from "svelte";
   import SourceForm from "./SourceForm.svelte";
@@ -63,7 +64,7 @@
   let saveFeedError: ErrorDetails | null = $state(null);
   let loadPmdError: ErrorDetails | null = $state(null);
   let feedError: ErrorDetails | null = $state(null);
-  let pmd: CSAFProviderMetadata | null = $state(null);
+  let pmd: CSAFProviderMetadata2_0 | CSAFProviderMetadata2_1 | null = $state(null);
   let feeds: Feed[] = $state([]);
 
   let loadingFeeds: boolean = $state(false);

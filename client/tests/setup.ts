@@ -40,11 +40,11 @@ setup("authenticate and upload document", async ({ page }) => {
   await page
     .locator('input[type="file"]')
     .setInputFiles([
-      "../docs/example-advisories/avendor-advisory-0004.json",
-      "../docs/example-advisories/avendor-advisory-0005.json",
+      "../docs/example-advisories/multiple-versions/1/avendor-advisory-0004.json",
       "../docs/example-advisories/multiple-versions/2/avendor-advisory-0004.json",
       "../docs/example-advisories/multiple-versions/3-interim/avendor-advisory-0004.json",
-      "../docs/example-advisories/multiple-versions/3-final/avendor-advisory-0004.json"
+      "../docs/example-advisories/multiple-versions/3-final/avendor-advisory-0004.json",
+      "../docs/example-advisories/avendor-advisory-0005.json"
     ]);
   await expect(page.getByText("5 files selected")).toBeVisible();
   await expect(page.getByText("avendor-advisory-0005.json")).toBeVisible();

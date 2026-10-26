@@ -23,7 +23,22 @@
 
   import { Tabs, TabItem } from "flowbite-svelte";
   import { onMount, tick } from "svelte";
-  import { advisorySearchState, getAdvisorySearchHit } from "../advisory.svelte";
+  import {
+    advisorySearchState,
+    getAdvisorySearchHit,
+    getProductVulneravbilities
+  } from "../advisory.svelte";
+  import {
+    getAcknowledgments,
+    getAliases,
+    getInvolvement,
+    getNotes,
+    getProductTree,
+    getReferences,
+    getRevisionHistory,
+    getVulnerabilities
+  } from "../docmodel";
+  import Involvement from "./vulnerabilities/vulnerability/involvements/Involvement.svelte";
 
   interface Props {
     position: string;
@@ -45,6 +60,7 @@
     | "Acknowledgments"
     | "references"
     | "revisionHistory"
+    | "involvement"
     | undefined;
   type WebviewDataSections = {
     [key: string]: boolean;
@@ -55,6 +71,7 @@
     Acknowledgments: boolean;
     references: boolean;
     revisionHistory: boolean;
+    involvement: boolean;
   };
 
   let closeAll = $state(false);
@@ -66,8 +83,19 @@
     notes: false,
     Acknowledgments: false,
     references: false,
-    revisionHistory: false
+    revisionHistory: false,
+    involvement: false
   });
+
+  let doc = $derived(appStore.state.webview.doc);
+  let acknowledgments = $derived(getAcknowledgments(doc));
+  let aliases = $derived(getAliases(doc));
+  let notes = $derived(getNotes(doc));
+  let involvement = $derived(getInvolvement(doc));
+  let productTree = $derived(getProductTree(doc));
+  let references = $derived(getReferences(doc));
+  let revisionHistory = $derived(getRevisionHistory(doc));
+  let vulnerabilities = $derived(getVulnerabilities(doc));
 
   // When a link in a component inside the Webview is clicked we want the appropriate
   // tab to be opened.
@@ -98,25 +126,30 @@
     return open;
   });
 
-  let maxTabs: number = $derived.by(() => {
-    return Object.keys(tabOpen).length;
+  // All tabs that should be displayed
+  let availableTabs: string[] = $derived.by(() => {
+    const tabs = [];
+    if (productTree) tabs.push("productTree");
+    if (vulnerabilities) tabs.push("vulnerabilities");
+    if (notes) tabs.push("notes");
+    if (acknowledgments) tabs.push("acknowledgments");
+    if (references) tabs.push("references");
+    if (revisionHistory) tabs.push("revisionHistory");
+    if (involvement) tabs.push("involvement");
+    return tabs;
   });
-  let tabCount: number = $derived.by(() => {
-    let count = 1;
-    if (appStore.state.webview.doc && appStore.state.webview.doc["isProductTreePresent"]) count++;
-    if (appStore.state.webview.doc && appStore.state.webview.doc["isVulnerabilitiesPresent"])
-      count++;
-    if (appStore.state.webview.doc?.notes) count++;
-    if (appStore.state.webview.doc?.acknowledgments) count++;
-    if (appStore.state.webview.doc && appStore.state.webview.doc.references.length > 0) count++;
-    if (appStore.state.webview.doc?.isRevisionHistoryPresent) count++;
-    return count;
+  // Number of tabs that are placed next to the general section
+  let numberOfDetachedTabs: number = $derived(Math.max(0, Math.floor(gridWidth / 750) - 1));
+  let detachedTabs: string[] = $derived.by(() => {
+    return availableTabs.filter((_tab, index) => index < numberOfDetachedTabs);
   });
-  let missingTabs: number = $derived.by(() => {
-    return maxTabs - tabCount;
-  });
-  // Number of sections that can be shown next to each other
-  let screenPhase: number = $derived(Math.max(0, Math.floor(gridWidth / 750 - 2 + missingTabs)));
+  let detachProductTree = $derived(detachedTabs.includes("productTree"));
+  let detachVulnerabilities = $derived(detachedTabs.includes("vulnerabilities"));
+  let detachNotes = $derived(detachedTabs.includes("notes"));
+  let detachAcknowledgment = $derived(detachedTabs.includes("acknowledgments"));
+  let detachReferences = $derived(detachedTabs.includes("references"));
+  let detachRevisionHistory = $derived(detachedTabs.includes("revisionHistory"));
+  let detachInvolvement = $derived(detachedTabs.includes("involvement"));
 
   $effect(() => {
     const path = getAdvisorySearchHit()?.path;
@@ -133,6 +166,8 @@
         openTab("Acknowledgments", true, false);
       } else if (path.startsWith("/document/tracking/revision_history")) {
         openTab("revisionHistory", true, false);
+      } else if (path.startsWith("/document/involvement")) {
+        openTab("involvement", true, false);
       }
     }
   });
@@ -179,8 +214,6 @@
     }
   });
 
-  let aliases = $derived(appStore.state.webview.doc?.aliases);
-
   onMount(() => {
     setSelectedItems();
   });
@@ -188,7 +221,7 @@
 
 <div bind:clientWidth={gridWidth} class="grid auto-cols-fr grid-flow-col gap-6">
   <div class="flex w-full flex-col">
-    {#if appStore.state.webview.doc}
+    {#if doc}
       <div class="mb-4 w-full">
         <General {basePath} />
       </div>
@@ -198,7 +231,7 @@
         <ValueList label="Aliases" values={aliases} path="/document/tracking/aliases" />
       </div>
     {/if}
-    {#if screenPhase < Object.keys(tabOpen).length}
+    {#if numberOfDetachedTabs < Object.keys(tabOpen).length}
       <Tabs class="mb-2 flex flex-wrap space-x-2 gap-y-2 rtl:space-x-reverse">
         <TabItem
           activeClass={tabItemActiveClass}
@@ -207,7 +240,7 @@
           onclick={() => openTab("vulnerabilitiesOverview")}
           title="Overview"
         >
-          {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+          {#if getProductVulneravbilities().length > 1}
             <div class={sideScroll}>
               <ProductVulnerabilities {basePath} />
             </div>
@@ -218,7 +251,7 @@
             </i>
           {/if}
         </TabItem>
-        {#if screenPhase < 2}
+        {#if !detachProductTree}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -231,7 +264,7 @@
             </div>
           </TabItem>
         {/if}
-        {#if screenPhase < 3}
+        {#if !detachVulnerabilities}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -244,7 +277,7 @@
             </div>
           </TabItem>
         {/if}
-        {#if screenPhase < 4 && appStore.state.webview.doc?.notes}
+        {#if !detachNotes && notes}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -253,11 +286,11 @@
             title="Notes"
           >
             <div class={sideScroll}>
-              <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
+              <Notes initOpen {notes} path="/document" />
             </div>
           </TabItem>
         {/if}
-        {#if screenPhase < 5 && appStore.state.webview.doc?.acknowledgments}
+        {#if !detachAcknowledgment && acknowledgments}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -266,11 +299,11 @@
             title="Acknowledgments"
           >
             <div class={sideScroll}>
-              <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+              <Acknowledgments {acknowledgments} />
             </div>
           </TabItem>
         {/if}
-        {#if screenPhase < 6}
+        {#if !detachReferences}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -279,11 +312,11 @@
             title="References"
           >
             <div class={sideScroll}>
-              <References path="/document" references={appStore.state.webview.doc?.references} />
+              <References path="/document" references={getReferences(doc)} />
             </div>
           </TabItem>
         {/if}
-        {#if screenPhase < 7}
+        {#if !detachRevisionHistory}
           <TabItem
             activeClass={tabItemActiveClass}
             inactiveClass={tabItemInactiveClass}
@@ -296,13 +329,26 @@
             </div>
           </TabItem>
         {/if}
+        {#if !detachInvolvement && involvement}
+          <TabItem
+            activeClass={tabItemActiveClass}
+            inactiveClass={tabItemInactiveClass}
+            open={reallyOpen.involvement}
+            onclick={() => openTab("involvement")}
+            title="Involvement"
+          >
+            <div class={sideScroll}>
+              <Involvement />
+            </div>
+          </TabItem>
+        {/if}
       </Tabs>
     {:else}
       <div>
         <FakeButton active>Overview</FakeButton>
         <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
         <div class={sideScroll}>
-          {#if appStore.state.webview.doc?.productVulnerabilities.length > 1}
+          {#if getProductVulneravbilities().length > 1}
             <ProductVulnerabilities {basePath} />
           {:else}
             <i>
@@ -314,7 +360,7 @@
       </div>
     {/if}
   </div>
-  {#if screenPhase > 1}
+  {#if detachProductTree}
     <div>
       <FakeButton active>Product tree</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
@@ -323,7 +369,7 @@
       </div>
     </div>
   {/if}
-  {#if screenPhase > 2}
+  {#if detachVulnerabilities}
     <div>
       <FakeButton active>Vulnerabilities</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
@@ -332,42 +378,52 @@
       </div>
     </div>
   {/if}
-  {#if screenPhase > 3 && appStore.state.webview.doc?.notes}
+  {#if detachNotes && notes}
     <div>
       <FakeButton active>Notes</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        <Notes initOpen notes={appStore.state.webview.doc?.notes} path="/document" />
+        <Notes initOpen {notes} path="/document" />
       </div>
     </div>
   {/if}
 
-  {#if screenPhase > 4 && appStore.state.webview.doc?.acknowledgments}
+  {#if detachAcknowledgment && acknowledgments}
     <div>
       <FakeButton active>Acknowledgments</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        <Acknowledgments acknowledgments={appStore.state.webview.doc?.acknowledgments} />
+        <Acknowledgments {acknowledgments} />
       </div>
     </div>
   {/if}
 
-  {#if screenPhase > 5}
+  {#if detachReferences}
     <div>
       <FakeButton active>References</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
-        <References path="/document" references={appStore.state.webview.doc?.references} />
+        <References path="/document" references={doc ? getReferences(doc) : undefined} />
       </div>
     </div>
   {/if}
 
-  {#if screenPhase > 6}
+  {#if detachRevisionHistory}
     <div>
       <FakeButton active>Revision history</FakeButton>
       <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
       <div class={sideScroll}>
         <RevisionHistory />
+      </div>
+    </div>
+  {/if}
+
+  {#if detachInvolvement && involvement}
+    <div>
+      <FakeButton active>Involvement</FakeButton>
+      <div class="mt-2 mb-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class={sideScroll}>
+        <Involvement />
       </div>
     </div>
   {/if}
