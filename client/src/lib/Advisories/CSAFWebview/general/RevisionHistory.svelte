@@ -21,7 +21,7 @@
   import { tablePadding } from "#lib/Table/defaults.ts";
   import { getReadableDateString } from "../helpers";
   import SearchableText from "../SearchableText.svelte";
-  const baseCellStyle = "py-0 px-2";
+  const baseCellStyle = "py-4 px-2";
   const cellStyle = "whitespace-nowrap " + baseCellStyle;
 
   let revisionHistory = $derived(appStore.state.webview.doc?.revisionHistory);
@@ -31,10 +31,10 @@
   <div class="mt-1 w-fit pl-5">
     <Table border={false} striped={true}>
       <TableHead>
-        <TableHeadCell padding={tablePadding}>#</TableHeadCell>
-        <TableHeadCell padding={tablePadding}>Date</TableHeadCell>
-        <TableHeadCell padding={tablePadding}>Summary</TableHeadCell>
-        <TableHeadCell padding={tablePadding}>Legacy_version</TableHeadCell>
+        <TableHeadCell class={tablePadding}>#</TableHeadCell>
+        <TableHeadCell class={tablePadding}>Date</TableHeadCell>
+        <TableHeadCell class={tablePadding}>Summary</TableHeadCell>
+        <TableHeadCell class={tablePadding}>Legacy_version</TableHeadCell>
       </TableHead>
       <TableBody>
         {#if revisionHistory}
@@ -54,7 +54,7 @@
                   textPath={`/document/tracking/revision_history[${reversedIndex}]/summary`}
                 />
               </TableBodyCell>
-              <TableBodyCell
+              <TableBodyCell class={baseCellStyle}
                 >{#if entry.legacy_version}
                   <SearchableText
                     text={entry.legacy_version}
