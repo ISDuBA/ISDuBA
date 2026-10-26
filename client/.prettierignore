@@ -21,3 +21,4 @@ coverage/
 
 # Don't format generated files
 src/lib/Advisories/types/csaf-**.d.ts
+src/lib/Provider/types/provider-**.d.ts
