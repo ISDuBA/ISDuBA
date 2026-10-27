@@ -102,6 +102,19 @@ type source struct {
 	checksumUpdated time.Time
 }
 
+func (f *feed) setProcessingHealthy(
+	ctx context.Context,
+	m *Manager,
+	healthy bool,
+) error {
+	const sql = `UPDATE feeds SET processing_healthy = $1 WHERE id = $2`
+
+	return m.db.Run(ctx, func(ctx context.Context, conn *pgxpool.Conn) error {
+		_, err := conn.Exec(ctx, sql, healthy, f.id)
+		return err
+	}, 0)
+}
+
 // ignore returns true if the given url should be ignored.
 func (ip ignorePatterns) ignore(u *url.URL) bool {
 	if len(ip) == 0 {
@@ -126,9 +139,25 @@ func (f *feed) refresh(ctx context.Context, m *Manager) {
 	f.fetchIndex(ctx, m, func(candidates []location, err error) {
 		if err != nil {
 			f.log(ctx, m, config.ErrorFeedLogLevel, "fetching feed index failed: %v", err)
+
+			m.fns <- func(m *Manager, ctx context.Context) {
+				if err := f.setProcessingHealthy(ctx, m, false); err != nil {
+					f.log(ctx, m, config.ErrorFeedLogLevel,
+						"updating feed health failed: %v", err)
+				}
+			}
 			return
 		}
+
 		if candidates == nil {
+			// An unchanged index is a successful check.
+			m.fns <- func(m *Manager, ctx context.Context) {
+				if err := f.setProcessingHealthy(ctx, m, true); err != nil {
+					f.log(ctx, m, config.ErrorFeedLogLevel,
+						"updating feed health failed: %v", err)
+				}
+			}
+
 			slog.Debug("feed has not changed", "feed", f.id)
 			f.log(ctx, m, config.InfoFeedLogLevel, "feed %d has not changed", f.id)
 			f.log(ctx, m, config.InfoFeedLogLevel, "entries to download: %d", len(f.queue))
@@ -143,7 +172,16 @@ func (f *feed) refresh(ctx context.Context, m *Manager) {
 			if candidates, err = f.removeOlder(ctx, m.db, candidates); err != nil {
 				f.log(ctx, m, config.ErrorFeedLogLevel,
 					"feed refresh failed with database error: %v", err)
+
+				if healthErr := f.setProcessingHealthy(ctx, m, false); healthErr != nil {
+					f.log(ctx, m, config.ErrorFeedLogLevel,
+						"updating feed health failed: %v", healthErr)
+				}
 				return
+			}
+			if err := f.setProcessingHealthy(ctx, m, true); err != nil {
+				f.log(ctx, m, config.ErrorFeedLogLevel,
+					"updating feed health failed: %v", err)
 			}
 
 			if len(candidates) == 0 { // Nothing to do.
