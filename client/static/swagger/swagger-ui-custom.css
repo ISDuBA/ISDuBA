@@ -1,0 +1,31 @@
+/*
+ This file is Free Software under the Apache-2.0 License
+ without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+
+ SPDX-License-Identifier: Apache-2.0
+
+ SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
+*/
+
+.topbar a img {
+  content: url("/favicon.svg") / "ISDuBA logo";
+}
+
+.topbar a::after {
+  content: "ISDuBA";
+  padding-left: 12px;
+  font-size: 34px;
+}
+
+.swagger-ui .topbar .download-url-wrapper .download-url-button {
+  background-color: #075985 !important;
+}
+
+.swagger-ui .topbar .download-url-wrapper input[type="text"] {
+  border: 2px solid #075985;
+}
+
+html.dark-mode .swagger-ui .topbar .download-url-wrapper .download-url-button {
+  background: #075985 !important;
+}

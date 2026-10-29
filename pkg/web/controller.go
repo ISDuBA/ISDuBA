@@ -80,8 +80,17 @@ func (c *Controller) Bind() http.Handler {
 	r.Use(sloggin.New(slog.Default()))
 	r.Use(gin.Recovery())
 	// Serve API description.
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
+	r.GET("/swagger/*any", func(ctx *gin.Context) {
+		// Serve our own index.html and CSS file to overwrite favicon, page title and to customize the style.
+		if c.cfg.Web.Static != "" && (ctx.Param("any") == "/index.html" || ctx.Param("any") == "/") {
+			ctx.File(c.cfg.Web.Static + "/swagger/index.html")
+		} else if c.cfg.Web.Static != "" && ctx.Param("any") == "/swagger-ui-custom.css" {
+			ctx.File(c.cfg.Web.Static + "/swagger/swagger-ui-custom.css")
+		} else {
+			handlerFunc := ginSwagger.WrapHandler(swaggerFiles.Handler)
+			handlerFunc(ctx)
+		}
+	})
 	if c.cfg.Web.Static != "" {
 		r.Use(static.Serve("/", static.LocalFile(c.cfg.Web.Static, false)))
 	}
