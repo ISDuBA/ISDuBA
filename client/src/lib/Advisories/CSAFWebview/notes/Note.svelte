@@ -9,8 +9,8 @@
 -->
 
 <script lang="ts">
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import type { Note } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import type { Note } from "#lib/Advisories/CSAFWebview/docmodel/docmodeltypes.ts";
   import SearchableText from "../SearchableText.svelte";
 
   interface Props {

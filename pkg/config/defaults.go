@@ -130,14 +130,19 @@ const (
 var defaultRemoteValidatorPresets = []string{"mandatory"}
 
 const (
-	defaultClientKeycloakRealm    = "isduba"
-	defaultClientKeycloakClientID = "auth"
-	defaultClientUpdateInterval   = 5 * time.Minute
-	defaultClientIdleTimeout      = 30 * time.Minute
-	defaultClientAboutText        = "Hosted by <a href=\"https://example.com\">Example Corp</a>"
+	defaultClientKeycloakRealm       = "isduba"
+	defaultClientKeycloakClientID    = "auth"
+	defaultClientUpdateInterval      = 5 * time.Minute
+	defaultClientIdleTimeout         = 30 * time.Minute
+	defaultClientImportStatsInterval = 30 * time.Second
+	defaultClientAboutText           = "Hosted by <a href=\"https://example.com\">Example Corp</a>"
 )
 
 const (
 	defaultAggregatorsTimeout        = 30 * time.Second
 	defaultAggregatorsUpdateInterval = 1 * time.Hour
+)
+
+const (
+	defaultPprofURL = ""
 )

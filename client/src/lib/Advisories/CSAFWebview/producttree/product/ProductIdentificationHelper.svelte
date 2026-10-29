@@ -10,11 +10,11 @@
 
 <script lang="ts">
   import FileHash from "./FileHash.svelte";
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import ValueList from "$lib/Advisories/CSAFWebview/ValueList.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import ValueList from "#lib/Advisories/CSAFWebview/ValueList.svelte";
   import XGenericUri from "./XGenericURI.svelte";
   import { Table, TableBodyCell, TableBodyRow } from "flowbite-svelte";
-  import type { HelperToIdentifyTheProduct } from "$lib/pmdTypes";
+  import type { HelperToIdentifyTheProduct } from "#lib/pmdTypes.ts";
 
   interface Props {
     helper: HelperToIdentifyTheProduct;

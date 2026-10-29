@@ -8,7 +8,7 @@
 
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { vectorStart } from "$lib/Advisories/SSVC/SSVCCalculator";
+import { vectorStart } from "#lib/Advisories/SSVC/SSVCCalculator.ts";
 
 test.beforeEach(async ({ page }) => {
   // Go to Search and ensure that the client finished loading the results
@@ -36,6 +36,8 @@ test("Advisory view is working", async ({ page }) => {
   const doc = page.getByText("Avendor-advisory-0004", { exact: true }).first();
   await doc.scrollIntoViewIfNeeded();
   await doc.click({ force: true });
+  await expect(page.getByText("Language en")).toBeVisible();
+  await expect(page.getByText("Source language en")).toBeVisible();
   await expect(page.getByText("5.7 (MEDIUM)")).toBeVisible();
   await expect(page.getByText("Test CSAF document")).toBeVisible();
   // The tests run with two browsers so there will be two comments. The random
@@ -102,14 +104,13 @@ test("Advisory view is working", async ({ page }) => {
 
   // Test view of raw document
   expect(page.getByRole("button", { name: "Download document" })).toBeVisible();
-  await page.getByRole("button", { name: "View raw document" }).click();
-  expect(page.getByRole("heading", { name: "Raw document" })).toBeVisible();
+  await page.getByTitle("View raw document").click({ force: true });
   expect(page.getByText(`"document": {`)).toBeVisible();
-  const copyButton = page.getByRole("button", { name: "Copy document" });
+  const copyButton = page.getByRole("button", { name: "Copy raw document" });
   await copyButton.click();
-  expect(page.getByText("Copied")).toBeVisible();
-  await page.getByRole("button", { name: "Close dialog" }).click();
-  await copyButton.waitFor({ state: "hidden" });
+  expect(page.getByText("Copied raw document")).toBeVisible();
+  await page.getByTitle("Open normal document view").click({ force: true });
+  expect(page.getByText(`"document": {`)).not.toBeVisible();
 
   // Switch version and check if there is a link at the comment that leads to the previous document
   await page
@@ -123,6 +124,12 @@ test("Tabs with details about document are working", async ({ page }) => {
   await page.getByText("Avendor-advisory-0004", { exact: true }).first().click({ force: true });
   await page.getByRole("button", { name: "3 (final)" }).click();
 
+  await page.getByRole("tab", { name: "Acknowledgments" }).click();
+  await expect(page.getByText("Example Corp", { exact: true })).toBeVisible();
+  await expect(page.getByText("John Doe")).toBeVisible();
+  await expect(page.getByText("Summary of document acknowledgment")).toBeVisible();
+  await expect(page.getByText("https://example.com/example_corp", { exact: true })).toBeVisible();
+
   await page.getByRole("tab", { name: "Vulnerabilities" }).click();
   const scoresCollapsible = await page.getByText("Scores").first();
   await scoresCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
@@ -131,6 +138,31 @@ test("Tabs with details about document are working", async ({ page }) => {
   await idsCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
   await idsCollapsible.click({ force: true });
   expect(page.getByText("GitHub Issue")).toBeVisible();
+  const acknowledgmentsCollapsible = page.getByText("Acknowledgments").nth(1);
+  await acknowledgmentsCollapsible.click({ force: true });
+  await expect(page.getByText("Example Corp 2", { exact: true })).toBeVisible();
+  await expect(page.getByText("Jane Doe")).toBeVisible();
+  await expect(page.getByText("Summary of vulnerability acknowledgment")).toBeVisible();
+  await expect(page.getByText("https://example.com/example_corp_2", { exact: true })).toBeVisible();
+  // Involvements
+  await page.getByText("Involvements").click();
+  await expect(page.getByText("discoverer")).toBeVisible();
+  await expect(page.getByText("in_progress")).toBeVisible();
+  await expect(page.getByText("2022-05-08T09:14:02Z")).toBeVisible();
+  await expect(page.getByText("Summary of involvement")).toBeVisible();
+
+  // Product status
+  const productStatusCollapsible = page.getByText("Product status").first();
+  await productStatusCollapsible.scrollIntoViewIfNeeded({ timeout: 2000 });
+  await productStatusCollapsible.click({ force: true });
+  await expect(page.getByText("FIRST_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("FIRST_FIXED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("FIXED_CSAFPID_0001", { exact: true })).toBeVisible();
+  await expect(page.getByText("KNOWN_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("KNOWN_NOT_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("LAST_AFFECTED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("RECOMMENDED_CSAFPID_0001")).toBeVisible();
+  await expect(page.getByText("UNDER_INVESTIGATION_CSAFPID_0001")).toBeVisible();
 
   await page.getByRole("tab", { name: "Notes" }).click();
   await expect(page.getByText("Auto generated test CSAF document")).toBeVisible();
@@ -138,4 +170,23 @@ test("Tabs with details about document are working", async ({ page }) => {
   await page.getByRole("tab", { name: "Product tree" }).click();
   await page.getByText("AVendor product_1 1.1").first().click();
   await page.getByText("pkg:npm/acme/CSAFPID_0001").scrollIntoViewIfNeeded({ timeout: 2000 });
+
+  // Full product names
+  const fullProductName = page.getByText("AVendor super product_1 1.1", { exact: true });
+  await fullProductName.scrollIntoViewIfNeeded();
+  await fullProductName.click();
+  await expect(page.getByText("cpe:/a:avendor:enterprise_linux:0::appstream")).toBeVisible();
+  await expect(page.getByText("sha256")).toBeVisible();
+  await expect(
+    page.getByText("4775203615d9534a8bfca96a93dc8b461a489f69124a130d786b42204f3341cc")
+  ).toBeVisible();
+  await expect(page.getByText("avendor_product.go")).toBeVisible();
+  await expect(page.getByText("avendor-6RA8096-4MV62-0AA0")).toBeVisible();
+  await expect(page.getByText("pkg:avendor/product@1.1", { exact: true })).toBeVisible();
+  await expect(page.getByText("serial-123456789")).toBeVisible();
+  await expect(page.getByText("SKU-123456789")).toBeVisible();
+  await expect(page.getByText("https://example.com/capabilities/bomlink/")).toBeVisible();
+  await expect(
+    page.getByText("urn:cdx:411dafd2-c29f-491a-97d7-e97de5bc2289/1#pkg:avendor/product@1.1")
+  ).toBeVisible();
 });

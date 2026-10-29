@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import SSVCBadge from "$lib/Advisories/SSVC/SSVCBadge.svelte";
+  import SSVCBadge from "#lib/Advisories/SSVC/SSVCBadge.svelte";
   import { GalleryVerticalEnd, Message as MessageIcon } from "@boxicons/svelte";
 
   interface Props {

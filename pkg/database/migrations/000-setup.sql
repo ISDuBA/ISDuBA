@@ -367,6 +367,7 @@ CREATE TABLE feeds (
     url        varchar         NOT NULL,
     rolie      bool            NOT NULL DEFAULT FALSE,
     log_lvl    feed_logs_level NOT NULL DEFAULT 'info',
+    processing_healthy bool            NOT NULL DEFAULT TRUE,
     CHECK(label <> ''),
     CHECK(url <> ''),
     UNIQUE(label, sources_id)

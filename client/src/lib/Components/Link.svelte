@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { routerState } from "$routes/router.svelte";
+  import { routerState } from "#routes/router.svelte.ts";
   import type { Snippet } from "svelte";
   import type { HTMLButtonAttributes } from "svelte/elements";
 

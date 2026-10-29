@@ -121,7 +121,7 @@ func (m *Manager) refresh(ctx context.Context) {
 			select {
 			case agg, ok := <-toFetch:
 				if !ok {
-					break
+					return
 				}
 				cagg, err := m.Cache.GetAggregator(ctx, agg.url, m.cfg)
 				if err != nil {

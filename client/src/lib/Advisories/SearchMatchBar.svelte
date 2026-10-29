@@ -10,7 +10,7 @@
 <script lang="ts">
   import { Button } from "flowbite-svelte";
   import { advisorySearchState } from "./advisory.svelte";
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { ChevronDown, ChevronUp } from "@boxicons/svelte";
 
   let index = $derived(advisorySearchState.matchIndex);

@@ -6,14 +6,14 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-import { request } from "$lib/request";
-import type { Result } from "$lib/types";
-import type { CSAFProviderMetadata } from "$lib/provider";
-import type { AggregatorMetadata } from "$lib/aggregatorTypes";
+import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+import { request } from "#lib/request.ts";
+import type { Result } from "#lib/types.ts";
+import type { CSAFProviderMetadata } from "#lib/provider.d.ts";
+import type { AggregatorMetadata } from "#lib/aggregatorTypes.ts";
 
-const dtClass: string = "ml-1 mt-1 text-gray-500 md:text-sm dark:text-gray-400";
-const ddClass: string = "text-md break-words font-semibold ml-2 mb-1";
+const dtClass: string = "mt-1 text-gray-500 md:text-sm dark:text-gray-400";
+const ddClass: string = "text-md text-gray-900 dark:text-gray-100 break-words mb-1";
 
 type Source = {
   id?: number;
@@ -101,6 +101,7 @@ type Attention = {
 };
 
 type UploadInfo = {
+  id?: number;
   success?: boolean;
   message?: string;
   requestStatus?: number;

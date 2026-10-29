@@ -10,16 +10,16 @@
 
 <script lang="ts">
   import { Button, Label, Textarea } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { canSetStateReview, isRoleIncluded } from "$lib/permissions";
-  import { ARCHIVED, EDITOR, REVIEW, REVIEWER } from "$lib/workflow";
-  import { appStore } from "$lib/store.svelte";
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { canSetStateReview, isRoleIncluded } from "#lib/permissions.ts";
+  import { ARCHIVED, EDITOR, REVIEW, REVIEWER } from "#lib/workflow.ts";
+  import { appStore } from "#lib/store.svelte.ts";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
 
   interface Props {
     ariaLabel?: string;
     value: string;
-    buttonText: string;
+    buttonText: "Save" | "Send";
     cancelable?: boolean;
     errorMessage: ErrorDetails | null;
     workflowState?: string;
@@ -116,6 +116,11 @@
               </Button>
             {/if}
           {/if}
+          {#if cancelable && cancel}
+            <Button size="xs" onclick={() => cancel()} color="light">
+              <span>Cancel</span>
+            </Button>
+          {/if}
           {#if !((workflowState === REVIEW || workflowState === ARCHIVED) && isRoleIncluded( appStore.getRoles(), [EDITOR] ))}
             <Button
               color="green"
@@ -124,11 +129,6 @@
               disabled={count > 10000 || count === 0 || value === old}
             >
               <span>{buttonText}</span>
-            </Button>
-          {/if}
-          {#if cancelable && cancel}
-            <Button size="xs" onclick={() => cancel()} outline color="red">
-              <span>Cancel</span>
             </Button>
           {/if}
         </div>

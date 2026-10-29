@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import type { DocModel } from "$lib/Advisories/CSAFWebview/docmodel/docmodeltypes";
+import type { DocModel } from "#lib/Advisories/CSAFWebview/docmodel/docmodeltypes.ts";
 import { ADMIN, AUDITOR, EDITOR, IMPORTER, REVIEWER, SOURCE_MANAGER } from "./workflow";
 import { UserManager, type UserProfile } from "oidc-client-ts";
 import { SvelteSet } from "svelte/reactivity";
@@ -198,6 +198,7 @@ export const appStore = {
   getKeycloakRealm: () => state.app.config?.keycloak_realm,
   getKeycloakURL: () => state.app.config?.keycloak_url,
   getUpdateInterval: () => state.app.config?.update_interval,
+  getImportStatsInterval: () => state.app.config?.import_stats_interval ?? 0,
   getAboutText: () => state.app.config?.about_text,
 
   // Setters

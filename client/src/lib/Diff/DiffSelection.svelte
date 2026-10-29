@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import {
     Button,
     Dropzone,
@@ -23,14 +23,14 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
-  import { push } from "$routes/router.svelte";
-  import { request } from "$lib/request";
-  import { getPublisher } from "$lib/publisher";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { push } from "#routes/router.svelte.ts";
+  import { request } from "#lib/request.ts";
+  import { getPublisher } from "#lib/publisher.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { onDestroy, onMount, untrack } from "svelte";
-  import CIconButton from "$lib/Components/CIconButton.svelte";
-  import { getRelativeTime } from "$lib/time";
+  import CIconButton from "#lib/Components/CIconButton.svelte";
+  import { getRelativeTime } from "#lib/time.ts";
   import { ArrowOutUpSquareHalf, Trash, X } from "@boxicons/svelte";
 
   const uid = $props.id();

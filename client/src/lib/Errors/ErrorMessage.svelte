@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
   import { ChevronDown, ChevronUp } from "@boxicons/svelte";
   import { Alert } from "flowbite-svelte";
   interface Props {
@@ -42,7 +42,7 @@
     <Alert bind:alertStatus color="red" class="gap-3 p-4 text-sm dark:bg-[#302834]" dismissable>
       <span class="text-lg"> {error.message}</span>
       {#if error.details}
-        <button class="cursor-pointer" onclick={() => (showDetails = !showDetails)}>
+        <button onclick={() => (showDetails = !showDetails)}>
           {#if showDetails}
             <ChevronUp class="text-2xl" />
           {:else}

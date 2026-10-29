@@ -9,11 +9,11 @@
 -->
 <script lang="ts">
   import { A, Li, List, P } from "flowbite-svelte";
-  import { loadAdvisoryVersions, type AdvisoryVersion } from "$lib/Advisories/advisory.svelte";
+  import { loadAdvisoryVersions, type AdvisoryVersion } from "#lib/Advisories/advisory.svelte.ts";
   import { onMount } from "svelte";
-  import { addSlashes } from "$lib/utils";
-  import type { ErrorDetails } from "$lib/Errors/error";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import { addSlashes } from "#lib/utils.ts";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
   import { AlertCircle } from "@boxicons/svelte";
 
   interface Props {
@@ -69,7 +69,7 @@
 </script>
 
 <div class="flex flex-col gap-6">
-  <div class="mb-2 font-bold">
+  <div class="mb-2 flex gap-1 font-bold">
     <AlertCircle aria-hidden="true" />
     <span>The URL doesn't reference any document</span>
   </div>
