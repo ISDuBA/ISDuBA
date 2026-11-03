@@ -101,10 +101,10 @@ func (cpmd *CachedProviderMetadata) Model() (*provider.Provider, error) {
 
 // dirURL returns the directory url of a dir based distribution, if present
 func dirURL(d *provider.ProviderDistributionsElem) string {
-	if u, _ := d.GetDirectoryURL(); u != nil {
+	if u, _ := d.DirectoryURL(); u != nil {
 		return string(*u)
 	}
-	if dir, _ := d.GetDirectory(); dir != nil {
+	if dir, _ := d.Directory(); dir != nil {
 		return string(dir.URL)
 	}
 	return ""
