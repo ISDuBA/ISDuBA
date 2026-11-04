@@ -395,7 +395,7 @@
             title="Remove key-value-pair"
             class="row-start-3 h-full w-fit rounded-none rounded-br-lg border-t-0 border-l-0 p-1 sm:row-start-2 sm:rounded-tr-lg sm:border-t dark:border-gray-500 dark:bg-gray-600"
             color="light"
-            disabled={headers.length > 1}
+            disabled={headers.length <= 1 || (header[0] === "" && header[1] === "")}
           >
             <X />
           </Button>
