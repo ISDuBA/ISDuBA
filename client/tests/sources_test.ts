@@ -13,11 +13,11 @@ test("Sources are working", async ({ page }) => {
   await page.goto("/#/sources");
   await page.getByRole("link", { name: "Add source", exact: false }).click();
   await page.getByLabel("Domain/PMD").fill("lorem  ipsum");
-  const checkUrlButton = await page.getByRole("button", {
+  const checkUrlButton = page.getByRole("button", {
     name: "Search and load provider metadata",
     exact: false
   });
-  expect(checkUrlButton).toBeDisabled();
+  await expect(checkUrlButton).toBeDisabled();
   await page.getByLabel("Domain/PMD").fill("intevation.de");
   await checkUrlButton.click();
   const sourceName = `Source ${Math.random()}`;
@@ -31,12 +31,12 @@ test("Sources are working", async ({ page }) => {
   await nameInput.pressSequentially(sourceName);
   await page.getByText("Advanced options").click();
   await page.getByLabel("Strict mode").check();
-  const unsubscribeButton = await page.getByRole("button", {
+  const unsubscribeButton = page.getByRole("button", {
     name: "Unsubscribe all",
     exact: false
   });
   await unsubscribeButton.click();
-  expect(unsubscribeButton).toBeDisabled();
+  await expect(unsubscribeButton).toBeDisabled();
   await page.getByLabel("Enable feed with label", { exact: false }).first().click();
   await page.getByRole("button", { name: "Save source", exact: false }).click();
 
