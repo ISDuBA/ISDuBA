@@ -46,26 +46,38 @@ func (tlp *TLP) UnmarshalText(text []byte) error {
 	}
 }
 
-// corrected ensures the equality between TLP 1 WHITE and TLP 2 CLEAR labels
-func (tlp TLP) corrected() TLP {
-	if tlp == TLPWhite {
-		return TLPClear
+// temporaryTLPMapping temporarily maps (WHITE -> CLEAR) and (AMBER -> AMBER+STRICT) rules
+// TODO: This will need to be migrated to proper TLP 2.0 handling later
+var temporaryTLPMapping = map[TLP][]TLP{
+	TLPWhite: {TLPClear},
+	TLPAmber: {TLPAmberStrict},
+}
+
+// mappedTLPs returns list of tlps for which rights exist, as well as mapped ones added temporarily
+// TODO: This is a temporary change until TLP 2 migration
+func mappedTLPs(tlps []TLP) []TLP {
+	mapped := make([]TLP, 0, len(tlps)+2)
+	add := func(tlp TLP) {
+		if !slices.Contains(mapped, tlp) {
+			mapped = append(mapped, tlp)
+		}
 	}
-	return tlp
+	for _, tlp := range tlps {
+		add(tlp)
+		for _, tmpTLP := range temporaryTLPMapping[tlp] {
+			add(tmpTLP)
+		}
+	}
+	return mapped
 }
 
 // Allowed checks if a pair of publisher/tlp is allowed.
 func (ptlps PublishersTLPs) Allowed(publisher string, tlp TLP) bool {
-	corrected := tlp.corrected()
 	if p, ok := ptlps[Publisher(publisher)]; ok {
-		return slices.ContainsFunc(p, func(t TLP) bool {
-			return t.corrected() == corrected
-		})
+		return slices.Contains(mappedTLPs(p), tlp)
 	}
 	wildcard, ok := ptlps["*"]
-	return ok && slices.ContainsFunc(wildcard, func(t TLP) bool {
-		return t.corrected() == corrected
-	})
+	return ok && slices.Contains(mappedTLPs(wildcard), tlp)
 }
 
 // or transforms a slice of string kinds into list of or-ed string field accesses.
@@ -100,7 +112,7 @@ func (ptlps PublishersTLPs) AsExprPublisher(publisher string) *query.Expr {
 
 	var root *query.Expr
 	for _, pub := range pubs {
-		ts := or("tlp", ptlps[pub])
+		ts := or("tlp", mappedTLPs(ptlps[pub]))
 		if ts == nil {
 			// List is empty.
 			continue
@@ -117,7 +129,7 @@ func (ptlps PublishersTLPs) AsExprPublisher(publisher string) *query.Expr {
 
 	// Do we have a wildcard?
 	if tlps, ok := ptlps["*"]; ok {
-		if ts := or("tlp", tlps); ts != nil {
+		if ts := or("tlp", mappedTLPs(tlps)); ts != nil {
 			// If we have other publishers,
 			// don't apply wildcard in these cases.
 			if len(pubs) > 0 {
