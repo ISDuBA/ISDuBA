@@ -12,7 +12,7 @@
   import { type Source, fetchSourceDefaultConfig } from "#lib/Sources/source.ts";
   import { Accordion, AccordionItem, Button, Input, Label, Select } from "flowbite-svelte";
   import CCheckbox from "#lib/Components/CCheckbox.svelte";
-  import { onMount, untrack } from "svelte";
+  import { onMount } from "svelte";
   import CFileinput from "#lib/Components/CFileinput.svelte";
   import { X } from "@boxicons/svelte";
 
@@ -30,7 +30,6 @@
     source: Source;
     oldSource?: Source | undefined;
     enableActive?: boolean;
-    parseSource?: boolean;
     inputChange?: () => void;
   }
 
@@ -39,11 +38,9 @@
     source = $bindable(),
     oldSource = undefined,
     enableActive = false,
-    parseSource = $bindable(true),
     inputChange = () => {}
   }: Props = $props();
   export const updateSource = async () => {
-    formatHeaders();
     await loadCerts();
   };
 
@@ -101,7 +98,6 @@
     y: 24 * 365
   };
 
-  let headers: [string, string][] = $state([["", ""]]);
   let privateCert: FileList | undefined = $state();
   let privateCertReset: boolean = $state(false);
   let publicCert: FileList | undefined = $state();
@@ -115,6 +111,11 @@
 
   let ratePlaceholder = $state(0);
   let slotPlaceholder = $state(2);
+
+  let headers: [string, string][] = $derived.by(() => {
+    if (!source) return [["", ""]];
+    return parseHeaders(source);
+  });
 
   const loadSourceDefaults = async () => {
     const resp = await fetchSourceDefaultConfig();
@@ -143,12 +144,11 @@
     }
   };
 
-  const onChangedHeaders = (e: Event | undefined) => {
-    let lastElement = headers[headers.length - 1];
-    if (lastElement === undefined || (lastElement[0] !== "" && lastElement[1] !== "")) {
-      headers.push(["", ""]);
-    }
-    formatHeaders();
+  const onChangedHeaders = (e: Event, i: number, j: number) => {
+    const value = (e.target as HTMLInputElement).value;
+    const parsed = parseHeaders(source);
+    parsed[i][j] = value;
+    source.headers = formatHeaders(parsed);
 
     if (e) {
       inputChange();
@@ -163,12 +163,14 @@
   };
 
   const removeHeader = (index: number) => {
-    if (headers.length === 1)
-      headers = [
-        ["", ""],
-        ["", ""]
-      ];
-    headers = headers.toSpliced(index, 1);
+    if (!source) return;
+    if (source.headers.length === 1) {
+      source.headers = ["", ""];
+    } else {
+      const parsed = parseHeaders(source);
+      const newHeaders = parsed.toSpliced(index, 1);
+      source.headers = formatHeaders(newHeaders);
+    }
     inputChange();
   };
 
@@ -181,23 +183,30 @@
     inputChange();
   };
 
-  const parseHeaders = () => {
-    headers = [];
-    for (const header of source.headers) {
-      let h = header.split(":");
-      headers.push([h[0], h[1]]);
+  // Parse headers of source so they can be easier displayed in the UI
+  const parseHeaders = (s: any): [string, string][] => {
+    const newHeaders: [string, string][] = [];
+    for (const header of s.headers) {
+      const h = header.split(":");
+      newHeaders.push([h[0], h[1]]);
     }
-    if (headers.length === 0) {
-      headers.push(["", ""]);
+    if (newHeaders.length === 0) {
+      newHeaders.push(["", ""]);
+    } else {
+      let lastElement = newHeaders[newHeaders.length - 1];
+      if (lastElement[0] !== "" && lastElement[1] !== "") {
+        newHeaders.push(["", ""]);
+      }
     }
-    onChangedHeaders(undefined);
+    return newHeaders;
   };
 
-  const formatHeaders = () => {
-    source.headers = [];
+  const formatHeaders = (headers: [string, string][]): string[] => {
+    const newHeaders = [];
     for (const header of headers) {
-      if (header[0] !== "") source.headers.push(`${header[0]}:${header[1] ?? ""}`);
+      if (header[0] !== "" || header[1] !== "") newHeaders.push(`${header[0]}:${header[1] ?? ""}`);
     }
+    return newHeaders;
   };
 
   const loadCerts = async () => {
@@ -220,13 +229,6 @@
       }
     }
   };
-  $effect(() => {
-    untrack(() => headers);
-    if (source.headers && parseSource) {
-      parseHeaders();
-      parseSource = false;
-    }
-  });
 </script>
 
 <form class={formClass}>
@@ -379,16 +381,20 @@
           </Label>
           <Input
             class="col-span-2 row-start-2 rounded-none rounded-t-lg sm:col-span-1 sm:rounded-l-lg sm:rounded-tr-none"
-            oninput={onChangedHeaders}
-            bind:value={header[0]}
+            oninput={(event) => {
+              onChangedHeaders(event, index, 0);
+            }}
+            value={header[0]}
           />
           <Label class="collapse col-span-2 col-start-1 row-start-1 sm:visible sm:col-start-2">
             <span class="text-gray-500">Field value</span>
           </Label>
           <Input
             class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-t sm:border-l-0"
-            oninput={onChangedHeaders}
-            bind:value={header[1]}
+            oninput={(event) => {
+              onChangedHeaders(event, index, 1);
+            }}
+            value={header[1]}
           />
           <Button
             onclick={() => removeHeader(index)}
