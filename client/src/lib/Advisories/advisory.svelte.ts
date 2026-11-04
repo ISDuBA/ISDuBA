@@ -18,6 +18,7 @@ import {
 import { getRevisionHistory } from "./docmodel";
 import type { Revision as Revision2_0 } from "#lib/Advisories/types/csaf-2.0.d.ts";
 import type { Revision as Revision2_1 } from "#lib/Advisories/types/csaf-2.1.d.ts";
+import { addSlashes } from "#lib/utils.ts";
 type StateChange = {
   publisher: string;
   trackingID: string;
@@ -223,7 +224,7 @@ const sortedRevisionHistory = $derived(
 const getSortedRevisionHistory = () => sortedRevisionHistory;
 
 const getAdvisoryLink = (doc: any) =>
-  `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
+  `/advisories/${encodeURIComponent(addSlashes(doc.publisher))}/${encodeURIComponent(addSlashes(doc.tracking_id))}/documents/${doc.id}`;
 const getAdvisoryAnchorLink = (doc: any) => "#" + getAdvisoryLink(doc);
 
 export {
