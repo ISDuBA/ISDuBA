@@ -11,7 +11,7 @@
 <script lang="ts">
   import { getContext } from "svelte";
   import type { AdvisoryVersion } from "../advisory.svelte";
-  import type { AdvisoryRouteParams } from "$routes/routes";
+  import type { AdvisoryRouteParams } from "#routes/routes.ts";
   import { A } from "flowbite-svelte";
 
   let advisoryVersions: () => AdvisoryVersion[] = getContext("advisoryVersions");

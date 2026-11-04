@@ -8,7 +8,7 @@
  Software-Engineering: 2023 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import Vulnerability from "./vulnerability/Vulnerability.svelte";
 
   interface Props {

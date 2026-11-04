@@ -9,9 +9,9 @@
 -->
 
 <script lang="ts">
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { request } from "$lib/request";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { request } from "#lib/request.ts";
   import { Spinner } from "flowbite-svelte";
   import { onMount } from "svelte";
   import DOMPurify from "dompurify";

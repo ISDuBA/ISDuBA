@@ -12,19 +12,19 @@
   import { onMount } from "svelte";
   import { router } from "svelte-spa-router";
   import { parse } from "qs";
-  import { request } from "$lib/request";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { request } from "#lib/request.ts";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { Button, ButtonGroup } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { push } from "$routes/router.svelte";
-  import { truncate } from "$lib/utils";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { push } from "#routes/router.svelte.ts";
+  import { truncate } from "#lib/utils.ts";
   import {
     defaultQuery as defaultQ,
     queryState,
     invisibleQueries,
     sortedQueries
   } from "./search.svelte";
-  import type { Query, SEARCHTYPES } from "$lib/Queries/query";
+  import type { Query, SEARCHTYPES } from "#lib/Queries/query.ts";
   import { Cog } from "@boxicons/svelte";
 
   interface Props {

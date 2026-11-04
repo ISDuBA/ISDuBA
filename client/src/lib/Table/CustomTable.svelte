@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  import SectionHeader from "#lib/SectionHeader.svelte";
   import { Table, TableBody, TableHead, TableHeadCell } from "flowbite-svelte";
   import { tablePadding, type TableHeader } from "./defaults";
   import type { Snippet } from "svelte";

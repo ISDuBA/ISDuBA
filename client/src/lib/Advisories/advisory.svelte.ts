@@ -6,12 +6,18 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-import { getAccessToken, request } from "$lib/request";
-import { appStore } from "$lib/store.svelte";
-import type { WorkflowState } from "$lib/workflow";
-import { push } from "$routes/router.svelte";
-
+import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+import { getAccessToken, request } from "#lib/request.ts";
+import { appStore } from "#lib/store.svelte.ts";
+import type { WorkflowState } from "#lib/workflow.ts";
+import { push } from "#routes/router.svelte.ts";
+import {
+  extractProducts,
+  generateProductVulnerabilities
+} from "./CSAFWebview/productvulnerabilities/productvulnerabilities";
+import { getRevisionHistory } from "./docmodel";
+import type { Revision as Revision2_0 } from "#lib/Advisories/types/csaf-2.0.d.ts";
+import type { Revision as Revision2_1 } from "#lib/Advisories/types/csaf-2.1.d.ts";
 type StateChange = {
   publisher: string;
   trackingID: string;
@@ -130,36 +136,6 @@ const loadAdvisoryVersions = async (
   }
 };
 
-const fetchDocumentSSVC = async (
-  documentId: string | number,
-  abortController?: AbortController
-): Promise<string | ErrorDetails | undefined> => {
-  const response = await request(
-    `/api/ssvc/documents/${documentId}`,
-    "GET",
-    undefined,
-    abortController
-  );
-
-  // Any error
-  if (!response.ok) {
-    if (response.error !== "AbortError") {
-      return getErrorDetails("Could not load SSVC.", response);
-    } else {
-      return undefined;
-    }
-  }
-
-  const result = await response.content;
-
-  // got a non-empty result
-  if (result && typeof result.ssvc === "string" && result.ssvc !== "") {
-    return result.ssvc;
-  }
-  // no SSVC
-  return undefined;
-};
-
 interface SearchMatch {
   path: string;
   positions: number[][];
@@ -181,10 +157,11 @@ const fetchSearchHits = async (id: number): Promise<SearchMatch[] | ErrorDetails
 // with the parameters in the URL.
 const isResultConsistent = (params: any, document: any) => {
   return (
-    params.trackingID &&
-    params.publisherNamespace &&
-    document.tracking.id === params.trackingID &&
-    document.publisher.name === params.publisherNamespace
+    (!params.trackingID && !params.publisherNamespace) ||
+    (params.trackingID &&
+      params.publisherNamespace &&
+      document.tracking.id === params.trackingID &&
+      document.publisher.name === params.publisherNamespace)
   );
 };
 
@@ -210,6 +187,41 @@ const getAdvisorySearchHit = () => {
   return derivedHit;
 };
 
+const doc = $derived(appStore.state.webview.doc);
+
+const products = $derived(extractProducts(doc));
+
+const productsByID = $derived.by(() => {
+  return products.reduce((o: any, n: any) => {
+    o[n.product_id] = n.name;
+    return o;
+  }, {});
+});
+
+const productVulnerabilities = $derived(
+  generateProductVulnerabilities(doc, products, productsByID)
+);
+
+const getProductsByID = () => {
+  return productsByID;
+};
+
+const getProductVulneravbilities = () => {
+  return productVulnerabilities ?? [];
+};
+
+const sortedRevisionHistory = $derived(
+  getRevisionHistory(doc)?.sort(
+    (entry1: Revision2_0 | Revision2_1, entry2: Revision2_0 | Revision2_1) => {
+      if (entry1.date < entry2.date) return 1;
+      if (entry1.date > entry2.date) return -1;
+      return 0;
+    }
+  ) ?? []
+);
+
+const getSortedRevisionHistory = () => sortedRevisionHistory;
+
 const getAdvisoryLink = (doc: any) =>
   `/advisories/${doc.publisher}/${doc.tracking_id}/documents/${doc.id}`;
 const getAdvisoryAnchorLink = (doc: any) => "#" + getAdvisoryLink(doc);
@@ -218,10 +230,12 @@ export {
   advisorySearchState,
   updateMultipleStates,
   loadAdvisoryVersions,
-  fetchDocumentSSVC,
   fetchSearchHits,
   getAdvisoryAnchorLink,
   getAdvisorySearchHit,
-  isResultConsistent
+  isResultConsistent,
+  getProductsByID,
+  getProductVulneravbilities,
+  getSortedRevisionHistory
 };
 export type { AdvisoryVersion, SearchMatch };

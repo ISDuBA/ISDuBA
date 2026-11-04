@@ -10,20 +10,20 @@
 
 <script lang="ts">
   import { Button, Toggle } from "flowbite-svelte";
-  import AdvisoryTable from "$lib/Table/Table.svelte";
-  import { searchColumnName } from "$lib/Table/defaults";
-  import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "$lib/Queries/query";
-  import type { Query } from "$lib/Queries/query";
+  import AdvisoryTable from "#lib/Table/Table.svelte";
+  import { searchColumnName } from "#lib/Table/defaults.ts";
+  import { SEARCHPAGECOLUMNS, SEARCHTYPES } from "#lib/Queries/query.ts";
+  import type { Query } from "#lib/Queries/query.ts";
   import Queries from "./Queries.svelte";
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { router } from "svelte-spa-router";
-  import { push } from "$routes/router.svelte";
+  import { push } from "#routes/router.svelte.ts";
   import { parse } from "qs";
   import Toolbox from "./Toolbox.svelte";
-  import CSearch from "$lib/Components/CSearch.svelte";
-  import TypeToggle from "$lib/Search/TypeToggle.svelte";
-  import { request } from "$lib/request";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import CSearch from "#lib/Components/CSearch.svelte";
+  import TypeToggle from "#lib/Search/TypeToggle.svelte";
+  import { request } from "#lib/request.ts";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import type { SearchParameters } from "./search.svelte";
   import { defaultQuery as defaultQ, queryState } from "./search.svelte";
   import { page } from "$app/state";

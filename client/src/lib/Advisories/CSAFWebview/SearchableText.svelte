@@ -8,7 +8,7 @@
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { splitMatches } from "$lib/utils";
+  import { splitMatches } from "#lib/utils.ts";
   import { advisorySearchState, type SearchMatch } from "../advisory.svelte";
 
   interface Props {

@@ -11,8 +11,8 @@
 <script lang="ts">
   import { TableBodyCell } from "flowbite-svelte";
   import { searchColumnName } from "./defaults";
-  import { advisorySearchState, getAdvisoryAnchorLink } from "$lib/Advisories/advisory.svelte";
-  import Link from "$lib/Components/Link.svelte";
+  import { advisorySearchState, getAdvisoryAnchorLink } from "#lib/Advisories/advisory.svelte.ts";
+  import Link from "#lib/Components/Link.svelte";
 
   interface Props {
     doc: any;

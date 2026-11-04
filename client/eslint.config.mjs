@@ -11,7 +11,6 @@ import js from "@eslint/js";
 import svelte from "eslint-plugin-svelte";
 import ts from "typescript-eslint";
 import prettier from "eslint-config-prettier";
-import svelteConfig from "./svelte.config.js";
 
 export default [
   {
@@ -66,8 +65,7 @@ export default [
       parserOptions: {
         projectService: true,
         extraFileExtensions: [".svelte"],
-        parser: ts.parser,
-        svelteConfig
+        parser: ts.parser
       }
     },
     rules: {

@@ -34,6 +34,14 @@
   background-image: url("data:image/svg+xml,%3csvg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 12'%3e %3cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M1 5.917 5.724 10.5 15 1.5'/%3e %3c/svg%3e");
 }
 
+button:hover {
+  cursor: pointer;
+}
+
+button:disabled:hover {
+  cursor: default;
+}
+
 .loadingFadeIn {
   opacity: 0;
   animation-name: fadeIn;
@@ -106,6 +114,7 @@ Webview styles
   animation-iteration-count: infinite;
 }
 
+/* CISA defined which colors to use for TLPs: https://www.cisa.gov/news-events/news/traffic-light-protocol-tlp-definitions-and-usage */
 .tlpwhite {
   font-size: small;
   padding: 0.25em;
@@ -118,7 +127,8 @@ Webview styles
   background: #000;
   color: #ff2b2b;
 }
-.tlpamber {
+.tlpamber,
+.tlpamber-strict {
   font-size: small;
   padding: 0.25em;
   background: #000;

@@ -53,7 +53,7 @@
     onclick={() => {
       document.getElementById(id)?.click();
     }}
-    class="cursor-pointer rounded-none rounded-l-lg border-r-0 disabled:cursor-not-allowed"
+    class="rounded-none rounded-l-lg border-r-0"
     color={browseButtonColor}
     {disabled}>Browse...</Button
   >

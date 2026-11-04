@@ -13,10 +13,10 @@
   import DiffEntry from "./DiffEntry.svelte";
   import type { JsonDiffResult } from "./Diff";
   import LazyEntry from "./LazyEntry.svelte";
-  import { request } from "$lib/request";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { appStore } from "$lib/store.svelte";
+  import { request } from "#lib/request.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import { appStore } from "#lib/store.svelte.ts";
 
   interface Props {
     showTitle?: boolean;

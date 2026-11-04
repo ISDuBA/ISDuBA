@@ -8,7 +8,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-set -e # to exit if a command in the script fails
+set -euo pipefail # to exit if a command in the script fails
 
 
 # Alter PostgreSQL as postgres user
@@ -34,9 +34,9 @@ fi
 # Adjust postgresql configuration
 PG_HBA_PATH=$(psql -t -P format=unaligned -c 'SHOW hba_file;')
 
-if ! grep -q -F "# ISDuBA configuration" $PG_HBA_PATH;
+if ! grep -q -F "# ISDuBA configuration" "$PG_HBA_PATH";
 then
-tee -a $PG_HBA_PATH <<block_to_insert > /dev/null
+tee -a "$PG_HBA_PATH" <<block_to_insert > /dev/null
 # ISDuBA configuration
 host    all             all             127.0.0.1/32            scram-sha-256
 host    all             all             ::1/128                 scram-sha-256

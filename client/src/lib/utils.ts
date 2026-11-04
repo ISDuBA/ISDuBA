@@ -8,6 +8,8 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
+const selectedClass = "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700";
+
 const truncate = (str: string, n: number) => {
   return str.length > n ? str.slice(0, n - 1) + "…" : str;
 };
@@ -61,4 +63,4 @@ const splitMatches = (text: string, positions: number[][]): string[] => {
   return decodedSplits;
 };
 
-export { truncate, areArraysEqual, addSlashes, splitMatches };
+export { selectedClass, truncate, areArraysEqual, addSlashes, splitMatches };

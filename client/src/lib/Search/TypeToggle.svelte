@@ -10,7 +10,8 @@
 
 <script lang="ts">
   import { Button, ButtonGroup } from "flowbite-svelte";
-  import { SEARCHTYPES } from "$lib/Queries/query";
+  import { SEARCHTYPES } from "#lib/Queries/query.ts";
+  import { selectedClass } from "#lib/utils.ts";
 
   interface Props {
     advisoryButtonVisible?: boolean;
@@ -35,7 +36,6 @@
   }: Props = $props();
 
   const baseClasses = "py-1 text-xs";
-  const selectedClass = "bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-700";
 </script>
 
 <ButtonGroup class="h-7">

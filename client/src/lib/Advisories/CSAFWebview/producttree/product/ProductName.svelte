@@ -10,10 +10,10 @@
 
 <script lang="ts">
   import ProductIdentificationHelper from "./ProductIdentificationHelper.svelte";
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
-  import { appStore } from "$lib/store.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { tick, untrack } from "svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
 
   interface Props {
     product: any;

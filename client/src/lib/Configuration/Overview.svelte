@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  import SectionHeader from "#lib/SectionHeader.svelte";
 </script>
 
 <SectionHeader title="Configuration"></SectionHeader>

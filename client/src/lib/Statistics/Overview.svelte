@@ -10,8 +10,8 @@
 
 <script lang="ts">
   import ImportStats from "./ImportStats.svelte";
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import { DAY_MS } from "$lib/time";
+  import SectionHeader from "#lib/SectionHeader.svelte";
+  import { DAY_MS } from "#lib/time.ts";
 </script>
 
 <SectionHeader title="Statistics"></SectionHeader>

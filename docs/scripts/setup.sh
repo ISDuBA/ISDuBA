@@ -8,7 +8,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-set -e # to exit if a command in the script fails
+set -euo pipefail # to exit if a command in the script fails
 
 args=()
 while [[ $# -gt 0 ]]; do
@@ -16,9 +16,6 @@ while [[ $# -gt 0 ]]; do
     -k|--keycloakRunning)
       echo "Assuming keycloak is running..."
       args+=(-k)
-      ;;
-    -q|--quick)
-      args+=(-q)
       ;;
     *)
       echo "Unknown option: $1"
@@ -46,7 +43,7 @@ cd keycloak
 
 cd ..
 
-./installplaywright.sh # prepare frontend
+./installclient.sh # prepare frontend
 
 ./installisduba.sh # build the isdubad and bulkimporter tools
 

@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { Badge } from "flowbite-svelte";
-  import { convertVectorToSSVCObject } from "./SSVCCalculator";
+  import { convertVectorToSSVCObject } from "#lib/Advisories/SSVC/SSVCCalculator.ts";
 
   interface Props {
     vector: string;

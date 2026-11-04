@@ -11,11 +11,11 @@
 <script lang="ts">
   import { Button, Spinner } from "flowbite-svelte";
   import { onMount, setContext } from "svelte";
-  import { request } from "$lib/request";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import { request } from "#lib/request.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { Modal } from "flowbite-svelte";
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { fetchIgnored, setIgnored, createStoredQuery, proposeName, type Query } from "./query";
   import QueryTable from "./QueryTable.svelte";
   import type { Order } from "./query";

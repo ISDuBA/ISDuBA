@@ -8,7 +8,7 @@
 # SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 
-set -e # to exit if a command in the script fails
+set -euo pipefail # to exit if a command in the script fails
 
 # install PostgreSQL 17, following https://www.postgresql.org/download/linux/ubuntu/
 sudo apt install ca-certificates -y

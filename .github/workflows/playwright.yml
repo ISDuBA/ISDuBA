@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir /tmp/cov
           cd docs/scripts
-          ./setup.sh --quick
+          ./setup.sh
           ./start_all.sh
           cd ../../client
           npm run cover

@@ -21,7 +21,7 @@
 
   const sortedProductNames = $derived(
     productNames
-      ? productNames.sort((p1: any, p2: any) => {
+      ? productNames.toSorted((p1: any, p2: any) => {
           if (p1.name < p2.name) return -1;
           if (p1.name > p2.name) return 1;
           return 0;

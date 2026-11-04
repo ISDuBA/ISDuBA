@@ -14,13 +14,13 @@
     type Attention,
     fetchSourceAttentionList,
     fetchAggregatorAttentionList
-  } from "$lib/Sources/source";
-  import SectionHeader from "$lib/SectionHeader.svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { type ErrorDetails } from "$lib/Errors/error";
+  } from "#lib/Sources/source.ts";
+  import SectionHeader from "#lib/SectionHeader.svelte";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { type ErrorDetails } from "#lib/Errors/error.ts";
   import Activity from "./Activity.svelte";
   import { Button, Spinner } from "flowbite-svelte";
-  import { push } from "$routes/router.svelte";
+  import { push } from "#routes/router.svelte.ts";
   import { GitRepoForked } from "@boxicons/svelte";
 
   interface MergedAttention extends Attention {

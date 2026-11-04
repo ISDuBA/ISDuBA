@@ -6,9 +6,9 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-import { request } from "$lib/request";
-import type { Role } from "$lib/workflow";
+import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+import { request } from "#lib/request.ts";
+import type { Role } from "#lib/workflow.ts";
 
 const COLUMNS = {
   ADVISORY: [

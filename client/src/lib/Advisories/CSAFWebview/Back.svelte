@@ -9,8 +9,8 @@
 -->
 
 <script lang="ts">
-  import Link from "$lib/Components/Link.svelte";
-  import { appStore } from "$lib/store.svelte";
+  import Link from "#lib/Components/Link.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { Undo } from "@boxicons/svelte";
   /**
    * updateUI waits until UI is settled and goes back to the last anchor.

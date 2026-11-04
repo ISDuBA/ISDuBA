@@ -9,8 +9,8 @@
 -->
 
 <script lang="ts">
-  import DiffSelection from "$lib/Diff/DiffSelection.svelte";
-  import { appStore } from "$lib/store.svelte";
+  import DiffSelection from "#lib/Diff/DiffSelection.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { Button, Img } from "flowbite-svelte";
 
   let docA = $derived(appStore.state.app.diff.docA);

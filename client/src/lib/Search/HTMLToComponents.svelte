@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import Self from "./HTMLToComponents.svelte";
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  import SectionHeader from "#lib/SectionHeader.svelte";
   import {
     Heading,
     Table,

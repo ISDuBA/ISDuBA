@@ -8,7 +8,7 @@
 # SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 # Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-set -e # to exit if a command in the script fails
+set -euo pipefail # to exit if a command in the script fails
 
 # install node
 sudo apt-get update && sudo apt-get install -y ca-certificates curl gnupg

@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import {
     Table,
     TableBody,
@@ -18,16 +18,17 @@
     TableHead,
     TableHeadCell
   } from "flowbite-svelte";
-  import { tablePadding } from "$lib/Table/defaults";
+  import { tablePadding } from "#lib/Table/defaults.ts";
   import { getReadableDateString } from "../helpers";
   import SearchableText from "../SearchableText.svelte";
+  import { getRevisionHistory } from "#lib/Advisories/docmodel.ts";
   const baseCellStyle = "py-0 px-2";
   const cellStyle = "whitespace-nowrap " + baseCellStyle;
 
-  let revisionHistory = $derived(appStore.state.webview.doc?.revisionHistory);
+  let revisionHistory = $derived(getRevisionHistory(appStore.state.webview.doc));
 </script>
 
-{#if appStore.state.webview.doc?.isRevisionHistoryPresent}
+{#if revisionHistory}
   <div class="mt-1 w-fit pl-5">
     <Table border={false} striped={true}>
       <TableHead>

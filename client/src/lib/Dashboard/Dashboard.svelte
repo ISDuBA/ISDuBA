@@ -9,15 +9,15 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { onMount } from "svelte";
   import AdvisoryQuery from "./AdvisoryQuery.svelte";
   import EventQuery from "./EventQuery.svelte";
-  import { request } from "$lib/request";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import { SEARCHTYPES } from "$lib/Queries/query";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import ImportStats from "$lib/Statistics/ImportStats.svelte";
+  import { request } from "#lib/request.ts";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import { SEARCHTYPES } from "#lib/Queries/query.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import ImportStats from "#lib/Statistics/ImportStats.svelte";
   import SourceEvents from "./SourceEvents.svelte";
 
   const uid = $props.id();

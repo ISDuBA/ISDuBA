@@ -8,7 +8,7 @@
  * Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
  */
 
-import type { HttpResponse } from "$lib/types";
+import type { HttpResponse } from "#lib/types.ts";
 
 const contactAdmin = `Please contact an administrator.`;
 

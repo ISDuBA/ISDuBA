@@ -11,9 +11,9 @@
 <script lang="ts">
   import type { AggregatorEntry, FeedInfo, SourceInfo } from "./aggregator";
   import { Button } from "flowbite-svelte";
-  import { tdClass } from "$lib/Table/defaults";
+  import { tdClass } from "#lib/Table/defaults.ts";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { onMount } from "svelte";
   import { fetchSource } from "../source";
   import { Circle, GitRepoForked, Plus } from "@boxicons/svelte";

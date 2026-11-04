@@ -8,7 +8,7 @@
  Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
 -->
 <script lang="ts">
-  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW } from "$lib/workflow";
+  import { ASSESSING, ARCHIVED, DELETE, NEW, READ, REVIEW } from "#lib/workflow.ts";
   import { Analyze, Archive, BookOpen, Certification, Eye, Trash } from "@boxicons/svelte";
 
   interface Props {

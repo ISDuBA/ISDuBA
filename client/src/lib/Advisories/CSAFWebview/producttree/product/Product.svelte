@@ -9,17 +9,18 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { tick, untrack } from "svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
-  import KeyValue from "$lib/Advisories/CSAFWebview/KeyValue.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import KeyValue from "#lib/Advisories/CSAFWebview/KeyValue.svelte";
   import ProductIdentificationHelper from "./ProductIdentificationHelper.svelte";
-  import type { FullProductName } from "$lib/pmdTypes";
-  import { getAdvisorySearchHit } from "$lib/Advisories/advisory.svelte";
+  import type { FullProductName as FullProductName2_0 } from "#lib/Advisories/types/csaf-2.0.d.ts";
+  import type { FullProductName as FullProductName2_1 } from "#lib/Advisories/types/csaf-2.1.d.ts";
+  import { getAdvisorySearchHit } from "#lib/Advisories/advisory.svelte.ts";
 
   interface Props {
     path: string;
-    product: FullProductName;
+    product: FullProductName2_0 | FullProductName2_1;
   }
   let { product, path }: Props = $props();
 

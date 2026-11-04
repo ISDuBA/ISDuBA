@@ -9,11 +9,11 @@
 -->
 
 <script lang="ts">
-  import { type Source, fetchSourceDefaultConfig } from "$lib/Sources/source";
+  import { type Source, fetchSourceDefaultConfig } from "#lib/Sources/source.ts";
   import { Accordion, AccordionItem, Button, Input, Label, Select } from "flowbite-svelte";
-  import CCheckbox from "$lib/Components/CCheckbox.svelte";
+  import CCheckbox from "#lib/Components/CCheckbox.svelte";
   import { onMount, untrack } from "svelte";
-  import CFileinput from "$lib/Components/CFileinput.svelte";
+  import CFileinput from "#lib/Components/CFileinput.svelte";
   import { X } from "@boxicons/svelte";
 
   // Define enum first

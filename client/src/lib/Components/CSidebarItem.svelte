@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { activeClass, nonActiveClass, sidebarItemLinkClass } from "$lib/sidenav";
+  import { activeClass, nonActiveClass, sidebarItemLinkClass } from "#lib/sidenav.ts";
   import type { Snippet } from "svelte";
   import { getContext } from "svelte";
   import Link from "./Link.svelte";

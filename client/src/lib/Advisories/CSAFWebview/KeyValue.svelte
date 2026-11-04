@@ -11,7 +11,7 @@
 <script lang="ts">
   import { Table, TableBody, TableBodyCell, TableBodyRow } from "flowbite-svelte";
   import CVSS from "./general/CVSS.svelte";
-  import Link from "$lib/Components/Link.svelte";
+  import Link from "#lib/Components/Link.svelte";
   import SearchableText from "./SearchableText.svelte";
   import { Link as LinkIcon } from "@boxicons/svelte";
 

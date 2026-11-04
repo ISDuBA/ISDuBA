@@ -10,10 +10,10 @@ import type { PageLoad } from "./$types";
 import { type User, UserManager } from "oidc-client-ts";
 import { push } from "svelte-spa-router";
 import { jwtDecode } from "jwt-decode";
-import { configuration } from "$lib/configuration";
-import { getErrorDetails } from "$lib/Errors/error";
-import type { HttpResponse } from "$lib/types";
-import { appStore } from "$lib/store.svelte";
+import { configuration } from "#lib/configuration.ts";
+import { getErrorDetails } from "#lib/Errors/error.ts";
+import type { HttpResponse } from "#lib/types.ts";
+import { appStore } from "#lib/store.svelte.ts";
 
 const loadConfig = (fetch: any) => {
   return new Promise((resolve) => {

@@ -9,8 +9,8 @@
 -->
 
 <script lang="ts">
-  import type { ErrorDetails } from "$lib/Errors/error";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
   import {
     fetchImportFailuresStatistic,
     type StatisticGroup,
@@ -22,7 +22,7 @@
     fetchTotals,
     getCVSSTextualRatingDescription,
     getLabelForKey
-  } from "$lib/Statistics/statistics";
+  } from "#lib/Statistics/statistics.ts";
   import Chart from "chart.js/auto";
   import { Button, ButtonGroup, Spinner } from "flowbite-svelte";
   import { onDestroy, onMount, untrack } from "svelte";
@@ -37,10 +37,10 @@
     pad,
     setToEndOfDay,
     toLocaleISOString
-  } from "$lib/time";
+  } from "#lib/time.ts";
   import chroma from "chroma-js";
-  import { appStore } from "$lib/store.svelte";
-  import DateRange from "$lib/Components/DateRange.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
+  import DateRange from "#lib/Components/DateRange.svelte";
   import debounce from "debounce";
   import { SvelteDate } from "svelte/reactivity";
   import { BarChart, Table as TableIcon } from "@boxicons/svelte";

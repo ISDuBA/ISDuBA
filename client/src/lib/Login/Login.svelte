@@ -9,12 +9,12 @@
 -->
 
 <script lang="ts">
-  import { appStore } from "$lib/store.svelte";
+  import { appStore } from "#lib/store.svelte.ts";
   import { Button, DarkMode, Heading, Card } from "flowbite-svelte";
   import { A, P, Li, List } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { request } from "$lib/request";
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { request } from "#lib/request.ts";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
   import { ArrowOutUpRightSquare, MessageExclamation } from "@boxicons/svelte";
   import DOMPurify from "dompurify";
 

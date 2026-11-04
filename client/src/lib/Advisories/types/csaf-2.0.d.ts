@@ -1,17 +1,28 @@
-// This file is Free Software under the Apache-2.0 License
-// without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-// SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
-//  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
+/**
+ * This file is Free Software under the Apache-2.0 License
+ * without warranty, see README.md and LICENSES/Apache-2.0.txt for details.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+ * Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
+ */
+
+/* eslint-disable */
+/**
+* This file was automatically generated with the repo at https://heptapod.host/intevation/csaf-types.
+
 
 /**
  * Contains a list of acknowledgment elements associated with the whole document.
+ * 
+ * @minItems 1
  */
 export type DocumentAcknowledgments = [Acknowledgment, ...Acknowledgment[]];
 /**
  * Contains the names of contributors being recognized.
+ *
+ * @minItems 1
  */
 export type ListOfAcknowledgedNames = [NameOfTheContributor, ...NameOfTheContributor[]];
 /**
@@ -28,6 +39,8 @@ export type ContributingOrganization = string;
 export type SummaryOfTheAcknowledgment = string;
 /**
  * Specifies a list of URLs or location of the reference to be acknowledged.
+ *
+ * @minItems 1
  */
 export type ListOfURLs = [URLOfAcknowledgment, ...URLOfAcknowledgment[]];
 /**
@@ -68,6 +81,8 @@ export type URLOfTLPVersion = string;
 export type DocumentLanguage = string;
 /**
  * Holds notes associated with the whole document.
+ *
+ * @minItems 1
  */
 export type DocumentNotes = [Note, ...Note[]];
 /**
@@ -77,8 +92,7 @@ export type AudienceOfNote = string;
 /**
  * Contains the information of what kind of note this is.
  */
-export type NoteCategory =
-  "description" | "details" | "faq" | "general" | "legal_disclaimer" | "other" | "summary";
+export type NoteCategory = "description" | "details" | "faq" | "general" | "legal_disclaimer" | "other" | "summary";
 /**
  * Holds the content of the note. Content varies depending on type.
  */
@@ -90,8 +104,7 @@ export type TitleOfNote = string;
 /**
  * Provides information about the category of publisher releasing the document.
  */
-export type CategoryOfPublisher =
-  "coordinator" | "discoverer" | "other" | "translator" | "user" | "vendor";
+export type CategoryOfPublisher = "coordinator" | "discoverer" | "other" | "translator" | "user" | "vendor";
 /**
  * Information on how to contact the publisher, possibly including details such as web sites, email addresses, phone numbers, and postal mail addresses.
  */
@@ -110,6 +123,8 @@ export type NameOfPublisher = string;
 export type NamespaceOfPublisher = string;
 /**
  * Holds a list of references associated with the whole document.
+ *
+ * @minItems 1
  */
 export type DocumentReferences = [Reference, ...Reference[]];
 /**
@@ -134,6 +149,8 @@ export type SourceLanguage = string;
 export type TitleOfThisDocument = string;
 /**
  * Contains a list of alternate names for the same document.
+ *
+ * @minItems 1
  */
 export type Aliases = [AlternateName, ...AlternateName[]];
 /**
@@ -166,6 +183,8 @@ export type UniqueIdentifierForTheDocument = string;
 export type InitialReleaseDate = string;
 /**
  * Holds one revision item for each version of the CSAF document, including the initial one.
+ *
+ * @minItems 1
  */
 export type RevisionHistory = [Revision, ...Revision[]];
 /**
@@ -190,6 +209,8 @@ export type SummaryOfTheRevision = string;
 export type DocumentStatus = "draft" | "final" | "interim";
 /**
  * Contains branch elements as children of the current element.
+ *
+ * @minItems 1
  */
 export type ListOfBranches = [Branch, ...Branch[]];
 /**
@@ -226,10 +247,14 @@ export type ReferenceTokenForProductInstance = string;
 export type CommonPlatformEnumerationRepresentation = string;
 /**
  * Contains a list of cryptographic hashes usable to identify files.
+ *
+ * @minItems 1
  */
 export type ListOfHashes = [CryptographicHashes, ...CryptographicHashes[]];
 /**
  * Contains a list of cryptographic hashes for this file.
+ *
+ * @minItems 1
  */
 export type ListOfFileHashes = [FileHash, ...FileHash[]];
 /**
@@ -246,6 +271,8 @@ export type ValueOfTheCryptographicHash = string;
 export type Filename = string;
 /**
  * Contains a list of full or abbreviated (partial) model numbers.
+ *
+ * @minItems 1
  */
 export type ListOfModels = [ModelNumber, ...ModelNumber[]];
 /**
@@ -258,6 +285,8 @@ export type ModelNumber = string;
 export type PackageURLRepresentation = string;
 /**
  * Contains a list of URLs where SBOMs for this product can be retrieved.
+ *
+ * @minItems 1
  */
 export type ListOfSBOMURLs = [SBOMURL, ...SBOMURL[]];
 /**
@@ -266,6 +295,8 @@ export type ListOfSBOMURLs = [SBOMURL, ...SBOMURL[]];
 export type SBOMURL = string;
 /**
  * Contains a list of full or abbreviated (partial) serial numbers.
+ *
+ * @minItems 1
  */
 export type ListOfSerialNumbers = [SerialNumber, ...SerialNumber[]];
 /**
@@ -274,6 +305,8 @@ export type ListOfSerialNumbers = [SerialNumber, ...SerialNumber[]];
 export type SerialNumber = string;
 /**
  * Contains a list of full or abbreviated (partial) stock keeping units.
+ *
+ * @minItems 1
  */
 export type ListOfStockKeepingUnits = [StockKeepingUnit, ...StockKeepingUnit[]];
 /**
@@ -282,6 +315,8 @@ export type ListOfStockKeepingUnits = [StockKeepingUnit, ...StockKeepingUnit[]];
 export type StockKeepingUnit = string;
 /**
  * Contains a list of identifiers which are either vendor-specific or derived from a standard not yet supported.
+ *
+ * @minItems 1
  */
 export type ListOfGenericURIs = [GenericURI, ...GenericURI[]];
 /**
@@ -294,10 +329,14 @@ export type NamespaceOfTheGenericURI = string;
 export type URI = string;
 /**
  * Contains a list of full product names.
+ *
+ * @minItems 1
  */
 export type ListOfFullProductNames = [FullProductName, ...FullProductName[]];
 /**
  * Contains a list of product groups.
+ *
+ * @minItems 1
  */
 export type ListOfProductGroups = [ProductGroup, ...ProductGroup[]];
 /**
@@ -306,6 +345,8 @@ export type ListOfProductGroups = [ProductGroup, ...ProductGroup[]];
 export type ReferenceTokenForProductGroupInstance = string;
 /**
  * Lists the product_ids of those products which known as one group in the document.
+ *
+ * @minItems 2
  */
 export type ListOfProductIDs = [
   ReferenceTokenForProductInstance,
@@ -318,17 +359,15 @@ export type ListOfProductIDs = [
 export type SummaryOfTheProductGroup = string;
 /**
  * Contains a list of relationships.
+ *
+ * @minItems 1
  */
 export type ListOfRelationships = [Relationship, ...Relationship[]];
 /**
  * Defines the category of relationship for the referenced component.
  */
 export type RelationshipCategory =
-  | "default_component_of"
-  | "external_component_of"
-  | "installed_on"
-  | "installed_with"
-  | "optional_component_of";
+  "default_component_of" | "external_component_of" | "installed_on" | "installed_with" | "optional_component_of";
 /**
  * Token required to identify a full_product_name so that it can be referred to from other parts in the document. There is no predefined or required format for the product_id as long as it uniquely identifies a product in the context of the current document.
  */
@@ -339,10 +378,14 @@ export type ReferenceTokenForProductInstance1 = string;
 export type ReferenceTokenForProductInstance2 = string;
 /**
  * Represents a list of all relevant vulnerability information items.
+ *
+ * @minItems 1
  */
 export type Vulnerabilities = [Vulnerability, ...Vulnerability[]];
 /**
  * Contains a list of acknowledgment elements associated with this vulnerability item.
+ *
+ * @minItems 1
  */
 export type VulnerabilityAcknowledgments = [Acknowledgment, ...Acknowledgment[]];
 /**
@@ -363,6 +406,8 @@ export type WeaknessName = string;
 export type DiscoveryDate = string;
 /**
  * Contains a list of machine readable flags.
+ *
+ * @minItems 1
  */
 export type ListOfFlags = [Flag, ...Flag[]];
 /**
@@ -371,11 +416,10 @@ export type ListOfFlags = [Flag, ...Flag[]];
 export type DateOfTheFlag = string;
 /**
  * Specifies a list of product_group_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductGroupIds = [
-  ReferenceTokenForProductGroupInstance,
-  ...ReferenceTokenForProductGroupInstance[]
-];
+export type ListOfProductGroupIds = [ReferenceTokenForProductGroupInstance, ...ReferenceTokenForProductGroupInstance[]];
 /**
  * Specifies the machine readable label.
  */
@@ -387,13 +431,14 @@ export type LabelOfTheFlag =
   | "vulnerable_code_not_present";
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Represents a list of unique labels or tracking IDs for the vulnerability (if such information exists).
+ *
+ * @minItems 1
  */
 export type ListOfIDs = [ID, ...ID[]];
 /**
@@ -406,6 +451,8 @@ export type SystemName = string;
 export type Text = string;
 /**
  * Contains a list of involvements.
+ *
+ * @minItems 1
  */
 export type ListOfInvolvements = [Involvement, ...Involvement[]];
 /**
@@ -419,74 +466,69 @@ export type PartyCategory = "coordinator" | "discoverer" | "other" | "user" | "v
 /**
  * Defines contact status of the involved party.
  */
-export type PartyStatus =
-  "completed" | "contact_attempted" | "disputed" | "in_progress" | "not_contacted" | "open";
+export type PartyStatus = "completed" | "contact_attempted" | "disputed" | "in_progress" | "not_contacted" | "open";
 /**
  * Contains additional context regarding what is going on.
  */
 export type SummaryOfTheInvolvement = string;
 /**
  * Holds notes associated with this vulnerability item.
+ *
+ * @minItems 1
  */
 export type VulnerabilityNotes = [Note, ...Note[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds1 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds1 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds2 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds2 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds3 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds3 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds4 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds4 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds5 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds5 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds6 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds6 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds7 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds7 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Specifies a list of product_ids to give context to the parent item.
+ *
+ * @minItems 1
  */
-export type ListOfProductIds8 = [
-  ReferenceTokenForProductInstance,
-  ...ReferenceTokenForProductInstance[]
-];
+export type ListOfProductIds8 = [ReferenceTokenForProductInstance, ...ReferenceTokenForProductInstance[]];
 /**
  * Holds a list of references associated with this vulnerability item.
+ *
+ * @minItems 1
  */
 export type VulnerabilityReferences = [Reference, ...Reference[]];
 /**
@@ -495,13 +537,14 @@ export type VulnerabilityReferences = [Reference, ...Reference[]];
 export type ReleaseDate = string;
 /**
  * Contains a list of remediations.
+ *
+ * @minItems 1
  */
 export type ListOfRemediations = [Remediation, ...Remediation[]];
 /**
  * Specifies the category which this remediation belongs to.
  */
-export type CategoryOfTheRemediation =
-  "mitigation" | "no_fix_planned" | "none_available" | "vendor_fix" | "workaround";
+export type CategoryOfTheRemediation = "mitigation" | "no_fix_planned" | "none_available" | "vendor_fix" | "workaround";
 /**
  * Contains the date from which the remediation is available.
  */
@@ -512,6 +555,8 @@ export type DateOfTheRemediation = string;
 export type DetailsOfTheRemediation = string;
 /**
  * Contains a list of entitlements.
+ *
+ * @minItems 1
  */
 export type ListOfEntitlements = [EntitlementOfTheRemediation, ...EntitlementOfTheRemediation[]];
 /**
@@ -522,15 +567,7 @@ export type EntitlementOfTheRemediation = string;
  * Specifies what category of restart is required by this remediation to become effective.
  */
 export type CategoryOfRestart =
-  | "connected"
-  | "dependencies"
-  | "machine"
-  | "none"
-  | "parent"
-  | "service"
-  | "system"
-  | "vulnerable_component"
-  | "zone";
+  "connected" | "dependencies" | "machine" | "none" | "parent" | "service" | "system" | "vulnerable_component" | "zone";
 /**
  * Provides additional information for the restart. This can include details on procedures, scope or impact.
  */
@@ -541,10 +578,14 @@ export type AdditionalRestartInformation = string;
 export type URLToTheRemediation = string;
 /**
  * Contains score objects for the current vulnerability.
+ *
+ * @minItems 1
  */
 export type ListOfScores = [Score, ...Score[]];
 /**
  * Contains information about a vulnerability that can change with time.
+ *
+ * @minItems 1
  */
 export type ListOfThreats = [Threat, ...Threat[]];
 /**
@@ -567,7 +608,7 @@ export type Title = string;
 /**
  * Representation of security advisory information as a JSON document.
  */
-export interface CommonSecurityAdvisoryFramework {
+export interface CSAFDocumentv2_0 {
   document: DocumentLevelMetaData;
   product_tree?: ProductTree;
   vulnerabilities?: Vulnerabilities;
@@ -577,7 +618,7 @@ export interface CommonSecurityAdvisoryFramework {
  * Captures the meta-data about this document describing a particular set of security advisories.
  */
 export interface DocumentLevelMetaData {
-  Acknowledgments?: DocumentAcknowledgments;
+  acknowledgments?: DocumentAcknowledgments;
   aggregate_severity?: AggregateSeverity;
   category: DocumentCategory;
   csaf_version: CSAFVersion;
@@ -785,7 +826,7 @@ export interface Relationship {
  * Is a container for the aggregation of all fields that are related to a single vulnerability in the document.
  */
 export interface Vulnerability {
-  Acknowledgments?: VulnerabilityAcknowledgments;
+  acknowledgments?: VulnerabilityAcknowledgments;
   cve?: CVE;
   cwe?: CWE;
   discovery_date?: DiscoveryDate;
@@ -880,8 +921,7 @@ export interface RestartRequiredByRemediation {
 export interface Score {
   cvss_v2?: JSONSchemaForCommonVulnerabilityScoringSystemVersion20;
   cvss_v3?:
-    | JSONSchemaForCommonVulnerabilityScoringSystemVersion30
-    | JSONSchemaForCommonVulnerabilityScoringSystemVersion31;
+    JSONSchemaForCommonVulnerabilityScoringSystemVersion30 | JSONSchemaForCommonVulnerabilityScoringSystemVersion31;
   products: ListOfProductIds;
   [k: string]: unknown;
 }
@@ -899,12 +939,10 @@ export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion20 {
   availabilityImpact?: "NONE" | "PARTIAL" | "COMPLETE";
   baseScore: number;
   exploitability?: "UNPROVEN" | "PROOF_OF_CONCEPT" | "FUNCTIONAL" | "HIGH" | "NOT_DEFINED";
-  remediationLevel?:
-    "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
+  remediationLevel?: "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
   reportConfidence?: "UNCONFIRMED" | "UNCORROBORATED" | "CONFIRMED" | "NOT_DEFINED";
   temporalScore?: number;
-  collateralDamagePotential?:
-    "NONE" | "LOW" | "LOW_MEDIUM" | "MEDIUM_HIGH" | "HIGH" | "NOT_DEFINED";
+  collateralDamagePotential?: "NONE" | "LOW" | "LOW_MEDIUM" | "MEDIUM_HIGH" | "HIGH" | "NOT_DEFINED";
   targetDistribution?: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
   confidentialityRequirement?: "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
   integrityRequirement?: "LOW" | "MEDIUM" | "HIGH" | "NOT_DEFINED";
@@ -929,8 +967,7 @@ export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion30 {
   baseScore: number;
   baseSeverity: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   exploitCodeMaturity?: "UNPROVEN" | "PROOF_OF_CONCEPT" | "FUNCTIONAL" | "HIGH" | "NOT_DEFINED";
-  remediationLevel?:
-    "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
+  remediationLevel?: "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
   reportConfidence?: "UNKNOWN" | "REASONABLE" | "CONFIRMED" | "NOT_DEFINED";
   temporalScore?: number;
   temporalSeverity?: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -966,8 +1003,7 @@ export interface JSONSchemaForCommonVulnerabilityScoringSystemVersion31 {
   baseScore: number;
   baseSeverity: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   exploitCodeMaturity?: "UNPROVEN" | "PROOF_OF_CONCEPT" | "FUNCTIONAL" | "HIGH" | "NOT_DEFINED";
-  remediationLevel?:
-    "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
+  remediationLevel?: "OFFICIAL_FIX" | "TEMPORARY_FIX" | "WORKAROUND" | "UNAVAILABLE" | "NOT_DEFINED";
   reportConfidence?: "UNKNOWN" | "REASONABLE" | "CONFIRMED" | "NOT_DEFINED";
   temporalScore?: number;
   temporalSeverity?: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";

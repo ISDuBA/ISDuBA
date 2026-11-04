@@ -19,8 +19,8 @@
     resetAggregatorAttention,
     dtClass,
     ddClass
-  } from "$lib/Sources/source";
-  import SectionHeader from "$lib/SectionHeader.svelte";
+  } from "#lib/Sources/source.ts";
+  import SectionHeader from "#lib/SectionHeader.svelte";
   import {
     Badge,
     DescriptionList,
@@ -32,8 +32,8 @@
     Toggle,
     type InputProps
   } from "flowbite-svelte";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import type { ErrorDetails } from "$lib/Errors/error";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import type { ErrorDetails } from "#lib/Errors/error.ts";
   import {
     type AggregatorMetadata,
     type CSAFProviderEntry,
@@ -41,19 +41,19 @@
     type Custom,
     type FeedSubscription,
     type Subscription
-  } from "$lib/aggregatorTypes";
-  import { appStore } from "$lib/store.svelte";
+  } from "#lib/aggregatorTypes.ts";
+  import { appStore } from "#lib/store.svelte.ts";
   import { onMount } from "svelte";
-  import { push } from "$routes/router.svelte";
-  import CAccordionItem from "$lib/Components/CAccordionItem.svelte";
-  import Collapsible from "$lib/Advisories/CSAFWebview/Collapsible.svelte";
+  import { push } from "#routes/router.svelte.ts";
+  import CAccordionItem from "#lib/Components/CAccordionItem.svelte";
+  import Collapsible from "#lib/Advisories/CSAFWebview/Collapsible.svelte";
   import { scale } from "svelte/transition";
   import FeedBulletPoint from "./FeedBulletPoint.svelte";
   import type { AggregatorEntry, AggregatorRole, FeedInfo, SourceInfo } from "./aggregator";
   import SourceContent from "./SourceContent.svelte";
-  import CAccordion from "$lib/Components/CAccordion.svelte";
+  import CAccordion from "#lib/Components/CAccordion.svelte";
   import { SvelteMap } from "svelte/reactivity";
-  import CBadge from "$lib/Components/CBadge.svelte";
+  import CBadge from "#lib/Components/CBadge.svelte";
   import { Check, ChevronDown, ChevronUp, Pencil, Plus, Trash, X } from "@boxicons/svelte";
 
   const uid = $props.id();
@@ -245,7 +245,7 @@
 
   const getSources = (entry: Subscription): SourceInfo[] =>
     entry.subscriptions?.map(
-      (s) =>
+      (s: any) =>
         <SourceInfo>{
           id: s.id,
           name: s.name,
@@ -264,7 +264,7 @@
     ];
 
   const findSubscription = (url: string, custom: Custom) =>
-    custom.subscriptions.find((i) => i.url === url);
+    custom.subscriptions.find((i: any) => i.url === url);
 
   const getAvailableSources = (url: string, custom: Custom) => {
     const subscription = findSubscription(url, custom);
@@ -318,7 +318,9 @@
     if (subscription) {
       let available = subscription?.available ?? [];
       let subscribed = subscription.subscriptions ?? [];
-      let subscribedFeeds = subscribed.flatMap((s) => s.subscripted ?? []).map((f) => f.url);
+      let subscribedFeeds = subscribed
+        .flatMap((s: any) => s.subscripted ?? [])
+        .map((f: any) => f.url);
       let uniqueSubscribedFeeds = [...new Set(subscribedFeeds)];
 
       return uniqueSubscribedFeeds.filter((s) => available.includes(s)).length;

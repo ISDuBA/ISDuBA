@@ -9,11 +9,11 @@
 -->
 
 <script lang="ts">
-  import { getErrorDetails, type ErrorDetails } from "$lib/Errors/error";
-  import ErrorMessage from "$lib/Errors/ErrorMessage.svelte";
-  import { SEARCHTYPES } from "$lib/Queries/query";
-  import { request } from "$lib/request";
-  import { appStore } from "$lib/store.svelte";
+  import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
+  import ErrorMessage from "#lib/Errors/ErrorMessage.svelte";
+  import { SEARCHTYPES } from "#lib/Queries/query.ts";
+  import { request } from "#lib/request.ts";
+  import { appStore } from "#lib/store.svelte.ts";
   import { Button, Modal, Spinner } from "flowbite-svelte";
 
   interface Props {

@@ -1,5 +1,7 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json",
+  "extends": "$app/tsconfig",
+  "include": ["src", "test"],
+  "exclude": ["src/service-worker"],
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
@@ -10,7 +12,7 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler",
-    "types": ["svelte", "@sveltejs/kit"]
+    "types": ["$app/types", "node"]
   }
   // Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
   //
