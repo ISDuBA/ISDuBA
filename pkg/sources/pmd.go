@@ -127,7 +127,7 @@ func availableFeeds(pmd *provider.Provider) []string {
 		feeds := d.Rolie.Feeds
 		for j := range feeds {
 			if f := &feeds[j]; f.URL != "" {
-				add(f.URL)
+				add(string(f.URL))
 			}
 		}
 	}
@@ -161,7 +161,7 @@ func isROLIEFeed(pmd *provider.Provider, url string) bool {
 		}
 		feeds := d.Rolie.Feeds
 		for j := range feeds {
-			if d.Rolie.Feeds[j].URL == url {
+			if string(d.Rolie.Feeds[j].URL) == url {
 				return true
 			}
 		}

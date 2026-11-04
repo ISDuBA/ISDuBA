@@ -618,7 +618,7 @@ func (m *Manager) Subscriptions(ctx context.Context, urls []string) []SourceSubs
 	sources := make(map[string][]int64, len(urlIDs))
 	for _, urlID := range urlIDs {
 		if pmd := rps.pmd(urlID.url); pmd != nil && pmd.CanonicalURL != "" {
-			url := pmd.CanonicalURL
+			url := string(pmd.CanonicalURL)
 			sources[url] = append(sources[url], urlID.id)
 		}
 	}
@@ -634,7 +634,7 @@ func (m *Manager) Subscriptions(ctx context.Context, urls []string) []SourceSubs
 			}
 			var subscriptions []SourceSubscription
 			// Look sources up by the canonical URL
-			for _, sourceID := range sources[pmd.CanonicalURL] {
+			for _, sourceID := range sources[string(pmd.CanonicalURL)] {
 				s := m.findSourceByID(sourceID)
 				if s == nil {
 					continue

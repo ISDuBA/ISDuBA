@@ -64,7 +64,7 @@ func (m *Manager) openPGPKeys(ctx context.Context, source *source) (*crypto.KeyR
 		if key.URL == "" {
 			continue
 		}
-		u, err := url.Parse(key.URL)
+		u, err := url.Parse(string(key.URL))
 		if err != nil {
 			slog.Warn("Invalid OpenPGP url", "url", key.URL, "err", err)
 			continue
