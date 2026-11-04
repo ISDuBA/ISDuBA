@@ -156,6 +156,13 @@ const fetchSourceAttentionList = async (): Promise<Result<Attention[], ErrorDeta
 const resetSourceAttention = async (source: Source): Promise<Result<Attention[], ErrorDetails>> => {
   const formData = new FormData();
   formData.append("attention", "false");
+  if (source.headers) {
+    for (const header of source.headers) {
+      if (header != "") {
+        formData.append("headers", header);
+      }
+    }
+  }
   const resp = await request(`/api/sources/${source.id}`, "PUT", formData);
   if (resp.ok) {
     return {
@@ -177,6 +184,13 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
     method = "PUT";
     path += `/${source.id}`;
     formData.append("id", source.id.toString());
+    if (source.headers) {
+      for (const header of source.headers) {
+        if (header != "") {
+          formData.append("headers", header);
+        }
+      }
+    }
   } else {
     formData.append("url", source.url);
   }
