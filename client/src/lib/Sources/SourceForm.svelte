@@ -185,6 +185,7 @@
 
   // Parse headers of source so they can be easier displayed in the UI
   const parseHeaders = (s: any): [string, string][] => {
+    if (!s?.headers) return [["", ""]];
     const newHeaders: [string, string][] = [];
     for (const header of s.headers) {
       const h = header.split(":");
@@ -375,22 +376,27 @@
       <Label>HTTP headers</Label>
       {#each headers as header, index (index)}
         <div class="mb-3 grid w-full grid-cols-[1fr_auto] sm:grid-cols-[1fr_1fr_auto]">
-          <Label class="col-span-2 col-start-1 row-start-1 sm:col-span-1">
+          <Label class="col-span-2 col-start-1 row-start-1 sm:col-span-1" for="field-name-{index}">
             <span class="text-gray-500">Field name</span>
             <span class="text-gray-500 sm:collapse">- Field value</span>
           </Label>
           <Input
             class="col-span-2 row-start-2 rounded-none rounded-t-lg sm:col-span-1 sm:rounded-l-lg sm:rounded-tr-none"
+            id="field-name-{index}"
             oninput={(event) => {
               onChangedHeaders(event, index, 0);
             }}
             value={header[0]}
           />
-          <Label class="collapse col-span-2 col-start-1 row-start-1 sm:visible sm:col-start-2">
+          <Label
+            class="collapse col-span-2 col-start-1 row-start-1 sm:visible sm:col-start-2"
+            for="field-value-{index}"
+          >
             <span class="text-gray-500">Field value</span>
           </Label>
           <Input
             class="row-start-3 rounded-none rounded-bl-lg border-t-0 sm:row-start-2 sm:rounded-bl-none sm:border-t sm:border-l-0"
+            id="field-value-{index}"
             oninput={(event) => {
               onChangedHeaders(event, index, 1);
             }}
