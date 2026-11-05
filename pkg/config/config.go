@@ -21,7 +21,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
-	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/gocsaf/csaf/v5/csaf"
 
 	"github.com/ISDuBA/ISDuBA/pkg/ginkeycloak"
 	"github.com/ISDuBA/ISDuBA/pkg/models"

@@ -19,7 +19,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/gocsaf/csaf/v5/csaf"
 )
 
 // ParserMode represents the operation mode of the parser.

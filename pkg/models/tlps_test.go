@@ -24,32 +24,48 @@ func TestAsConditions(t *testing.T) {
 	}{
 		{
 			`{"*": [ "WHITE", "GREEN" ]}`,
-			`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
-			[]any{"WHITE", "GREEN"},
+			`(((((((tlp)=($1)))OR(((tlp)=($2)))))OR(((tlp)=($3)))))`,
+			[]any{"WHITE", "CLEAR", "GREEN"},
 		}, {
 			`{}`,
 			`(FALSE)`,
 			[]any{},
 		}, {
 			`{"A": [ "WHITE", "GREEN" ]}`,
-			`(((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))`,
-			[]any{"A", "WHITE", "GREEN"},
+			`(((((advisories.publisher)=($1)))AND(((((((tlp)=($2)))OR(((tlp)=($3)))))OR(((tlp)=($4)))))))`,
+			[]any{"A", "WHITE", "CLEAR", "GREEN"},
 		}, {
 			`{"A": [ "AMBER", "RED" ], "*": ["WHITE"]}`,
-			`(((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((tlp)=($4)))AND((NOT (((advisories.publisher)=($1)))))))))`,
-			[]any{"A", "AMBER", "RED", "WHITE"},
+			`(((((((advisories.publisher)=($1)))AND(((((((tlp)=($2)))OR(((tlp)=($3)))))OR(((tlp)=($4)))))))OR(((((((tlp)=($5)))OR(((tlp)=($6)))))AND((NOT (((advisories.publisher)=($1)))))))))`,
+			[]any{"A", "AMBER", "AMBER+STRICT", "RED", "WHITE", "CLEAR"},
 		}, {
 			`{"A": [ "AMBER", "RED" ], "*": ["WHITE", "GREEN"]}`,
-			`(((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((((tlp)=($4)))OR(((tlp)=($5)))))AND((NOT (((advisories.publisher)=($1)))))))))`,
-			[]any{"A", "AMBER", "RED", "WHITE", "GREEN"},
+			`(((((((advisories.publisher)=($1)))AND(((((((tlp)=($2)))OR(((tlp)=($3)))))OR(((tlp)=($4)))))))OR(((((((((tlp)=($5)))OR(((tlp)=($6)))))OR(((tlp)=($7)))))AND((NOT (((advisories.publisher)=($1)))))))))`,
+			[]any{"A", "AMBER", "AMBER+STRICT", "RED", "WHITE", "CLEAR", "GREEN"},
 		}, {
 			`{"A": [ "AMBER" ], "B": ["RED"], "*": ["WHITE"]}`,
-			`(((((((((advisories.publisher)=($1)))AND(((tlp)=($2)))))OR(((((advisories.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($3)))))))))))`,
-			[]any{"A", "AMBER", "B", "RED", "WHITE"},
+			`(((((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((advisories.publisher)=($4)))AND(((tlp)=($5)))))))OR(((((((tlp)=($6)))OR(((tlp)=($7)))))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($4)))))))))))`,
+			[]any{"A", "AMBER", "AMBER+STRICT", "B", "RED", "WHITE", "CLEAR"},
 		}, {
 			`{"*": ["WHITE"], "A": [ "AMBER" ], "B": ["RED"]}`,
-			`(((((((((advisories.publisher)=($1)))AND(((tlp)=($2)))))OR(((((advisories.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($3)))))))))))`,
-			[]any{"A", "AMBER", "B", "RED", "WHITE"},
+			`(((((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((advisories.publisher)=($4)))AND(((tlp)=($5)))))))OR(((((((tlp)=($6)))OR(((tlp)=($7)))))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($4)))))))))))`,
+			[]any{"A", "AMBER", "AMBER+STRICT", "B", "RED", "WHITE", "CLEAR"},
+		}, {
+			`{"*": [ "CLEAR" ]}`,
+			`(((tlp)=($1)))`,
+			[]any{"CLEAR"},
+		}, {
+			`{"*": [ "WHITE", "CLEAR" ]}`,
+			`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
+			[]any{"WHITE", "CLEAR"},
+		}, {
+			`{"*": [ "AMBER", "AMBER+STRICT" ]}`,
+			`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
+			[]any{"AMBER", "AMBER+STRICT"},
+		}, {
+			`{"*": [ "AMBER+STRICT" ]}`,
+			`(((tlp)=($1)))`,
+			[]any{"AMBER+STRICT"},
 		},
 	} {
 		var ptlps PublishersTLPs

@@ -27,8 +27,8 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
-	"github.com/gocsaf/csaf/v3/csaf"
-	"github.com/gocsaf/csaf/v3/util"
+	"github.com/gocsaf/csaf/v5/csaf"
+	"github.com/gocsaf/csaf/v5/util"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

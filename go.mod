@@ -16,7 +16,7 @@ require (
 	github.com/ProtonMail/gopenpgp/v2 v2.11.1
 	github.com/gin-contrib/static v1.1.8
 	github.com/gin-gonic/gin v1.12.0
-	github.com/gocsaf/csaf/v3 v3.7.0
+	github.com/gocsaf/csaf/v5 v5.0.0-pre.1.0.20261105122404-3d7e4b512b42
 	github.com/gomarkdown/markdown v0.0.0-20260824154242-13c5cf49db8d
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/samber/slog-gin v1.21.1
@@ -42,6 +42,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect
 	github.com/cloudwego/base64x v0.1.7 // indirect
+	github.com/dlclark/regexp2 v1.12.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
 	github.com/gin-contrib/sse v1.1.2 // indirect
 	github.com/go-openapi/jsonpointer v1.0.1 // indirect

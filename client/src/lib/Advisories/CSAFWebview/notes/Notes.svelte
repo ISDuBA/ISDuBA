@@ -10,13 +10,14 @@
 
 <script lang="ts">
   import SingleNote from "#lib/Advisories/CSAFWebview/notes/Note.svelte";
-  import type { Note } from "#lib/Advisories/CSAFWebview/docmodel/docmodeltypes.ts";
+  import type { Note as Note2_0 } from "#lib/Advisories/types/csaf-2.0.d.ts";
+  import type { Note as Note2_1 } from "#lib/Advisories/types/csaf-2.1.d.ts";
   import { onMount } from "svelte";
   import Collapsible from "../Collapsible.svelte";
   import { advisorySearchState } from "#lib/Advisories/advisory.svelte.ts";
 
   interface Props {
-    notes: Note[];
+    notes: Array<Note2_0 | Note2_1>;
     initOpen?: boolean;
     path: string;
   }

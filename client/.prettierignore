@@ -18,3 +18,6 @@ playwright/.auth/
 playwright/output/
 .nyc_output/
 coverage/
+
+# Don't format generated files
+src/lib/Advisories/types/csaf-**.d.ts
