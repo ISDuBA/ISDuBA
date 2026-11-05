@@ -184,13 +184,6 @@ const saveSource = async (source: Source): Promise<Result<Source, ErrorDetails>>
     method = "PUT";
     path += `/${source.id}`;
     formData.append("id", source.id.toString());
-    if (source.headers) {
-      for (const header of source.headers) {
-        if (header != "") {
-          formData.append("headers", header);
-        }
-      }
-    }
   } else {
     formData.append("url", source.url);
   }
