@@ -20,7 +20,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/gocsaf/csaf/v5/csaf"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"

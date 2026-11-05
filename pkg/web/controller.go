@@ -15,7 +15,7 @@ import (
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/gocsaf/csaf/v5/csaf"
 	sloggin "github.com/samber/slog-gin"
 
 	"github.com/ISDuBA/ISDuBA/pkg/aggregators"

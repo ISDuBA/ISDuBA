@@ -20,7 +20,7 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/models"
 	"github.com/ISDuBA/ISDuBA/pkg/tempstore"
 	"github.com/gin-gonic/gin"
-	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/gocsaf/csaf/v5/csaf"
 )
 
 // importTempDocument is an endpoint that saves a temporary document.
