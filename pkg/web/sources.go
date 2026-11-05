@@ -148,24 +148,35 @@ func showHealth(ctx *gin.Context) (bool, bool) {
 }
 
 func (c *Controller) isHealthy(ctx context.Context, isSource bool, id int64) (bool, error) {
-
 	healthSQL := `SELECT NOT EXISTS (` +
-		`SELECT 1 FROM downloads WHERE feeds_id `
+		`SELECT 1 FROM feeds f WHERE `
 
 	if isSource {
-		healthSQL += ` IN (SELECT id FROM feeds WHERE sources_id = $1) `
+		healthSQL += `f.sources_id = $1 `
 	} else {
-		healthSQL += `= $1 `
+		healthSQL += `f.id = $1 `
 	}
-	healthSQL += `AND time >= NOW() - INTERVAL '24 hours' ` +
-		`AND (
-            download_failed  IS TRUE OR
-            filename_failed  IS TRUE OR
-            schema_failed    IS TRUE OR
-            remote_failed    IS TRUE OR
-            checksum_failed  IS TRUE OR
-            signature_failed IS TRUE
-        ));`
+
+	healthSQL += `
+			AND (
+				f.processing_healthy IS FALSE
+				OR EXISTS (
+					SELECT 1
+					FROM downloads d
+					WHERE d.feeds_id = f.id
+					  AND d.time >= NOW() - INTERVAL '24 hours'
+					  AND (
+						d.download_failed  IS TRUE OR
+						d.filename_failed  IS TRUE OR
+						d.schema_failed    IS TRUE OR
+						d.remote_failed    IS TRUE OR
+						d.checksum_failed  IS TRUE OR
+						d.signature_failed IS TRUE
+					  )
+				)
+			)
+		)`
+
 	var healthy bool
 	switch err := c.db.Run(
 		ctx,

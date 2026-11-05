@@ -76,8 +76,6 @@
   let updateSourceForm: any = $state(null);
   let fillAgeDataFromSource: (source: Source) => void;
 
-  let loadSource: boolean = $state(true);
-
   const initialSource = {
     name: "",
     url: "",
@@ -128,7 +126,6 @@
     let result = await fetchSource(Number(id), true);
     if (result.ok) {
       source = result.value;
-      loadSource = true;
       if (fillAgeDataFromSource) {
         fillAgeDataFromSource(source);
       }
@@ -398,7 +395,6 @@
       </div>
       <SourceForm
         bind:this={sourceForm}
-        bind:parseSource={loadSource}
         {inputChange}
         bind:source
         {oldSource}
