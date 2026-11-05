@@ -13,11 +13,11 @@ test("Sources are working", async ({ page }) => {
   await page.goto("/#/sources");
   await page.getByRole("link", { name: "Add source", exact: false }).click();
   await page.getByLabel("Domain/PMD").fill("lorem  ipsum");
-  const checkUrlButton = await page.getByRole("button", {
+  const checkUrlButton = page.getByRole("button", {
     name: "Search and load provider metadata",
     exact: false
   });
-  expect(checkUrlButton).toBeDisabled();
+  await expect(checkUrlButton).toBeDisabled();
   await page.getByLabel("Domain/PMD").fill("intevation.de");
   await checkUrlButton.click();
   const sourceName = `Source ${Math.random()}`;
@@ -31,12 +31,25 @@ test("Sources are working", async ({ page }) => {
   await nameInput.pressSequentially(sourceName);
   await page.getByText("Advanced options").click();
   await page.getByLabel("Strict mode").check();
-  const unsubscribeButton = await page.getByRole("button", {
+  await expect(
+    page.getByRole("textbox", { name: "Field name", exact: true }).nth(1)
+  ).not.toBeVisible();
+  await page
+    .getByRole("textbox", { name: "Field name", exact: true })
+    .first()
+    .pressSequentially("Authorization", { delay: 100 });
+  await expect(page.getByRole("textbox", { name: "Field value", exact: true }).first()).toBeEmpty();
+  await page
+    .getByLabel("Field value", { exact: true })
+    .first()
+    .pressSequentially("Basic test-user-12345678", { delay: 100 });
+  await expect(page.getByRole("textbox", { name: "Field name", exact: true }).nth(1)).toBeVisible();
+  const unsubscribeButton = page.getByRole("button", {
     name: "Unsubscribe all",
     exact: false
   });
   await unsubscribeButton.click();
-  expect(unsubscribeButton).toBeDisabled();
+  await expect(unsubscribeButton).toBeDisabled();
   await page.getByLabel("Enable feed with label", { exact: false }).first().click();
   await page.getByRole("button", { name: "Save source", exact: false }).click();
 
@@ -48,6 +61,35 @@ test("Sources are working", async ({ page }) => {
   await expect(page.getByText("Client cert passphrase")).toBeVisible();
   // Check that the name was saved correctly
   await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(sourceName);
+  await page.getByText("Advanced options").click();
+  await expect(page.getByRole("textbox", { name: "Field name", exact: true }).first()).toHaveValue(
+    "Authorization"
+  );
+  await expect(page.getByRole("textbox", { name: "Field value", exact: true }).first()).toHaveValue(
+    "Basic test-user-12345678"
+  );
+
+  await page.goto("/#/sources");
+  await page.getByText(sourceName).click();
+  await page.getByText("Advanced options").click();
+  // Check if the HTTP header value is still displayed after reopening source
+  await expect(page.getByRole("textbox", { name: "Field value", exact: true }).first()).toHaveValue(
+    "Basic test-user-12345678"
+  );
+
+  // Check if editing the HTTP header works
+  await page.getByRole("textbox", { name: "Field value", exact: true }).first().clear();
+  await page
+    .getByRole("textbox", { name: "Field value", exact: true })
+    .first()
+    .pressSequentially("Basic test-user-87654321", { delay: 100 });
+  await page.getByRole("button", { name: "Save source", exact: false }).click();
+  await page.goto("/#/sources");
+  await page.getByText(sourceName).click();
+  await page.getByText("Advanced options").click();
+  await expect(page.getByRole("textbox", { name: "Field value", exact: true }).first()).toHaveValue(
+    "Basic test-user-87654321"
+  );
 
   // Test if input fields for time range fire requests to /api/sources/feed.
   await page.getByLabel("View feed details").click();
