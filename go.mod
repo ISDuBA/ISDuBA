@@ -8,7 +8,7 @@
 
 module github.com/ISDuBA/ISDuBA
 
-go 1.27.0
+go 1.27.3
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -16,7 +16,7 @@ require (
 	github.com/ProtonMail/gopenpgp/v2 v2.11.1
 	github.com/gin-contrib/static v1.1.8
 	github.com/gin-gonic/gin v1.12.0
-	github.com/gocsaf/csaf/v5 v5.0.0-pre.1.0.20261105122404-3d7e4b512b42
+	github.com/gocsaf/csaf/v5 v5.0.0-pre.1.0.20261110130122-48bf1ad21170
 	github.com/gomarkdown/markdown v0.0.0-20260824154242-13c5cf49db8d
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/samber/slog-gin v1.21.1
