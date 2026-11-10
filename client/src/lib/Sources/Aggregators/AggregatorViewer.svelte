@@ -39,7 +39,7 @@
     type Custom,
     type FeedSubscription,
     type Subscription
-  } from "#lib/aggregatorTypes.ts";
+  } from "#lib/additionalAggregatorTypes.ts";
   import { appStore } from "#lib/store.svelte.ts";
   import { onMount } from "svelte";
   import { push } from "#routes/router.svelte.ts";
