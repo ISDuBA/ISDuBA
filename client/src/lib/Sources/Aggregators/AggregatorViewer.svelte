@@ -56,12 +56,14 @@
   import type {
     RoleOfTheIssuingParty as RoleOfTheIssuingParty2_0,
     CSAFProviderEntry as CSAFProviderEntry2_0,
-    CSAFPublisherEntry as CSAFPublisherEntry2_0
+    CSAFPublisherEntry as CSAFPublisherEntry2_0,
+    CSAFAggregator as CSAFAggregator2_0
   } from "./types/aggregator-2.0";
   import type {
     RoleOfTheIssuingParty as RoleOfTheIssuingParty2_1,
     CSAFProviderEntry as CSAFProviderEntry2_1,
-    CSAFPublisherEntry as CSAFPublisherEntry2_1
+    CSAFPublisherEntry as CSAFPublisherEntry2_1,
+    CSAFAggregator as CSAFAggregator2_1
   } from "./types/aggregator-2.1";
 
   const uid = $props.id();
@@ -650,17 +652,32 @@
                   <DescriptionList tag="dd" class={ddClass}>{aggregator.url}</DescriptionList>
                 </div>
                 {#if metadata?.aggregator}
-                  {@const data = metadata.aggregator.aggregator}
+                  {@const aggr = metadata.aggregator as CSAFAggregator2_0 | CSAFAggregator2_1}
+                  {@const data = aggr.aggregator}
                   <div>
                     <DescriptionList tag="dt" class={dtClass}>Category</DescriptionList>
                     <DescriptionList tag="dd" class={ddClass}>{data.category}</DescriptionList>
                   </div>
                   <div>
                     <DescriptionList tag="dt" class={dtClass}>Last updated</DescriptionList>
-                    <DescriptionList tag="dd" class={ddClass}
-                      >{metadata.aggregator.last_updated}</DescriptionList
-                    >
+                    <DescriptionList tag="dd" class={ddClass}>{aggr.last_updated}</DescriptionList>
                   </div>
+                  {#if aggr.maintained_from}
+                    <div>
+                      <DescriptionList tag="dt" class={dtClass}>Maintained from</DescriptionList>
+                      <DescriptionList tag="dd" class={ddClass}
+                        >{aggr.maintained_from}</DescriptionList
+                      >
+                    </div>
+                  {/if}
+                  {#if aggr.maintained_until}
+                    <div>
+                      <DescriptionList tag="dt" class={dtClass}>Maintained until</DescriptionList>
+                      <DescriptionList tag="dd" class={ddClass}
+                        >{aggr.maintained_until}</DescriptionList
+                      >
+                    </div>
+                  {/if}
                   <div>
                     <DescriptionList tag="dt" class={dtClass}>Namespace</DescriptionList>
                     <DescriptionList tag="dd" class={ddClass}>{data.namespace}</DescriptionList>
