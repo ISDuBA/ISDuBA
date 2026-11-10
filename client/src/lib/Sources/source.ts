@@ -10,7 +10,7 @@ import { getErrorDetails, type ErrorDetails } from "#lib/Errors/error.ts";
 import { request } from "#lib/request.ts";
 import type { Result } from "#lib/types.ts";
 import type { CSAFProviderMetadata } from "#lib/provider.d.ts";
-import type { AggregatorMetadata } from "#lib/aggregatorTypes.ts";
+import type { AggregatorMetadata } from "#lib/Sources/Aggregators/types/additionalAggregatorTypes.ts";
 
 const dtClass: string = "mt-1 text-gray-500 md:text-sm dark:text-gray-400";
 const ddClass: string = "text-md text-gray-900 dark:text-gray-100 break-words mb-1";

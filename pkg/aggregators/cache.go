@@ -23,8 +23,9 @@ import (
 	"github.com/ISDuBA/ISDuBA/pkg/cache"
 	"github.com/ISDuBA/ISDuBA/pkg/config"
 	"github.com/ISDuBA/ISDuBA/pkg/sources"
-	"github.com/gocsaf/csaf/v3/csaf"
-	"github.com/gocsaf/csaf/v3/util"
+	"github.com/gocsaf/csaf/v5/csaf"
+	"github.com/gocsaf/csaf/v5/csaf/aggregator"
+	"github.com/gocsaf/csaf/v5/util"
 )
 
 // holdingDuration is the duration how long PMDs are cached.
@@ -33,7 +34,7 @@ const holdingDuration = time.Minute * 15
 // CachedAggregator are cached aggregators.
 type CachedAggregator struct {
 	Raw        []byte
-	Aggregator *csaf.Aggregator
+	Aggregator *aggregator.Aggregator
 }
 
 // Cache is cache of aggregators.
@@ -91,9 +92,9 @@ func (c *Cache) GetAggregator(ctx context.Context, url string, cfg *config.Confi
 		return nil, fmt.Errorf("validation failed: %s", strings.Join(msgs, ", "))
 	}
 	raw := bytes.Clone(data.Bytes())
-	agg := new(csaf.Aggregator)
-	if err := json.Unmarshal(raw, agg); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal aggregator: %w", err)
+	agg, err := aggregator.DecodeAggregator(raw)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decode aggregator: %w", err)
 	}
 	ca := &CachedAggregator{
 		Raw:        raw,
@@ -107,28 +108,18 @@ func (c *Cache) GetAggregator(ctx context.Context, url string, cfg *config.Confi
 func (ca *CachedAggregator) SourceURLs() []string {
 	var urls []string
 	unique := func(url string) {
-		if !slices.Contains(urls, url) {
+		if url != "" && !slices.Contains(urls, url) {
 			urls = append(urls, url)
 		}
 	}
-	add := func(metadata *csaf.AggregatorCSAFProviderMetadata) {
-		if metadata != nil {
-			if url := metadata.URL; url != nil {
-				unique(string(*url))
-			}
-		}
+	for i := range ca.Aggregator.CSAFProviders {
+		unique(string(ca.Aggregator.CSAFProviders[i].Metadata.URL))
 	}
-	for _, provider := range ca.Aggregator.CSAFProviders {
-		if provider != nil {
-			add(provider.Metadata)
-		}
-	}
-	for _, publisher := range ca.Aggregator.CSAFPublishers {
-		if publisher != nil {
-			add(publisher.Metadata)
-			for _, m := range publisher.Mirrors {
-				unique(string(m))
-			}
+	for i := range ca.Aggregator.CSAFPublishers {
+		pub := &ca.Aggregator.CSAFPublishers[i]
+		unique(string(pub.Metadata.URL))
+		for _, m := range pub.Mirrors {
+			unique(string(m))
 		}
 	}
 	return urls

@@ -9,13 +9,19 @@
 -->
 <script lang="ts">
   import Link from "#lib/Components/Link.svelte";
+  import type { LabelOfTLP as LabelOfTLP2_0 } from "#lib/Advisories/types/csaf-2.0.d.ts";
+  import type { LabelOfTLP as LabelOfTLP2_1 } from "#lib/Advisories/types/csaf-2.1.d.ts";
 
   interface Props {
-    tlp?: string;
+    tlp: LabelOfTLP2_0 | LabelOfTLP2_1;
   }
-  let { tlp = "" }: Props = $props();
+  let { tlp }: Props = $props();
+
+  const getTLPClass = (tlpLabel: LabelOfTLP2_0 | LabelOfTLP2_1): string => {
+    return `tlp${tlpLabel.toLocaleLowerCase().replace("+", "-")}`;
+  };
 </script>
 
-<Link href="https://www.first.org/tlp/" class={tlp ? `tlp${tlp.toLocaleLowerCase()}` : ""}>
+<Link href="https://www.first.org/tlp/" class={getTLPClass(tlp)}>
   {tlp}
 </Link>

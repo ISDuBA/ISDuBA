@@ -14,19 +14,6 @@ export const ProductStatus = {
   RECOMMENDED: "RECOMMENDED"
 } as const;
 
-export type ProductStatus_t = {
-  first_affected?: string[];
-  first_fixed?: string[];
-  fixed?: string[];
-  known_affected?: string[];
-  known_not_affected?: string[];
-  last_affected?: string[];
-  recommended?: string[];
-  under_investigation?: string[];
-};
-
-export type ProductStatus_t_Key = keyof ProductStatus_t;
-
 export const ProductStatusSymbol = {
   FIXED: "F",
   UNDER_INVESTIGATION: "U",
@@ -42,10 +29,6 @@ type StringObject = {
 export type FullProductName = {
   name: string;
   product_id: string;
-};
-
-export type Relationship = {
-  full_product_name: FullProductName;
 };
 
 export type Product = { product_id: string; name: string };
