@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2024 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
 //  Software-Engineering: 2024 Intevation GmbH <https://intevation.de>
 
-import type { CSAFAggregator as CSAFAggregator2_0 } from "./Sources/Aggregators/types/aggregator-2.0";
-import type { CSAFAggregator as CSAFAggregator2_1 } from "./Sources/Aggregators/types/aggregator-2.1";
+import type { CSAFAggregator as CSAFAggregator2_0 } from "#lib/Sources/Aggregators/types/aggregator-2.0.d.ts";
+import type { CSAFAggregator as CSAFAggregator2_1 } from "#lib/Sources/Aggregators/types/aggregator-2.1.d.ts";
 
 /**
  * Contains information about the subscribed feed.
