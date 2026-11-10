@@ -36,8 +36,6 @@
   import type { ErrorDetails } from "#lib/Errors/error.ts";
   import {
     type AggregatorMetadata,
-    type CSAFProviderEntry,
-    type CSAFPublisherEntry,
     type Custom,
     type FeedSubscription,
     type Subscription
@@ -55,6 +53,16 @@
   import { SvelteMap } from "svelte/reactivity";
   import CBadge from "#lib/Components/CBadge.svelte";
   import { Check, ChevronDown, ChevronUp, Pencil, Plus, Trash, X } from "@boxicons/svelte";
+  import type {
+    RoleOfTheIssuingParty as RoleOfTheIssuingParty2_0,
+    CSAFProviderEntry as CSAFProviderEntry2_0,
+    CSAFPublisherEntry as CSAFPublisherEntry2_0
+  } from "./types/aggregator-2.0";
+  import type {
+    RoleOfTheIssuingParty as RoleOfTheIssuingParty2_1,
+    CSAFProviderEntry as CSAFProviderEntry2_1,
+    CSAFPublisherEntry as CSAFPublisherEntry2_1
+  } from "./types/aggregator-2.1";
 
   const uid = $props.id();
 
@@ -275,30 +283,31 @@
     }
   };
 
-  const getRoleAbbreviation = (role: string | undefined): AggregatorRole => {
-    if (role) {
-      switch (role) {
-        case "csaf_publisher":
-          return {
-            label: "Publisher",
-            abbreviation: "M"
-          };
-        case "csaf_trusted_provider":
-          return {
-            label: "Trusted provider",
-            abbreviation: "TP"
-          };
-        case "csaf_provider":
-          return {
-            label: "Provider",
-            abbreviation: "P"
-          };
-      }
+  const getRoleAbbreviation = (
+    role: RoleOfTheIssuingParty2_0 | RoleOfTheIssuingParty2_1 | undefined
+  ): AggregatorRole => {
+    if (role === undefined)
+      return {
+        label: "",
+        abbreviation: ""
+      };
+    switch (role) {
+      case "csaf_publisher":
+        return {
+          label: "Publisher",
+          abbreviation: "M"
+        };
+      case "csaf_trusted_provider":
+        return {
+          label: "Trusted provider",
+          abbreviation: "TP"
+        };
+      case "csaf_provider":
+        return {
+          label: "Provider",
+          abbreviation: "P"
+        };
     }
-    return {
-      label: role ?? "",
-      abbreviation: role?.substring(0, 1) ?? ""
-    };
   };
 
   const getAvailableFeedCount = (url: string, custom: Custom) => {
@@ -329,7 +338,9 @@
   };
 
   const parseAggregatorData = (data: AggregatorMetadata): AggregatorEntry[] => {
-    const extractEntry = (i: CSAFProviderEntry | CSAFPublisherEntry) =>
+    const extractEntry = (
+      i: CSAFProviderEntry2_0 | CSAFProviderEntry2_1 | CSAFPublisherEntry2_0 | CSAFPublisherEntry2_1
+    ) =>
       <AggregatorEntry>{
         name: i.metadata.publisher.name,
         url: i.metadata.url,
