@@ -14,7 +14,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/ProtonMail/gopenpgp/v2 v2.11.1
-	github.com/gin-contrib/static v1.1.8
+	github.com/gin-contrib/static v1.1.10
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocsaf/csaf/v3 v3.7.0
 	github.com/gomarkdown/markdown v0.0.0-20260824154242-13c5cf49db8d
@@ -85,7 +85,7 @@ require (
 	golang.org/x/arch v0.30.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
