@@ -68,7 +68,7 @@ const (
 	commentsCountDocumentsCTE = `(SELECT count(*) FROM comments WHERE ` +
 		`comments.documents_id = docads.id)`
 	commentsCountEvents = `(SELECT count(*) FROM comments WHERE ` +
-		`comments.documents_id = documents_id)`
+		`comments.documents_id = events_log.documents_id)`
 
 	ilikePrefix = `'%'||regexp_replace(regexp_replace(`
 	ilikeSuffix = `,'(%|_)','\\\1','g'),'(\s+)','%','g')||'%'`
