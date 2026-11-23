@@ -229,7 +229,7 @@ CREATE FUNCTION incr_comments() RETURNS trigger AS $$
         WHERE
             id = (SELECT advisories_id
                 FROM documents
-                WHERE id = OLD.documents_id);
+                WHERE id = NEW.documents_id);
         RETURN NULL;
     END;
 $$ LANGUAGE plpgsql;
