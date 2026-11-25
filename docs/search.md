@@ -90,7 +90,7 @@ More Examples:
 | `initial_release_date` | `timestamp` | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/tracking/initial_release_date`                       |
 | `rev_history_length`   | `integer`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | Length of the revision history                                  |
 | `title`                | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/title`                                               |
-| `tlp`                  | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/distribution/tlp/label`                              |
+| `tlp`                  | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | `/document/distribution/tlp/label`, `WHITE` as `CLEAR`                              |
 | `ssvc`                 | `string`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | SSVC score of this document                                     |
 | `cvss_v2_score`        | `float`     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v2/baseScore)` |
 | `cvss_v3_score`        | `float`     | :white_check_mark: | :white_check_mark: | :white_check_mark: | `max(/document/vulnerabilities[*]/scores[*]/cvss_v3_scorecore)` |

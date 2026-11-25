@@ -77,15 +77,7 @@
   }
 
   const getTLPClass = (label: string) => {
-    if (label === "WHITE") {
-      return "tlpwhite";
-    } else if (label === "RED") {
-      return "tlpred";
-    } else if (label === "AMBER") {
-      return "tlpamber";
-    } else if (label === "GREEN") {
-      return "tlpgreen";
-    }
+    return `tlp${label.toLocaleLowerCase().replace("+", "-")}`;
   };
 </script>
 

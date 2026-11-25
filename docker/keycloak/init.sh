@@ -61,10 +61,10 @@ kcadm.sh update clients/$id --target-realm=isduba \
     } } ]'
 
 # Create groups
-WHITE_ID=$(kcadm.sh create groups --target-realm=isduba --set name=white -i)
-kcadm.sh update groups/$WHITE_ID --target-realm isduba \
+CLEAR_ID=$(kcadm.sh create groups --target-realm=isduba --set name=clear -i)
+kcadm.sh update groups/$CLEAR_ID --target-realm isduba \
   --set 'attributes={
-    "TLP" : [ "{\"*\": [ \"WHITE\" ]}" ]
+    "TLP" : [ "{\"*\": [ \"CLEAR\" ]}" ]
   }'
 GREEN_ID=$(kcadm.sh create groups --target-realm=isduba --set name=green -i)
 kcadm.sh update groups/$GREEN_ID --target-realm isduba \
@@ -106,8 +106,8 @@ kcadm.sh add-roles -r isduba --uusername user --rolename admin
 kcadm.sh add-roles -r isduba --uusername user --rolename importer
 kcadm.sh add-roles -r isduba --uusername user --rolename auditor
 
-kcadm.sh update -r isduba users/$USER_ID/groups/$WHITE_ID \
-  -s realm=isduba -s userId=$USER_ID -s groupId=$WHITE_ID -n
+kcadm.sh update -r isduba users/$USER_ID/groups/$CLEAR_ID \
+  -s realm=isduba -s userId=$USER_ID -s groupId=$CLEAR_ID -n
 
 kcadm.sh update -r isduba users/$USER_ID/groups/$GREEN_ID \
   -s realm=isduba -s userId=$USER_ID -s groupId=$GREEN_ID -n

@@ -38,7 +38,7 @@
       "name": "all",
       "attributes": {
         "TLP": [
-          "{\"*\": [\"WHITE\", \"CLEAR\", \"GREEN\", \"AMBER\", \"AMBER+STRICT\", \"RED\"]}"
+          "{\"*\": [\"CLEAR\", \"GREEN\", \"AMBER\", \"AMBER+STRICT\", \"RED\"]}"
         ]
       }
     },
@@ -107,18 +107,10 @@
       }
     },
     {
-      "name": "white",
+      "name": "cleargreen",
       "attributes": {
         "TLP": [
-          "{\"*\": [\"WHITE\"]}"
-        ]
-      }
-    },
-    {
-      "name": "whitegreen",
-      "attributes": {
-        "TLP": [
-          "{\"*\": [\"WHITE\", \"GREEN\"]}"
+          "{\"*\": [\"CLEAR\", \"GREEN\"]}"
         ]
       }
     }
@@ -490,7 +482,7 @@
         "editor"
       ],
       "groups": [
-        "/whitegreen"
+        "/cleargreen"
       ]
     },
     {
@@ -650,28 +642,6 @@
       ],
       "groups": [
         "/all"
-      ]
-    },
-    {
-      "username": "white",
-      "enabled": true,
-      "firstName": "White",
-      "lastName": "Weiss",
-      "email": "whi@example.com",
-      "emailVerified": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "white",
-          "temporary": false
-        }
-      ],
-      "realmRoles": [
-        "default-roles-isduba",
-        "editor"
-      ],
-      "groups": [
-        "/white"
       ]
     }
   ]

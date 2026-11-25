@@ -112,12 +112,13 @@ Defaults to:
 
 ```
 [publishers_tlps]
-'*' = ["WHITE"]
+'*' = ["CLEAR"]
 ```
 
 An empty `publisher` means all not explicitly stated. `publisher`s with non-empty values have a higher priority.
-Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 1 values
-`WHITE`, `GREEN`, `AMBER` and `RED`.
+Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.org/wiki/Traffic_Light_Protocol) 2 values
+`CLEAR`, `GREEN`, `AMBER`, `AMBER+STRICT` and `RED`.
+TLP 1 value `WHITE` is rejected, use `CLEAR` instead (see [TLP migration documentation](./developer/tlp_migration.md) for more details).
 
 ### <a name="section_temp_storage"></a> Section `[temp_storage]` Temporary document storage
 
@@ -137,7 +138,7 @@ Valid values for `tlps` are the [Traffic Light Protocol](https://en.wikipedia.or
 - `feed_refresh`: Duration between re-asking source for a new updated feed index. Defaults to `"15m"`.
 - `feed_log_level`: The log level per feed. Valid values are `debug`, `info`, `warn`, `error`. Defaults to `"info"`.
 - `feed_importer`: Name of the user that is doing the feed imports. Defaults to `feedimporter`.
-- `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }`
+- `publishers_tlps`: Rules what the feed import is allowed to import. Defaults to `{ "*" = [ "CLEAR", "GREEN", "AMBER", "AMBER+STRICT", "RED" ] }`
 - `default_message`: The message that should be displayed inside the source manager.
 - `aes_key`: A crypto token in form of 64 character long hex string used to encrypt security sensitive\
    fields in the database like passphrases and private keys. Defaults to "".\
@@ -242,4 +243,4 @@ Aggregators are checked for updates in regular intervals.
 | `ISDUBA_FORWARDER_STRATEGY`           | `forwarder strategy`                 |
 | `ISDUBA_AGGREGATORS_UPDATE_INTERVAL`  | `aggregators update_interval`        |
 | `ISDUBA_AGGREGATORS_TIMEOUT`          | `aggregators timeout`                |
-| `ISDUBA_PPROF_URL`  		        | `pprof url`		               |
+| `ISDUBA_PPROF_URL`  		              | `pprof url`		                       |

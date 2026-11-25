@@ -85,7 +85,11 @@ CREATE TABLE documents (
                 utc_timestamp(document #>> '{document,tracking,initial_release_date}')) STORED,
     -- Often used
     tlp         text
-                GENERATED ALWAYS AS (document #>> '{document,distribution,tlp,label}') STORED,
+                GENERATED ALWAYS AS (
+                    CASE document #>> '{document,distribution,tlp,label}'
+                        WHEN 'WHITE' THEN 'CLEAR'
+                        ELSE document #>> '{document,distribution,tlp,label}'
+                    END) STORED,
     title       text
                 GENERATED ALWAYS AS (document #>> '{document,title}') STORED,
     rev_history_length int

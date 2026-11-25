@@ -42,4 +42,4 @@ migrate = true
 terminate_after_migration = false
 
 [publishers_tlps]
-'*' = ["WHITE"]
+'*' = ["CLEAR"]

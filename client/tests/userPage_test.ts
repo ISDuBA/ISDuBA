@@ -54,9 +54,10 @@ test("User page has footer text", async ({ page }) => {
 });
 
 test("User page shows all TLPs the test-user is allowed to see", async ({ page }) => {
-  await expect(page.getByText("WHITE", { exact: true })).toBeVisible();
+  await expect(page.getByText("CLEAR", { exact: true })).toBeVisible();
   await expect(page.getByText("GREEN", { exact: true })).toBeVisible();
   await expect(page.getByText("AMBER", { exact: true })).toBeVisible();
+  await expect(page.getByText("AMBER+STRICT", { exact: true })).toBeVisible();
   await expect(page.getByText("RED", { exact: true })).toBeVisible();
 });
 

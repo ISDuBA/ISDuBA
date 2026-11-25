@@ -62,7 +62,7 @@
 # files_user = 2
 
 # [publishers_tlps]
-# '*' = ["WHITE"]
+# '*' = ["CLEAR"]
 
 # [sources]
 # strict_mode = true
@@ -75,7 +75,7 @@
 # feed_refresh = "15m"
 # feed_log_level = "info"
 # feed_importer = "feedimporter"
-# publishers_tlps = { "*" = [ "WHITE", "GREEN", "AMBER", "RED" ] }
+# publishers_tlps = { "*" = [ "CLEAR", "GREEN", "AMBER", "AMBER+STRICT", "RED" ] }
 # default_message = """Missing something? \
 #                      To suggest new CSAF sources, \
 #                      please contact your CSAF source manager. \

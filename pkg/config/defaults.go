@@ -80,13 +80,14 @@ const (
 
 var (
 	defaultPublishersTLPs = models.PublishersTLPs{
-		"*": []models.TLP{models.TLPWhite},
+		"*": []models.TLP{models.TLPClear},
 	}
 	defaultSourcesPublishersTLPs = models.PublishersTLPs{
 		"*": []models.TLP{
-			models.TLPWhite,
+			models.TLPClear,
 			models.TLPGreen,
 			models.TLPAmber,
+			models.TLPAmberStrict,
 			models.TLPRed,
 		},
 	}

@@ -37,7 +37,7 @@ docker compose up -d
 The default configuration is inside `docker/.env` and can be used as provided.
 
 A user `user` with password `user` with all roles will also be created. This user has
-the authorization to handle TLP WHITE and TLP GREEN advisories.
+the authorization to handle TLP:CLEAR, TLP:WHITE and TLP:GREEN advisories.
 
 The application can then be reached under <http://localhost:5371>.
 

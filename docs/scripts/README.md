@@ -32,9 +32,10 @@ Since these scripts need to install all dependencies, sudo privileges are requir
 
 ### important notes
 
- - A list of users created by the setup scripts can be found in [the users.txt.](./../developer/users.txt) including their usernames and passwords. Editing this file before using the createUsers or the setup script will change which users are created.
-  - Additionally, a user "test-user" with username "test-user" and password "test-user" will be created. This test-user has all roles and can access any TLP-level of every publisher.
-
+ - The users, groups and roles created by the setup scripts can be found in [the realm file](./keycloak/isduba-realm.json) including their usernames and passwords.
+ Editing this file before using the configureKeycloak or the setup script will change which users are created. Ream import is skipped, if the realm already exists.
+ - Additionally, a user "test-user" with username "test-user" and password "test-user" will be created. This test-user has all roles and can access any TLP-level of every publisher.
+ - Only TLP 2.0 labels are granted by groups. `clear` also grants access to `TLP:WHITE` advisories for backwards compatibility. `amber` does not grant access to `TLP:AMBER+STRICT` advisories and needs to be set up as its own group and added to users as examplified in [the realm file](./keycloak/isduba-realm.json). For more details, check out the [TLP migration changes](../developer/tlp_migration.md).
  - The Keycloak admin user created via the scripts will have the username `keycloak`, unless otherwise specified via the environment variable `KEYCLOAK_ADMIN`. The password can be specified via the environment variable `KEYCLOAK_ADMIN_PASSWORD`.
   - If `KEYCLOAK_ADMIN_PASSWORD` is not set, then the script will try to see if `docs/scripts/password.txt` exists and contains a password. If this is not set either, then a random password will be generated and stored in `docs/scripts/password.txt`.
 

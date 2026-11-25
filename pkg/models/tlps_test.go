@@ -23,41 +23,37 @@ func TestAsConditions(t *testing.T) {
 		replacements []any
 	}{
 		{
-			`{"*": [ "WHITE", "GREEN" ]}`,
-			`(((((((tlp)=($1)))OR(((tlp)=($2)))))OR(((tlp)=($3)))))`,
-			[]any{"WHITE", "CLEAR", "GREEN"},
+			`{"*": [ "CLEAR", "GREEN" ]}`,
+			`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
+			[]any{"CLEAR", "GREEN"},
 		}, {
 			`{}`,
 			`(FALSE)`,
 			[]any{},
 		}, {
-			`{"A": [ "WHITE", "GREEN" ]}`,
-			`(((((advisories.publisher)=($1)))AND(((((((tlp)=($2)))OR(((tlp)=($3)))))OR(((tlp)=($4)))))))`,
-			[]any{"A", "WHITE", "CLEAR", "GREEN"},
+			`{"A": [ "CLEAR", "GREEN" ]}`,
+			`(((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))`,
+			[]any{"A", "CLEAR", "GREEN"},
 		}, {
-			`{"A": [ "AMBER", "RED" ], "*": ["WHITE"]}`,
-			`(((((((advisories.publisher)=($1)))AND(((((((tlp)=($2)))OR(((tlp)=($3)))))OR(((tlp)=($4)))))))OR(((((((tlp)=($5)))OR(((tlp)=($6)))))AND((NOT (((advisories.publisher)=($1)))))))))`,
-			[]any{"A", "AMBER", "AMBER+STRICT", "RED", "WHITE", "CLEAR"},
+			`{"A": [ "AMBER", "RED" ], "*": ["CLEAR"]}`,
+			`(((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((tlp)=($4)))AND((NOT (((advisories.publisher)=($1)))))))))`,
+			[]any{"A", "AMBER", "RED", "CLEAR"},
 		}, {
-			`{"A": [ "AMBER", "RED" ], "*": ["WHITE", "GREEN"]}`,
-			`(((((((advisories.publisher)=($1)))AND(((((((tlp)=($2)))OR(((tlp)=($3)))))OR(((tlp)=($4)))))))OR(((((((((tlp)=($5)))OR(((tlp)=($6)))))OR(((tlp)=($7)))))AND((NOT (((advisories.publisher)=($1)))))))))`,
-			[]any{"A", "AMBER", "AMBER+STRICT", "RED", "WHITE", "CLEAR", "GREEN"},
+			`{"A": [ "AMBER", "RED" ], "*": ["CLEAR", "GREEN"]}`,
+			`(((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((((tlp)=($4)))OR(((tlp)=($5)))))AND((NOT (((advisories.publisher)=($1)))))))))`,
+			[]any{"A", "AMBER", "RED", "CLEAR", "GREEN"},
 		}, {
-			`{"A": [ "AMBER" ], "B": ["RED"], "*": ["WHITE"]}`,
-			`(((((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((advisories.publisher)=($4)))AND(((tlp)=($5)))))))OR(((((((tlp)=($6)))OR(((tlp)=($7)))))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($4)))))))))))`,
-			[]any{"A", "AMBER", "AMBER+STRICT", "B", "RED", "WHITE", "CLEAR"},
+			`{"A": [ "AMBER" ], "B": ["RED"], "*": ["CLEAR"]}`,
+			`(((((((((advisories.publisher)=($1)))AND(((tlp)=($2)))))OR(((((advisories.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($3)))))))))))`,
+			[]any{"A", "AMBER", "B", "RED", "CLEAR"},
 		}, {
-			`{"*": ["WHITE"], "A": [ "AMBER" ], "B": ["RED"]}`,
-			`(((((((((advisories.publisher)=($1)))AND(((((tlp)=($2)))OR(((tlp)=($3)))))))OR(((((advisories.publisher)=($4)))AND(((tlp)=($5)))))))OR(((((((tlp)=($6)))OR(((tlp)=($7)))))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($4)))))))))))`,
-			[]any{"A", "AMBER", "AMBER+STRICT", "B", "RED", "WHITE", "CLEAR"},
+			`{"*": ["CLEAR"], "A": [ "AMBER" ], "B": ["RED"]}`,
+			`(((((((((advisories.publisher)=($1)))AND(((tlp)=($2)))))OR(((((advisories.publisher)=($3)))AND(((tlp)=($4)))))))OR(((((tlp)=($5)))AND((NOT (((((advisories.publisher)=($1)))OR(((advisories.publisher)=($3)))))))))))`,
+			[]any{"A", "AMBER", "B", "RED", "CLEAR"},
 		}, {
 			`{"*": [ "CLEAR" ]}`,
 			`(((tlp)=($1)))`,
 			[]any{"CLEAR"},
-		}, {
-			`{"*": [ "WHITE", "CLEAR" ]}`,
-			`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
-			[]any{"WHITE", "CLEAR"},
 		}, {
 			`{"*": [ "AMBER", "AMBER+STRICT" ]}`,
 			`(((((tlp)=($1)))OR(((tlp)=($2)))))`,
@@ -99,9 +95,11 @@ func TestUnmarshalText(t *testing.T) {
 		expected TLP
 		error    bool
 	}{
-		{"WHITE", TLPWhite, false},
+		{"WHITE", "", true},
+		{"CLEAR", TLPClear, false},
 		{"GREEN", TLPGreen, false},
 		{"AMBER", TLPAmber, false},
+		{"AMBER+STRICT", TLPAmberStrict, false},
 		{"RED", TLPRed, false},
 		{"HEARD", "", true},
 	} {
