@@ -115,8 +115,7 @@ Webview styles
 }
 
 /* CISA defined which colors to use for TLPs: https://www.cisa.gov/news-events/news/traffic-light-protocol-tlp-definitions-and-usage */
-.tlpclear,
-.tlpwhite {
+.tlpclear {
   font-size: small;
   padding: 0.25em;
   background: #000;
