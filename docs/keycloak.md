@@ -85,7 +85,7 @@ where
 
  - $PUBLISHER: the publisher this group can access. The value ```*``` allows access to all publishers. The respective value in advisories can be found under document\publisher\name\value. 
  - $TLPS: An array containing any combination of ```"CLEAR"```, ```"GREEN"```, ```"AMBER"```, ```"AMBER+STRICT"``` and ```"RED"```. The array-elements grant access to advisories of their respective TLP-level.
- - Moving to TLP 2.0 ```"WHITE"``` will be rejected, use ```"CLEAR"``` instead (Read the [TLP 2.0 migration documentation](../docs/developer/tlp_migration.md) for more details).
+ - Moving to TLP 2.0 ```"WHITE"``` will be rejected, use ```"CLEAR"``` instead (Read the [TLP 2.0 migration documentation](./developer/tlp_migration.md) for more details).
 
 The current default is:
 
