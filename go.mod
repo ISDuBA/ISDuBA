@@ -20,7 +20,7 @@ require (
 	github.com/gomarkdown/markdown v0.0.0-20260824154242-13c5cf49db8d
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/samber/slog-gin v1.21.1
-	github.com/sergi/go-diff v1.4.0
+	github.com/sergi/go-diff v1.4.5
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
 	github.com/swaggo/swag v1.16.6
